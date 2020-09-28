@@ -4,9 +4,10 @@ but at least we can use it in the meantime to make sure the code runs before pus
 """
 
 from june.infection_seed import InfectionSeed
+from june.demography import Population
 
 
 def test_box_full_run(simulator_box, selector):
     seed = InfectionSeed(simulator_box.world.boxes, selector, )
-    seed.unleash_virus(10, box_mode=True)
+    seed.unleash_virus(Population(simulator_box.world.people), 10, box_mode=True)
     simulator_box.run()

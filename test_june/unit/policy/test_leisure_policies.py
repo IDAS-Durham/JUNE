@@ -6,7 +6,7 @@ import pytest
 
 from june import paths
 from june.demography import Person, Population
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (
     Hospitals,
@@ -44,8 +44,8 @@ class TestCloseLeisure:
         leisure_instance = leisure.generate_leisure_for_config(
             world=world, config_filename=test_config
         )
-        leisure_instance.distribute_social_venues_to_households(
-            world.households, super_areas=world.super_areas
+        leisure_instance.distribute_social_venues_to_areas(
+            world.areas, super_areas=world.super_areas
         )
         sim.activity_manager.leisure = leisure_instance
         sim.activity_manager.policies = policies
@@ -125,16 +125,16 @@ class TestReduceLeisureProbabilities:
         assert str(sim.timer.date.date()) == "2020-03-01"
         household = Household()
         household.area = super_area.areas[0]
-        leisure_instance.distribute_social_venues_to_households(
-            [household], super_areas=world.super_areas
+        leisure_instance.distribute_social_venues_to_areas(
+            world.areas, super_areas=world.super_areas
         )
         person1 = Person.from_attributes(age=60, sex="m")
         person1.area = super_area.areas[0]
         household.add(person1)
         person2 = Person.from_attributes(age=80, sex="f")
         person2.area = super_area.areas[0]
-        sim.activity_manager.leisure.distribute_social_venues_to_households(
-            [household], super_areas=world.super_areas
+        sim.activity_manager.leisure.distribute_social_venues_to_areas(
+            world.areas, super_areas=world.super_areas
         )
         household.add(person2)
         pubs1_visits_before = 0

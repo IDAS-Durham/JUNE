@@ -1,6 +1,6 @@
 from june.demography.person import Person
 from june.groups.leisure import HouseholdVisitsDistributor
-from june.demography.geography import Geography
+from june.geography import Geography
 import numpy as np
 from pytest import fixture
 from june import World

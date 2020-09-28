@@ -1,6 +1,6 @@
 import pytest
 
-from june import commute as c
+from june.groups.travel import mode_of_transport as c
 from june import paths
 
 test_data_filename = paths.data_path / "census_data/commute.csv"
@@ -26,7 +26,7 @@ class TestModeOfTransport:
 
     def test__load_from_file__uses_correct_values_from_configs(self):
         modes_of_transport = c.ModeOfTransport.load_from_file()
-        assert len(modes_of_transport) == 12
+        assert len(modes_of_transport) == 11 # used to be 12 with unemployment
         assert "Work mainly at or from home" in modes_of_transport
         assert c.ModeOfTransport.load_from_file()[0] is modes_of_transport[0]
 
@@ -50,7 +50,7 @@ class TestRegionalGenerator:
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.total == 2
@@ -62,7 +62,7 @@ class TestRegionalGenerator:
         ]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.total == 7
@@ -71,7 +71,7 @@ class TestRegionalGenerator:
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.modes == ["car"]
@@ -83,7 +83,7 @@ class TestRegionalGenerator:
         ]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.modes == ["car", "bus", "magic_carpet"]
@@ -92,10 +92,10 @@ class TestRegionalGenerator:
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
-        assert regional_gen.weights == [1]
+        assert (regional_gen.weights == [1]).all()
 
         weighted_modes = [
             (2, c.ModeOfTransport("car")),
@@ -104,16 +104,16 @@ class TestRegionalGenerator:
         ]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
-        assert regional_gen.weights == [2 / 7, 4 / 7, 1 / 7]
+        assert (regional_gen.weights == [2 / 7, 4 / 7, 1 / 7]).all()
 
     def test__weighted_choice__chooses_random_value_from_the_modes(self):
         weighted_modes = [(2, c.ModeOfTransport("car"))]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.weighted_random_choice() == "car"
@@ -125,7 +125,7 @@ class TestRegionalGenerator:
         ]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.weighted_random_choice() == "car" or "bus" or "magic_carpet"
@@ -138,7 +138,7 @@ class TestRegionalGenerator:
         ]
 
         regional_gen = c.RegionalGenerator(
-            msoarea="test_area", weighted_modes=weighted_modes
+            area="test_area", weighted_modes=weighted_modes
         )
 
         assert regional_gen.weighted_random_choice() == "bus"

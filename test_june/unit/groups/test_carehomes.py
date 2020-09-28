@@ -2,7 +2,7 @@ import os
 import yaml
 import pytest
 from june import paths
-from june.demography.geography import Geography, Area
+from june.geography import Geography, Area
 from june.demography import Person
 from june.groups.carehome import CareHome, CareHomes
 

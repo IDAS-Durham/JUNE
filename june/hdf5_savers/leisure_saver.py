@@ -43,18 +43,31 @@ def save_social_venues_to_hdf5(social_venues_list: List[SocialVenues], file_path
             social_venues_dset.create_dataset("super_area", data=super_areas)
 
 
-def load_social_venues_from_hdf5(file_path: str):
+def load_social_venues_from_hdf5(file_path: str, domain_super_areas=None):
     social_venues_dict = {}
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         for spec in f["social_venues"]:
             data = f["social_venues"][spec]
             social_venues = []
             n = data.attrs["n"]
+            if n == 0:
+                social_venues_dict[spec] = None
+                continue
             ids = np.empty(n, dtype=int)
             data["id"].read_direct(ids, np.s_[0:n], np.s_[0:n])
             coordinates = np.empty((n, 2), dtype=float)
             data["coordinates"].read_direct(coordinates, np.s_[0:n], np.s_[0:n])
+            super_areas = np.empty(n, dtype=int)
+            data["super_area"].read_direct(super_areas, np.s_[0:n], np.s_[0:n])
             for k in range(n):
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
                 social_venue = spec_to_group_dict[spec]()
                 social_venue.id = ids[k]
                 social_venue.coordinates = coordinates[k]
@@ -64,25 +77,33 @@ def load_social_venues_from_hdf5(file_path: str):
 
 
 def restore_social_venues_properties_from_hdf5(
-    world: World, file_path: str
+    world: World, file_path: str, domain_super_areas=None
 ):
-    first_super_area_id = world.super_areas[0].id
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         for spec in f["social_venues"]:
-            social_venues = getattr(world, spec)
-            first_social_venue_id = social_venues[0].id
             data = f["social_venues"][spec]
             n = data.attrs["n"]
+            if n == 0:
+                continue
+            social_venues = getattr(world, spec)
             ids = np.empty(n, dtype=int)
             data["id"].read_direct(ids, np.s_[0:n], np.s_[0:n])
             super_areas = np.empty(n, dtype=int)
             data["super_area"].read_direct(super_areas, np.s_[0:n], np.s_[0:n])
             for k in range(n):
-                social_venue = social_venues[ids[k] - first_social_venue_id]
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
+                social_venue = social_venues.get_from_id(ids[k])
                 super_area = super_areas[k]
                 if super_area == nan_integer:
                     super_area = None
                 else:
-                    super_area = world.super_areas[super_area - first_super_area_id]
+                    super_area = world.super_areas.get_from_id(super_area)
                 social_venue.super_area = super_area
 

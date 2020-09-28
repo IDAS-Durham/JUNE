@@ -6,7 +6,7 @@ import yaml
 from typing import List, Optional
 
 from june import paths
-from june.demography.geography import SuperAreas, SuperArea
+from june.geography import SuperAreas, SuperArea
 from june.groups import Hospitals
 
 logger = logging.getLogger(__name__)
@@ -100,8 +100,10 @@ class HospitalDistributor:
         super_areas:
             object containing all the super areas to distribute medics
         """
+        logger.info(f"Distributing medics to hospitals")
         for super_area in super_areas:
             self.distribute_medics_to_hospitals(super_area)
+        logger.info(f"Medics distributed to hospitals")
 
     def get_hospitals_in_super_area(self, super_area: SuperArea) -> List["Hospital"]:
         """
@@ -156,3 +158,9 @@ class HospitalDistributor:
                     medic = medics.pop()
                     hospital.add(medic, hospital.SubgroupType.workers)
                     medic.lockdown_status = "key_worker"
+
+    def assign_closest_hospitals_to_super_areas(self, super_areas):
+        for super_area in super_areas:
+            super_area.closest_hospitals = self.hospitals.get_closest_hospitals(
+                super_area.coordinates, self.hospitals.neighbour_hospitals
+            )
