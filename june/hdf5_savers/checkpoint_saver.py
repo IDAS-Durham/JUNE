@@ -52,7 +52,7 @@ def save_checkpoint_to_hdf5(
     for person in population.infected:
         infected_people_ids.append(person.id)
         infection_list.append(person.infection)
-    with h5py.File(hdf5_file_path, "a") as f:
+    with h5py.File(hdf5_file_path, "w") as f:
         f.create_group("time")
         f["time"].attrs["date"] = date
         f.create_group("people_data")
@@ -70,9 +70,10 @@ def save_checkpoint_to_hdf5(
                 dataset_name=name,
                 data=np.array(data, dtype=np.int),
             )
-    save_infections_to_hdf5(
-        hdf5_file_path=hdf5_file_path, infections=infection_list, chunk_size=chunk_size
-    )
+    if infection_list:
+        save_infections_to_hdf5(
+            hdf5_file_path=hdf5_file_path, infections=infection_list, chunk_size=chunk_size
+        )
 
 
 def load_checkpoint_from_hdf5(hdf5_file_path: str, chunk_size=50000, load_date=True):

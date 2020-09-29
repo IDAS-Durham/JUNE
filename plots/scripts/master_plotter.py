@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from june.hdf5_savers import generate_world_from_hdf5
 from policy import PolicyPlots
+from leisure import LeisurePlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -34,6 +35,33 @@ class Plotter:
         world = generate_world_from_hdf5(world_filename)
 
         return Plotter(world)
+
+    def plot_leisure(
+            self,
+            save_dir: str = '../plots/leisure/'
+    ):
+        "Make all leisure plots"
+
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+
+        print ("Setting up leisure plots")
+
+        leisure_plots = LeisurePlots(self.world)
+
+        print ("Running poisson process")
+        leisure_plots.run_poisson_process()
+
+        print ("Plotting week probabilities")
+        week_probabilities_plot = leisure_plots.plot_week_probabilities()
+        week_probabilities_plot.plot()
+        plt.savefig(save_dir + 'week_probabilities.png', dpi=150, bbox_inches='tight')
+        
+        plt.clf()
+        print ("Plotting leisure time spent")
+        leisure_time_spent_plot = leisure_plots.plot_leisure_time_spent()
+        leisure_time_spent_plot.plot()
+        plt.savefig(save_dir + 'leisure_time_spent.png', dpi=150, bbox_inches='tight')
         
     def plot_policies(
             self,
@@ -51,9 +79,6 @@ class Plotter:
         print ("Plotting restaurant reopening")
         restaurant_reopening_plot = policy_plots.plot_restaurant_reopening()
         restaurant_reopening_plot.plot()
-        plt.xticks(rotation=45)
-        plt.ylabel('% pupils attending')
-        plt.xlabel('Date')
         plt.savefig(save_dir + 'restaurant_reopening.png', dpi=150, bbox_inches='tight')
 
         print ("Plotting school reopening")
@@ -61,12 +86,18 @@ class Plotter:
         school_reopening_plot.plot()
         plt.savefig(save_dir + 'school_reopening.png', dpi=150, bbox_inches='tight')
 
+        print ("Plotting beta fraction")
+        beta_fraction_plot = policy_plots.plot_beta_fraction()
+        beta_fraction_plot.plot()
+        plt.savefig(save_dir + 'beta_fraction.png', dpi=150, bbox_inches='tight')
+
         print ("All policy plots finished")
     
     def plot_all(self):
 
         print ("Plotting the world")
-        
+
+        self.plot_leisure()
         self.plot_policies()
 
 
