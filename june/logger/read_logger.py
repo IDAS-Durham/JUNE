@@ -32,7 +32,6 @@ class ReadLogger:
         self.output_path = Path(output_path)
         self.root_output_file = root_output_file
         self.n_processes = n_processes
-        #self.load_infection_location()
         self.load_population_data()
         self.load_infected_data()
 
@@ -93,8 +92,6 @@ class ReadLogger:
         for i,x in enumerate(self.symptom_lists):
             self.symptoms[i] = np.concatenate(x)
             self.symptom_lists[i] = 0
-        #self.ids = [np.concatenate(x) ]
-        #self.symptoms = [np.concatenate(x) ]
 
         self.infections_df = pd.DataFrame(
             {
