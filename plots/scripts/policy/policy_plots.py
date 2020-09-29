@@ -58,8 +58,8 @@ class PolicyPlots:
             fit_change.append(zero)
 
         f, ax = plt.subplots()
-        ax.plot(dates, change)
-        ax.plot(dates[137:-1], fit_change, label='Simualted change', color='maroon')
+        ax.plot(dates, change, label='OpenTable')
+        ax.plot(dates[137:-1], fit_change, label='JUNE')
         ax.vlines(datetime(2020,3,16).date(),-110,230, linestyles='--', color='orange', label = '16th March')
         ax.vlines(datetime(2020,3,23).date(),-110,230, linestyles='--', color='red', label = '23rd March')
         ax.vlines(datetime(2020,7,4).date(),-110,230, linestyles='--',  color='green', label = '4th July')
@@ -132,8 +132,8 @@ class PolicyPlots:
         dfe_per *= 100
 
         f, ax = plt.subplots(figsize=(5,3))
-        ax.plot(dates, per_in_school, label='JUNE')
         ax.plot(dfe_dates, dfe_per, label='DfE statistics')
+        ax.plot(dates, per_in_school, label='JUNE')
         ax.vlines(datetime(2020,6,1),1,19,linestyle='--',color='green', label='Early years +\nY6 opening')
         ax.vlines(datetime(2020,6,15),1,19,linestyle='--',color='orange', label='Y10+Y12\noffered support')
         ax.vlines(datetime(2020,7,16),1,19,linestyle='--',color='red', label='Summer holidays')
