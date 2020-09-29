@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from june.hdf5_savers import generate_world_from_hdf5
 from policy import PolicyPlots
 from leisure import LeisurePlots
+from companies import CompanyPlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -38,7 +39,7 @@ class Plotter:
 
     def plot_companies(
             self,
-            save_dir: str = '../plots/companies'
+            save_dir: str = '../plots/companies/'
     ):
         "Make all company plots"
 
