@@ -135,7 +135,7 @@ class CompanyPlots:
 
         return ax
 
-    def plot_work_travel(self):
+    def plot_work_distance_travel(self):
         "Plotting distance travelled to work by sex"
 
         residence_super_areas_male = []
