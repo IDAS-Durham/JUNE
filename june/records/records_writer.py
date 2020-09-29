@@ -147,7 +147,7 @@ class Record:
     def summarise_susceptibles(self, world="World"):
         current_susceptible = {}
         for region in world.regions:
-            current_susceptible[region] = len(
+            current_susceptible[region.name] = len(
                 [person for person in region.people if person.susceptible]
             )
         return current_susceptible

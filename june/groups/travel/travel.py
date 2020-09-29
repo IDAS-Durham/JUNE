@@ -191,7 +191,7 @@ class Travel:
                     np.ceil(n_commute_internal / people_per_city_transport)
                 )
                 for _ in range(number_city_transports):
-                    city_transport = CityTransport()
+                    city_transport = CityTransport(city=city)
                     city.city_transports.append(city_transport)
                     world.city_transports.add(city_transport)
                 for station in city.stations:
@@ -201,7 +201,7 @@ class Travel:
                         )
                     )
                     for _ in range(number_inter_city_transports):
-                        inter_city_transport = InterCityTransport()
+                        inter_city_transport = InterCityTransport(station=station)
                         station.inter_city_transports.append(inter_city_transport)
                         world.inter_city_transports.add(inter_city_transport)
         logger.info(f"Cities' transport initialised")

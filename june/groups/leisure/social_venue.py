@@ -25,12 +25,15 @@ class SocialVenue(Group):
 
     def __init__(self):
         super().__init__()
-        self.super_area = None
+        self.area = None
 
     def add(self, person, activity="leisure"):
         self.subgroups[0].append(person)
         setattr(person.subgroups, activity, self.subgroups[0])
 
+    @property
+    def super_area(self):
+        return self.area.super_area
 
 class SocialVenues(Supergroup):
     social_venue_class = SocialVenue
@@ -70,7 +73,8 @@ class SocialVenues(Supergroup):
             else:
                 super_area = None
             sv.coordinates = coord
-            sv.super_area = super_area
+            area = Areas(super_area.areas).get_closest_area(coordinates=coord)
+            sv.area = area 
             social_venues.append(sv)
         return cls(social_venues, **kwargs)
 

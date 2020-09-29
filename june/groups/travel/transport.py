@@ -30,6 +30,17 @@ class CityTransport(Transport):
     """
     Inner city transport
     """
+    def __init__(self, city):
+        super().__init__()
+        self.city = city
+
+    @property
+    def area(self):
+        return self.city.super_area.areas[0]
+
+    @property 
+    def coordinates(self):
+        return self.area.coordinates
 
 
 class CityTransports(Transports):
@@ -42,6 +53,18 @@ class InterCityTransport(Transport):
     """
     Transport between cities.
     """
+    def __init__(self, station):
+        super().__init__()
+        self.station = station
+
+    @property
+    def area(self):
+        return self.station.super_area.areas[0]
+
+    @property
+    def coordinates(self):
+        return self.area.coordinates
+
 
 
 class InterCityTransports(Transports):
