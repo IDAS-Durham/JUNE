@@ -24,8 +24,6 @@ from june.time import Timer
 from june.world import World
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 
-# from june.hdf5_savers import save_checkpoint_to_hdf5
-
 default_config_filename = paths.configs_path / "config_example.yaml"
 
 output_logger = logging.getLogger(__name__)
@@ -346,7 +344,7 @@ class Simulator:
                 if self.record is not None:
                     self.record.accumulate(
                         table_name="infections",
-                        location_spec="".join(inf_loc.split("_")[:-1]),
+                        location_spec="_".join(inf_loc.split("_")[:-1]),
                         location_id=int(inf_loc.split("_")[-1]),
                         infected_id=person.id,
                     )
@@ -542,7 +540,7 @@ class Simulator:
         Run simulation with n_seed initial infections
         """
         output_logger.info(
-            f"Starting simulation for {self.timer.total_days} days at day {self.timer.day}, to run for {self.timer.total_days} days"
+            f"Starting simulation for {self.timer.total_days} days at day {self.timer.date}, to run for {self.timer.total_days} days"
         )
         self.clear_world()
 
@@ -577,7 +575,9 @@ class Simulator:
         if mpi_size == 1:
             save_path = self.checkpoint_path / f"checkpoint_{saving_date}.hdf5"
         else:
-            save_path = self.checkpoint_path / f"checkpoint_{saving_date}.{mpi_rank}.hdf5"
+            save_path = (
+                self.checkpoint_path / f"checkpoint_{saving_date}.{mpi_rank}.hdf5"
+            )
         save_checkpoint_to_hdf5(
             population=self.world.people,
             date=str(saving_date),

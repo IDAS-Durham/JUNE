@@ -22,6 +22,7 @@ from june.groups.commute import *
 from june.logger import Logger
 from june.logger.read_logger import ReadLogger
 from june.domain import Domain, generate_super_areas_to_domain_dict
+from june.mpi_setup import mpi_comm, mpi_rank, mpi_size
 
 
 def set_random_seed(seed=999):
@@ -117,6 +118,7 @@ def generate_simulator():
             daily_super_area_cases=daily_cases_per_super_area,
             seed_strength=0.66,
             )
+
     # interaction
     interaction = Interaction.from_file()
     
