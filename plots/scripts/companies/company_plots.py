@@ -56,8 +56,8 @@ class CompanyPlots:
             bin_widths.append(size_brackets[i+1]-size_brackets[i])
 
         f, ax = plt.subplots()
-        ax.bar(size_brackets[:-1], JUNE_company_sizes_binned, width=bin_widths, align='edge', alpha=0.7, label='JUNE sizes')
         ax.bar(size_brackets[:-1], world_company_sizes_binned, width=bin_widths, align='edge', alpha=0.7, label='NOMIS sizes')
+        ax.bar(size_brackets[:-1], JUNE_company_sizes_binned, width=bin_widths, align='edge', alpha=0.7, label='JUNE sizes')
         ax.set_xlim((-5,np.max(size_brackets)))
         ax.set_yscale('log')
         ax.set_ylabel('Frequency')
@@ -91,8 +91,8 @@ class CompanyPlots:
             bin_widths.append(size_brackets[i+1]-size_brackets[i])
 
         f, ax = plt.subplots()
-        ax.bar(size_brackets[:-1], JUNE_company_workers_binned, width=bin_widths, align='edge', alpha=0.7, label='JUNE workers')
         ax.bar(size_brackets[:-1], world_company_sizes_binned, width=bin_widths, align='edge', alpha=0.7, label='NOMIS sizes')
+        ax.bar(size_brackets[:-1], JUNE_company_workers_binned, width=bin_widths, align='edge', alpha=0.7, label='JUNE workers')
         ax.set_xlim((-5,np.max(size_brackets)))
         ax.set_yscale('log')
         ax.set_ylabel('Frequency')
@@ -131,8 +131,8 @@ class CompanyPlots:
         x = np.arange(len(sector_brackets))
 
         f, ax = plt.subplots()
-        ax.bar(x, JUNE_company_sectors_binned, align='center', alpha=0.7, label='JUNE')
         ax.bar(x, world_company_sectors_binned, align='center', alpha=0.7, label='NOMIS')
+        ax.bar(x, JUNE_company_sectors_binned, align='center', alpha=0.7, label='JUNE')
         ax.set_ylabel('Frequency')
         ax.set_xlabel('Company sector')
         ax.set_xticks(x)
@@ -168,8 +168,8 @@ class CompanyPlots:
         work_travel_female_binned, work_travel_female_bins = np.histogram(work_travel_female, bins=100)
 
         f, ax = plt.subplots()
-        ax.scatter(work_travel_male_bins[1:], work_travel_male_binned, label='Male')
-        ax.scatter(work_travel_female_bins[1:], work_travel_female_binned, label='Female')
+        ax.scatter(work_travel_male_bins[1:], work_travel_male_binned, label='Male',s=10)
+        ax.scatter(work_travel_female_bins[1:], work_travel_female_binned, label='Female',s=10)
         ax.set_xlabel('Distance to work (km)')
         ax.set_ylabel('Frequency')
         ax.set_yscale('log')
