@@ -235,22 +235,6 @@ class ReadLogger:
             flat_hospitalised_df.index
         ).size()
         df["daily_icu_admissions"] = df["daily_icu_admissions"].fillna(0.0)
-        """
-        symptoms_df = symptoms_df.loc[df["current_hospitalised"] > 0]
-        for ts, row in symptoms_df.iterrows():
-            mask = row["symptoms"] == SymptomTag.hospitalised
-            for col, data in row.iteritems():
-                if col in ("symptoms", "infected_id"):
-                    symptoms_df.loc[ts, col] = data[mask]
-        flat_df = symptoms_df[["symptoms", "infected_id"]].apply(lambda x: x.explode())
-        unique, unique_indices = np.unique(
-            flat_df["infected_id"].values, return_index=True
-        )  # will only return the first index of each.
-        flat_hospitalised_df = flat_df.iloc[unique_indices]
-        df["daily_hospital_admissions"] = flat_hospitalised_df.groupby(
-            flat_hospitalised_df.index
-        ).size()
-        df["daily_hospital_admissions"] = df["daily_hospital_admissions"].fillna(0.0)"""
 
         return df
 
