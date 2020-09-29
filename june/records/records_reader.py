@@ -35,6 +35,9 @@ class RecordReader:
         with tables.open_file(self.results_path / "june_records.hdf5", mode="r") as f:
             table = getattr(f.root, table_name)
             df = pd.DataFrame.from_records(table.read(), index=index)
+        str_df = df.select_dtypes([np.object])
+        for col in str_df:
+            df[col] = str_df[col].str.decode('utf-8')
         return df
 
     def get_geography_df(self,):
@@ -67,6 +70,6 @@ class RecordReader:
             )
             if with_geography:
                 geography_df = self.get_geography_df()
-                df.merge(geography_df, left_on='area_id', right_index=True)
+                df = df.merge(geography_df, left_on='area_id', right_index=True)
         return df 
 
