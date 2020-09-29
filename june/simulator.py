@@ -25,8 +25,6 @@ from june.world import World
 from june.logger import Logger
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 
-# from june.hdf5_savers import save_checkpoint_to_hdf5
-
 default_config_filename = paths.configs_path / "config_example.yaml"
 
 output_logger = logging.getLogger(__name__)
@@ -330,8 +328,7 @@ class Simulator:
                 person = self.world.people.get_from_id(inf_id)
                 if self.logger is not None:
                     self.logger.accumulate_infection_location(
-                        location=inf_loc,
-                        new_infected_ids=[person.id]
+                        location=inf_loc, new_infected_ids=[person.id]
                     )
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
             else:
@@ -395,8 +392,7 @@ class Simulator:
             person = self.world.people.get_from_id(infection_data[0])
             if self.logger is not None:
                 self.logger.accumulate_infection_location(
-                    location=infection_data[1],
-                    new_infected_ids=[person.id],
+                    location=infection_data[1], new_infected_ids=[person.id],
                 )
             self.infection_selector.infect_person_at_time(person, self.timer.now)
 
@@ -521,7 +517,7 @@ class Simulator:
         Run simulation with n_seed initial infections
         """
         output_logger.info(
-            f"Starting simulation for {self.timer.total_days} days at day {self.timer.day}, to run for {self.timer.total_days} days"
+            f"Starting simulation for {self.timer.total_days} days at day {self.timer.date}, to run for {self.timer.total_days} days"
         )
         self.clear_world()
         if self.logger:
@@ -567,7 +563,9 @@ class Simulator:
         if mpi_size == 1:
             save_path = self.checkpoint_path / f"checkpoint_{saving_date}.hdf5"
         else:
-            save_path = self.checkpoint_path / f"checkpoint_{saving_date}.{mpi_rank}.hdf5"
+            save_path = (
+                self.checkpoint_path / f"checkpoint_{saving_date}.{mpi_rank}.hdf5"
+            )
         save_checkpoint_to_hdf5(
             population=self.world.people,
             date=str(saving_date),
