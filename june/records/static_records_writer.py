@@ -64,6 +64,7 @@ class PeopleRecord(StaticRecord):
                 "socioeconomic_index",
                 "primary_activity_id",
                 "residence_id",
+                "area_id"
             ],
             float_names=[],
             str_names=["sex", "ethnicity", "primary_activity_type", "residence_type",],
@@ -79,9 +80,10 @@ class PeopleRecord(StaticRecord):
             primary_activity_id,
             residence_type,
             residence_id,
+            area_id,
             sex,
             ethnicity,
-        ) = ([], [], [], [], [], [], [], [], [])
+        ) = ([], [], [], [], [], [], [], [], [], [])
         for person in world.people:
             ids.append(person.id)
             age.append(person.age)
@@ -102,9 +104,10 @@ class PeopleRecord(StaticRecord):
             residence_id.append(
                 person.residence.group.id if person.residence is not None else 0
             )
+            area_id.append(person.area.id)
             sex.append(person.sex)
             ethnicity.append(person.ethnicity)
-        int_data = [ids, age, socioeconomic_index, primary_activity_id, residence_id]
+        int_data = [ids, age, socioeconomic_index, primary_activity_id, residence_id, area_id]
         float_data = []
         str_data = []
         str_data = [sex, ethnicity, primary_activity_type, residence_type]
@@ -133,14 +136,15 @@ class LocationRecord(StaticRecord):
         )
         counter = 0
         for attribute, value in world.__dict__.items():
-            if isinstance(value, Supergroup) and attribute != "cities":
+            if isinstance(value, Supergroup) and attribute not in ("cities", "cemeteries", "stations"):
+                print(f'Storing {attribute}')
                 for group in getattr(world, attribute):
                     ids.append(counter)
-                    latitude.append(group.coordinates[0])
-                    longitude.append(group.coordinates[1])
                     group_spec.append(group.spec)
                     group_id.append(group.id)
                     area_id.append(group.area.id)
+                    latitude.append(group.coordinates[0])
+                    longitude.append(group.coordinates[1])
                     counter += 1
         int_data = [ids, group_id, area_id]
         float_data = [latitude, longitude]

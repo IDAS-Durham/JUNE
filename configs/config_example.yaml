@@ -8,7 +8,7 @@ activity_to_super_groups:
   commute: ['city_transports', 'inter_city_transports']
 
 time:
-  total_days: 10
+  total_days: 200
   initial_day: "2020-03-01" 
   step_duration: 
       weekday:
