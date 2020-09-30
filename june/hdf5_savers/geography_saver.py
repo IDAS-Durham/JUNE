@@ -3,7 +3,7 @@ import numpy as np
 from collections import defaultdict
 
 from june.groups import ExternalGroup, ExternalSubgroup
-from june.geography import Geography, Area, SuperArea, Areas, SuperAreas
+from june.geography import Geography, Area, SuperArea, Areas, SuperAreas, Region, Regions
 from .utils import read_dataset
 from june.world import World
 
@@ -51,6 +51,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     super_area_ids = []
     super_area_names = []
     super_area_coordinates = []
+    super_area_regions = []
     closest_hospitals_ids = []
     closest_hospitals_super_areas = []
     hospital_lengths = []
@@ -61,6 +62,9 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     super_area_closest_stations_cities = []
     super_area_closest_stations_stations = []
     super_area_closest_stations_lengths = []
+    n_regions = len(geography.regions)
+    region_ids = []
+    region_names = []
 
     for area in geography.areas:
         area_ids.append(area.id)
@@ -85,6 +89,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     for super_area in geography.super_areas:
         super_area_ids.append(super_area.id)
         super_area_names.append(super_area.name.encode("ascii", "ignore"))
+        super_area_regions.append(super_area.region.id)
         super_area_coordinates.append(np.array(super_area.coordinates))
         if super_area.closest_hospitals is None:
             closest_hospitals_ids.append(np.array([nan_integer], dtype=np.int))
@@ -105,6 +110,10 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
             super_area_city.append(nan_integer)
         else:
             super_area_city.append(super_area.city.id)
+
+        for region in geography.regions:
+            region_ids.append(region.id)
+            region_names.append(region.name)
         cities = []
         stations = []
         for key, value in super_area.closest_station_for_city.items():
@@ -123,6 +132,9 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     super_area_ids = np.array(super_area_ids, dtype=np.int)
     super_area_names = np.array(super_area_names, dtype="S20")
     super_area_coordinates = np.array(super_area_coordinates, dtype=np.float)
+    super_area_regions = np.array(super_area_regions, dtype=np.int)
+    region_ids = np.array(region_ids, dtype=np.int)
+    region_names = np.array(region_names, dtype='S20')
     if len(np.unique(hospital_lengths)) == 1:
         closest_hospitals_ids = np.array(closest_hospitals_ids, dtype=np.int)
         closest_hospitals_super_areas = np.array(
@@ -153,12 +165,14 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         geography_dset = f.create_group("geography")
         geography_dset.attrs["n_areas"] = n_areas
         geography_dset.attrs["n_super_areas"] = n_super_areas
+        geography_dset.attrs["n_regions"] = n_regions 
         geography_dset.create_dataset("area_id", data=area_ids)
         geography_dset.create_dataset("area_name", data=area_names)
         geography_dset.create_dataset("area_super_area", data=area_super_areas)
         geography_dset.create_dataset("area_coordinates", data=area_coordinates)
         geography_dset.create_dataset("super_area_id", data=super_area_ids)
         geography_dset.create_dataset("super_area_name", data=super_area_names)
+        geography_dset.create_dataset("super_area_region", data=super_area_regions)
         geography_dset.create_dataset("super_area_city", data=super_area_city)
         geography_dset.create_dataset(
             "super_area_closest_stations_cities",
@@ -177,6 +191,8 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         geography_dset.create_dataset(
             "closest_hospitals_super_areas", data=closest_hospitals_super_areas
         )
+        geography_dset.create_dataset("region_id", data=region_ids)
+        geography_dset.create_dataset("region_name", data=region_names)
         if social_venues_specs and social_venues_ids:
             geography_dset.create_dataset(
                 "social_venues_specs", data=social_venues_specs_list,
@@ -201,6 +217,7 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
         n_areas = geography.attrs["n_areas"]
         area_list = []
         n_super_areas = geography.attrs["n_super_areas"]
+        n_regions = geography.attrs["n_regions"]
         # areas
         n_chunks = int(np.ceil(n_areas / chunk_size))
         for chunk in range(n_chunks):
@@ -229,6 +246,7 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
                 area_list.append(area)
         # super areas
         super_area_list = []
+        domain_regions = set()
         n_chunks = int(np.ceil(n_super_areas / chunk_size))
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
@@ -236,6 +254,7 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
             length = idx2 - idx1
             super_area_ids = read_dataset(geography["super_area_id"], idx1, idx2)
             super_area_names = read_dataset(geography["super_area_name"], idx1, idx2)
+            super_area_regions = read_dataset(geography["super_area_region"], idx1, idx2)
             super_area_coordinates = read_dataset(
                 geography["super_area_coordinates"], idx1, idx2
             )
@@ -255,9 +274,36 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
                 )
                 super_area.id = super_area_ids[k]
                 super_area_list.append(super_area)
+                domain_regions.add(super_area_regions[k])
+        # regions
+        region_list = []
+        n_chunks = int(np.ceil(n_regions / chunk_size))
+        for chunk in range(n_chunks):
+            idx1 = chunk * chunk_size
+            idx2 = min((chunk + 1) * chunk_size, n_regions)
+            length = idx2 - idx1
+            region_ids = read_dataset(geography["region_id"], idx1, idx2)
+            region_names = read_dataset(geography["region_name"], idx1, idx2)
+            for k in range(idx2 - idx1):
+                if domain_super_areas is not None:
+                    region_id = region_ids[k]
+                    if region_id == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones regions."
+                        )
+                    if region_id not in domain_regions:
+                        continue
+                region = Region(
+                    name=region_names[k].decode(),
+                    super_areas=None,
+                )
+                region.id = region_ids[k]
+                region_list.append(region)
+
     areas = Areas(area_list)
     super_areas = SuperAreas(super_area_list)
-    return Geography(areas, super_areas)
+    regions = Regions(region_list)
+    return Geography(areas, super_areas, regions)
 
 
 def restore_geography_properties_from_hdf5(
@@ -292,6 +338,7 @@ def restore_geography_properties_from_hdf5(
                 social_venues_ids = read_dataset(
                     geography["social_venues_ids"], idx1, idx2
                 )
+                #TODO:
                 social_venues_super_areas = read_dataset(
                     geography["social_venues_super_areas"], idx1, idx2
                 )
@@ -304,8 +351,9 @@ def restore_geography_properties_from_hdf5(
                         )
                     if super_area_id not in domain_super_areas:
                         continue
+                super_area = world.super_areas.get_from_id(super_areas[k])
                 area = world.areas.get_from_id(areas_ids[k])
-                area.super_area = world.super_areas.get_from_id(super_areas[k])
+                area.super_area = super_area
                 area.super_area.areas.append(area)
                 # social venues
                 area.social_venues = defaultdict(tuple)
@@ -340,4 +388,25 @@ def restore_geography_properties_from_hdf5(
                             *area.social_venues[spec],
                             group,
                         )
-
+        n_super_areas = geography.attrs["n_super_areas"]
+        n_chunks = int(np.ceil(n_super_areas / chunk_size))
+        # areas
+        for chunk in range(n_chunks):
+            idx1 = chunk * chunk_size
+            idx2 = min((chunk + 1) * chunk_size, n_super_areas)
+            length = idx2 - idx1
+            super_area_ids = read_dataset(geography["super_area_id"], index1=idx1, index2=idx2)
+            regions = read_dataset(geography["super_area_region"], index1=idx1, index2=idx2)
+            for k in range(length):
+                if domain_super_areas is not None:
+                    super_area_id = super_area_ids[k]
+                    if super_area_id == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area_id not in domain_super_areas:
+                        continue
+                super_area = world.super_areas.get_from_id(super_area_ids[k])
+                region = world.regions.get_from_id(regions[k])
+                super_area.region = region
+                region.super_areas.append(super_area)

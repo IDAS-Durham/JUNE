@@ -150,7 +150,7 @@ def load_cities_from_hdf5(
                 )
                 city.id = ids[k]
                 for city_transport_id in city_transport_ids:
-                    city_transport = CityTransport()
+                    city_transport = CityTransport(city=city)
                     city_transport.id = city_transport_id
                     city_transports_city.append(city_transport)
             else:
@@ -250,7 +250,7 @@ def load_stations_from_hdf5(
                 station = Station(city=cities[k].decode())
                 station.id = ids[k]
                 for transport_id in transport_ids[k]:
-                    inter_city_transport = InterCityTransport()
+                    inter_city_transport = InterCityTransport(station=station)
                     inter_city_transport.id = transport_id
                     inter_city_transports_station.append(inter_city_transport)
             else:

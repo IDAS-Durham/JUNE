@@ -315,10 +315,17 @@ class Region:
 
 
 class Regions:
-    __slots__ = "members"
+    __slots__ = "members_by_id", "members_by_name"
 
     def __init__(self, regions: List[Region]):
-        self.members = regions
+        self.members_by_id = {region.id: region for region in regions}
+        try:
+            self.members_by_name = {
+                region.name: region for region in regions 
+            }
+        except AttributeError:
+            self.members_by_name = None
+
 
     def __iter__(self):
         return iter(self.members)
@@ -328,6 +335,15 @@ class Regions:
 
     def __getitem__(self, index):
         return self.members[index]
+
+    def get_from_id(self, id):
+        return self.members_by_id[id]
+
+    @property
+    def members(self):
+        return list(self.members_by_id.values())
+
+
 
 
 class Geography:

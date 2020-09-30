@@ -67,7 +67,7 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     # empty file
     with h5py.File(file_path, "w"):
         pass
-    geo = Geography(world.areas, world.super_areas)
+    geo = Geography(world.areas, world.super_areas, world.regions)
     save_geography_to_hdf5(geo, file_path)
     logger.info("saving population...")
     save_population_to_hdf5(world.people, file_path, chunk_size)
@@ -124,6 +124,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     geography = load_geography_from_hdf5(file_path=file_path, chunk_size=chunk_size)
     world.areas = geography.areas
     world.super_areas = geography.super_areas
+    world.regions = geography.regions
     if "hospitals" in f_keys:
         logger.info("loading hospitals...")
         world.hospitals = load_hospitals_from_hdf5(
@@ -244,6 +245,7 @@ def generate_domain_from_hdf5(
         file_path=file_path, chunk_size=chunk_size, domain_super_areas=super_area_ids
     )
     domain.areas = geography.areas
+    areas_ids = set([area.id for area in domain.areas])
     domain.super_areas = geography.super_areas
 
     # load world data
@@ -252,7 +254,7 @@ def generate_domain_from_hdf5(
         domain.hospitals = load_hospitals_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
-            domain_super_areas=super_area_ids,
+            domain_areas=areas_ids
         )
     if "schools" in f_keys:
         logger.info("loading schools...")
@@ -279,7 +281,7 @@ def generate_domain_from_hdf5(
         domain.universities = load_universities_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
-            domain_super_areas=super_area_ids,
+            domain_areas=areas_ids,
         )
     if "cities" in f_keys:
         logger.info("loading cities...")
@@ -306,7 +308,7 @@ def generate_domain_from_hdf5(
     if "social_venues" in f_keys:
         logger.info("loading social venues...")
         social_venues_dict = load_social_venues_from_hdf5(
-            file_path, domain_super_areas=super_area_ids
+            file_path, domain_areas=area_ids
         )
         for social_venues_spec, social_venues in social_venues_dict.items():
             setattr(domain, social_venues_spec, social_venues)
@@ -350,6 +352,7 @@ def generate_domain_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
+            domain_areas=areas_ids,
             super_areas_to_domain_dict=super_areas_to_domain_dict
         )
     if "companies" in f_keys:
@@ -371,7 +374,7 @@ def generate_domain_from_hdf5(
     if "universities" in f_keys:
         logger.info("restoring unis...")
         restore_universities_properties_from_hdf5(
-            world=domain, file_path=file_path, domain_super_areas=super_area_ids
+            world=domain, file_path=file_path, domain_areas=area_ids
         )
 
     if "cities" and "stations" in f_keys:
@@ -387,7 +390,7 @@ def generate_domain_from_hdf5(
     if "social_venues" in f_keys:
         logger.info("restoring social venues...")
         restore_social_venues_properties_from_hdf5(
-            world=domain, file_path=file_path, domain_super_areas=super_area_ids
+            world=domain, file_path=file_path, domain_areas=area_ids
         )
     domain.cemeteries = Cemeteries()
     return domain
