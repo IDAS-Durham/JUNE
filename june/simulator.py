@@ -43,6 +43,7 @@ class Simulator:
         # comment: str = None, #TODO: what do we do with comment!!
         record: Optional["Record"] = None,
         checkpoint_dates: List[datetime.date] = None,
+        checkpoint_path: str = None,
     ):
         """
         Class to run an epidemic spread simulation on the world.
@@ -59,13 +60,12 @@ class Simulator:
         self.infection_seed = infection_seed
         self.timer = timer
         # self.comment = comment
-        if checkpoint_dates is None:
-            self.checkpoint_dates = ()
-        else:
-            if record is None:
-                raise SimulatorError("Checkpoint requires not None logger for now..")
-            self.checkpoint_path = record.record_path
+        if checkpoint_path is not None:
+            self.checkpoint_path = Path(checkpoint_path)
+            self.checkpoint_path.mkdir(parents=True, exist_ok=True)
             self.checkpoint_dates = checkpoint_dates
+        else:
+            self.checkpoint_dates = ()
         self.record = record
 
     @classmethod
@@ -79,6 +79,7 @@ class Simulator:
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
+        checkpoint_path: str = None,
         # comment: str = None,
         record: Optional["Record"] = None,
     ) -> "Simulator":
@@ -166,6 +167,7 @@ class Simulator:
             # comment=comment,
             record=record,
             checkpoint_dates=checkpoint_dates,
+            checkpoint_path=checkpoint_path
         )
 
     @classmethod

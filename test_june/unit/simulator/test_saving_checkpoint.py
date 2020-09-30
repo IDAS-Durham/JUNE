@@ -94,8 +94,8 @@ def run_simulator(selector):
         infection_selector=selector,
         config_filename=test_config,
         leisure=None,
-        record=Record(record_path="checkpoint_tests"),
         policies=policies,
+        checkpoint_path='checkpoint_tests',
     )
     seed = InfectionSeed(sim.world, selector)
     seed.unleash_virus(sim.world.people, n_cases=50)
@@ -121,7 +121,6 @@ class TestCheckpoints:
             interaction=interaction,
             infection_selector=selector,
             config_filename=test_config,
-            record=Record(),
             leisure=None,
             travel=None,
             policies=policies,
