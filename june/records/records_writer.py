@@ -40,19 +40,24 @@ def combine_summaries(record_path):
 def combine_hdf5s(record_path, table_names=("infections", "population")):
     record_files = record_path.glob("june_record.*.h5")
     with tables.open_file(record_path / "june_record.h5", "w") as merged_record:
-        for record_file in record_files:
+        root = merged_record.root
+        for i, record_file in enumerate(record_files):
             with tables.open_file(str(record_file), "r") as record:
                 datasets = record.root._f_list_nodes()
-                row = 0
                 for dataset in datasets:
                     arr_data = dataset[:]
-                    if row == 0:
+                    if len(arr_data) > 0:
                         all_data = arr_data.copy()
-                        row += arr_data.shape[0]
-                    else:
-                        all_data = np.append(all_data, arr_data, axis=0)
-                        row += arr_data.shape[0]
-                tables.Array(merged_record.root, dataset, obj=all_data)
+                        description = getattr(record.root, dataset.name).description
+                        if i == 0:
+                            merged_record.create_table(
+                                merged_record.root,
+                                dataset.name,
+                                description=description,
+                            )
+                        table = getattr(merged_record.root, dataset.name)
+                        table.append(all_data)
+                        table.flush()
 
 
 def combine_records(record_path):
