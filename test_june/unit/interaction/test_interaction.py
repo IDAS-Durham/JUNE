@@ -16,7 +16,7 @@ import numpy as np
 import os
 import pathlib
 
-test_config = paths.configs_path / "defaults/interaction/ContactInteraction.yaml"
+test_config = paths.configs_path / "defaults/interaction/interaction.yaml"
 
 
 def test__contact_matrices_from_default():
