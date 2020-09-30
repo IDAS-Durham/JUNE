@@ -212,7 +212,7 @@ def restore_hospital_properties_from_hdf5(
                         raise ValueError(
                             "if ``domain_super_areas`` is True, I expect not Nones super_areas."
                         )
-                    if super_area_id not in domain_super_areas_ids:
+                    if super_area_id not in domain_super_areas:
                         continue
                 super_area = world.super_areas.get_from_id(super_areas_ids[k])
                 # load closest hospitals
@@ -222,13 +222,13 @@ def restore_hospital_properties_from_hdf5(
                 ):
                     if (
                         domain_super_areas is None
-                        or super_area_ids[k] in domain_super_areas
+                        or hospital_super_area_id in domain_super_areas
                     ):
                         hospital = world.hospitals.get_from_id(hospital_id)
                     else:
                         hospital = ExternalGroup(
                             domain_id=super_areas_to_domain_dict[
-                               hospital.super_area.id 
+                               hospital_super_area_id 
                             ],
                             spec="hospital",
                             id=hospital_id,

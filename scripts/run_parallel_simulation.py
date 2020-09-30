@@ -19,7 +19,7 @@ from june.infection_seed import InfectionSeed, Observed2Cases
 from june.policy import Policies
 from june import paths
 from june.groups.commute import *
-from june.logger import Logger
+from june.recom import Record
 from june.logger.read_logger import ReadLogger
 from june.domain import Domain, generate_super_areas_to_domain_dict
 from june.mpi_setup import mpi_comm, mpi_rank, mpi_size

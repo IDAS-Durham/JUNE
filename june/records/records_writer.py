@@ -29,15 +29,15 @@ from june import paths
 
 class Record:
     def __init__(
-        self, record_path: str, filename: str, record_static_data=False,
+        self, record_path: str, record_static_data=False, mpi_rank: int=0
     ):
         self.record_path = Path(record_path)
         self.record_path.mkdir(parents=True, exist_ok=True)
+        self.filename = f'june_record.{mpi_rank}.h5'
         try:
-            os.remove(self.record_path / filename)
+            os.remove(self.record_path / self.filename)
         except OSError:
             pass
-        self.filename = filename
         self.file = tables.open_file(self.record_path / self.filename, mode="w")
         self.root = self.file.root
         self.events = {
@@ -49,7 +49,7 @@ class Record:
             "recoveries": RecoveriesRecord(hdf5_file=self.file),
             "symptoms": SymptomsRecord(hdf5_file=self.file),
         }
-        with open(self.record_path / "summary.csv", "w", newline="") as summary_file:
+        with open(self.record_path / f"summary.{mpi_rank}.csv", "w", newline="") as summary_file:
             writer = csv.writer(summary_file)
             fields = ["infected", "recovered", "hospitalised", "intensive_care"]
             header = ["time_stamp", "region"]
@@ -183,3 +183,8 @@ class Record:
                         daily_deaths.get(region, 0),
                     ]
                 )
+    def combine_summaries(self,):
+        pass
+
+    def combine_hdf5(self,):
+        pass
