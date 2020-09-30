@@ -14,7 +14,7 @@ def save_hospitals_to_hdf5(
     """
     Saves the Hospitals object to hdf5 format file ``file_path``. Currently for each person,
     the following values are stored:
-    - id, n_beds, n_icu_beds, super_area, coordinates
+    - id, n_beds, n_icu_beds, area, coordinates
 
     Parameters
     ----------
@@ -37,22 +37,22 @@ def save_hospitals_to_hdf5(
             ids = []
             n_beds = []
             n_icu_beds = []
-            super_areas = []
+            areas = []
             coordinates = []
             trust_code = []
             for hospital in hospitals[idx1:idx2]:
                 ids.append(hospital.id)
-                if hospital.super_area is None:
-                    super_areas.append(nan_integer)
+                if hospital.area is None:
+                    areas.append(nan_integer)
                 else:
-                    super_areas.append(hospital.super_area.id)
+                    areas.append(hospital.area.id)
                 n_beds.append(hospital.n_beds)
                 n_icu_beds.append(hospital.n_icu_beds)
                 coordinates.append(np.array(hospital.coordinates))
                 trust_code.append(hospital.trust_code)
 
             ids = np.array(ids, dtype=np.int)
-            super_areas = np.array(super_areas, dtype=np.int)
+            areas = np.array(areas, dtype=np.int)
             trust_code = np.array(trust_code, dtype="S10")
             n_beds = np.array(n_beds, dtype=np.int)
             n_icu_beds = np.array(n_icu_beds, dtype=np.int)
@@ -61,7 +61,7 @@ def save_hospitals_to_hdf5(
                 hospitals_dset.attrs["n_hospitals"] = n_hospitals
                 hospitals_dset.create_dataset("id", data=ids, maxshape=(None,))
                 hospitals_dset.create_dataset(
-                    "super_area", data=super_areas, maxshape=(None,)
+                    "area", data=areas, maxshape=(None,)
                 )
                 hospitals_dset.create_dataset(
                     "trust_code", data=trust_code, maxshape=(None,)
@@ -79,8 +79,8 @@ def save_hospitals_to_hdf5(
                 newshape = (hospitals_dset["id"].shape[0] + ids.shape[0],)
                 hospitals_dset["id"].resize(newshape)
                 hospitals_dset["id"][idx1:idx2] = ids
-                hospitals_dset["super_area"].resize(newshape)
-                hospitals_dset["super_area"][idx1:idx2] = super_areas
+                hospitals_dset["area"].resize(newshape)
+                hospitals_dset["area"][idx1:idx2] = areas 
                 hospitals_dset["trust_code"].resize(newshape)
                 hospitals_dset["trust_code"][idx1:idx2] = trust_code
                 hospitals_dset["n_beds"].resize(newshape)
@@ -91,7 +91,7 @@ def save_hospitals_to_hdf5(
                 hospitals_dset["coordinates"][idx1:idx2] = coordinates
 
 
-def load_hospitals_from_hdf5(file_path: str, chunk_size=50000, domain_super_areas=None):
+def load_hospitals_from_hdf5(file_path: str, chunk_size=50000, domain_areas=None):
     """
     Loads companies from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -126,18 +126,18 @@ def load_hospitals_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
             hospitals["coordinates"].read_direct(
                 coordinates, np.s_[idx1:idx2], np.s_[0:length]
             )
-            super_areas = np.empty(length, dtype=int)
-            hospitals["super_area"].read_direct(
-                super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            areas = np.empty(length, dtype=int)
+            hospitals["area"].read_direct(
+                areas, np.s_[idx1:idx2], np.s_[0:length]
             )
             for k in range(idx2 - idx1):
-                if domain_super_areas is not None:
-                    super_area = super_areas[k]
-                    if super_area == nan_integer:
+                if domain_areas is not None:
+                    area = areas[k]
+                    if area == nan_integer:
                         raise ValueError(
-                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                            "if ``domain_areas`` is True, I expect not Nones areas."
                         )
-                    if super_area not in domain_super_areas:
+                    if area not in domain_areas:
                         continue
                 trust_code = trust_codes[k]
                 if trust_code.decode() == " ":
@@ -156,7 +156,7 @@ def load_hospitals_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
 
 
 def restore_hospital_properties_from_hdf5(
-    world: World, file_path: str, chunk_size=50000, domain_super_areas=None, super_areas_to_domain_dict:dict = None
+    world: World, file_path: str, chunk_size=50000, domain_super_areas=None, domain_areas = None, super_areas_to_domain_dict:dict = None
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         hospitals = f["hospitals"]
@@ -169,26 +169,26 @@ def restore_hospital_properties_from_hdf5(
             length = idx2 - idx1
             ids = np.empty(length, dtype=int)
             hospitals["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
-            super_areas = np.empty(length, dtype=int)
-            hospitals["super_area"].read_direct(
-                super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            areas = np.empty(length, dtype=int)
+            hospitals["area"].read_direct(
+                areas, np.s_[idx1:idx2], np.s_[0:length]
             )
             for k in range(length):
-                if domain_super_areas is not None:
-                    super_area = super_areas[k]
-                    if super_area == nan_integer:
+                if domain_areas is not None:
+                    area = areas[k]
+                    if area == nan_integer:
                         raise ValueError(
-                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                            "if ``domain_areas`` is True, I expect not Nones areas."
                         )
-                    if super_area not in domain_super_areas:
+                    if area not in domain_areas:
                         continue
                 hospital = world.hospitals.get_from_id(ids[k])
-                super_area = super_areas[k]
-                if super_area == nan_integer:
-                    super_area = None
+                area = areas[k]
+                if area == nan_integer:
+                    area = None
                 else:
-                    super_area = world.super_areas.get_from_id(super_area)
-                hospital.super_area = super_area
+                    area = world.areas.get_from_id(area)
+                hospital.area = area
 
         # super areas
         geography = f["geography"]
@@ -210,9 +210,9 @@ def restore_hospital_properties_from_hdf5(
                     super_area_id = super_areas_ids[k]
                     if super_area_id == nan_integer:
                         raise ValueError(
-                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                            "if ``domain_super_areas`` is True, I expect not Nones super_areas."
                         )
-                    if super_area_id not in domain_super_areas:
+                    if super_area_id not in domain_super_areas_ids:
                         continue
                 super_area = world.super_areas.get_from_id(super_areas_ids[k])
                 # load closest hospitals
@@ -222,13 +222,13 @@ def restore_hospital_properties_from_hdf5(
                 ):
                     if (
                         domain_super_areas is None
-                        or hospital_super_area_id in domain_super_areas
+                        or super_area_ids[k] in domain_super_areas
                     ):
                         hospital = world.hospitals.get_from_id(hospital_id)
                     else:
                         hospital = ExternalGroup(
                             domain_id=super_areas_to_domain_dict[
-                                hospital_super_area_id
+                               hospital.super_area.id 
                             ],
                             spec="hospital",
                             id=hospital_id,
