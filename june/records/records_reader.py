@@ -7,8 +7,8 @@ import tables
 
 class RecordReader:
     def __init__(self, results_path=Path("results")):
-        self.results_path = results_path
-        self.regional_summary = self.get_regional_summary(results_path / "summary.csv")
+        self.results_path = Path(results_path)
+        self.regional_summary = self.get_regional_summary(self.results_path / "summary.csv")
         self.world_summary = self.get_world_summary()
 
     def get_regional_summary(self, summary_path):
@@ -32,7 +32,7 @@ class RecordReader:
         self, table_name: str, index: str = "id", fields: Optional[Tuple] = None
     ) -> pd.DataFrame:
         # TODO: include fields to read only certain columns
-        with tables.open_file(self.results_path / "june_records.hdf5", mode="r") as f:
+        with tables.open_file(self.results_path / "june_record.h5", mode="r") as f:
             table = getattr(f.root, table_name)
             df = pd.DataFrame.from_records(table.read(), index=index)
         str_df = df.select_dtypes([np.object])
