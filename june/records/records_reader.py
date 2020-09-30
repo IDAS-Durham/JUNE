@@ -37,7 +37,7 @@ class RecordReader:
             df = pd.DataFrame.from_records(table.read(), index=index)
         str_df = df.select_dtypes([np.object])
         for col in str_df:
-            df[col] = str_df[col].str.decode('utf-8')
+            df[col] = str_df[col].str.decode("utf-8")
         return df
 
     def get_geography_df(self,):
@@ -60,16 +60,13 @@ class RecordReader:
         )
 
     def get_table_with_extras(
-        self, table_name, index, with_people=True, with_geography=True 
+        self, table_name, index, with_people=True, with_geography=True
     ):
         df = self.table_to_df(table_name, index=index)
         if with_people:
             people_df = self.table_to_df("population", index="id")
-            df = df.merge(
-                people_df, how="inner", left_index=True, right_index=True
-            )
+            df = df.merge(people_df, how="inner", left_index=True, right_index=True)
             if with_geography:
                 geography_df = self.get_geography_df()
-                df = df.merge(geography_df, left_on='area_id', right_index=True)
-        return df 
-
+                df = df.merge(geography_df, left_on="area_id", right_index=True)
+        return df

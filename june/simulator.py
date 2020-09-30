@@ -414,8 +414,8 @@ class Simulator:
             if self.record is not None:
                 self.record.accumulate(
                     table_name="infections",
-                    location_spec="".join(location_data[1].split("_")[:-1]),
-                    location_id=location_data[1].split("_")[-1],
+                    location_spec="".join(infection_data[1].split("_")[:-1]),
+                    location_id=infection_data[1].split("_")[-1],
                     infected_id=person.id,
                 )
 

@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 
 from june.world import World
-from june.groups import Hospital, Hospitals, ExternalGroup
+from june.groups import Hospital, Hospitals, ExternalHospital
 from .utils import read_dataset
 
 nan_integer = -999
@@ -91,7 +91,7 @@ def save_hospitals_to_hdf5(
                 hospitals_dset["coordinates"][idx1:idx2] = coordinates
 
 
-def load_hospitals_from_hdf5(file_path: str, chunk_size=50000, domain_areas=None):
+def load_hospitals_from_hdf5(file_path: str, chunk_size=50000, domain_areas=None, areas_to_domain_dict: dict = None):
     """
     Loads companies from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -137,22 +137,32 @@ def load_hospitals_from_hdf5(file_path: str, chunk_size=50000, domain_areas=None
                         raise ValueError(
                             "if ``domain_areas`` is True, I expect not Nones areas."
                         )
+                    trust_code = trust_codes[k]
+                    if trust_code.decode() == " ":
+                        trust_code = None
+                    else:
+                        trust_code = trust_code.decode()
+                    
                     if area not in domain_areas:
+                        '''
+                        hospital = ExternalHospital(
+                                id=ids[k],
+                                domain_id = areas_to_domain_dict[area],
+                                region = None
+                            )
+                        '''
                         continue
-                trust_code = trust_codes[k]
-                if trust_code.decode() == " ":
-                    trust_code = None
-                else:
-                    trust_code = trust_code.decode()
-                hospital = Hospital(
-                    n_beds=n_beds_list[k],
-                    n_icu_beds=n_icu_beds_list[k],
-                    coordinates=coordinates[k],
-                    trust_code=trust_code,
-                )
-                hospital.id = ids[k]
+                    else:
+                        hospital = Hospital(
+                                n_beds=n_beds_list[k],
+                                n_icu_beds=n_icu_beds_list[k],
+                                coordinates=coordinates[k],
+                                trust_code=trust_code,
+                        )
+                        hospital.id = ids[k]
+
                 hospitals_list.append(hospital)
-    return Hospitals(hospitals_list)
+    return Hospitals(hospitals_list, ball_tree=False)
 
 
 def restore_hospital_properties_from_hdf5(
@@ -226,12 +236,13 @@ def restore_hospital_properties_from_hdf5(
                     ):
                         hospital = world.hospitals.get_from_id(hospital_id)
                     else:
-                        hospital = ExternalGroup(
+                        hospital = ExternalHospital(
                             domain_id=super_areas_to_domain_dict[
                                hospital_super_area_id 
                             ],
                             spec="hospital",
                             id=hospital_id,
+                            region = super_area.region
                         )
                     hospitals.append(hospital)
                 super_area.closest_hospitals = hospitals

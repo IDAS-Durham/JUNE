@@ -64,7 +64,7 @@ class PeopleRecord(StaticRecord):
                 "socioeconomic_index",
                 "primary_activity_id",
                 "residence_id",
-                "area_id"
+                "area_id",
             ],
             float_names=[],
             str_names=["sex", "ethnicity", "primary_activity_type", "residence_type",],
@@ -107,7 +107,14 @@ class PeopleRecord(StaticRecord):
             area_id.append(person.area.id)
             sex.append(person.sex)
             ethnicity.append(person.ethnicity)
-        int_data = [ids, age, socioeconomic_index, primary_activity_id, residence_id, area_id]
+        int_data = [
+            ids,
+            age,
+            socioeconomic_index,
+            primary_activity_id,
+            residence_id,
+            area_id,
+        ]
         float_data = []
         str_data = []
         str_data = [sex, ethnicity, primary_activity_type, residence_type]
@@ -136,9 +143,14 @@ class LocationRecord(StaticRecord):
         )
         counter = 0
         for attribute, value in world.__dict__.items():
-            if isinstance(value, Supergroup) and attribute not in ("cities", "cemeteries", "stations"):
-                print(f'Storing {attribute}')
+            if isinstance(value, Supergroup) and attribute not in (
+                "cities",
+                "cemeteries",
+                "stations",
+            ):
                 for group in getattr(world, attribute):
+                    if group.external:
+                        continue
                     ids.append(counter)
                     group_spec.append(group.spec)
                     group_id.append(group.id)
