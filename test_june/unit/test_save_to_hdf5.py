@@ -136,6 +136,7 @@ class TestSaveHospitals:
             assert hospital.coordinates[0] == hospital2.coordinates[0]
             assert hospital.coordinates[1] == hospital2.coordinates[1]
             assert hospital.trust_code == hospital2.trust_code
+            assert hospital.area == hospital2.area
 
 
 class TestSaveSchools:
