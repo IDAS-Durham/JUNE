@@ -34,6 +34,7 @@ class SimulatorBox(Simulator):
             infection_seed: Optional["InfectionSeed"] = None,
             checkpoint_dates: List[datetime.date] = None,
             record: "Record" = None,
+            checkpoint_path: str = None,
             #comment: str = None,
     ):
         """
@@ -71,6 +72,7 @@ class SimulatorBox(Simulator):
             record=record,
             #comment=comment,
             checkpoint_dates=checkpoint_dates,
+            checkpoint_path = checkpoint_path
         )
 
     def do_timestep(self):
