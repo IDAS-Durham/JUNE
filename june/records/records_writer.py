@@ -37,7 +37,7 @@ class Record:
     ):
         self.record_path = Path(record_path)
         self.record_path.mkdir(parents=True, exist_ok=True)
-        if mpi_rank is not None
+        if mpi_rank is not None:
             self.filename = f'june_record.{mpi_rank}.h5'
             self.summary_filename = f'summary.{mpi_rank}.csv'
         else:
