@@ -19,8 +19,7 @@ from june.infection_seed import InfectionSeed, Observed2Cases
 from june.policy import Policies
 from june import paths
 from june.groups.commute import *
-from june.recom import Record
-from june.logger.read_logger import ReadLogger
+from june.record import Record
 from june.domain import Domain, generate_super_areas_to_domain_dict
 from june.mpi_setup import mpi_comm, mpi_rank, mpi_size
 
@@ -85,7 +84,7 @@ def generate_simulator():
         n_super_areas = f["geography"].attrs["n_super_areas"]
     
     
-    logger = Logger(save_path = save_path, file_name=f"logger.{rank}.hdf5")
+    record = Record(record_path = 'results', record_static_data=True, mpi_rank=rank)
     
     super_areas_to_domain_dict = generate_super_areas_to_domain_dict(n_super_areas, size)
     
@@ -94,8 +93,6 @@ def generate_simulator():
         super_areas_to_domain_dict=super_areas_to_domain_dict,
         hdf5_file_path=world_file,
     )
-    logger.log_population(domain.people)
-    #
     # regenerate lesiure
     leisure = generate_leisure_for_config(domain, config_path)
     #
@@ -137,7 +134,7 @@ def generate_simulator():
         infection_selector=infection_selector,
         infection_seed=infection_seed,
         config_filename=config_path,
-        logger=logger,
+        record=record,
     )
     print("simulator ready to go")
     return simulator
@@ -149,12 +146,7 @@ def run_simulator(simulator):
     t2 = time.time()
     print(f" Simulation took {t2-t1} seconds")
 
-def save_summary():
-    if rank == 0:
-        logger = ReadLogger(save_path, n_processes=size)
-        logger.world_summary().to_csv(Path(save_path) / "summary.csv")
-
 if __name__ == "__main__":
     simulator = generate_simulator()
     run_simulator(simulator)
-    save_summary()
+    #simulator.record.combine_processes()
