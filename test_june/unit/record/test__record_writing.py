@@ -320,7 +320,7 @@ def test__sumarise_time_tep(dummy_world):
     record.summarise_time_step(timestamp, dummy_world)
     record.time_step(timestamp)
     record.file.close()
-    summary_df = pd.read_csv(record.record_path / "summary.0.csv", index_col=0)
+    summary_df = pd.read_csv(record.record_path / "summary.csv", index_col=0)
     region_1 = summary_df[summary_df["region"] == "region_1"]
     region_2 = summary_df[summary_df["region"] == "region_2"]
     assert region_1.loc["2020-04-04"]["daily_infected"] == 2
