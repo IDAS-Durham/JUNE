@@ -1,6 +1,6 @@
 import numpy as np
 from june.groups import University, Universities
-from june.geography import Area, SuperArea, Geography, SuperAreas
+from june.geography import Area, Areas, SuperArea, Geography, SuperAreas
 
 
 def test__university_init():
@@ -10,6 +10,9 @@ def test__university_init():
 
 def test__university_for_super_areas():
     super_area = SuperArea(name="durham", areas=None, coordinates=[54.768, -1.571868])
+    area = Area(name='durham_central', super_area=super_area, coordinates=super_area.coordinates)
+    areas = Areas([area])
+    super_area.areas = areas
     super_areas = SuperAreas([super_area])
     unis  = Universities.for_super_areas(super_areas)
     durham_uni = unis[0]
