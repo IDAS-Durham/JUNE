@@ -18,7 +18,7 @@ quarantine:
         n_days: 7 # for the symptomatic person
         n_days_household: 14 # for the housemates
         compliance: 0.95 # for the symptomatic individual - needs to be checked
-        household_compliance: 0.8
+        household_compliance: 0.9
         start_time: 2020-03-24
         end_time: 2021-07-04
 
@@ -718,4 +718,4 @@ close_schools:
 
 close_universities:
     start_time: 2020-03-20
-    end_time: 2020-09-28
+    end_time: 2021-09-28
