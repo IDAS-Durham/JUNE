@@ -136,7 +136,6 @@ class TestSaveHospitals:
             assert hospital.coordinates[0] == hospital2.coordinates[0]
             assert hospital.coordinates[1] == hospital2.coordinates[1]
             assert hospital.trust_code == hospital2.trust_code
-            assert hospital.area == hospital2.area
 
 
 class TestSaveSchools:
@@ -440,11 +439,13 @@ class TestSaveWorld:
 
     def test__university_super_area(self, full_world, full_world_loaded):
         for uni1, uni2 in zip(full_world.universities, full_world_loaded.universities):
+            assert uni1.area.id == uni2.area.id
             assert uni1.super_area.id == uni2.super_area.id
             assert uni1.super_area.name == uni2.super_area.name
 
     def test__hospital_super_area(self, full_world, full_world_loaded):
         for h1, h2 in zip(full_world.hospitals, full_world_loaded.hospitals):
+            assert h1.area.id == h2.area.id
             assert h1.super_area.id == h2.super_area.id
             assert h1.super_area.name == h2.super_area.name
 
@@ -454,6 +455,7 @@ class TestSaveWorld:
             social_venues2 = getattr(full_world_loaded, spec)
             assert len(social_venues1) == len(social_venues2)
             for v1, v2 in zip(social_venues1, social_venues2):
+                assert v1.area.id == v2.area.id
                 assert v1.super_area.id == v2.super_area.id
                 assert v1.super_area.name == v2.super_area.name
 
