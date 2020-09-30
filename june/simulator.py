@@ -319,12 +319,13 @@ class Simulator:
                 and person.infection.tag == SymptomTag.mild
             ):
                 person.residence.group.quarantine_starting_date = time
-            if previous_tag != person.infection.tag:
-                self.record.accumulate(
-                    table_name="symptoms",
-                    infected_id=person.id,
-                    symptoms=person.infection.tag.value,
-                )
+            if self.record is not None:
+                if previous_tag != person.infection.tag:
+                    self.record.accumulate(
+                        table_name="symptoms",
+                        infected_id=person.id,
+                        symptoms=person.infection.tag.value,
+                    )
             # Take actions on new symptoms
             self.activity_manager.policies.medical_care_policies.apply(
                 person=person,

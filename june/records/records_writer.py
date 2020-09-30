@@ -26,14 +26,23 @@ from june.records.static_records_writer import (
 )
 from june import paths
 
+def combine_records(record_path):
+    record_path = Path(record_path)
+    record_files = record_path.glob('june_record.*.h5')
+
 
 class Record:
     def __init__(
-        self, record_path: str, record_static_data=False, mpi_rank: int=0
+        self, record_path: str, record_static_data=False, mpi_rank: Optional[int]=None
     ):
         self.record_path = Path(record_path)
         self.record_path.mkdir(parents=True, exist_ok=True)
-        self.filename = f'june_record.{mpi_rank}.h5'
+        if mpi_rank is not None
+            self.filename = f'june_record.{mpi_rank}.h5'
+            self.summary_filename = f'summary.{mpi_rank}.csv'
+        else:
+            self.filename = f'june_record.h5'
+            self.summary_filename = f'summary.csv'
         try:
             os.remove(self.record_path / self.filename)
         except OSError:
@@ -49,7 +58,7 @@ class Record:
             "recoveries": RecoveriesRecord(hdf5_file=self.file),
             "symptoms": SymptomsRecord(hdf5_file=self.file),
         }
-        with open(self.record_path / f"summary.{mpi_rank}.csv", "w", newline="") as summary_file:
+        with open(self.record_path / self.summary_filename, "w", newline="") as summary_file:
             writer = csv.writer(summary_file)
             fields = ["infected", "recovered", "hospitalised", "intensive_care"]
             header = ["time_stamp", "region"]
@@ -163,7 +172,7 @@ class Record:
         ) = self.summarise_hospitalisations(world=world)
         current_susceptible = self.summarise_susceptibles(world=world)
         daily_deaths, daily_deaths_in_hospital = self.summarise_deaths(world=world)
-        with open(self.record_path / "summary.csv", "a", newline="") as summary_file:
+        with open(self.record_path / self.summary_filename, "a", newline="") as summary_file:
             summary_writer = csv.writer(summary_file)
             for region in [region.name for region in world.regions]:
                 summary_writer.writerow(
