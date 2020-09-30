@@ -109,6 +109,7 @@ class ICUAdmissionsRecord(EventRecord):
         self.hospital_ids.append(hospital_id)
         self.patient_ids.append(patient_id)
 
+
 class DischargesRecord(EventRecord):
     def __init__(
         self, hdf5_file,
@@ -158,6 +159,7 @@ class RecoveriesRecord(EventRecord):
 
     def accumulate(self, recovered_person_id):
         self.recovered_person_ids.append(recovered_person_id)
+
 
 class SymptomsRecord(EventRecord):
     def __init__(

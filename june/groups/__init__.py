@@ -5,6 +5,7 @@ from .group import (
     Supergroup,
     ExternalSubgroup,
     ExternalGroup,
+    ExternalHospital,
 )
 from .boundary import Boundary
 from .carehome import CareHome, CareHomes

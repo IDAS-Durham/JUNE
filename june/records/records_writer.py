@@ -26,23 +26,53 @@ from june.records.static_records_writer import (
 )
 from june import paths
 
+
+def combine_summaries(record_path):
+    summary_files = record_path.glob("summary.*.csv")
+    dfs = []
+    for summary_file in summary_files:
+        dfs.append(pd.read_csv(summary_file))
+    summary = pd.concat(dfs)
+    summary = summary.groupby(["time_stamp", "region"]).sum()
+    summary.to_csv(record_path / "summary.csv")
+
+
+def combine_hdf5s(record_path, table_names=("infections", "population")):
+    record_files = record_path.glob("june_record.*.h5")
+    with tables.open_file(record_path / "june_record.h5", "w") as merged_record:
+        for record_file in record_files:
+            with tables.open_file(str(record_file), "r") as record:
+                datasets = record.root._f_list_nodes()
+                row = 0
+                for dataset in datasets:
+                    arr_data = dataset[:]
+                    if row == 0:
+                        all_data = arr_data.copy()
+                        row += arr_data.shape[0]
+                    else:
+                        all_data = np.append(all_data, arr_data, axis=0)
+                        row += arr_data.shape[0]
+                tables.Array(merged_record.root, dataset, obj=all_data)
+
+
 def combine_records(record_path):
     record_path = Path(record_path)
-    record_files = record_path.glob('june_record.*.h5')
+    combine_summaries(record_path)
+    combine_hdf5s(record_path)
 
 
 class Record:
     def __init__(
-        self, record_path: str, record_static_data=False, mpi_rank: Optional[int]=None
+        self, record_path: str, record_static_data=False, mpi_rank: Optional[int] = None
     ):
         self.record_path = Path(record_path)
         self.record_path.mkdir(parents=True, exist_ok=True)
         if mpi_rank is not None:
-            self.filename = f'june_record.{mpi_rank}.h5'
-            self.summary_filename = f'summary.{mpi_rank}.csv'
+            self.filename = f"june_record.{mpi_rank}.h5"
+            self.summary_filename = f"summary.{mpi_rank}.csv"
         else:
-            self.filename = f'june_record.h5'
-            self.summary_filename = f'summary.csv'
+            self.filename = f"june_record.h5"
+            self.summary_filename = f"summary.csv"
         try:
             os.remove(self.record_path / self.filename)
         except OSError:
@@ -58,7 +88,9 @@ class Record:
             "recoveries": RecoveriesRecord(hdf5_file=self.file),
             "symptoms": SymptomsRecord(hdf5_file=self.file),
         }
-        with open(self.record_path / self.summary_filename, "w", newline="") as summary_file:
+        with open(
+            self.record_path / self.summary_filename, "w", newline=""
+        ) as summary_file:
             writer = csv.writer(summary_file)
             fields = ["infected", "recovered", "hospitalised", "intensive_care"]
             header = ["time_stamp", "region"]
@@ -97,10 +129,18 @@ class Record:
     def summarise_hospitalisations(self, world: "World"):
         hospital_admissions, icu_admissions = defaultdict(int), defaultdict(int)
         for hospital_id in self.events["hospital_admissions"].hospital_ids:
-            region = world.hospitals.get_from_id(hospital_id).super_area.region.name
+            hospital = world.hospitals.get_from_id(hospital_id)
+            if hospital.external:
+                region = hospital.region
+            else:
+                region = hospital.region.name
             hospital_admissions[region] += 1
         for hospital_id in self.events["icu_admissions"].hospital_ids:
-            region = world.hospitals.get_from_id(hospital_id).super_area.region.name
+            hospital = world.hospitals.get_from_id(hospital_id)
+            if hospital.external:
+                region = hospital.region
+            else:
+                region = hospital.region.name
             icu_admissions[region] += 1
         current_hospitalised, current_intensive_care = (
             defaultdict(int),
@@ -172,7 +212,9 @@ class Record:
         ) = self.summarise_hospitalisations(world=world)
         current_susceptible = self.summarise_susceptibles(world=world)
         daily_deaths, daily_deaths_in_hospital = self.summarise_deaths(world=world)
-        with open(self.record_path / self.summary_filename, "a", newline="") as summary_file:
+        with open(
+            self.record_path / self.summary_filename, "a", newline=""
+        ) as summary_file:
             summary_writer = csv.writer(summary_file)
             for region in [region.name for region in world.regions]:
                 summary_writer.writerow(
@@ -192,8 +234,6 @@ class Record:
                         daily_deaths.get(region, 0),
                     ]
                 )
-    def combine_summaries(self,):
-        pass
 
-    def combine_hdf5(self,):
-        pass
+    def combine_outputs(self,):
+        combine_records(self.record_path)

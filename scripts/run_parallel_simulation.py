@@ -19,7 +19,7 @@ from june.infection_seed import InfectionSeed, Observed2Cases
 from june.policy import Policies
 from june import paths
 from june.groups.commute import *
-from june.record import Record
+from june.records import Record
 from june.domain import Domain, generate_super_areas_to_domain_dict
 from june.mpi_setup import mpi_comm, mpi_rank, mpi_size
 
@@ -42,22 +42,24 @@ def set_random_seed(seed=999):
 
 # a decorator for profiling
 def profile(filename=None, comm=MPI.COMM_WORLD):
-  def prof_decorator(f):
-    def wrap_f(*args, **kwargs):
-      pr = cProfile.Profile()
-      pr.enable()
-      result = f(*args, **kwargs)
-      pr.disable()
+    def prof_decorator(f):
+        def wrap_f(*args, **kwargs):
+            pr = cProfile.Profile()
+            pr.enable()
+            result = f(*args, **kwargs)
+            pr.disable()
 
-      if filename is None:
-        pr.print_stats()
-      else:
-        filename_r = filename + ".{}".format(comm.rank)
-        pr.dump_stats(filename_r)
+            if filename is None:
+                pr.print_stats()
+            else:
+                filename_r = filename + ".{}".format(comm.rank)
+                pr.dump_stats(filename_r)
 
-      return result
-    return wrap_f
-  return prof_decorator
+            return result
+
+        return wrap_f
+
+    return prof_decorator
 
 
 if len(sys.argv) > 1:
@@ -79,20 +81,25 @@ if seed == 999:
 else:
     save_path = f"results_{seed:02d}"
 
+
 def generate_simulator():
     with h5py.File(world_file, "r") as f:
         n_super_areas = f["geography"].attrs["n_super_areas"]
-    
-    
-    record = Record(record_path = 'results', record_static_data=True, mpi_rank=rank)
-    
-    super_areas_to_domain_dict = generate_super_areas_to_domain_dict(n_super_areas, size)
-    
+
+    record = Record(record_path="results", record_static_data=True, mpi_rank=rank)
+
+    super_areas_to_domain_dict = generate_super_areas_to_domain_dict(
+        n_super_areas, size
+    )
+
     domain = Domain.from_hdf5(
         domain_id=rank,
         super_areas_to_domain_dict=super_areas_to_domain_dict,
         hdf5_file_path=world_file,
     )
+    record.static_data(world=domain)
+    for hospital in domain.hospitals:
+        print(f"Rank {rank} hospital {hospital.id}")
     # regenerate lesiure
     leisure = generate_leisure_for_config(domain, config_path)
     #
@@ -102,28 +109,27 @@ def generate_simulator():
         health_index_generator=health_index_generator
     )
     oc = Observed2Cases.from_file(
-            health_index_generator=health_index_generator,
-            smoothing=True
-            )
+        health_index_generator=health_index_generator, smoothing=True
+    )
     daily_cases_per_region = oc.get_regional_latent_cases()
     daily_cases_per_super_area = oc.convert_regional_cases_to_super_area(
-            daily_cases_per_region,
-            dates=['2020-02-28', '2020-03-02']
-            )
-    infection_seed = InfectionSeed(world=domain,
-            infection_selector=infection_selector,
-            daily_super_area_cases=daily_cases_per_super_area,
-            seed_strength=0.66,
-            )
+        daily_cases_per_region, dates=["2020-02-28", "2020-03-02"]
+    )
+    infection_seed = InfectionSeed(
+        world=domain,
+        infection_selector=infection_selector,
+        daily_super_area_cases=daily_cases_per_super_area,
+        seed_strength=0.66,
+    )
 
     # interaction
     interaction = Interaction.from_file()
-    
+
     # policies
     policies = Policies.from_file()
-    
+
     # create simulator
-    
+
     travel = Travel()
     simulator = Simulator.from_file(
         world=domain,
@@ -139,6 +145,7 @@ def generate_simulator():
     print("simulator ready to go")
     return simulator
 
+
 def run_simulator(simulator):
 
     t1 = time.time()
@@ -146,7 +153,8 @@ def run_simulator(simulator):
     t2 = time.time()
     print(f" Simulation took {t2-t1} seconds")
 
+
 if __name__ == "__main__":
     simulator = generate_simulator()
     run_simulator(simulator)
-    #simulator.record.combine_processes()
+    simulator.record.combine_outputs()
