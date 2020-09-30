@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from june.hdf5_savers import generate_world_from_hdf5
 from policy import PolicyPlots
 from leisure import LeisurePlots
+from companies import CompanyPlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -36,6 +37,43 @@ class Plotter:
 
         return Plotter(world)
 
+    def plot_companies(
+            self,
+            save_dir: str = '../plots/companies/'
+    ):
+        "Make all company plots"
+
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+
+        print ("Setting up company plots")
+
+        company_plots = CompanyPlots(self.world)
+
+        print ("Loading company data")
+        company_plots.load_company_data()
+
+        print ("Plotting company sizes")
+        company_sizes_plot = company_plots.plot_company_sizes()
+        company_sizes_plot.plot()
+        plt.savefig(save_dir + 'company_sizes.png', dpi=150, bbox_inches='tight')
+
+        print ("Plotting company workers")
+        company_workers_plot = company_plots.plot_company_workers()
+        company_workers_plot.plot()
+        plt.savefig(save_dir + 'company_workers.png', dpi=150, bbox_inches='tight')
+
+        print ("Plotting company sectors")
+        company_sectors_plot = company_plots.plot_company_sectors()
+        company_sectors_plot.plot()
+        plt.savefig(save_dir + 'company_sectors.png', dpi=150, bbox_inches='tight')
+
+        print ("Plotting work distance travel")
+        work_distance_travel_plot = company_plots.plot_work_distance_travel()
+        work_distance_travel_plot.plot()
+        plt.savefig(save_dir + 'work_distance_travel.png', dpi=150, bbox_inches='tight')
+        
+    
     def plot_leisure(
             self,
             save_dir: str = '../plots/leisure/'
@@ -97,6 +135,7 @@ class Plotter:
 
         print ("Plotting the world")
 
+        self.plot_companies()
         self.plot_leisure()
         self.plot_policies()
 
