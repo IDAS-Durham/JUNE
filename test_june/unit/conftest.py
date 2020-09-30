@@ -232,10 +232,10 @@ def make_dummy_world():
     world.stations = city.stations
     world.super_areas[0].city = city
     world.super_areas[0].closest_station_for_city[city.name] = city.stations[0]
-    city_transports = CityTransports([CityTransport()])
+    city_transports = CityTransports([CityTransport(city=city)])
     world.city_transports = city_transports
     city.city_transports = city_transports
-    inter_city_transports = InterCityTransports([InterCityTransport()])
+    inter_city_transports = InterCityTransports([InterCityTransport(station=city.stations[0])])
     world.inter_city_transports = inter_city_transports
     city.stations[0].inter_city_transports = inter_city_transports
     world.cemeteries = Cemeteries()
