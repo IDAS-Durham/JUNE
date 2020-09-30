@@ -1,5 +1,5 @@
 susceptibilities:
-  0-13 : 1.0
+  0-13 : 0.5
   13-100: 1.0
 
 alpha_physical: 2.
