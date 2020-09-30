@@ -245,8 +245,9 @@ def generate_domain_from_hdf5(
         file_path=file_path, chunk_size=chunk_size, domain_super_areas=super_area_ids
     )
     domain.areas = geography.areas
-    areas_ids = set([area.id for area in domain.areas])
+    area_ids = set([area.id for area in domain.areas])
     domain.super_areas = geography.super_areas
+    domain.regions = geography.regions
 
     # load world data
     if "hospitals" in f_keys:
@@ -254,7 +255,7 @@ def generate_domain_from_hdf5(
         domain.hospitals = load_hospitals_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
-            domain_areas=areas_ids
+            domain_areas=area_ids
         )
     if "schools" in f_keys:
         logger.info("loading schools...")
@@ -281,7 +282,7 @@ def generate_domain_from_hdf5(
         domain.universities = load_universities_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
-            domain_areas=areas_ids,
+            domain_areas=area_ids,
         )
     if "cities" in f_keys:
         logger.info("loading cities...")
@@ -352,7 +353,7 @@ def generate_domain_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
-            domain_areas=areas_ids,
+            domain_areas=area_ids,
             super_areas_to_domain_dict=super_areas_to_domain_dict
         )
     if "companies" in f_keys:
