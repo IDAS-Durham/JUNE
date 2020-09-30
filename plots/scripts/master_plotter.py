@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import time
+from pathlib import Path
 from datetime import datetime, timedelta
 import argparse
 import os
@@ -10,6 +11,7 @@ from june.hdf5_savers import generate_world_from_hdf5
 from policy import PolicyPlots
 from leisure import LeisurePlots
 from companies import CompanyPlots
+from households import HouseholdPlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -36,6 +38,30 @@ class Plotter:
         world = generate_world_from_hdf5(world_filename)
 
         return Plotter(world)
+
+    def plot_households(self, save_dir: Path = Path("../plots/households")):
+        save_dir.mkdir(exist_ok=True, parents=True)
+        print("Setting up household plots")
+        household_plots = HouseholdPlots(self.world)
+
+        print ("Loading household data")
+        household_plots.load_household_data()
+
+        #print ("Plotting household sizes")
+        #household_sizes_plot = household_plots.plot_household_sizes()
+        #household_sizes_plot.plot()
+        #plt.savefig(save_dir / 'household_sizes.png', dpi=150, bbox_inches='tight')
+
+        #print ("Plotting household probability matrix")
+        #household_probability_matrix = household_plots.plot_household_probability_matrix()
+        #household_probability_matrix.plot()
+        #plt.savefig(save_dir / 'household_prob_matrix.png', dpi=150, bbox_inches='tight')
+
+        print ("Plotting household age differences")
+        f, ax = household_plots.plot_household_age_differences()
+        plt.plot()
+        plt.savefig(save_dir / 'household_age_differences.png', dpi=150, bbox_inches='tight')
+
 
     def plot_companies(
             self,
@@ -142,7 +168,7 @@ class Plotter:
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Full run of the camp")
+    parser = argparse.ArgumentParser(description="Plotter for JUNE's world.")
 
     parser.add_argument(
         "-w",
@@ -151,7 +177,17 @@ if __name__ == "__main__":
         required=False,
         default = default_world_filename
     )
+    parser.add_argument(
+        "-q",
+        "--households",
+        help="Plot only households",
+        required=False,
+        default = False,
+        action="store_true"
+    )
     args = parser.parse_args()
-    
     plotter = Plotter.from_file(args.world_filename)
-    plotter.plot_all()
+    if args.households:
+        plotter.plot_households()
+    else:
+        plotter.plot_all()
