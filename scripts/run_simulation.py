@@ -61,7 +61,7 @@ health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
 infection_selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
 
 # interaction
-interaction = Interaction.from_file()
+interaction = Interaction.from_file(config_filename="./config_interaction.yaml", population=world.people)
 
 # policies
 policies = Policies.from_file()
