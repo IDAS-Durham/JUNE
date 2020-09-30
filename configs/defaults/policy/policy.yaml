@@ -149,7 +149,7 @@ social_distancing:
 
     2:
         start_time: 2020-03-24
-        end_time: 2020-07-04 
+        end_time: 2020-05-11 
         beta_factors:
             box: 0.75
             pub: 0.75
@@ -164,6 +164,22 @@ social_distancing:
             household: 1.0
             university: 0.75
     3:
+        start_time: 2020-05-11
+        end_time: 2020-07-04
+        beta_factors:
+            box: 0.786
+            pub: 0.786
+            grocery: 0.786
+            cinema: 0.786
+            city_transport: 0.786
+            inter_city_transport: 0.786
+            hospital: 0.786
+            care_home: 0.786
+            company: 0.786
+            school: 0.786
+            household: 1.0
+            university: 0.786
+    4:
         start_time: 2020-07-04 
         end_time: 2021-12-01
         beta_factors:
@@ -426,7 +442,39 @@ close_leisure_venue:
 change_leisure_probability:
     1:
         start_time: 2020-03-24
-        end_time: 2020-07-04
+        end_time: 2020-05-21
+        leisure_activities_probabilities:
+            household_visits:
+                men: 
+                    0-64: 0.1
+                    65-100: 0.05
+                women: 
+                    0-64: 0.1
+                    65-100: 0.05
+            care_home_visits:
+                men:
+                    0-100: 0.05
+                women:
+                    0-100: 0.05
+    2:
+        start_time: 2020-05-21
+        end_time: 2020-05-31
+        leisure_activities_probabilities:
+            household_visits:
+                men: 
+                    0-64: 0.25
+                    65-100: 0.125
+                women: 
+                    0-64: 0.25
+                    65-100: 0.125
+            care_home_visits:
+                men:
+                    0-100: 0.05
+                women:
+                    0-100: 0.05
+    3:
+        start_time: 2020-05-31
+        end_time: 2020-06-04
         leisure_activities_probabilities:
             household_visits:
                 men: 
@@ -440,8 +488,40 @@ change_leisure_probability:
                     0-100: 0.05
                 women:
                     0-100: 0.05
+    4:
+        start_time: 2020-06-04
+        end_time: 2020-06-14
+        leisure_activities_probabilities:
+            household_visits:
+                men: 
+                    0-64: 0.7
+                    65-100: 0.35
+                women: 
+                    0-64: 0.7
+                    65-100: 0.35
+            care_home_visits:
+                men:
+                    0-100: 0.05
+                women:
+                    0-100: 0.05
+    5:
+        start_time: 2020-06-14
+        end_time: 2020-07-04
+        leisure_activities_probabilities:
+            household_visits:
+                men: 
+                    0-64: 1.25
+                    65-100: 0.625
+                women: 
+                    0-64: 1.25
+                    65-100: 0.625
+            care_home_visits:
+                men:
+                    0-100: 0.05
+                women:
+                    0-100: 0.05
 
-    2:
+    6:
         start_time: 2020-07-04
         end_time: 2020-07-11
         leisure_activities_probabilities:
@@ -452,8 +532,15 @@ change_leisure_probability:
                 women:
                     18-65: 0.256
                     65-100: 0.170
+            household_visits:
+                men: 
+                    0-64: 1.4
+                    65-100: 0.7
+                women: 
+                    0-64: 1.4
+                    65-100: 0.7
 
-    3:
+    7:
         start_time: 2020-07-11
         end_time: 2020-07-18
         leisure_activities_probabilities:
@@ -464,8 +551,16 @@ change_leisure_probability:
                 women:
                     18-65: 0.402
                     65-100: 0.268
+            household_visits:
+                men: 
+                    0-64: 1.4
+                    65-100: 0.7
+                women: 
+                    0-64: 1.4
+                    65-100: 0.7
 
-    4:
+
+    8:
         start_time: 2020-07-18
         end_time: 2020-07-25
         leisure_activities_probabilities:
@@ -476,8 +571,16 @@ change_leisure_probability:
                 women:
                     18-65: 0.548
                     65-100: 0.366
+            household_visits:
+                men: 
+                    0-64: 1.4
+                    65-100: 0.7
+                women: 
+                    0-64: 1.4
+                    65-100: 0.7
 
-    5:
+
+    9:
         start_time: 2020-07-25
         end_time: 2020-08-01
         leisure_activities_probabilities:
@@ -488,8 +591,16 @@ change_leisure_probability:
                 women:
                     18-65: 0.695
                     65-100: 0.463
+            household_visits:
+                men: 
+                    0-64: 1.4
+                    65-100: 0.7
+                women: 
+                    0-64: 1.4
+                    65-100: 0.7
 
-    6:
+
+    10:
         start_time: 2020-08-01
         end_time: 2020-08-08
         leisure_activities_probabilities:
@@ -500,8 +611,16 @@ change_leisure_probability:
                 women:
                     18-65: 0.841
                     65-100: 0.561
+            household_visits:
+                men: 
+                    0-64: 1.4
+                    65-100: 0.7
+                women: 
+                    0-64: 1.4
+                    65-100: 0.7
 
-    7:
+
+    11:
         start_time: 2020-08-08
         end_time: 2020-08-15
         leisure_activities_probabilities:
@@ -513,7 +632,7 @@ change_leisure_probability:
                     18-65: 0.988
                     65-100: 0.659
 
-    8:
+    12:
         start_time: 2020-08-15
         end_time: 2020-08-22
         leisure_activities_probabilities:
@@ -525,7 +644,7 @@ change_leisure_probability:
                     18-65: 1.13
                     65-100: 0.756
 
-    9:
+    13:
         start_time: 2020-08-22
         end_time: 2020-08-29
         leisure_activities_probabilities:
@@ -537,7 +656,7 @@ change_leisure_probability:
                     18-65: 1.28
                     65-100: 0.854
 
-    10:
+    14:
         start_time: 2020-08-29
         end_time: 2020-08-31
         leisure_activities_probabilities:
