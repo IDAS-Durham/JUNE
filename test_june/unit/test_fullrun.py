@@ -76,7 +76,6 @@ def test__full_run(dummy_world, selector):
     interaction = Interaction.from_file()
     record = Record(
             record_path = 'results',
-            filename='june_records.hdf5',
     )
     policies = Policies.from_file()
     sim = Simulator.from_file(
