@@ -198,7 +198,7 @@ class InfectionSeed:
             except KeyError as e:
                 raise KeyError("There is no data on cases for super area: %s" % str(e))
 
-    def unleash_virus_per_day(self, date: "datetime", record: Optional["Record"]):
+    def unleash_virus_per_day(self, date: "datetime", record: Optional["Record"]=None):
         """
         Infect super areas at a given ```date```
 
@@ -213,5 +213,5 @@ class InfectionSeed:
             date not in self.dates_seeded
             and date_str in self.daily_super_area_cases.index
         ):
-            self.infect_super_areas(self.daily_super_area_cases.loc[date_str])
+            self.infect_super_areas(self.daily_super_area_cases.loc[date_str], record=record)
             self.dates_seeded.append(date)
