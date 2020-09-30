@@ -2,10 +2,14 @@ import numpy as np
 import yaml
 import numba as nb
 from random import random
-from typing import List
-from june import paths
-from june.interaction.interactive_group import InteractiveGroup
+from typing import List, Dict
 from itertools import chain
+
+from june.interaction.interactive_group import InteractiveGroup
+from june.demography import Population
+from june.exc import InteractionError
+from june.utils import parse_age_probabilities
+from june import paths
 
 default_config_filename = (
     paths.configs_path / "defaults/interaction/ContactInteraction.yaml"
@@ -124,12 +128,51 @@ def _translate_school_subgroup(idx, school_years):
 
 
 class Interaction:
-    def __init__(self, alpha_physical, beta, contact_matrices):
+    """
+    Class to handle interaction in groups.
+
+    Parameters
+    ----------
+    alpha_physical
+        Scaling factor for physical contacts, an alpha_physical factor of 1, means that physical
+        contacts count as much as non-physical contacts.
+    beta
+        dictionary mapping the group specs with their contact intensities
+    contact_matrices
+        dictionary mapping the group specs with their contact matrices
+    susceptibilities_by_age
+        dictionary mapping age ranges to their susceptibility.
+        Example: susceptibilities_by_age = {"0-13" : 0.5, "13-99" : 0.5}
+        note that the right limit of the range is not included.
+    population
+        list of people to have the susceptibilities changed.
+    """
+
+    def __init__(
+        self,
+        alpha_physical: float,
+        beta: Dict[str, float],
+        contact_matrices: dict,
+        susceptibilities_by_age: Dict[str, int] = None,
+        population: Population = None,
+    ):
         self.alpha_physical = alpha_physical
         self.beta = beta
-        self.contact_matrices = self.process_contact_matrices(
-            groups=beta.keys(), input_contact_matrices=contact_matrices
-        )
+        if contact_matrices is not None:
+            self.contact_matrices = self.process_contact_matrices(
+                groups=beta.keys(), input_contact_matrices=contact_matrices
+            )
+        if susceptibilities_by_age is not None:
+            if population is None:
+                raise InteractionError(
+                    f"Need to pass population to change susceptibilities by age."
+                )
+            susceptibilities_array = parse_age_probabilities(susceptibilities_by_age)
+            for person in population:
+                if person.age >= len(susceptibilities_array):
+                    person.susceptibility = susceptibilities_array[-1]
+                else:
+                    person.susceptibility = susceptibilities_array[person.age]
 
     @classmethod
     def from_file(
