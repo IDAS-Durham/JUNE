@@ -12,7 +12,7 @@ from june.utils import parse_age_probabilities
 from june import paths
 
 default_config_filename = (
-    paths.configs_path / "defaults/interaction/ContactInteraction.yaml"
+    paths.configs_path / "defaults/interaction/interaction.yaml"
 )
 
 
@@ -178,15 +178,21 @@ class Interaction:
 
     @classmethod
     def from_file(
-        cls, config_filename: str = default_config_filename
-    ) -> "ContactAveraging":
+        cls, config_filename: str = default_config_filename, population: Population = None
+    ) -> "Interaction":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         contact_matrices = config["contact_matrices"]
+        if "susceptibilities" in config:
+            susceptibilities_by_age = config["susceptibilities_by_age"]
+        else:
+            susceptibilities_by_age = None
         return Interaction(
             alpha_physical=config["alpha_physical"],
             beta=config["beta"],
             contact_matrices=contact_matrices,
+            susceptibilities_by_age=susceptibilities_by_age,
+            population = population
         )
 
     def process_contact_matrices(self, groups: List[str], input_contact_matrices: dict):
@@ -266,34 +272,50 @@ class Interaction:
         beta = self.beta[group.spec]
         school_years = group.school_years
         infected_ids = []
-        if len(group.subgroups_susceptible) == 1:
-            infected_ids = self.time_step_for_subgroup(
+        for i, subgroup_id in enumerate(group.subgroups_susceptible):
+            susceptible_ids = group.susceptible_ids[i]
+            susceptibilities = group.susceptibilities[i]
+            infected_ids += self.time_step_for_subgroup(
                 contact_matrix=contact_matrix,
                 subgroup_transmission_probabilities=group.transmission_probabilities,
-                susceptible_ids=group.susceptible_ids[0],
-                susceptibilities=group.susceptibilities[0],
+                susceptible_ids=susceptible_ids,
+                susceptibilities=susceptibilities,
                 infector_subgroups=group.subgroups_infector,
                 infector_subgroup_sizes=group.infector_subgroup_sizes,
                 beta=beta,
                 delta_time=delta_time,
-                subgroup_idx=group.subgroups_susceptible[0],
+                subgroup_idx=subgroup_id,
                 school_years=school_years,
             )
-        else:
-            for i, subgroup_id in enumerate(group.subgroups_susceptible):
-                susceptible_ids = group.susceptible_ids[i]
-                infected_ids += self.time_step_for_subgroup(
-                    contact_matrix=contact_matrix,
-                    subgroup_transmission_probabilities=group.transmission_probabilities,
-                    susceptible_ids=susceptible_ids,
-                    susceptibilities=group.susceptibilities,
-                    infector_subgroups=group.subgroups_infector,
-                    infector_subgroup_sizes=group.infector_subgroup_sizes,
-                    beta=beta,
-                    delta_time=delta_time,
-                    subgroup_idx=subgroup_id,
-                    school_years=school_years,
-                )
+        #if len(group.subgroups_susceptible) == 1:
+        #    infected_ids = self.time_step_for_subgroup(
+        #        contact_matrix=contact_matrix,
+        #        subgroup_transmission_probabilities=group.transmission_probabilities,
+        #        susceptible_ids=group.susceptible_ids[0],
+        #        susceptibilities=group.susceptibilities[0],
+        #        infector_subgroups=group.subgroups_infector,
+        #        infector_subgroup_sizes=group.infector_subgroup_sizes,
+        #        beta=beta,
+        #        delta_time=delta_time,
+        #        subgroup_idx=group.subgroups_susceptible[0],
+        #        school_years=school_years,
+        #    )
+        #else:
+        #    for i, subgroup_id in enumerate(group.subgroups_susceptible):
+        #        susceptible_ids = group.susceptible_ids[i]
+        #        susceptibilities = group.susceptibilities[i]
+        #        infected_ids += self.time_step_for_subgroup(
+        #            contact_matrix=contact_matrix,
+        #            subgroup_transmission_probabilities=group.transmission_probabilities,
+        #            susceptible_ids=susceptible_ids,
+        #            susceptibilities=group.susceptibilities,
+        #            infector_subgroups=group.subgroups_infector,
+        #            infector_subgroup_sizes=group.infector_subgroup_sizes,
+        #            beta=beta,
+        #            delta_time=delta_time,
+        #            subgroup_idx=subgroup_id,
+        #            school_years=school_years,
+        #        )
         return infected_ids
 
     def time_step_for_subgroup(
