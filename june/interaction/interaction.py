@@ -66,15 +66,17 @@ def compute_effective_transmission(
             infecters_idx=infector_subgroups[i],
             school_years=school_years,
         )
-    poisson_exponent = transmission_exponent * delta_time * beta
-    return 1.0 - np.exp(-poisson_exponent)
+    return transmission_exponent * delta_time * beta
 
 
 # @nb.jit(nopython=True)
-def infect_susceptibles(effective_transmission_probability, susceptible_ids):
+def infect_susceptibles(effective_transmission, susceptible_ids, suscetibilities):
     infected_ids = []
-    for id in susceptible_ids:
-        if random() < effective_transmission_probability:
+    for id, susceptibility in zip(susceptible_ids, suscetibilities):
+        transmission_probability = 1.0 - np.exp(
+            -effective_transmission * susceptibility
+        )
+        if random() < transmission_probability:
             infected_ids.append(id)
     return infected_ids
 
@@ -157,11 +159,11 @@ class Interaction:
         population: Population = None,
     ):
         self.alpha_physical = alpha_physical
-        self.beta = beta
-        if contact_matrices is not None:
-            self.contact_matrices = self.process_contact_matrices(
-                groups=beta.keys(), input_contact_matrices=contact_matrices
-            )
+        self.beta = beta or {}
+        contact_matrices = contact_matrices or {}
+        self.contact_matrices = self.process_contact_matrices(
+            groups=self.beta.keys(), input_contact_matrices=contact_matrices
+        )
         if susceptibilities_by_age is not None:
             if population is None:
                 raise InteractionError(
@@ -269,6 +271,7 @@ class Interaction:
                 contact_matrix=contact_matrix,
                 subgroup_transmission_probabilities=group.transmission_probabilities,
                 susceptible_ids=group.susceptible_ids[0],
+                susceptibilities=group.susceptibilities[0],
                 infector_subgroups=group.subgroups_infector,
                 infector_subgroup_sizes=group.infector_subgroup_sizes,
                 beta=beta,
@@ -283,6 +286,7 @@ class Interaction:
                     contact_matrix=contact_matrix,
                     subgroup_transmission_probabilities=group.transmission_probabilities,
                     susceptible_ids=susceptible_ids,
+                    susceptibilities=group.susceptibilities,
                     infector_subgroups=group.subgroups_infector,
                     infector_subgroup_sizes=group.infector_subgroup_sizes,
                     beta=beta,
@@ -296,6 +300,7 @@ class Interaction:
         self,
         subgroup_transmission_probabilities,
         susceptible_ids,
+        susceptibilities,
         infector_subgroups,
         infector_subgroup_sizes,
         contact_matrix,
@@ -304,7 +309,7 @@ class Interaction:
         subgroup_idx,
         school_years,
     ) -> List[int]:
-        effective_transmission_probability = compute_effective_transmission(
+        effective_transmission = compute_effective_transmission(
             subgroup_transmission_probabilities=subgroup_transmission_probabilities,
             susceptibles_group_idx=subgroup_idx,
             infector_subgroups=infector_subgroups,
@@ -315,6 +320,8 @@ class Interaction:
             school_years=school_years,
         )
         infected_ids = infect_susceptibles(
-            effective_transmission_probability, susceptible_ids
+            effective_transmission=effective_transmission,
+            susceptible_ids=susceptible_ids,
+            suscetibilities=susceptibilities,
         )
         return infected_ids
