@@ -184,7 +184,7 @@ class Interaction:
             config = yaml.load(f, Loader=yaml.FullLoader)
         contact_matrices = config["contact_matrices"]
         if "susceptibilities" in config:
-            susceptibilities_by_age = config["susceptibilities_by_age"]
+            susceptibilities_by_age = config["susceptibilities"]
         else:
             susceptibilities_by_age = None
         return Interaction(
