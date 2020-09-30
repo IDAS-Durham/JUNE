@@ -52,13 +52,13 @@ class InteractiveGroup:
                 subgroup_susceptible = [
                     person for person in subgroup if person.susceptible
                 ]
-                if subgroup_susceptible:
+                sus_ids = [
+                    person.id for person in subgroup_susceptible
+                ] + people_abroad_susceptible_ids
+                if sus_ids:
                     # store subgroup id and susceptibilities
                     self.has_susceptible = True
                     self.subgroups_susceptible.append(i)
-                    sus_ids = [
-                        person.id for person in subgroup_susceptible
-                    ] + people_abroad_susceptible_ids
                     people_abroad_susceptibilities = [
                         people_abroad_data[id]["susc"]
                         for id in people_abroad_ids
@@ -66,7 +66,7 @@ class InteractiveGroup:
                     ]
                     subgroup_susceptibilities = [
                         person.susceptibility for person in subgroup_susceptible
-                    ] + people_abroad_susceptible_ids
+                    ] + people_abroad_susceptibilities
                     susceptible_ids.append(sus_ids)
                     susceptibilities.append(subgroup_susceptibilities)
 
@@ -77,13 +77,13 @@ class InteractiveGroup:
                     if person.infection is not None
                     and person.infection.transmission.probability > 0
                 ]
-                if subgroup_infected:
+                inf_ids = [
+                    person.id for person in subgroup_infected
+                ] + people_abroad_infected_ids
+                if inf_ids:
                     # has infected
                     self.has_infector = True
                     self.subgroups_infector.append(i)
-                    inf_ids = [
-                        person.id for person in subgroup_infected
-                    ] + people_abroad_infected_ids
                     people_abroad_infected_prob = [
                         people_abroad_data[id]["inf_prob"]
                         for id in people_abroad_ids
@@ -105,12 +105,12 @@ class InteractiveGroup:
                 subgroup_susceptible = [
                     person for person in subgroup if person.susceptible
                 ]
-                if subgroup_susceptible:
+                sus_ids = [
+                    person.id for person in subgroup_susceptible
+                ]
+                if sus_ids:
                     self.has_susceptible = True
                     self.subgroups_susceptible.append(i)
-                    sus_ids = [
-                        person.id for person in subgroup_susceptible
-                    ]
                     subgroup_susceptibilities = [person.susceptibility for person in subgroup_susceptible]
                     susceptible_ids.append(sus_ids)
                     susceptibilities.append(subgroup_susceptibilities)
