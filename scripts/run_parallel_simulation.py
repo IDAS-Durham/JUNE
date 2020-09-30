@@ -120,7 +120,7 @@ def generate_simulator():
             )
 
     # interaction
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename="./config_interaction.yaml")
     
     # policies
     policies = Policies.from_file()
