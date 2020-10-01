@@ -10,7 +10,7 @@ import cProfile
 
 from june.hdf5_savers import generate_world_from_hdf5, load_population_from_hdf5
 from june.interaction import Interaction
-from june.infection import Infection, InfectionSelector, HealthIndexGenerator
+from june.infection import Infection, InfectionSelector, HealthIndexGenerator, SymptomTag
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.groups.travel import Travel
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
@@ -38,6 +38,18 @@ def set_random_seed(seed=999):
     set_seed_numba(seed)
     random.seed(seed)
     return
+
+class MockHealthIndexGenerator:
+    def __init__(self, desired_symptoms=SymptomTag.hospitalised):
+        self.index = desired_symptoms
+
+    def __call__(self, person):
+        hi = np.ones(8)
+        for h in range(len(hi)):
+            if h < self.index:
+                hi[h] = 0
+        return hi
+
 
 
 # a decorator for profiling
@@ -68,7 +80,7 @@ else:
     seed = 999
 set_random_seed(seed)
 
-world_file = f"./tests.hdf5"
+world_file = f"./tests_records.hdf5"
 config_path = "./config_simulation.yaml"
 
 # parallel setup
@@ -106,10 +118,12 @@ def generate_simulator():
     leisure = generate_leisure_for_config(domain, config_path)
     #
     # health index and infection selecctor
-    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+    health_index_generator = MockHealthIndexGenerator() #HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
     infection_selector = InfectionSelector.from_file(
         health_index_generator=health_index_generator
     )
+    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+
     oc = Observed2Cases.from_file(
         health_index_generator=health_index_generator, smoothing=True
     )
