@@ -208,14 +208,15 @@ class ExternalCity(ExternalGroup):
     """
     This a city that lives outside the simulated domain.
     """
-    __slots__ = "commuter_ids", "city_transports", "super_area", "coordinates"
+    __slots__ = "commuter_ids", "city_transports", "super_area", "coordinates", "name"
     external = True
-    def __init__(self, id, domain_id, coordinates= None, commuter_ids = None):
+    def __init__(self, id, domain_id, coordinates= None, commuter_ids = None, name=None):
         super().__init__(spec="city", domain_id=domain_id, id=id)
         self.commuter_ids = commuter_ids
         self.city_transports = None
         self.super_area = None
         self.coordinates = coordinates
+        self.name = name
 
     def get_commute_subgroup(self, person):
         if not self.commuter_ids:

@@ -159,6 +159,7 @@ def load_cities_from_hdf5(
                     id=ids[k],
                     domain_id=super_areas_to_domain_dict[city_super_area],
                     commuter_ids=None,
+                    name = names[k].decode()
                 )
                 for city_transport_id in city_transport_ids:
                     city_transport = ExternalGroup(
