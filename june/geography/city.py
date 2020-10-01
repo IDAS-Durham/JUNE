@@ -110,6 +110,7 @@ class Cities(Supergroup):
 
     def __init__(self, cities: List[City], ball_tree=True):
         super().__init__(cities)
+        self.members_by_name = {city.name : city for city in cities}
         if ball_tree:
             self._ball_tree = self._construct_ball_tree()
 
@@ -190,6 +191,9 @@ class Cities(Supergroup):
             cities = [self[idx] for idx in indcs[0]]
             return cities
 
+    def get_by_name(self, city_name):
+        return self.members_by_name[city_name]
+
     def get_closest_city(self, coordinates):
         return self.get_closest_cities(coordinates, k=1, return_distance=False)[0]
 
@@ -204,14 +208,15 @@ class ExternalCity(ExternalGroup):
     """
     This a city that lives outside the simulated domain.
     """
-    __slots__ = "commuter_ids", "city_transports", "super_area", "coordinates"
+    __slots__ = "commuter_ids", "city_transports", "super_area", "coordinates", "name"
     external = True
-    def __init__(self, id, domain_id, coordinates= None, commuter_ids = None):
+    def __init__(self, id, domain_id, coordinates= None, commuter_ids = None, name=None):
         super().__init__(spec="city", domain_id=domain_id, id=id)
         self.commuter_ids = commuter_ids
         self.city_transports = None
         self.super_area = None
         self.coordinates = coordinates
+        self.name = name
 
     def get_commute_subgroup(self, person):
         if not self.commuter_ids:

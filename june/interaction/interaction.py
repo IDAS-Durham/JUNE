@@ -287,35 +287,6 @@ class Interaction:
                 subgroup_idx=subgroup_id,
                 school_years=school_years,
             )
-        #if len(group.subgroups_susceptible) == 1:
-        #    infected_ids = self.time_step_for_subgroup(
-        #        contact_matrix=contact_matrix,
-        #        subgroup_transmission_probabilities=group.transmission_probabilities,
-        #        susceptible_ids=group.susceptible_ids[0],
-        #        susceptibilities=group.susceptibilities[0],
-        #        infector_subgroups=group.subgroups_infector,
-        #        infector_subgroup_sizes=group.infector_subgroup_sizes,
-        #        beta=beta,
-        #        delta_time=delta_time,
-        #        subgroup_idx=group.subgroups_susceptible[0],
-        #        school_years=school_years,
-        #    )
-        #else:
-        #    for i, subgroup_id in enumerate(group.subgroups_susceptible):
-        #        susceptible_ids = group.susceptible_ids[i]
-        #        susceptibilities = group.susceptibilities[i]
-        #        infected_ids += self.time_step_for_subgroup(
-        #            contact_matrix=contact_matrix,
-        #            subgroup_transmission_probabilities=group.transmission_probabilities,
-        #            susceptible_ids=susceptible_ids,
-        #            susceptibilities=group.susceptibilities,
-        #            infector_subgroups=group.subgroups_infector,
-        #            infector_subgroup_sizes=group.infector_subgroup_sizes,
-        #            beta=beta,
-        #            delta_time=delta_time,
-        #            subgroup_idx=subgroup_id,
-        #            school_years=school_years,
-        #        )
         return infected_ids
 
     def time_step_for_subgroup(
