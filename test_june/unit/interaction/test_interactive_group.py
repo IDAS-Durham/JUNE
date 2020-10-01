@@ -14,6 +14,10 @@ def test__substract_information_from_group():
     person2 = Person.from_attributes()
     person3 = Person.from_attributes()
     person4 = Person.from_attributes()
+    person1.susceptibility = 1
+    person2.susceptibility = 2
+    person3.susceptibility = 3
+    person4.susceptibility = 4
     infection_selector = InfectionSelector.from_file()
     hospital.add(person1, subgroup_type=0)
     hospital.add(person2, subgroup_type=0)
@@ -32,3 +36,5 @@ def test__substract_information_from_group():
     assert len(interactive_group.susceptible_ids) == 2
     assert interactive_group.susceptible_ids[0][0] == person2.id
     assert interactive_group.susceptible_ids[1][0] == person4.id
+    assert interactive_group.susceptibilities[0][0] == 2
+    assert interactive_group.susceptibilities[1][0] == 4

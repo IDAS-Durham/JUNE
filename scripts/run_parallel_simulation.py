@@ -43,22 +43,24 @@ def set_random_seed(seed=999):
 
 # a decorator for profiling
 def profile(filename=None, comm=MPI.COMM_WORLD):
-  def prof_decorator(f):
-    def wrap_f(*args, **kwargs):
-      pr = cProfile.Profile()
-      pr.enable()
-      result = f(*args, **kwargs)
-      pr.disable()
+    def prof_decorator(f):
+        def wrap_f(*args, **kwargs):
+            pr = cProfile.Profile()
+            pr.enable()
+            result = f(*args, **kwargs)
+            pr.disable()
 
-      if filename is None:
-        pr.print_stats()
-      else:
-        filename_r = filename + ".{}".format(comm.rank)
-        pr.dump_stats(filename_r)
+            if filename is None:
+                pr.print_stats()
+            else:
+                filename_r = filename + ".{}".format(comm.rank)
+                pr.dump_stats(filename_r)
 
-      return result
-    return wrap_f
-  return prof_decorator
+            return result
+
+        return wrap_f
+
+    return prof_decorator
 
 
 if len(sys.argv) > 1:
@@ -80,15 +82,17 @@ if seed == 999:
 else:
     save_path = f"results_{seed:02d}"
 
+
 def generate_simulator():
     with h5py.File(world_file, "r") as f:
         n_super_areas = f["geography"].attrs["n_super_areas"]
-    
-    
-    logger = Logger(save_path = save_path, file_name=f"logger.{rank}.hdf5")
-    
-    super_areas_to_domain_dict = generate_super_areas_to_domain_dict(n_super_areas, size)
-    
+
+    logger = Logger(save_path=save_path, file_name=f"logger.{rank}.hdf5")
+
+    super_areas_to_domain_dict = generate_super_areas_to_domain_dict(
+        n_super_areas, size
+    )
+
     domain = Domain.from_hdf5(
         domain_id=rank,
         super_areas_to_domain_dict=super_areas_to_domain_dict,
@@ -100,33 +104,34 @@ def generate_simulator():
     leisure = generate_leisure_for_config(domain, config_path)
     #
     # health index and infection selecctor
-    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.39)
+    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
     infection_selector = InfectionSelector.from_file(
         health_index_generator=health_index_generator
     )
     oc = Observed2Cases.from_file(
-            health_index_generator=health_index_generator,
-            smoothing=True
-            )
+        health_index_generator=health_index_generator, smoothing=True
+    )
     daily_cases_per_region = oc.get_regional_latent_cases()
     daily_cases_per_super_area = oc.convert_regional_cases_to_super_area(
-            daily_cases_per_region,
-            dates=['2020-02-28', '2020-03-02']
-            )
-    infection_seed = InfectionSeed(world=domain,
-            infection_selector=infection_selector,
-            daily_super_area_cases=daily_cases_per_super_area,
-            seed_strength=0.66,
-            )
+        daily_cases_per_region, dates=["2020-02-28", "2020-03-02"]
+    )
+    infection_seed = InfectionSeed(
+        world=domain,
+        infection_selector=infection_selector,
+        daily_super_area_cases=daily_cases_per_super_area,
+        seed_strength=10,
+    )
 
     # interaction
-    interaction = Interaction.from_file(config_filename="./config_interaction.yaml")
-    
+    interaction = Interaction.from_file(
+        config_filename="./config_interaction.yaml", population=domain.people
+    )
+
     # policies
     policies = Policies.from_file()
-    
+
     # create simulator
-    
+
     travel = Travel()
     simulator = Simulator.from_file(
         world=domain,
@@ -142,6 +147,7 @@ def generate_simulator():
     print("simulator ready to go")
     return simulator
 
+
 def run_simulator(simulator):
 
     t1 = time.time()
@@ -149,10 +155,12 @@ def run_simulator(simulator):
     t2 = time.time()
     print(f" Simulation took {t2-t1} seconds")
 
+
 def save_summary():
     if rank == 0:
         logger = ReadLogger(save_path, n_processes=size)
         logger.world_summary().to_csv(Path(save_path) / "summary.csv")
+
 
 if __name__ == "__main__":
     simulator = generate_simulator()
