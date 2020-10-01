@@ -20,10 +20,10 @@ def make_geo():
     )
     areas = Areas(
         [
-            Area(super_area=super_areas[0]),
-            Area(super_area=super_areas[0]),
-            Area(super_area=super_areas[1]),
-            Area(super_area=super_areas[1]),
+            Area(super_area=super_areas[0], name="area_1"),
+            Area(super_area=super_areas[0], name="area_2"),
+            Area(super_area=super_areas[1], name="area_3"),
+            Area(super_area=super_areas[1], name="area_4"),
         ],
         ball_tree=False,
     )

@@ -95,6 +95,19 @@ class CareHomeDistributor:
             del people_by_age[chosen_person.age]
         return chosen_person
 
+    def _sort_dictionary_by_age_range_key(self, d: dict):
+        """
+        Sorts a dictionary by decreasing order of the age range in the keys.
+        """
+        ret = OrderedDict()
+        ages = [age_range[0] for age_range in d.keys()]
+        men_age_ranges_sorted = np.array(list(d.keys()))[
+            np.argsort(ages)[::-1]
+        ]
+        for key in men_age_ranges_sorted:
+            ret[key] = d[key]
+        return ret
+
     def populate_care_homes_in_super_areas(self, super_areas: SuperAreas):
         """
         Populates care homes in the super areas. For each super area, we look into the
@@ -108,21 +121,8 @@ class CareHomeDistributor:
             women_communal_residents = self.communal_women_by_super_area[
                 super_area.name
             ]
-            # sort them from older age to younger
-            men_ages = [age_range[0] for age_range in men_communal_residents.keys()]
-            men_age_ranges_sorted = np.array(list(men_communal_residents.keys()))[
-                np.argsort(men_ages)[::-1]
-            ]
-            women_ages = [age_range[0] for age_range in women_communal_residents.keys()]
-            women_age_ranges_sorted = np.array(list(women_communal_residents.keys()))[
-                np.argsort(women_ages)[::-1]
-            ]
-            communal_men_sorted = OrderedDict()
-            communal_women_sorted = OrderedDict()
-            for key in men_age_ranges_sorted:
-                communal_men_sorted[key] = men_communal_residents[key]
-            for key in women_age_ranges_sorted:
-                communal_women_sorted[key] = women_communal_residents[key]
+            communal_men_sorted = self._sort_dictionary_by_age_range_key(men_communal_residents)
+            communal_women_sorted = self._sort_dictionary_by_age_range_key(women_communal_residents)
             areas_with_care_homes = [
                 area for area in super_area.areas if area.care_home is not None
             ]
@@ -133,33 +133,19 @@ class CareHomeDistributor:
                 self._create_people_dicts(area) for area in areas_with_care_homes
             ]
             found_person = True
+            assert communal_men_sorted.keys() == communal_women_sorted.keys()
             while found_person:
                 found_person = False
                 for i, area in enumerate(areas_with_care_homes):
                     care_home = area.care_home
                     if len(care_home.residents) < care_home.n_residents:
-                        found_person = False
                         # look for men first
                         for age_range in communal_men_sorted:
                             age1, age2 = list(map(int, age_range.split("-")))
                             if communal_men_sorted[age_range] <= 0:
-                                break
-                            person = self._find_person_in_age_range(
-                                areas_dicts[i][0], age1, age2
-                            )
-                            if person is None:
-                                break 
-                            care_home.add(person)
-                            communal_men_sorted[age_range] -= 1
-                            total_care_home_residents += 1
-                            found_person = True
-                            break
-                        if not found_person:
-                            # try women
-                            for age_range in communal_women_sorted:
-                                age1, age2 = list(map(int, age_range.split("-")))
                                 if communal_women_sorted[age_range] <= 0:
-                                    continue
+                                    continue 
+                                # find woman
                                 person = self._find_person_in_age_range(
                                     areas_dicts[i][1], age1, age2
                                 )
@@ -170,6 +156,21 @@ class CareHomeDistributor:
                                 total_care_home_residents += 1
                                 found_person = True
                                 break
+                            person = self._find_person_in_age_range(
+                                areas_dicts[i][0], age1, age2
+                            )
+                            if person is None:
+                                # find woman
+                                person = self._find_person_in_age_range(
+                                    areas_dicts[i][1], age1, age2
+                                )
+                            if person is None:
+                                continue
+                            care_home.add(person)
+                            communal_women_sorted[age_range] -= 1
+                            total_care_home_residents += 1
+                            found_person = True
+                            break 
         logger.info(
             f"This world has {total_care_home_residents} people living in care homes."
         )
