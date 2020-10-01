@@ -192,7 +192,7 @@ class Travel:
         for city in world.cities:
             if city.has_stations:
                 seats_per_passenger = self.commute_config["seats_per_passenger"].get(
-                    city.name, default=1
+                    city.name, 1
                 )
                 n_commute_internal = len(city.commuter_ids)
                 number_city_transports = int(
