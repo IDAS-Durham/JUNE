@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 from june.geography import Geography
 from june.groups.travel import generate_commuting_network, Travel, ModeOfTransport
@@ -17,7 +18,7 @@ def make_commuting_network(geo):
     world.areas = geo.areas
     world.super_areas = geo.super_areas
     people = []
-    for i in range(12):
+    for i in range(1200):
         person = Person.from_attributes()
         person.mode_of_transport = ModeOfTransport(is_public=True, description="asd")
         person.work_super_area = world.super_areas.members_by_name["E02001731"]
@@ -56,8 +57,8 @@ class TestCommute:
         for station in city.stations:
             n_external_commuters += len(station.commuter_ids)
         n_internal_commuters = len(city.commuter_ids)
-        assert n_internal_commuters == 3
-        assert n_external_commuters == 9
+        assert n_internal_commuters == 300
+        assert n_external_commuters == 900
 
     def test__get_travel_subgroup(self, travel_world):
         world, travel = travel_world
@@ -104,3 +105,30 @@ class TestCommute:
             commuters += len(station.commuter_ids)
         assert commuters > 0
         assert commuters == assigned_commuters
+
+    def test__number_of_transports(self, travel_world):
+        world, travel = travel_world
+        newcastle = world.cities.get_by_name("Newcastle upon Tyne")
+        seats_per_passenger = 2.28
+        seats_per_train = 50
+
+        n_city_transports = len(newcastle.city_transports)
+        assert n_city_transports > 0
+        n_city_commuters = len(newcastle.commuter_ids)
+        assert n_city_commuters > 0
+        assert (
+            np.ceil(n_city_commuters * seats_per_passenger / seats_per_train)
+            == n_city_transports
+        )
+        n_inter_city_transports = sum(
+            len(station.inter_city_transports) for station in newcastle.stations
+        )
+        assert n_inter_city_transports > 0
+        n_inter_city_commuters = sum(
+            len(station.commuter_ids) for station in newcastle.stations
+        )
+        assert n_inter_city_commuters > 0
+        assert (
+            np.ceil(n_inter_city_commuters * seats_per_passenger / seats_per_train)
+            == n_inter_city_transports
+        )

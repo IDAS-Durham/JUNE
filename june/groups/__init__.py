@@ -7,7 +7,7 @@ from .group import (
     ExternalGroup,
 )
 from .boundary import Boundary
-from .carehome import CareHome, CareHomes
+from .care_home import CareHome, CareHomes
 from .cemetery import Cemetery, Cemeteries
 from .company import Company, Companies
 from .hospital import Hospital, Hospitals, ExternalHospital

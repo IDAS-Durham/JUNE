@@ -89,7 +89,6 @@ class World:
         self.cities = None
         self.stations = None
 
-
     def distribute_people(self, include_households=True):
         """
         Distributes people to buildings assuming default configurations.
@@ -109,8 +108,13 @@ class World:
             )
 
         if self.care_homes is not None:
-            carehome_distr = CareHomeDistributor()
-            carehome_distr.populate_care_home_in_areas(self.areas)
+            carehome_distr = CareHomeDistributor.from_file()
+            carehome_distr.populate_care_homes_in_super_areas(
+                super_areas=self.super_areas
+            )
+            carehome_distr.distribute_workers_to_care_homes(
+                super_areas=self.super_areas
+            )
 
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
