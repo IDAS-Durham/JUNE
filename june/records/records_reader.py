@@ -68,5 +68,6 @@ class RecordReader:
             df = df.merge(people_df, how="inner", left_index=True, right_index=True)
             if with_geography:
                 geography_df = self.get_geography_df()
-                df = df.merge(geography_df, left_on="area_id", right_index=True)
+                df = df.merge(geography_df.drop_duplicates(),
+                        left_on="area_id", right_index=True, how='inner')
         return df

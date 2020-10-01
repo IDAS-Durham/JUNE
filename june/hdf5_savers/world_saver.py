@@ -255,7 +255,8 @@ def generate_domain_from_hdf5(
         domain.hospitals = load_hospitals_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
-            domain_areas=area_ids
+            domain_super_areas=super_area_ids,
+            super_areas_to_domain_dict=super_areas_to_domain_dict,
         )
     if "schools" in f_keys:
         logger.info("loading schools...")

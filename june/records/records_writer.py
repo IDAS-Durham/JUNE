@@ -40,23 +40,21 @@ def combine_summaries(record_path):
 def combine_hdf5s(record_path, table_names=("infections", "population")):
     record_files = record_path.glob("june_record.*.h5")
     with tables.open_file(record_path / "june_record.h5", "w") as merged_record:
-        root = merged_record.root
         for i, record_file in enumerate(record_files):
             with tables.open_file(str(record_file), "r") as record:
                 datasets = record.root._f_list_nodes()
                 for dataset in datasets:
                     arr_data = dataset[:]
                     if len(arr_data) > 0:
-                        all_data = arr_data.copy()
-                        description = getattr(record.root, dataset.name).description
                         if i == 0:
+                            description = getattr(record.root, dataset.name).description
                             merged_record.create_table(
                                 merged_record.root,
                                 dataset.name,
                                 description=description,
                             )
                         table = getattr(merged_record.root, dataset.name)
-                        table.append(all_data)
+                        table.append(arr_data)
                         table.flush()
 
 
@@ -135,18 +133,10 @@ class Record:
         hospital_admissions, icu_admissions = defaultdict(int), defaultdict(int)
         for hospital_id in self.events["hospital_admissions"].hospital_ids:
             hospital = world.hospitals.get_from_id(hospital_id)
-            if hospital.external:
-                region = hospital.region
-            else:
-                region = hospital.region.name
-            hospital_admissions[region] += 1
+            hospital_admissions[hospital.region_name] += 1
         for hospital_id in self.events["icu_admissions"].hospital_ids:
             hospital = world.hospitals.get_from_id(hospital_id)
-            if hospital.external:
-                region = hospital.region
-            else:
-                region = hospital.region.name
-            icu_admissions[region] += 1
+            icu_admissions[hospital.region_name] += 1
         current_hospitalised, current_intensive_care = (
             defaultdict(int),
             defaultdict(int),
@@ -154,10 +144,10 @@ class Record:
         for person in world.people:
             if person.medical_facility is not None:
                 if person.medical_facility.subgroup_type == 1:
-                    region = person.medical_facility.group.super_area.region.name
+                    region = person.medical_facility.group.region_name
                     current_hospitalised[region] += 1
                 elif person.medical_facility.subgroup_type == 2:
-                    region = person.medical_facility.group.super_area.region.name
+                    region = person.medical_facility.group.region_name
                     current_intensive_care[region] += 1
         return (
             hospital_admissions,
