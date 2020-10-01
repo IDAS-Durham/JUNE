@@ -26,7 +26,6 @@ class Household(Group):
         "area",
         "type",
         "max_size",
-        "n_residents",
         "residents",
         "quarantine_starting_date",
         "households_to_visit",
@@ -52,7 +51,6 @@ class Household(Group):
         self.relatives_in_care_homes = None
         self.relatives_in_households = None
         self.max_size = max_size
-        self.n_residents = 0
         self.residents = ()
         self.households_to_visit = None
         self.care_homes_to_visit = None
@@ -122,6 +120,9 @@ class Household(Group):
     @property
     def coordinates(self):
         return self.area.coordinates
+
+    def n_residents(self):
+        return len(self.residents)
 
     def quarantine(self, time, quarantine_days, household_compliance):
         if self.type == "communal":

@@ -128,7 +128,6 @@ def generate_simulator():
     interaction = Interaction.from_file(
         config_filename="./config_interaction.yaml", population=domain.people
     )
-
     # policies
     policies = Policies.from_file()
 
