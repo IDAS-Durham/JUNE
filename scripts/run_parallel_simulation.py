@@ -86,7 +86,9 @@ def generate_simulator():
     with h5py.File(world_file, "r") as f:
         n_super_areas = f["geography"].attrs["n_super_areas"]
 
-    record = Record(record_path="results", record_static_data=True, mpi_rank=rank)
+    record = Record(
+        record_path="results_records", record_static_data=True, mpi_rank=rank
+    )
 
     super_areas_to_domain_dict = generate_super_areas_to_domain_dict(
         n_super_areas, size
