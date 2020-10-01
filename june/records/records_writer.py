@@ -45,14 +45,14 @@ def combine_hdf5s(record_path, table_names=("infections", "population")):
                 datasets = record.root._f_list_nodes()
                 for dataset in datasets:
                     arr_data = dataset[:]
+                    if i == 0:
+                        description = getattr(record.root, dataset.name).description
+                        merged_record.create_table(
+                            merged_record.root,
+                            dataset.name,
+                            description=description,
+                        )
                     if len(arr_data) > 0:
-                        if i == 0:
-                            description = getattr(record.root, dataset.name).description
-                            merged_record.create_table(
-                                merged_record.root,
-                                dataset.name,
-                                description=description,
-                            )
                         table = getattr(merged_record.root, dataset.name)
                         table.append(arr_data)
                         table.flush()
