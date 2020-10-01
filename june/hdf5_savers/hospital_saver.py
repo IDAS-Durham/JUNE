@@ -157,34 +157,32 @@ def load_hospitals_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
                 region_name, np.s_[idx1:idx2], np.s_[0:length]
             )
             for k in range(idx2 - idx1):
-                if domain_super_areas is not None:
-                    super_area = super_areas[k]
-                    if super_area == nan_integer:
-                        raise ValueError(
-                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
-                        )
-                    trust_code = trust_codes[k]
-                    if trust_code.decode() == " ":
-                        trust_code = None
-                    else:
-                        trust_code = trust_code.decode()
+                super_area = super_areas[k]
+                if super_area == nan_integer:
+                    raise ValueError(
+                        "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                    )
+                trust_code = trust_codes[k]
+                if trust_code.decode() == " ":
+                    trust_code = None
+                else:
+                    trust_code = trust_code.decode()
                     
-                    if domain_super_areas is not None and super_area not in domain_super_areas:
+                if domain_super_areas is not None and super_area not in domain_super_areas:
                         hospital = ExternalHospital(
                                 id=ids[k],
                                 spec='hospital',
                                 domain_id = super_areas_to_domain_dict[super_area],
                                 region_name = region_name[k] 
                             )
-                    else:
-                        hospital = Hospital(
-                                n_beds=n_beds_list[k],
-                                n_icu_beds=n_icu_beds_list[k],
-                                coordinates=coordinates[k],
-                                trust_code=trust_code,
-                        )
-                        hospital.id = ids[k]
-
+                else:
+                    hospital = Hospital(
+                            n_beds=n_beds_list[k],
+                            n_icu_beds=n_icu_beds_list[k],
+                            coordinates=coordinates[k],
+                            trust_code=trust_code,
+                    )
+                    hospital.id = ids[k]
                 hospitals_list.append(hospital)
     return Hospitals(hospitals_list, ball_tree=False)
 

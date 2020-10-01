@@ -341,7 +341,7 @@ class Simulator:
                 self.bury_the_dead(self.world, person)
 
     def infect_people(self, infected_ids, people_from_abroad_dict):
-        foreign_ids = [] 
+        foreign_ids = []
         for inf_id in infected_ids:
             if inf_id in self.world.people.people_dict:
                 person = self.world.people.get_from_id(inf_id)
@@ -367,9 +367,7 @@ class Simulator:
                 if id in foreign_ids:
                     if domain not in infect_in_domains:
                         infect_in_domains[domain] = []
-                    infect_in_domains[domain].append(
-                        id
-                    )
+                    infect_in_domains[domain].append(id)
             return infect_in_domains
 
     def tell_domains_to_infect(self, infect_in_domains):
@@ -452,7 +450,7 @@ class Simulator:
             f"number of infected = {len(self.world.people.infected)}"
         )
         # main interaction loop
-        infected_ids= []
+        infected_ids = []
         for super_group in super_group_instances:
             for group in super_group:
                 if group.external:
