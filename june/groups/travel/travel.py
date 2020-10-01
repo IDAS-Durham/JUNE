@@ -191,9 +191,9 @@ class Travel:
         world.inter_city_transports = InterCityTransports([])
         for city in world.cities:
             if city.has_stations:
-                seats_per_passenger = self.commute_config["seats_per_passenger"][
-                    city.name
-                ]
+                seats_per_passenger = self.commute_config["seats_per_passenger"].get(
+                    city.name, default=1
+                )
                 n_commute_internal = len(city.commuter_ids)
                 number_city_transports = int(
                     np.ceil(
