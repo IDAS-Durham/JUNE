@@ -1,4 +1,2 @@
-sector:
-  Q:
-    nr_of_clients: 10
-
+n_residents_per_worker: 10
+workers_sector: Q
