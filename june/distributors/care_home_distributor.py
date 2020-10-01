@@ -132,46 +132,44 @@ class CareHomeDistributor:
             areas_dicts = [
                 self._create_people_dicts(area) for area in areas_with_care_homes
             ]
-            # distribute men
-            men_left = True
-            while men_left:
-                men_left = False
+            found_person = True
+            while found_person:
+                found_person = False
                 for i, area in enumerate(areas_with_care_homes):
                     care_home = area.care_home
                     if len(care_home.residents) < care_home.n_residents:
+                        found_person = False
+                        # look for men first
                         for age_range in communal_men_sorted:
                             age1, age2 = list(map(int, age_range.split("-")))
                             if communal_men_sorted[age_range] <= 0:
-                                continue
+                                break
                             person = self._find_person_in_age_range(
                                 areas_dicts[i][0], age1, age2
                             )
                             if person is None:
-                                continue
+                                break 
                             care_home.add(person)
                             communal_men_sorted[age_range] -= 1
-                            men_left = True
                             total_care_home_residents += 1
-            # distribute women
-            women_left = True
-            while women_left:
-                women_left = False
-                for i, area in enumerate(areas_with_care_homes):
-                    care_home = area.care_home
-                    if len(care_home.residents) < care_home.n_residents:
-                        for age_range in communal_women_sorted:
-                            age1, age2 = list(map(int, age_range.split("-")))
-                            if communal_women_sorted[age_range] <= 0:
-                                continue
-                            person = self._find_person_in_age_range(
-                                areas_dicts[i][1], age1, age2
-                            )
-                            if person is None:
-                                continue
-                            care_home.add(person)
-                            communal_women_sorted[age_range] -= 1
-                            women_left = True
-                            total_care_home_residents += 1
+                            found_person = True
+                            break
+                        if not found_person:
+                            # try women
+                            for age_range in communal_women_sorted:
+                                age1, age2 = list(map(int, age_range.split("-")))
+                                if communal_women_sorted[age_range] <= 0:
+                                    continue
+                                person = self._find_person_in_age_range(
+                                    areas_dicts[i][1], age1, age2
+                                )
+                                if person is None:
+                                    continue
+                                care_home.add(person)
+                                communal_women_sorted[age_range] -= 1
+                                total_care_home_residents += 1
+                                found_person = True
+                                break
         logger.info(
             f"This world has {total_care_home_residents} people living in care homes."
         )
