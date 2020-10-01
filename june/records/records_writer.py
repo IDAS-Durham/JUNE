@@ -70,6 +70,7 @@ class Record:
     ):
         self.record_path = Path(record_path)
         self.record_path.mkdir(parents=True, exist_ok=True)
+        self.mpi_rank = mpi_rank
         if mpi_rank is not None:
             self.filename = f"june_record.{mpi_rank}.h5"
             self.summary_filename = f"summary.{mpi_rank}.csv"
@@ -226,4 +227,5 @@ class Record:
                 )
 
     def combine_outputs(self,):
-        combine_records(self.record_path)
+        if self.mpi_rank == 0:
+            combine_records(self.record_path)
