@@ -28,6 +28,8 @@ default_city_stations_config_filename = (
     configs_path / "defaults/travel/city_stations.yaml"
 )
 
+default_commute_config_filename = configs_path / "defaults/groups/travel/commute.yaml"
+
 
 def generate_commuting_network(
     world,
@@ -85,9 +87,12 @@ class Travel:
         self,
         city_super_areas_filename=default_cities_filename,
         city_stations_filename=default_city_stations_config_filename,
+        commute_config_filename=default_commute_config_filename,
     ):
         self.city_super_areas_filename = city_super_areas_filename
         self.city_stations_filename = city_stations_filename
+        with open(commute_config_filename) as f:
+            self.commute_config = yaml.load(f, Loader=yaml.FullLoader)
 
     def initialise_commute(self, world):
         logger.info(f"Initialising commute...")
@@ -179,31 +184,54 @@ class Travel:
                 )
 
     def create_transport_units_at_stations_and_cities(
-        self, world, people_per_city_transport=50, people_per_inter_city_transport=50
+        self, world, seats_per_city_transport=50, seats_per_inter_city_transport=50
     ):
         logger.info(f"Creating transport units for the population")
         world.city_transports = CityTransports([])
         world.inter_city_transports = InterCityTransports([])
         for city in world.cities:
             if city.has_stations:
+                seats_per_passenger = self.commute_config["seats_per_passenger"].get(
+                    city.name, 1
+                )
                 n_commute_internal = len(city.commuter_ids)
                 number_city_transports = int(
-                    np.ceil(n_commute_internal / people_per_city_transport)
+                    np.ceil(
+                        (
+                            seats_per_passenger
+                            * n_commute_internal
+                            / seats_per_city_transport
+                        )
+                    )
+                )
+                logger.info(
+                    f"City {city.name} has {number_city_transports} city train carriages."
                 )
                 for _ in range(number_city_transports):
                     city_transport = CityTransport()
                     city.city_transports.append(city_transport)
                     world.city_transports.add(city_transport)
+                number_inter_city_transports_total = 0
                 for station in city.stations:
+                    if len(station.commuter_ids) == 0:
+                        continue
                     number_inter_city_transports = int(
                         np.ceil(
-                            len(station.commuter_ids) / people_per_inter_city_transport
+                            (
+                                seats_per_passenger
+                                * len(station.commuter_ids)
+                                / seats_per_inter_city_transport
+                            )
                         )
                     )
+                    number_inter_city_transports_total += number_inter_city_transports
                     for _ in range(number_inter_city_transports):
                         inter_city_transport = InterCityTransport()
                         station.inter_city_transports.append(inter_city_transport)
                         world.inter_city_transports.add(inter_city_transport)
+                logger.info(
+                    f"City {city.name} has {number_inter_city_transports_total} inter-city train carriages."
+                )
         logger.info(f"Cities' transport initialised")
 
     def get_commute_subgroup(self, person):
