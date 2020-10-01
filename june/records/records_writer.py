@@ -183,7 +183,7 @@ class Record:
             daily_deaths[region] += 1
             if self.events["deaths"].location_specs[i] == "hospital":
                 hospital_id = self.events["deaths"].location_ids[i]
-                region = world.hospitals.get_from_id(hospital_id).super_area.region.name
+                region = world.hospitals.get_from_id(hospital_id).region_name
                 daily_deaths_in_hospital[region] += 1
         return daily_deaths, daily_deaths_in_hospital
 

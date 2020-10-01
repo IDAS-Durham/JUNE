@@ -38,6 +38,10 @@ class CityTransport(Transport):
     def area(self):
         return self.city.super_area.areas[0]
 
+    @property
+    def super_area(self):
+        return self.city.super_area
+
     @property 
     def coordinates(self):
         return self.area.coordinates
@@ -61,6 +65,10 @@ class InterCityTransport(Transport):
     def area(self):
         return self.station.super_area.areas[0]
 
+    @property
+    def super_area(self):
+        return self.station.super_area
+ 
     @property
     def coordinates(self):
         return self.area.coordinates

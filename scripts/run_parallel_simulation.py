@@ -106,7 +106,7 @@ def generate_simulator():
     leisure = generate_leisure_for_config(domain, config_path)
     #
     # health index and infection selecctor
-    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.39)
+    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
     infection_selector = InfectionSelector.from_file(
         health_index_generator=health_index_generator
     )
@@ -121,11 +121,13 @@ def generate_simulator():
         world=domain,
         infection_selector=infection_selector,
         daily_super_area_cases=daily_cases_per_super_area,
-        seed_strength=0.66,
+        seed_strength=10,
     )
 
     # interaction
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(
+        config_filename="./config_interaction.yaml", population=domain.people
+    )
 
     # policies
     policies = Policies.from_file()
@@ -154,6 +156,7 @@ def run_simulator(simulator):
     simulator.run()
     t2 = time.time()
     print(f" Simulation took {t2-t1} seconds")
+
 
 
 if __name__ == "__main__":
