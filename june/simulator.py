@@ -471,16 +471,10 @@ class Simulator:
                         n_infected = len(new_infected_ids)
                         tprob_norm = sum(int_group.transmission_probabilities)
                         infector_ids = list(chain.from_iterable(int_group.infector_ids))
-                        transmission_probabilities = [
-                            self.world.people.get_from_id(
-                                infector_id
-                            ).infection.transmission.probability
-                            for infector_id in infector_ids
-                        ]
                         infector_ids = np.random.choice(
                             infector_ids,
                             n_infected,
-                            p=np.array(transmission_probabilities) / tprob_norm,
+                            #p=np.array(transmission_probabilities) / tprob_norm,
                         )
                         self.record.accumulate(
                             table_name="infections",

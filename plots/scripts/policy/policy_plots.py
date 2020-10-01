@@ -58,13 +58,13 @@ class PolicyPlots:
             fit_change.append(zero)
 
         f, ax = plt.subplots()
-        ax.plot(dates, change)
-        ax.plot(dates[137:-1], fit_change, label='Simualted change', color='maroon')
+        ax.plot(dates, change, label='OpenTable')
+        ax.plot(dates[137:-1], fit_change, label='JUNE')
         ax.vlines(datetime(2020,3,16).date(),-110,230, linestyles='--', color='orange', label = '16th March')
         ax.vlines(datetime(2020,3,23).date(),-110,230, linestyles='--', color='red', label = '23rd March')
         ax.vlines(datetime(2020,7,4).date(),-110,230, linestyles='--',  color='green', label = '4th July')
         ax.hlines(0, dates[0], dates[-1], linestyles='--')
-        ax.set_ylabel('% difference')
+        ax.set_ylabel('\% difference')
         ax.set_xlabel('Date')
         ax.legend(bbox_to_anchor=(1.05, 1))
         plt.xticks(rotation=45)
@@ -90,8 +90,8 @@ class PolicyPlots:
 
         activities = ["primary_activity", "residence"]
 
-        no_days = 200
-        begin_date = datetime(2020,3,1)
+        no_days = 130
+        begin_date = datetime(2020,3,31)
 
         dates = []
         children_in_school = []
@@ -132,12 +132,12 @@ class PolicyPlots:
         dfe_per *= 100
 
         f, ax = plt.subplots(figsize=(5,3))
-        ax.plot(dates, per_in_school, label='JUNE')
         ax.plot(dfe_dates, dfe_per, label='DfE statistics')
+        ax.plot(dates, per_in_school, label='JUNE')
         ax.vlines(datetime(2020,6,1),1,19,linestyle='--',color='green', label='Early years +\nY6 opening')
         ax.vlines(datetime(2020,6,15),1,19,linestyle='--',color='orange', label='Y10+Y12\noffered support')
         ax.vlines(datetime(2020,7,16),1,19,linestyle='--',color='red', label='Summer holidays')
-        ax.set_ylabel('% pupils attending')
+        ax.set_ylabel('\% pupils attending')
         ax.set_xlabel('Date')
         ax.set_ylim((0,20))
         ax.set_xlim((datetime(2020,4,1),datetime(2020,7,25)))

@@ -340,3 +340,4 @@ def create_domains_world():
     travel = Travel()
     travel.initialise_commute(world)
     return world
+

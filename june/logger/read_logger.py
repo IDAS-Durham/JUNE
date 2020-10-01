@@ -39,6 +39,15 @@ class ReadLogger:
         """
         Load data related to population (age, sex, ...)
         """
+        
+        n_people = []        
+        ids = []
+        ages = []
+        sexes = []
+        super_areas = []
+        ethnicities = []
+        socioeconomic_indices = []
+
         for rank in range(self.n_processes):
             with h5py.File(
                 self.output_path / f"{self.root_output_file}.{rank}.hdf5",
@@ -46,45 +55,51 @@ class ReadLogger:
                 libver="latest",
                 swmr=True,
             ) as f:
-                if rank == 0:
-                    population = f["population"]
-                    self.n_people = population.attrs["n_people"]
-                    self.ids = population["id"][:]
-                    self.ages = population["age"][:]
-                    self.sexes = population["sex"][:]
-                    self.super_areas = population["super_area"][:].astype("U13")
-                    self.ethnicities = population["ethnicity"][:]
-                    self.socioeconomic_indices = population["socioeconomic_index"][:]
-                else:
-                    population = f["population"]
-                    self.n_people += population.attrs["n_people"]
-                    self.ids = np.concatenate((self.ids, population["id"][:]))
-                    self.ages = np.concatenate((self.ages, population["age"][:]))
-                    self.sexes = np.concatenate((self.sexes, population["sex"][:]))
-                    self.super_areas = np.concatenate((self.super_areas,
-                        population['super_area'][:].astype("U13"))
-                        )
-                    self.ethnicities = np.concatenate(
-                        (self.ethnicities, population["ethnicity"][:])
-                    )
-                    self.socioeconomic_indices = np.concatenate(
-                        (
-                            self.socioeconomic_indices,
-                            population["socioeconomic_index"][:],
-                        )
-                    )
+
+                population = f["population"]
+                n_people.append(population.attrs["n_people"])
+                ids.append(population["id"][:])
+                ages.append(population["age"][:])
+                sexes.append(population["sex"][:])
+                super_areas.append(
+                    population['super_area'][:].astype("U13")
+                )
+                ethnicities.append(
+                    population["ethnicity"][:]
+                )
+                socioeconomic_indices.append(
+                    population["socioeconomic_index"][:]               
+                )
+
+        self.n_people = int(np.sum(n_people))
+        self.ids = np.concatenate(ids)
+        self.ages = np.concatenate(ages)
+        self.sexes = np.concatenate(sexes)
+        self.super_areas = np.concatenate(super_areas)
+        self.ethnicites = np.concatenate(ethnicities)
+        self.socioeconomic_indices = np.concatenate(socioeconomic_indices)
 
     def load_infected_data(self):
-        infections_world_list = []
+
         for rank in range(self.n_processes):
             self._load_infected_data_for_rank(rank)
+
+        self.ids = [0 for x in self.id_lists]
+        self.symptoms = [0 for x in self.symptom_lists]
+        for i,x in enumerate(self.id_lists):
+            self.ids[i] = np.concatenate(x)
+            self.id_lists[i] = 0
+        for i,x in enumerate(self.symptom_lists):
+            self.symptoms[i] = np.concatenate(x)
+            self.symptom_lists[i] = 0
+
         self.infections_df = pd.DataFrame(
-                {
-                    "time_stamp": self.time_stamps,
-                    "infected_id": self.ids,
-                    "symptoms": self.symptoms,
-                }
-            )
+            {
+                "time_stamp": self.time_stamps,
+                "infected_id": self.ids,
+                "symptoms": self.symptoms,
+            }
+        )
         self.infections_df.set_index("time_stamp", inplace=True)
         self.infections_df.index = pd.to_datetime(self.infections_df.index)
 
@@ -110,18 +125,14 @@ class ReadLogger:
             swmr=True,
         ) as f:
             infections = f[f"infection"]
-            self.time_stamps = [key for key in infections]
             if rank == 0:
-                self.ids, self.symptoms = [], []
-                for i, time_stamp in enumerate(self.time_stamps):
-                    self.ids.append(list(infections[time_stamp]["id"][:]))
-                    self.symptoms.append(list(infections[time_stamp]["symptoms"][:]))
-
-            else:
-                for i, time_stamp in enumerate(self.time_stamps):
-                    self.ids[i] += list(infections[time_stamp]["id"][:])
-                    self.symptoms[i] += list(infections[time_stamp]["symptoms"][:])
-        
+                self.time_stamps = [key for key in infections]
+                self.id_lists = [[] for time_stamp in self.time_stamps]
+                self.symptom_lists = [[] for time_stamp in self.time_stamps]
+            for i, time_stamp in enumerate(self.time_stamps):
+                self.id_lists[i].append(infections[time_stamp]["id"][:])
+                self.symptom_lists[i].append(infections[time_stamp]["symptoms"][:])
+       
 
     def process_symptoms(
         self, symptoms_df: pd.DataFrame, n_people: int
@@ -187,14 +198,15 @@ class ReadLogger:
             .fillna(-df["current_infected"][0])
             .astype(int)
         )
+        
         # filter rows that contain at least one hospitalised person
-        symptoms_df = symptoms_df.loc[df["current_hospitalised"] > 0]
-        for ts, row in symptoms_df.iterrows():
+        hosp_df = symptoms_df.loc[df["current_hospitalised"] > 0]
+        for ts, row in hosp_df.iterrows():
             mask = row["symptoms"] == SymptomTag.hospitalised
             for col, data in row.iteritems():
                 if col in ("symptoms", "infected_id"):
-                    symptoms_df.loc[ts, col] = data[mask]
-        flat_df = symptoms_df[["symptoms", "infected_id"]].apply(lambda x: x.explode())
+                    hosp_df.loc[ts, col] = data[mask]
+        flat_df = hosp_df[["symptoms", "infected_id"]].apply(lambda x: x.explode())
         unique, unique_indices = np.unique(
             flat_df["infected_id"].values, return_index=True
         )  # will only return the first index of each.
@@ -203,6 +215,24 @@ class ReadLogger:
             flat_hospitalised_df.index
         ).size()
         df["daily_hospital_admissions"] = df["daily_hospital_admissions"].fillna(0.0)
+        
+        # filter rows that contain at least one ICU.
+        icu_df = symptoms_df.loc[df["current_intensive_care"] > 0]
+        for ts, row in icu_df.iterrows():
+            mask = row["symptoms"] == SymptomTag.intensive_care
+            for col, data in row.iteritems():
+                if col in ("symptoms", "infected_id"):
+                    hosp_df.loc[ts, col] = data[mask]
+        flat_df = hosp_df[["symptoms", "infected_id"]].apply(lambda x: x.explode())
+        unique, unique_indices = np.unique(
+            flat_df["infected_id"].values, return_index=True
+        )  # will only return the first index of each.
+        flat_hospitalised_df = flat_df.iloc[unique_indices]
+        df["daily_icu_admissions"] = flat_hospitalised_df.groupby(
+            flat_hospitalised_df.index
+        ).size()
+        df["daily_icu_admissions"] = df["daily_icu_admissions"].fillna(0.0)
+
         return df
 
     def world_summary(self) -> pd.DataFrame:
@@ -322,10 +352,13 @@ class ReadLogger:
         infection_locations = []
         for rank in range(self.n_processes):
             self._load_infection_location_for_rank(rank=rank)
+        self.infection_locations = [np.concatenate(x).tolist() for x in self.infection_location_lists]
+        self.infection_locations_lists = []
+
         locations_df = pd.DataFrame(
             {
                 "time_stamp": self.location_time_stamps,
-                "location_id": self.infection_location,
+                "location_id": self.infection_locations,
             }
         )
         locations_df["time_stamp"] = pd.to_datetime(locations_df["time_stamp"])
@@ -357,17 +390,20 @@ class ReadLogger:
         ) as f:
             locations = f[f"locations"]
             if rank == 0:
-                self.location_time_stamps, self.infection_location = [], [] 
+                self.location_time_stamps = list(locations.keys())
+                self.infection_location_lists = [[] for time_stamp in self.location_time_stamps]
                 for i, time_stamp in enumerate(locations.keys()):
-                    self.infection_location.append(
-                        list(
-                            locations[time_stamp]["infection_location"][:].astype("U")
-                        )
+                    self.infection_location_lists[i].append(
+                        locations[time_stamp]["infection_location"][:].astype("U")
                     )
-                    self.location_time_stamps.append(time_stamp)
             else:
                 for i, time_stamp in enumerate(locations.keys()):
-                    self.infection_location[i] += list(locations[time_stamp]['infection_location'][:].astype("U"))
+                    # Will there ever be instance of no infections in a location in a domain?
+                    if time_stamp not in locations.keys():
+                        continue
+                    self.infection_location_lists[i].append(
+                        locations[time_stamp]['infection_location'][:].astype("U")
+                    )
 
         
     def get_locations_infections(self, start_date=None, end_date=None,) -> pd.DataFrame:

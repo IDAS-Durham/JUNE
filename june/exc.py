@@ -6,3 +6,6 @@ class PolicyError(BaseException):
 
 class SimulatorError(BaseException):
     pass
+
+class InteractionError(BaseException):
+    pass
