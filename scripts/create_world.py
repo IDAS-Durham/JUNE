@@ -40,38 +40,30 @@ t1 = time.time()
 config_path = "./config_simulation.yaml"
 
 # define geography, let's run the first 20 super areas of london
-#geography = Geography.from_file({"area": ["E00061969"]})
-geography = Geography.from_file({"region": ["North East"]})
+geography = Geography.from_file({"super_area": london_areas})
+#geography = Geography.from_file({"region": ["North East"]})
 
 # add buildings
-#geography.hospitals = Hospitals.for_geography(geography)
-#geography.companies = Companies.for_geography(geography)
-#geography.schools = Schools.for_geography(geography)
-#geography.universities = Universities.for_super_areas(geography.super_areas)
+geography.hospitals = Hospitals.for_geography(geography)
+geography.companies = Companies.for_geography(geography)
+geography.schools = Schools.for_geography(geography)
+geography.universities = Universities.for_super_areas(geography.super_areas)
 geography.care_homes = CareHomes.for_geography(geography)
 ## generate world
 world = generate_world_from_geography(geography, include_households=False)
 #
 ## some leisure activities
-#world.pubs = Pubs.for_geography(geography)
-#world.cinemas = Cinemas.for_geography(geography)
-#world.groceries = Groceries.for_geography(geography)
-#leisure = generate_leisure_for_config(world, config_filename=config_path)
-#leisure.distribute_social_venues_to_areas(
-#    areas=world.areas, super_areas=world.super_areas
-#)  # this assigns possible social venues to people.
-#travel = Travel()
-#travel.initialise_commute(world)
+world.pubs = Pubs.for_geography(geography)
+world.cinemas = Cinemas.for_geography(geography)
+world.groceries = Groceries.for_geography(geography)
+leisure = generate_leisure_for_config(world, config_filename=config_path)
+leisure.distribute_social_venues_to_areas(
+    areas=world.areas, super_areas=world.super_areas
+)  # this assigns possible social venues to people.
+travel = Travel()
+travel.initialise_commute(world)
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 # save the world to hdf5 to load it later
 world.to_hdf5("tests.hdf5")
 print("Done :)")
-
-import matplotlib.pyplot as plt
-ages = []
-for care_home in world.care_homes:
-    ages += [person.age for person in care_home.residents]
-plt.hist(ages)
-
-plt.show()
