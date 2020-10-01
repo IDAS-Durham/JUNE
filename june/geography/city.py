@@ -110,6 +110,7 @@ class Cities(Supergroup):
 
     def __init__(self, cities: List[City], ball_tree=True):
         super().__init__(cities)
+        self.members_by_name = {city.name : city for city in cities}
         if ball_tree:
             self._ball_tree = self._construct_ball_tree()
 
@@ -189,6 +190,9 @@ class Cities(Supergroup):
             )
             cities = [self[idx] for idx in indcs[0]]
             return cities
+
+    def get_by_name(self, city_name):
+        return self.members_by_name[city_name]
 
     def get_closest_city(self, coordinates):
         return self.get_closest_cities(coordinates, k=1, return_distance=False)[0]
