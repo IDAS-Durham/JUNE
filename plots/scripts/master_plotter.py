@@ -143,8 +143,8 @@ class Plotter:
 
         print("Plotting age distribution in care homes")
         care_plots.load_care_home_data()
-        care_plots.plot_age_distribution()
-        care_plots.plot()
+        care_age_plot = care_plots.plot_age_distribution()
+        care_age_plot.plot()
         plt.savefig(save_dir + 'age_distribution.png', dpi=150, bbox_inches='tight')
 
     def plot_all(self):
@@ -153,6 +153,7 @@ class Plotter:
         self.plot_companies()
         self.plot_leisure()
         self.plot_policies()
+        self.plot_care_homes()
 
 
 if __name__ == "__main__":
