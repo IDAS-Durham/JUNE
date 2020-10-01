@@ -47,15 +47,15 @@ class Plotter:
         print ("Loading household data")
         household_plots.load_household_data()
 
-        #print ("Plotting household sizes")
-        #household_sizes_plot = household_plots.plot_household_sizes()
-        #household_sizes_plot.plot()
-        #plt.savefig(save_dir / 'household_sizes.png', dpi=150, bbox_inches='tight')
+        print ("Plotting household sizes")
+        household_sizes_plot = household_plots.plot_household_sizes()
+        household_sizes_plot.plot()
+        plt.savefig(save_dir / 'household_sizes.png', dpi=150, bbox_inches='tight')
 
-        #print ("Plotting household probability matrix")
-        #household_probability_matrix = household_plots.plot_household_probability_matrix()
-        #household_probability_matrix.plot()
-        #plt.savefig(save_dir / 'household_prob_matrix.png', dpi=150, bbox_inches='tight')
+        print ("Plotting household probability matrix")
+        household_probability_matrix = household_plots.plot_household_probability_matrix()
+        household_probability_matrix.plot()
+        plt.savefig(save_dir / 'household_prob_matrix.png', dpi=150, bbox_inches='tight')
 
         print ("Plotting household age differences")
         f, ax = household_plots.plot_household_age_differences()
