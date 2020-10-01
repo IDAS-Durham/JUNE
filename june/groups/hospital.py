@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
-from june.groups import Group, Supergroup
+from june.groups import Group, Supergroup, ExternalGroup
 
 from june.geography import SuperArea
 from june.infection import SymptomTag
@@ -19,6 +19,14 @@ default_data_filename = (
     paths.data_path / "input/hospitals/trusts.csv"
 )
 default_config_filename = paths.configs_path / "defaults/groups/hospitals.yaml"
+
+class ExternalHospital(ExternalGroup):
+    external = True
+    __slots__ = "spec", "id", "domain_id", "region_name"
+
+    def __init__(self, id, spec, domain_id, region_name):
+        super().__init__(id=id, spec=spec, domain_id=domain_id)
+        self.region_name = region_name
 
 
 class Hospital(Group):
@@ -73,6 +81,14 @@ class Hospital(Group):
         return self.area.super_area
 
     @property
+    def region(self):
+        return self.super_area.region
+
+    @property 
+    def region_name(self):
+        return self.region.name
+
+    @property
     def full(self):
         """
         Check whether all regular beds are being used
@@ -85,6 +101,8 @@ class Hospital(Group):
         Check whether all ICU beds are being used
         """
         return self[self.SubgroupType.icu_patients].size >= self.n_icu_beds
+
+
 
     def add(self, person, subgroup_type=SubgroupType.workers):
         if subgroup_type in [

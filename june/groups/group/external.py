@@ -8,15 +8,6 @@ class ExternalGroup:
         self.domain_id = domain_id
 
 
-class ExternalHospital(ExternalGroup):
-    external = True
-    __slots__ = "spec", "id", "domain_id", "region"
-
-    def __init__(self, id, spec, domain_id, region):
-        super().__init__(id=id, spec=spec, domain_id=domain_id)
-        self.region = region
-
-
 class ExternalSubgroup:
     external = True
     __slots__ = ("subgroup_type", "group")

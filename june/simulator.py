@@ -9,6 +9,7 @@ from pathlib import Path
 from time import perf_counter
 from time import time as wall_clock
 
+from june.utils import random_choice_numba 
 from june import paths
 from june.activity import ActivityManager, activity_hierarchy
 from june.demography import Person, Activities
@@ -487,20 +488,11 @@ class Simulator:
                     )
                     if new_infected_ids:
                         n_infected = len(new_infected_ids)
-                        if mpi_size == 1:
-                            # note this is disabled in parallel
-                            # assign blame of infections
-                            tprob_norm = sum(int_group.transmission_probabilities)
-                            for infector_id in chain.from_iterable(
-                                int_group.infector_ids
-                            ):
-                                infector = self.world.people.get_from_id(infector_id)
-                                assert infector.id == infector_id
-                                infector.infection.number_of_infected += (
-                                    n_infected
-                                    * infector.infection.transmission.probability
-                                    / tprob_norm
-                                )
+                        tprob_norm = sum(int_group.transmission_probabilities)
+                        infector_ids = np.random.choice(int_group.infector_ids, n_infected,
+                                p=int_group.transmission_probabilities/tprob_norm)
+                        # TODO: record
+
                     infected_ids += new_infected_ids
                     infection_location += len(new_infected_ids) * [
                         f"{group.spec}_{group.id}"
