@@ -65,15 +65,16 @@ class InfectionRecord(EventRecord):
         super().__init__(
             hdf5_file=hdf5_file,
             table_name="infections",
-            int_names=["location_ids", "infected_ids"],
+            int_names=["location_ids", "infector_ids", "infected_ids"],
             float_names=[],
             str_names=["location_specs"],
         )
 
-    def accumulate(self, location_spec, location_id, infected_id):
-        self.location_specs.append(location_spec)
-        self.location_ids.append(location_id)
-        self.infected_ids.append(infected_id)
+    def accumulate(self, location_spec, location_id, infector_ids, infected_ids):
+        self.location_specs.extend([location_spec]*len(infected_ids))
+        self.location_ids.extend([location_id]*len(infected_ids))
+        self.infector_ids.extend(infector_ids)
+        self.infected_ids.extend(infected_ids)
 
 
 class HospitalAdmissionsRecord(EventRecord):

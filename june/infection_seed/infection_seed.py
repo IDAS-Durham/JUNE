@@ -101,7 +101,8 @@ class InfectionSeed:
                             table_name='infections',
                             location_spec="infection_seed",
                             location_id=0,
-                            infected_id=person.id,
+                            infected_ids=[person.id],
+                            infector_ids=[person.id],
                         )
         else:
             for inf_id in ids_to_infect:
@@ -116,7 +117,8 @@ class InfectionSeed:
                         table_name='infections',
                         location_spec="infection_seed",
                         location_id=0,
-                        infected_id=person_to_infect.id,
+                        infected_ids=[person_to_infect.id],
+                        infector_ids=[person_to_infect.id],
                     )
 
     def select_susceptiles_by_age(

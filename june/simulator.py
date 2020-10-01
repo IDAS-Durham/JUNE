@@ -9,7 +9,7 @@ from pathlib import Path
 from time import perf_counter
 from time import time as wall_clock
 
-from june.utils import random_choice_numba 
+from june.utils import random_choice_numba
 from june import paths
 from june.activity import ActivityManager, activity_hierarchy
 from june.demography import Person, Activities
@@ -168,7 +168,7 @@ class Simulator:
             # comment=comment,
             record=record,
             checkpoint_dates=checkpoint_dates,
-            checkpoint_path=checkpoint_path
+            checkpoint_path=checkpoint_path,
         )
 
     @classmethod
@@ -184,7 +184,7 @@ class Simulator:
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
         record: Optional["Record"] = None,
-        #comment: Optional[str] = None,
+        # comment: Optional[str] = None,
     ):
         from june.hdf5_savers.checkpoint_saver import generate_simulator_from_checkpoint
 
@@ -199,7 +199,7 @@ class Simulator:
             travel=travel,
             config_filename=config_filename,
             record=record,
-            #comment=comment,
+            # comment=comment,
         )
 
     def clear_world(self):
@@ -340,22 +340,14 @@ class Simulator:
             elif new_status == "dead":
                 self.bury_the_dead(self.world, person)
 
-    def infect_people(self, infected_ids, people_from_abroad_dict, infection_locations):
-        foreign_ids, foreign_infection_locations = [], []
-        for inf_id, inf_loc in zip(infected_ids, infection_locations):
+    def infect_people(self, infected_ids, people_from_abroad_dict):
+        foreign_ids = [] 
+        for inf_id in infected_ids:
             if inf_id in self.world.people.people_dict:
                 person = self.world.people.get_from_id(inf_id)
-                if self.record is not None:
-                    self.record.accumulate(
-                        table_name="infections",
-                        location_spec="_".join(inf_loc.split("_")[:-1]),
-                        location_id=int(inf_loc.split("_")[-1]),
-                        infected_id=person.id,
-                    )
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
             else:
                 foreign_ids.append(inf_id)
-                foreign_infection_locations.append(inf_loc)
         if foreign_ids:
             infect_in_domains = {}
             people_ids = []
@@ -376,7 +368,7 @@ class Simulator:
                     if domain not in infect_in_domains:
                         infect_in_domains[domain] = []
                     infect_in_domains[domain].append(
-                        (id, foreign_infection_locations[foreign_ids.index(id)])
+                        id
                     )
             return infect_in_domains
 
@@ -411,15 +403,7 @@ class Simulator:
             f"CMS: Infection COMS for rank {mpi_rank}/{mpi_size} - {tock-tick},{tockw-tickw} - {self.timer.date}"
         )
         for infection_data in people_to_infect:
-            person = self.world.people.get_from_id(infection_data[0])
-            if self.record is not None:
-                self.record.accumulate(
-                    table_name="infections",
-                    location_spec="".join(infection_data[1].split("_")[:-1]),
-                    location_id=infection_data[1].split("_")[-1],
-                    infected_id=person.id,
-                )
-
+            person = self.world.people.get_from_id(infection_data)
             self.infection_selector.infect_person_at_time(person, self.timer.now)
 
     def do_timestep(self):
@@ -468,7 +452,7 @@ class Simulator:
             f"number of infected = {len(self.world.people.infected)}"
         )
         # main interaction loop
-        infected_ids, infection_location = [], []
+        infected_ids= []
         for super_group in super_group_instances:
             for group in super_group:
                 if group.external:
@@ -489,20 +473,32 @@ class Simulator:
                     if new_infected_ids:
                         n_infected = len(new_infected_ids)
                         tprob_norm = sum(int_group.transmission_probabilities)
-                        infector_ids = np.random.choice(int_group.infector_ids, n_infected,
-                                p=int_group.transmission_probabilities/tprob_norm)
-                        # TODO: record
+                        infector_ids = np.random.choice(
+                            [
+                                infector_id
+                                for infector_id_subgroup in int_group.infector_ids
+                                for infector_id in infector_id_subgroup
+                            ],
+                            n_infected,
+                            p=np.array(int_group.transmission_probabilities)
+                            / tprob_norm,
+                        )
+                        # TODO: record here
+                        if self.record is not None:
+                            self.record.accumulate(
+                                table_name="infections",
+                                location_spec=group.spec,
+                                location_id=group.id,
+                                infected_ids=new_infected_ids,
+                                infector_ids=infector_ids,
+                            )
 
                     infected_ids += new_infected_ids
-                    infection_location += len(new_infected_ids) * [
-                        f"{group.spec}_{group.id}"
-                    ]
         # infect the people that got exposed
         if self.infection_selector:
             infect_in_domains = self.infect_people(
                 infected_ids=infected_ids,
                 people_from_abroad_dict=people_from_abroad_dict,
-                infection_locations=infection_location,
             )
             to_infect = self.tell_domains_to_infect(infect_in_domains)
         # recount people active to check people conservation
