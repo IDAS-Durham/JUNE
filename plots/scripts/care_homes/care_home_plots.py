@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from june import paths
 from collections import defaultdict
 
-default_care_home_age_filename = paths.data_path / "care_home_data.xlsx"
+default_care_home_age_filename = paths.data_path / "plotting/care_home_data.xlsx"
 
 
 class CareHomePlots:
@@ -91,6 +91,6 @@ class CareHomePlots:
         f, ax = plt.subplots()
         self.percent["Persons"].plot.bar(ax=ax, label="UK Census estimate")
         june_percent["Persons"].plot.bar(ax=ax, alpha=0.5, color="orange", label="JUNE")
-        ax.set_ylabel("% of population in care homes")
+        ax.set_ylabel("Percentage of population in care homes")
         ax.legend()
         return ax
