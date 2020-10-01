@@ -11,7 +11,11 @@ from june.hdf5_savers import generate_world_from_hdf5
 from policy import PolicyPlots
 from leisure import LeisurePlots
 from companies import CompanyPlots
+<<<<<<< HEAD
 from households import HouseholdPlots
+=======
+from care_homes import CareHomePlots
+>>>>>>> master
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -156,15 +160,30 @@ class Plotter:
         plt.savefig(save_dir + 'beta_fraction.png', dpi=150, bbox_inches='tight')
 
         print ("All policy plots finished")
-    
+
+    def plot_care_homes(self,
+                save_dir: str = '../plots/care_home/'
+    ):
+        "Make all care home plots"
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        print("Setting up care home plots")
+        care_plots = CareHomePlots(self.world)
+
+        print("Plotting age distribution in care homes")
+        care_plots.load_care_home_data()
+        care_age_plot = care_plots.plot_age_distribution()
+        care_age_plot.plot()
+        plt.savefig(save_dir + 'age_distribution.png', dpi=150, bbox_inches='tight')
+
     def plot_all(self):
 
         print ("Plotting the world")
-
         self.plot_companies()
         self.plot_households()
         self.plot_leisure()
         self.plot_policies()
+        self.plot_care_homes()
 
 
 if __name__ == "__main__":
