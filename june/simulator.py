@@ -9,7 +9,6 @@ from pathlib import Path
 from time import perf_counter
 from time import time as wall_clock
 
-from june.utils import random_choice_numba
 from june import paths
 from june.activity import ActivityManager, activity_hierarchy
 from june.demography import Person, Activities
@@ -468,28 +467,28 @@ class Simulator:
                     new_infected_ids = self.interaction.time_step_for_group(
                         self.timer.duration, int_group
                     )
-                    if new_infected_ids:
+                    if new_infected_ids and self.record is not None:
                         n_infected = len(new_infected_ids)
                         tprob_norm = sum(int_group.transmission_probabilities)
-                        infector_ids = np.random.choice(
-                            [
+                        infector_ids = list(chain.from_iterable(int_group.infector_ids))
+                        transmission_probabilities = [
+                            self.world.people.get_from_id(
                                 infector_id
-                                for infector_id_subgroup in int_group.infector_ids
-                                for infector_id in infector_id_subgroup
-                            ],
+                            ).infection.transmission.probability
+                            for infector_id in infector_ids
+                        ]
+                        infector_ids = np.random.choice(
+                            infector_ids,
                             n_infected,
-                            p=np.array(int_group.transmission_probabilities)
-                            / tprob_norm,
+                            p=np.array(transmission_probabilities) / tprob_norm,
                         )
-                        # TODO: record here
-                        if self.record is not None:
-                            self.record.accumulate(
-                                table_name="infections",
-                                location_spec=group.spec,
-                                location_id=group.id,
-                                infected_ids=new_infected_ids,
-                                infector_ids=infector_ids,
-                            )
+                        self.record.accumulate(
+                            table_name="infections",
+                            location_spec=group.spec,
+                            location_id=group.id,
+                            infected_ids=new_infected_ids,
+                            infector_ids=infector_ids,
+                        )
 
                     infected_ids += new_infected_ids
         # infect the people that got exposed
