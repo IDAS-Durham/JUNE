@@ -486,6 +486,7 @@ class Simulator:
                             table_name="infections",
                             location_spec=group.spec,
                             location_id=group.id,
+                            region_name=group.super_area.region.name,
                             infected_ids=new_infected_ids,
                             infector_ids=infector_ids,
                         )

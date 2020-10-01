@@ -76,7 +76,7 @@ def test__writing_infections():
     timestamp = datetime.datetime(2020, 10, 10)
     record.file = open_file(record.record_path / record.filename, mode="a")
     record.accumulate(
-        table_name="infections", location_spec="care_home", location_id=0, infected_ids=[0,10,20],
+        table_name="infections", location_spec="care_home", region_name='made_up', location_id=0, infected_ids=[0,10,20],
         infector_ids = [5,15,25]
     )
     record.events["infections"].record(hdf5_file=record.file, timestamp=timestamp)
@@ -86,6 +86,7 @@ def test__writing_infections():
     assert len(df) == 3
     assert df.timestamp.unique()[0].decode() == "2020-10-10"
     assert df.location_ids.unique() == [0]
+    assert df.region_names.unique() == [b"made_up"]
     assert df.location_specs.unique() == [b"care_home"]
     assert len(df.infected_ids) == 3
     assert df.infected_ids[0] == 0
@@ -269,6 +270,7 @@ def test__sumarise_time_tep(dummy_world):
     record.accumulate(
         table_name="infections",
         location_spec="care_home",
+        region_name='region_1',
         location_id=dummy_world.care_homes[0].id,
         infected_ids=[2],
         infector_ids=[0],
@@ -276,6 +278,7 @@ def test__sumarise_time_tep(dummy_world):
     record.accumulate(
         table_name="infections",
         location_spec="household",
+        region_name='region_1',
         location_id=dummy_world.households[0].id,
         infected_ids=[0],
         infector_ids=[5],

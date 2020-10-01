@@ -158,8 +158,7 @@ class Record:
 
     def summarise_infections(self, world="World"):
         daily_infections, current_infected = defaultdict(int), defaultdict(int)
-        for person_id in self.events["infections"].infected_ids:
-            region = world.people.get_from_id(person_id).super_area.region.name
+        for region in self.events["infections"].region_names:
             daily_infections[region] += 1
         for person in world.people.infected:
             region = person.super_area.region.name
