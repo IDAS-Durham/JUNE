@@ -162,6 +162,7 @@ class Plotter:
         print ("Plotting the world")
 
         self.plot_companies()
+        self.plot_households()
         self.plot_leisure()
         self.plot_policies()
 
