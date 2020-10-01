@@ -80,17 +80,24 @@ class Record:
             os.remove(self.record_path / self.filename)
         except OSError:
             pass
-        self.file = tables.open_file(self.record_path / self.filename, mode="w")
-        self.root = self.file.root
-        self.events = {
-            "infections": InfectionRecord(hdf5_file=self.file),
-            "hospital_admissions": HospitalAdmissionsRecord(hdf5_file=self.file),
-            "icu_admissions": ICUAdmissionsRecord(hdf5_file=self.file),
-            "discharges": DischargesRecord(hdf5_file=self.file),
-            "deaths": DeathsRecord(hdf5_file=self.file),
-            "recoveries": RecoveriesRecord(hdf5_file=self.file),
-            "symptoms": SymptomsRecord(hdf5_file=self.file),
-        }
+        with tables.open_file(self.record_path/self.filename, mode='w') as self.file:
+            self.events = {
+                "infections": InfectionRecord(hdf5_file=self.file),
+                "hospital_admissions": HospitalAdmissionsRecord(hdf5_file=self.file),
+                "icu_admissions": ICUAdmissionsRecord(hdf5_file=self.file),
+                "discharges": DischargesRecord(hdf5_file=self.file),
+                "deaths": DeathsRecord(hdf5_file=self.file),
+                "recoveries": RecoveriesRecord(hdf5_file=self.file),
+                "symptoms": SymptomsRecord(hdf5_file=self.file),
+            }
+            if record_static_data:
+                self.statics = {
+                    "people": PeopleRecord(hdf5_file=self.file),
+                    "locations": LocationRecord(hdf5_file=self.file),
+                    "areas": AreaRecord(hdf5_file=self.file),
+                    "super_areas": SuperAreaRecord(hdf5_file=self.file),
+                    "regions": RegionRecord(hdf5_file=self.file),
+                }
         with open(
             self.record_path / self.summary_filename, "w", newline=""
         ) as summary_file:
@@ -104,30 +111,19 @@ class Record:
                 ["current_susceptible", "daily_hospital_deaths", "daily_deaths"]
             )
             writer.writerow(header)
-        if record_static_data:
-            self.statics = {
-                "people": PeopleRecord(hdf5_file=self.file),
-                "locations": LocationRecord(hdf5_file=self.file),
-                "areas": AreaRecord(hdf5_file=self.file),
-                "super_areas": SuperAreaRecord(hdf5_file=self.file),
-                "regions": RegionRecord(hdf5_file=self.file),
-            }
-        self.file.close()
 
     def static_data(self, world: "World"):
-        self.file = tables.open_file(self.record_path / self.filename, mode="a")
-        for static_name in self.statics.keys():
-            self.statics[static_name].record(hdf5_file=self.file, world=world)
-        self.file.close()
+        with tables.open_file(self.record_path/self.filename, mode='a') as self.file:
+            for static_name in self.statics.keys():
+                self.statics[static_name].record(hdf5_file=self.file, world=world)
 
     def accumulate(self, table_name: str, **kwargs):
         self.events[table_name].accumulate(**kwargs)
 
     def time_step(self, timestamp: str):
-        self.file = tables.open_file(self.record_path / self.filename, mode="a")
-        for event_name in self.events.keys():
-            self.events[event_name].record(hdf5_file=self.file, timestamp=timestamp)
-        self.file.close()
+        with tables.open_file(self.record_path/self.filename, mode='a') as self.file:
+            for event_name in self.events.keys():
+                self.events[event_name].record(hdf5_file=self.file, timestamp=timestamp)
 
     def summarise_hospitalisations(self, world: "World"):
         hospital_admissions, icu_admissions = defaultdict(int), defaultdict(int)
