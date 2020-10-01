@@ -100,6 +100,7 @@ class InfectionSeed:
                         record.accumulate(
                             table_name='infections',
                             location_spec="infection_seed",
+                            region_name=person.super_area.region.name,
                             location_id=0,
                             infected_ids=[person.id],
                             infector_ids=[person.id],
@@ -116,6 +117,7 @@ class InfectionSeed:
                     record.accumulate(
                         table_name='infections',
                         location_spec="infection_seed",
+                        region_name=person_to_infect.super_area.region.name,
                         location_id=0,
                         infected_ids=[person_to_infect.id],
                         infector_ids=[person_to_infect.id],
