@@ -369,8 +369,8 @@ def test__parameters(dummy_world):
     infection_seed = InfectionSeed(
         world=None, infection_selector=infection_selector, seed_strength=0.0,
     )
-    infection_seed.min_date = "2020-01-01"
-    infection_seed.max_date = "2020-11-01"
+    infection_seed.min_date = datetime.datetime(2020, 10, 10)
+    infection_seed.max_date = datetime.datetime(2020, 10, 11)
 
     policies = Policies.from_file()
     activity_manager = ActivityManager(
@@ -402,11 +402,9 @@ def test__parameters(dummy_world):
             parameters["interaction"]["contact_matrices"][key], value
         )
 
-    seed_attributes = ["seed_strength", "min_date", "max_date"]
-    for attribute in seed_attributes:
-        assert parameters["infection_seed"][attribute] == getattr(
-            infection_seed, attribute
-        )
+    assert parameters["infection_seed"]['seed_strength'] == infection_seed.seed_strength
+    assert parameters["infection_seed"]['min_date'] == infection_seed.min_date.strftime('%Y-%m-%d')
+    assert parameters["infection_seed"]['max_date'] == infection_seed.seed_strength.strftime('%Y-%m-%d')
 
     assert parameters["infection"]["asymptomatic_ratio"] == 0.6
     assert (
