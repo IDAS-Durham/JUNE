@@ -167,7 +167,7 @@ class CareHomeDistributor:
                             if person is None:
                                 continue
                             care_home.add(person)
-                            communal_women_sorted[age_range] -= 1
+                            communal_men_sorted[age_range] -= 1
                             total_care_home_residents += 1
                             found_person = True
                             break 
