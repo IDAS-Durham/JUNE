@@ -58,7 +58,7 @@ class CareHomePlots:
         age_intervals = []
         for name in self.percent.index:
             if name == "85 and over":
-                age_intervals.append([85, 100])
+                age_intervals.append([85, 150])
             else:
                 interval = [int(value) for value in name.split(" to ")]
                 age_intervals.append(interval)
