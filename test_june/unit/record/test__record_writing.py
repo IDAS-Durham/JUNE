@@ -371,7 +371,6 @@ def test__parameters(dummy_world):
     )
     infection_seed.min_date = "2020-01-01"
     infection_seed.max_date = "2020-11-01"
-    config_filename = "../../../configs/config_example.yaml"
 
     policies = Policies.from_file()
     activity_manager = ActivityManager(
@@ -383,7 +382,6 @@ def test__parameters(dummy_world):
     )
     record = Record(record_path="results")
     record.parameters(
-        config_filename=config_filename,
         interaction=interaction,
         infection_seed=infection_seed,
         infection_selector=infection_selector,
