@@ -322,18 +322,19 @@ class Record:
                 yaml.safe_dump(configs, f)
 
 
-def combine_summaries(record_path):
+def combine_summaries(record_path, remove_left_overs=False):
     summary_files = record_path.glob("summary.*.csv")
     dfs = []
     for summary_file in summary_files:
         dfs.append(pd.read_csv(summary_file))
-        summary_file.unlink()
+        if remove_left_overs:
+            summary_file.unlink()
     summary = pd.concat(dfs)
     summary = summary.groupby(["time_stamp", "region"]).sum()
     summary.to_csv(record_path / "summary.csv")
 
 
-def combine_hdf5s(record_path, table_names=("infections", "population")):
+def combine_hdf5s(record_path, table_names=("infections", "population"), remove_left_overs=False):
     record_files = record_path.glob("june_record.*.h5")
     with tables.open_file(record_path / "june_record.h5", "w") as merged_record:
         for i, record_file in enumerate(record_files):
@@ -350,13 +351,13 @@ def combine_hdf5s(record_path, table_names=("infections", "population")):
                         table = getattr(merged_record.root, dataset.name)
                         table.append(arr_data)
                         table.flush()
+            if remove_left_overs:
+                record_file.unlink()
 
-            record_file.unlink()
-
-def combine_records(record_path):
+def combine_records(record_path, remove_left_overs=False):
     record_path = Path(record_path)
-    combine_summaries(record_path)
-    combine_hdf5s(record_path)
+    combine_summaries(record_path, remove_left_overs=remove_left_overs)
+    combine_hdf5s(record_path, remove_left_overs=remove_left_overs)
 
 
 
