@@ -228,8 +228,8 @@ class Record:
     ):
         infection_seed_dict = {}
         infection_seed_dict["seed_strength"] = infection_seed.seed_strength
-        infection_seed_dict["min_date"] = infection_seed.min_date
-        infection_seed_dict["max_date"] = infection_seed.max_date
+        infection_seed_dict["min_date"] = infection_seed.min_date.strftime('%Y-%m-%d')
+        infection_seed_dict["max_date"] = infection_seed.max_date.strftime('%Y-%m-%d')
         self.append_dict_to_configs(config_dict={"infection_seed": infection_seed_dict})
 
     def parameters_infection(
@@ -247,7 +247,7 @@ class Record:
     ):
         policy_dicts = []
         for policy in activity_manager.policies.policies:
-            policy_attributes = policy.__dict__
+            policy_attributes = policy.__dict__.copy()
             if 'start_time' in policy_attributes:
                 policy_attributes["start_time"] = policy_attributes['start_time'].strftime('%Y-%m-%d')
             if 'end_time' in policy_attributes:
