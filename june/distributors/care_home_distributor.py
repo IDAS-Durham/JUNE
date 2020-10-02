@@ -101,9 +101,7 @@ class CareHomeDistributor:
         """
         ret = OrderedDict()
         ages = [age_range[0] for age_range in d.keys()]
-        men_age_ranges_sorted = np.array(list(d.keys()))[
-            np.argsort(ages)[::-1]
-        ]
+        men_age_ranges_sorted = np.array(list(d.keys()))[np.argsort(ages)[::-1]]
         for key in men_age_ranges_sorted:
             ret[key] = d[key]
         return ret
@@ -121,8 +119,12 @@ class CareHomeDistributor:
             women_communal_residents = self.communal_women_by_super_area[
                 super_area.name
             ]
-            communal_men_sorted = self._sort_dictionary_by_age_range_key(men_communal_residents)
-            communal_women_sorted = self._sort_dictionary_by_age_range_key(women_communal_residents)
+            communal_men_sorted = self._sort_dictionary_by_age_range_key(
+                men_communal_residents
+            )
+            communal_women_sorted = self._sort_dictionary_by_age_range_key(
+                women_communal_residents
+            )
             areas_with_care_homes = [
                 area for area in super_area.areas if area.care_home is not None
             ]
@@ -144,7 +146,7 @@ class CareHomeDistributor:
                             age1, age2 = list(map(int, age_range.split("-")))
                             if communal_men_sorted[age_range] <= 0:
                                 if communal_women_sorted[age_range] <= 0:
-                                    continue 
+                                    continue
                                 # find woman
                                 person = self._find_person_in_age_range(
                                     areas_dicts[i][1], age1, age2
@@ -164,13 +166,18 @@ class CareHomeDistributor:
                                 person = self._find_person_in_age_range(
                                     areas_dicts[i][1], age1, age2
                                 )
-                            if person is None:
-                                continue
+                                if person is None:
+                                    continue 
+                                care_home.add(person)
+                                communal_women_sorted[age_range] -= 1
+                                total_care_home_residents += 1
+                                found_person = True
+                                break
                             care_home.add(person)
                             communal_men_sorted[age_range] -= 1
                             total_care_home_residents += 1
                             found_person = True
-                            break 
+                            break
         logger.info(
             f"This world has {total_care_home_residents} people living in care homes."
         )
