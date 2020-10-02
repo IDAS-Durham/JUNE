@@ -256,11 +256,6 @@ class Record:
         with open(self.record_path / 'policies.txt', 'w') as fout:
             fout.write(repr(policy_dicts))
 
-    def simulation_config(self, config_filename):
-        with open(config_filename, "r") as f:
-            config = yaml.safe_load(f)
-        self.append_dict_to_configs(config_dict={"simulator_config": config})
-
     @staticmethod
     def get_username():
         try:
@@ -271,14 +266,12 @@ class Record:
 
     def parameters(
         self,
-        config_filename: str = None,
         interaction: "Interaction" = None,
         infection_seed: "InfectionSeed" = None,
         infection_selector: "InfectionSelector" = None,
         activity_manager: "ActivityManager" = None,
     ):
         if self.mpi_rank is None or self.mpi_rank == 0:
-            self.simulation_config(config_filename)
             self.parameters_interaction(interaction=interaction)
             self.parameters_seed(infection_seed=infection_seed)
             self.parameters_infection(infection_selector=infection_selector)
