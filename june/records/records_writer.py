@@ -45,14 +45,14 @@ def combine_hdf5s(record_path, table_names=("infections", "population")):
                 datasets = record.root._f_list_nodes()
                 for dataset in datasets:
                     arr_data = dataset[:]
+                    if i == 0:
+                        description = getattr(record.root, dataset.name).description
+                        merged_record.create_table(
+                            merged_record.root,
+                            dataset.name,
+                            description=description,
+                        )
                     if len(arr_data) > 0:
-                        if i == 0:
-                            description = getattr(record.root, dataset.name).description
-                            merged_record.create_table(
-                                merged_record.root,
-                                dataset.name,
-                                description=description,
-                            )
                         table = getattr(merged_record.root, dataset.name)
                         table.append(arr_data)
                         table.flush()
@@ -70,6 +70,7 @@ class Record:
     ):
         self.record_path = Path(record_path)
         self.record_path.mkdir(parents=True, exist_ok=True)
+        self.mpi_rank = mpi_rank
         if mpi_rank is not None:
             self.filename = f"june_record.{mpi_rank}.h5"
             self.summary_filename = f"summary.{mpi_rank}.csv"
@@ -226,4 +227,5 @@ class Record:
                 )
 
     def combine_outputs(self,):
-        combine_records(self.record_path)
+        if self.mpi_rank == 0:
+            combine_records(self.record_path)
