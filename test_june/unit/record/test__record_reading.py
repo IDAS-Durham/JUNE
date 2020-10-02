@@ -225,7 +225,7 @@ def test__log_hospital_admissions(world, interaction, selector):
     counter = 0
     saved_ids = []
     hospital_admissions = {}
-    while counter < 10:
+    while counter < 15:
         timer = sim.timer.date.strftime("%Y-%m-%d")
         daily_hosps_ids = []
         sim.update_health_status(sim.timer.now, sim.timer.duration)
@@ -242,6 +242,9 @@ def test__log_hospital_admissions(world, interaction, selector):
     for key in list(hospital_admissions.keys()):
         if hospital_admissions[key]:
             assert read.regional_summary.loc[key, "daily_hospitalised"] == len(
+                hospital_admissions[key]
+            )
+            assert read.world_summary.loc[key, "daily_hospitalised"] == len(
                 hospital_admissions[key]
             )
     clean_world(world)
