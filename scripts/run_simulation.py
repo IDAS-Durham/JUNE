@@ -34,7 +34,7 @@ def set_random_seed(seed=999):
     return
 
 class MockHealthIndexGenerator:
-    def __init__(self, desired_symptoms=SymptomTag.dead_hospital):
+    def __init__(self, desired_symptoms=SymptomTag.hospitalised):
         self.index = desired_symptoms
         self.asymptomatic_ratio = 0.2
 
