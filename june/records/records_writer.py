@@ -30,41 +30,6 @@ from june.records.static_records_writer import (
 from june import paths
 
 
-def combine_summaries(record_path):
-    summary_files = record_path.glob("summary.*.csv")
-    dfs = []
-    for summary_file in summary_files:
-        dfs.append(pd.read_csv(summary_file))
-    summary = pd.concat(dfs)
-    summary = summary.groupby(["time_stamp", "region"]).sum()
-    summary.to_csv(record_path / "summary.csv")
-
-
-def combine_hdf5s(record_path, table_names=("infections", "population")):
-    record_files = record_path.glob("june_record.*.h5")
-    with tables.open_file(record_path / "june_record.h5", "w") as merged_record:
-        for i, record_file in enumerate(record_files):
-            with tables.open_file(str(record_file), "r") as record:
-                datasets = record.root._f_list_nodes()
-                for dataset in datasets:
-                    arr_data = dataset[:]
-                    if i == 0:
-                        description = getattr(record.root, dataset.name).description
-                        merged_record.create_table(
-                            merged_record.root, dataset.name, description=description,
-                        )
-                    if len(arr_data) > 0:
-                        table = getattr(merged_record.root, dataset.name)
-                        table.append(arr_data)
-                        table.flush()
-
-
-def combine_records(record_path):
-    record_path = Path(record_path)
-    combine_summaries(record_path)
-    combine_hdf5s(record_path)
-
-
 class Record:
     def __init__(
         self, record_path: str, record_static_data=False, mpi_rank: Optional[int] = None
@@ -145,14 +110,10 @@ class Record:
             defaultdict(int),
             defaultdict(int),
         )
-        for person in world.people:
-            if person.medical_facility is not None:
-                if person.medical_facility.subgroup_type == 1:
-                    region = person.medical_facility.group.region_name
-                    current_hospitalised[region] += 1
-                elif person.medical_facility.subgroup_type == 2:
-                    region = person.medical_facility.group.region_name
-                    current_intensive_care[region] += 1
+        for hospital in world.hospitals:
+            if not hospital.external:
+                current_hospitalised[hospital.region_name] += len(hospital.patients)
+                current_intensive_care[hospital.region_name] += len(hospital.icu_patients)
         return (
             hospital_admissions,
             icu_admissions,
@@ -160,13 +121,22 @@ class Record:
             current_intensive_care,
         )
 
+    def summarise_susceptibles(self, world="World"):
+        current_susceptible = {}
+        for region in world.regions:
+            current_susceptible[region.name] = len(
+                [person for person in region.people if person.susceptible]
+            )
+        return current_susceptible
+
     def summarise_infections(self, world="World"):
         daily_infections, current_infected = defaultdict(int), defaultdict(int)
         for region in self.events["infections"].region_names:
             daily_infections[region] += 1
-        for person in world.people.infected:
-            region = person.super_area.region.name
-            current_infected[region] += 1
+        for region in world.regions:
+            current_infected[region.name] = len(
+                [person for person in region.people if person.infected]
+            )
         return daily_infections, current_infected
 
     def summarise_recoveries(self, world="World"):
@@ -174,10 +144,10 @@ class Record:
         for person_id in self.events["recoveries"].recovered_person_ids:
             region = world.people.get_from_id(person_id).super_area.region.name
             daily_recovered[region] += 1
-        for person in world.people:
-            if person.recovered:
-                region = person.super_area.region.name
-                current_recovered[region] += 1
+        for region in world.regions:
+            current_recovered[region.name] = len(
+                [person for person in region.people if person.recovered]
+            )
         return daily_recovered, current_recovered
 
     def summarise_deaths(self, world="World"):
@@ -190,14 +160,6 @@ class Record:
                 region = world.hospitals.get_from_id(hospital_id).region_name
                 daily_deaths_in_hospital[region] += 1
         return daily_deaths, daily_deaths_in_hospital
-
-    def summarise_susceptibles(self, world="World"):
-        current_susceptible = {}
-        for region in world.regions:
-            current_susceptible[region.name] = len(
-                [person for person in region.people if person.susceptible]
-            )
-        return current_susceptible
 
     def summarise_time_step(self, timestamp: str, world: "World"):
         daily_infected, current_infected = self.summarise_infections(world=world)
@@ -365,3 +327,41 @@ class Record:
                 configs.update({"meta_information": meta_dict})
             with open(self.record_path / self.configs_filename, "w") as f:
                 yaml.safe_dump(configs, f)
+
+
+def combine_summaries(record_path):
+    summary_files = record_path.glob("summary.*.csv")
+    dfs = []
+    for summary_file in summary_files:
+        dfs.append(pd.read_csv(summary_file))
+    summary = pd.concat(dfs)
+    summary = summary.groupby(["time_stamp", "region"]).sum()
+    summary.to_csv(record_path / "summary.csv")
+
+
+def combine_hdf5s(record_path, table_names=("infections", "population")):
+    record_files = record_path.glob("june_record.*.h5")
+    with tables.open_file(record_path / "june_record.h5", "w") as merged_record:
+        for i, record_file in enumerate(record_files):
+            with tables.open_file(str(record_file), "r") as record:
+                datasets = record.root._f_list_nodes()
+                for dataset in datasets:
+                    arr_data = dataset[:]
+                    if i == 0:
+                        description = getattr(record.root, dataset.name).description
+                        merged_record.create_table(
+                            merged_record.root, dataset.name, description=description,
+                        )
+                    if len(arr_data) > 0:
+                        table = getattr(merged_record.root, dataset.name)
+                        table.append(arr_data)
+                        table.flush()
+
+
+def combine_records(record_path):
+    record_path = Path(record_path)
+    combine_summaries(record_path)
+    combine_hdf5s(record_path)
+
+
+
