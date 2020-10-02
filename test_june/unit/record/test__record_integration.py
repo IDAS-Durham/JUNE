@@ -382,12 +382,3 @@ def test__log_deaths(world, interaction, selector):
                 )
     clean_world(world)
 
-def test__parameters(dummy_world, interaction, selector):
-    record = Record(record_path="results")
-    comment = "I love passing tests"
-    record.parameters(comment=comment)
-    with open(record.record_path / 'parameters.yaml') as file:
-        parameters = yaml.load(file, Loader=yaml.FullLoader)
-    assert parameters['meta']['comment'] == comment
-    assert parameters['meta']['user'] == user 
-
