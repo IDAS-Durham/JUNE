@@ -62,7 +62,7 @@ print("World loaded succesfully")
 record = Record(
     record_path="results_records_serial", record_static_data=True, 
 )
-record.static_data(world=domain)
+record.static_data(world=world)
 # regenerate lesiure
 leisure = generate_leisure_for_config(world, config_path)
 #
