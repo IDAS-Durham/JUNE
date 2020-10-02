@@ -327,6 +327,7 @@ def combine_summaries(record_path):
     dfs = []
     for summary_file in summary_files:
         dfs.append(pd.read_csv(summary_file))
+        summary_file.unlink()
     summary = pd.concat(dfs)
     summary = summary.groupby(["time_stamp", "region"]).sum()
     summary.to_csv(record_path / "summary.csv")
@@ -350,6 +351,7 @@ def combine_hdf5s(record_path, table_names=("infections", "population")):
                         table.append(arr_data)
                         table.flush()
 
+            record_file.unlink()
 
 def combine_records(record_path):
     record_path = Path(record_path)
