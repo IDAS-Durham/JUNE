@@ -448,6 +448,7 @@ class TestSaveWorld:
             assert h1.area.id == h2.area.id
             assert h1.super_area.id == h2.super_area.id
             assert h1.super_area.name == h2.super_area.name
+            assert h1.region_name == h2.region_name
 
     def test__social_venues_super_area(self, full_world, full_world_loaded):
         for spec in ["pubs", "groceries", "cinemas"]:
