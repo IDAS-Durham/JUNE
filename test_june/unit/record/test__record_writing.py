@@ -1,5 +1,6 @@
 import datetime
 import numpy as np
+import json
 import pandas as pd
 import yaml
 import pytest
@@ -7,7 +8,12 @@ from tables import open_file
 from june import paths
 from june.records import Record
 from june.groups import Hospital, Hospitals, Household, Households, CareHome, CareHomes
+from june.policy import Policies
+from june.activity import ActivityManager
 from june.demography import Person, Population
+from june.interaction import Interaction
+from june.infection import InfectionSelector, HealthIndexGenerator
+from june.infection_seed import InfectionSeed
 from june.geography.geography import (
     Areas,
     SuperAreas,
@@ -78,8 +84,12 @@ def test__writing_infections():
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
         record.accumulate(
-            table_name="infections", location_spec="care_home", region_name='made_up', location_id=0, infected_ids=[0,10,20],
-            infector_ids = [5,15,25]
+            table_name="infections",
+            location_spec="care_home",
+            region_name="made_up",
+            location_id=0,
+            infected_ids=[0, 10, 20],
+            infector_ids=[5, 15, 25],
         )
         record.events["infections"].record(hdf5_file=record.file, timestamp=timestamp)
         table = record.file.root.infections
@@ -104,7 +114,9 @@ def test__writing_hospital_admissions():
     timestamp = datetime.datetime(2020, 4, 4)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
-        record.accumulate(table_name="hospital_admissions", hospital_id=0, patient_id=10)
+        record.accumulate(
+            table_name="hospital_admissions", hospital_id=0, patient_id=10
+        )
         record.events["hospital_admissions"].record(
             hdf5_file=record.file, timestamp=timestamp
         )
@@ -121,10 +133,8 @@ def test__writing_hospital_discharges():
     timestamp = datetime.datetime(2020, 4, 4)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
-        record.accumulate(table_name='discharges', hospital_id=0, patient_id=10)
-        record.events["discharges"].record(
-            hdf5_file=record.file, timestamp=timestamp
-        )
+        record.accumulate(table_name="discharges", hospital_id=0, patient_id=10)
+        record.events["discharges"].record(hdf5_file=record.file, timestamp=timestamp)
         table = record.file.root.discharges
         df = pd.DataFrame.from_records(table.read())
     assert len(df) == 1
@@ -139,7 +149,9 @@ def test__writing_intensive_care_admissions():
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
         record.accumulate(table_name="icu_admissions", hospital_id=0, patient_id=10)
-        record.events["icu_admissions"].record(hdf5_file=record.file, timestamp=timestamp)
+        record.events["icu_admissions"].record(
+            hdf5_file=record.file, timestamp=timestamp
+        )
         table = record.file.root.icu_admissions
         df = pd.DataFrame.from_records(table.read())
     assert len(df) == 1
@@ -154,7 +166,10 @@ def test__writing_death():
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
         record.accumulate(
-            table_name="deaths", location_spec="household", location_id=0, dead_person_id=10
+            table_name="deaths",
+            location_spec="household",
+            location_id=0,
+            dead_person_id=10,
         )
         record.events["deaths"].record(hdf5_file=record.file, timestamp=timestamp)
         table = record.file.root.deaths
@@ -167,9 +182,7 @@ def test__writing_death():
 
 
 def test__static_people(dummy_world):
-    record = Record(
-        record_path="results", record_static_data=True,
-    )
+    record = Record(record_path="results", record_static_data=True,)
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -200,9 +213,7 @@ def test__static_people(dummy_world):
 
 
 def test__static_location(dummy_world):
-    record = Record(
-        record_path="results", record_static_data=True,
-    )
+    record = Record(record_path="results", record_static_data=True,)
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -232,9 +243,7 @@ def test__static_location(dummy_world):
 
 
 def test__static_geography(dummy_world):
-    record = Record(
-        record_path="results", record_static_data=True,
-    )
+    record = Record(record_path="results", record_static_data=True,)
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -272,7 +281,7 @@ def test__sumarise_time_tep(dummy_world):
         record.accumulate(
             table_name="infections",
             location_spec="care_home",
-            region_name='region_1',
+            region_name="region_1",
             location_id=dummy_world.care_homes[0].id,
             infected_ids=[2],
             infector_ids=[0],
@@ -280,7 +289,7 @@ def test__sumarise_time_tep(dummy_world):
         record.accumulate(
             table_name="infections",
             location_spec="household",
-            region_name='region_1',
+            region_name="region_1",
             location_id=dummy_world.households[0].id,
             infected_ids=[0],
             infector_ids=[5],
@@ -339,13 +348,74 @@ def test__sumarise_time_tep(dummy_world):
     assert region_2.loc["2020-04-05"]["daily_hospital_deaths"] == 1
 
 
-def test__parameters():
+def test__meta_information():
     record = Record(record_path="results")
     comment = "I love passing tests"
     record.meta_information(comment=comment, random_state=0, number_of_cores=20)
-    with open(record.record_path / 'config.yaml') as file:
+    with open(record.record_path / "config.yaml") as file:
         parameters = yaml.load(file, Loader=yaml.FullLoader)
-    assert parameters['meta']['user_comment'] == comment
-    assert parameters['meta']['random_state'] == 0
-    assert parameters['meta']['number_of_cores'] == 20 
+    assert parameters["meta_information"]["user_comment"] == comment
+    assert parameters["meta_information"]["random_state"] == 0
+    assert parameters["meta_information"]["number_of_cores"] == 20
 
+
+def test__parameters(dummy_world):
+    interaction = Interaction.from_file()
+    interaction.alpha_physical = 100.0
+    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.6)
+    infection_selector = InfectionSelector.from_file(
+        health_index_generator=health_index_generator
+    )
+    infection_seed = InfectionSeed(
+        world=None, infection_selector=infection_selector, seed_strength=0.0,
+    )
+    infection_seed.min_date = "2020-01-01"
+    infection_seed.max_date = "2020-11-01"
+    config_filename = "../../../configs/config_example.yaml"
+
+    policies = Policies.from_file()
+    activity_manager = ActivityManager(
+        world=dummy_world,
+        policies=policies,
+        timer=None,
+        all_activities=None,
+        activity_to_super_groups={"residence": ["household"]},
+    )
+    record = Record(record_path="results")
+    record.parameters(
+        config_filename=config_filename,
+        interaction=interaction,
+        infection_seed=infection_seed,
+        infection_selector=infection_selector,
+        activity_manager=activity_manager,
+    )
+    with open(record.record_path / "config.yaml",'r') as file:
+        parameters = yaml.load(file, Loader=yaml.FullLoader)
+
+    with open(record.record_path / "policies.txt",'r') as file:
+        policies = file.read()
+        policies = policies.replace('array', 'np.array')
+        policies = eval(policies)
+    interaction_attributes = ["beta", "alpha_physical", "susceptibilities_by_age"]
+    for attribute in interaction_attributes:
+        assert parameters["interaction"][attribute] == getattr(interaction, attribute)
+    for key, value in interaction.contact_matrices.items():
+        np.testing.assert_equal(
+            parameters["interaction"]["contact_matrices"][key], value
+        )
+
+    seed_attributes = ["seed_strength", "min_date", "max_date"]
+    for attribute in seed_attributes:
+        assert parameters["infection_seed"][attribute] == getattr(
+            infection_seed, attribute
+        )
+
+    assert parameters["infection"]["asymptomatic_ratio"] == 0.6
+    assert (
+        parameters["infection"]["transmission_type"]
+        == infection_selector.transmission_type
+    )
+    print(policies)
+    for i, policy in enumerate(activity_manager.policies.policies):
+        policy_spec = policy.get_spec()
+        assert policies[i] == policy.__dict__

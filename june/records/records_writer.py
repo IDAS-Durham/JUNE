@@ -4,10 +4,11 @@ import pandas as pd
 import yaml
 import numpy as np
 import csv
+import json
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict 
 import june
 from june.groups import Supergroup
 from june.records.event_records_writer import (
@@ -50,9 +51,7 @@ def combine_hdf5s(record_path, table_names=("infections", "population")):
                     if i == 0:
                         description = getattr(record.root, dataset.name).description
                         merged_record.create_table(
-                            merged_record.root,
-                            dataset.name,
-                            description=description,
+                            merged_record.root, dataset.name, description=description,
                         )
                     if len(arr_data) > 0:
                         table = getattr(merged_record.root, dataset.name)
@@ -79,12 +78,12 @@ class Record:
         else:
             self.filename = f"june_record.h5"
             self.summary_filename = f"summary.csv"
-        self.configs_filename = f'config.yaml'
+        self.configs_filename = f"config.yaml"
         try:
             os.remove(self.record_path / self.filename)
         except OSError:
             pass
-        with tables.open_file(self.record_path/self.filename, mode='w') as self.file:
+        with tables.open_file(self.record_path / self.filename, mode="w") as self.file:
             self.events = {
                 "infections": InfectionRecord(hdf5_file=self.file),
                 "hospital_admissions": HospitalAdmissionsRecord(hdf5_file=self.file),
@@ -115,12 +114,14 @@ class Record:
                 ["current_susceptible", "daily_hospital_deaths", "daily_deaths"]
             )
             writer.writerow(header)
-        description = {'description': f'Started runnning at {datetime.now()}. Good luck!'}
-        with open(self.record_path / self.configs_filename,'w') as f:
+        description = {
+            "description": f"Started runnning at {datetime.now()}. Good luck!"
+        }
+        with open(self.record_path / self.configs_filename, "w") as f:
             yaml.dump(description, f)
 
     def static_data(self, world: "World"):
-        with tables.open_file(self.record_path/self.filename, mode='a') as self.file:
+        with tables.open_file(self.record_path / self.filename, mode="a") as self.file:
             for static_name in self.statics.keys():
                 self.statics[static_name].record(hdf5_file=self.file, world=world)
 
@@ -128,7 +129,7 @@ class Record:
         self.events[table_name].accumulate(**kwargs)
 
     def time_step(self, timestamp: str):
-        with tables.open_file(self.record_path/self.filename, mode='a') as self.file:
+        with tables.open_file(self.record_path / self.filename, mode="a") as self.file:
             for event_name in self.events.keys():
                 self.events[event_name].record(hdf5_file=self.file, timestamp=timestamp)
 
@@ -239,37 +240,64 @@ class Record:
         if self.mpi_rank == 0:
             combine_records(self.record_path)
 
-    def parameters_interaction(self,
-            interaction: "Interaction" = None,
-        ):
-        interaction.beta
-        interaction.alpha_physical
-        interaction.contact_matrices
-        interaction.susceptibilities_by_age
+    def append_dict_to_configs(self, config_dict):
+        with open(self.record_path / self.configs_filename, "r") as f:
+            configs = yaml.safe_load(f)
+            configs.update(config_dict)
+        with open(self.record_path / self.configs_filename, "w") as f:
+            yaml.safe_dump(configs, f,  allow_unicode=True, default_flow_style=False, sort_keys=False)
 
-    def parameters_seed(self,
-            infection_seed: "InfectionSeed" = None,
-        ):
-        infection_seed.seed_strength
-        #infection_Seed min_date/max_date
+    def parameters_interaction(
+        self, interaction: "Interaction" = None,
+    ):
+        interaction_dict = {}
+        interaction_dict["beta"] = interaction.beta
+        interaction_dict["alpha_physical"] = interaction.alpha_physical
+        interaction_dict["contact_matrices"] = {}
+        for key, values in interaction.contact_matrices.items():
+            interaction_dict["contact_matrices"][key] = values.tolist()
+        interaction_dict[
+            "susceptibilities_by_age"
+        ] = interaction.susceptibilities_by_age
+        self.append_dict_to_configs(config_dict={"interaction": interaction_dict})
 
-    def parameters_infection(self,
-            infection_selector: "InfectionSelector" = None,
-        ):
-        infection_selector.health_index_generator.asymptomatic_ratio
-        infection_selector.transmission_type
+    def parameters_seed(
+        self, infection_seed: "InfectionSeed" = None,
+    ):
+        infection_seed_dict = {}
+        infection_seed_dict["seed_strength"] = infection_seed.seed_strength
+        infection_seed_dict["min_date"] = infection_seed.min_date
+        infection_seed_dict["max_date"] = infection_seed.max_date
+        self.append_dict_to_configs(config_dict={"infection_seed": infection_seed_dict})
 
-    def parameters_policies(self,
-            activity_manager: "ActivityManager" = None,
-        ):
-        if activity_manager.policies:
-            for policy in activity_manager.policies.policies:
-                policy_spec = policy.get_spec()
-                policy.__dict__
-                
-    def simulation_config(self,
-            config):
-        pass
+    def parameters_infection(
+        self, infection_selector: "InfectionSelector" = None,
+    ):
+        infection_dict = {}
+        infection_dict[
+            "asymptomatic_ratio"
+        ] = infection_selector.health_index_generator.asymptomatic_ratio
+        infection_dict["transmission_type"] = infection_selector.transmission_type
+        self.append_dict_to_configs(config_dict={"infection": infection_dict})
+
+    def parameters_policies(
+        self, activity_manager: "ActivityManager" = None,
+    ):
+        policy_dicts = []
+        for policy in activity_manager.policies.policies:
+            policy_attributes = policy.__dict__
+            if 'start_time' in policy_attributes:
+                policy_attributes["start_time"] = policy_attributes['start_time'].strftime('%Y-%m-%d')
+            if 'end_time' in policy_attributes:
+                policy_attributes["end_time"] = policy_attributes['end_time'].strftime('%Y-%m-%d')
+            policy_dicts.append(policy_attributes)
+        with open(self.record_path / 'policies.txt', 'w') as fout:
+            fout.write(repr(policy_dicts))
+
+    def simulation_config(self, config_filename):
+        with open(config_filename, "r") as f:
+            config = yaml.safe_load(f)
+        self.append_dict_to_configs(config_dict={"simulator_config": config})
 
     @staticmethod
     def get_username():
@@ -279,26 +307,48 @@ class Record:
             username = "no_user"
         return username
 
-    def meta_information(self, comment: Optional[str]=None, random_state: Optional[int]=None,
-            number_of_cores: Optional[int] = None,
-            ):
+    def parameters(
+        self,
+        config_filename: str = None,
+        interaction: "Interaction" = None,
+        infection_seed: "InfectionSeed" = None,
+        infection_selector: "InfectionSelector" = None,
+        activity_manager: "ActivityManager" = None,
+    ):
         if self.mpi_rank is None or self.mpi_rank == 0:
-            june_git = Path(june.__path__[0]).parent / '.git'
+            self.simulation_config(config_filename)
+            self.parameters_interaction(interaction=interaction)
+            self.parameters_seed(infection_seed=infection_seed)
+            self.parameters_infection(infection_selector=infection_selector)
+            self.parameters_policies(activity_manager=activity_manager)
+
+    def meta_information(
+        self,
+        comment: Optional[str] = None,
+        random_state: Optional[int] = None,
+        number_of_cores: Optional[int] = None,
+    ):
+        if self.mpi_rank is None or self.mpi_rank == 0:
+            june_git = Path(june.__path__[0]).parent / ".git"
             meta_dict = {}
-            branch_cmd = f'git --git-dir {june_git} rev-parse --abbrev-ref HEAD'.split()
+            branch_cmd = f"git --git-dir {june_git} rev-parse --abbrev-ref HEAD".split()
             try:
-                meta_dict["branch"] = subprocess.run(
-                    branch_cmd,stdout=subprocess.PIPE
-                ).stdout.decode('utf-8').strip()
+                meta_dict["branch"] = (
+                    subprocess.run(branch_cmd, stdout=subprocess.PIPE)
+                    .stdout.decode("utf-8")
+                    .strip()
+                )
             except Exception as e:
                 print(e)
                 print("Could not record git branch")
-                meta_dict["branch"] =  "unavailable"
+                meta_dict["branch"] = "unavailable"
             local_SHA_cmd = f'git --git-dir {june_git} log -n 1 --format="%h"'.split()
             try:
-                meta_dict["local_SHA"] = subprocess.run(
-                    local_SHA_cmd,stdout=subprocess.PIPE
-                ).stdout.decode('utf-8').strip()
+                meta_dict["local_SHA"] = (
+                    subprocess.run(local_SHA_cmd, stdout=subprocess.PIPE)
+                    .stdout.decode("utf-8")
+                    .strip()
+                )
             except:
                 print("Could not record local git SHA")
                 meta_dict["local_SHA"] = "unavailable"
@@ -308,26 +358,10 @@ class Record:
                 comment: "No comment provided."
             meta_dict["user_comment"] = f"{comment}"
             meta_dict["june_path"] = str(june.__path__[0])
-            meta_dict['number_of_cores'] = number_of_cores
-            meta_dict['random_state'] = random_state
-            with open(self.record_path / self.configs_filename,'r') as f:
-                configs = yaml.load(f)
-                configs.update({'meta': meta_dict})
-            with open(self.record_path / self.configs_filename, 'w') as f:
-                yaml.safe_dump(configs, f) # Also note the safe_dump
-
-    def parameters(self,
-            config_filename: str = None,
-            interaction: "Interaction" = None,
-            infection_seed: "InfectionSeed" = None,
-            infection_selector: "InfectionSelector" = None,
-            activity_manager: "ActivityManager" = None,
-        ):
-            if self.rank == 0:
-                self.parameters_interaction(interaction=interaction)
-                self.parameters_seed(activity_manager=activity_manager)
-                self.parameters_infection(infection_selector=infection_selector)
-                self.parameters_policies(activity_manager=activity_manager)
-                self.simulation_config(config_filename)
-         
-            
+            meta_dict["number_of_cores"] = number_of_cores
+            meta_dict["random_state"] = random_state
+            with open(self.record_path / self.configs_filename, "r") as f:
+                configs = yaml.safe_load(f)
+                configs.update({"meta_information": meta_dict})
+            with open(self.record_path / self.configs_filename, "w") as f:
+                yaml.safe_dump(configs, f)
