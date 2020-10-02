@@ -40,7 +40,7 @@ def set_random_seed(seed=999):
     return
 
 class MockHealthIndexGenerator:
-    def __init__(self, desired_symptoms=SymptomTag.dead_hospital):
+    def __init__(self, desired_symptoms=SymptomTag.hospitalised):
         self.index = desired_symptoms
 
     def __call__(self, person):
