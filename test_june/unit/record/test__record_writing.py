@@ -1,6 +1,7 @@
 import datetime
 import numpy as np
 import pandas as pd
+import yaml
 import pytest
 from tables import open_file
 from june import paths
@@ -336,3 +337,15 @@ def test__sumarise_time_tep(dummy_world):
     assert region_2.loc["2020-04-05"]["daily_deaths"] == 0
 
     assert region_2.loc["2020-04-05"]["daily_hospital_deaths"] == 1
+
+
+def test__parameters():
+    record = Record(record_path="results")
+    comment = "I love passing tests"
+    record.meta_information(comment=comment, random_state=0, number_of_cores=20)
+    with open(record.record_path / 'config.yaml') as file:
+        parameters = yaml.load(file, Loader=yaml.FullLoader)
+    assert parameters['meta']['user_comment'] == comment
+    assert parameters['meta']['random_state'] == 0
+    assert parameters['meta']['number_of_cores'] == 20 
+

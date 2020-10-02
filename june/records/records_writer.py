@@ -1,12 +1,14 @@
 import os
 import tables
 import pandas as pd
+import yaml
 import numpy as np
 import csv
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
 from collections import Counter, defaultdict
-
+import june
 from june.groups import Supergroup
 from june.records.event_records_writer import (
     InfectionRecord,
@@ -77,6 +79,7 @@ class Record:
         else:
             self.filename = f"june_record.h5"
             self.summary_filename = f"summary.csv"
+        self.configs_filename = f'config.yaml'
         try:
             os.remove(self.record_path / self.filename)
         except OSError:
@@ -112,6 +115,9 @@ class Record:
                 ["current_susceptible", "daily_hospital_deaths", "daily_deaths"]
             )
             writer.writerow(header)
+        description = {'description': f'Started runnning at {datetime.now()}. Good luck!'}
+        with open(self.record_path / self.configs_filename,'w') as f:
+            yaml.dump(description, f)
 
     def static_data(self, world: "World"):
         with tables.open_file(self.record_path/self.filename, mode='a') as self.file:
@@ -232,3 +238,96 @@ class Record:
     def combine_outputs(self,):
         if self.mpi_rank == 0:
             combine_records(self.record_path)
+
+    def parameters_interaction(self,
+            interaction: "Interaction" = None,
+        ):
+        interaction.beta
+        interaction.alpha_physical
+        interaction.contact_matrices
+        interaction.susceptibilities_by_age
+
+    def parameters_seed(self,
+            infection_seed: "InfectionSeed" = None,
+        ):
+        infection_seed.seed_strength
+        #infection_Seed min_date/max_date
+
+    def parameters_infection(self,
+            infection_selector: "InfectionSelector" = None,
+        ):
+        infection_selector.health_index_generator.asymptomatic_ratio
+        infection_selector.transmission_type
+
+    def parameters_policies(self,
+            activity_manager: "ActivityManager" = None,
+        ):
+        if activity_manager.policies:
+            for policy in activity_manager.policies.policies:
+                policy_spec = policy.get_spec()
+                policy.__dict__
+                
+    def simulation_config(self,
+            config):
+        pass
+
+    @staticmethod
+    def get_username():
+        try:
+            username = os.getlogin()
+        except:
+            username = "no_user"
+        return username
+
+    def meta_information(self, comment: Optional[str]=None, random_state: Optional[int]=None,
+            number_of_cores: Optional[int] = None,
+            ):
+        if self.mpi_rank is None or self.mpi_rank == 0:
+            june_git = Path(june.__path__[0]).parent / '.git'
+            meta_dict = {}
+            branch_cmd = f'git --git-dir {june_git} rev-parse --abbrev-ref HEAD'.split()
+            try:
+                meta_dict["branch"] = subprocess.run(
+                    branch_cmd,stdout=subprocess.PIPE
+                ).stdout.decode('utf-8').strip()
+            except Exception as e:
+                print(e)
+                print("Could not record git branch")
+                meta_dict["branch"] =  "unavailable"
+            local_SHA_cmd = f'git --git-dir {june_git} log -n 1 --format="%h"'.split()
+            try:
+                meta_dict["local_SHA"] = subprocess.run(
+                    local_SHA_cmd,stdout=subprocess.PIPE
+                ).stdout.decode('utf-8').strip()
+            except:
+                print("Could not record local git SHA")
+                meta_dict["local_SHA"] = "unavailable"
+            user = self.get_username()
+            meta_dict["user"] = user
+            if comment is None:
+                comment: "No comment provided."
+            meta_dict["user_comment"] = f"{comment}"
+            meta_dict["june_path"] = str(june.__path__[0])
+            meta_dict['number_of_cores'] = number_of_cores
+            meta_dict['random_state'] = random_state
+            with open(self.record_path / self.configs_filename,'r') as f:
+                configs = yaml.load(f)
+                configs.update({'meta': meta_dict})
+            with open(self.record_path / self.configs_filename, 'w') as f:
+                yaml.safe_dump(configs, f) # Also note the safe_dump
+
+    def parameters(self,
+            config_filename: str = None,
+            interaction: "Interaction" = None,
+            infection_seed: "InfectionSeed" = None,
+            infection_selector: "InfectionSelector" = None,
+            activity_manager: "ActivityManager" = None,
+        ):
+            if self.rank == 0:
+                self.parameters_interaction(interaction=interaction)
+                self.parameters_seed(activity_manager=activity_manager)
+                self.parameters_infection(infection_selector=infection_selector)
+                self.parameters_policies(activity_manager=activity_manager)
+                self.simulation_config(config_filename)
+         
+            
