@@ -203,11 +203,14 @@ class Record:
         ) = self.summarise_hospitalisations(world=world)
         current_susceptible = self.summarise_susceptibles(world=world)
         daily_deaths, daily_deaths_in_hospital = self.summarise_deaths(world=world)
+        all_hospital_regions = [hospital.region_name for hospital in world.hospitals]
+        all_world_regions = [region.name for region in world.regions]
+        all_regions = set(all_hospital_regions + all_world_regions)
         with open(
             self.record_path / self.summary_filename, "a", newline=""
         ) as summary_file:
             summary_writer = csv.writer(summary_file)
-            for region in [region.name for region in world.regions]:
+            for region in all_regions:
                 summary_writer.writerow(
                     [
                         timestamp.strftime("%Y-%m-%d"),
