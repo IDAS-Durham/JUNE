@@ -13,7 +13,7 @@ from june.groups.group import Group, Supergroup
 
 default_data_filename = paths.data_path / "input/care_homes/care_homes_ew.csv"
 default_areas_map_path = paths.data_path / "input/geography/area_super_area_region.csv"
-default_config_filename = paths.configs_path / "defaults/groups/carehome.yaml"
+default_config_filename = paths.configs_path / "defaults/groups/care_home.yaml"
 logger = logging.getLogger(__name__)
 
 
@@ -31,7 +31,14 @@ class CareHome(Group):
     2 - visitors 
     """
 
-    __slots__ = "n_residents", "area", "n_workers", "relatives_in_care_homes", "relatives_in_households", "quarantine_starting_date"
+    __slots__ = (
+        "n_residents",
+        "area",
+        "n_workers",
+        "relatives_in_care_homes",
+        "relatives_in_households",
+        "quarantine_starting_date",
+    )
 
     class SubgroupType(IntEnum):
         workers = 0
@@ -48,22 +55,14 @@ class CareHome(Group):
         self.quarantine_starting_date = None
 
     def add(
-        self,
-        person,
-        subgroup_type=SubgroupType.residents,
-        activity: str = "residence",
+        self, person, subgroup_type=SubgroupType.residents, activity: str = "residence",
     ):
         if activity == "leisure":
             super().add(
-                person,
-                subgroup_type=self.SubgroupType.visitors,
-                activity="leisure",
+                person, subgroup_type=self.SubgroupType.visitors, activity="leisure",
             )
         else:
-            super().add(
-                person, subgroup_type=subgroup_type, activity=activity
-            )
-
+            super().add(person, subgroup_type=subgroup_type, activity=activity)
 
     @property
     def workers(self):
@@ -76,7 +75,7 @@ class CareHome(Group):
     @property
     def visitors(self):
         return self.subgroups[self.SubgroupType.visitors]
-    
+
     def quarantine(self, time, quarantine_days, household_compliance):
         return True
 
@@ -97,7 +96,6 @@ class CareHome(Group):
 
 
 class CareHomes(Supergroup):
-
     def __init__(self, care_homes: List[CareHome]):
         super().__init__(members=care_homes)
 
@@ -145,7 +143,9 @@ class CareHomes(Supergroup):
         )
         for area in areas:
             n_residents = care_home_df.loc[area.name].values[0]
-            n_worker = max(int(n_residents / config["sector"]["Q"]["nr_of_clients"]), 1)
+            n_worker = max(
+                int(np.ceil(n_residents / config["n_residents_per_worker"])), 1
+            )
             if n_residents != 0:
                 area.care_home = CareHome(area, n_residents, n_worker)
                 care_homes.append(area.care_home)
