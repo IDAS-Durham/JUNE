@@ -11,6 +11,12 @@ class RecordReader:
         self.regional_summary = self.get_regional_summary(self.results_path / "summary.csv")
         self.world_summary = self.get_world_summary()
 
+    def decode_bytes_columns(self, df):
+        str_df = df.select_dtypes([np.object])
+        for col in str_df:
+            df[col] = str_df[col].str.decode("utf-8")
+        return df
+
     def get_regional_summary(self, summary_path):
         df = pd.read_csv(summary_path)
         self.aggregator = {
@@ -35,9 +41,7 @@ class RecordReader:
         with tables.open_file(self.results_path / "june_record.h5", mode="r") as f:
             table = getattr(f.root, table_name)
             df = pd.DataFrame.from_records(table.read(), index=index)
-        str_df = df.select_dtypes([np.object])
-        for col in str_df:
-            df[col] = str_df[col].str.decode("utf-8")
+        df = self.decode_bytes_columns(df)
         return df
 
     def get_geography_df(self,):
@@ -62,12 +66,17 @@ class RecordReader:
     def get_table_with_extras(
         self, table_name, index, with_people=True, with_geography=True
     ):
+        print(f"Loading {table_name} table")
         df = self.table_to_df(table_name, index=index)
         if with_people:
+            print(f"Loading population table")
             people_df = self.table_to_df("population", index="id")
+            print(f"Merging infection and population tables")
             df = df.merge(people_df, how="inner", left_index=True, right_index=True)
             if with_geography:
+                print(f"Loading geography table")
                 geography_df = self.get_geography_df()
+                print(f"Mergeing infection and geography tables")
                 df = df.merge(geography_df.drop_duplicates(),
                         left_on="area_id", right_index=True, how='inner')
         return df
