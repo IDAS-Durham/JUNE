@@ -220,44 +220,48 @@ class Record:
     def parameters_interaction(
         self, interaction: "Interaction" = None,
     ):
-        interaction_dict = {}
-        interaction_dict["beta"] = interaction.beta
-        interaction_dict["alpha_physical"] = interaction.alpha_physical
-        interaction_dict["contact_matrices"] = {}
-        for key, values in interaction.contact_matrices.items():
-            interaction_dict["contact_matrices"][key] = values.tolist()
-        interaction_dict[
-            "susceptibilities_by_age"
-        ] = interaction.susceptibilities_by_age
-        self.append_dict_to_configs(config_dict={"interaction": interaction_dict})
+        if interaction is not None:
+            interaction_dict = {}
+            interaction_dict["beta"] = interaction.beta
+            interaction_dict["alpha_physical"] = interaction.alpha_physical
+            interaction_dict["contact_matrices"] = {}
+            for key, values in interaction.contact_matrices.items():
+                interaction_dict["contact_matrices"][key] = values.tolist()
+            interaction_dict[
+                "susceptibilities_by_age"
+            ] = interaction.susceptibilities_by_age
+            self.append_dict_to_configs(config_dict={"interaction": interaction_dict})
 
     def parameters_seed(
         self, infection_seed: "InfectionSeed" = None,
     ):
-        infection_seed_dict = {}
-        infection_seed_dict["seed_strength"] = infection_seed.seed_strength
-        infection_seed_dict["min_date"] = infection_seed.min_date.strftime("%Y-%m-%d")
-        infection_seed_dict["max_date"] = infection_seed.max_date.strftime("%Y-%m-%d")
-        self.append_dict_to_configs(config_dict={"infection_seed": infection_seed_dict})
+        if infection_seed is not None:
+            infection_seed_dict = {}
+            infection_seed_dict["seed_strength"] = infection_seed.seed_strength
+            infection_seed_dict["min_date"] = infection_seed.min_date.strftime("%Y-%m-%d")
+            infection_seed_dict["max_date"] = infection_seed.max_date.strftime("%Y-%m-%d")
+            self.append_dict_to_configs(config_dict={"infection_seed": infection_seed_dict})
 
     def parameters_infection(
         self, infection_selector: "InfectionSelector" = None,
     ):
-        infection_dict = {}
-        infection_dict[
-            "asymptomatic_ratio"
-        ] = infection_selector.health_index_generator.asymptomatic_ratio
-        infection_dict["transmission_type"] = infection_selector.transmission_type
-        self.append_dict_to_configs(config_dict={"infection": infection_dict})
+        if infection_selector is not None:
+            infection_dict = {}
+            infection_dict[
+                "asymptomatic_ratio"
+            ] = infection_selector.health_index_generator.asymptomatic_ratio
+            infection_dict["transmission_type"] = infection_selector.transmission_type
+            self.append_dict_to_configs(config_dict={"infection": infection_dict})
 
     def parameters_policies(
         self, activity_manager: "ActivityManager" = None,
     ):
-        policy_dicts = []
-        for policy in activity_manager.policies.policies:
-            policy_dicts.append(policy.__dict__.copy())
-        with open(self.record_path / "policies.txt", "w") as fout:
-            fout.write(repr(policy_dicts))
+        if activity_manager is not None:
+            policy_dicts = []
+            for policy in activity_manager.policies.policies:
+                policy_dicts.append(policy.__dict__.copy())
+            with open(self.record_path / "policies.txt", "w") as fout:
+                fout.write(repr(policy_dicts))
 
     @staticmethod
     def get_username():

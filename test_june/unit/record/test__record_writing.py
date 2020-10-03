@@ -387,12 +387,12 @@ def test__parameters(dummy_world):
         infection_selector=infection_selector,
         activity_manager=activity_manager,
     )
-    with open(record.record_path / "config.yaml",'r') as file:
+    with open(record.record_path / "config.yaml", "r") as file:
         parameters = yaml.load(file, Loader=yaml.FullLoader)
 
-    with open(record.record_path / "policies.txt",'r') as file:
+    with open(record.record_path / "policies.txt", "r") as file:
         policies = file.read()
-        policies = policies.replace('array', 'np.array')
+        policies = policies.replace("array", "np.array")
         policies = eval(policies)
     interaction_attributes = ["beta", "alpha_physical", "susceptibilities_by_age"]
     for attribute in interaction_attributes:
@@ -402,9 +402,13 @@ def test__parameters(dummy_world):
             parameters["interaction"]["contact_matrices"][key], value
         )
 
-    assert parameters["infection_seed"]['seed_strength'] == infection_seed.seed_strength
-    assert parameters["infection_seed"]['min_date'] == infection_seed.min_date.strftime('%Y-%m-%d')
-    assert parameters["infection_seed"]['max_date'] == infection_seed.max_date.strftime('%Y-%m-%d')
+    assert parameters["infection_seed"]["seed_strength"] == infection_seed.seed_strength
+    assert parameters["infection_seed"]["min_date"] == infection_seed.min_date.strftime(
+        "%Y-%m-%d"
+    )
+    assert parameters["infection_seed"]["max_date"] == infection_seed.max_date.strftime(
+        "%Y-%m-%d"
+    )
 
     assert parameters["infection"]["asymptomatic_ratio"] == 0.6
     assert (
