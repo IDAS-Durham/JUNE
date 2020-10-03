@@ -4,9 +4,9 @@ import random
 import tables
 import numpy as np
 import pytest
-import pandas as pd 
-from june import paths 
-from june.demography import Person, Population 
+import pandas as pd
+from june import paths
+from june.demography import Person, Population
 from june.geography import Geography
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (
@@ -272,7 +272,5 @@ def test__log_deaths(world, interaction, selector):
     read = RecordReader(results_path=sim.record.record_path)
     for key in list(deaths.keys()):
         if deaths[key]:
-            assert read.regional_summary.loc[key, "daily_deaths"] == len(
-                deaths[key]
-            )
+            assert read.regional_summary.loc[key, "daily_deaths"] == len(deaths[key])
     clean_world(world)

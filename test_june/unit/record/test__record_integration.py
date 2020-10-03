@@ -214,7 +214,7 @@ def test__log_infected(world, interaction, selector):
         counter += 1
         already_infected += current_infected
 
-    with tables.open_file(sim.record.record_path / sim.record.filename, mode='r') as f:
+    with tables.open_file(sim.record.record_path / sim.record.filename, mode="r") as f:
         table = f.root.infections
         df = pd.DataFrame.from_records(table.read())
     df["timestamp"] = df["timestamp"].str.decode("utf-8")
@@ -267,7 +267,7 @@ def test__log_hospital_admissions(world, interaction, selector):
         sim.record.time_step(timestamp=sim.timer.date)
         next(sim.timer)
         counter += 1
-    with tables.open_file(sim.record.record_path / sim.record.filename, mode='r') as f:
+    with tables.open_file(sim.record.record_path / sim.record.filename, mode="r") as f:
         table = f.root.hospital_admissions
         admissions_df = pd.DataFrame.from_records(table.read())
         table = f.root.discharges
@@ -322,7 +322,7 @@ def test__symptoms_transition(world, interaction, selector):
         sim.record.time_step(timestamp=sim.timer.date)
         next(sim.timer)
         counter += 1
-    with tables.open_file(sim.record.record_path / sim.record.filename, mode='r') as f:
+    with tables.open_file(sim.record.record_path / sim.record.filename, mode="r") as f:
         table = f.root.symptoms
         df = pd.DataFrame.from_records(table.read())
     df["timestamp"] = df["timestamp"].str.decode("utf-8")
@@ -367,7 +367,7 @@ def test__log_deaths(world, interaction, selector):
         sim.record.time_step(timestamp=sim.timer.date)
         next(sim.timer)
         counter += 1
-    with tables.open_file(sim.record.record_path / sim.record.filename, mode='r') as f:
+    with tables.open_file(sim.record.record_path / sim.record.filename, mode="r") as f:
         table = f.root.deaths
         df = pd.DataFrame.from_records(table.read())
     df["timestamp"] = df["timestamp"].str.decode("utf-8")
@@ -381,4 +381,3 @@ def test__log_deaths(world, interaction, selector):
                     deaths[timestamp]
                 )
     clean_world(world)
-
