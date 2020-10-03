@@ -70,10 +70,12 @@ class InfectionRecord(EventRecord):
             str_names=["location_specs", "region_names"],
         )
 
-    def accumulate(self, location_spec, location_id, region_name, infector_ids, infected_ids):
-        self.location_specs.extend([location_spec]*len(infected_ids))
-        self.location_ids.extend([location_id]*len(infected_ids))
-        self.region_names.extend([region_name]*len(infected_ids))
+    def accumulate(
+        self, location_spec, location_id, region_name, infector_ids, infected_ids
+    ):
+        self.location_specs.extend([location_spec] * len(infected_ids))
+        self.location_ids.extend([location_id] * len(infected_ids))
+        self.region_names.extend([region_name] * len(infected_ids))
         self.infector_ids.extend(infector_ids)
         self.infected_ids.extend(infected_ids)
 
