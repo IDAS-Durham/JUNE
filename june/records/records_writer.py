@@ -228,8 +228,8 @@ class Record:
     ):
         infection_seed_dict = {}
         infection_seed_dict["seed_strength"] = infection_seed.seed_strength
-        infection_seed_dict["min_date"] = infection_seed.min_date
-        infection_seed_dict["max_date"] = infection_seed.max_date
+        infection_seed_dict["min_date"] = infection_seed.min_date.strftime('%Y-%m-%d')
+        infection_seed_dict["max_date"] = infection_seed.max_date.strftime('%Y-%m-%d')
         self.append_dict_to_configs(config_dict={"infection_seed": infection_seed_dict})
 
     def parameters_infection(
@@ -247,7 +247,7 @@ class Record:
     ):
         policy_dicts = []
         for policy in activity_manager.policies.policies:
-            policy_attributes = policy.__dict__
+            policy_attributes = policy.__dict__.copy()
             if 'start_time' in policy_attributes:
                 policy_attributes["start_time"] = policy_attributes['start_time'].strftime('%Y-%m-%d')
             if 'end_time' in policy_attributes:
@@ -255,11 +255,6 @@ class Record:
             policy_dicts.append(policy_attributes)
         with open(self.record_path / 'policies.txt', 'w') as fout:
             fout.write(repr(policy_dicts))
-
-    def simulation_config(self, config_filename):
-        with open(config_filename, "r") as f:
-            config = yaml.safe_load(f)
-        self.append_dict_to_configs(config_dict={"simulator_config": config})
 
     @staticmethod
     def get_username():
@@ -271,14 +266,12 @@ class Record:
 
     def parameters(
         self,
-        config_filename: str = None,
         interaction: "Interaction" = None,
         infection_seed: "InfectionSeed" = None,
         infection_selector: "InfectionSelector" = None,
         activity_manager: "ActivityManager" = None,
     ):
         if self.mpi_rank is None or self.mpi_rank == 0:
-            self.simulation_config(config_filename)
             self.parameters_interaction(interaction=interaction)
             self.parameters_seed(infection_seed=infection_seed)
             self.parameters_infection(infection_selector=infection_selector)
@@ -334,6 +327,7 @@ def combine_summaries(record_path):
     dfs = []
     for summary_file in summary_files:
         dfs.append(pd.read_csv(summary_file))
+        summary_file.unlink()
     summary = pd.concat(dfs)
     summary = summary.groupby(["time_stamp", "region"]).sum()
     summary.to_csv(record_path / "summary.csv")
@@ -357,6 +351,7 @@ def combine_hdf5s(record_path, table_names=("infections", "population")):
                         table.append(arr_data)
                         table.flush()
 
+            record_file.unlink()
 
 def combine_records(record_path):
     record_path = Path(record_path)
