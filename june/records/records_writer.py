@@ -180,10 +180,7 @@ class Record:
         ) as summary_file:
             summary_writer = csv.writer(summary_file)
             for region in all_regions:
-                summary_writer.writerow(
-                    [
-                        timestamp.strftime("%Y-%m-%d"),
-                        region,
+                data = [
                         current_infected.get(region, 0),
                         daily_infected.get(region, 0),
                         current_recovered.get(region, 0),
@@ -196,7 +193,13 @@ class Record:
                         daily_deaths_in_hospital.get(region, 0),
                         daily_deaths.get(region, 0),
                     ]
-                )
+                if sum(data) > 0:
+                    summary_writer.writerow(
+                        [
+                            timestamp.strftime("%Y-%m-%d"),
+                            region,
+                        ] + data
+                    )
 
     def combine_outputs(self,):
         if self.mpi_rank == 0:
