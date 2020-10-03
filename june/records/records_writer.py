@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
-from collections import Counter, defaultdict 
+from collections import Counter, defaultdict
 import june
 from june.groups import Supergroup
 from june.records.event_records_writer import (
@@ -113,7 +113,9 @@ class Record:
         for hospital in world.hospitals:
             if not hospital.external:
                 current_hospitalised[hospital.region_name] += len(hospital.patients)
-                current_intensive_care[hospital.region_name] += len(hospital.icu_patients)
+                current_intensive_care[hospital.region_name] += len(
+                    hospital.icu_patients
+                )
         return (
             hospital_admissions,
             icu_admissions,
@@ -181,24 +183,21 @@ class Record:
             summary_writer = csv.writer(summary_file)
             for region in all_regions:
                 data = [
-                        current_infected.get(region, 0),
-                        daily_infected.get(region, 0),
-                        current_recovered.get(region, 0),
-                        daily_recovered.get(region, 0),
-                        current_hospitalised.get(region, 0),
-                        daily_hospitalised.get(region, 0),
-                        current_intensive_care.get(region, 0),
-                        daily_intensive_care.get(region, 0),
-                        current_susceptible.get(region, 0),
-                        daily_deaths_in_hospital.get(region, 0),
-                        daily_deaths.get(region, 0),
-                    ]
+                    current_infected.get(region, 0),
+                    daily_infected.get(region, 0),
+                    current_recovered.get(region, 0),
+                    daily_recovered.get(region, 0),
+                    current_hospitalised.get(region, 0),
+                    daily_hospitalised.get(region, 0),
+                    current_intensive_care.get(region, 0),
+                    daily_intensive_care.get(region, 0),
+                    current_susceptible.get(region, 0),
+                    daily_deaths_in_hospital.get(region, 0),
+                    daily_deaths.get(region, 0),
+                ]
                 if sum(data) > 0:
                     summary_writer.writerow(
-                        [
-                            timestamp.strftime("%Y-%m-%d"),
-                            region,
-                        ] + data
+                        [timestamp.strftime("%Y-%m-%d"), region,] + data
                     )
 
     def combine_outputs(self,):
@@ -210,7 +209,13 @@ class Record:
             configs = yaml.safe_load(f)
             configs.update(config_dict)
         with open(self.record_path / self.configs_filename, "w") as f:
-            yaml.safe_dump(configs, f,  allow_unicode=True, default_flow_style=False, sort_keys=False)
+            yaml.safe_dump(
+                configs,
+                f,
+                allow_unicode=True,
+                default_flow_style=False,
+                sort_keys=False,
+            )
 
     def parameters_interaction(
         self, interaction: "Interaction" = None,
@@ -231,8 +236,8 @@ class Record:
     ):
         infection_seed_dict = {}
         infection_seed_dict["seed_strength"] = infection_seed.seed_strength
-        infection_seed_dict["min_date"] = infection_seed.min_date.strftime('%Y-%m-%d')
-        infection_seed_dict["max_date"] = infection_seed.max_date.strftime('%Y-%m-%d')
+        infection_seed_dict["min_date"] = infection_seed.min_date.strftime("%Y-%m-%d")
+        infection_seed_dict["max_date"] = infection_seed.max_date.strftime("%Y-%m-%d")
         self.append_dict_to_configs(config_dict={"infection_seed": infection_seed_dict})
 
     def parameters_infection(
@@ -250,13 +255,8 @@ class Record:
     ):
         policy_dicts = []
         for policy in activity_manager.policies.policies:
-            policy_attributes = policy.__dict__.copy()
-            if 'start_time' in policy_attributes:
-                policy_attributes["start_time"] = policy_attributes['start_time'].strftime('%Y-%m-%d')
-            if 'end_time' in policy_attributes:
-                policy_attributes["end_time"] = policy_attributes['end_time'].strftime('%Y-%m-%d')
-            policy_dicts.append(policy_attributes)
-        with open(self.record_path / 'policies.txt', 'w') as fout:
+            policy_dicts.append(policy.__dict__.copy())
+        with open(self.record_path / "policies.txt", "w") as fout:
             fout.write(repr(policy_dicts))
 
     @staticmethod
@@ -337,7 +337,9 @@ def combine_summaries(record_path, remove_left_overs=False):
     summary.to_csv(record_path / "summary.csv")
 
 
-def combine_hdf5s(record_path, table_names=("infections", "population"), remove_left_overs=False):
+def combine_hdf5s(
+    record_path, table_names=("infections", "population"), remove_left_overs=False
+):
     record_files = record_path.glob("june_record.*.h5")
     with tables.open_file(record_path / "june_record.h5", "w") as merged_record:
         for i, record_file in enumerate(record_files):
@@ -357,10 +359,8 @@ def combine_hdf5s(record_path, table_names=("infections", "population"), remove_
             if remove_left_overs:
                 record_file.unlink()
 
+
 def combine_records(record_path, remove_left_overs=False):
     record_path = Path(record_path)
     combine_summaries(record_path, remove_left_overs=remove_left_overs)
     combine_hdf5s(record_path, remove_left_overs=remove_left_overs)
-
-
-

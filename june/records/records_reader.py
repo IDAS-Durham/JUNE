@@ -8,10 +8,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class RecordReader:
     def __init__(self, results_path=Path("results")):
         self.results_path = Path(results_path)
-        self.regional_summary = self.get_regional_summary(self.results_path / "summary.csv")
+        self.regional_summary = self.get_regional_summary(
+            self.results_path / "summary.csv"
+        )
         self.world_summary = self.get_world_summary()
 
     def decode_bytes_columns(self, df):
@@ -80,8 +83,12 @@ class RecordReader:
                 logger.info(f"Loading geography table")
                 geography_df = self.get_geography_df()
                 logger.info(f"Mergeing infection and geography tables")
-                df = df.merge(geography_df.drop_duplicates(),
-                        left_on="area_id", right_index=True, how='inner')
-        if 'timestamp' in df.columns:
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
+                df = df.merge(
+                    geography_df.drop_duplicates(),
+                    left_on="area_id",
+                    right_index=True,
+                    how="inner",
+                )
+        if "timestamp" in df.columns:
+            df["timestamp"] = pd.to_datetime(df["timestamp"])
         return df

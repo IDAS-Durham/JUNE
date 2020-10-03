@@ -404,14 +404,12 @@ def test__parameters(dummy_world):
 
     assert parameters["infection_seed"]['seed_strength'] == infection_seed.seed_strength
     assert parameters["infection_seed"]['min_date'] == infection_seed.min_date.strftime('%Y-%m-%d')
-    assert parameters["infection_seed"]['max_date'] == infection_seed.seed_strength.strftime('%Y-%m-%d')
+    assert parameters["infection_seed"]['max_date'] == infection_seed.max_date.strftime('%Y-%m-%d')
 
     assert parameters["infection"]["asymptomatic_ratio"] == 0.6
     assert (
         parameters["infection"]["transmission_type"]
         == infection_selector.transmission_type
     )
-    print(policies)
     for i, policy in enumerate(activity_manager.policies.policies):
-        policy_spec = policy.get_spec()
         assert policies[i] == policy.__dict__

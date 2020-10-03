@@ -526,12 +526,13 @@ class Simulator:
             f"Starting simulation for {self.timer.total_days} days at day {self.timer.date}, to run for {self.timer.total_days} days"
         )
         self.clear_world()
-        self.record.parameters(
-                interaction=self.interaction,
-                infection_seed=self.infection_seed,
-                infection_selector=self.infection_selector,
-                activity_manager=self.activity_manager
-        )
+        if self.record is not None:
+            self.record.parameters(
+                    interaction=self.interaction,
+                    infection_seed=self.infection_seed,
+                    infection_selector=self.infection_selector,
+                    activity_manager=self.activity_manager
+            )
         while self.timer.date < self.timer.final_date:
             if self.infection_seed:
                 if (
