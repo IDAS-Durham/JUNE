@@ -3,7 +3,10 @@ from typing import Optional, Tuple
 import numpy as np
 import pandas as pd
 import tables
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 class RecordReader:
     def __init__(self, results_path=Path("results")):
@@ -66,17 +69,19 @@ class RecordReader:
     def get_table_with_extras(
         self, table_name, index, with_people=True, with_geography=True
     ):
-        print(f"Loading {table_name} table")
+        logger.info(f"Loading {table_name} table")
         df = self.table_to_df(table_name, index=index)
         if with_people:
-            print(f"Loading population table")
+            logger.info(f"Loading population table")
             people_df = self.table_to_df("population", index="id")
-            print(f"Merging infection and population tables")
+            logger.info(f"Merging infection and population tables")
             df = df.merge(people_df, how="inner", left_index=True, right_index=True)
             if with_geography:
-                print(f"Loading geography table")
+                logger.info(f"Loading geography table")
                 geography_df = self.get_geography_df()
-                print(f"Mergeing infection and geography tables")
+                logger.info(f"Mergeing infection and geography tables")
                 df = df.merge(geography_df.drop_duplicates(),
                         left_on="area_id", right_index=True, how='inner')
+        if 'timestamp' in df.columns:
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
         return df
