@@ -13,7 +13,7 @@ from leisure import LeisurePlots
 from companies import CompanyPlots
 from households import HouseholdPlots
 from care_homes import CareHomePlots
-from commute_plots import CommutePlots
+from commute import CommutePlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -43,7 +43,7 @@ class Plotter:
 
     def plot_commute(
             self,
-            save_dir: str = '../plots/companies/',
+            save_dir: str = '../plots/commute/',
     ):
         "Make all commute plots"
 
