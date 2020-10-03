@@ -26,16 +26,11 @@ if "E00004734" not in london_areas:
     london_areas = np.append(london_areas, "E02000187")
 
 # add some people commuting from Cambridge
-london_areas = np.concatenate(
-    (london_areas, ["E02003719", "E02003720", "E02003721"])
-)
+london_areas = np.concatenate((london_areas, ["E02003719", "E02003720", "E02003721"]))
 
 # add Bath as well to have a city with no stations
 london_areas = np.concatenate(
-    (
-        london_areas,
-        ["E02002988", "E02002989", "E02002990", "E02002991", "E02002992",],
-    )
+    (london_areas, ["E02002988", "E02002989", "E02002990", "E02002991", "E02002992",],)
 )
 
 
@@ -46,6 +41,7 @@ config_path = "./config_simulation.yaml"
 
 # define geography, let's run the first 20 super areas of london
 geography = Geography.from_file({"super_area": london_areas})
+#geography = Geography.from_file({"region": ["North East"]})
 
 # add buildings
 geography.hospitals = Hospitals.for_geography(geography)
@@ -54,7 +50,7 @@ geography.schools = Schools.for_geography(geography)
 geography.universities = Universities.for_super_areas(geography.super_areas)
 geography.care_homes = CareHomes.for_geography(geography)
 ## generate world
-world = generate_world_from_geography(geography, include_households=True)
+world = generate_world_from_geography(geography, include_households=False)
 #
 ## some leisure activities
 world.pubs = Pubs.for_geography(geography)
