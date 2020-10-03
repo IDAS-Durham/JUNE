@@ -173,7 +173,7 @@ def load_hospitals_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
                                 id=ids[k],
                                 spec='hospital',
                                 domain_id = super_areas_to_domain_dict[super_area],
-                                region_name = region_name[k] 
+                                region_name = region_name[k].decode()
                             )
                 else:
                     hospital = Hospital(
