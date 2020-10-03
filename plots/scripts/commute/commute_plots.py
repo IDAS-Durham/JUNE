@@ -36,7 +36,7 @@ class CommutePlots:
         internal_commuters = []
         external_commuters = []
         names = []
-        for city in world.cities:
+        for city in self.world.cities:
             external = 0
             for station in city.stations:
                 external += len(station.commuter_ids)
@@ -78,51 +78,56 @@ class CommutePlots:
 
         plot_city = None
 
-        for city in world.cities:
+        for city in self.world.cities:
             if city.name == city_to_plot:
                 plot_city = city
                 break
 
-        internal_commuters_ids = []
-        external_commuters_ids = []
-        commuters_ids = []
-        for commuter in list(city.commuter_ids):
-            internal_commuters_ids.append(commuter)
-            commuters_ids.append(commuter)
-        for station in city.stations:
-            for commuter in list(station.commuter_ids):
+        if plot_city is not None:
+
+            internal_commuters_ids = []
+            external_commuters_ids = []
+            commuters_ids = []
+            for commuter in list(city.commuter_ids):
+                internal_commuters_ids.append(commuter)
                 commuters_ids.append(commuter)
-                external_commuters_ids.append(commuter)
+            for station in city.stations:
+                for commuter in list(station.commuter_ids):
+                    commuters_ids.append(commuter)
+                    external_commuters_ids.append(commuter)
 
-        live_super_areas = []
-        internal_super_areas = []
-        external_super_areas = []
-        for commuter_id in commuters_ids:
-            live_super_areas.append(world.people[commuter_id].super_area.name)
-        for commuter_id in internal_commuters_ids:
-            internal_super_areas.append(world.people[commuter_id].super_area.name)
-        for commuter_id in external_commuters_ids:
-            external_super_areas.append(world.people[commuter_id].super_area.name)
+            live_super_areas = []
+            internal_super_areas = []
+            external_super_areas = []
+            for commuter_id in commuters_ids:
+                live_super_areas.append(self.world.people[commuter_id].super_area.name)
+            for commuter_id in internal_commuters_ids:
+                internal_super_areas.append(self.world.people[commuter_id].super_area.name)
+            for commuter_id in external_commuters_ids:
+                external_super_areas.append(self.world.people[commuter_id].super_area.name)
 
-        live_super_area_names, live_super_area_counts = np.unique(live_super_areas, return_counts=True)
-        internal_super_area_names = np.unique(internal_super_areas)
-        external_super_area_names = np.unique(external_super_areas)
+            live_super_area_names, live_super_area_counts = np.unique(live_super_areas, return_counts=True)
+            internal_super_area_names = np.unique(internal_super_areas)
+            external_super_area_names = np.unique(external_super_areas)
 
-        commute_areas = super_areas[super_areas['msoa11cd'].isin(live_super_area_names)]
+            commute_areas = super_areas[super_areas['msoa11cd'].isin(live_super_area_names)]
 
-        commute_areas['commuters'] = live_super_area_counts
+            commute_areas['commuters'] = live_super_area_counts
 
-        for idx, super_area in enumerate(live_super_area_names):
-            commute_areas['commuters'][commute_areas['msoa11cd'] == super_area] = live_super_area_counts[idx]
+            for idx, super_area in enumerate(live_super_area_names):
+                commute_areas['commuters'][commute_areas['msoa11cd'] == super_area] = live_super_area_counts[idx]
 
-        internal_commute_areas = commute_areas[commute_areas['msoa11cd'].isin(internal_super_area_names)]
-        external_commute_areas = commute_areas[commute_areas['msoa11cd'].isin(external_super_area_names)]
+            internal_commute_areas = commute_areas[commute_areas['msoa11cd'].isin(internal_super_area_names)]
+            external_commute_areas = commute_areas[commute_areas['msoa11cd'].isin(external_super_area_names)]
 
-        return internal_commute_areas, external_commute_areas
+            return internal_commute_areas, external_commute_areas
+
+        else:
+            return None, None
 
     def plot_commute_areas(self, commute_areas):
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(10,15))
         gplt.choropleth(
             commute_areas, hue='commuters',
             cmap='Reds', legend=True, edgecolor="black", ax=ax
