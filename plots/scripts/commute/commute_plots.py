@@ -83,7 +83,7 @@ class CommutePlots:
                 plot_city = city
                 break
 
-    internal_commuters_ids = []
+        internal_commuters_ids = []
         external_commuters_ids = []
         commuters_ids = []
         for commuter in list(city.commuter_ids):
