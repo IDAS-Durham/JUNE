@@ -11,11 +11,8 @@ from june.hdf5_savers import generate_world_from_hdf5
 from policy import PolicyPlots
 from leisure import LeisurePlots
 from companies import CompanyPlots
-<<<<<<< HEAD
 from households import HouseholdPlots
-=======
 from care_homes import CareHomePlots
->>>>>>> master
 
 plt.style.use(['science'])
 plt.style.reload_library()
