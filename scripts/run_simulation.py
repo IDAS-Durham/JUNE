@@ -33,19 +33,6 @@ def set_random_seed(seed=999):
     random.seed(seed)
     return
 
-class MockHealthIndexGenerator:
-    def __init__(self, desired_symptoms=SymptomTag.hospitalised):
-        self.index = desired_symptoms
-        self.asymptomatic_ratio = 0.2
-
-    def __call__(self, person):
-        hi = np.ones(8)
-        for h in range(len(hi)):
-            if h < self.index:
-                hi[h] = 0
-        return hi
-
-
 if len(sys.argv) > 1:
     seed = int(sys.argv[1])
 else:
@@ -68,7 +55,7 @@ leisure = generate_leisure_for_config(world, config_path)
 #
 travel = Travel()
 # health index and infection selecctor
-health_index_generator = MockHealthIndexGenerator() #HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
 infection_selector = InfectionSelector.from_file(health_index_generator=health_index_generator)
 
 # interaction
@@ -78,7 +65,6 @@ interaction = Interaction.from_file(config_filename="./config_interaction.yaml",
 policies = Policies.from_file()
 
 # infection seed
-health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
 oc = Observed2Cases.from_file(
     health_index_generator=health_index_generator, smoothing=True
 )
