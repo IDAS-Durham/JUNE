@@ -68,7 +68,7 @@ class CommutePlots:
     def process_internal_external_areas(
             self,
             super_areas_foldername = default_super_areas_foldername,
-            city_to_plot = 'Newcastle upon Tyne',
+            city_to_plot = "Newcastle upon Tyne",
     ):
         "Plotting internal and external super areas and number of commuters"
 
