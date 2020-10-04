@@ -30,7 +30,9 @@ from june.records import Record
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
+
 test_config = paths.configs_path / "tests/test_simulator_no_leisure.yaml"
+interaction_config = paths.configs_path / "tests/interaction.yaml"
 
 
 def clean_world(world):
@@ -38,6 +40,11 @@ def clean_world(world):
         person.infection = None
         person.dead = False
         person.susceptibility = 1.0
+        person.subgroups.medical_facility = None
+    for hospital in world.hospitals:
+        hospital.ward_ids = set()
+        hospital.icu_ids = set()
+
 
 
 class MockHealthIndexGenerator:
@@ -91,7 +98,7 @@ def create_selector():
 
 @pytest.fixture(name="interaction", scope="module")
 def create_interaction():
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename=interaction_config)
     interaction.beta["school"] = 0.8
     interaction.beta["cinema"] = 0.0
     interaction.beta["pub"] = 0.0

@@ -39,6 +39,7 @@ from june.simulator import Simulator, activity_hierarchy
 from june.world import generate_world_from_geography
 
 constant_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+interaction_config = paths.configs_path / "tests/interaction.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 
@@ -72,7 +73,7 @@ def setup_sim(dummy_world, selector):
     leisure_instance.distribute_social_venues_to_areas(
         world.areas, super_areas=world.super_areas
     )
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename=interaction_config)
     policies = Policies.from_file()
     travel = Travel()
     sim = Simulator.from_file(
