@@ -74,7 +74,7 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
                         else:
                             households_super_area[i].residences_to_visit["care_home"] = tuple(
                                 (
-                                    *households_super_area[i].care_homes_to_visit,
+                                    *households_super_area[i].residences_to_visit["care_home"],
                                     area.care_home,
                                 )
                             )

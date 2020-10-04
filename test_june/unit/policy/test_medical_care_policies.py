@@ -106,7 +106,7 @@ def test__care_home_residents_denied_treatment(setup_policy_world, selector):
     times_admitted = 0
     N = 1000
     for _ in range(N):
-        hospitalisation.apply(person=person, hospitals=None, record = None)
+        hospitalisation.apply(person=person, record = None)
         if person.medical_facility is not None:
             assert person.id in person.medical_facility.group.ward_ids
             times_admitted += 1
