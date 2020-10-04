@@ -21,14 +21,14 @@ def make_commuting_network(geo):
     for i in range(1200):
         person = Person.from_attributes()
         person.mode_of_transport = ModeOfTransport(is_public=True, description="asd")
-        person.work_super_area = world.super_areas[0]
+        person.work_super_area = world.super_areas.members_by_name["E02001731"]
         world.super_areas[0].workers.append(person)
         if i % 4 == 0:
             # these people commute internally
-            person.area = world.super_areas[0].areas[0]
+            person.area = world.super_areas.members_by_name["E02001731"].areas[0]
         else:
             # these people come from abroad
-            person.area = world.super_areas[1].areas[0]
+            person.area = world.super_areas.members_by_name["E02005123"].areas[0]
         people.append(person)
     world.people = Population(people)
     travel = Travel()
