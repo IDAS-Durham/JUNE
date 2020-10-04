@@ -17,6 +17,7 @@ class CampWorld(World):
         """
         self.areas = None
         self.super_areas = None
+        self.regions = None
         self.people = None
         self.households = None
         self.schools = None

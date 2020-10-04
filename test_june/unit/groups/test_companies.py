@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
-from june.demography.geography import Geography, Area
+from june.geography import Geography, Area
 from june.demography import Person
 from june.groups.company import Company, Companies
 
@@ -67,5 +67,11 @@ def test__company_sizes(companies_example):
     assert np.isclose(sizes_dict[1], 40, atol=10)
     assert np.isclose(sizes_dict[2], 40, atol=10)
     assert np.isclose(sizes_dict[3], 10, atol=5)
-    assert np.isclose(sizes_dict[4], 10, atol=5)
+    assert np.isclose(sizes_dict[4], 10, atol=6)
+
+def test__company_ids(companies_example, super_area_companies):
+    for company_id, company in companies_example.members_by_id.items():
+        assert company.id == company_id
+    for company in companies_example:
+        assert company.super_area == super_area_companies
 
