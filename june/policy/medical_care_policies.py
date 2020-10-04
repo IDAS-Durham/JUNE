@@ -33,45 +33,46 @@ class Hospitalisation(MedicalCarePolicy):
     enough. When the person recovers, releases the person from the hospital.
     """
 
+    def __init__(
+        self,
+        start_time="1900-01-01",
+        end_time="2500-01-01",
+        probability_of_care_home_resident_admission=0.3,
+    ):
+        super().__init__(start_time, end_time)
+        self.probability_of_care_home_resident_admission = (
+            probability_of_care_home_resident_admission
+        )
+
     def apply(
         self, person: Person, hospitals: Hospitals, record: Optional["Record"] = None
     ):
         symptoms_tag = person.infection.tag
         if symptoms_tag in hospitalised_tags:
-            # note, we dont model hospital capacity here.
-            closest_hospital = person.super_area.closest_hospitals[0]
-            if record is not None and person.medical_facility is None:
-                if symptoms_tag == SymptomTag.intensive_care:
-                    table_name = "icu_admissions"
-                else:
-                    table_name = "hospital_admissions"
-                record.accumulate(
-                    table_name=table_name,
-                    hospital_id=closest_hospital.id,
-                    patient_id=person.id,
-                )
-            if symptoms_tag == SymptomTag.hospitalised:
-                if closest_hospital.external:
-                    # not in this domain, we need to send it over
-                    person.subgroups.medical_facility = ExternalSubgroup(
-                        group=closest_hospital,
-                        subgroup_type=Hospital.SubgroupType.patients,
-                    )
-                else:
-                    person.subgroups.medical_facility = closest_hospital.subgroups[
-                        closest_hospital.SubgroupType.patients
-                    ]
+            if person.medical_facility is not None:
+                patient_hospital = person.medical_facility.group
             else:
-                if closest_hospital.external:
-                    # not in this domain, we need to send it over
-                    person.subgroups.medical_facility = ExternalSubgroup(
-                        group=closest_hospital,
-                        subgroup_type=Hospital.SubgroupType.icu_patients,
+                patient_hospital = person.super_area.closest_hospitals[0]
+            # note, we dont model hospital capacity here.
+            status = patient_hospital.allocate_patient(
+                person,
+                probability_of_care_home_resident_admission=self.probability_of_care_home_resident_admission,
+            )
+            if record is not None:
+                if status in [
+                    "ward_admitted"
+                ]:  # TODO: think if we want to count transfers as admissions.
+                    record.accumulate(
+                        table_name="hospital_admissions",
+                        hospital_id=patient_hospital.id,
+                        patient_id=person.id,
                     )
-                else:
-                    person.subgroups.medical_facility = closest_hospital.subgroups[
-                        closest_hospital.SubgroupType.icu_patients
-                    ]
+                elif status in ["icu_admitted"]:
+                    record.accumulate(
+                        table_name="icu_admissions",
+                        hospital_id=patient_hospital.id,
+                        patient_id=person.id,
+                    )
         else:
             if (
                 person.medical_facility is not None
@@ -83,4 +84,5 @@ class Hospitalisation(MedicalCarePolicy):
                         hospital_id=person.medical_facility.group.id,
                         patient_id=person.id,
                     )
+                person.medical_facility.group.release_patient(person)
             return
