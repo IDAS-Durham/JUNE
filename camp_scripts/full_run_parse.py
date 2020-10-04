@@ -256,9 +256,9 @@ print("Save path set to: {}".format(args.save_path))
 CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
-world = generate_empty_world({"super_area": ["CXB-219-C"]})
+#world = generate_empty_world({"super_area": ["CXB-219-C"]})
 #world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
-#world = generate_empty_world()
+world = generate_empty_world()
 
 # populate empty world
 populate_world(world)
@@ -275,6 +275,9 @@ for hospital in hospitals:
 world.hospitals = hospitals
 hospital_distributor = HospitalDistributor(
     hospitals, medic_min_age=20, patients_per_medic=10
+)
+hospital_distributor.assign_closest_hospitals_to_super_areas(
+    world.super_areas
 )
 world.isolation_units = IsolationUnits([IsolationUnit(area=world.areas[0])])
 
