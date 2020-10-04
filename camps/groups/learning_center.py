@@ -96,7 +96,7 @@ class LearningCenters(Supergroup):
         n_shifts:
             number of daily shifts 
         """
-        super().__init__()
+        super().__init__(members=learning_centers)
         self.members = learning_centers
         if learning_centers_tree:
             coordinates = np.vstack([np.array(lc.coordinates) for lc in self.members])
