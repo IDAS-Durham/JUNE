@@ -17,9 +17,13 @@ from june.distributors import (
     CompanyDistributor,
     UniversityDistributor,
 )
-from june.demography.geography import Geography, Areas
+from june.geography import Geography, Areas
+from june.groups.travel import (
+    generate_commuting_network,
+    Travel,
+    ModeOfTransportGenerator,
+)
 from june.groups import *
-from june.commute import CommuteGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +40,21 @@ possible_groups = [
 ]
 
 
-def _populate_areas(areas: Areas, demography):
+def _populate_areas(
+    areas: Areas, demography, ethnicity=True, socioecon_index=True, comorbidity=True
+):
+    logger.info(f"Populating areas")
     people = Population()
     for area in areas:
-        area.populate(demography)
+        area.populate(
+            demography,
+            ethnicity=ethnicity,
+            socioecon_index=socioecon_index,
+            comorbidity=comorbidity,
+        )
         people.extend(area.people)
+    n_people = len(people)
+    logger.info(f"Areas populated. This world's population is: {n_people}")
     return people
 
 
@@ -69,15 +83,13 @@ class World:
         self.pubs = None
         self.groceries = None
         self.cinemas = None
-        self.commutecities = None
-        self.commutehubs = None
         self.cemeteries = None
         self.universities = None
         self.box_mode = False
+        self.cities = None
+        self.stations = None
 
-    def distribute_people(
-        self, include_households=True, include_commute=False, include_rail_travel=False
-    ):
+    def distribute_people(self, include_households=True):
         """
         Distributes people to buildings assuming default configurations.
         """
@@ -94,8 +106,13 @@ class World:
                 areas=self.areas, super_areas=self.super_areas, population=self.people
             )
         if self.care_homes is not None:
-            carehome_distr = CareHomeDistributor()
-            carehome_distr.populate_care_home_in_areas(self.areas)
+            carehome_distr = CareHomeDistributor.from_file()
+            carehome_distr.populate_care_homes_in_super_areas(
+                super_areas=self.super_areas
+            )
+            carehome_distr.distribute_workers_to_care_homes(
+                super_areas=self.super_areas
+            )
 
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
@@ -111,20 +128,16 @@ class World:
                 self.super_areas
             )
 
-
         if self.universities is not None:
             uni_distributor = UniversityDistributor(self.universities)
             uni_distributor.distribute_students_to_universities(self.super_areas)
 
-        if include_commute:
-            self.initialise_commuting()
-
-        if include_rail_travel:
-            self.initialise_rail_travel()
-
         if self.hospitals is not None:
             hospital_distributor = HospitalDistributor.from_file(self.hospitals)
             hospital_distributor.distribute_medics_to_super_areas(self.super_areas)
+            hospital_distributor.assign_closest_hospitals_to_super_areas(
+                self.super_areas
+            )
 
         # Companies last because need hospital and school workers first
         if self.companies is not None:
@@ -132,54 +145,6 @@ class World:
             company_distributor.distribute_adults_to_companies_in_super_areas(
                 self.super_areas
             )
-
-    def initialise_commuting(self):
-        commute_generator = CommuteGenerator.from_file()
-
-        for area in self.areas:
-            commute_gen = commute_generator.regional_gen_from_msoarea(area.name)
-            for person in area.people:
-                person.mode_of_transport = commute_gen.weighted_random_choice()
-
-        # CommuteCity
-        self.commutecities = CommuteCities.for_super_areas(self.super_areas)
-
-        self.commutecity_distributor = CommuteCityDistributor(
-            self.commutecities.members, self.super_areas.members
-        )
-        self.commutecity_distributor.distribute_people()
-
-        # CommuteHub
-        self.commutehubs = CommuteHubs(self.commutecities)
-        self.commutehubs.from_file()
-        self.commutehubs.init_hubs()
-
-        self.commutehub_distributor = CommuteHubDistributor(self.commutecities.members)
-        self.commutehub_distributor.from_file()
-        self.commutehub_distributor.distribute_people()
-
-        # CommuteUnit
-        self.commuteunits = CommuteUnits(self.commutehubs.members)
-        self.commuteunits.init_units()
-
-        # CommuteCityUnit
-        self.commutecityunits = CommuteCityUnits(self.commutecities.members)
-        self.commutecityunits.init_units()
-
-    def initialise_rail_travel(self):
-
-        # TravelCity
-        self.travelcities = TravelCities(self.commutecities)
-        self.init_cities()
-
-        # TravelCityDistributor
-        self.travelcity_distributor = TravelCityDistributor(
-            self.travelcities.members, self.super_areas.members
-        )
-        self.travelcity_distributor.distribute_msoas()
-
-        # TravelUnit
-        self.travelunits = TravelUnits()
 
     def to_hdf5(self, file_path: str, chunk_size=100000):
         """
@@ -197,6 +162,7 @@ class World:
             It is advise to keep it around 1e5
         """
         from june.hdf5_savers import save_world_to_hdf5
+
         save_world_to_hdf5(world=self, file_path=file_path, chunk_size=chunk_size)
 
 
@@ -205,38 +171,39 @@ def generate_world_from_geography(
     demography: Optional[Demography] = None,
     box_mode=False,
     include_households=True,
-    include_commute=False,
-    include_rail_travel=False,
+    ethnicity=True,
+    socioecon_index=True,
+    comorbidity=True,
 ):
     """
-        Initializes the world given a geometry. The demography is calculated
-        with the default settings for that geography.
-        """
+    Initializes the world given a geometry. The demography is calculated
+    with the default settings for that geography.
+    """
     world = World()
     world.box_mode = box_mode
     if demography is None:
         demography = Demography.for_geography(geography)
-    if include_rail_travel and not include_commute:
-        raise ValueError("Rail travel depends on commute and so both must be true")
     if box_mode:
         world.hospitals = Hospitals.for_box_mode()
-        world.people = _populate_areas(geography.areas, demography)
+        world.people = _populate_areas(
+            geography.areas,
+            demography,
+            ethnicity=ethnicity,
+            socioecon_index=socioecon_index,
+            comorbidity=comorbidity,
+        )
         world.boxes = Boxes([Box()])
         world.cemeteries = Cemeteries()
         world.boxes.members[0].set_population(world.people)
         return world
     world.areas = geography.areas
     world.super_areas = geography.super_areas
+    world.regions = geography.regions
     world.people = _populate_areas(world.areas, demography)
     for possible_group in possible_groups:
         geography_group = getattr(geography, possible_group)
         if geography_group is not None:
             setattr(world, possible_group, geography_group)
-    world.distribute_people(
-        include_households=include_households,
-        include_commute=include_commute,
-        include_rail_travel=include_rail_travel,
-    )
+    world.distribute_people(include_households=include_households,)
     world.cemeteries = Cemeteries()
     return world
-

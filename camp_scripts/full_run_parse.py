@@ -9,7 +9,7 @@ import sys
 import argparse
 from pathlib import Path
 
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.demography.demography import (
     load_age_and_sex_generators_for_bins,
     Demography,
@@ -26,7 +26,7 @@ from june.groups import Hospital, Hospitals, Cemeteries
 from june.distributors import HospitalDistributor
 from june.hdf5_savers import generate_world_from_hdf5
 from june.policy import Policy, Policies
-from june.logger.read_logger import ReadLogger
+from june.records import Record
 from june.simulator import Simulator
 
 from camps.activity import CampActivityManager
@@ -256,9 +256,9 @@ print("Save path set to: {}".format(args.save_path))
 CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
-# world = generate_empty_world({"super_area": ["CXB-219-C"]})
-world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
-# world = generate_empty_world()
+#world = generate_empty_world({"super_area": ["CXB-219-C"]})
+#world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
+world = generate_empty_world()
 
 # populate empty world
 populate_world(world)
@@ -270,13 +270,16 @@ distribute_people_to_households(world)
 hospitals = Hospitals.from_file(
     filename=camp_data_path / "input/hospitals/hospitals.csv"
 )
+for hospital in hospitals:
+    hospital.area = world.areas.get_closest_area(hospital.coordinates)
 world.hospitals = hospitals
-for hospital in world.hospitals:
-    hospital.super_area = world.super_areas.members[0]
 hospital_distributor = HospitalDistributor(
     hospitals, medic_min_age=20, patients_per_medic=10
 )
-world.isolation_units = IsolationUnits([IsolationUnit()])
+hospital_distributor.assign_closest_hospitals_to_super_areas(
+    world.super_areas
+)
+world.isolation_units = IsolationUnits([IsolationUnit(area=world.areas[0])])
 
 hospital_distributor.distribute_medics_from_world(world.people)
 
@@ -435,16 +438,17 @@ cases_detected = {
 
 print("Detected cases = ", sum(cases_detected.values()))
 
-msoa_region_filename = camp_data_path / "input/geography/area_super_area_region.csv"
-msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
+super_region_filename = camp_data_path / "input/geography/area_super_area_region.csv"
+super_region_df = pd.read_csv(super_region_filename)[["super_area", "region"]]
 infection_seed = InfectionSeed(
-    super_areas=world.super_areas, selector=selector, msoa_region=msoa_region
+    world=world, infection_selector=selector, 
 )
-
-for key, n_cases in cases_detected.items():
-    infection_seed.unleash_virus_regional_cases(key, n_cases * 10)
+for region in world.regions:
+    if region.name in cases_detected.keys():
+        infection_seed.unleash_virus(n_cases=10*cases_detected[region.name],
+                population=Population(region.people))
 # Add some extra random cases
-infection_seed.unleash_virus(n_cases=100)
+infection_seed.unleash_virus(n_cases=100, population=world.people)
 
 print("Infected people in seed = ", len(world.people.infected))
 
@@ -458,29 +462,29 @@ leisure.leisure_distributors["pump_latrines"] = PumpLatrineDistributor.from_conf
     pump_latrines=world.pump_latrines
 )
 leisure.leisure_distributors["play_groups"] = PlayGroupDistributor.from_config(
-    play_groups=world.play_groups
+    world.play_groups
 )
 leisure.leisure_distributors[
     "distribution_centers"
 ] = DistributionCenterDistributor.from_config(
-    distribution_centers=world.distribution_centers
+    world.distribution_centers
 )
 leisure.leisure_distributors["communals"] = CommunalDistributor.from_config(
-    communals=world.communals
+    world.communals
 )
 leisure.leisure_distributors[
     "female_communals"
-] = FemaleCommunalDistributor.from_config(female_communals=world.female_communals)
+] = FemaleCommunalDistributor.from_config(world.female_communals)
 leisure.leisure_distributors["religiouss"] = ReligiousDistributor.from_config(
-    religiouss=world.religiouss
+    world.religiouss
 )
 leisure.leisure_distributors["e_vouchers"] = EVoucherDistributor.from_config(
-    evouchers=world.e_vouchers
+    world.e_vouchers
 )
 leisure.leisure_distributors[
     "n_f_distribution_centers"
 ] = NFDistributionCenterDistributor.from_config(
-    nfdistributioncenters=world.n_f_distribution_centers
+    world.n_f_distribution_centers
 )
 leisure.leisure_distributors[
     "shelters_visits"
@@ -489,11 +493,19 @@ leisure.leisure_distributors["shelters_visits"].link_shelters_to_shelters(
     world.super_areas
 )
 # associate social activities to shelters
-leisure.distribute_social_venues_to_households(world.shelters, world.super_areas)
+leisure.distribute_social_venues_to_areas(world.areas, world.super_areas)
 
 # ==================================================================================#
 
 # =================================== simulator ===============================#
+
+# records
+record = Record(
+    record_path=args.save_path, record_static_data=True
+)
+record.static_data(world=world)
+
+
 Simulator.ActivityManager = CampActivityManager
 simulator = Simulator.from_file(
     world=world,
@@ -502,7 +514,7 @@ simulator = Simulator.from_file(
     policies=policies,
     config_filename=CONFIG_PATH,
     infection_selector=selector,
-    save_path=args.save_path,
+    record=record,
 )
 
 leisure.leisure_distributors
@@ -512,8 +524,3 @@ simulator.timer.reset()
 simulator.run()
 
 # ==================================================================================#
-read = ReadLogger(output_path=args.save_path)
-summary = read.run_summary(
-    super_area_region_path=camp_data_path / "input/geography/area_super_area_region.csv"
-)
-summary.to_csv(Path(args.save_path) / "summary.csv")

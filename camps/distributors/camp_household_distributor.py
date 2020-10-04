@@ -12,7 +12,7 @@ import numba as nb
 
 from june import paths
 from june.demography import Person
-from june.demography.geography import Area
+from june.geography import Area
 from june.groups import Household, Households
 
 logger = logging.getLogger(__name__)

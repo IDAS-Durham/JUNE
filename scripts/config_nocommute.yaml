@@ -1,0 +1,36 @@
+title: Covid configuration example
+
+activity_to_groups:
+  medical_facility: ["hospitals"]
+  primary_activity: ['schools', 'companies', "universities"]
+  leisure: ['pubs', 'cinemas', 'groceries', "care_home_visits", "household_visits"] 
+  residence: ['households', 'care_homes']
+
+time:
+  total_days: 30
+  initial_day: "2020-03-01" 
+  step_duration: 
+      weekday:
+          0: 1 
+          1: 8
+          2: 1
+          3: 3
+          4: 11
+      weekend:
+          0: 4 
+          1: 4 
+          2: 4 
+          3: 12 
+  step_activities:
+      weekday:
+          0: ['medical_facility', 'residence'] 
+          1: ['medical_facility', 'primary_activity', 'leisure', 'residence'] 
+          2: ['medical_facility', 'residence'] 
+          3: ['medical_facility', 'leisure', 'residence']
+          4: ['medical_facility', 'residence']
+      weekend:
+          0: ['medical_facility', 'leisure', 'residence']
+          1: ['medical_facility', 'leisure', 'residence']
+          2: ['medical_facility', 'leisure', 'residence']
+          3: ['medical_facility', 'residence']
+

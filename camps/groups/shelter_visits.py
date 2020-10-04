@@ -3,7 +3,7 @@ import pandas as pd
 import yaml
 from itertools import chain
 from random import randint, shuffle
-from june.demography.geography import Areas, SuperAreas
+from june.geography import Areas, SuperAreas
 from june.groups.leisure.social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
 

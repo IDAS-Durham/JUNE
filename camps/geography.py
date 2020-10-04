@@ -2,7 +2,7 @@ from typing import Tuple, List
 import pandas as pd
 import numpy as np
 
-from june.demography.geography import Area, Geography, SuperArea
+from june.geography import Area, Geography, SuperArea, Region
 
 class CampArea(Area):
     def __init__(
@@ -15,7 +15,7 @@ class CampArea(Area):
 
 class CampGeography(Geography):
     def __init__(
-        self, areas: List[CampArea], super_areas: List[SuperArea],
+            self, areas: List[CampArea], super_areas: List[SuperArea], regions: List[Region]
     ):
         """
         Generate hierachical devision of geography.
@@ -31,6 +31,7 @@ class CampGeography(Geography):
         """
         self.areas = areas
         self.super_areas = super_areas
+        self.regions = regions
         # possible buildings
         self.schools = None
         self.hospitals = None

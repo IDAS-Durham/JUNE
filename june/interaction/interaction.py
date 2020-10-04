@@ -2,13 +2,17 @@ import numpy as np
 import yaml
 import numba as nb
 from random import random
-from typing import List
-from june import paths
-from june.interaction.interactive_group import InteractiveGroup
+from typing import List, Dict
 from itertools import chain
 
+from june.interaction.interactive_group import InteractiveGroup
+from june.demography import Population
+from june.exc import InteractionError
+from june.utils import parse_age_probabilities
+from june import paths
+
 default_config_filename = (
-    paths.configs_path / "defaults/interaction/ContactInteraction.yaml"
+    paths.configs_path / "defaults/interaction/interaction.yaml"
 )
 
 
@@ -62,15 +66,17 @@ def compute_effective_transmission(
             infecters_idx=infector_subgroups[i],
             school_years=school_years,
         )
-    poisson_exponent = transmission_exponent * delta_time * beta
-    return 1.0 - np.exp(-poisson_exponent)
+    return transmission_exponent * delta_time * beta
 
 
 # @nb.jit(nopython=True)
-def infect_susceptibles(effective_transmission_probability, susceptible_ids):
+def infect_susceptibles(effective_transmission, susceptible_ids, suscetibilities):
     infected_ids = []
-    for id in susceptible_ids:
-        if random() < effective_transmission_probability:
+    for id, susceptibility in zip(susceptible_ids, suscetibilities):
+        transmission_probability = 1.0 - np.exp(
+            -effective_transmission * susceptibility
+        )
+        if random() < transmission_probability:
             infected_ids.append(id)
     return infected_ids
 
@@ -124,24 +130,70 @@ def _translate_school_subgroup(idx, school_years):
 
 
 class Interaction:
-    def __init__(self, alpha_physical, beta, contact_matrices):
+    """
+    Class to handle interaction in groups.
+
+    Parameters
+    ----------
+    alpha_physical
+        Scaling factor for physical contacts, an alpha_physical factor of 1, means that physical
+        contacts count as much as non-physical contacts.
+    beta
+        dictionary mapping the group specs with their contact intensities
+    contact_matrices
+        dictionary mapping the group specs with their contact matrices
+    susceptibilities_by_age
+        dictionary mapping age ranges to their susceptibility.
+        Example: susceptibilities_by_age = {"0-13" : 0.5, "13-99" : 0.5}
+        note that the right limit of the range is not included.
+    population
+        list of people to have the susceptibilities changed.
+    """
+
+    def __init__(
+        self,
+        alpha_physical: float,
+        beta: Dict[str, float],
+        contact_matrices: dict,
+        susceptibilities_by_age: Dict[str, int] = None,
+        population: Population = None,
+    ):
         self.alpha_physical = alpha_physical
-        self.beta = beta
+        self.beta = beta or {}
+        contact_matrices = contact_matrices or {}
         self.contact_matrices = self.process_contact_matrices(
-            groups=beta.keys(), input_contact_matrices=contact_matrices
+            groups=self.beta.keys(), input_contact_matrices=contact_matrices
         )
+        self.susceptibilities_by_age = susceptibilities_by_age
+        if self.susceptibilities_by_age is not None:
+            if population is None:
+                raise InteractionError(
+                    f"Need to pass population to change susceptibilities by age."
+                )
+            susceptibilities_array = parse_age_probabilities(susceptibilities_by_age)
+            for person in population:
+                if person.age >= len(susceptibilities_array):
+                    person.susceptibility = susceptibilities_array[-1]
+                else:
+                    person.susceptibility = susceptibilities_array[person.age]
 
     @classmethod
     def from_file(
-        cls, config_filename: str = default_config_filename
-    ) -> "ContactAveraging":
+        cls, config_filename: str = default_config_filename, population: Population = None
+    ) -> "Interaction":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         contact_matrices = config["contact_matrices"]
+        if "susceptibilities" in config:
+            susceptibilities_by_age = config["susceptibilities"]
+        else:
+            susceptibilities_by_age = None
         return Interaction(
             alpha_physical=config["alpha_physical"],
             beta=config["beta"],
             contact_matrices=contact_matrices,
+            susceptibilities_by_age=susceptibilities_by_age,
+            population = population
         )
 
     def process_contact_matrices(self, groups: List[str], input_contact_matrices: dict):
@@ -221,38 +273,28 @@ class Interaction:
         beta = self.beta[group.spec]
         school_years = group.school_years
         infected_ids = []
-        if len(group.subgroups_susceptible) == 1:
-            infected_ids = self.time_step_for_subgroup(
+        for i, subgroup_id in enumerate(group.subgroups_susceptible):
+            susceptible_ids = group.susceptible_ids[i]
+            susceptibilities = group.susceptibilities[i]
+            infected_ids += self.time_step_for_subgroup(
                 contact_matrix=contact_matrix,
                 subgroup_transmission_probabilities=group.transmission_probabilities,
-                susceptible_ids=group.susceptible_ids[0],
+                susceptible_ids=susceptible_ids,
+                susceptibilities=susceptibilities,
                 infector_subgroups=group.subgroups_infector,
                 infector_subgroup_sizes=group.infector_subgroup_sizes,
                 beta=beta,
                 delta_time=delta_time,
-                subgroup_idx=group.subgroups_susceptible[0],
+                subgroup_idx=subgroup_id,
                 school_years=school_years,
             )
-        else:
-            for i, subgroup_id in enumerate(group.subgroups_susceptible):
-                susceptible_ids = group.susceptible_ids[i]
-                infected_ids += self.time_step_for_subgroup(
-                    contact_matrix=contact_matrix,
-                    subgroup_transmission_probabilities=group.transmission_probabilities,
-                    susceptible_ids=susceptible_ids,
-                    infector_subgroups=group.subgroups_infector,
-                    infector_subgroup_sizes=group.infector_subgroup_sizes,
-                    beta=beta,
-                    delta_time=delta_time,
-                    subgroup_idx=subgroup_id,
-                    school_years=school_years,
-                )
         return infected_ids
 
     def time_step_for_subgroup(
         self,
         subgroup_transmission_probabilities,
         susceptible_ids,
+        susceptibilities,
         infector_subgroups,
         infector_subgroup_sizes,
         contact_matrix,
@@ -261,7 +303,7 @@ class Interaction:
         subgroup_idx,
         school_years,
     ) -> List[int]:
-        effective_transmission_probability = compute_effective_transmission(
+        effective_transmission = compute_effective_transmission(
             subgroup_transmission_probabilities=subgroup_transmission_probabilities,
             susceptibles_group_idx=subgroup_idx,
             infector_subgroups=infector_subgroups,
@@ -272,6 +314,8 @@ class Interaction:
             school_years=school_years,
         )
         infected_ids = infect_susceptibles(
-            effective_transmission_probability, susceptible_ids
+            effective_transmission=effective_transmission,
+            susceptible_ids=susceptible_ids,
+            suscetibilities=susceptibilities,
         )
         return infected_ids

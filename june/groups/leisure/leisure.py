@@ -2,10 +2,10 @@ import numpy as np
 from numba import jit
 import yaml
 import logging
-from random import random, sample
+from random import random, randint 
 from typing import List, Dict
 from june.demography import Person
-from june.demography.geography import Geography, SuperAreas
+from june.geography import Geography, SuperAreas, Areas
 from june.groups.leisure import (
     SocialVenueDistributor,
     PubDistributor,
@@ -15,20 +15,14 @@ from june.groups.leisure import (
     CareHomeVisitsDistributor,
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries
-from june.groups import Household
+from june.groups import Household, ExternalSubgroup, Households
+from june.utils import random_choice_numba
 from june import paths
+
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
 logger = logging.getLogger(__name__)
-
-
-@jit(nopython=True)
-def random_choice_numba(arr, prob):
-    """
-    Fast implementation of np.random.choice
-    """
-    return arr[np.searchsorted(np.cumsum(prob), random(), side="right")]
 
 
 @jit(nopython=True)
@@ -54,19 +48,32 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
     """
     leisure_distributors = {}
     if "pubs" in list_of_leisure_groups:
-        if not hasattr(world, "pubs"):
-            raise ValueError("Your world does not have pubs.")
-        leisure_distributors["pubs"] = PubDistributor.from_config(world.pubs)
+        if not hasattr(world, "pubs") or world.pubs is None or len(world.pubs) == 0:
+            logger.warning("No pubs in this world/domain")
+        else:
+            leisure_distributors["pubs"] = PubDistributor.from_config(world.pubs)
     if "cinemas" in list_of_leisure_groups:
-        if not hasattr(world, "cinemas"):
-            raise ValueError("Your world does not have cinemas.")
-        leisure_distributors["cinemas"] = CinemaDistributor.from_config(world.cinemas)
+        if (
+            not hasattr(world, "cinemas")
+            or world.cinemas is None
+            or len(world.cinemas) == 0
+        ):
+            logger.warning("No cinemas in this world/domain")
+        else:
+            leisure_distributors["cinemas"] = CinemaDistributor.from_config(
+                world.cinemas
+            )
     if "groceries" in list_of_leisure_groups:
-        if not hasattr(world, "groceries"):
-            raise ValueError("Your world does not have groceries.")
-        leisure_distributors["groceries"] = GroceryDistributor.from_config(
-            world.groceries
-        )
+        if (
+            not hasattr(world, "groceries")
+            or world.groceries is None
+            or len(world.groceries) == 0
+        ):
+            logger.warning("No groceries in this world/domain")
+        else:
+            leisure_distributors["groceries"] = GroceryDistributor.from_config(
+                world.groceries
+            )
     if "care_home_visits" in list_of_leisure_groups:
         if not hasattr(world, "care_homes"):
             raise ValueError("Your world does not have care homes.")
@@ -79,8 +86,6 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         leisure_distributors[
             "household_visits"
         ] = HouseholdVisitsDistributor.from_config()
-    if "residence_visits" in list_of_leisure_groups:
-        raise NotImplementedError
     leisure = Leisure(leisure_distributors)
     return leisure
 
@@ -95,7 +100,10 @@ def generate_leisure_for_config(world, config_filename=default_config_filename):
     """
     with open(config_filename) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-    list_of_leisure_groups = config["activity_to_groups"]["leisure"]
+    try:
+        list_of_leisure_groups = config["activity_to_super_groups"]["leisure"]
+    except:
+        list_of_leisure_groups = config["activity_to_groups"]["leisure"]
     leisure_instance = generate_leisure_for_world(list_of_leisure_groups, world)
     return leisure_instance
 
@@ -117,25 +125,30 @@ class Leisure:
         self.n_activities = len(self.leisure_distributors)
         self.closed_venues = set()
 
-    def distribute_social_venues_to_households(
-        self, households: List[Household], super_areas: SuperAreas
-    ):
+    def distribute_social_venues_to_areas(self, areas: Areas, super_areas: SuperAreas):
+        logger.info("Linking households for visits")
         if "household_visits" in self.leisure_distributors:
             self.leisure_distributors["household_visits"].link_households_to_households(
                 super_areas
             )
+        logger.info("Done")
+        logger.info("Linking households with care homes for visits")
         if "care_home_visits" in self.leisure_distributors:
             self.leisure_distributors["care_home_visits"].link_households_to_care_homes(
                 super_areas
             )
-        logger.info("Distributing social venues to households")
-        for i, household in enumerate(households):
-            if i % 1_000_000 == 0:
-                logger.info(f"Distributed in {i} of {len(households)} households.")
-            household.social_venues = {}
+        logger.info("Done")
+        logger.info("Distributing social venues to areas")
+        for i, area in enumerate(areas):
+            if i % 2000 == 0:
+                logger.info(f"Distributed in {i} of {len(areas)} areas.")
             for activity, distributor in self.leisure_distributors.items():
-                social_venues = distributor.get_possible_venues_for_household(household)
-                household.social_venues[activity] = social_venues
+                if "visits" in activity:
+                    continue
+                social_venues = distributor.get_possible_venues_for_area(area)
+                if social_venues is not None:
+                    area.social_venues[activity] = social_venues
+        logger.info(f"Distributed in {len(areas)} of {len(areas)} areas.")
 
     def update_household_and_care_home_visits_targets(self, people: List[Person]):
         """
@@ -214,18 +227,20 @@ class Leisure:
         return random() < prob
 
     def send_household_with_person_if_necessary(
-        self, person, subgroup, probability,
+        self, person, subgroup, probability, to_send_abroad=None
     ):
         """
         When we know that the person does an activity in the social venue X,
         then we ask X whether the person needs to drag the household with
         him or her.
         """
+        # this produces a recursive import...
         if (
             person.residence.group.spec == "care_home"
             or person.residence.group.type in ["communal", "other", "student"]
         ):
             return
+        assert subgroup is not None
         if random() < probability:
             for mate in person.residence.group.residents:
                 if mate != person:
@@ -233,18 +248,27 @@ class Leisure:
                         if (
                             mate.leisure is not None
                         ):  # this perosn has already been assigned somewhere
-                            try:
+                            if not mate.leisure.external:
+                                if mate not in mate.leisure.people:
+                                    # person active somewhere else, let's not disturb them
+                                    continue
                                 mate.leisure.remove(mate)
-                            except:
-                                raise ValueError
-                            mate.subgroups.leisure = subgroup
-                            subgroup.append(mate)
-                    else:
-                        mate.subgroups.leisure = (
-                            subgroup  # person will be added later in the simulator.
-                        )
+                            else:
+                                ret = to_send_abroad.delete_person(mate, mate.leisure)
+                                if ret:
+                                    # person active somewhere else, let's not disturb them
+                                    continue
+                            if not subgroup.external:
+                                subgroup.append(mate)
+                            else:
+                                to_send_abroad.add_person(mate, subgroup)
+                    mate.subgroups.leisure = (
+                        subgroup  # person will be added later in the simulator.
+                    )
 
-    def get_subgroup_for_person_and_housemates(self, person: Person):
+    def get_subgroup_for_person_and_housemates(
+        self, person: Person, to_send_abroad: dict = None
+    ):
         """
         Main function of the Leisure class. For every possible activity a person can do,
         we chech the Poisson parameter lambda = probability / day * deltat of that activty 
@@ -272,23 +296,42 @@ class Leisure:
                 prob=np.array(list(prob_age_sex["activities"].values())),
             )
             activity = list(prob_age_sex["activities"].keys())[activity_idx]
-            candidates = person.residence.group.social_venues[activity]
+            activity_distributor = self.leisure_distributors[activity]
+            leisure_subgroup_type = activity_distributor.get_leisure_subgroup_type(
+                person
+            )
+            if "visits" in activity:
+                residence_type = "_".join(activity.split("_")[:-1])
+                if residence_type not in person.residence.group.residences_to_visit:
+                    return
+                else:
+                    candidates = person.residence.group.residences_to_visit[residence_type]
+            else:
+                candidates = person.area.social_venues[activity]
             candidates_length = len(candidates)
             if candidates_length == 0:
                 return
-            if candidates_length == 1:
-                subgroup = candidates[0].get_leisure_subgroup(person)
+            elif candidates_length == 1:
+                group = candidates[0]
             else:
-                indices = sample(range(len(candidates)), len(candidates))
-                for idx in indices:
-                    subgroup = candidates[idx].get_leisure_subgroup(person)
-                    if subgroup is not None:
-                        break
-            if subgroup is None:
+                group = candidates[randint(0, candidates_length-1)]
+            if group is None:
                 return
+            elif group.external:
+                subgroup = ExternalSubgroup(
+                    subgroup_type=leisure_subgroup_type, group=group
+                )
+            else:
+                subgroup = group[leisure_subgroup_type]
+            assert subgroup is not None
             self.send_household_with_person_if_necessary(
-                person, subgroup, prob_age_sex["drags_household"][activity]
+                person,
+                subgroup,
+                prob_age_sex["drags_household"][activity],
+                to_send_abroad=to_send_abroad,
             )
+            if activity == "household_visits":
+                group.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
             person.subgroups.leisure = subgroup
             return subgroup
 

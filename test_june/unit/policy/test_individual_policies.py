@@ -7,7 +7,7 @@ import pytest
 
 from june import paths
 from june.demography import Person, Population
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (
     Hospitals,
@@ -31,7 +31,6 @@ from june.policy import (
     Policies,
     IndividualPolicies,
     Hospitalisation,
-    Susceptibility
 )
 from june.simulator import Simulator
 from june.world import World
@@ -44,28 +43,6 @@ def infect_person(person, selector, symptom_tag="mild"):
     if symptom_tag != "asymptomatic":
         person.residence.group.quarantine_starting_date = 5.3
 
-class TestIndividualInteraction:
-    def test__susceptibility(self, setup_policy_world, selector):
-        world, pupil, student, worker, sim = setup_policy_world
-        susceptibility_policy = Susceptibility(
-            start_time="2020-1-10",
-            end_time="2020-3-12",
-            age_group = '2-18',
-            susceptibility = 0.5,
-        )
-        start_date = datetime(2020, 3, 10)
-        end_date = datetime(2020, 3, 12)
-        policies = Policies([susceptibility_policy])
-        sim.activity_manager.policies = policies
-        sim.clear_world()
-        while sim.timer.date >= sim.timer.final_date:
-            sim.do_timestep()
-            if sim.timer.date >= start_date and sim.timer.date < end_date:
-                assert pupil.susceptibility == 0.5
-                assert worker.susceptibility == 1.0
-            else:
-                assert pupil.susceptibility == 1.0
-                assert worker.susceptibility == 1.0
 
 class TestSevereSymptomsStayHome:
     def test__policy_adults(self, setup_policy_world, selector):
@@ -216,6 +193,120 @@ class TestClosure:
             activities=activities,
             days_from_start=0,
         ) == ["primary_activity", "residence",]
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_during_policy
+        )
+        assert pupil in pupil.primary_activity.people
+        assert worker in worker.primary_activity.people
+        sim.clear_world()
+        time_after_policy = datetime(2030, 2, 2)
+        active_individual_policies = policies.individual_policies.get_active(
+            date=time_after_policy
+        )
+        assert policies.individual_policies.apply(
+            active_individual_policies,
+            person=pupil,
+            activities=activities,
+            days_from_start=0,
+        ) == ["primary_activity", "residence",]
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_after_policy
+        )
+        assert pupil in pupil.primary_activity.people
+        assert worker in worker.primary_activity.people
+        sim.clear_world()
+
+    def test__reopen_schools(self, setup_policy_world):
+        world, pupil, student, worker, sim = setup_policy_world
+        super_area = world.super_areas[0]
+        school_closure = CloseSchools(
+            start_time="2020-1-1", end_time="2020-10-1", attending_compliance=0.5,
+        )
+        policies = Policies([school_closure])
+        sim.activity_manager.policies = policies
+
+        # non key worker
+        worker.lockdown_status = "furlough"
+        sim.clear_world()
+        activities = ["primary_activity", "residence"]
+        time_before_policy = datetime(2019, 2, 1)
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_before_policy
+        )
+        assert worker in worker.primary_activity.people
+        assert pupil in pupil.primary_activity.people
+        sim.clear_world()
+        time_during_policy = datetime(2020, 2, 1)
+        active_individual_policies = policies.individual_policies.get_active(
+            date=time_during_policy
+        )
+
+        # Move the pupil 500 times for five days
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in policies.individual_policies.apply(
+                    active_individual_policies,
+                    person=pupil,
+                    activities=activities,
+                    days_from_start=0,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(2.5, rel=0.1)
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_during_policy
+        )
+        assert worker in worker.primary_activity.people
+        sim.clear_world()
+        time_after_policy = datetime(2030, 2, 2)
+        active_individual_policies = policies.individual_policies.get_active(
+            date=time_after_policy
+        )
+        assert policies.individual_policies.apply(
+            active_individual_policies,
+            person=pupil,
+            activities=activities,
+            days_from_start=0,
+        ) == ["primary_activity", "residence",]
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_after_policy
+        )
+        assert pupil in pupil.primary_activity.people
+        assert worker in worker.primary_activity.people
+        sim.clear_world()
+
+        # key worker
+        worker.lockdown_status = "key_worker"
+        student.lockdown_status = "key_worker"
+        sim.clear_world()
+        activities = ["primary_activity", "residence"]
+        time_before_policy = datetime(2019, 2, 1)
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_before_policy
+        )
+        assert worker in worker.primary_activity.people
+        assert pupil in pupil.primary_activity.people
+        sim.clear_world()
+        time_during_policy = datetime(2020, 2, 1)
+        active_individual_policies = policies.individual_policies.get_active(
+            date=time_during_policy
+        )
+        # Move the pupil 500 times for five days
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in policies.individual_policies.apply(
+                    active_individual_policies,
+                    person=pupil,
+                    activities=activities,
+                    days_from_start=0,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(5.0, rel=0.1)
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy
         )

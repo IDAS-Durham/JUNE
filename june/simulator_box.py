@@ -30,10 +30,12 @@ class SimulatorBox(Simulator):
             interaction: Interaction,
             timer,
             activity_manager,
-            infection_selector: InfectionSelector =None,
+            infection_selector: InfectionSelector = None,
             infection_seed: Optional["InfectionSeed"] = None,
             checkpoint_dates: List[datetime.date] = None,
-            save_path: str = "results",
+            record: "Record" = None,
+            checkpoint_path: str = None,
+            #comment: str = None,
     ):
         """
         Class to run an epidemic spread simulation on a box. It is 
@@ -67,8 +69,10 @@ class SimulatorBox(Simulator):
             activity_manager=activity_manager,
             infection_selector=infection_selector,
             infection_seed=infection_seed,
-            save_path=save_path,
+            record=record,
+            #comment=comment,
             checkpoint_dates=checkpoint_dates,
+            checkpoint_path = checkpoint_path
         )
 
     def do_timestep(self):
@@ -86,7 +90,7 @@ class SimulatorBox(Simulator):
 
         policies = self.activity_manager.policies
 
-        active_groups = self.activity_manager.activities_to_groups(activities)
+        active_groups = self.activity_manager.activities_to_super_groups(activities)
         group_instances = [
             getattr(self.world, group)
             for group in active_groups
@@ -115,9 +119,10 @@ class SimulatorBox(Simulator):
             f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}"
         )
         infected_ids = []
+        first_person_id = self.world.people[0].id
         for group_type in group_instances:
             for group in group_type.members:
-                int_group = InteractiveGroup(group)
+                int_group = InteractiveGroup(group, None)
                 n_people += int_group.size
                 if int_group.must_timestep:
                     new_infected_ids = self.interaction.time_step_for_group(
@@ -125,22 +130,26 @@ class SimulatorBox(Simulator):
                     )
                     if new_infected_ids:
                         n_infected = len(new_infected_ids)
-                        if self.logger is not None:
-                            self.logger.accumulate_infection_location(
-                                group.spec, n_infected
-                            )
+                        if self.record is not None:
+                            for infected_id in new_infected_ids:
+                                self.record.accumulate(
+                                    table_name="infections",
+                                    location_spec=group.spec,
+                                    location_id=group.id,
+                                    infected_id=person.id,
+                                )
                         # assign blame of infections
                         tprob_norm = sum(int_group.transmission_probabilities)
                         for infector_id in chain.from_iterable(
                                 int_group.infector_ids):
-                            infector = self.world.people[infector_id]
+                            infector = self.world.people[infector_id - first_person_id]
                             infector.infection.number_of_infected += (
                                 n_infected
                                 * infector.infection.transmission.probability
                                 / tprob_norm
                             )
                     infected_ids += new_infected_ids
-        people_to_infect = [self.world.people[idx] for idx in infected_ids]
+        people_to_infect = [self.world.people[idx - first_person_id] for idx in infected_ids]
         if n_people != len(self.world.people):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
@@ -151,9 +160,9 @@ class SimulatorBox(Simulator):
             for person in people_to_infect:
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
-        if self.logger:
-            self.logger.log_infection_location(self.timer.date)
-            self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
+        if self.record is not None:
+            self.record.summarise_time_step(timestamp=self.timer.date, world=self.world)
+            self.record.time_step(timestamp=self.timer.date)
         self.clear_world()
 
     def update_health_status(self, time: float, duration: float):
@@ -189,7 +198,3 @@ class SimulatorBox(Simulator):
                 self.recover(person)
             elif new_status == "dead":
                 self.bury_the_dead(person)
-        if self.logger:
-            self.logger.log_infected(
-                self.timer.date, ids, symptoms, n_secondary_infections
-            )
