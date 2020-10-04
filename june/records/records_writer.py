@@ -112,9 +112,9 @@ class Record:
         )
         for hospital in world.hospitals:
             if not hospital.external:
-                current_hospitalised[hospital.region_name] += len(hospital.patients)
+                current_hospitalised[hospital.region_name] += len(hospital.ward)
                 current_intensive_care[hospital.region_name] += len(
-                    hospital.icu_patients
+                    hospital.icu
                 )
         return (
             hospital_admissions,
