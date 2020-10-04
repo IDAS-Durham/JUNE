@@ -76,8 +76,6 @@ def test__area_attributes(geography_example):
 
 
 def test__super_area_attributes(geography_example):
-    print(geography_example.super_areas.members)
-    print(geography_example.super_areas.members[0].name)
     super_area = geography_example.super_areas.members[0]
     assert super_area.name == "E02000140"
     npt.assert_almost_equal(
