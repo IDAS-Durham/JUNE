@@ -50,6 +50,7 @@ from pathlib import Path
 
 selector_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
+interaction_config = paths.configs_path / "tests/interaction.yaml"
 
 
 def test__full_run(dummy_world, selector):
@@ -73,7 +74,7 @@ def test__full_run(dummy_world, selector):
         areas=world.areas, super_areas=world.super_areas
     )
     travel = Travel()
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename=interaction_config)
     record = Record(
             record_path = 'results',
     )

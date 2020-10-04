@@ -16,7 +16,7 @@ import numpy as np
 import os
 import pathlib
 
-test_config = paths.configs_path / "defaults/interaction/interaction.yaml"
+test_config = paths.configs_path / "tests/interaction.yaml"
 
 
 def test__contact_matrices_from_default():
@@ -60,7 +60,7 @@ def test__school_index_translation():
 
 
 def test__school_contact_matrices():
-    interaction_instance = Interaction.from_file()
+    interaction_instance = Interaction.from_file(config_filename=test_config)
     xi = 0.3
     age_min = 3
     age_max = 7
@@ -92,7 +92,7 @@ def test__school_contact_matrices():
     assert n_contacts_student_teacher == 0.81 * 3
 
 def test__school_contact_matrices_different_classroom():
-    interaction_instance = Interaction.from_file()
+    interaction_instance = Interaction.from_file(config_filename=test_config)
     xi = 0.3
     age_min = 3
     age_max = 7
@@ -190,7 +190,7 @@ def test__average_time_to_infect(n_teachers, mode):
 def test__infection_is_isolated(selector):
     geography = Geography.from_file({"area": ["E00002559"]})
     world = generate_world_from_geography(geography, include_households=True)
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename=test_config)
     infection_seed = InfectionSeed(world, selector)
     n_cases = 5
     infection_seed.unleash_virus(
