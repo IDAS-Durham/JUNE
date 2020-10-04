@@ -29,6 +29,7 @@ from june.simulator_box import SimulatorBox
 from june.world import generate_world_from_geography, World
 
 constant_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+interaction_config = paths.configs_path / "tests/interaction.yaml"
 
 import logging
 
@@ -97,7 +98,7 @@ def create_infection_constant(transmission, symptoms_constant):
 
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename=interaction_config)
     interaction.selector = InfectionSelector.from_file(
         transmission_config_path=constant_config
     )

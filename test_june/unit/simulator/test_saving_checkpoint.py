@@ -28,6 +28,7 @@ from june.infection.transmission import TransmissionGamma
 from june import paths
 
 test_config = paths.configs_path / "tests/test_checkpoint_config.yaml"
+config_interaction = paths.configs_path / "tests/interaction.yaml"
 
 
 def _populate_areas(areas: Areas):
@@ -86,7 +87,7 @@ def create_world():
 
 def run_simulator(selector):
     world = create_world()
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename=config_interaction)
     policies = Policies([])
     sim = Simulator.from_file(
         world=world,
@@ -113,7 +114,7 @@ class TestCheckpoints:
         assert len(sim.world.people.susceptible) > 0
         assert len(sim.world.people.dead) > 0
         fresh_world = create_world()
-        interaction = Interaction.from_file()
+        interaction = Interaction.from_file(config_filename=config_interaction)
         policies = Policies([])
         sim_recovered = Simulator.from_checkpoint(
             world=fresh_world,

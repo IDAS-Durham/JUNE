@@ -25,6 +25,7 @@ from june.geography.geography import (
 from june.groups import Supergroup
 from june import World
 
+config_interaction = paths.configs_path / "tests/interaction.yaml"
 
 @pytest.fixture(name="dummy_world", scope="module")
 def create_dummy_world():
@@ -360,7 +361,7 @@ def test__meta_information():
 
 
 def test__parameters(dummy_world):
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename=config_interaction)
     interaction.alpha_physical = 100.0
     health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.6)
     infection_selector = InfectionSelector.from_file(
