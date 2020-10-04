@@ -11,11 +11,9 @@ from june.hdf5_savers import generate_world_from_hdf5
 from policy import PolicyPlots
 from leisure import LeisurePlots
 from companies import CompanyPlots
-<<<<<<< HEAD
 from households import HouseholdPlots
-=======
 from care_homes import CareHomePlots
->>>>>>> master
+from schools import SchoolPlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -176,14 +174,36 @@ class Plotter:
         care_age_plot.plot()
         plt.savefig(save_dir + 'age_distribution.png', dpi=150, bbox_inches='tight')
 
+    def plot_schools(self,save_dir='../plots/schools/'):
+        """Make all school plots"""
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+
+        print("Set up school plots")
+        school_plots = SchoolPlots(self.world)
+        school_plots.load_school_data()
+
+        school_size_plot = school_plots.plot_school_sizes()        
+        school_size_plot.plot()
+        plt.savefig(save_dir + 'school_sizes.png', dpi=150, bbox_inches='tight')
+        
+        student_teacher_ratio_plot = school_plots.plot_student_teacher_ratio()
+        student_teacher_ratio_plot.plot()
+        plt.savefig(save_dir + 'student_teacher_ratios.png', dpi=150, bbox_inches='tight')
+
+        distance_to_school_plot = school_plots.plot_distance_to_school()
+        distance_to_school_plot.plot()
+        plt.savefig(save_dir + 'distance_to_school.png', dpi=150, bbox_inches='tight')        
+
     def plot_all(self):
 
         print ("Plotting the world")
-        self.plot_companies()
-        self.plot_households()
-        self.plot_leisure()
-        self.plot_policies()
-        self.plot_care_homes()
+        #self.plot_companies()
+        #self.plot_households()
+        #self.plot_leisure()
+        #self.plot_policies()
+        #self.plot_care_homes()
+        self.plot_schools()
 
 
 if __name__ == "__main__":
