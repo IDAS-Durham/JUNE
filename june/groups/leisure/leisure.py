@@ -300,14 +300,12 @@ class Leisure:
             leisure_subgroup_type = activity_distributor.get_leisure_subgroup_type(
                 person
             )
-            if activity == "household_visits":
-                candidates = person.residence.group.households_to_visit
-                if candidates is None:
+            if "visits" in activity:
+                residence_type = activity.split("_")[0]
+                if residence_type not in person.residence.group.residences_to_visit:
                     return
-            elif activity == "care_home_visits":
-                candidates = person.residence.group.care_homes_to_visit
-                if candidates is None:
-                    return
+                else:
+                    candidates = person.residence.group.residences_to_visit[residence_type]
             else:
                 candidates = person.area.social_venues[activity]
             candidates_length = len(candidates)

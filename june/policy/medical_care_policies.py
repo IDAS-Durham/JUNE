@@ -24,19 +24,30 @@ class MedicalCarePolicy(Policy):
 class MedicalCarePolicies(PolicyCollection):
     policy_type = "medical_care"
 
-    def apply(self, person: Person, medical_facilities, days_from_start: float, record: Optional[Record]):
+    def apply(
+        self,
+        person: Person,
+        medical_facilities,
+        days_from_start: float,
+        record: Optional[Record],
+    ):
         """
         Applies medical care policies. Hospitalisation takes preference over all.
         """
-        hospitalisation_policies = [policy for policy in self.policies if isinstance(policy, Hospitalisation)]
+        hospitalisation_policies = [
+            policy for policy in self.policies if isinstance(policy, Hospitalisation)
+        ]
         for policy in hospitalisation_policies:
+            activates = policy.apply(person=person, record=record)
+            if activates:
+                return
+        for policy in [
+            policy for policy in self.policies if policy not in hospitalisation_policies
+        ]:
             activates = policy.apply(person, medical_facilities, days_from_start)
             if activates:
                 return
-        for policy in [policy for policy in self.policies if policy not in hospitalisation_policies]:
-            activates = policy.apply(person, medical_facilities, days_from_start)
-            if activates:
-                return 
+
 
 class Hospitalisation(MedicalCarePolicy):
     """
@@ -56,7 +67,9 @@ class Hospitalisation(MedicalCarePolicy):
         )
 
     def apply(
-        self, person: Person, medical_facilities: MedicalFacilities, record: Optional[Record] = None
+        self,
+        person: Person,
+        record: Optional[Record] = None,
     ):
         symptoms_tag = person.infection.tag
         if symptoms_tag in hospitalised_tags:
