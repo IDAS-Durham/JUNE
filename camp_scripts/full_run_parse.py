@@ -435,13 +435,15 @@ cases_detected = {
 
 print("Detected cases = ", sum(cases_detected.values()))
 
-msoa_region_filename = camp_data_path / "input/geography/area_super_area_region.csv"
-msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
+super_region_filename = camp_data_path / "input/geography/area_super_area_region.csv"
+super_region_df = pd.read_csv(super_region_filename)[["super_area", "region"]]
 infection_seed = InfectionSeed(
     world=world, infection_selector=selector, 
 )
-
-#TODO: redo regional seeding
+for region in world.regions:
+    if region.name in cases_detected.keys():
+        infection_seed.unleash_virus(n_cases=10*cases_detected[region.name],
+                population=region.people)
 # Add some extra random cases
 infection_seed.unleash_virus(n_cases=100, population=world.people)
 
