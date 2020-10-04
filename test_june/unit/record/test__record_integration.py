@@ -61,9 +61,12 @@ def make_selector(desired_symptoms,):
 
 
 def infect_hospitalised_person(person):
+    '''
     max_symptom_tag = random.choice(
         [SymptomTag.hospitalised, SymptomTag.intensive_care,]
     )
+    '''
+    max_symptom_tag = SymptomTag.intensive_care
     selector = make_selector(desired_symptoms=max_symptom_tag)
     selector.infect_person_at_time(person, 0.0)
 
@@ -201,7 +204,7 @@ def test__log_infected(world, interaction, selector):
     counter = 0
     new_infected = {}
     already_infected = [person.id for person in world.people.infected]
-    while counter < 10:
+    while counter < 20:
         time = sim.timer.date.strftime("%Y-%m-%d")
         sim.do_timestep()
         current_infected = [
@@ -244,25 +247,29 @@ def test__log_hospital_admissions(world, interaction, selector):
     sim = create_sim(world, interaction, selector, seed="hospitalised")
     sim.timer.reset()
     counter = 0
-    saved_ids, discharged_ids = [], []
-    hospital_admissions, hospital_discharges = {}, {}
-    while counter < 50:
+    hospitalised_ids, icu_ids, discharged_ids = [], [], []
+    hospital_admissions, hospital_discharges, icu_admissions = {}, {}, {}
+    while counter < 30:
         timer = sim.timer.date.strftime("%Y-%m-%d")
-        daily_hosps_ids, daily_discharges_ids = [], []
+        daily_hosps_ids, daily_discharges_ids, daily_icu_ids = [], [], []
         sim.update_health_status(sim.timer.now, sim.timer.duration)
         for person in world.people.infected:
-            if person.medical_facility is not None and person.id not in saved_ids:
+            if person.medical_facility is not None and person.id not in hospitalised_ids:
                 daily_hosps_ids.append(person.id)
-                saved_ids.append(person.id)
+                hospitalised_ids.append(person.id)
+            elif person.medical_facility is not None and person.medical_facility.subgroup_type == 2 and person.id not in icu_ids:
+                daily_icu_ids.append(person.id)
+                icu_ids.append(person.id)
         for person in world.people:
             if (
                 person.medical_facility is None
-                and person.id in saved_ids
+                and person.id in hospitalised_ids
                 and person.id not in discharged_ids
             ):
                 daily_discharges_ids.append(person.id)
                 discharged_ids.append(person.id)
         hospital_admissions[timer] = daily_hosps_ids
+        icu_admissions[timer] = daily_icu_ids 
         hospital_discharges[timer] = daily_discharges_ids
         sim.record.time_step(timestamp=sim.timer.date)
         next(sim.timer)
@@ -272,11 +279,18 @@ def test__log_hospital_admissions(world, interaction, selector):
         admissions_df = pd.DataFrame.from_records(table.read())
         table = f.root.discharges
         discharges_df = pd.DataFrame.from_records(table.read())
+        table = f.root.icu_admissions
+        icu_df = pd.DataFrame.from_records(table.read())
+
+    assert len(admissions_df) != 0
+    assert len(discharges_df) != 0
+    assert len(icu_df) != 0
     admissions_df["timestamp"] = admissions_df["timestamp"].str.decode("utf-8")
     admissions_df.set_index("timestamp", inplace=True)
     discharges_df["timestamp"] = discharges_df["timestamp"].str.decode("utf-8")
     discharges_df.set_index("timestamp", inplace=True)
-
+    icu_df["timestamp"] = icu_df["timestamp"].str.decode("utf-8")
+    icu_df.set_index("timestamp", inplace=True)
     for timestamp in hospital_admissions.keys():
         if hospital_admissions[timestamp]:
             if type(admissions_df.loc[timestamp]["patient_ids"]) is np.int32:
@@ -298,6 +312,17 @@ def test__log_hospital_admissions(world, interaction, selector):
                 assert set(discharges_df.loc[timestamp]["patient_ids"].values) == set(
                     hospital_admissions[timestamp]
                 )
+        if icu_admissions[timestamp]:
+            if type(icu_df.loc[timestamp]["patient_ids"]) is np.int32:
+                assert (
+                    icu_df.loc[timestamp]["patient_ids"]
+                    == icu_admissions[timestamp]
+                )
+            else:
+                assert set(icu_df.loc[timestamp]["patient_ids"].values) == set(
+                    icu_admissions[timestamp]
+                )
+
     clean_world(world)
 
 
