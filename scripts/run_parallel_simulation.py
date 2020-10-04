@@ -10,7 +10,7 @@ import cProfile
 
 from june.hdf5_savers import generate_world_from_hdf5, load_population_from_hdf5
 from june.interaction import Interaction
-from june.infection import Infection, InfectionSelector, HealthIndexGenerator
+from june.infection import Infection, InfectionSelector, HealthIndexGenerator, SymptomTag
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.groups.travel import Travel
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
@@ -19,8 +19,7 @@ from june.infection_seed import InfectionSeed, Observed2Cases
 from june.policy import Policies
 from june import paths
 from june.groups.commute import *
-from june.logger import Logger
-from june.logger.read_logger import ReadLogger
+from june.records import Record
 from june.domain import Domain, generate_super_areas_to_domain_dict
 from june.mpi_setup import mpi_comm, mpi_rank, mpi_size
 
@@ -39,7 +38,6 @@ def set_random_seed(seed=999):
     set_seed_numba(seed)
     random.seed(seed)
     return
-
 
 # a decorator for profiling
 def profile(filename=None, comm=MPI.COMM_WORLD):
@@ -69,7 +67,7 @@ else:
     seed = 999
 set_random_seed(seed)
 
-world_file = f"./tests.hdf5"
+world_file = f"./tests_records.hdf5"
 config_path = "./config_simulation.yaml"
 
 # parallel setup
@@ -87,7 +85,9 @@ def generate_simulator():
     with h5py.File(world_file, "r") as f:
         n_super_areas = f["geography"].attrs["n_super_areas"]
 
-    logger = Logger(save_path=save_path, file_name=f"logger.{rank}.hdf5")
+    record = Record(
+        record_path="results_records", record_static_data=True, mpi_rank=rank
+    )
 
     super_areas_to_domain_dict = generate_super_areas_to_domain_dict(
         n_super_areas, size
@@ -98,8 +98,9 @@ def generate_simulator():
         super_areas_to_domain_dict=super_areas_to_domain_dict,
         hdf5_file_path=world_file,
     )
-    logger.log_population(domain.people)
-    #
+    record.static_data(world=domain)
+    for hospital in domain.hospitals:
+        print(f"Rank {rank} hospital {hospital.id}")
     # regenerate lesiure
     leisure = generate_leisure_for_config(domain, config_path)
     #
@@ -141,7 +142,7 @@ def generate_simulator():
         infection_selector=infection_selector,
         infection_seed=infection_seed,
         config_filename=config_path,
-        logger=logger,
+        record=record,
     )
     print("simulator ready to go")
     return simulator
@@ -155,13 +156,8 @@ def run_simulator(simulator):
     print(f" Simulation took {t2-t1} seconds")
 
 
-def save_summary():
-    if rank == 0:
-        logger = ReadLogger(save_path, n_processes=size)
-        logger.world_summary().to_csv(Path(save_path) / "summary.csv")
-
 
 if __name__ == "__main__":
     simulator = generate_simulator()
     run_simulator(simulator)
-    save_summary()
+    simulator.record.combine_outputs()
