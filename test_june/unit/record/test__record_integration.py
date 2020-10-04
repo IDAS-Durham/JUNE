@@ -38,6 +38,11 @@ def clean_world(world):
         person.infection = None
         person.dead = False
         person.susceptibility = 1.0
+        person.subgroups.medical_facility = None
+    for hospital in world.hospitals:
+        hospital.ward_ids = set()
+        hospital.icu_ids = set()
+
 
 
 class MockHealthIndexGenerator:
