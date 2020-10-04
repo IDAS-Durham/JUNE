@@ -29,6 +29,7 @@ from june.records import Record, RecordReader
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 test_config = paths.configs_path / "tests/test_simulator_no_leisure.yaml"
+interaction_config = paths.configs_path / "tests/interaction.yaml"
 
 
 def clean_world(world):
@@ -85,7 +86,7 @@ def create_selector():
 
 @pytest.fixture(name="interaction", scope="module")
 def create_interaction():
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename=interaction_config)
     interaction.beta["school"] = 0.8
     interaction.beta["cinema"] = 0.0
     interaction.beta["pub"] = 0.0

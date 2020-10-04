@@ -11,11 +11,10 @@ from june.hdf5_savers import generate_world_from_hdf5
 from policy import PolicyPlots
 from leisure import LeisurePlots
 from companies import CompanyPlots
-<<<<<<< HEAD
 from households import HouseholdPlots
-=======
 from care_homes import CareHomePlots
->>>>>>> master
+from contact_matrix import ContactMatrixPlots
+from commute import CommutePlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -43,7 +42,60 @@ class Plotter:
 
         return Plotter(world)
 
+    def plot_commute(
+            self,
+            save_dir: str = '../plots/commute/',
+    ):
+        "Make all commute plots"
+
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+
+        commute_plots = CommutePlots(self.world)
+
+        print ("Plotting internal exteral numbers")
+        internal_external_numbers_plot = commute_plots.plot_internal_external_numbers()
+        internal_external_numbers_plot.plot()
+        plt.savefig(save_dir + 'internal_external.png', dpi=150, bbox_inches='tight')
+
+        print ("Processing Newcastle areas")
+        internal_commute_areas, external_commute_areas = commute_plots.process_internal_external_areas(
+            city_to_plot = "Newcastle upon Tyne"
+        )
+
+        if internal_commute_areas is not None:
+            print ("Plotting Newcastle internal areas")
+            commute_areas_plot = commute_plots.plot_commute_areas(internal_commute_areas)
+            commute_areas_plot.plot()
+            plt.savefig(save_dir + 'Newcastle_internal_commute.png', dpi=150, bbox_inches='tight')
+
+        if external_commute_areas is not None:
+            print ("Plotting Newcastle external areas")
+            commute_areas_plot = commute_plots.plot_commute_areas(external_commute_areas)
+            commute_areas_plot.plot()
+            plt.savefig(save_dir + 'Newcastle_external_commute.png', dpi=150, bbox_inches='tight')
+            
+
+        print ("Processing London areas")
+        internal_commute_areas, external_commute_areas = commute_plots.process_internal_external_areas(
+            city_to_plot = "London"
+        )
+
+        if internal_commute_areas is not None:
+            print ("Plotting London internal areas")
+            commute_areas_plot = commute_plots.plot_commute_areas(internal_commute_areas)
+            commute_areas_plot.plot()
+            plt.savefig(save_dir + 'London_internal_commute.png', dpi=150, bbox_inches='tight')
+
+        if external_commute_areas is not None:
+            print ("Plotting London external areas")
+            commute_areas_plot = commute_plots.plot_commute_areas(external_commute_areas)
+            commute_areas_plot.plot()
+            plt.savefig(save_dir + 'London_external_commute.png', dpi=150, bbox_inches='tight')
+        
+
     def plot_households(self, save_dir: Path = Path("../plots/households")):
+        
         save_dir.mkdir(exist_ok=True, parents=True)
         print("Setting up household plots")
         household_plots = HouseholdPlots(self.world)
@@ -176,14 +228,47 @@ class Plotter:
         care_age_plot.plot()
         plt.savefig(save_dir + 'age_distribution.png', dpi=150, bbox_inches='tight')
 
+    def plot_contact_matrices(
+            self,
+            save_dir: str = '../plots/contact_matrices/'
+    ):
+        "Plot contact matrices pre-lockdown and during lockdown."
+
+        os.makedirs(save_dir, exist_ok=True)
+
+        pre_lockdown_date = datetime(2020, 3, 1)
+        during_lockdown_date = datetime(2020, 4, 15)
+
+        print("Setting up contact matrix plots")
+        contact_matrix_plots = ContactMatrixPlots(self.world)
+
+        print("Loading world data")
+        contact_matrix_plots.load_world_data()
+
+        print("Plotting pre-lockdown contact matrices")
+        contact_matrix_plots.calculate_all_contact_matrices(pre_lockdown_date)
+        contact_matrices = contact_matrix_plots.contact_matrices
+        for location, contact_matrix in contact_matrices.items():
+            contact_matrix_plots.plot_contact_matrix(contact_matrix)
+            plt.savefig(save_dir + f'/contact_matrix_{location}_prelockdown.png', dpi=150, bbox_inches='tight')
+
+        print("Plotting during lockdown contact matrices")
+        contact_matrix_plots.calculate_all_contact_matrices(during_lockdown_date)
+        contact_matrices = contact_matrix_plots.contact_matrices
+        for location, contact_matrix in contact_matrices.items():
+            contact_matrix_plots.plot_contact_matrix(contact_matrix)
+            plt.savefig(save_dir + f'/contact_matrix_{location}_lockdown.png', dpi=150, bbox_inches='tight')
+
     def plot_all(self):
 
         print ("Plotting the world")
+        self.plot_commute()
         self.plot_companies()
         self.plot_households()
         self.plot_leisure()
         self.plot_policies()
         self.plot_care_homes()
+        self.plot_contact_matrices()
 
 
 if __name__ == "__main__":
@@ -205,9 +290,19 @@ if __name__ == "__main__":
         default = False,
         action="store_true"
     )
+    parser.add_argument(
+        "-c",
+        "--contact_matrix",
+        help="Plot only contact matrices",
+        required=False,
+        default=False
+    )
+
     args = parser.parse_args()
     plotter = Plotter.from_file(args.world_filename)
     if args.households:
         plotter.plot_households()
+    if args.contact_matrix:
+        plotter.plot_contact_matrices()
     else:
         plotter.plot_all()
