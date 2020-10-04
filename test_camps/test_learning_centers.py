@@ -119,7 +119,8 @@ def test__shift_manager_moving_people():
     assert pupil_shift_2.id in learning_center.ids_per_shift[1]
     assert pupil_shift_3.id in learning_center.ids_per_shift[2]
     activity_manager.do_timestep()
-
+    print(len(learning_center.people))
+    print(learning_center.people)
     assert teacher in learning_center.people
     assert pupil_shift_1 in learning_center.people
     assert pupil_shift_2 not in learning_center.people
