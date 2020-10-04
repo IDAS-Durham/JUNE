@@ -20,8 +20,7 @@ default_parent_kid_age_difference_filename = (
     paths.data_path / "input/households/parent_kid_age_difference.csv"
 )
 
-# default_hc_by_age_filename = paths.data_path / "plotting/hc_england_by_age.csv"
-default_hc_by_age_filename = "/home/arnau/code/JUNE/Notebooks/hc_england_by_age.csv"
+default_hc_by_age_filename = paths.data_path / "plotting/hc_england_by_age.csv"
 
 
 class HouseholdPlots:
