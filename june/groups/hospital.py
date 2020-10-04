@@ -3,13 +3,12 @@ import logging
 from enum import IntEnum
 from june import paths
 from typing import List, Tuple, Optional
-
+from random import random
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
 from june.groups import Group, Supergroup, ExternalGroup, ExternalSubgroup
-
 from june.geography import SuperArea
 from june.infection import SymptomTag
 from june.exc import HospitalError
@@ -28,6 +27,7 @@ class AbstractHospital:
     def __init__(self):
         self.ward_ids = set()
         self.icu_ids = set()
+        self.denied_treatment_ids = set()
 
     def add_to_ward(self, person):
         self.ward_ids.add(person.id)
@@ -45,7 +45,10 @@ class AbstractHospital:
         self.icu_ids.remove(person.id)
         person.subgroups.medical_facility = None
 
-    def allocate_patient(self, person):
+    def add_to_denied_treatment(self, person):
+        self.denied_treatment_ids.add(person.id)
+
+    def allocate_patient(self, person, probability_of_care_home_resident_admission=0.3):
         """
         Allocate a patient inside the hospital, in the ward, in the ICU, or transfer.
         To correctly log if the person has been just admitted, transfered, or released,
@@ -55,8 +58,19 @@ class AbstractHospital:
         - "ward_transferred" : this person has been transferred  to ward (from icu)
         - "icu_transferred" : this person has been transferred to icu (from ward)
         - "no_change" : no change respect to last time step.
+        - "denied_treatment" : person has not been accepted to the hospital
         """
         if person.medical_facility is None:
+            if person.residence.group.spec == "care_home":
+                if person.id not in self.denied_treatment_ids:
+                    if random() > probability_of_care_home_resident_admission:
+                        self.add_to_denied_treatment(person)
+                        return "denied_treatment"
+                    else:
+                        # this person can be treated, added this for readability.
+                        pass
+                else:
+                    return "denied_treatment"
             if person.infection.tag.name == "hospitalised":
                 self.add_to_ward(person)
                 return "ward_admitted"
