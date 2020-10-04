@@ -200,9 +200,9 @@ class Record:
                         [timestamp.strftime("%Y-%m-%d"), region,] + data
                     )
 
-    def combine_outputs(self,):
+    def combine_outputs(self, remove_left_overs=True):
         if self.mpi_rank == 0:
-            combine_records(self.record_path)
+            combine_records(self.record_path, remove_left_overs=remove_left_overs)
 
     def append_dict_to_configs(self, config_dict):
         with open(self.record_path / self.configs_filename, "r") as f:
