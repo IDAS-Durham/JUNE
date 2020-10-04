@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
-from june.groups import Group, Supergroup
+from june.groups import Group, Supergroup, ExternalGroup
 
 from june.geography import SuperArea
 from june.infection import SymptomTag
@@ -19,6 +19,14 @@ default_data_filename = (
     paths.data_path / "input/hospitals/trusts.csv"
 )
 default_config_filename = paths.configs_path / "defaults/groups/hospitals.yaml"
+
+class ExternalHospital(ExternalGroup):
+    external = True
+    __slots__ = "spec", "id", "domain_id", "region_name"
+
+    def __init__(self, id, spec, domain_id, region_name):
+        super().__init__(id=id, spec=spec, domain_id=domain_id)
+        self.region_name = region_name
 
 
 class Hospital(Group):
@@ -37,13 +45,13 @@ class Hospital(Group):
         patients = 1
         icu_patients = 2
 
-    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "super_area", "trust_code" 
+    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "area", "trust_code" 
 
     def __init__(
         self,
         n_beds: int,
         n_icu_beds: int,
-        super_area: str = None,
+        area: str = None,
         coordinates: Optional[Tuple[float, float]] = None,
         trust_code: str = None,
     ):
@@ -56,17 +64,29 @@ class Hospital(Group):
             total number of regular beds in the hospital
         n_icu_beds:
             total number of ICU beds in the hospital
-        super_area:
+        area:
             name of the super area the hospital belongs to
         coordinates:
             latitude and longitude 
         """
         super().__init__()
-        self.super_area = super_area
+        self.area = area 
         self.coordinates = coordinates
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
         self.trust_code = trust_code
+
+    @property
+    def super_area(self):
+        return self.area.super_area
+
+    @property
+    def region(self):
+        return self.super_area.region
+
+    @property 
+    def region_name(self):
+        return self.region.name
 
     @property
     def full(self):
@@ -81,6 +101,8 @@ class Hospital(Group):
         Check whether all ICU beds are being used
         """
         return self[self.SubgroupType.icu_patients].size >= self.n_icu_beds
+
+
 
     def add(self, person, subgroup_type=SubgroupType.workers):
         if subgroup_type in [
@@ -205,24 +227,24 @@ class Hospitals(Supergroup):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         neighbour_hospitals = config["neighbour_hospitals"]
-        hospital_df = pd.read_csv(filename, index_col=0)
-        super_area_names = [super_area.name for super_area in geography.super_areas]
-        hospital_df = hospital_df.loc[hospital_df.index.isin(super_area_names)]
+        hospital_df = pd.read_csv(filename, index_col=4)
+        area_names = [area.name for area in geography.areas]
+        hospital_df = hospital_df.loc[hospital_df.index.isin(area_names)]
         logger.info(f"There are {len(hospital_df)} hospitals in this geography.")
         total_hospitals = len(hospital_df)
         hospitals = []
-        for super_area in geography.super_areas:
-            if super_area.name in hospital_df.index:
-                hospitals_in_area = hospital_df.loc[super_area.name]
+        for area in geography.areas:
+            if area.name in hospital_df.index:
+                hospitals_in_area = hospital_df.loc[area.name]
                 if isinstance(hospitals_in_area, pd.Series):
                     hospital = cls.create_hospital_from_df_row(
-                        super_area, hospitals_in_area, 
+                        area, hospitals_in_area, 
                     )
                     hospitals.append(hospital)
                 else:
                     for _, row in hospitals_in_area.iterrows():
                         hospital = cls.create_hospital_from_df_row(
-                            super_area, row,  
+                            area, row,  
                         )
                         hospitals.append(hospital)
                 if len(hospitals) == total_hospitals:
@@ -231,14 +253,14 @@ class Hospitals(Supergroup):
 
     @classmethod
     def create_hospital_from_df_row(
-        cls, super_area, row,  
+        cls, area, row,  
     ):
         coordinates = row[["latitude", "longitude"]].values.astype(np.float)
         n_beds = row["beds"]
         n_icu_beds = row["icu_beds"] 
         trust_code = row["code"]
         hospital = Hospital(
-            super_area=super_area,
+            area=area,
             coordinates=coordinates,
             n_beds=n_beds,
             n_icu_beds=n_icu_beds,

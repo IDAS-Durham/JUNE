@@ -7,15 +7,14 @@ import sys
 from june.hdf5_savers import generate_world_from_hdf5, load_population_from_hdf5
 from june.geography import Geography
 from june.interaction import Interaction
-from june.infection import Infection, InfectionSelector, HealthIndexGenerator
+from june.infection import Infection, InfectionSelector, HealthIndexGenerator, SymptomTag
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
 from june.groups.travel import Travel
 from june.simulator import Simulator
 from june.infection_seed import InfectionSeed, Observed2Cases
 from june.policy import Policies
-from june.logger import Logger
-from june.logger.read_logger import ReadLogger
+from june.records import Record
 from june import paths
 
 
@@ -34,24 +33,23 @@ def set_random_seed(seed=999):
     random.seed(seed)
     return
 
-
 if len(sys.argv) > 1:
     seed = int(sys.argv[1])
 else:
     seed = 999
 set_random_seed(seed)
 
-world_file = "./tests.hdf5"
+world_file = f"./tests_records.hdf5"
 config_path = "./config_simulation.yaml"
 save_path = f'results_nompi_{seed:02d}'
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
 print("World loaded succesfully")
 
-logger = Logger(save_path=save_path, file_name=f'logger.0.hdf5') 
-logger.log_population(world.people)
-
-
+record = Record(
+    record_path="results_records_serial", record_static_data=True, 
+)
+record.static_data(world=world)
 # regenerate lesiure
 leisure = generate_leisure_for_config(world, config_path)
 #
@@ -91,16 +89,13 @@ simulator = Simulator.from_file(
    infection_selector=infection_selector,
    infection_seed=infection_seed,
    config_filename=config_path,
-   logger=logger,
+   record=record,
 )
 print("simulator ready to go")
 
 t1 = time.time()
 simulator.run()
 t2 = time.time()
-
-logger = ReadLogger(save_path, n_processes=1)
-logger.world_summary().to_csv(save_path + "_summary.csv")
 
 print(f" Simulation took {t2-t1} seconds")
 

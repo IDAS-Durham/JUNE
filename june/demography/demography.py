@@ -184,6 +184,11 @@ class Population:
     def __getitem__(self, index):
         return self.people[index]
     
+    def __add__(self, population: "Population"):
+        self.people.extend(population.people)
+        self.people_dict  = {**self.people_dict, **population.people_dict}
+        return self
+
     def add(self, person):
         self.people_dict[person.id] = person
         self.people.append(person)
