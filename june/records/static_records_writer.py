@@ -151,7 +151,6 @@ class LocationRecord(StaticRecord):
                 "stations",
             ):
                 for group in getattr(world, attribute):
-                    print(group.spec)
                     if group.external:
                         continue
                     ids.append(counter)
