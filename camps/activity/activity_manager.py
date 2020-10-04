@@ -36,8 +36,6 @@ class CampActivityManager(ActivityManager):
         subgroup = getattr(person, activity)
         try:
             if subgroup.group.has_shifts:
-                print('Subgroup has shifts!')
-                print(subgroup.group.spec)
                 if (
                     person.id
                     not in subgroup.group.ids_per_shift[subgroup.group.active_shift]
