@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from collections import defaultdict
 
-from june.demography.geography import SuperAreas, SuperArea
+from june.geography import SuperAreas, SuperArea
 
 from camps.groups import Shelter, Shelters
 from camps.groups import SheltersVisitsDistributor

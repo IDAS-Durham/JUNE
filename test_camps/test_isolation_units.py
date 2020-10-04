@@ -31,7 +31,7 @@ def infect_person(person, selector, symptom_tag="mild"):
 
 
 def test__isolation_unit_group():
-    iso_unit = IsolationUnit()
+    iso_unit = IsolationUnit(area=None)
     iso_units = IsolationUnits([iso_unit])
     assert iso_units.get_closest() == iso_unit
     assert isinstance(iso_unit, MedicalFacility)
@@ -65,7 +65,7 @@ def test__send_to_isolation(selector, isolation):
     person.infection.time_of_testing = isolation._generate_time_of_testing(
         person
     )
-    isolation_units = IsolationUnits([IsolationUnit()])
+    isolation_units = IsolationUnits([IsolationUnit(area=None)])
     for day in range(0, 100):
         isolation.apply(
             person, medical_facilities=[isolation_units], days_from_start=day
@@ -92,7 +92,7 @@ def test__isolation_compliance(selector):
     for _ in range(1000):
         person = Person.from_attributes()
         infect_person(person, selector, symptom_tag="mild")
-        isolation_units = IsolationUnits([IsolationUnit()])
+        isolation_units = IsolationUnits([IsolationUnit(area=None)])
         for day in range(0, 100):
             isolation.apply(
                 person, medical_facilities=[isolation_units], days_from_start=day

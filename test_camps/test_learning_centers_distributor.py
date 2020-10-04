@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.neighbors import BallTree
 
 from june.demography import Person, Population
-from june.demography.geography import Area, Areas
+from june.geography import Area, Areas
 from camps.distributors import LearningCenterDistributor
 from camps.groups import LearningCenter, LearningCenters
 

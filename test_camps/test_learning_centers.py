@@ -72,7 +72,7 @@ def make_dummy_activity_manager(world):
         policies=Policies.from_file(),
         timer=timer,
         all_activities=["primary_activity", "residence"],
-        activity_to_groups={
+        activity_to_super_groups={
             "primary_activity": ["learning_centers"],
             "residence": ["households"],
         },

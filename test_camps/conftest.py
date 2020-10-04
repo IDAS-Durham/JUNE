@@ -51,11 +51,11 @@ def generate_camp():
     )
     world.hospitals = hospitals
     for hospital in world.hospitals:
-        hospital.super_area = world.super_areas.members[0]
+        hospital.area = world.areas.members[0]
     hospital_distributor = HospitalDistributor(
         hospitals, medic_min_age=20, patients_per_medic=10
     )
-    world.isolation_units = IsolationUnits([IsolationUnit()])
+    world.isolation_units = IsolationUnits([IsolationUnit(area = world.areas[0])])
     hospital_distributor.distribute_medics_from_world(world.people)
     world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=4)
     world.pump_latrines = PumpLatrines.for_areas(world.areas)
