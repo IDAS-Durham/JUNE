@@ -121,8 +121,7 @@ class HealthIndexGenerator:
         asymptomatic_ratio=0.2,
         comorbidity_multipliers=None,
         prevalence_reference_population=None,
-        male_care_home_ratios=None,
-        female_care_home_ratios=None,
+        care_home_ratios_filename: Optional[str] =None,
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
@@ -175,7 +174,14 @@ class HealthIndexGenerator:
             age_death, male_death, bounds_error=False, fill_value=male_death[-1]
         )
         death_hosp = [interp_female_death(age), interp_male_death(age)]
-
+        if care_home_ratios_filename is not None:
+            with open(care_home_ratios_filename) as f:
+                care_home_ratios = yaml.load(f, Loader=yaml.FullLoader)
+            male_care_home_ratios = care_home_ratios['male']
+            female_care_home_ratios = care_home_ratios['female']
+        else:
+            male_care_home_ratios = None
+            female_care_home_ratios = None
         return cls(
             hosp_cases,
             icu_hosp,
