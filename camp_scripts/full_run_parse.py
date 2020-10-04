@@ -446,7 +446,7 @@ infection_seed = InfectionSeed(
 for region in world.regions:
     if region.name in cases_detected.keys():
         infection_seed.unleash_virus(n_cases=10*cases_detected[region.name],
-                population=region.people)
+                population=Population(region.people))
 # Add some extra random cases
 infection_seed.unleash_virus(n_cases=100, population=world.people)
 
