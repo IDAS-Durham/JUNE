@@ -40,7 +40,6 @@ class Simulator:
         activity_manager: ActivityManager,
         infection_selector: InfectionSelector = None,
         infection_seed: Optional["InfectionSeed"] = None,
-        # comment: str = None, #TODO: what do we do with comment!!
         record: Optional["Record"] = None,
         checkpoint_dates: List[datetime.date] = None,
         checkpoint_path: str = None,

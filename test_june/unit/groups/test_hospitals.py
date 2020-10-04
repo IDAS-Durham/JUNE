@@ -62,3 +62,4 @@ def test__initialize_hospitals_from_geography():
     assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 468 + 41 
     assert hospitals.members[1].n_beds + hospitals.members[1].n_icu_beds == 2115 + 296 
     assert hospitals.members[1].trust_code == 'RAJ' 
+
