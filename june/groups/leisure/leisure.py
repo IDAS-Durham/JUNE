@@ -301,7 +301,7 @@ class Leisure:
                 person
             )
             if "visits" in activity:
-                residence_type = activity.split("_")[0]
+                residence_type = "_".join(activity.split("_")[:-1])
                 if residence_type not in person.residence.group.residences_to_visit:
                     return
                 else:

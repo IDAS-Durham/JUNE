@@ -214,10 +214,8 @@ class TestSaveGeography:
                     assert attribute == attribute2
             assert super_area.coordinates[0] == super_area2.coordinates[0]
             assert super_area.coordinates[1] == super_area2.coordinates[1]
-            
-        for region, region2 in zip(
-            regions, geography_recovered.regions
-        ):
+
+        for region, region2 in zip(regions, geography_recovered.regions):
             for attribute_name in ["id", "name"]:
                 attribute = getattr(region, attribute_name)
                 attribute2 = getattr(region2, attribute_name)
@@ -225,7 +223,6 @@ class TestSaveGeography:
                     assert attribute2 == None
                 else:
                     assert attribute == attribute2
-        
 
 
 class TestSaveTravel:
@@ -339,15 +336,13 @@ class TestSaveWorld:
                 assert area1.super_area.region.name == area2.super_area.region.name
 
         assert len(full_world.regions) == len(full_world_loaded.regions)
-        for region1, region2 in zip(
-            full_world.regions, full_world_loaded.regions
-        ):
+        for region1, region2 in zip(full_world.regions, full_world_loaded.regions):
             assert region1.id == region2.id
             assert region1.name == region2.name
             for superarea1, superarea2 in zip(region1.super_areas, region2.super_areas):
                 assert superarea1.id == superarea2.id
                 assert superarea1.name == superarea2.name
- 
+
     def test__subgroups(self, full_world, full_world_loaded):
         for person1, person2 in zip(full_world.people, full_world_loaded.people):
             assert person1.area.id == person2.area.id
@@ -504,19 +499,31 @@ class TestSaveWorld:
                 )
                 assert np.array_equal(social_venues_id, social_venues_recovered_id)
         for h1, h2 in zip(full_world.households, full_world_loaded.households):
-            if h1.households_to_visit is None:
-                assert h2.households_to_visit is None
+            if "household" not in h1.residences_to_visit:
+                assert "household" not in h2.residences_to_visit
                 continue
-            assert len(h1.households_to_visit) == len(h2.households_to_visit)
-            if h1.care_homes_to_visit is None:
-                assert h2.care_homes_to_visit is None
+            assert len(h1.residences_to_visit["household"]) == len(
+                h2.residences_to_visit["household"]
+            )
+            if "care_home" not in h1.residences_to_visit:
+                assert "care_home" not in h2.residences_to_visit
                 continue
-            assert len(h1.care_homes_to_visit) == len(h2.care_homes_to_visit)
-            if len(h1.households_to_visit) > 0:
-                h1ids = np.sort([relative.id for relative in h1.households_to_visit])
-                h2ids = np.sort([relative.id for relative in h2.households_to_visit])
+            assert len(h1.residences_to_visit["care_home"]) == len(
+                h2.residences_to_visit["care_home"]
+            )
+            if len(h1.residences_to_visit["household"]) > 0:
+                h1ids = np.sort(
+                    [relative.id for relative in h1.residences_to_visit["household"]]
+                )
+                h2ids = np.sort(
+                    [relative.id for relative in h2.residences_to_visit["household"]]
+                )
                 assert np.array_equal(h1ids, h2ids)
-            if len(h1.care_homes_to_visit) > 0:
-                h1ids = np.sort([relative.id for relative in h1.care_homes_to_visit])
-                h2ids = np.sort([relative.id for relative in h2.care_homes_to_visit])
+            if len(h1.residences_to_visit["care_home"]) > 0:
+                h1ids = np.sort(
+                    [relative.id for relative in h1.residences_to_visit["care_home"]]
+                )
+                h2ids = np.sort(
+                    [relative.id for relative in h2.residences_to_visit["care_home"]]
+                )
                 assert np.array_equal(h1ids, h2ids)

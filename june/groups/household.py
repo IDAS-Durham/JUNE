@@ -28,8 +28,7 @@ class Household(Group):
         "max_size",
         "residents",
         "quarantine_starting_date",
-        "households_to_visit",
-        "care_homes_to_visit",
+        "residences_to_visit",
         "ids_checked",
     )
 
