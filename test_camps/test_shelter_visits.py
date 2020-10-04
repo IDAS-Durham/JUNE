@@ -28,7 +28,7 @@ def test__shelter_links(visits_world):
     assert set(shelters_to_visit_sizes.keys()) == set([0, 1, 2, 3])
     for i in shelters_to_visit_sizes.values():
         for j in shelters_to_visit_sizes.values():
-            assert np.isclose(i, j, rtol=0.1)
+            assert np.isclose(i, j, rtol=0.11)
 
 
 def test__shelter_get_candidates(camps_world):
