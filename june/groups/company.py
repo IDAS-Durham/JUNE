@@ -67,6 +67,13 @@ class Company(Group):
     def workers(self):
         return self.subgroups[self.SubgroupType.workers]
 
+    @property
+    def coordinates(self):
+        return self.super_area.coordinates
+
+    @property
+    def area(self):
+        return self.super_area.areas[0]
 
 class Companies(Supergroup):
     def __init__(self, companies: List["Companies"]):

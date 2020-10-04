@@ -184,9 +184,11 @@ class TestSaveGeography:
     def test__save_geography(self, full_world):
         areas = full_world.areas
         super_areas = full_world.super_areas
+        regions = full_world.regions
         assert len(areas) > 0
         assert len(super_areas) > 0
-        geography = Geography(areas, super_areas)
+        assert len(regions) > 0
+        geography = Geography(areas, super_areas, regions)
         save_geography_to_hdf5(geography, "test.hdf5")
         geography_recovered = load_geography_from_hdf5("test.hdf5")
         for area, area2 in zip(areas, geography_recovered.areas):
@@ -212,6 +214,18 @@ class TestSaveGeography:
                     assert attribute == attribute2
             assert super_area.coordinates[0] == super_area2.coordinates[0]
             assert super_area.coordinates[1] == super_area2.coordinates[1]
+            
+        for region, region2 in zip(
+            regions, geography_recovered.regions
+        ):
+            for attribute_name in ["id", "name"]:
+                attribute = getattr(region, attribute_name)
+                attribute2 = getattr(region2, attribute_name)
+                if attribute is None:
+                    assert attribute2 == None
+                else:
+                    assert attribute == attribute2
+        
 
 
 class TestSaveTravel:
@@ -321,7 +335,19 @@ class TestSaveWorld:
                 assert area1.super_area.id == area2.super_area.id
                 assert area1.super_area.name == area2.super_area.name
                 assert area1.name == area2.name
+                assert area1.super_area.region.id == area2.super_area.region.id
+                assert area1.super_area.region.name == area2.super_area.region.name
 
+        assert len(full_world.regions) == len(full_world_loaded.regions)
+        for region1, region2 in zip(
+            full_world.regions, full_world_loaded.regions
+        ):
+            assert region1.id == region2.id
+            assert region1.name == region2.name
+            for superarea1, superarea2 in zip(region1.super_areas, region2.super_areas):
+                assert superarea1.id == superarea2.id
+                assert superarea1.name == superarea2.name
+ 
     def test__subgroups(self, full_world, full_world_loaded):
         for person1, person2 in zip(full_world.people, full_world_loaded.people):
             assert person1.area.id == person2.area.id
@@ -413,13 +439,16 @@ class TestSaveWorld:
 
     def test__university_super_area(self, full_world, full_world_loaded):
         for uni1, uni2 in zip(full_world.universities, full_world_loaded.universities):
+            assert uni1.area.id == uni2.area.id
             assert uni1.super_area.id == uni2.super_area.id
             assert uni1.super_area.name == uni2.super_area.name
 
     def test__hospital_super_area(self, full_world, full_world_loaded):
         for h1, h2 in zip(full_world.hospitals, full_world_loaded.hospitals):
+            assert h1.area.id == h2.area.id
             assert h1.super_area.id == h2.super_area.id
             assert h1.super_area.name == h2.super_area.name
+            assert h1.region_name == h2.region_name
 
     def test__social_venues_super_area(self, full_world, full_world_loaded):
         for spec in ["pubs", "groceries", "cinemas"]:
@@ -427,6 +456,7 @@ class TestSaveWorld:
             social_venues2 = getattr(full_world_loaded, spec)
             assert len(social_venues1) == len(social_venues2)
             for v1, v2 in zip(social_venues1, social_venues2):
+                assert v1.area.id == v2.area.id
                 assert v1.super_area.id == v2.super_area.id
                 assert v1.super_area.name == v2.super_area.name
 

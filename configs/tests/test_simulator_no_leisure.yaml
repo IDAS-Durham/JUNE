@@ -1,0 +1,20 @@
+title: Covid configuration example
+
+activity_to_groups:
+  medical_facility: ['hospitals']
+  primary_activity: ['schools', 'companies', 'universities']
+  residence: ['households', ]
+
+time:
+  total_days: 10
+  initial_day: '2020-03-01'
+  step_duration: 
+      weekday:
+          0: 24 
+      weekend:
+          0: 24
+  step_activities:
+      weekday:
+          0: ['medical_facility', 'primary_activity', 'residence']
+      weekend:
+          0: ['medical_facility', 'residence']

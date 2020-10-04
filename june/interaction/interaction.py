@@ -164,7 +164,8 @@ class Interaction:
         self.contact_matrices = self.process_contact_matrices(
             groups=self.beta.keys(), input_contact_matrices=contact_matrices
         )
-        if susceptibilities_by_age is not None:
+        self.susceptibilities_by_age = susceptibilities_by_age
+        if self.susceptibilities_by_age is not None:
             if population is None:
                 raise InteractionError(
                     f"Need to pass population to change susceptibilities by age."

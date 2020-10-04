@@ -50,7 +50,7 @@ geography.schools = Schools.for_geography(geography)
 geography.universities = Universities.for_super_areas(geography.super_areas)
 geography.care_homes = CareHomes.for_geography(geography)
 ## generate world
-world = generate_world_from_geography(geography, include_households=False)
+world = generate_world_from_geography(geography, include_households=True)
 #
 ## some leisure activities
 world.pubs = Pubs.for_geography(geography)

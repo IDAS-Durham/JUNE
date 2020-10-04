@@ -118,6 +118,9 @@ class Household(Group):
         return self.subgroups[self.SubgroupType.old_adults]
 
     @property
+    def coordinates(self):
+        return self.area.coordinates
+
     def n_residents(self):
         return len(self.residents)
 

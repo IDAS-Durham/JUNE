@@ -7,7 +7,7 @@ import june.simulator
 from pathlib import Path
 from random import randint
 
-from june.logger import Logger
+from june.records import Record 
 from june.groups import Hospitals, Hospital
 from june.demography import Population, Person
 from june.geography import Area, Areas, SuperArea, SuperAreas
@@ -77,7 +77,7 @@ def create_world():
     world.areas = areas
     world.super_areas = super_areas
     world.hospitals = Hospitals(
-        [Hospital(n_beds=1000, n_icu_beds=1000, super_area=None, coordinates=None,)],
+        [Hospital(n_beds=1000, n_icu_beds=1000, area=None, coordinates=None,)],
         ball_tree=False,
     )
     world.cemeteries = Cemeteries()
@@ -94,8 +94,8 @@ def run_simulator(selector):
         infection_selector=selector,
         config_filename=test_config,
         leisure=None,
-        logger=Logger(save_path="checkpoint_tests"),
         policies=policies,
+        checkpoint_path='checkpoint_tests',
     )
     seed = InfectionSeed(sim.world, selector)
     seed.unleash_virus(sim.world.people, n_cases=50)
@@ -121,7 +121,6 @@ class TestCheckpoints:
             interaction=interaction,
             infection_selector=selector,
             config_filename=test_config,
-            logger=Logger(),
             leisure=None,
             travel=None,
             policies=policies,
