@@ -65,7 +65,8 @@ class HealthIndexGenerator:
         asymptomatic_ratio=0.2,
         comorbidity_multipliers: Optional[dict] = None,
         prevalence_reference_population: Optional[dict] = None,
-        care_home_ratios: Optional[List] = None,
+        male_care_home_ratios: Optional[List] = None,
+        female_care_home_ratios: Optional[List] = None,
     ):
         """
         Parameters:
@@ -88,7 +89,8 @@ class HealthIndexGenerator:
         self.icu_hosp = icu_hosp
         self.death_hosp = death_hosp
         self.asymptomatic_ratio = asymptomatic_ratio
-        self.care_home_ratios = care_home_ratios
+        self.female_care_home_ratios = female_care_home_ratios
+        self.male_care_home_ratios = male_care_home_ratios
         self.make_list()
         if comorbidity_multipliers is not None:
             self.max_mild_symptom_tag = [
@@ -119,7 +121,7 @@ class HealthIndexGenerator:
         asymptomatic_ratio=0.2,
         comorbidity_multipliers=None,
         prevalence_reference_population=None,
-        care_home_ratios=None,
+        care_home_ratios_filename: Optional[str] =None,
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
@@ -172,7 +174,14 @@ class HealthIndexGenerator:
             age_death, male_death, bounds_error=False, fill_value=male_death[-1]
         )
         death_hosp = [interp_female_death(age), interp_male_death(age)]
-
+        if care_home_ratios_filename is not None:
+            with open(care_home_ratios_filename) as f:
+                care_home_ratios = yaml.load(f, Loader=yaml.FullLoader)
+            male_care_home_ratios = care_home_ratios['male']
+            female_care_home_ratios = care_home_ratios['female']
+        else:
+            male_care_home_ratios = None
+            female_care_home_ratios = None
         return cls(
             hosp_cases,
             icu_hosp,
@@ -180,7 +189,8 @@ class HealthIndexGenerator:
             asymptomatic_ratio,
             comorbidity_multipliers=comorbidity_multipliers,
             prevalence_reference_population=prevalence_reference_population,
-            care_home_ratios=care_home_ratios,
+            male_care_home_ratios=male_care_home_ratios,
+            female_care_home_ratios=female_care_home_ratios,
         )
 
     @classmethod
@@ -369,9 +379,11 @@ class HealthIndexGenerator:
             sex = 0
         round_age = int(round(person.age))
         probabilities = self.prob_lists[sex][round_age]
-        if self.care_home_ratios is not None:
+        if self.male_care_home_ratios is not None and self.female_care_home_ratios is not None:
             probabilities = self.adjust_hospitalisation(
-                probabilities, person, care_home_ratio=self.care_home_ratios
+                probabilities, person, 
+                male_care_home_ratio=self.male_care_home_ratios,
+                female_care_home_ratio=self.female_care_home_ratios,
             )
         if hasattr(self, "comorbidity_multipliers") and person.comorbidity is not None:
             probabilities = self.adjust_for_comorbidities(
@@ -379,7 +391,8 @@ class HealthIndexGenerator:
             )
         return np.cumsum(probabilities)
 
-    def adjust_hospitalisation(self, probabilities, person, care_home_ratio):
+    def adjust_hospitalisation(self, probabilities, person, male_care_home_ratio,
+            female_care_home_ratio):
         if (
             person.age > 65
             and person.residence is not None
@@ -387,7 +400,10 @@ class HealthIndexGenerator:
         ):
             # 10% of the deaths were of care home residents in realitiy, thus
             # the factor 0.9
-            correction_factor = 0.9 / (1 - care_home_ratio[person.age])
+            if person.sex == 'm':
+                correction_factor = 0.9 / (1 - male_care_home_ratio[person.age])
+            elif person.sex == 'f':
+                correction_factor = 0.9 / (1 - female_care_home_ratio[person.age])
             last_probability = 1 - sum(probabilities)
             probabilities[[3, 4, 6]] *= correction_factor
             last_probability *= correction_factor
