@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import time
 from datetime import datetime, timedelta
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import argparse
 import os
 import mpu
@@ -20,13 +20,18 @@ default_parent_kid_age_difference_filename = (
     paths.data_path / "input/households/parent_kid_age_difference.csv"
 )
 
+# default_hc_by_age_filename = paths.data_path / "plotting/hc_england_by_age.csv"
+default_hc_by_age_filename = "/home/arnau/code/JUNE/Notebooks/hc_england_by_age.csv"
+
 
 class HouseholdPlots:
     def __init__(self, world):
         self.world = world
 
     def load_household_data(
-        self, household_size_per_area_filename=default_size_nr_file,
+        self,
+        household_size_per_area_filename=default_size_nr_file,
+        hc_by_age_filename=default_hc_by_age_filename,
     ):
         "Loading household data for plotting"
 
@@ -39,6 +44,33 @@ class HouseholdPlots:
         )
         self.children_age_diff_data = pd.read_csv(
             default_parent_kid_age_difference_filename, index_col=0
+        )
+        self.hc_by_age = pd.read_csv(hc_by_age_filename)
+
+    def plot_all_household_plots(self, save_dir):
+        print("Loading household data")
+        self.load_household_data()
+
+        print ("Plotting household sizes")
+        household_sizes_plot = self.plot_household_sizes()
+        household_sizes_plot.plot()
+        plt.savefig(save_dir / 'household_sizes.png', dpi=150, bbox_inches='tight')
+
+        print ("Plotting household probability matrix")
+        household_probability_matrix = self.plot_household_probability_matrix()
+        household_probability_matrix.plot()
+        plt.savefig(save_dir / 'household_prob_matrix.png', dpi=150, bbox_inches='tight')
+
+        print ("Plotting household age differences")
+        f, ax = self.plot_household_age_differences()
+        plt.plot()
+        plt.savefig(save_dir / 'household_age_differences.png', dpi=150, bbox_inches='tight')
+
+        print("Plotting hc by age")
+        hc_plot = self.plot_household_composition_by_age()
+        hc_plot.plot()
+        plt.savefig(
+            save_dir / "household_composition_by_age.png", dpi=150, bbox_inches="tight"
         )
 
     def plot_household_sizes(self):
@@ -60,25 +92,28 @@ class HouseholdPlots:
             JUNE_household_sizes[key] = JUNE_household_sizes[key] / n_households * 100
         # data
         world_areas = [area.name for area in self.world.areas]
-        household_sizes_data = self.household_sizes_per_area_data.loc[world_areas]
+        household_sizes_data = self.household_sizes_per_area_data.loc[world_areas].sum(
+            axis=0
+        )
         n_households_data = household_sizes_data.values.sum()
-        sizes_all_world = household_sizes_data.sum(axis=0) * 100 / n_households_data
-        sizes_all_world_dict = {
-            key: sizes_all_world[str(key)] for key in JUNE_household_sizes
-        }
+        household_sizes_data = household_sizes_data / n_households_data * 100
+        sizes_all_world_dict = household_sizes_data.to_dict()
+        sizes_all_world_dict_ordered = OrderedDict()
+        for key in JUNE_household_sizes:
+            sizes_all_world_dict_ordered[key] = sizes_all_world_dict[str(key)]
 
         f, ax = plt.subplots()
         ax.bar(
             JUNE_household_sizes.keys(),
             JUNE_household_sizes.values(),
             alpha=0.7,
-            label="NOMIS sizes",
+            label="JUNE sizes",
         )
         ax.bar(
-            sizes_all_world_dict.keys(),
-            sizes_all_world_dict.values(),
+            sizes_all_world_dict_ordered.keys(),
+            sizes_all_world_dict_ordered.values(),
             alpha=0.7,
-            label="JUNE sizes",
+            label="NOMIS sizes",
         )
         ax.set_xlabel("Household size")
         ax.set_ylabel("Frequency [\%]")
@@ -179,6 +214,8 @@ class HouseholdPlots:
             age_differences_second_kid,
         ) = self._compute_children_parent_age_difference()
         f, ax = plt.subplots(1, 3, sharey=True, figsize=(8,3))
+        f, ax = plt.subplots(1, 3, sharey=True, figsize=(8, 3))
+        ax[0].hist(age_difference_couples, density=True, label="JUNE", bins=20)
         ax[0].set_xlabel("Couples' age difference")
         ax[0].set_ylabel("Frequency [\%]")
         ax[0].plot(
@@ -214,3 +251,170 @@ class HouseholdPlots:
         ax[2].legend()
         plt.subplots_adjust(wspace=0, hspace=0)
         return f, ax
+
+    def plot_household_composition_by_age(self):
+        # data
+        data_hc = pd.read_csv(default_hc_by_age_filename, index_col=0)
+        data_hc = data_hc / data_hc.sum(axis=0)
+        # june
+        names = ["0-15", "16-24", "25-34", "35-49", "50-100"]
+        june_hc = {
+            htype: {age_range: 0 for age_range in names}
+            for htype in ["single", "couple", "family", "other"]
+        }
+        for person in self.world.people:
+            if person.residence.group.spec != "household":
+                continue
+            household = person.residence.group
+            if household.type in ["family", "ya_parents"]:
+                htype = "family"
+            elif household.type in ["nokids", "old"]:
+                if len(household.people) == 1:
+                    htype = "single"
+                else:
+                    htype = "couple"
+            elif household.type in ["student", "communal", "young_adults"]:
+                htype = "other"
+            if person.age <= 15:
+                age_range = "0-15"
+            elif person.age <= 24:
+                age_range = "16-24"
+            elif person.age <= 34:
+                age_range = "25-34"
+            elif person.age <= 49:
+                age_range = "35-49"
+            else:
+                age_range = "50-100"
+            june_hc[htype][age_range] += 1
+        june_hc = pd.DataFrame.from_dict(june_hc)
+        june_hc = june_hc / june_hc.sum(axis=0)
+        print(june_hc)
+        print(data_hc)
+
+        f, ax = plt.subplots()
+        totals = [
+            i + j + k + l
+            for i, j, k, l in zip(
+                data_hc["single"],
+                data_hc["couple"],
+                data_hc["family"],
+                data_hc["other"],
+            )
+        ]
+        # plot
+        barWidth = 0.25
+        r = [0, 1, 2, 3, 4]
+        # data bars
+        single = [i / j * 100 for i, j in zip(data_hc["single"], totals)]
+        couple = [i / j * 100 for i, j in zip(data_hc["couple"], totals)]
+        family = [i / j * 100 for i, j in zip(data_hc["family"], totals)]
+        other = [i / j * 100 for i, j in zip(data_hc["other"], totals)]
+        ax.bar(
+            r,
+            single,
+            color="C0",
+            edgecolor="white",
+            width=barWidth,
+            label="NOMIS single",
+            align="center",
+        )
+        # Create orange Bars
+        ax.bar(
+            r,
+            couple,
+            bottom=single,
+            color="C1",
+            align="center",
+            edgecolor="white",
+            width=barWidth,
+            label="NOMIS couple",
+        )
+        # Create blue Bars
+        ax.bar(
+            r,
+            family,
+            bottom=[i + j for i, j in zip(single, couple)],
+            color=f"C2",
+            edgecolor="white",
+            align="center",
+            width=barWidth,
+            label="NOMIS family",
+        )
+        ax.bar(
+            r,
+            other,
+            bottom=[i + j + k for i, j, k in zip(single, couple, family)],
+            color="C3",
+            edgecolor="white",
+            align="center",
+            width=barWidth,
+            label="NOMIS other",
+        )
+        # JUNE
+        totals = [
+            i + j + k + l
+            for i, j, k, l in zip(
+                june_hc["single"],
+                june_hc["couple"],
+                june_hc["family"],
+                june_hc["other"],
+            )
+        ]
+        # plot
+        r = np.array([0., 1., 2., 3., 4.]) + barWidth
+        # june bars
+        single = [i / j * 100 for i, j in zip(june_hc["single"], totals)]
+        couple = [i / j * 100 for i, j in zip(june_hc["couple"], totals)]
+        family = [i / j * 100 for i, j in zip(june_hc["family"], totals)]
+        other = [i / j * 100 for i, j in zip(june_hc["other"], totals)]
+
+        ax.bar(
+            r,
+            single,
+            color="C0",
+            edgecolor="white",
+            width=barWidth,
+            label="JUNE single",
+            align="center",
+            alpha=0.5
+        )
+        # Create orange Bars
+        ax.bar(
+            r,
+            couple,
+            bottom=single,
+            color="C1",
+            align="center",
+            edgecolor="white",
+            width=barWidth,
+            label="JUNE couple",
+            alpha=0.5
+        )
+        # Create blue Bars
+        ax.bar(
+            r,
+            family,
+            bottom=[i + j for i, j in zip(single, couple)],
+            color=f"C2",
+            edgecolor="white",
+            align="center",
+            width=barWidth,
+            label="JUNE family",
+            alpha=0.5
+        )
+        ax.bar(
+            r,
+            other,
+            bottom=[i + j + k for i, j, k in zip(single, couple, family)],
+            color="C3",
+            edgecolor="white",
+            align="center",
+            width=barWidth,
+            label="JUNE other",
+            alpha=0.5
+        )
+        ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+        plt.xticks(r-barWidth /2, names)
+        ax.set_ylabel("Household type")
+
+        return ax
