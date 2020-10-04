@@ -2,19 +2,29 @@ import logging
 from datetime import datetime
 from itertools import chain
 from typing import List, Optional
+from collections import defaultdict
+import numpy as np
+from time import perf_counter
+from time import time as wall_clock
 
 from june.demography import Person
 from june.exc import SimulatorError
 from june.groups import Subgroup
-from june.groups.commute.commutecityunit_distributor import CommuteCityUnitDistributor
-from june.groups.commute.commuteunit_distributor import CommuteUnitDistributor
+
 from june.groups.leisure import Leisure
-from june.groups.travel.travelunit_distributor import TravelUnitDistributor
+from june.groups.travel import Travel
+
 from june.policy import (
     IndividualPolicies,
     LeisurePolicies,
     MedicalCarePolicies,
     InteractionPolicies,
+)
+from june.mpi_setup import (
+    mpi_comm,
+    mpi_size,
+    mpi_rank,
+    MovablePeople,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,42 +48,35 @@ class ActivityManager:
         policies,
         timer,
         all_activities,
-        activity_to_groups: dict,
+        activity_to_super_groups: dict,
         leisure: Optional[Leisure] = None,
-        min_age_home_alone: int = 15,
+        travel: Optional[Travel] = None,
     ):
         self.logger = logger
         self.policies = policies
         self.world = world
         self.timer = timer
         self.leisure = leisure
+        self.travel = travel
         self.all_activities = all_activities
 
         if self.world.box_mode:
-            self.activity_to_group_dict = {
+            self.activity_to_super_group_dict = {
                 "box": ["boxes"],
             }
         else:
-            self.activity_to_group_dict = {
-                "medical_facility": activity_to_groups.get("medical_facility", []),
-                "primary_activity": activity_to_groups.get("primary_activity", []),
-                "leisure": activity_to_groups.get("leisure", []),
-                "residence": activity_to_groups.get("residence", []),
-                "commute": activity_to_groups.get("commute", []),
-                "rail_travel": activity_to_groups.get("rail_travel", []),
+            self.activity_to_super_group_dict = {
+                "medical_facility": activity_to_super_groups.get(
+                    "medical_facility", []
+                ),
+                "primary_activity": activity_to_super_groups.get(
+                    "primary_activity", []
+                ),
+                "leisure": activity_to_super_groups.get("leisure", []),
+                "residence": activity_to_super_groups.get("residence", []),
+                "commute": activity_to_super_groups.get("commute", []),
+                "rail_travel": activity_to_super_groups.get("rail_travel", []),
             }
-        self.min_age_home_alone = min_age_home_alone
-
-        if (
-            "rail_travel_out" in self.all_activities
-            or "rail_travel_back" in self.all_activities
-        ):
-            travel_options = activity_to_groups["rail_travel"]
-            if "travelunits" in travel_options:
-                self.travelunit_distributor = TravelUnitDistributor(
-                    self.world.travelcities.members, self.world.travelunits.members
-                )
-
         self.furlough_ratio = 0
         self.key_ratio = 0
         self.random_ratio = 0
@@ -98,20 +101,12 @@ class ActivityManager:
             self.random_ratio = None
 
     @property
-    def all_groups(self):
-        return self.activities_to_groups(self.all_activities)
+    def all_super_groups(self):
+        return self.activities_to_super_groups(self.all_activities)
 
     @property
-    def active_groups(self):
-        return self.activities_to_groups(self.timer.activities)
-
-    def distribute_rail_out(self):
-        if hasattr(self, "travelunit_distributor"):
-            self.travelunit_distributor.distribute_people_out()
-
-    def distribute_rail_back(self):
-        if hasattr(self, "travelunit_distributor"):
-            self.travelunit_distributor.distribute_people_back()
+    def active_super_groups(self):
+        return self.activities_to_super_groups(self.timer.activities)
 
     @staticmethod
     def apply_activity_hierarchy(activities: List[str]) -> List[str]:
@@ -130,9 +125,9 @@ class ActivityManager:
         activities.sort(key=lambda x: activity_hierarchy.index(x))
         return activities
 
-    def activities_to_groups(self, activities: List[str]) -> List[str]:
+    def activities_to_super_groups(self, activities: List[str]) -> List[str]:
         """
-        Converts activities into Groups, the interaction will run over these Groups.
+        Converts activities into Supergroups, the interaction will run over these Groups.
 
         Parameters
         ---------
@@ -142,12 +137,14 @@ class ActivityManager:
         -------
         List of groups that are active.
         """
-
-        groups = [self.activity_to_group_dict[activity] for activity in activities]
-        return list(chain.from_iterable(groups))
+        return list(
+            chain.from_iterable(
+                self.activity_to_super_group_dict[activity] for activity in activities
+            )
+        )
 
     def move_to_active_subgroup(
-        self, activities: List[str], person: Person
+        self, activities: List[str], person: Person, to_send_abroad=None
     ) -> Optional["Subgroup"]:
         """
         Given the hierarchy of activities and a person, decide what subgroup
@@ -166,43 +163,25 @@ class ActivityManager:
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
-                    person=person,
+                    person=person, to_send_abroad=to_send_abroad
                 )
-            elif person.mode_of_transport is not None and person.mode_of_transport.is_public and activity == "commute":
-                for commutecity in self.world.commutecities:
-                    if person in commutecity.commuters:
-                        subgroup = commutecity.get_commute_subgroup(person=person)
+            elif activity == "commute":
+                subgroup = self.travel.get_commute_subgroup(person=person)
             else:
-                subgroup = self.get_personal_subgroup(person=person, activity=activity)
+                subgroup = getattr(person, activity)
             if subgroup is not None:
+                if subgroup.external:
+                    person.busy = True
+                    # this person goes to another MPI domain
+                    return subgroup
                 subgroup.append(person)
                 return
         raise SimulatorError(
             "Attention! Some people do not have an activity in this timestep."
         )
 
-    def get_personal_subgroup(self, person: "Person", activity: str) -> "Subgroup":
-        """
-        Find the subgroup a person belongs to for a particular activity.
-        
-        Parameters
-        ----------
-        person:
-            person that is looking for a subgroup 
-        activity:
-            the activity the person wants to find a subgroup for
-        Returns
-        -------
-        Subgroup for activity
-        """
-        return getattr(person, activity)
-
     def do_timestep(self):
         activities = self.timer.activities
-        if "rail_travel_out" in activities:
-            self.distribute_rail_out()
-        if "rail_travel_back" in activities:
-            self.distribute_rail_back()
         if self.leisure is not None:
             if self.policies is not None:
                 self.policies.leisure_policies.apply(
@@ -211,11 +190,17 @@ class ActivityManager:
             self.leisure.generate_leisure_probabilities_for_timestep(
                 delta_time=self.timer.duration,
                 is_weekend=self.timer.is_weekend,
-                working_hours= "primary_activity" in activities
+                working_hours="primary_activity" in activities,
             )
-        self.move_people_to_active_subgroups(
+        to_send_abroad = self.move_people_to_active_subgroups(
             activities, self.timer.date, self.timer.now,
         )
+        (
+            people_from_abroad,
+            n_people_from_abroad,
+            n_people_going_abroad,
+        ) = self.send_and_receive_people_from_abroad(to_send_abroad)
+        return people_from_abroad, n_people_from_abroad, n_people_going_abroad
 
     def move_people_to_active_subgroups(
         self,
@@ -235,6 +220,7 @@ class ActivityManager:
             date=date
         )
         activities = self.apply_activity_hierarchy(activities)
+        to_send_abroad = MovablePeople()
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
@@ -247,4 +233,54 @@ class ActivityManager:
                 key_ratio=self.key_ratio,
                 random_ratio=self.random_ratio,
             )
-            self.move_to_active_subgroup(allowed_activities, person)
+            external_subgroup = self.move_to_active_subgroup(
+                allowed_activities, person, to_send_abroad
+            )
+            if external_subgroup is not None:
+                to_send_abroad.add_person(person, external_subgroup)
+
+        return to_send_abroad
+
+    def send_and_receive_people_from_abroad(self, movable_people):
+        """
+        Deal with the MPI comms.
+        """
+        n_people_going_abroad = 0
+        n_people_from_abroad = 0
+        tick, tickw = perf_counter(), wall_clock()
+        reqs = []
+
+        for rank in range(mpi_size):
+
+            if mpi_rank == rank:
+                continue
+            keys, data, n_this_rank = movable_people.serialise(rank)
+            if n_this_rank:
+                reqs.append(mpi_comm.isend(keys, dest=rank, tag=100))
+                reqs.append(mpi_comm.isend(data, dest=rank, tag=200))
+                n_people_going_abroad += n_this_rank
+            else:
+                reqs.append(mpi_comm.isend(None, dest=rank, tag=100))
+                reqs.append(mpi_comm.isend(None, dest=rank, tag=200))
+
+        # now it has all been sent, we can start the receiving.
+
+        for rank in range(mpi_size):
+
+            if rank == mpi_rank:
+                continue
+            keys = mpi_comm.recv(source=rank, tag=100)
+            data = mpi_comm.recv(source=rank, tag=200)
+
+            if keys is not None:
+                movable_people.update(rank, keys, data)
+                n_people_from_abroad += data.shape[0]
+
+        for r in reqs:
+            r.wait()
+
+        tock, tockw = perf_counter(), wall_clock()
+        logger.info(
+            f"CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw - tickw} - {self.timer.date}"
+        )
+        return movable_people.skinny_in, n_people_from_abroad, n_people_going_abroad

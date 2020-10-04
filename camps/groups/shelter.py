@@ -3,7 +3,7 @@ from enum import IntEnum
 from random import randint
 
 from june.groups import Group, Supergroup, Households, Household
-from june.demography.geography import Areas
+from june.geography import Areas
 
 
 class Shelter(Household):
@@ -61,8 +61,7 @@ class Shelter(Household):
 
 class Shelters(Supergroup):
     def __init__(self, shelters):
-        super().__init__()
-        self.members = shelters
+        super().__init__(shelters)
 
     @classmethod
     def from_families_in_area(cls, n_families_area, sharing_shelter_ratio=0.75):

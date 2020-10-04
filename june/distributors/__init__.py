@@ -1,5 +1,5 @@
 from .worker_distributor import WorkerDistributor, load_sex_per_sector, load_workflow_df
-from .carehome_distributor import CareHomeDistributor
+from .care_home_distributor import CareHomeDistributor
 from .company_distributor import CompanyDistributor
 from .household_distributor import HouseholdDistributor
 from .hospital_distributor import HospitalDistributor

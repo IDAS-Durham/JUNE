@@ -5,6 +5,7 @@ from typing import List, Optional, Dict
 from enum import IntEnum
 
 from june.groups.group import Group, Supergroup
+from june.geography import Area
 from june.groups.leisure.social_venue import SocialVenue, SocialVenues, SocialVenueError
 from june.groups.leisure.social_venue_distributor import SocialVenueDistributor
 from camps.paths import camp_data_path, camp_configs_path
@@ -19,13 +20,18 @@ class PlayGroup(SocialVenue):
         old = 2
 
     def __init__(
-        self, age_group_limits: List[int] = [3, 7, 12, 17], max_size: int = 10
+        self, age_group_limits: List[int] = [3, 7, 12, 17], max_size: int = 10, area = None
     ):
         super().__init__()
         self.age_group_limits = age_group_limits
         self.min_age = age_group_limits[0]
         self.max_age = age_group_limits[-1]-1
         self.max_size = max_size
+        self.area = area
+
+    @property
+    def coordinates(self):
+        return self.area.coordinates
 
     def get_leisure_subgroup(self, person: "Person"):
         if person.age >= self.min_age and person.age <= self.max_age:
@@ -61,7 +67,7 @@ class PlayGroups(SocialVenues):
             )
             for _ in range(0, int(np.ceil(venues_per_capita * area_population))):
                 play_group = PlayGroup(
-                    age_group_limits=age_group_limits, max_size=max_size
+                    age_group_limits=age_group_limits, max_size=max_size, area=area
                 )
                 area.play_groups.append(play_group)
                 play_groups.append(play_group)
@@ -98,9 +104,9 @@ class PlayGroupDistributor(SocialVenueDistributor):
         venue = np.random.choice(person.area.play_groups)
         return venue
 
-    def get_possible_venues_for_household(self, household: "Household"):
-        if household.area.play_groups:
-            venue = np.random.choice(household.area.play_groups)
+    def get_possible_venues_for_area(self, area: Area):
+        if area.play_groups:
+            venue = np.random.choice(area.play_groups)
             return [venue]
         else:
             return None

@@ -9,6 +9,7 @@ import re
 from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
 from june.groups import Household
 from june.utils.parse_probabilities import parse_age_probabilities
+from june.geography import Area
 
 
 @jit(nopython=True)
@@ -130,7 +131,30 @@ class SocialVenueDistributor:
             house_location, self.maximum_distance
         )
         if potential_venues is None:
-            return (self.social_venues.get_closest_venues(house_location, k=1)[0], )
+            closest_venue = self.social_venues.get_closest_venues(house_location, k=1)
+            if closest_venue is None:
+                return
+            return (closest_venue[0], )
+        indices_len = min(len(potential_venues), self.neighbours_to_consider)
+        random_idx_choice = sample(range(len(potential_venues)), indices_len)
+        return tuple([potential_venues[idx] for idx in random_idx_choice])
+
+    def get_possible_venues_for_area(self, area: Area):
+        """
+        Given an area, searches for the social venues inside
+        ``self.maximum_distance``. It then returns ``self.neighbours_to_consider``
+        of them randomly. If there are no social venues inside the maximum distance,
+        it returns the closest one.
+        """
+        area_location = area.coordinates
+        potential_venues = self.social_venues.get_venues_in_radius(
+            area_location, self.maximum_distance
+        )
+        if potential_venues is None:
+            closest_venue = self.social_venues.get_closest_venues(area_location, k=1)
+            if closest_venue is None:
+                return
+            return (closest_venue[0], )
         indices_len = min(len(potential_venues), self.neighbours_to_consider)
         random_idx_choice = sample(range(len(potential_venues)), indices_len)
         return tuple([potential_venues[idx] for idx in random_idx_choice])
@@ -167,3 +191,8 @@ class SocialVenueDistributor:
             return False
         else:
             return random() < self.drags_household_probability
+
+    def get_leisure_subgroup_type(self, person):
+        return 0
+
+
