@@ -7,7 +7,7 @@ import pytest
 
 from june.demography.person import Person
 from june.demography import Demography
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.groups import Household, Households
 from june.distributors import HouseholdDistributor
 

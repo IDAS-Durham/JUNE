@@ -1,0 +1,25 @@
+- description: Work mainly at or from home
+  is_public: false
+- description: Underground, metro, light rail, tram
+  is_public: true
+- description: Train
+  is_public: true
+- description: Bus, minibus or coach
+  is_public: true
+- description: Taxi
+  is_public: false
+- description: Motorcycle, scooter or moped
+  is_public: false
+- description: Driving a car or van
+  is_public: false
+- description: Passenger in a car or van
+  is_public: false
+- description: Bicycle
+  is_public: false
+- description: On foot
+  is_public: false
+- description: Other method of travel to work
+  is_public: false
+# Note : this is disabled as we only distribute this among workers.
+  #- description: Not in employment
+  #is_public: false

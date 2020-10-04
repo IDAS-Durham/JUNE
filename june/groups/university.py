@@ -2,15 +2,17 @@ import numpy as np
 import pandas as pd
 from random import randint
 from typing import List
+import logging
 
 from june.groups import Group, Subgroup, Supergroup
-from june.demography.geography import SuperAreas, Areas
+from june.geography import SuperAreas, Areas
 from june.paths import data_path
 
 age_to_years = {19: 1, 20: 2, 21: 3, 22: 4, 23 : 5}
 
 default_universities_filename = data_path / "input/universities/uk_universities.csv"
 
+logger = logging.getLogger(__name__)
 
 class University(Group):
     def __init__(
@@ -19,13 +21,13 @@ class University(Group):
         n_students_max=None,
         n_years=5,
         ukprn=None,
-        super_area=None,
+        area=None,
     ):
         self.coordinates = coordinates
         self.n_students_max = n_students_max
         self.n_years = n_years
         self.ukprn = ukprn
-        self.super_area = super_area
+        self.area = area 
         super().__init__()
         self.subgroups = [Subgroup(self, i) for i in range(self.n_years + 1)]
 
@@ -40,6 +42,10 @@ class University(Group):
     @property
     def professors(self):
         return self.subgroups[0].people
+
+    @property
+    def super_area(self):
+        return self.area.super_area
 
     def add(self, person, subgroup="student"):
         if subgroup == "student":
@@ -60,8 +66,7 @@ class University(Group):
 
 class Universities(Supergroup):
     def __init__(self, universities: List[University]):
-        super().__init__()
-        self.members = universities
+        super().__init__(members=universities)
 
     @classmethod
     def for_super_areas(
@@ -99,11 +104,13 @@ class Universities(Supergroup):
         for coord, n_stud, ukprn, super_area in zip(
             coordinates, n_students, ukprn_values, super_areas
         ):
+            area = Areas(super_area.areas).get_closest_area(coordinates=coordinates)
             university = University(
                 coordinates=coord,
                 n_students_max=n_stud,
                 ukprn =ukprn,
-                super_area = super_area
+                area = area 
             )
             universities.append(university)
+        logger.info(f"There are {len(universities)} universities in this world.")
         return cls(universities)

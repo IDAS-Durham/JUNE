@@ -47,6 +47,7 @@ def generate_empty_world(filter_key: Optional[dict]=None):
     world = CampWorld()
     world.areas = geo.areas
     world.super_areas = geo.super_areas
+    world.regions = geo.regions
     world.people = Population()
     return world
 

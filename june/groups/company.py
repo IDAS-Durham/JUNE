@@ -9,7 +9,7 @@ import yaml
 import numpy as np
 import pandas as pd
 
-from june.demography.geography import Geography, SuperArea
+from june.geography import Geography, SuperArea
 from june.groups.group import Group, Supergroup
 
 default_size_nr_file = paths.data_path / "input/companies/company_size_2019.csv"
@@ -67,6 +67,13 @@ class Company(Group):
     def workers(self):
         return self.subgroups[self.SubgroupType.workers]
 
+    @property
+    def coordinates(self):
+        return self.super_area.coordinates
+
+    @property
+    def area(self):
+        return self.super_area.areas[0]
 
 class Companies(Supergroup):
     def __init__(self, companies: List["Companies"]):
@@ -81,8 +88,7 @@ class Companies(Supergroup):
         compsec_per_msoa_df: pd.DataFrame
             Nr. of companies per sector sector per SuperArea.
         """
-        super().__init__()
-        self.members = companies
+        super().__init__(members=companies)
 
     @classmethod
     def for_geography(
@@ -180,6 +186,7 @@ class Companies(Supergroup):
             sizes = np.concatenate(
                 (sizes, np.random.randint(max(size_min, 1), size_max, int(counts)))
             )
+        np.random.shuffle(sizes)
         sectors = []
         for sector, counts in company_sectors.items():
             sectors += [sector] * int(counts)
@@ -193,11 +200,6 @@ class Companies(Supergroup):
                 sectors,
             )
         )
-        # shuffle and reorder companies
-        min_idx = companies[0].id
-        shuffle(companies)
-        for i, company in enumerate(companies):
-            company.id = min_idx + i
         return companies
 
     @classmethod

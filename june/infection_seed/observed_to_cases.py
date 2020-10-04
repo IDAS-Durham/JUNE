@@ -1,148 +1,489 @@
 import pandas as pd
-from typing import List, Optional
 import yaml
 import numpy as np
 from datetime import timedelta
-from collections import defaultdict
+from typing import List, Optional, Tuple
+from collections import defaultdict, Counter
 from scipy.ndimage import gaussian_filter1d
 
-from june.infection.symptom_tag import SymptomTag
-from june.demography import Person
-from june.infection.trajectory_maker import TrajectoryMaker
 from june import paths
+from june.demography import Person
+from june.infection.symptom_tag import SymptomTag
+from june.infection.trajectory_maker import TrajectoryMaker
 
-default_config_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
-default_msoa_region_filename = (
+default_trajectories_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
+default_area_super_region_path = (
     paths.data_path / "input/geography/area_super_area_region.csv"
+)
+default_observed_deaths_path = paths.data_path / "covid_real_data/n_deaths_region.csv"
+default_age_per_area_path = (
+    paths.data_path / "input/demography/age_structure_single_year.csv"
+)
+default_female_fraction_per_area_path = (
+    paths.data_path / "input/demography/female_ratios_per_age_bin.csv"
 )
 
 
 class Observed2Cases:
     def __init__(
         self,
-        trajectories=None,
-        super_areas=None,
-        health_index=None,
+        age_per_area_df: pd.DataFrame,
+        female_fraction_per_area_df: pd.DataFrame,
+        health_index_generator: "HealthIndexGenerator" = None,
+        symptoms_trajectories: Optional["TrajectoryMaker"] = None,
         n_observed_deaths: Optional[pd.DataFrame] = None,
-        msoa_region: Optional[pd.DataFrame] = None,
-        regions: Optional[List[str]]=None,
+        area_super_region_df: Optional[pd.DataFrame] = None,
         smoothing=False,
     ):
-        self.trajectories = trajectories
-        self.msoa_region = msoa_region
-        self.super_areas = super_areas
-        self.all_regions = n_observed_deaths.columns
-        if super_areas is not None:
-            self.regions = self.find_regions_for_super_areas(super_areas)
-            self.population = self.get_population(super_areas, self.regions)
+        """
+        Class to convert observed deaths over time into predicted number of latent cases 
+        over time, use for the seed of the infection. 
+        It reads population data, to compute average death rates for a particular region, 
+        timings from config file estimate the median time it takes for someone infected to 
+        die in hospital, and the health index to obtain the death rate as a function of
+        age and sex.
+
+        Parameters
+        ----------
+        age_per_area_df:
+            data frame with the age distribution per area, to compute the weighted death rate
+        female_fraction_per_area_df:
+            data frame with the fraction of females per area as a function of age to compute
+            the weighted death rate
+        health_index_generator:
+            generator of the health index to compute death_rate(age,sex) 
+        symptoms_trajectories:
+            used to read the trajectory config file and compute the 
+            median time it takes to die in hospital
+        n_observed_deaths: 
+            time series with the number of observed deaths per region
+        area_super_region_df:
+            df with area, super_area, region mapping
+        smoothing:
+            whether to smooth the observed deaths time series before computing
+            the expected number of cases (therefore the estimates becomes less
+            dependent on spikes in the data)
+        """
+        self.area_super_region_df = area_super_region_df
+        self.age_per_area_df = age_per_area_df
+        (
+            self.females_per_age_region_df,
+            self.males_per_age_region_df,
+        ) = self.aggregate_age_sex_dfs_by_region(
+            age_per_area_df=age_per_area_df,
+            female_fraction_per_area_df=female_fraction_per_area_df,
+        )
+        self.symptoms_trajectories = symptoms_trajectories
+        self.health_index_generator = health_index_generator
+        self.regions = self.area_super_region_df["region"].unique()
+        if (
+            n_observed_deaths is not None
+            and "East Of England" in n_observed_deaths.columns
+        ):
+            n_observed_deaths = n_observed_deaths.rename(
+                columns={"East Of England": "East of England"}
+            )
         if smoothing:
-           n_observed_deaths = self._smooth_time_series(n_observed_deaths) 
-        self.n_observed_deaths = n_observed_deaths[self.regions]
-        self.health_index = health_index
+            n_observed_deaths = self._smooth_time_series(n_observed_deaths)
+        self.n_observed_deaths = n_observed_deaths
 
     @classmethod
     def from_file(
         cls,
-        super_areas,
-        health_index,
-        config_path: str = default_config_path,
-        msoa_region_filename: str = default_msoa_region_filename,
-        smoothing=False
-    ):
-        with open(default_config_path) as f:
-            trajectories = yaml.safe_load(f)["trajectories"]
-        trajectories = [
-            TrajectoryMaker.from_dict(trajectory) for trajectory in trajectories
-        ]
-        n_observed_deaths = pd.read_csv(
-            paths.data_path / "covid_real_data/n_deaths_region.csv", index_col=0
-        )
-        n_observed_deaths.index = pd.to_datetime(n_observed_deaths.index)
-        msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
-
-        return Observed2Cases(
-            trajectories=trajectories,
-            super_areas=super_areas,
-            health_index=health_index,
-            n_observed_deaths=n_observed_deaths,
-            msoa_region=msoa_region,
-            smoothing=smoothing
-        )
-
-    def _filter_region(
-        self, super_areas, region: str = "North East"
-    ) -> List["SuperArea"]:
+        health_index_generator,
+        age_per_area_path: str = default_age_per_area_path,
+        female_fraction_per_area_path: str = default_female_fraction_per_area_path,
+        trajectories_path: str = default_trajectories_path,
+        observed_deaths_path: str = default_observed_deaths_path,
+        area_super_region_path: str = default_area_super_region_path,
+        smoothing=False,
+    ) -> "Observed2Cases":
         """
-        Given a region, return a list of super areas belonging to that region
+        Creates class from paths to data
 
         Parameters
         ----------
-        region:
-            name of the region
-        """
-        if "North East" in region:
-            msoa_region_filtered = self.msoa_region[
-                (self.msoa_region.region == "North East")
-                | (self.msoa_region.region == "Yorkshire and The Humber")
-            ]
-        elif "Midlands" in region:
-            msoa_region_filtered = self.msoa_region[
-                (self.msoa_region.region == "West Midlands")
-                | (self.msoa_region.region == "East Midlands")
-            ]
+        health_index_generator:
+            generator of the health index to compute death_rate(age,sex) 
+        age_per_area_path:
+            path to data with number of people of a given age by area
+        female_fraction_per_area_df:
+            path to data with fraction of people that are female by area and age bin
+        trajectories_path:
+            path to config file with possible symptoms trajectories and their timings
+        observed_deaths_path:
+            path to time series of observed deaths over time
+        area_super_region_path:
+            path to data on area, super_area, region mapping
+        smoothing:
+            whether to smooth the observed deaths time series before computing
+            the expected number of cases (therefore the estimates becomes less
+            dependent on spikes in the data)
 
-        else:
-            msoa_region_filtered = self.msoa_region[self.msoa_region.region == region]
-        filter_region = list(
-            map(
-                lambda x: x in msoa_region_filtered["super_area"].values,
-                [super_area.name for super_area in super_areas.members],
+        Returns
+        -------
+        Instance of Observed2Cases
+        """
+        age_per_area_df = pd.read_csv(age_per_area_path, index_col=0)
+        female_fraction_per_area_df = pd.read_csv(
+            female_fraction_per_area_path, index_col=0
+        )
+        with open(trajectories_path) as f:
+            symptoms_trajectories = yaml.safe_load(f)["trajectories"]
+        symptoms_trajectories = [
+            TrajectoryMaker.from_dict(trajectory)
+            for trajectory in symptoms_trajectories
+        ]
+        n_observed_deaths = pd.read_csv(observed_deaths_path, index_col=0)
+        n_observed_deaths.index = pd.to_datetime(n_observed_deaths.index)
+        area_super_region_df = pd.read_csv(area_super_region_path, index_col=0)
+        # Combine regions as in deaths dataset
+        area_super_region_df = area_super_region_df.replace(
+            {
+                "region": {
+                    "West Midlands": "Midlands",
+                    "East Midlands": "Midlands",
+                    "North East": "North East And Yorkshire",
+                    "Yorkshire and The Humber": "North East And Yorkshire",
+                }
+            }
+        )
+        return cls(
+            age_per_area_df=age_per_area_df,
+            female_fraction_per_area_df=female_fraction_per_area_df,
+            health_index_generator=health_index_generator,
+            symptoms_trajectories=symptoms_trajectories,
+            n_observed_deaths=n_observed_deaths,
+            area_super_region_df=area_super_region_df,
+            smoothing=smoothing,
+        )
+
+    def aggregate_areas_by_region(self, df_per_area: pd.DataFrame) -> pd.DataFrame:
+        """
+        Aggregates an area dataframe into a region dataframe
+
+        Parameters
+        ----------
+        df_per_area:
+            data frame indexed by area
+        
+        Returns
+        -------
+        """
+        return (
+            pd.merge(
+                df_per_area,
+                self.area_super_region_df.drop(columns="super_area"),
+                left_index=True,
+                right_index=True,
+            )
+            .groupby("region")
+            .sum()
+        )
+
+    def aggregate_age_sex_dfs_by_region(
+        self, age_per_area_df: pd.DataFrame, female_fraction_per_area_df: pd.DataFrame,
+    ) -> (pd.DataFrame, pd.DataFrame):
+        """
+        Combines the age per area dataframe and female fraction per area to  
+        create two data frames with numbers of females by age per region, and
+        numbers of males by age per region 
+
+        Parameters
+        ----------
+        age_per_area_df:
+            data frame with the number of people with a certain age per area
+        female_fraction_per_area_df:
+            fraction of those that are females per area and age bin
+
+        Returns
+        -------
+        females_per_age_region_df:
+            number of females as a function of age per region
+        males_per_age_region_df:
+            number of males as a function of age per region
+        """
+        sex_bins = list(map(int, female_fraction_per_area_df.columns))
+        females_per_age_area_df = age_per_area_df.apply(
+            lambda x: x
+            * female_fraction_per_area_df[
+                female_fraction_per_area_df.columns[
+                    np.digitize(int(x.name), bins=sex_bins) - 1
+                ]
+            ]
+        ).astype("int")
+        males_per_age_area_df = age_per_area_df - females_per_age_area_df
+        females_per_age_region_df = self.aggregate_areas_by_region(
+            females_per_age_area_df
+        )
+        males_per_age_region_df = self.aggregate_areas_by_region(males_per_age_area_df)
+        return females_per_age_region_df, males_per_age_region_df
+
+    def get_symptoms_rates_per_age_sex(self,) -> dict:
+        """
+        Computes the rates of ending up with certain SymptomTag for all 
+        ages and sex.
+
+        Returns
+        -------
+        dictionary with rates of symptoms (fate) as a function of age and sex
+        """
+        symptoms_rates_dict = {"m": defaultdict(int), "f": defaultdict(int)}
+        for sex in ("m", "f"):
+            for age in np.arange(100):
+                symptoms_rates_dict[sex][age] = np.diff(
+                    self.health_index_generator(Person(sex=sex, age=age)),
+                    prepend=0.0,
+                    append=1.0,
+                )  # need np.diff because health index is cummulative
+        return symptoms_rates_dict
+
+    def weight_rates_by_age_sex_per_region(
+        self, symptoms_rates_dict: dict, symptoms_tags: List["SymptomTag"]
+    ) -> List[float]:
+        """
+        Get the weighted average by age and sex of symptoms rates for symptoms in symptoms_tags. 
+        For example to get the weighted average death rate per region, 
+        select symptoms_tags = ('dead_hospital', 'dead_icu', 'dead_home')
+
+        Parameters
+        ----------
+        symtpoms_rates_dict:
+            dictionary with rates for all the possible final symptoms, indexed by sex and age.
+        symptoms_tags:
+            final symptoms to keep
+        Returns
+        -------
+        List of weighted rates for symptoms in ```symptoms_tags``` (ordered in the same way!!)
+        """
+        idx_symptoms_to_keep = [getattr(SymptomTag, tag) for tag in symptoms_tags]
+        weighted_rates = {}
+        for region in self.regions:
+            weighted_rates_region = 0
+            for age in np.arange(100):
+                weighted_rates_region += (
+                    symptoms_rates_dict["f"][age][idx_symptoms_to_keep]
+                    * self.females_per_age_region_df.loc[region][str(age)]
+                )
+                weighted_rates_region += (
+                    symptoms_rates_dict["m"][age][idx_symptoms_to_keep]
+                    * self.males_per_age_region_df.loc[region][str(age)]
+                )
+            n_people_region = (
+                self.females_per_age_region_df.loc[region].sum()
+                + self.males_per_age_region_df.loc[region].sum()
+            )
+            weighted_rates[region] = weighted_rates_region / n_people_region
+        return weighted_rates
+
+    def get_latent_cases_from_observed(self, n_observed: int, avg_rates: List) -> int:
+        """
+        Given a number of observed cases, such as observed deaths or observed hospital
+        admissions, this function converts it into number of latent cases necessary to
+        produce such an observation.
+
+        Parameters
+        ----------
+        n_observed:
+            observed number of cases (such as deaths or hospital admissions)
+        avg_rates:
+            average rates to produce the observed cases, such as average death rate or average
+            admission rates. It is a list, since we might want to look at, for instance, 
+            death rate, which is a combination of deat_home, deat_hospital, dead_icu rates.
+        Returns
+        -------
+        Number of latent cases
+        """
+        avg_rate = sum(avg_rates)
+        return round(n_observed / avg_rate)
+
+    def get_latent_cases_per_region(
+        self,
+        n_observed_df: pd.DataFrame,
+        time_to_get_symptoms: int,
+        avg_rates_per_region: dict,
+    ) -> pd.DataFrame:
+        """
+        Converts observed cases per region into latent cases per region.
+
+        Parameters
+        ----------
+        n_observed_df:
+            time series of the observed cases
+        time_to_get_symptoms:
+            days it takes form infection to the symptoms of interest (such as time to death)
+        avg_rates_per_region:
+            average probability to get those symptoms per region
+
+        Returns
+        -------
+        n_cases_per_region_df:
+            number of latent cases per region time series
+        """
+        n_cases_per_region_df = n_observed_df.apply(
+            lambda x: self.get_latent_cases_from_observed(
+                x, avg_rates_per_region[x.name]
             )
         )
-        return np.array(super_areas.members)[filter_region]
+        n_cases_per_region_df.index = n_observed_df.index - timedelta(
+            days=time_to_get_symptoms
+        )
+        return n_cases_per_region_df
 
-    def _smooth_time_series(self, time_series_df):
+    def get_super_area_population_weights(self,) -> pd.DataFrame:
+        """
+        Compute the weight in population that a super area has over its whole region, used
+        to convert regional cases to cases by super area by population density
+
+        Returns
+        -------
+        data frame indexed by super area, with weights and region
+        """
+        people_per_super_area = (
+            pd.merge(
+                self.age_per_area_df.sum(axis=1).to_frame("n_people"),
+                self.area_super_region_df.drop(columns="region"),
+                left_index=True,
+                right_index=True,
+            )
+            .groupby("super_area")
+            .sum()
+        )
+        people_per_super_aera_and_region = pd.merge(
+            people_per_super_area,
+            self.area_super_region_df.drop_duplicates().set_index("super_area"),
+            left_index=True,
+            right_index=True,
+            how="left",
+        )
+        people_per_region = people_per_super_aera_and_region.groupby("region").sum()[
+            "n_people"
+        ]
+        people_per_super_aera_and_region[
+            "weights"
+        ] = people_per_super_aera_and_region.apply(
+            lambda x: x.n_people / people_per_region.loc[x.region], axis=1
+        )
+        return people_per_super_aera_and_region[["weights", "region"]]
+
+    def convert_regional_cases_to_super_area(
+        self, n_cases_per_region_df: pd.DataFrame, dates: List[str]
+    ) -> pd.DataFrame:
+        """
+        Converts regional cases to cases by super area by weighting each super area
+        within the region according to its population
+
+        Parameters
+        ----------
+        n_cases_per_region_df:
+            data frame with the number of cases by region, indexed by date
+        dates:
+            dates to select
+        
+        Returns
+        -------
+        data frame with the number of cases by super area, indexed by date
+        """
+        n_cases_per_region_df = n_cases_per_region_df.loc[dates[0] : dates[-1]]
+        n_cases_per_super_area_df = pd.DataFrame(
+            0,
+            index=n_cases_per_region_df.index,
+            columns=self.area_super_region_df["super_area"].unique(),
+        )
+        super_area_weights = self.get_super_area_population_weights()
+        super_area_cases = []
+        for region in n_cases_per_region_df.columns:
+            super_area_weights_for_region = super_area_weights[
+                super_area_weights["region"] == region
+            ]
+            for date, n_cases in n_cases_per_region_df[region].iteritems():
+                chosen_super_areas = np.random.choice(
+                    list(super_area_weights_for_region.index),
+                    replace=True,
+                    size=round(n_cases),
+                    p=super_area_weights_for_region["weights"],
+                )
+                n_cases_super_area = Counter(chosen_super_areas)
+                n_cases_per_super_area_df.loc[
+                    date, list(n_cases_super_area.keys())
+                ] = n_cases_super_area.values()
+        return n_cases_per_super_area_df
+
+    def _smooth_time_series(self, time_series_df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Smooth a time series by applying a gaussian filter in 1d
+
+        Parameters
+        ----------
+        time_series_df:
+            df with time as index
+
+        Returns
+        -------
+        smoothed time series df
+        """
         return time_series_df.apply(lambda x: gaussian_filter1d(x, sigma=2))
 
-    def find_regions_for_super_areas(self, super_areas):
-        regions = []
-        for region in self.all_regions:
-            if self._filter_region(super_areas,region).size:
-                regions.append(region)
-        return regions
+    def filter_symptoms_trajectories(
+        self,
+        symptoms_trajectories: List["TrajectoryMaker"],
+        symptoms_to_keep: Tuple[str] = ("dead_hospital", "dead_icu"),
+    ) -> List["TrajectoryMaker"]:
+        """
+        Filter all symptoms trajectories to obtain only the ones that contain given symtpoms 
+        in ```symptoms_to_keep```
 
-    def get_population(self, super_areas, regions):
-        population = {}
-        for region in regions:
-            population[region] = self.get_population_for_region(super_areas, region)
-        return population
+        Parameters
+        ----------
+        symptoms_trajectories:
+            list of all symptoms trajectories
+        symptoms_to_keep:
+            tuple of strings containing the desired symptoms for which to find trajectories
 
-    def get_population_for_region(self, super_areas, region):
-        super_in_region = self._filter_region(super_areas, region)
-        population = []
-        for super_area in super_in_region:
-            population += super_area.people
-        return population
-
-    def filter_trajectories(
-        self, trajectories, symptoms_to_keep=("dead_hospital", "dead_icu")
-    ):
+        Returns
+        -------
+        trajectories containing ```symptoms_to_keep```
+        """
         filtered_trajectories = []
-        for trajectory in trajectories:
+        for trajectory in symptoms_trajectories:
             symptom_tags = [stage.symptoms_tag.name for stage in trajectory.stages]
             if set(symptom_tags).intersection(set(symptoms_to_keep)):
                 filtered_trajectories.append(trajectory)
         return filtered_trajectories
 
-    def get_median_completion_time(self, stage):
+    def get_median_completion_time(self, stage: "Stage") -> float:
+        """
+        Get median completion time of a stage, from its distribution
+
+        Parameters
+        ----------
+            stage:
+                given stage in trajectory
+        Returns
+        -------
+        Median time spent in stage
+        """
         if hasattr(stage.completion_time, "distribution"):
             return stage.completion_time.distribution.median()
         else:
             return stage.completion_time.value
 
-    def get_time_it_takes_to_symptoms(self, trajectories, symptoms_tags):
+    def get_time_it_takes_to_symptoms(
+        self, symptoms_trajectories: List["TrajectoryMaker"], symptoms_tags: List[str]
+    ):
+        """
+        Compute the median time it takes to get certain symptoms in ```symptoms_tags```, such as death or hospital
+        admission.
+
+        Parameters
+        ----------
+        symptoms_trajectories:
+            list of symptoms trajectories
+        symptoms_tags:
+            symptoms tags for the symptoms of interest
+        """
         time_to_symptoms = []
-        for trajectory in trajectories:
+        for trajectory in symptoms_trajectories:
             time = 0
             for stage in trajectory.stages:
                 if stage.symptoms_tag.name in symptoms_tags:
@@ -151,101 +492,67 @@ class Observed2Cases:
             time_to_symptoms.append(time)
         return time_to_symptoms
 
-    def get_age_structure(self, region):
-        age_dict = {"m": defaultdict(int), "f": defaultdict(int)}
-        for person in self.population[region]:
-            age_dict[person.sex][person.age] += 1
-        return age_dict
+    def get_weighted_time_to_symptoms(
+        self,
+        symptoms_trajectories: List["TrajectoryMaker"],
+        avg_rate_for_symptoms: List["float"],
+        symptoms_tags: List[str],
+    ) -> float:
+        """
+        Get the time it takes to get certain symptoms weighted by population. For instance, 
+        when computing the death rate, more people die in hospital than in icu, 
+        therefore the median time to die in hospital gets weighted more than the median time 
+        to die in icu.
 
-    def get_health_index_by_age_and_sex(self):
-        health_dict = {"m": defaultdict(int), "f": defaultdict(int)}
-        for sex in ("m", "f"):
-            for age in np.arange(100):
-                health_dict[sex][age] = self.health_index(Person(sex=sex, age=age))
-        return health_dict
+        Parameters
+        ----------
+        symptoms_trajectories:
+            trajectories for symptoms that include the symptoms of interest
+        avg_rate_for_symptoms:
+            list containing the average rate for certain symptoms given in ```symptoms tags```. 
+            WARNING: should be in the same order
+        symptoms_tags:
+            tags of the symptoms for which we want to know the median time
+        
+        Returns
+        -------
+        Weighted median time to symptoms
 
-    def get_avg_rate_for_symptoms(self, symptoms_tags, region):
-        avg_rates = 0
-        age_dict = self.get_age_structure(region)
-        health_dict = self.get_health_index_by_age_and_sex()
-        for sex in ("m", "f"):
-            for age in np.arange(100):
-                avg_rates += (
-                    np.diff(np.append(health_dict[sex][age], 1)) * age_dict[sex][age]
-                )
-        idx = [getattr(SymptomTag, tag) - 1 for tag in symptoms_tags]
-        return avg_rates[idx] / len(self.population[region])
-
-    def get_avg_time_to_symptoms(
-        self, trajectories, avg_rate_for_symptoms, symptoms_tags
-    ):
+        """
         times_to_symptoms = self.get_time_it_takes_to_symptoms(
-            trajectories, symptoms_tags=symptoms_tags
+            symptoms_trajectories, symptoms_tags=symptoms_tags
         )
         return sum(avg_rate_for_symptoms * times_to_symptoms) / sum(
             avg_rate_for_symptoms
         )
 
-    def get_n_cases_from_observed(self, n_observed, avg_rates):
-        avg_rate = sum(avg_rates)
-        return n_observed / avg_rate
+    def get_regional_latent_cases(self,) -> pd.DataFrame:
+        """
+        Find regional latent cases from the observed one.
 
-    def cases_from_observation(
-        self, n_observed_df, time_to_get_there, avg_rates, region
-    ):
-        n_initial_cases = []
-        for index, n_observed in n_observed_df.iterrows():
-            date = index - timedelta(days=round(time_to_get_there))
-            n_cases = self.get_n_cases_from_observed(n_observed[region], avg_rates)
-            n_initial_cases.append((date, round(n_cases)))
-        n_cases_df = pd.DataFrame(n_initial_cases, columns=["date", region])
-        n_cases_df.set_index('date', inplace=True)
-        n_cases_df.index = pd.to_datetime(n_cases_df.index)
-        n_cases_df.index = n_cases_df.index.round('D')
-        return n_cases_df
-
-    def cases_from_deaths_for_region(self, region):
-        dead_trajectories = self.filter_trajectories(self.trajectories)
-        avg_rates = self.get_avg_rate_for_symptoms(
-            symptoms_tags=("dead_hospital", "dead_icu"), region=region
+        Returns
+        -------
+        data frame with latent cases per region indexed by date
+        """
+        symptoms_tags = ("dead_hospital", "dead_icu")
+        symtpoms_rates = self.get_symptoms_rates_per_age_sex()
+        avg_hospital_death_rate = self.weight_rates_by_age_sex_per_region(
+            symtpoms_rates, symptoms_tags=symptoms_tags
         )
-        time_to_death = self.get_avg_time_to_symptoms(
-            dead_trajectories, avg_rates, symptoms_tags=("dead_hospital", "dead_icu")
+        avg_death_rate_over_regions = np.mean(
+            list(avg_hospital_death_rate.values()), axis=0
         )
-        return self.cases_from_observation(
-            self.n_observed_deaths, time_to_death, avg_rates, region=region
+        hospital_death_trajectories = self.filter_symptoms_trajectories(
+            self.symptoms_trajectories, symptoms_to_keep=symptoms_tags
         )
 
-    def cases_from_deaths(self):
-        cases_dfs = []
-        for region in self.regions:
-            cases_dfs.append(self.cases_from_deaths_for_region(region))
-        return pd.concat(cases_dfs, axis=1)
-
-
-    def cases_from_admissions_for_region(self, region):
-        hospitalised_trajectories = self.filter_trajectories(self.trajectories,
-             symptoms_to_keep=(
-                "hospitalised",
-                "intensive_care",
-                "dead_hospital",
-                "dead_icu",
-            ),
+        median_time_to_death = round(
+            self.get_weighted_time_to_symptoms(
+                hospital_death_trajectories,
+                avg_death_rate_over_regions,
+                symptoms_tags=symptoms_tags,
+            )
         )
-        avg_rates = self.get_avg_rate_for_symptoms(
-            symptoms_tags=(
-                "hospitalised",
-                "intensive_care",
-                "dead_hospital",
-                "dead_icu",
-            ),
-            region=region,
-        )
-        time_to_hospital = self.get_avg_time_to_symptoms(
-            hospitalised_trajectories,
-            avg_rates,
-            symptoms_tags=("hospitalised", "intensive_care"),
-        )
-        return self.cases_from_observation(
-            self.n_observed_deaths, time_to_hospital, avg_rates, region=region
+        return self.get_latent_cases_per_region(
+            self.n_observed_deaths, median_time_to_death, avg_hospital_death_rate
         )

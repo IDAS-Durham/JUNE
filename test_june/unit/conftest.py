@@ -1,17 +1,24 @@
-# set seed
 import random
 
 import numba as nb
 import numpy as np
 import pytest
+import h5py
 
 import june.infection.symptoms
 from june.interaction import Interaction
 from june import paths
-from june.demography.geography import Geography, Areas, SuperAreas
-from june.commute import ModeOfTransport
+from june.geography import Geography, Areas, SuperAreas, Regions,Cities, City, Station, Stations
+from june.groups.travel import (
+    ModeOfTransport,
+    CityTransport,
+    CityTransports,
+    InterCityTransport,
+    InterCityTransports,
+)
 from june.groups import *
 from june.groups.leisure import *
+from june.groups.travel import Travel
 from june.demography import Person, Population
 from june.infection import Infection
 from june.infection.infection_selector import InfectionSelector
@@ -22,6 +29,12 @@ from june.simulator_box import SimulatorBox
 from june.world import generate_world_from_geography, World
 
 constant_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+interaction_config = paths.configs_path / "tests/interaction.yaml"
+
+import logging
+
+# disable logging for testing
+logging.disable(logging.CRITICAL)
 
 
 @pytest.fixture(autouse=True)
@@ -33,10 +46,10 @@ def set_random_seed(seed=999):
     @nb.njit(cache=True)
     def set_seed_numba(seed):
         random.seed(seed)
-        return np.random.seed(seed)
+        np.random.seed(seed)
 
-    np.random.seed(seed)
     set_seed_numba(seed)
+    np.random.seed(seed)
     random.seed(seed)
     return
 
@@ -85,7 +98,7 @@ def create_infection_constant(transmission, symptoms_constant):
 
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename=interaction_config)
     interaction.selector = InfectionSelector.from_file(
         transmission_config_path=constant_config
     )
@@ -94,7 +107,9 @@ def create_interaction():
 
 @pytest.fixture(name="geography", scope="session")
 def make_geography():
-    geography = Geography.from_file({"super_area": ["E02002512", "E02001697", "E02001731"]})
+    geography = Geography.from_file(
+        {"super_area": ["E02002512", "E02001697", "E02001731"]}
+    )
     return geography
 
 
@@ -108,12 +123,6 @@ def create_world(geography):
     geography.companies = Companies.for_geography(geography)
     world = generate_world_from_geography(geography, include_households=True)
     return world
-
-
-# @pytest.fixture(name="simulator", scope="session")
-# def create_simulator(world, interaction, infection_constant, selector):
-#    return Simulator.from_file(world=world, interaction=interaction, infection_constant, infection_selector=selector)
-#
 
 
 @pytest.fixture(name="world_box", scope="session")
@@ -140,7 +149,7 @@ def create_simulator_box(world_box, interaction, selector):
 
 @pytest.fixture(name="world_visits", scope="session")
 def make_super_areas():
-    geo = Geography.from_file({"super_area": ["E02003353", "E02002512"]})
+    geo = Geography.from_file({"super_area": ["E02003353"]})
     geo.care_homes = CareHomes.for_geography(geo)
     world = generate_world_from_geography(geo, include_households=True)
     return world
@@ -149,7 +158,7 @@ def make_super_areas():
 # policy dummy world
 @pytest.fixture(name="dummy_world", scope="session")
 def make_dummy_world():
-    g = Geography.from_file(filter_key={"super_area": ["E02002512", "E02001697", "E02001731"]})
+    g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     super_area = g.super_areas.members[0]
     area = g.areas.members[0]
     company = Company(super_area=super_area, n_workers_max=100, sector="Q")
@@ -165,9 +174,10 @@ def make_dummy_world():
     hospital = Hospital(
         n_beds=40,
         n_icu_beds=5,
-        super_area=super_area,
+        area=area,
         coordinates=super_area.coordinates,
     )
+    super_area.closest_hospitals = [hospital]
     worker = Person.from_attributes(age=40)
     worker.area = super_area.areas[0]
     household.add(worker, subgroup_type=household.SubgroupType.adults)
@@ -175,21 +185,21 @@ def make_dummy_world():
     company.add(worker)
 
     pupil = Person.from_attributes(age=6)
-    pupil.area = super_area.areas[0] 
+    pupil.area = super_area.areas[0]
     household.add(pupil, subgroup_type=household.SubgroupType.kids)
-    household.area = super_area.areas[0] 
+    household.area = super_area.areas[0]
     school.add(pupil)
 
     student = Person.from_attributes(age=21)
-    student.area = super_area.areas[0] 
+    student.area = super_area.areas[0]
     household.add(student, subgroup_type=household.SubgroupType.adults)
     university = University(coordinates=super_area.coordinates, n_students_max=100,)
     university.add(student)
 
     commuter = Person.from_attributes(sex="m", age=30)
     commuter.area = super_area.areas[0]
-    commuter.mode_of_transport = ModeOfTransport(description="bus", is_public=True)
-    #commuter.mode_of_transport = "public"
+    commuter.work_super_area = super_area
+    commuter.mode_of_transport = ModeOfTransport(description="surf", is_public=True)
     household.add(commuter)
 
     world = World()
@@ -204,6 +214,7 @@ def make_dummy_world():
     world.areas = Areas([super_area.areas[0]])
     world.areas[0].people = world.people
     world.super_areas = SuperAreas([super_area])
+    world.regions = Regions([super_area.region])
     cinema = Cinema()
     cinema.coordinates = super_area.coordinates
     world.cinemas = Cinemas([cinema])
@@ -213,18 +224,21 @@ def make_dummy_world():
     grocery = Grocery()
     grocery.coordinates = super_area.coordinates
     world.groceries = Groceries([grocery])
-    # commute
-    world.commutecities = CommuteCities.for_super_areas(world.super_areas)
-    world.commutecities[7].add(commuter)
-    world.commutecities[7].add_internal_commuter(commuter)
-    world.commutehubs = CommuteHubs(world.commutecities)
-    world.commutehubs.from_file()
-    world.commutehubs.init_hubs()
-    world.commutehubs[0].commute_through.append(commuter)
-    world.commutecityunits = CommuteCityUnits(world.commutecities.members)
-    world.commutecityunits.init_units()
-    world.commuteunits = CommuteUnits(world.commutehubs.members)
-    world.commuteunits.init_units()
+    city = City(name="test", coordinates=[1, 2])
+    world.cities = Cities([city])
+    city.commuter_ids.add(commuter.id)
+    city.stations = [
+        Station(super_area=world.super_areas[0], city=world.cities[0])
+    ]
+    world.stations = city.stations
+    world.super_areas[0].city = city
+    world.super_areas[0].closest_station_for_city[city.name] = city.stations[0]
+    city_transports = CityTransports([CityTransport(city=city)])
+    world.city_transports = city_transports
+    city.city_transports = city_transports
+    inter_city_transports = InterCityTransports([InterCityTransport(station=city.stations[0])])
+    world.inter_city_transports = inter_city_transports
+    city.stations[0].inter_city_transports = inter_city_transports
     world.cemeteries = Cemeteries()
     return world
 
@@ -232,12 +246,14 @@ def make_dummy_world():
 @pytest.fixture(name="policy_simulator", scope="session")
 def make_policy_simulator(dummy_world, interaction, selector):
     config_name = paths.configs_path / "tests/test_simulator_simple.yaml"
+    travel = Travel()
     sim = Simulator.from_file(
         dummy_world,
         interaction,
         infection_selector=selector,
         config_filename=config_name,
-        save_path=None,
+        record=None,
+        travel = travel,
         policies=None,
         leisure=None,
     )
@@ -262,3 +278,67 @@ def setup_world(dummy_world, policy_simulator):
         person.dead = False
         person.subgroups.medical_facility = None
     return world, pupil, student, worker, policy_simulator
+
+
+@pytest.fixture(name="full_world_geography", scope="session")
+def make_full_world_geography():
+    geography = Geography.from_file(
+        {"super_area": ["E02001731", "E02002566"]}
+    )
+    return geography
+
+
+@pytest.fixture(name="full_world", scope="session")
+def create_full_world(full_world_geography):
+    # clean file
+    with h5py.File("test.hdf5", "w") as f:
+        pass
+    geography = full_world_geography
+    geography.hospitals = Hospitals.for_geography(geography)
+    geography.schools = Schools.for_geography(geography)
+    geography.companies = Companies.for_geography(geography)
+    geography.care_homes = CareHomes.for_geography(geography)
+    geography.universities = Universities.for_super_areas(geography.super_areas)
+    world = generate_world_from_geography(
+        geography=geography, include_households=True
+    )
+    world.pubs = Pubs.for_geography(geography)
+    world.cinemas = Cinemas.for_geography(geography)
+    world.groceries = Groceries.for_geography(geography)
+    leisure = generate_leisure_for_world(
+        ["pubs", "cinemas", "groceries", "household_visits", "care_home_visits"], world
+    )
+    leisure.distribute_social_venues_to_areas(
+        areas=world.areas, super_areas=world.super_areas
+    )
+    travel = Travel()
+    travel.initialise_commute(world)
+    return world
+
+
+@pytest.fixture(name="domains_world", scope="session")
+def create_domains_world():
+    geography = Geography.from_file(
+        {"super_area": ["E02001731", "E02001732", "E02002566", "E02002567"]}
+    )
+    geography.hospitals = Hospitals.for_geography(geography)
+    geography.schools = Schools.for_geography(geography)
+    geography.companies = Companies.for_geography(geography)
+    geography.care_homes = CareHomes.for_geography(geography)
+    geography.universities = Universities.for_super_areas(geography.super_areas)
+    world = generate_world_from_geography(
+        geography=geography, include_households=True
+    )
+    world.pubs = Pubs.for_geography(geography)
+    world.cinemas = Cinemas.for_geography(geography)
+    world.groceries = Groceries.for_geography(geography)
+    leisure = generate_leisure_for_world(
+        ["pubs", "cinemas", "groceries", "household_visits", "care_home_visits"], world
+    )
+    leisure.distribute_social_venues_to_areas(
+        areas=world.areas, super_areas=world.super_areas
+    )
+    travel = Travel()
+    travel.initialise_commute(world)
+    return world
+

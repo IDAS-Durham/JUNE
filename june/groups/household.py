@@ -5,6 +5,7 @@ from random import random
 import h5py
 
 from june.groups.group import Group, Supergroup
+
 from enum import IntEnum
 from typing import List
 from recordclass import dataobject
@@ -25,12 +26,11 @@ class Household(Group):
         "area",
         "type",
         "max_size",
-        "n_residents",
         "residents",
-        "relatives_in_care_homes",
-        "relatives_in_households",
         "quarantine_starting_date",
-        "social_venues",
+        "households_to_visit",
+        "care_homes_to_visit",
+        "ids_checked",
     )
 
     class SubgroupType(IntEnum):
@@ -51,9 +51,9 @@ class Household(Group):
         self.relatives_in_care_homes = None
         self.relatives_in_households = None
         self.max_size = max_size
-        self.n_residents = 0
         self.residents = ()
-        self.social_venues = defaultdict(tuple)
+        self.households_to_visit = None
+        self.care_homes_to_visit = None
 
     def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
         if activity == "leisure":
@@ -74,32 +74,32 @@ class Household(Group):
         else:
             raise NotImplementedError(f"Activity {activity} not supported in household")
 
-    def get_leisure_subgroup(self, person):
+    def make_household_residents_stay_home(self, to_send_abroad=None):
         """
-        A person wants to come and visit this household. We need to assign the person
-        to the relevant age subgroup, and make sure the residents welcome him and
-        don't go do any other leisure activities.
+        Forces the residents to stay home if they are away doing leisure.
+        This is used to welcome visitors.
         """
         for mate in self.residents:
             if mate.busy:
                 if (
-                    mate.leisure is not None and mate in mate.leisure
-                ):  # this perosn has already been assigned somewhere
-                    mate.leisure.remove(mate)
-                    mate.subgroups.leisure = mate.subgroups.residence
+                    mate.leisure is not None
+                ):  # this person has already been assigned somewhere
+                    if not mate.leisure.external:
+                        if mate not in mate.leisure.people:
+                            # person active somewhere else, let's not disturb them
+                            continue
+                        mate.leisure.remove(mate)
+                    else:
+                        ret = to_send_abroad.delete_person(mate, mate.leisure)
+                        if ret:
+                            # person active somewhere else, let's not disturb them
+                            continue
+                    mate.subgroups.leisure = mate.residence
                     mate.residence.append(mate)
             else:
                 mate.subgroups.leisure = (
-                    mate.residence # person will be added later in the simulator.
+                    mate.residence  # person will be added later in the simulator.
                 )
-        if person.age < 18:
-            return self.subgroups[self.SubgroupType.kids]
-        elif person.age <= 35:
-            return self.subgroups[self.SubgroupType.young_adults]
-        elif person.age < 65:
-            return self.subgroups[self.SubgroupType.adults]
-        else:
-            return self.subgroups[self.SubgroupType.old_adults]
 
     @property
     def kids(self):
@@ -116,6 +116,13 @@ class Household(Group):
     @property
     def old_adults(self):
         return self.subgroups[self.SubgroupType.old_adults]
+
+    @property
+    def coordinates(self):
+        return self.area.coordinates
+
+    def n_residents(self):
+        return len(self.residents)
 
     def quarantine(self, time, quarantine_days, household_compliance):
         if self.type == "communal":
@@ -143,18 +150,4 @@ class Households(Supergroup):
     """
 
     def __init__(self, households: List[Household]):
-        super().__init__()
-        self.members = households
-
-    def __add__(self, households: "Households"):
-        """
-        Adding two households instances concatenates the members
-        list.
-
-        Parameters
-        ----------
-        households:
-            instance of Households to sum with.
-        """
-        self.members += households.members
-        return self
+        super().__init__(members=households)
