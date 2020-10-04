@@ -25,12 +25,15 @@ class SocialVenue(Group):
 
     def __init__(self):
         super().__init__()
-        self.super_area = None
+        self.area = None
 
     def add(self, person, activity="leisure"):
         self.subgroups[0].append(person)
         setattr(person.subgroups, activity, self.subgroups[0])
 
+    @property
+    def super_area(self):
+        return self.area.super_area
 
 class SocialVenues(Supergroup):
     social_venue_class = SocialVenue
@@ -70,7 +73,9 @@ class SocialVenues(Supergroup):
             else:
                 super_area = None
             sv.coordinates = coord
-            sv.super_area = super_area
+            if super_areas:
+                area = Areas(super_area.areas).get_closest_area(coordinates=coord)
+                sv.area = area 
             social_venues.append(sv)
         return cls(social_venues, **kwargs)
 
@@ -192,7 +197,7 @@ class SocialVenues(Supergroup):
             np.array([np.deg2rad(sv.coordinates) for sv in self]), metric="haversine"
         )
 
-    def add_to_super_areas(self, super_areas: SuperAreas):
+    def add_to_areas(self, areas: Areas):
         """
         Adds all venues to the closest super area
         """
@@ -201,7 +206,7 @@ class SocialVenues(Supergroup):
                 raise SocialVenueError(
                     "Can't add to super area if venues don't have coordiantes."
                 )
-            venue.super_area = super_areas.get_closest_super_areas(venue.coordinates)[0]
+            venue.area = areas.get_closest_areas(venue.coordinates)[0]
 
     def get_closest_venues(self, coordinates, k=1):
         """

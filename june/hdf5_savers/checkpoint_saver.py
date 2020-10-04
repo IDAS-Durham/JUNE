@@ -7,7 +7,6 @@ from glob import glob
 
 from june.world import World
 from june.interaction import Interaction
-from june.logger import Logger
 from june.groups.leisure import Leisure
 from june.policy import Policies
 from june.infection import InfectionSelector, Infection
@@ -155,8 +154,8 @@ def generate_simulator_from_checkpoint(
     leisure: Optional[Leisure] = None,
     travel: Optional[Travel] = None,
     config_filename: str = default_config_filename,
-    logger: Logger = None,
-    comment: Optional[str] = None,
+    record: "Record" = None,
+    #comment: Optional[str] = None,
 ):
     """
     Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
@@ -173,8 +172,8 @@ def generate_simulator_from_checkpoint(
         leisure=leisure,
         travel=travel,
         config_filename=config_filename,
-        logger=logger,
-        comment=comment,
+        record=record,
+        #comment=comment,
     )
     people_ids = set(world.people.people_ids)
     checkpoint_data = load_checkpoint_from_hdf5(checkpoint_path, chunk_size=chunk_size)

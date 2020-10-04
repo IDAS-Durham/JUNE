@@ -13,6 +13,7 @@ from leisure import LeisurePlots
 from companies import CompanyPlots
 from households import HouseholdPlots
 from care_homes import CareHomePlots
+from contact_matrix import ContactMatrixPlots
 from commute import CommutePlots
 
 plt.style.use(['science'])
@@ -227,6 +228,37 @@ class Plotter:
         care_age_plot.plot()
         plt.savefig(save_dir + 'age_distribution.png', dpi=150, bbox_inches='tight')
 
+    def plot_contact_matrices(
+            self,
+            save_dir: str = '../plots/contact_matrices/'
+    ):
+        "Plot contact matrices pre-lockdown and during lockdown."
+
+        os.makedirs(save_dir, exist_ok=True)
+
+        pre_lockdown_date = datetime(2020, 3, 1)
+        during_lockdown_date = datetime(2020, 4, 15)
+
+        print("Setting up contact matrix plots")
+        contact_matrix_plots = ContactMatrixPlots(self.world)
+
+        print("Loading world data")
+        contact_matrix_plots.load_world_data()
+
+        print("Plotting pre-lockdown contact matrices")
+        contact_matrix_plots.calculate_all_contact_matrices(pre_lockdown_date)
+        contact_matrices = contact_matrix_plots.contact_matrices
+        for location, contact_matrix in contact_matrices.items():
+            contact_matrix_plots.plot_contact_matrix(contact_matrix)
+            plt.savefig(save_dir + f'/contact_matrix_{location}_prelockdown.png', dpi=150, bbox_inches='tight')
+
+        print("Plotting during lockdown contact matrices")
+        contact_matrix_plots.calculate_all_contact_matrices(during_lockdown_date)
+        contact_matrices = contact_matrix_plots.contact_matrices
+        for location, contact_matrix in contact_matrices.items():
+            contact_matrix_plots.plot_contact_matrix(contact_matrix)
+            plt.savefig(save_dir + f'/contact_matrix_{location}_lockdown.png', dpi=150, bbox_inches='tight')
+
     def plot_all(self):
 
         print ("Plotting the world")
@@ -236,6 +268,7 @@ class Plotter:
         self.plot_leisure()
         self.plot_policies()
         self.plot_care_homes()
+        self.plot_contact_matrices()
 
 
 if __name__ == "__main__":
@@ -257,9 +290,19 @@ if __name__ == "__main__":
         default = False,
         action="store_true"
     )
+    parser.add_argument(
+        "-c",
+        "--contact_matrix",
+        help="Plot only contact matrices",
+        required=False,
+        default=False
+    )
+
     args = parser.parse_args()
     plotter = Plotter.from_file(args.world_filename)
     if args.households:
         plotter.plot_households()
+    if args.contact_matrix:
+        plotter.plot_contact_matrices()
     else:
         plotter.plot_all()
