@@ -159,15 +159,14 @@ def test__comorbidities_effect():
 
 def test__apply_hospitalisation_correction():
  
-    health_index = HealthIndexGenerator.from_file(
-            care_home_ratios=None
-    )
+    health_index = HealthIndexGenerator.from_file()
     adjusted_health_index = HealthIndexGenerator(
             hosp_cases = health_index.hosp_cases,
             icu_hosp=health_index.icu_hosp,
             death_hosp=health_index.death_hosp,
             asymptomatic_ratio=health_index.asymptomatic_ratio,
-            care_home_ratios = [0]*60 + [0.15]*40
+            male_care_home_ratios = [0]*60 + [0.15]*40,
+            female_care_home_ratios = [0]*60 + [0.2]*40,
     ) # percent of people in age group that doesnt live in a care home
     dummy = Person.from_attributes(sex="f", age=45,)
     hi = health_index(dummy)
@@ -187,8 +186,20 @@ def test__apply_hospitalisation_correction():
     hi = np.diff(health_index(non_resident), prepend=0., append=1.)
     adjusted_hi = np.diff(adjusted_health_index(non_resident), prepend=0., append=1.)
     assert sum(adjusted_hi) == 1.
-    assert adjusted_hi[3] == pytest.approx(hi[3]*1.06, rel=0.01)
-    assert adjusted_hi[4] == pytest.approx(hi[4]*1.06, rel=0.01)
+    assert adjusted_hi[3] == pytest.approx(hi[3]*0.9/(1-0.2), rel=0.01)
+    assert adjusted_hi[4] == pytest.approx(hi[4]*0.9/(1-0.2), rel=0.01)
     assert adjusted_hi[5] == hi[5]
-    assert adjusted_hi[6] == pytest.approx(hi[6]*1.06, rel=0.01)
-    assert adjusted_hi[7] == pytest.approx(hi[7]*1.06, rel=0.01)
+    assert adjusted_hi[6] == pytest.approx(hi[6]*0.9/(1-0.2), rel=0.01)
+    assert adjusted_hi[7] == pytest.approx(hi[7]*0.9/(1-0.2), rel=0.01)
+
+    non_resident = Person.from_attributes(sex="m", age=80,)
+    household = Household()
+    household.add(non_resident)
+    hi = np.diff(health_index(non_resident), prepend=0., append=1.)
+    adjusted_hi = np.diff(adjusted_health_index(non_resident), prepend=0., append=1.)
+    assert sum(adjusted_hi) == 1.
+    assert adjusted_hi[3] == pytest.approx(hi[3]*0.9/(1-0.15), rel=0.01)
+    assert adjusted_hi[4] == pytest.approx(hi[4]*0.9/(1-0.15), rel=0.01)
+    assert adjusted_hi[5] == hi[5]
+    assert adjusted_hi[6] == pytest.approx(hi[6]*0.9/(1-0.15), rel=0.01)
+    assert adjusted_hi[7] == pytest.approx(hi[7]*0.9/(1-0.15), rel=0.01)
