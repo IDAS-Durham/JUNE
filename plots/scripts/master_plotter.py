@@ -14,6 +14,7 @@ from companies import CompanyPlots
 from households import HouseholdPlots
 from care_homes import CareHomePlots
 from contact_matrix import ContactMatrixPlots
+from commute import CommutePlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -41,7 +42,60 @@ class Plotter:
 
         return Plotter(world)
 
+    def plot_commute(
+            self,
+            save_dir: str = '../plots/commute/',
+    ):
+        "Make all commute plots"
+
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+
+        commute_plots = CommutePlots(self.world)
+
+        print ("Plotting internal exteral numbers")
+        internal_external_numbers_plot = commute_plots.plot_internal_external_numbers()
+        internal_external_numbers_plot.plot()
+        plt.savefig(save_dir + 'internal_external.png', dpi=150, bbox_inches='tight')
+
+        print ("Processing Newcastle areas")
+        internal_commute_areas, external_commute_areas = commute_plots.process_internal_external_areas(
+            city_to_plot = "Newcastle upon Tyne"
+        )
+
+        if internal_commute_areas is not None:
+            print ("Plotting Newcastle internal areas")
+            commute_areas_plot = commute_plots.plot_commute_areas(internal_commute_areas)
+            commute_areas_plot.plot()
+            plt.savefig(save_dir + 'Newcastle_internal_commute.png', dpi=150, bbox_inches='tight')
+
+        if external_commute_areas is not None:
+            print ("Plotting Newcastle external areas")
+            commute_areas_plot = commute_plots.plot_commute_areas(external_commute_areas)
+            commute_areas_plot.plot()
+            plt.savefig(save_dir + 'Newcastle_external_commute.png', dpi=150, bbox_inches='tight')
+            
+
+        print ("Processing London areas")
+        internal_commute_areas, external_commute_areas = commute_plots.process_internal_external_areas(
+            city_to_plot = "London"
+        )
+
+        if internal_commute_areas is not None:
+            print ("Plotting London internal areas")
+            commute_areas_plot = commute_plots.plot_commute_areas(internal_commute_areas)
+            commute_areas_plot.plot()
+            plt.savefig(save_dir + 'London_internal_commute.png', dpi=150, bbox_inches='tight')
+
+        if external_commute_areas is not None:
+            print ("Plotting London external areas")
+            commute_areas_plot = commute_plots.plot_commute_areas(external_commute_areas)
+            commute_areas_plot.plot()
+            plt.savefig(save_dir + 'London_external_commute.png', dpi=150, bbox_inches='tight')
+        
+
     def plot_households(self, save_dir: Path = Path("../plots/households")):
+        
         save_dir.mkdir(exist_ok=True, parents=True)
         print("Setting up household plots")
         household_plots = HouseholdPlots(self.world)
@@ -208,6 +262,7 @@ class Plotter:
     def plot_all(self):
 
         print ("Plotting the world")
+        self.plot_commute()
         self.plot_companies()
         self.plot_households()
         self.plot_leisure()
