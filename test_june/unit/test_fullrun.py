@@ -6,7 +6,6 @@ but at least we can use it in the meantime to make sure the code runs before pus
 from pathlib import Path
 from june.simulator import Simulator
 from june import world
-from june.logger import Logger
 from june.time import Timer
 from june.geography import Geography
 from june.demography import Demography, Person, Population
@@ -44,12 +43,14 @@ from june import World
 from june.world import generate_world_from_geography
 from june.infection_seed import InfectionSeed
 from june.policy import Policies
+from june.records import Record
 from june import paths
 
 from pathlib import Path
 
 selector_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
+interaction_config = paths.configs_path / "tests/interaction.yaml"
 
 
 def test__full_run(dummy_world, selector):
@@ -73,7 +74,10 @@ def test__full_run(dummy_world, selector):
         areas=world.areas, super_areas=world.super_areas
     )
     travel = Travel()
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename=interaction_config)
+    record = Record(
+            record_path = 'results',
+    )
     policies = Policies.from_file()
     sim = Simulator.from_file(
         world=world,
@@ -83,7 +87,7 @@ def test__full_run(dummy_world, selector):
         leisure=leisure_instance,
         travel=travel,
         policies=policies,
-        logger=Logger(),
+        record=record,
     )
     seed = InfectionSeed(world=sim.world, infection_selector=selector)
     seed.unleash_virus(Population(sim.world.people), n_cases=1)

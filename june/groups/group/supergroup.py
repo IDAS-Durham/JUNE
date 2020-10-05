@@ -59,9 +59,13 @@ class Supergroup:
 
     def get_spec(self) -> str:
         """
-        Returns the speciailization of the group.
+        Returns the speciailization of the super group.
         """
         return re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
+
+    @property
+    def group_spec(self):
+        return self.members[0].spec
 
     @classmethod
     def for_geography(cls):

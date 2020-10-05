@@ -10,7 +10,6 @@ available_groups = [
     "groceries",
     "cinemas",
     "universities",
-    "hospitals",
 ]
 
 
@@ -109,6 +108,25 @@ class TestDomainDecomposition:
                                 subgroup_domain.group.super_area.name
                                 == subgroup.group.super_area.name
                             )
+
+    def test__hospitals(self, domains_world, domains):
+        assert len(domains_world.hospitals)> 0 
+        for hospital in domains_world.hospitals:
+            for domain in domains:
+                assert len(domain.hospitals) == len(domains_world.hospitals)
+                domain_super_area_ids = [super_area.id for super_area in domain]
+                if hospital.super_area.id in domain_super_area_ids:
+                    for hospital_domain in domain.hospitals:
+                        if hospital.id == hospital_domain.id:
+                            assert hospital_domain.external is False
+                            assert hospital.super_area.id == hospital_domain.super_area.id
+                            assert hospital.trust_code == hospital_domain.trust_code 
+                            assert hospital.region_name == hospital_domain.region_name 
+                        else:
+                            for hospital_domain in domain.hospitals:
+                                if hospital_domain.id == domain.hospitals.id:
+                                    assert hospital_domain.external
+                                    assert hospital.region_name == hospital_domain.region_name 
 
     def test__stations_and_cities(self, domains_world, domains):
         assert len(domains_world.cities) > 0

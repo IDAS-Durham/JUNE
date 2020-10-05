@@ -44,13 +44,13 @@ def make_hospitals(geography_hospital):
         Hospital(
             n_beds=40,
             n_icu_beds=5,
-            super_area=super_area_test,
+            area=super_area_test.areas[0],
             coordinates=super_area_test.coordinates,
         ),
         Hospital(
             n_beds=80,
             n_icu_beds=20,
-            super_area=super_area_test,
+            area=super_area_test.areas[0],
             coordinates=super_area_test.coordinates,
         ),
     ]

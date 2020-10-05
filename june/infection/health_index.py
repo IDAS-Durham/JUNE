@@ -5,7 +5,7 @@ from scipy import interpolate
 from june.infection.symptom_tag import SymptomTag
 from june import paths
 from june.utils.parse_probabilities import parse_age_probabilities
-from typing import Optional
+from typing import Optional, List
 
 default_icu_hosp_filename = paths.configs_path / "defaults/ICU_hosp.dat"
 default_death_hosp_filename = paths.configs_path / "defaults/Death_hosp.dat"
@@ -62,11 +62,11 @@ class HealthIndexGenerator:
         hosp_cases: dict,
         icu_hosp: dict,
         death_hosp: dict,
-
         asymptomatic_ratio=0.2,
         comorbidity_multipliers: Optional[dict] = None,
         prevalence_reference_population: Optional[dict] = None,
-        adjust_hospitalisation_adults: bool = False,
+        male_care_home_ratios: Optional[List] = None,
+        female_care_home_ratios: Optional[List] = None,
     ):
         """
         Parameters:
@@ -89,7 +89,8 @@ class HealthIndexGenerator:
         self.icu_hosp = icu_hosp
         self.death_hosp = death_hosp
         self.asymptomatic_ratio = asymptomatic_ratio
-        self.adjust_hospitalisation_adults = adjust_hospitalisation_adults
+        self.female_care_home_ratios = female_care_home_ratios
+        self.male_care_home_ratios = male_care_home_ratios
         self.make_list()
         if comorbidity_multipliers is not None:
             self.max_mild_symptom_tag = [
@@ -120,7 +121,7 @@ class HealthIndexGenerator:
         asymptomatic_ratio=0.2,
         comorbidity_multipliers=None,
         prevalence_reference_population=None,
-        adjust_hospitalisation_adults=False,
+        care_home_ratios_filename: Optional[str] =None,
     ) -> "HealthIndexGenerator":
         """
         Initialize the Health index from path to data frame, and path to config file 
@@ -132,42 +133,55 @@ class HealthIndexGenerator:
           Interaction instance
         """
 
-        age=np.arange(0,121,1)
-        
-        hosp_data=np.loadtxt(hosp_filename,skiprows=1)
-        age_hosp=hosp_data[:,0]
-        female_hosp=hosp_data[:,1]
-        male_hosp=hosp_data[:,2]
-        
-        interp_female_hosp=interpolate.interp1d(age_hosp,female_hosp, bounds_error=False, \
-                                                            fill_value=female_hosp[-1])
-        interp_male_hosp=interpolate.interp1d(age_hosp,male_hosp, bounds_error=False, \
-                                                            fill_value=male_hosp[-1])
+        age = np.arange(0, 121, 1)
 
-        hosp_cases=[interp_female_hosp(age),interp_male_hosp(age)]
+        hosp_data = np.loadtxt(hosp_filename, skiprows=1)
+        age_hosp = hosp_data[:, 0]
+        female_hosp = hosp_data[:, 1]
+        male_hosp = hosp_data[:, 2]
 
-        icu_data=np.loadtxt(icu_filename,skiprows=1)
-        age_icu=icu_data[:,0]
-        female_icu=icu_data[:,1]
-        male_icu=icu_data[:,2]
+        interp_female_hosp = interpolate.interp1d(
+            age_hosp, female_hosp, bounds_error=False, fill_value=female_hosp[-1]
+        )
+        interp_male_hosp = interpolate.interp1d(
+            age_hosp, male_hosp, bounds_error=False, fill_value=male_hosp[-1]
+        )
 
-        interp_female_icu=interpolate.interp1d(age_icu,female_icu, bounds_error=False, \
-                                                            fill_value=female_icu[-1])
-        interp_male_icu=interpolate.interp1d(age_icu,male_icu, bounds_error=False, \
-                                                            fill_value=male_icu[-1])
-        icu_hosp=[interp_female_icu(age),interp_male_icu(age)]
+        hosp_cases = [interp_female_hosp(age), interp_male_hosp(age)]
 
-        death_data=np.loadtxt(death_filename,skiprows=1)
-        age_death=death_data[:,0]
-        female_death=death_data[:,1]
-        male_death=death_data[:,2]
+        icu_data = np.loadtxt(icu_filename, skiprows=1)
+        age_icu = icu_data[:, 0]
+        female_icu = icu_data[:, 1]
+        male_icu = icu_data[:, 2]
 
-        interp_female_death=interpolate.interp1d(age_death,female_death, bounds_error=False, \
-                                                            fill_value=female_death[-1])
-        interp_male_death=interpolate.interp1d(age_death,male_death, bounds_error=False, \
-                                                            fill_value=male_death[-1])
-        death_hosp=[interp_female_death(age),interp_male_death(age)]
+        interp_female_icu = interpolate.interp1d(
+            age_icu, female_icu, bounds_error=False, fill_value=female_icu[-1]
+        )
+        interp_male_icu = interpolate.interp1d(
+            age_icu, male_icu, bounds_error=False, fill_value=male_icu[-1]
+        )
+        icu_hosp = [interp_female_icu(age), interp_male_icu(age)]
 
+        death_data = np.loadtxt(death_filename, skiprows=1)
+        age_death = death_data[:, 0]
+        female_death = death_data[:, 1]
+        male_death = death_data[:, 2]
+
+        interp_female_death = interpolate.interp1d(
+            age_death, female_death, bounds_error=False, fill_value=female_death[-1]
+        )
+        interp_male_death = interpolate.interp1d(
+            age_death, male_death, bounds_error=False, fill_value=male_death[-1]
+        )
+        death_hosp = [interp_female_death(age), interp_male_death(age)]
+        if care_home_ratios_filename is not None:
+            with open(care_home_ratios_filename) as f:
+                care_home_ratios = yaml.load(f, Loader=yaml.FullLoader)
+            male_care_home_ratios = care_home_ratios['male']
+            female_care_home_ratios = care_home_ratios['female']
+        else:
+            male_care_home_ratios = None
+            female_care_home_ratios = None
         return cls(
             hosp_cases,
             icu_hosp,
@@ -175,7 +189,8 @@ class HealthIndexGenerator:
             asymptomatic_ratio,
             comorbidity_multipliers=comorbidity_multipliers,
             prevalence_reference_population=prevalence_reference_population,
-            adjust_hospitalisation_adults=adjust_hospitalisation_adults,
+            male_care_home_ratios=male_care_home_ratios,
+            female_care_home_ratios=female_care_home_ratios,
         )
 
     @classmethod
@@ -209,12 +224,10 @@ class HealthIndexGenerator:
             hosp_filename=hosp_filename,
             icu_filename=icu_filename,
             death_filename=death_filename,
-            
             asymptomatic_ratio=asymptomatic_ratio,
             comorbidity_multipliers=comorbidity_multipliers,
             prevalence_reference_population=prevalence_reference_population,
         )
-
 
     def make_list(self):
         """
@@ -244,16 +257,12 @@ class HealthIndexGenerator:
         # hosp,ICU,death ratios
 
         ratio_hosp_cases_female = self.hosp_cases[0]  # hospital/cases rate
-        ratio_icu_hosp_female = self.icu_hosp[0]   # ICU/hosp rate
-        ratio_death_hosp_female = self.death_hosp[0]# deaths in hosp/hosp rate
-        
-
+        ratio_icu_hosp_female = self.icu_hosp[0]  # ICU/hosp rate
+        ratio_death_hosp_female = self.death_hosp[0]  # deaths in hosp/hosp rate
 
         ratio_hosp_cases_male = self.hosp_cases[1]  # hospital/cases rate
-        ratio_icu_hosp_male = self.icu_hosp[1]   # ICU/hosp rate
-        ratio_death_hosp_male = self.death_hosp[1]# deaths in hosp/hosp rate
-        
-
+        ratio_icu_hosp_male = self.icu_hosp[1]  # ICU/hosp rate
+        ratio_death_hosp_male = self.death_hosp[1]  # deaths in hosp/hosp rate
 
         # Going to the hospital but not to ICU/hosp
         hosp_noicu_female = 1.0 - ratio_icu_hosp_female
@@ -287,29 +296,38 @@ class HealthIndexGenerator:
             len(survival_rate_icu) - 1
         ][1]
 
-        self.prob_lists[0, :, 4] = (ratio_hosp_cases_female*ratio_icu_hosp_female) * survival_icu #computes icu_survivors/cases
-        self.prob_lists[1, :, 4] = (ratio_hosp_cases_male*ratio_icu_hosp_male) * survival_icu
+        self.prob_lists[0, :, 4] = (
+            ratio_hosp_cases_female * ratio_icu_hosp_female
+        ) * survival_icu  # computes icu_survivors/cases
+        self.prob_lists[1, :, 4] = (
+            ratio_hosp_cases_male * ratio_icu_hosp_male
+        ) * survival_icu
 
         # probavility of Dying in icu
         icu_deaths_female = ratio_icu_hosp_female * (1 - survival_icu)
         icu_deaths_male = ratio_icu_hosp_male * (1 - survival_icu)
 
-
         # probability of Survinving  hospital
 
-        deaths_hosp_noicu_female = ratio_death_hosp_female - icu_deaths_female #deaths in hospital but not in icu/hosp
+        deaths_hosp_noicu_female = (
+            ratio_death_hosp_female - icu_deaths_female
+        )  # deaths in hospital but not in icu/hosp
         deaths_hosp_noicu_male = ratio_death_hosp_male - icu_deaths_male
 
         # If the death rate in icu is around the number of deaths virtually everyone in that age dies in icu.
         deaths_hosp_noicu_female[deaths_hosp_noicu_female < 0] = 1e-3
         deaths_hosp_noicu_male[deaths_hosp_noicu_male < 0] = 1e-3
 
-        self.prob_lists[0, :, 3] = (hosp_noicu_female - deaths_hosp_noicu_female)*ratio_hosp_cases_female #surviving hosp outside of icu/cases
-        self.prob_lists[1, :, 3] = (hosp_noicu_male - deaths_hosp_noicu_male)*ratio_hosp_cases_male
+        self.prob_lists[0, :, 3] = (
+            hosp_noicu_female - deaths_hosp_noicu_female
+        ) * ratio_hosp_cases_female  # surviving hosp outside of icu/cases
+        self.prob_lists[1, :, 3] = (
+            hosp_noicu_male - deaths_hosp_noicu_male
+        ) * ratio_hosp_cases_male
 
         # probability of dying in hospital Without icu
-        self.prob_lists[0, :, 6] = deaths_hosp_noicu_female*ratio_hosp_cases_female
-        self.prob_lists[1, :, 6] = deaths_hosp_noicu_male*ratio_hosp_cases_male
+        self.prob_lists[0, :, 6] = deaths_hosp_noicu_female * ratio_hosp_cases_female
+        self.prob_lists[1, :, 6] = deaths_hosp_noicu_male * ratio_hosp_cases_male
         """
         probability of dying in your home is the same as the number of deths above the mean of previous years
         that do not have covid 19 in the death certificate it is 23% according to 
@@ -328,8 +346,12 @@ class HealthIndexGenerator:
         excess_death_female[ages >= excess_deaths[-1][0]] = excess_deaths[-1][1]
         excess_death_male[ages >= excess_deaths[-1][0]] = excess_deaths[-1][2]
 
-        deaths_at_home_female = (ratio_death_hosp_female*ratio_hosp_cases_female) * (1 - excess_death_female)
-        deaths_at_home_male = (ratio_death_hosp_male*ratio_hosp_cases_male)* (1 - excess_death_male)
+        deaths_at_home_female = (ratio_death_hosp_female * ratio_hosp_cases_female) * (
+            1 - excess_death_female
+        )
+        deaths_at_home_male = (ratio_death_hosp_male * ratio_hosp_cases_male) * (
+            1 - excess_death_male
+        )
 
         self.prob_lists[0, :, 5] = deaths_at_home_female
         self.prob_lists[1, :, 5] = deaths_at_home_male
@@ -341,7 +363,6 @@ class HealthIndexGenerator:
 
         self.prob_lists[0, :, 2] = prob_home_severe_female - deaths_at_home_female
         self.prob_lists[1, :, 2] = prob_home_severe_male - deaths_at_home_male
-        
 
     def __call__(self, person):
         """
@@ -358,21 +379,34 @@ class HealthIndexGenerator:
             sex = 0
         round_age = int(round(person.age))
         probabilities = self.prob_lists[sex][round_age]
-        if self.adjust_hospitalisation_adults:
-            probabilities = self.adjust_hospitalisation(probabilities, person.age)
+        if self.male_care_home_ratios is not None and self.female_care_home_ratios is not None:
+            probabilities = self.adjust_hospitalisation(
+                probabilities, person, 
+                male_care_home_ratio=self.male_care_home_ratios,
+                female_care_home_ratio=self.female_care_home_ratios,
+            )
         if hasattr(self, "comorbidity_multipliers") and person.comorbidity is not None:
             probabilities = self.adjust_for_comorbidities(
                 probabilities, person.comorbidity, person.age, person.sex
             )
         return np.cumsum(probabilities)
 
-    def _hospitalisation_correction_factor(self, age):
-        return age / 69 + 5.0 / 69
-
-    def adjust_hospitalisation(self, probabilities, age):
-        if age >= 18 and age < 65:
+    def adjust_hospitalisation(self, probabilities, person, male_care_home_ratio,
+            female_care_home_ratio):
+        if (
+            person.age > 65
+            and person.residence is not None
+            and person.residence.group.spec != "care_home"
+        ):
+            # 10% of the deaths were of care home residents in realitiy, thus
+            # the factor 0.9
+            if person.sex == 'm':
+                correction_factor = 0.9 / (1 - male_care_home_ratio[person.age])
+            elif person.sex == 'f':
+                correction_factor = 0.9 / (1 - female_care_home_ratio[person.age])
             last_probability = 1 - sum(probabilities)
-            probabilities[[3, 4]] *= self._hospitalisation_correction_factor(age)
+            probabilities[[3, 4, 6]] *= correction_factor
+            last_probability *= correction_factor
             probabilities[:3] *= (1 - sum(probabilities[3:]) - last_probability) / sum(
                 probabilities[:3]
             )

@@ -7,7 +7,7 @@ import june.simulator
 from pathlib import Path
 from random import randint
 
-from june.logger import Logger
+from june.records import Record 
 from june.groups import Hospitals, Hospital
 from june.demography import Population, Person
 from june.geography import Area, Areas, SuperArea, SuperAreas
@@ -28,6 +28,7 @@ from june.infection.transmission import TransmissionGamma
 from june import paths
 
 test_config = paths.configs_path / "tests/test_checkpoint_config.yaml"
+config_interaction = paths.configs_path / "tests/interaction.yaml"
 
 
 def _populate_areas(areas: Areas):
@@ -77,7 +78,7 @@ def create_world():
     world.areas = areas
     world.super_areas = super_areas
     world.hospitals = Hospitals(
-        [Hospital(n_beds=1000, n_icu_beds=1000, super_area=None, coordinates=None,)],
+        [Hospital(n_beds=1000, n_icu_beds=1000, area=None, coordinates=None,)],
         ball_tree=False,
     )
     world.cemeteries = Cemeteries()
@@ -86,7 +87,7 @@ def create_world():
 
 def run_simulator(selector):
     world = create_world()
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename=config_interaction)
     policies = Policies([])
     sim = Simulator.from_file(
         world=world,
@@ -94,8 +95,8 @@ def run_simulator(selector):
         infection_selector=selector,
         config_filename=test_config,
         leisure=None,
-        logger=Logger(save_path="checkpoint_tests"),
         policies=policies,
+        checkpoint_path='checkpoint_tests',
     )
     seed = InfectionSeed(sim.world, selector)
     seed.unleash_virus(sim.world.people, n_cases=50)
@@ -113,7 +114,7 @@ class TestCheckpoints:
         assert len(sim.world.people.susceptible) > 0
         assert len(sim.world.people.dead) > 0
         fresh_world = create_world()
-        interaction = Interaction.from_file()
+        interaction = Interaction.from_file(config_filename=config_interaction)
         policies = Policies([])
         sim_recovered = Simulator.from_checkpoint(
             world=fresh_world,
@@ -121,7 +122,6 @@ class TestCheckpoints:
             interaction=interaction,
             infection_selector=selector,
             config_filename=test_config,
-            logger=Logger(),
             leisure=None,
             travel=None,
             policies=policies,

@@ -8,7 +8,7 @@ import h5py
 import june.infection.symptoms
 from june.interaction import Interaction
 from june import paths
-from june.geography import Geography, Areas, SuperAreas, Cities, City, Station, Stations
+from june.geography import Geography, Areas, SuperAreas, Regions,Cities, City, Station, Stations
 from june.groups.travel import (
     ModeOfTransport,
     CityTransport,
@@ -29,6 +29,7 @@ from june.simulator_box import SimulatorBox
 from june.world import generate_world_from_geography, World
 
 constant_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+interaction_config = paths.configs_path / "tests/interaction.yaml"
 
 import logging
 
@@ -97,7 +98,7 @@ def create_infection_constant(transmission, symptoms_constant):
 
 @pytest.fixture(name="interaction", scope="session")
 def create_interaction():
-    interaction = Interaction.from_file()
+    interaction = Interaction.from_file(config_filename=interaction_config)
     interaction.selector = InfectionSelector.from_file(
         transmission_config_path=constant_config
     )
@@ -173,7 +174,7 @@ def make_dummy_world():
     hospital = Hospital(
         n_beds=40,
         n_icu_beds=5,
-        super_area=super_area,
+        area=area,
         coordinates=super_area.coordinates,
     )
     super_area.closest_hospitals = [hospital]
@@ -213,6 +214,7 @@ def make_dummy_world():
     world.areas = Areas([super_area.areas[0]])
     world.areas[0].people = world.people
     world.super_areas = SuperAreas([super_area])
+    world.regions = Regions([super_area.region])
     cinema = Cinema()
     cinema.coordinates = super_area.coordinates
     world.cinemas = Cinemas([cinema])
@@ -231,10 +233,10 @@ def make_dummy_world():
     world.stations = city.stations
     world.super_areas[0].city = city
     world.super_areas[0].closest_station_for_city[city.name] = city.stations[0]
-    city_transports = CityTransports([CityTransport()])
+    city_transports = CityTransports([CityTransport(city=city)])
     world.city_transports = city_transports
     city.city_transports = city_transports
-    inter_city_transports = InterCityTransports([InterCityTransport()])
+    inter_city_transports = InterCityTransports([InterCityTransport(station=city.stations[0])])
     world.inter_city_transports = inter_city_transports
     city.stations[0].inter_city_transports = inter_city_transports
     world.cemeteries = Cemeteries()
@@ -250,7 +252,7 @@ def make_policy_simulator(dummy_world, interaction, selector):
         interaction,
         infection_selector=selector,
         config_filename=config_name,
-        logger=None,
+        record=None,
         travel = travel,
         policies=None,
         leisure=None,
@@ -339,3 +341,4 @@ def create_domains_world():
     travel = Travel()
     travel.initialise_commute(world)
     return world
+
