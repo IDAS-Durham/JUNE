@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 import time
 import matplotlib.pyplot as plt
@@ -28,6 +27,7 @@ from june.hdf5_savers import generate_world_from_hdf5
 from june.policy import Policy, Policies
 from june.records import Record
 from june.simulator import Simulator
+from june.records import Record, RecordReader
 
 from camps.activity import CampActivityManager
 from camps.paths import camp_data_path, camp_configs_path
@@ -147,8 +147,7 @@ parser.add_argument(
     help="Mask beta factor reduction",
     required=False,
     default=0.5,
-)
-parser.add_argument(
+)parser.add_argument(
     "-lc",
     "--learning_centers",
     help="Add learning centers",
@@ -445,10 +444,10 @@ infection_seed = InfectionSeed(
 )
 for region in world.regions:
     if region.name in cases_detected.keys():
-        infection_seed.unleash_virus(n_cases=10*cases_detected[region.name],
+        infection_seed.unleash_virus(n_cases=2*cases_detected[region.name],
                 population=Population(region.people))
 # Add some extra random cases
-infection_seed.unleash_virus(n_cases=100, population=world.people)
+infection_seed.unleash_virus(n_cases=44, population=world.people)
 
 print("Infected people in seed = ", len(world.people.infected))
 
@@ -524,3 +523,15 @@ simulator.timer.reset()
 simulator.run()
 
 # ==================================================================================#
+
+# =================================== read logger ===============================#
+
+read = RecordReader(args.save_path)
+
+infections_df = read.get_table_with_extras('infections',
+                                           'infected_ids')
+
+locations_df = infections_df.groupby(['location_specs', 
+                                'timestamp']).size()
+
+pd.to_csv(args.save_dir + 'locations.csv')
