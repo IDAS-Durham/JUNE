@@ -103,16 +103,16 @@ class HouseholdPlots:
 
         f, ax = plt.subplots()
         ax.bar(
-            JUNE_household_sizes.keys(),
-            JUNE_household_sizes.values(),
-            alpha=0.7,
-            label="JUNE sizes",
-        )
-        ax.bar(
             sizes_all_world_dict_ordered.keys(),
             sizes_all_world_dict_ordered.values(),
             alpha=0.7,
             label="NOMIS sizes",
+        )
+        ax.bar(
+            JUNE_household_sizes.keys(),
+            JUNE_household_sizes.values(),
+            alpha=0.7,
+            label="JUNE sizes",
         )
         ax.set_xlabel("Household size")
         ax.set_ylabel("Frequency [\%]")
@@ -214,7 +214,6 @@ class HouseholdPlots:
         ) = self._compute_children_parent_age_difference()
         f, ax = plt.subplots(1, 3, sharey=True, figsize=(8,3))
         f, ax = plt.subplots(1, 3, sharey=True, figsize=(8, 3))
-        ax[0].hist(age_difference_couples, density=True, label="JUNE", bins=20)
         ax[0].set_xlabel("Couples' age difference")
         ax[0].set_ylabel("Frequency [\%]")
         ax[0].plot(
@@ -287,8 +286,6 @@ class HouseholdPlots:
             june_hc[htype][age_range] += 1
         june_hc = pd.DataFrame.from_dict(june_hc)
         june_hc = june_hc / june_hc.sum(axis=0)
-        print(june_hc)
-        print(data_hc)
 
         f, ax = plt.subplots()
         totals = [
