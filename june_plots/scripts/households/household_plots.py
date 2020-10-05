@@ -212,7 +212,7 @@ class HouseholdPlots:
             age_differences_first_kid,
             age_differences_second_kid,
         ) = self._compute_children_parent_age_difference()
-        f, ax = plt.subplots(1, 3, sharey=True, figsize=(8,3))
+        #f, ax = plt.subplots(1, 3, sharey=True, figsize=(8,3))
         f, ax = plt.subplots(1, 3, sharey=True, figsize=(8, 3))
         ax[0].set_xlabel("Couples' age difference")
         ax[0].set_ylabel("Frequency [\%]")
