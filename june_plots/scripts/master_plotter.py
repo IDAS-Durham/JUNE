@@ -13,14 +13,16 @@ from june_plots.scripts.leisure import LeisurePlots
 from june_plots.scripts.companies import CompanyPlots
 from june_plots.scripts.households import HouseholdPlots
 from june_plots.scripts.care_homes import CareHomePlots
+from june_plots.scripts.schools import SchoolPlots
 from june_plots.scripts.commute import CommutePlots
 from june_plots.scripts.contact_matrix import ContactMatrixPlots
+from june_plots.scripts.life_expectancy import LifeExpectancyPlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
 
 default_world_filename = 'world.hdf5'
-default_output_plots_path = Path(__file__).parent.parent / "plots"
+default_output_plots_path = Path(__file__).absolute().parent.parent / "plots"
 
 class Plotter:
     """
@@ -50,8 +52,6 @@ class Plotter:
         "Make all commute plots"
 
         save_dir.mkdir(exist_ok=True, parents=True)
-
-        print ("plotting in {}".format(save_dir))
 
         commute_plots = CommutePlots(self.world)
 
@@ -208,13 +208,38 @@ class Plotter:
         care_age_plot.plot()
         plt.savefig(save_dir / 'age_distribution.png', dpi=150, bbox_inches='tight')
 
+    def plot_schools(
+        self,
+        save_dir: Path = default_output_plots_path / "schools"
+    ):
+        """Make all school plots"""
+        save_dir.mkdir(exist_ok=True, parents=True)
+
+        print("Set up school plots")
+        school_plots = SchoolPlots(self.world)
+        school_plots.load_school_data()
+
+        school_size_plot = school_plots.plot_school_sizes()        
+        school_size_plot.plot()
+        plt.savefig(save_dir / 'school_sizes.png', dpi=150, bbox_inches='tight')
+        
+        student_teacher_ratio_plot = school_plots.plot_student_teacher_ratio()
+        student_teacher_ratio_plot.plot()
+        plt.savefig(save_dir / 'student_teacher_ratios.png', dpi=150, bbox_inches='tight')
+
+        distance_to_school_plot = school_plots.plot_distance_to_school()
+        distance_to_school_plot.plot()
+
+        print(save_dir / 'distance_to_school.png')
+        plt.savefig(save_dir / 'distance_to_school.png', dpi=150, bbox_inches='tight')      
+
     def plot_contact_matrices(
             self,
-            save_dir: str = '../plots/contact_matrices/'
+            save_dir: Path = default_output_plots_path / "contact_matrices"
     ):
         "Plot contact matrices pre-lockdown and during lockdown."
 
-        os.makedirs(save_dir, exist_ok=True)
+        save_dir.mkdir(exist_ok=True, parents=True)
 
         pre_lockdown_date = datetime(2020, 3, 1)
         during_lockdown_date = datetime(2020, 4, 15)
@@ -230,25 +255,43 @@ class Plotter:
         contact_matrices = contact_matrix_plots.contact_matrices
         for location, contact_matrix in contact_matrices.items():
             contact_matrix_plots.plot_contact_matrix(contact_matrix)
-            plt.savefig(save_dir + f'/contact_matrix_{location}_prelockdown.png', dpi=150, bbox_inches='tight')
+            plt.savefig(save_dir / f'contact_matrix_{location}_prelockdown.png', dpi=150, bbox_inches='tight')
 
         print("Plotting during lockdown contact matrices")
         contact_matrix_plots.calculate_all_contact_matrices(during_lockdown_date)
         contact_matrices = contact_matrix_plots.contact_matrices
         for location, contact_matrix in contact_matrices.items():
             contact_matrix_plots.plot_contact_matrix(contact_matrix)
-            plt.savefig(save_dir + f'/contact_matrix_{location}_lockdown.png', dpi=150, bbox_inches='tight')
+            plt.savefig(save_dir / f'contact_matrix_{location}_lockdown.png', dpi=150, bbox_inches='tight')
+
+    def plot_life_expectancy(
+        self,
+        save_dir: Path = default_output_plots_path / "life_expectancy"
+    ):
+        """Plot socioeconomic_index vs. life_expectancy"""
+
+        save_dir.mkdir(exist_ok=True, parents=True)
+
+        le_plots = LifeExpectancyPlots()
+        le_plots.load_geography_data()
+        le_plots.load_iomd()
+        le_plots.load_life_expectancy()
+        le_plot = le_plots.plot_life_expectancy_socioecon_index()
+        le_plot.plot()
+
+        plt.savefig(save_dir / 'socioecon_life_expectancy.png', dpi=150, bbox_inches='tight')
 
     def plot_all(self):
-
         print ("Plotting the world")
         self.plot_commute()
         self.plot_companies()
         self.plot_households()
         self.plot_leisure()
-        self.plot_policies()
+        #self.plot_policies()
         self.plot_care_homes()
-        self.plot_contact_matrices()
+        self.plot_schools()
+        #self.plot_contact_matrices()
+        self.plot_life_expectancy()
 
 
 if __name__ == "__main__":
