@@ -49,8 +49,9 @@ class Plotter:
     ):
         "Make all commute plots"
 
-        if not os.path.exists(save_dir):
-            os.mkdir(save_dir)
+        save_dir.mkdir(exist_ok=True, parents=True)
+
+        print ("plotting in {}".format(save_dir))
 
         commute_plots = CommutePlots(self.world)
 
