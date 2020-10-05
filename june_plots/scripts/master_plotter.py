@@ -8,18 +8,19 @@ import os
 import matplotlib.pyplot as plt
 
 from june.hdf5_savers import generate_world_from_hdf5
-from policy import PolicyPlots
-from leisure import LeisurePlots
-from companies import CompanyPlots
-from households import HouseholdPlots
-from care_homes import CareHomePlots
-from contact_matrix import ContactMatrixPlots
-from commute import CommutePlots
+from june_plots.scripts.policy import PolicyPlots
+from june_plots.scripts.leisure import LeisurePlots
+from june_plots.scripts.companies import CompanyPlots
+from june_plots.scripts.households import HouseholdPlots
+from june_plots.scripts.care_homes import CareHomePlots
+from june_plots.scripts.commute import CommutePlots
+from june_plots.scripts.contact_matrix import ContactMatrixPlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
 
 default_world_filename = 'world.hdf5'
+default_output_plots_path = Path(__file__).parent.parent / "plots"
 
 class Plotter:
     """
@@ -44,7 +45,7 @@ class Plotter:
 
     def plot_commute(
             self,
-            save_dir: str = '../plots/commute/',
+            save_dir: Path = default_output_plots_path / "commute",
     ):
         "Make all commute plots"
 
@@ -56,7 +57,7 @@ class Plotter:
         print ("Plotting internal exteral numbers")
         internal_external_numbers_plot = commute_plots.plot_internal_external_numbers()
         internal_external_numbers_plot.plot()
-        plt.savefig(save_dir + 'internal_external.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'internal_external.png', dpi=150, bbox_inches='tight')
 
         print ("Processing Newcastle areas")
         internal_commute_areas, external_commute_areas = commute_plots.process_internal_external_areas(
@@ -67,13 +68,13 @@ class Plotter:
             print ("Plotting Newcastle internal areas")
             commute_areas_plot = commute_plots.plot_commute_areas(internal_commute_areas)
             commute_areas_plot.plot()
-            plt.savefig(save_dir + 'Newcastle_internal_commute.png', dpi=150, bbox_inches='tight')
+            plt.savefig(save_dir / 'Newcastle_internal_commute.png', dpi=150, bbox_inches='tight')
 
         if external_commute_areas is not None:
             print ("Plotting Newcastle external areas")
             commute_areas_plot = commute_plots.plot_commute_areas(external_commute_areas)
             commute_areas_plot.plot()
-            plt.savefig(save_dir + 'Newcastle_external_commute.png', dpi=150, bbox_inches='tight')
+            plt.savefig(save_dir / 'Newcastle_external_commute.png', dpi=150, bbox_inches='tight')
             
 
         print ("Processing London areas")
@@ -85,48 +86,28 @@ class Plotter:
             print ("Plotting London internal areas")
             commute_areas_plot = commute_plots.plot_commute_areas(internal_commute_areas)
             commute_areas_plot.plot()
-            plt.savefig(save_dir + 'London_internal_commute.png', dpi=150, bbox_inches='tight')
+            plt.savefig(save_dir / 'London_internal_commute.png', dpi=150, bbox_inches='tight')
 
         if external_commute_areas is not None:
             print ("Plotting London external areas")
             commute_areas_plot = commute_plots.plot_commute_areas(external_commute_areas)
             commute_areas_plot.plot()
-            plt.savefig(save_dir + 'London_external_commute.png', dpi=150, bbox_inches='tight')
+            plt.savefig(save_dir / 'London_external_commute.png', dpi=150, bbox_inches='tight')
         
 
-    def plot_households(self, save_dir: Path = Path("../plots/households")):
-        
+    def plot_households(self, save_dir: Path = default_output_plots_path / "households"):
         save_dir.mkdir(exist_ok=True, parents=True)
         print("Setting up household plots")
         household_plots = HouseholdPlots(self.world)
-
-        print ("Loading household data")
-        household_plots.load_household_data()
-
-        print ("Plotting household sizes")
-        household_sizes_plot = household_plots.plot_household_sizes()
-        household_sizes_plot.plot()
-        plt.savefig(save_dir / 'household_sizes.png', dpi=150, bbox_inches='tight')
-
-        print ("Plotting household probability matrix")
-        household_probability_matrix = household_plots.plot_household_probability_matrix()
-        household_probability_matrix.plot()
-        plt.savefig(save_dir / 'household_prob_matrix.png', dpi=150, bbox_inches='tight')
-
-        print ("Plotting household age differences")
-        f, ax = household_plots.plot_household_age_differences()
-        plt.plot()
-        plt.savefig(save_dir / 'household_age_differences.png', dpi=150, bbox_inches='tight')
+        household_plots.plot_all_household_plots(save_dir=save_dir)
 
 
     def plot_companies(
             self,
-            save_dir: str = '../plots/companies/'
+            save_dir: Path = default_output_plots_path / "companies"
     ):
         "Make all company plots"
-
-        if not os.path.exists(save_dir):
-            os.mkdir(save_dir)
+        save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up company plots")
 
@@ -138,32 +119,31 @@ class Plotter:
         print ("Plotting company sizes")
         company_sizes_plot = company_plots.plot_company_sizes()
         company_sizes_plot.plot()
-        plt.savefig(save_dir + 'company_sizes.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'company_sizes.png', dpi=150, bbox_inches='tight')
 
         print ("Plotting company workers")
         company_workers_plot = company_plots.plot_company_workers()
         company_workers_plot.plot()
-        plt.savefig(save_dir + 'company_workers.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'company_workers.png', dpi=150, bbox_inches='tight')
 
         print ("Plotting company sectors")
         company_sectors_plot = company_plots.plot_company_sectors()
         company_sectors_plot.plot()
-        plt.savefig(save_dir + 'company_sectors.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'company_sectors.png', dpi=150, bbox_inches='tight')
 
         print ("Plotting work distance travel")
         work_distance_travel_plot = company_plots.plot_work_distance_travel()
         work_distance_travel_plot.plot()
-        plt.savefig(save_dir + 'work_distance_travel.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'work_distance_travel.png', dpi=150, bbox_inches='tight')
         
     
     def plot_leisure(
             self,
-            save_dir: str = '../plots/leisure/'
+            save_dir: Path = default_output_plots_path / "leisure"
     ):
         "Make all leisure plots"
 
-        if not os.path.exists(save_dir):
-            os.mkdir(save_dir)
+        save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up leisure plots")
 
@@ -175,22 +155,21 @@ class Plotter:
         print ("Plotting week probabilities")
         week_probabilities_plot = leisure_plots.plot_week_probabilities()
         week_probabilities_plot.plot()
-        plt.savefig(save_dir + 'week_probabilities.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'week_probabilities.png', dpi=150, bbox_inches='tight')
         
         plt.clf()
         print ("Plotting leisure time spent")
         leisure_time_spent_plot = leisure_plots.plot_leisure_time_spent()
         leisure_time_spent_plot.plot()
-        plt.savefig(save_dir + 'leisure_time_spent.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'leisure_time_spent.png', dpi=150, bbox_inches='tight')
         
     def plot_policies(
             self,
-            save_dir: str = '../plots/policy/'
+            save_dir: Path = default_output_plots_path / "policy"
     ):
         "Make all policy plots"
 
-        if not os.path.exists(save_dir):
-            os.mkdir(save_dir)
+        save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up policy plots")
 
@@ -199,26 +178,26 @@ class Plotter:
         print ("Plotting restaurant reopening")
         restaurant_reopening_plot = policy_plots.plot_restaurant_reopening()
         restaurant_reopening_plot.plot()
-        plt.savefig(save_dir + 'restaurant_reopening.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'restaurant_reopening.png', dpi=150, bbox_inches='tight')
 
         print ("Plotting school reopening")
         school_reopening_plot = policy_plots.plot_school_reopening()
         school_reopening_plot.plot()
-        plt.savefig(save_dir + 'school_reopening.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'school_reopening.png', dpi=150, bbox_inches='tight')
 
         print ("Plotting beta fraction")
         beta_fraction_plot = policy_plots.plot_beta_fraction()
         beta_fraction_plot.plot()
-        plt.savefig(save_dir + 'beta_fraction.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'beta_fraction.png', dpi=150, bbox_inches='tight')
 
         print ("All policy plots finished")
 
     def plot_care_homes(self,
-                save_dir: str = '../plots/care_home/'
+        save_dir: Path = default_output_plots_path / "care_homes"
     ):
         "Make all care home plots"
-        if not os.path.exists(save_dir):
-            os.mkdir(save_dir)
+        save_dir.mkdir(exist_ok=True, parents=True)
+
         print("Setting up care home plots")
         care_plots = CareHomePlots(self.world)
 
@@ -226,7 +205,7 @@ class Plotter:
         care_plots.load_care_home_data()
         care_age_plot = care_plots.plot_age_distribution()
         care_age_plot.plot()
-        plt.savefig(save_dir + 'age_distribution.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'age_distribution.png', dpi=150, bbox_inches='tight')
 
     def plot_contact_matrices(
             self,

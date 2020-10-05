@@ -168,8 +168,8 @@ class CompanyPlots:
         work_travel_female_binned, work_travel_female_bins = np.histogram(work_travel_female, bins=100)
 
         f, ax = plt.subplots()
-        ax.scatter(work_travel_male_bins[1:], work_travel_male_binned, label='Male',s=10)
-        ax.scatter(work_travel_female_bins[1:], work_travel_female_binned, label='Female',s=10)
+        ax.scatter(work_travel_male_bins[1:], work_travel_male_binned, label='Male',s=10,color='orange')
+        ax.scatter(work_travel_female_bins[1:], work_travel_female_binned, label='Female',s=10,color='maroon')
         ax.set_xlabel('Distance to work (km)')
         ax.set_ylabel('Frequency')
         ax.set_yscale('log')
