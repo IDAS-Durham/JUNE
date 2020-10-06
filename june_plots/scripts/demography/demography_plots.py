@@ -161,7 +161,7 @@ class DemographyPlots:
         fig, ax = plt.subplots(figsize=(7,5))
         gplt.choropleth(
             super_areas, hue=column,
-            cmap='Reds', legend=True, edgecolor="black", ax=ax
+            cmap='Reds', legend=True, edgecolor="black", ax=ax, linewidth=0.2
         )
 
         return ax

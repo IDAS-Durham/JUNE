@@ -212,14 +212,14 @@ class HouseholdPlots:
             age_differences_first_kid,
             age_differences_second_kid,
         ) = self._compute_children_parent_age_difference()
-        #f, ax = plt.subplots(1, 3, sharey=True, figsize=(8,3))
+        
         f, ax = plt.subplots(1, 3, sharey=True, figsize=(8, 3))
         ax[0].set_xlabel("Couples' age difference")
         ax[0].set_ylabel("Frequency [\%]")
         ax[0].plot(
             self.couples_age_diff_data.index,
             self.couples_age_diff_data.values,
-            linewidth=3,
+            linewidth=2,
             label="NOMIS"
         )
         ax[0].hist(age_difference_couples, density=True, label="JUNE", bins=20, alpha=0.7)
@@ -229,7 +229,7 @@ class HouseholdPlots:
         ax[1].plot(
             self.children_age_diff_data.index,
             self.children_age_diff_data["1"],
-            linewidth=3,
+            linewidth=2,
             label="NOMIS"
         )
         ax[1].hist(age_differences_first_kid, density=True, label="JUNE", bins=30, alpha=0.7)
@@ -240,7 +240,7 @@ class HouseholdPlots:
         ax[2].plot(
             self.children_age_diff_data.index,
             self.children_age_diff_data["2"],
-            linewidth=3,
+            linewidth=2,
             label="NOMIS"
         )
         ax[2].hist(age_differences_second_kid, density=True, label="JUNE", bins=30, alpha=0.7)
