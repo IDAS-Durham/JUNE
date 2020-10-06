@@ -16,6 +16,10 @@ default_super_areas_foldername = (
     paths.data_path / "plotting/super_area_boundaries/"
 )
 
+default_socioeconomic_index_filename = (
+    paths.data_path / "input/demography/socioeconomic_index.csv"
+)
+
 class DemographyPlots:
     """
     Class for plotting demography related plots
@@ -104,5 +108,60 @@ class DemographyPlots:
         ax.hist(population_area, color='green', alpha=0.7)
         ax.set_xlabel('People per sq. km')
         ax.set_ylabel('Frequency')
+
+        return ax
+
+    @staticmethod # so can call on any set of super areas.
+    def process_socioeconomic_index_for_super_areas(
+        list_of_super_areas,
+        socioeconomic_index_filename = default_socioeconomic_index_filename,
+        super_areas_foldername = default_super_areas_foldername,
+    ):
+
+        super_areas = gp.read_file(super_areas_foldername)
+        super_areas = super_areas.to_crs(epsg=4326)
+        super_areas = super_areas.query("msoa11cd in @list_of_super_areas")
+
+        socioeconomic_index = pd.read_csv(socioeconomic_index_filename)
+        socioeconomic_index = socioeconomic_index.query("msoa in @list_of_super_areas")
+
+        sei_mean = socioeconomic_index.groupby("msoa")["iomd_centile"].mean().rename("centile_mean")
+        sei_std = socioeconomic_index.groupby("msoa")["iomd_centile"].std().rename("centile_std")
+
+        super_areas = pd.merge(
+            left=super_areas, right=sei_mean, left_on="msoa11cd", right_index=True, how="inner",
+            validate="1:1"
+        )
+        super_areas = pd.merge(
+            left=super_areas, right=sei_std, left_on="msoa11cd", right_index=True, how="inner",
+            validate="1:1"
+        )
+
+        return super_areas
+
+    def process_socioeconomic_index_for_world(
+        self,
+        socioeconomic_index_filename = default_socioeconomic_index_filename,
+        super_areas_foldername = default_super_areas_foldername,
+    ):
+        list_of_super_areas = [super_area.name for super_area in self.world.super_areas]
+
+        super_areas = self.process_socioeconomic_index_for_super_areas(
+            list_of_super_areas,
+            socioeconomic_index_filename = default_socioeconomic_index_filename,
+            super_areas_foldername = default_super_areas_foldername,
+        )
+        return super_areas
+
+    @staticmethod
+    def plot_socioeconomic_index(
+        super_areas,
+        column
+    ):
+        fig, ax = plt.subplots(figsize=(7,5))
+        gplt.choropleth(
+            super_areas, hue=column,
+            cmap='Reds', legend=True, edgecolor="black", ax=ax
+        )
 
         return ax
