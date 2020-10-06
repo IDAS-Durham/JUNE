@@ -67,15 +67,31 @@ class Plotter:
         print ("Plotting population density")
         population_density_plot = demography_plots.plot_population_density()
         population_density_plot.plot()
-        plt.savefig(save_dir / 'population_density.png', dpi=150, bbox_inches='tight')"""
-
-        london_superareas = pd.read_csv("/home/aidan/london_msoas.csv")["super_areas"]
+        plt.savefig(save_dir / 'population_density.png', dpi=150, bbox_inches='tight')
+        """
+        london_superareas_path = (
+            Path(__file__).absolute().parent.parent.parent / "scripts/london_areas.txt"
+        )
+        london_superareas = pd.read_csv(london_superareas_path,names=["msoa"])["msoa"]
         
-        super_areas = demography_plots.process_socioeconomic_index(london_superareas)
-
-        mean_plot = demography_plots.plot_socioeconomic_index(super_areas)
+        super_areas = demography_plots.process_socioeconomic_index_for_super_areas(
+            london_superareas
+        )
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas,column="centile_mean")
         mean_plot.plot()
-        plt.savefig(save_dir / 'london_population_density.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'london_socioeconomic_mean.png', dpi=150, bbox_inches='tight')
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas,column="centile_std")
+        mean_plot.plot()
+        plt.savefig(save_dir / 'london_socioeconomic_stdev.png', dpi=150, bbox_inches='tight')
+
+        super_areas = demography_plots.process_socioeconomic_index_for_world()
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas,column="centile_mean")
+        mean_plot.plot()
+        plt.savefig(save_dir / 'world_socioeconomic_mean.png', dpi=150, bbox_inches='tight')
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas,column="centile_std")
+        mean_plot.plot()
+        plt.savefig(save_dir / 'world_socioeconomic_stdev.png', dpi=150, bbox_inches='tight')
+
 
 
     def plot_commute(
@@ -355,7 +371,7 @@ class Plotter:
         #self.plot_schools()
         #self.plot_contact_matrices()
         #self.plot_life_expectancy()
-        #self.plot_health_index()
+        self.plot_health_index()
 
 if __name__ == "__main__":
 

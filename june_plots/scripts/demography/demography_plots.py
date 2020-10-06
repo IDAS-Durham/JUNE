@@ -111,8 +111,8 @@ class DemographyPlots:
 
         return ax
 
-    @staticmethod # so cam call on any set of super areas.
-    def process_socioeconomic_index(
+    @staticmethod # so can call on any set of super areas.
+    def process_socioeconomic_index_for_super_areas(
         list_of_super_areas,
         socioeconomic_index_filename = default_socioeconomic_index_filename,
         super_areas_foldername = default_super_areas_foldername,
@@ -137,18 +137,30 @@ class DemographyPlots:
             validate="1:1"
         )
 
-        print(super_areas)
-
         return super_areas
 
+    def process_socioeconomic_index_for_world(
+        self,
+        socioeconomic_index_filename = default_socioeconomic_index_filename,
+        super_areas_foldername = default_super_areas_foldername,
+    ):
+        list_of_super_areas = [super_area.name for super_area in self.world.super_areas]
+
+        super_areas = self.process_socioeconomic_index_for_super_areas(
+            list_of_super_areas,
+            socioeconomic_index_filename = default_socioeconomic_index_filename,
+            super_areas_foldername = default_super_areas_foldername,
+        )
+        return super_areas
 
     @staticmethod
     def plot_socioeconomic_index(
-        super_areas
+        super_areas,
+        column
     ):
         fig, ax = plt.subplots(figsize=(7,5))
         gplt.choropleth(
-            super_areas, hue='centile_mean',
+            super_areas, hue=column,
             cmap='Reds', legend=True, edgecolor="black", ax=ax
         )
 
