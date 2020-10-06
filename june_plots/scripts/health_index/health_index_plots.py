@@ -26,7 +26,7 @@ class HealthIndexPlots:
             seroprev[age_min[index] : age_max[index]] = seroprev_by_age[index]
 
         f, ax = plt.subplots()
-        ax.plot(range(0, 105), seroprev * 100, linewidth=3, color="blue")
+        ax.plot(range(0, 105), seroprev * 100, linewidth=2, color="blue")
         ax.set_xlabel("Age")
         ax.set_ylabel("Prevalence" + r"$[\%]$")
 
@@ -60,7 +60,7 @@ class HealthIndexPlots:
             ages,
             female_hospitalisation_rate,
             color="blue",
-            linewidth=3,
+            linewidth=2,
             label=" HR female",
         )
         ax.plot(
@@ -68,7 +68,7 @@ class HealthIndexPlots:
             male_hospitalisation_rate,
             linestyle="--",
             color="blue",
-            linewidth=3,
+            linewidth=2,
             label=" HR male",
         )
 
@@ -77,7 +77,7 @@ class HealthIndexPlots:
             ages,
             male_icu_rate,
             linestyle="--",
-            linewidth=3,
+            linewidth=2,
             color="green",
             label="ICUR male",
         )
@@ -88,7 +88,7 @@ class HealthIndexPlots:
             male_death_rate,
             linestyle="--",
             color="red",
-            linewidth=3,
+            linewidth=2,
             label="DR male",
         )
 
@@ -117,7 +117,7 @@ class HealthIndexPlots:
         infection_selector.infect_person_at_time(random_person, 0.0)
         random_person.infection.symptoms.tag = getattr(SymptomTag, "severe")
 
-        N_tries = 5
+        N_tries = 10
         ### The axvline sometimes fails. Until a random seed is fixed, here's an exceptionally
         ### ugly fix.
         for i in range(N_tries):
@@ -126,24 +126,27 @@ class HealthIndexPlots:
                         linestyle="dashed",
                         color='gray',
                         alpha=0.3,
-                        label='time of symptoms onset'
+                        label='time of symptoms onset',
+                        linewidth=2,
                 )
                 break
             except:
                 pass
 
         times, transmissions = self.get_infectiousness(random_person, 14.0)
-        ax.plot(times, transmissions, label="severe")
+        ax.plot(times, transmissions, label="severe", linewidth=2)
         ax.plot(
             times,
             infection_selector.mild_infectious_factor.value * np.array(transmissions),
             label="mild",
+            linewidth=2,
         )
         ax.plot(
             times,
             infection_selector.asymptomatic_infectious_factor.value
             * np.array(transmissions),
             label="asymptomatic",
+            linewidth=2,
         )
         ax.set_xlabel("Days from infection")
 
