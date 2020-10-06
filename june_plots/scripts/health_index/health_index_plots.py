@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from june import paths
 
 
-default_seroprev_filename = paths.configs_path / "data/plotting/seroprev.dat"
+default_seroprev_filename = paths.data_path / "plotting/seroprev.dat"
 
 default_icu_hosp_filename = paths.configs_path / "defaults/ICU_hosp.dat"
 default_death_hosp_filename = paths.configs_path / "defaults/Death_hosp.dat"
@@ -39,7 +39,7 @@ def zero_prevalence_plot(
         plt.plot(range(0,105), seroprev*100,linewidth=3,color='blue')
         plt.xlabel('Age',fontsize=30)
         plt.ylabel('Prevalence'+r'$[\%]$',fontsize=30)
-        plt.savefig('prevalence.pdf')
+        plt.savefig('../../plots/health_index/hosp_rate.pdfprevalence.pdf')
         
         
     def rates_plot(
@@ -78,5 +78,5 @@ def zero_prevalence_plot(
        plt.plot(r_death, ratiom_death,linestyle='--',color='red',linewidth=3, label="DR male")
        
        plt.legend(prop={'size':16})
-       plt.savefig('hosp_rate.pdf',bbox_inches='tight')
+       plt.savefig('../../plots/health_index/hosp_rate.pdf/rates.pdf',bbox_inches='tight')
        
