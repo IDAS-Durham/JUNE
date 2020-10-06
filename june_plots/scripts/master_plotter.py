@@ -17,6 +17,9 @@ from june_plots.scripts.schools import SchoolPlots
 from june_plots.scripts.commute import CommutePlots
 from june_plots.scripts.contact_matrix import ContactMatrixPlots
 from june_plots.scripts.life_expectancy import LifeExpectancyPlots
+from june_plots.scripts.health_index import HealthIndexPlots
+
+
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -282,6 +285,21 @@ class Plotter:
         le_plot.plot()
 
         plt.savefig(save_dir / 'socioecon_life_expectancy.png', dpi=150, bbox_inches='tight')
+    
+    def plot_health_index(
+        self,
+        
+    ):
+        """Plot socioeconomic_index vs. life_expectancy"""
+
+        
+
+        hi_plots = HealthIndexPlots()
+        hi_plots.zero_prevalence_plot()
+        hi_plots.rates_plot()
+
+
+
 
     def plot_all(self):
         print ("Plotting the world")
@@ -294,6 +312,7 @@ class Plotter:
         self.plot_schools()
         self.plot_contact_matrices()
         self.plot_life_expectancy()
+        self.plot_health_index()
 
 if __name__ == "__main__":
 

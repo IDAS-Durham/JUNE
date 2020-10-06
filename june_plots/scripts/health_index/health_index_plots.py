@@ -22,7 +22,7 @@ class HealthIndexPlots:
     Class for plotting helath index plots
 
     """
-def zero_prevalence_plot(
+    def zero_prevalence_plot(
             self,default_seroprev_filename
             ):
         seroprev_data=pd.read_csv(default_seroprev_filename,skiprows=1,sep=' ')
@@ -79,4 +79,4 @@ def zero_prevalence_plot(
        
        plt.legend(prop={'size':16})
        plt.savefig('../../plots/health_index/hosp_rate.pdf/rates.pdf',bbox_inches='tight')
-       
+
