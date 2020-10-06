@@ -339,8 +339,8 @@ def combine_summaries(record_path, remove_left_overs=False, full_summary_save_pa
     summary = pd.concat(dfs)
     summary = summary.groupby(["time_stamp", "region"]).sum()
     if full_summary_save_path is None:
-        full_summary_save_path = record_path
-    summary.to_csv(full_summary_save_path / "summary.csv")
+        full_summary_save_path = record_path / "summary.csv"
+    summary.to_csv(full_summary_save_path)
 
 
 def combine_hdf5s(
