@@ -17,6 +17,9 @@ from june_plots.scripts.schools import SchoolPlots
 from june_plots.scripts.commute import CommutePlots
 from june_plots.scripts.contact_matrix import ContactMatrixPlots
 from june_plots.scripts.life_expectancy import LifeExpectancyPlots
+from june_plots.scripts.demography import DemographyPlots
+from june_plots.scripts.health_index import HealthIndexPlots
+
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -45,6 +48,52 @@ class Plotter:
 
         return Plotter(world)
 
+    def plot_demography(
+            self,
+            save_dir: Path = default_output_plots_path / "demography",
+    ):
+        "Make all demography plots"
+
+        save_dir.mkdir(exist_ok=True, parents=True)
+        
+        print ("Setting up demography plots")
+        demography_plots = DemographyPlots(self.world)
+        
+        print ("Plotting age distribution")
+        fig, ax = demography_plots.plot_age_distribution()
+        plt.plot()
+        plt.savefig(save_dir / 'age_distribution.png', dpi=150, bbox_inches='tight')
+
+        print ("Plotting population density")
+        population_density_plot = demography_plots.plot_population_density()
+        population_density_plot.plot()
+        plt.savefig(save_dir / 'population_density.png', dpi=150, bbox_inches='tight')
+        
+        london_superareas_path = (
+            Path(__file__).absolute().parent.parent.parent / "scripts/london_areas.txt"
+        )
+        london_superareas = pd.read_csv(london_superareas_path,names=["msoa"])["msoa"]
+        
+        super_areas = demography_plots.process_socioeconomic_index_for_super_areas(
+            london_superareas
+        )
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas,column="centile_mean")
+        mean_plot.plot()
+        plt.savefig(save_dir / 'london_socioeconomic_mean.png', dpi=150, bbox_inches='tight')
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas,column="centile_std")
+        mean_plot.plot()
+        plt.savefig(save_dir / 'london_socioeconomic_stdev.png', dpi=150, bbox_inches='tight')
+
+        super_areas = demography_plots.process_socioeconomic_index_for_world()
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas,column="centile_mean")
+        mean_plot.plot()
+        plt.savefig(save_dir / 'world_socioeconomic_mean.png', dpi=150, bbox_inches='tight')
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas,column="centile_std")
+        mean_plot.plot()
+        plt.savefig(save_dir / 'world_socioeconomic_stdev.png', dpi=150, bbox_inches='tight')
+
+
+
     def plot_commute(
             self,
             save_dir: Path = default_output_plots_path / "commute",
@@ -53,8 +102,7 @@ class Plotter:
 
         save_dir.mkdir(exist_ok=True, parents=True)
 
-        print ("Plotting into {}".format(save_dir))
-
+        print ("Setting up commute plots")
         commute_plots = CommutePlots(self.world)
 
         print ("Plotting internal exteral numbers")
@@ -98,10 +146,17 @@ class Plotter:
             plt.savefig(save_dir / 'London_external_commute.png', dpi=150, bbox_inches='tight')
         
 
-    def plot_households(self, save_dir: Path = default_output_plots_path / "households"):
+    def plot_households(
+            self,
+            save_dir: Path = default_output_plots_path / "households"
+    ):
+        "Make all household plots"
+        
         save_dir.mkdir(exist_ok=True, parents=True)
+        
         print("Setting up household plots")
         household_plots = HouseholdPlots(self.world)
+
         household_plots.plot_all_household_plots(save_dir=save_dir)
 
 
@@ -149,7 +204,6 @@ class Plotter:
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up leisure plots")
-
         leisure_plots = LeisurePlots(self.world)
 
         print ("Running poisson process")
@@ -175,7 +229,6 @@ class Plotter:
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up policy plots")
-
         policy_plots = PolicyPlots(self.world)
 
         print ("Plotting restaurant reopening")
@@ -217,7 +270,7 @@ class Plotter:
         """Make all school plots"""
         save_dir.mkdir(exist_ok=True, parents=True)
 
-        print("Set up school plots")
+        print("Setting up school plots")
         school_plots = SchoolPlots(self.world)
         school_plots.load_school_data()
 
@@ -270,22 +323,54 @@ class Plotter:
         self,
         save_dir: Path = default_output_plots_path / "life_expectancy"
     ):
-        """Plot socioeconomic_index vs. life_expectancy"""
+        "Plot socioeconomic_index vs. life_expectancy"
 
         save_dir.mkdir(exist_ok=True, parents=True)
 
+        print ("Setting up life expectancy plots")
         le_plots = LifeExpectancyPlots()
+
         le_plots.load_geography_data()
         le_plots.load_iomd()
         le_plots.load_life_expectancy()
+
+        print ("Plotting life expectancy")
         le_plot = le_plots.plot_life_expectancy_socioecon_index()
         le_plot.plot()
+        plt.savefig(save_dir / "socioecon_life_expectancy.png", dpi=150, bbox_inches="tight")
+    
+    def plot_health_index(
+        self,
+        save_dir: Path = default_output_plots_path / "health_index"
+        
+    ):
+        "Plot socioeconomic_index vs. life_expectancy"
+        save_dir.mkdir(exist_ok=True, parents=True)
 
-        plt.savefig(save_dir / 'socioecon_life_expectancy.png', dpi=150, bbox_inches='tight')
+        print ("Setting up health index plots")
+        hi_plots = HealthIndexPlots()
+
+        print ("Plotting seroprevalence")
+        prevalence_plot = hi_plots.sero_prevalence_plot()
+        prevalence_plot.plot()
+        plt.savefig(save_dir / "prevalence_plots.png", dpi=150, bbox_inches="tight")
+
+        print ("Plotting rates")
+        rates_plot = hi_plots.rates_plot()
+        rates_plot.plot()
+        plt.savefig(save_dir / "rates.png", dpi=150, bbox_inches="tight")
+
+        print ("Plotting infectiousness")
+        infectiousness_plot = hi_plots.infectiousness()
+        infectiousness_plot.plot()
+        plt.savefig(save_dir / "infectiousness.png", dpi=150, bbox_inches="tight")
+
+
 
     def plot_all(self):
         print ("Plotting the world")
         self.plot_commute()
+        self.plot_demography()
         self.plot_companies()
         self.plot_households()
         self.plot_leisure()
@@ -294,6 +379,7 @@ class Plotter:
         self.plot_schools()
         self.plot_contact_matrices()
         self.plot_life_expectancy()
+        self.plot_health_index()
 
 if __name__ == "__main__":
 
