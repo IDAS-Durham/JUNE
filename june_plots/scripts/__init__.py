@@ -6,3 +6,4 @@ from .care_homes import CareHomePlots
 from .households import HouseholdPlots
 from .contact_matrix import ContactMatrixPlots
 from .commute import CommutePlots
+from .health_index import HealthIndexPlots
