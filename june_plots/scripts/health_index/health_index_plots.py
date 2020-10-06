@@ -120,12 +120,21 @@ class HealthIndexPlots:
         random_person = Person.from_attributes(sex="m", age=50)
         infection_selector.infect_person_at_time(random_person, 0.0)
         random_person.infection.symptoms.tag = getattr(SymptomTag, "severe")
-        ax.axvline(x=random_person.infection.time_of_symptoms_onset, 
-                linestyle="dashed",
-                color='gray',
-                alpha=0.3,
-                label='time of symptoms onset'
-        )
+
+        N_tries = 5
+        ### The axvline sometimes fails. Until a random seed is fixed, here's an exceptionally
+        ### ugly fix.
+        for i in range(N_tries):
+            try:
+                ax.axvline(x=random_person.infection.time_of_symptoms_onset, 
+                        linestyle="dashed",
+                        color='gray',
+                        alpha=0.3,
+                        label='time of symptoms onset'
+                )
+                break
+            except:
+                pass
 
         times, transmissions = self.get_infectiousness(random_person, 14.0)
         ax.plot(times, transmissions, label="severe")
@@ -143,5 +152,6 @@ class HealthIndexPlots:
         ax.set_xlabel("Days from infection")
 
         ax.set_ylabel("Infectivity")
-        ax.legend(loc='upper right', bbox_to_anchor=(1,1))
+        ax.legend(bbox_to_anchor = (0.5,1.02),loc='lower center',ncol=2)
+        f.subplots_adjust(top=0.80)
         return ax
