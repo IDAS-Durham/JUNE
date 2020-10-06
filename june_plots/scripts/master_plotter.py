@@ -55,10 +55,10 @@ class Plotter:
         "Make all demography plots"
 
         save_dir.mkdir(exist_ok=True, parents=True)
-
+        
         print ("Setting up demography plots")
         demography_plots = DemographyPlots(self.world)
-
+        """
         print ("Plotting age distribution")
         fig, ax = demography_plots.plot_age_distribution()
         plt.plot()
@@ -67,8 +67,16 @@ class Plotter:
         print ("Plotting population density")
         population_density_plot = demography_plots.plot_population_density()
         population_density_plot.plot()
-        plt.savefig(save_dir / 'population_density.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / 'population_density.png', dpi=150, bbox_inches='tight')"""
+
+        london_superareas = pd.read_csv("/home/aidan/london_msoas.csv")["super_areas"]
         
+        super_areas = demography_plots.process_socioeconomic_index(london_superareas)
+
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas)
+        mean_plot.plot()
+        plt.savefig(save_dir / 'london_population_density.png', dpi=150, bbox_inches='tight')
+
 
     def plot_commute(
             self,
@@ -333,17 +341,17 @@ class Plotter:
 
     def plot_all(self):
         print ("Plotting the world")
-        self.plot_commute()
+        #self.plot_commute()
         self.plot_demography()
-        self.plot_companies()
-        self.plot_households()
-        self.plot_leisure()
-        self.plot_policies()
-        self.plot_care_homes()
-        self.plot_schools()
-        self.plot_contact_matrices()
-        self.plot_life_expectancy()
-        self.plot_health_index()
+        #self.plot_companies()
+        #self.plot_households()
+        #self.plot_leisure()
+        #self.plot_policies()
+        #self.plot_care_homes()
+        #self.plot_schools()
+        #self.plot_contact_matrices()
+        #self.plot_life_expectancy()
+        #self.plot_health_index()
 
 if __name__ == "__main__":
 

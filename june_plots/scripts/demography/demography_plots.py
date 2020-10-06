@@ -16,6 +16,10 @@ default_super_areas_foldername = (
     paths.data_path / "plotting/super_area_boundaries/"
 )
 
+default_socioeconomic_index_filename = (
+    paths.data_path / "input/demography/socioeconomic_index.csv"
+)
+
 class DemographyPlots:
     """
     Class for plotting demography related plots
@@ -107,13 +111,45 @@ class DemographyPlots:
 
         return ax
 
-    @staticmethod
+    @staticmethod # so cam call on any set of super areas.
     def process_socioeconomic_index(
+        list_of_super_areas,
         socioeconomic_index_filename = default_socioeconomic_index_filename,
         super_areas_foldername = default_super_areas_foldername,
     ):
 
         super_areas = gp.read_file(super_areas_foldername)
-        super_areas = super_areas.to_crs(epsg=3395)
+        super_areas = super_areas.to_crs(epsg=4326)
+        super_areas = super_areas.query("msoa11cd in @list_of_super_areas")
 
-        
+        socioeconomic_index = pd.read_csv(socioeconomic_index_filename)
+        socioeconomic_index = socioeconomic_index.query("msoa in @list_of_super_areas")
+
+        sei_mean = socioeconomic_index.groupby("msoa")["iomd_centile"].mean().rename("centile_mean")
+        sei_std = socioeconomic_index.groupby("msoa")["iomd_centile"].std().rename("centile_std")
+
+        super_areas = pd.merge(
+            left=super_areas, right=sei_mean, left_on="msoa11cd", right_index=True, how="inner",
+            validate="1:1"
+        )
+        super_areas = pd.merge(
+            left=super_areas, right=sei_std, left_on="msoa11cd", right_index=True, how="inner",
+            validate="1:1"
+        )
+
+        print(super_areas)
+
+        return super_areas
+
+
+    @staticmethod
+    def plot_socioeconomic_index(
+        super_areas
+    ):
+        fig, ax = plt.subplots(figsize=(7,5))
+        gplt.choropleth(
+            super_areas, hue='centile_mean',
+            cmap='Reds', legend=True, edgecolor="black", ax=ax
+        )
+
+        return ax
