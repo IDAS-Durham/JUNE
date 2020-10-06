@@ -18,6 +18,8 @@ from june_plots.scripts.commute import CommutePlots
 from june_plots.scripts.contact_matrix import ContactMatrixPlots
 from june_plots.scripts.life_expectancy import LifeExpectancyPlots
 from june_plots.scripts.demography import DemographyPlots
+from june_plots.scripts.health_index import HealthIndexPlots
+
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -53,10 +55,10 @@ class Plotter:
         "Make all demography plots"
 
         save_dir.mkdir(exist_ok=True, parents=True)
-
+        
         print ("Setting up demography plots")
         demography_plots = DemographyPlots(self.world)
-
+        """
         print ("Plotting age distribution")
         fig, ax = demography_plots.plot_age_distribution()
         plt.plot()
@@ -66,7 +68,31 @@ class Plotter:
         population_density_plot = demography_plots.plot_population_density()
         population_density_plot.plot()
         plt.savefig(save_dir / 'population_density.png', dpi=150, bbox_inches='tight')
+        """
+        london_superareas_path = (
+            Path(__file__).absolute().parent.parent.parent / "scripts/london_areas.txt"
+        )
+        london_superareas = pd.read_csv(london_superareas_path,names=["msoa"])["msoa"]
         
+        super_areas = demography_plots.process_socioeconomic_index_for_super_areas(
+            london_superareas
+        )
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas,column="centile_mean")
+        mean_plot.plot()
+        plt.savefig(save_dir / 'london_socioeconomic_mean.png', dpi=150, bbox_inches='tight')
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas,column="centile_std")
+        mean_plot.plot()
+        plt.savefig(save_dir / 'london_socioeconomic_stdev.png', dpi=150, bbox_inches='tight')
+
+        super_areas = demography_plots.process_socioeconomic_index_for_world()
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas,column="centile_mean")
+        mean_plot.plot()
+        plt.savefig(save_dir / 'world_socioeconomic_mean.png', dpi=150, bbox_inches='tight')
+        mean_plot = demography_plots.plot_socioeconomic_index(super_areas,column="centile_std")
+        mean_plot.plot()
+        plt.savefig(save_dir / 'world_socioeconomic_stdev.png', dpi=150, bbox_inches='tight')
+
+
 
     def plot_commute(
             self,
@@ -308,20 +334,44 @@ class Plotter:
         le_plot = le_plots.plot_life_expectancy_socioecon_index()
         le_plot.plot()
 
-        plt.savefig(save_dir / 'socioecon_life_expectancy.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / "socioecon_life_expectancy.png", dpi=150, bbox_inches="tight")
+    
+    def plot_health_index(
+        self,
+        save_dir: Path = default_output_plots_path / "health_index"
+        
+    ):
+        """Plot socioeconomic_index vs. life_expectancy"""
+        save_dir.mkdir(exist_ok=True, parents=True)
+
+        hi_plots = HealthIndexPlots()
+        prevalence_plot = hi_plots.zero_prevalence_plot()
+        prevalence_plot.plot()
+        plt.savefig(save_dir / "prevalence_plots.png", dpi=150, bbox_inches="tight")
+
+        rates_plot = hi_plots.rates_plot()
+        rates_plot.plot()
+        plt.savefig(save_dir / "rates.png", dpi=150, bbox_inches="tight")
+
+        infectiousness_plot = hi_plots.infectiousness()
+        infectiousness_plot.plot()
+        plt.savefig(save_dir / "infectiousness.png", dpi=150, bbox_inches="tight")
+
+
 
     def plot_all(self):
         print ("Plotting the world")
-        self.plot_commute()
+        #self.plot_commute()
         self.plot_demography()
-        self.plot_companies()
-        self.plot_households()
-        self.plot_leisure()
-        self.plot_policies()
-        self.plot_care_homes()
-        self.plot_schools()
-        self.plot_contact_matrices()
-        self.plot_life_expectancy()
+        #self.plot_companies()
+        #self.plot_households()
+        #self.plot_leisure()
+        #self.plot_policies()
+        #self.plot_care_homes()
+        #self.plot_schools()
+        #self.plot_contact_matrices()
+        #self.plot_life_expectancy()
+        self.plot_health_index()
 
 if __name__ == "__main__":
 
