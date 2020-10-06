@@ -1,0 +1,262 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.infection.health_index.HealthIndexGenerator &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.infection.health_information.HealthInformation" href="june.infection.health_information.HealthInformation.html" />
+    <link rel="prev" title="june.groups.travel.travelunit.TravelUnits" href="june.groups.travel.travelunit.TravelUnits.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.infection.health_index.HealthIndexGenerator</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.groups.travel.travelunit.TravelUnits.html">june.groups.travel.travelunit.TravelUnits</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.infection.health_information.HealthInformation.html">june.infection.health_information.HealthInformation</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="june-infection-health-index-healthindexgenerator">
+<h1>june.infection.health_index.HealthIndexGenerator<a class="headerlink" href="#june-infection-health-index-healthindexgenerator" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.infection.health_index.</code><code class="sig-name descname">HealthIndexGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">poli_hosp</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">poli_icu</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">poli_deaths</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">asymptomatic_ratio</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">comorbidity_multipliers</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prevalence_reference_population</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adjust_hospitalisation_adults</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Computes probabilities for (asymptomatic, mild symptoms, severe symptoms, 
+hospitalisation, intensive care, fatality), using the age and sex of the subject.
+The probablities of hospitalisation,death and ICU are taken taken from fits made by 
+Miguel Icaza to the England data taken from several sources.
+We will assume that the symptomatic cases that do not need hospitalisation have either 
+mild symptoms or penumonia-like symptoms the percentage of those are distrubuted 
+according to the ratios in the RKI publication (table 1/column 2 of
+<a class="reference external" href="https://www.rki.de/DE/Content/Infekt/EpidBull/Archiv/2020/Ausgaben/17_20.pdf?__blob=publicationFile">https://www.rki.de/DE/Content/Infekt/EpidBull/Archiv/2020/Ausgaben/17_20.pdf?__blob=publicationFile</a>)</p>
+<p>Parameters:
+- poli_hosp,poli_icu,poli_deaths:</p>
+<blockquote>
+<div><p>Each of this arrays contains 2 lists of 4 elements. 
+The first element of the list correpdons to males and the second to females.
+The elements are the indexes C,C1,C2,C3
+of the polynomial fit defined to be the probability of being hospitalised, 
+sent to an ICU unit or dying</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>the probaility (P) is computed as 
+P=10**(C+C1*Age+C2*Age**2+C3*Age**3)
+The 10 exponent is requiered as the fits where done in logarithmic space.</p></li>
+<li><p>asimpto_ratio:
+The percentage of the population that will be asymptomatic, we fixed it to 
+43% and assume that is age-independent.  This assumptions comes from 
+Vo et al 2019 ( <a class="reference external" href="https://doi.org/10.1101/2020.04.17.20053157">https://doi.org/10.1101/2020.04.17.20053157</a> ).</p></li>
+</ul>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">poli_hosp</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">poli_icu</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">poli_deaths</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">asymptomatic_ratio</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">comorbidity_multipliers</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prevalence_reference_population</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adjust_hospitalisation_adults</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Parameters:
+- poli_hosp,poli_icu,poli_deaths:</p>
+<blockquote>
+<div><p>Each of this arrays contains 2 lists of 4 elements. 
+The first element of the list correpdons to males and the second to females.
+The elements are the indexes C,C1,C2,C3
+of the polynomial fit defined to be the probability of being hospitalised, 
+sent to an ICU unit or dying</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>the probaility (P) is computed as 
+P=10**(C+C1*Age+C2*Age**2+C3*Age**3)
+The 10 exponent is requiered as the fits where done in logarithmic space.</p></li>
+<li><p>asimpto_ratio:
+The percentage of the population that will be asymptomatic, we fixed it to 
+43% and assume that is age-independent.  This assumptions comes from 
+Vo et al 2019 ( <a class="reference external" href="https://doi.org/10.1101/2020.04.17.20053157">https://doi.org/10.1101/2020.04.17.20053157</a> ).</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_hospitalisation_correction_factor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">age</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">adjust_for_comorbidities</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">probabilities</span><span class="p">:</span> <span class="n">list</span></em>, <em class="sig-param"><span class="n">comorbidity</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">age</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">sex</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Compute adjusted probabilities for a person with given comorbidity, age and sex.</p>
+<dl class="simple">
+<dt>probabilities:</dt><dd><p>list with probability values for the 8 different outcomes (has len 7, but 8th value
+can be inferred from 1 - probabilities.sum())</p>
+</dd>
+<dt>comorbidity:</dt><dd><p>comorbidty type that the person has</p>
+</dd>
+<dt>age:</dt><dd><p>age group to compute average multiplier</p>
+</dd>
+<dt>sex:</dt><dd><p>sex group to compute average multiplier</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>probabilities adjusted for comorbidity</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">adjust_hospitalisation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">probabilities</span></em>, <em class="sig-param"><span class="n">age</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">adjust_probabilities_for_comorbidities</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">probabilities</span></em>, <em class="sig-param"><span class="n">effective_multiplier</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Compute adjusted probabilities given an effective multiplier</p>
+<dl class="simple">
+<dt>probabilities:</dt><dd><p>list with probability values for the 8 different outcomes (has len 7, but 8th value
+can be inferred from 1 - probabilities.sum())</p>
+</dd>
+<dt>effective_multiplier:</dt><dd><p>factor that amplifies severe outcomes</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>adjusted probabilities</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">polinome_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/health_index_ratios.txt')</span></em>, <em class="sig-param"><span class="n">asymptomatic_ratio</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">comorbidity_multipliers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prevalence_reference_population</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adjust_hospitalisation_adults</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.infection.health_index.html#june.infection.health_index.HealthIndexGenerator" title="june.infection.health_index.HealthIndexGenerator">june.infection.health_index.HealthIndexGenerator</a></dt>
+<dd><p>Initialize the Health index from path to data frame, and path to config file 
+Parameters:
+- filename:</p>
+<blockquote>
+<div><p>polinome_filename:  path to the file where the coefficients of the fits to 
+the spanish data are stored.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>Interaction instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_file_with_comorbidities</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">multipliers_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">male_prevalence_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">female_prevalence_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">polinome_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/health_index_ratios.txt')</span></em>, <em class="sig-param"><span class="n">asymptomatic_ratio</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.2</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.infection.health_index.html#june.infection.health_index.HealthIndexGenerator" title="june.infection.health_index.HealthIndexGenerator">june.infection.health_index.HealthIndexGenerator</a></dt>
+<dd><p>Initialize the Health index from path to data frame, and path to config file 
+Parameters:
+- filename:</p>
+<blockquote>
+<div><p>polinome_filename:  path to the file where the coefficients of the fits to 
+the spanish data are stored.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>Interaction instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_multiplier_from_reference_prevalence</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">age</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">sex</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; float</dt>
+<dd><p>Compute mean comorbidity multiplier given the prevalence of the different comorbidities
+in the reference population (for example the UK). It will be used to remove effect of comorbidities
+in the reference population</p>
+<dl class="simple">
+<dt>prevalence_reference_population:</dt><dd><p>nested dictionary with prevalence of comorbidity by comorbodity, age and sex cohort</p>
+</dd>
+<dt>age:</dt><dd><p>age group to compute average multiplier</p>
+</dd>
+<dt>sex:</dt><dd><p>sex group to compute average multiplier</p>
+</dd>
+</dl>
+<blockquote>
+<div><dl class="simple">
+<dt>weighted_multiplier:</dt><dd><p>weighted mean of the multipliers given prevalence</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">make_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Computes the probability of having all 7 posible outcomes for all ages between 0 and 120. 
+And for male and female</p>
+<dl>
+<dt>Retruns:</dt><dd><p>3D matrix of dimensions 2 X 120 X 7. With all the probabilities of all 6 
+outcomes for 120 ages and the 2 sex.</p>
+<p>For each gender and age there are 7 numbers to define: [N_1,N_2,N3,N4,N_5,N_6,N_7].
+The idea is to select a random number, r, between 0 and 1. Depending on how this random 
+number compares with our 7 numbers, different outcomes will happen
+- if  0&lt;r&lt;N_1  Asymptomatic
+- if  N_1&lt;r&lt;N_2 Mild symptoms
+- if  N_2&lt;r&lt;N_3  Stays at home with pneoumonia symptoms and survives.
+- if  N_3&lt;r&lt;N_4  Goes to the hospital but not to ICU and survives.
+- if  N_4&lt;r&lt;N_5  Goes to ICU ans survives.
+- if  N_5&lt;r&lt;N_6  Stays at home with severe and dies.
+- if  N_6&lt;r&lt;N_7  Goes to the hospital but not to ICU and dies.
+- if  N_7&lt;r&lt;1    Goes to ICU and dies.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">age</span></em>, <em class="sig-param"><span class="n">poli</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Computes the probability of an outcome from the coefficients of the polinomal fit and for 
+a given array of ages
+Parameters:
+———-</p>
+<blockquote>
+<div><dl class="simple">
+<dt>age:</dt><dd><p>array of ages where the probability should be computed.</p>
+</dd>
+<dt>poli:</dt><dd><p>The values C,C1,C2,C3
+of the polinomail fit defined to the probability of being hospitalised, 
+sent to an ICU unit or dying 
+the probaility (P) is computed as 
+P=10**(C+C1*Age+C2*Age**2+C3*Age**3)</p>
+</dd>
+<dt>Returns:</dt><dd><p>The probability P for all ages in the array “age”.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.groups.travel.travelunit.TravelUnits.html">june.groups.travel.travelunit.TravelUnits</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.infection.health_information.HealthInformation.html">june.infection.health_information.HealthInformation</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

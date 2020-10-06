@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.infection_seed.infection_seed &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.infection_seed.observed_to_cases" href="june.infection_seed.observed_to_cases.html" />
+    <link rel="prev" title="june.infection.infection" href="june.infection.infection.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.infection_seed.infection_seed</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.infection.infection.html">june.infection.infection</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.infection_seed.observed_to_cases.html">june.infection_seed.observed_to_cases</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="module-june.infection_seed.infection_seed">
+<span id="june-infection-seed-infection-seed"></span><h1>june.infection_seed.infection_seed<a class="headerlink" href="#module-june.infection_seed.infection_seed" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="june.infection_seed.infection_seed.InfectionSeed">
+<em class="property">class </em><code class="sig-prename descclassname">june.infection_seed.infection_seed.</code><code class="sig-name descname">InfectionSeed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas">june.demography.geography.SuperAreas</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">selector</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.infection.html#june.infection.infection.InfectionSelector" title="june.infection.infection.InfectionSelector">june.infection.infection.InfectionSelector</a></span></em>, <em class="sig-param"><span class="n">n_cases_region</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">msoa_region</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>datetime<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed_strength</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">age_profile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.infection_seed.InfectionSeed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to initialize the infection</p>
+<dl class="simple">
+<dt>super_areas:</dt><dd><p>a SuperAreas instance containing populated super_areas and areas.</p>
+</dd>
+<dt>infection:</dt><dd><p>an instance of the infection class to infect the selected seed.</p>
+</dd>
+<dt>n_cases_region:</dt><dd><p>data frame containing the number of cases per region starting at a given date.</p>
+</dd>
+<dt>msoa_region:</dt><dd><p>mapping between super areas and regions.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.infection_seed.infection_seed.InfectionSeed.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas">june.demography.geography.SuperAreas</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">selector</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.infection.html#june.infection.infection.InfectionSelector" title="june.infection.infection.InfectionSelector">june.infection.infection.InfectionSelector</a></span></em>, <em class="sig-param"><span class="n">n_cases_region</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">msoa_region</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>datetime<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed_strength</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">age_profile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.infection_seed.InfectionSeed.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to initialize the infection</p>
+<dl class="simple">
+<dt>super_areas:</dt><dd><p>a SuperAreas instance containing populated super_areas and areas.</p>
+</dd>
+<dt>infection:</dt><dd><p>an instance of the infection class to infect the selected seed.</p>
+</dd>
+<dt>n_cases_region:</dt><dd><p>data frame containing the number of cases per region starting at a given date.</p>
+</dd>
+<dt>msoa_region:</dt><dd><p>mapping between super areas and regions.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.infection_seed.infection_seed.InfectionSeed._filter_region">
+<code class="sig-name descname">_filter_region</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">region</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'North East'</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>SuperArea<span class="p">]</span><a class="headerlink" href="#june.infection_seed.infection_seed.InfectionSeed._filter_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a region, return a list of super areas belonging to that region</p>
+<dl class="simple">
+<dt>region:</dt><dd><p>name of the region</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.infection_seed.infection_seed.InfectionSeed.from_file">
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">SuperAreas</span></em>, <em class="sig-param"><span class="n">selector</span><span class="p">:</span> <span class="n">InfectionSelector</span></em>, <em class="sig-param"><span class="n">n_cases_region</span></em>, <em class="sig-param"><span class="n">msoa_region_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/geography/area_super_area_region.csv')</span></em>, <em class="sig-param"><span class="n">seed_strength</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">age_profile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Seed<a class="headerlink" href="#june.infection_seed.infection_seed.InfectionSeed.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize Seed from file containing the number of cases per region, and mapping
+between super areas and regions</p>
+<dl class="simple">
+<dt>super_areas:</dt><dd><p>a SuperAreas instance containing populated super_areas and areas.</p>
+</dd>
+<dt>infection:</dt><dd><p>an instance of the infection class to infect the selected seed.</p>
+</dd>
+<dt>health_index_generator:</dt><dd><p>an instance of health index generator to assign symptoms to selected seed.</p>
+</dd>
+<dt>n_cases_region:</dt><dd><p>pandas dataframe with number of cases per region.</p>
+</dd>
+<dt>msoa_region:</dt><dd><p>path to csv file containing mapping between super areas and regions.</p>
+</dd>
+<dt>seed_strengh:</dt><dd><p>seed only a <code class="docutils literal notranslate"><span class="pre">`seed_strength`</span></code> percent of the original cases</p>
+</dd>
+</dl>
+<p>Seed instance</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.infection_seed.infection_seed.InfectionSeed.get_people_from_age_group">
+<code class="sig-name descname">get_people_from_age_group</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">people</span></em>, <em class="sig-param"><span class="n">n_people</span></em>, <em class="sig-param"><span class="n">age_group</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.infection_seed.InfectionSeed.get_people_from_age_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.infection_seed.infection_seed.InfectionSeed.infect_super_area">
+<code class="sig-name descname">infect_super_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n">SuperArea</span></em>, <em class="sig-param"><span class="n">n_cases</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.infection_seed.InfectionSeed.infect_super_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Infect n_cases random people from a super_area.</p>
+<dl class="simple">
+<dt>super_area:</dt><dd><p>SuperArea instance, <strong>must be populated</strong></p>
+</dd>
+<dt>n_cases:</dt><dd><p>number of cases to seed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.infection_seed.infection_seed.InfectionSeed.infect_super_areas">
+<code class="sig-name descname">infect_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span>SuperArea<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n_cases</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.infection_seed.InfectionSeed.infect_super_areas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Infect n_cases random people from a list of super_areas. It will place
+more cases in proportion to the super_area population</p>
+<dl class="simple">
+<dt>super_areas:</dt><dd><p>list of super areas to seed.</p>
+</dd>
+<dt>n_cases:</dt><dd><p>number of cases to seed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.infection_seed.infection_seed.InfectionSeed.select_from_susceptible">
+<code class="sig-name descname">select_from_susceptible</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">susceptibles</span></em>, <em class="sig-param"><span class="n">n_cases</span></em>, <em class="sig-param"><span class="n">age_profile</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.infection_seed.InfectionSeed.select_from_susceptible" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.infection_seed.infection_seed.InfectionSeed.unleash_virus">
+<code class="sig-name descname">unleash_virus</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_cases</span></em>, <em class="sig-param"><span class="n">box_mode</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.infection_seed.InfectionSeed.unleash_virus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seed the infection with n_cases random people being infected,
+proportionally place more cases in the more populated super areas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.infection_seed.infection_seed.InfectionSeed.unleash_virus_per_day">
+<code class="sig-name descname">unleash_virus_per_day</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">area</span></em>, <em class="sig-param"><span class="n">n_cases</span></em>, <em class="sig-param"><span class="n">date</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.infection_seed.InfectionSeed.unleash_virus_per_day" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seed the infection in a given area, over several days</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.infection_seed.infection_seed.InfectionSeed.unleash_virus_per_region">
+<code class="sig-name descname">unleash_virus_per_region</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.infection_seed.InfectionSeed.unleash_virus_per_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seed the infection per region, using data on number of infected people/region</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.infection_seed.infection_seed.InfectionSeed.unleash_virus_regional_cases">
+<code class="sig-name descname">unleash_virus_regional_cases</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">region</span></em>, <em class="sig-param"><span class="n">n_cases</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.infection_seed.InfectionSeed.unleash_virus_regional_cases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seed the infection with n_cases random people being infected in region <code class="docutils literal notranslate"><span class="pre">`region`</span></code>,
+proportionally place more cases in the more populated super areas.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.infection.infection.html">june.infection.infection</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.infection_seed.observed_to_cases.html">june.infection_seed.observed_to_cases</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

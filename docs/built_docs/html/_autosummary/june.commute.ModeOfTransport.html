@@ -1,0 +1,134 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.commute.ModeOfTransport &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.commute.RegionalGenerator" href="june.commute.RegionalGenerator.html" />
+    <link rel="prev" title="june.box.box_mode.Boxes" href="june.box.box_mode.Boxes.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.commute.ModeOfTransport</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.box.box_mode.Boxes.html">june.box.box_mode.Boxes</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.commute.RegionalGenerator.html">june.commute.RegionalGenerator</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="june-commute-modeoftransport">
+<h1>june.commute.ModeOfTransport<a class="headerlink" href="#june-commute-modeoftransport" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.commute.</code><code class="sig-name descname">ModeOfTransport</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">description</span></em>, <em class="sig-param"><span class="n">is_public</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Create a ModeOfTransport from its description.</p>
+<p>Only one instance of each mode of transport exists with instances being
+retrieved from the __all dictionary.</p>
+<dl class="simple">
+<dt>description</dt><dd><p>e.g. “Bus, minibus or coach”</p>
+</dd>
+<dt>is_public</dt><dd><p>True if this is public transport, for example a bus.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">description</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">is_public</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Create a ModeOfTransport from its description.</p>
+<p>Only one instance of each mode of transport exists with instances being
+retrieved from the __all dictionary.</p>
+<dl class="simple">
+<dt>description</dt><dd><p>e.g. “Bus, minibus or coach”</p>
+</dd>
+<dt>is_public</dt><dd><p>True if this is public transport, for example a bus.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">index</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">headers</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><p>Determine the column index of this mode of transport.</p>
+<p>The first header that contains this mode of transport’s description
+is counted.</p>
+<dl class="simple">
+<dt>headers</dt><dd><p>A list of headers from a CSV file.</p>
+</dd>
+</dl>
+<p>The column index corresponding to this mode of transport.</p>
+<p>An assertion error if no such header is found.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">load_from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config_filename</span><span class="o">=</span><span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/commute.yaml')</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="june.commute.html#june.commute.ModeOfTransport" title="june.commute.ModeOfTransport">june.commute.ModeOfTransport</a><span class="p">]</span></dt>
+<dd><p>Load all of the modes of transport from commute.yaml.</p>
+<p>Modes of transport are globally unique. That is, even if the function
+is called twice identical mode of transport objects are returned.</p>
+<dl class="simple">
+<dt>config_filename</dt><dd><p>The path to the mode of transport yaml configuration</p>
+</dd>
+</dl>
+<p>A list of modes of transport</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">with_description</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">description</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.commute.html#june.commute.ModeOfTransport" title="june.commute.ModeOfTransport">june.commute.ModeOfTransport</a></dt>
+<dd><p>Retrieve a mode of transport by its description.</p>
+<dl class="simple">
+<dt>description</dt><dd><p>A description, e.g. ‘Bus, minibus or coach’</p>
+</dd>
+</dl>
+<p>The corresponding ModeOfTransport instance</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">is_private</code></dt>
+<dd><p>True if this is private transport, for example a car.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.box.box_mode.Boxes.html">june.box.box_mode.Boxes</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.commute.RegionalGenerator.html">june.commute.RegionalGenerator</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

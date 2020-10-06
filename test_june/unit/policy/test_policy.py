@@ -7,7 +7,7 @@ import pytest
 
 from june import paths
 from june.demography import Person, Population
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.interaction import Interaction
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (
@@ -20,7 +20,7 @@ from june.groups import (
 )
 from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub
 from june.infection import SymptomTag
-from june.infection.infection import InfectionSelector
+from june.infection.infection_selector import InfectionSelector
 from june.policy import (
     Policy,
     SevereSymptomsStayHome,

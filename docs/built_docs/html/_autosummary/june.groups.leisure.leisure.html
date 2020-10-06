@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.groups.leisure.leisure &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.groups.leisure.pub" href="june.groups.leisure.pub.html" />
+    <link rel="prev" title="june.groups.leisure.household_visits" href="june.groups.leisure.household_visits.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.groups.leisure.leisure</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.groups.leisure.household_visits.html">june.groups.leisure.household_visits</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.groups.leisure.pub.html">june.groups.leisure.pub</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="module-june.groups.leisure.leisure">
+<span id="june-groups-leisure-leisure"></span><h1>june.groups.leisure.leisure<a class="headerlink" href="#module-june.groups.leisure.leisure" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="june.groups.leisure.leisure.Leisure">
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.leisure.leisure.</code><code class="sig-name descname">Leisure</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">leisure_distributors</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span><a class="reference internal" href="june.groups.leisure.social_venue_distributor.html#june.groups.leisure.social_venue_distributor.SocialVenueDistributor" title="june.groups.leisure.social_venue_distributor.SocialVenueDistributor">june.groups.leisure.social_venue_distributor.SocialVenueDistributor</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to manage all possible activites that happen during leisure time.</p>
+<dl class="simple">
+<dt>leisure_distributors</dt><dd><p>List of social venue distributors.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.groups.leisure.leisure.Leisure.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">leisure_distributors</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span><a class="reference internal" href="june.groups.leisure.social_venue_distributor.html#june.groups.leisure.social_venue_distributor.SocialVenueDistributor" title="june.groups.leisure.social_venue_distributor.SocialVenueDistributor">june.groups.leisure.social_venue_distributor.SocialVenueDistributor</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>leisure_distributors</dt><dd><p>List of social venue distributors.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.leisure.Leisure.distribute_social_venues_to_households">
+<code class="sig-name descname">distribute_social_venues_to_households</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">households</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.groups.household.html#june.groups.household.Household" title="june.groups.household.Household">june.groups.household.Household</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.distribute_social_venues_to_households" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.leisure.Leisure.drags_household_to_activity">
+<code class="sig-name descname">drags_household_to_activity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em>, <em class="sig-param"><span class="n">activity</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.drags_household_to_activity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.leisure.Leisure.generate_leisure_probabilities_for_timestep">
+<code class="sig-name descname">generate_leisure_probabilities_for_timestep</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">delta_time</span></em>, <em class="sig-param"><span class="n">is_weekend</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.generate_leisure_probabilities_for_timestep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.leisure.Leisure.get_leisure_probability_for_age_and_sex">
+<code class="sig-name descname">get_leisure_probability_for_age_and_sex</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">age</span></em>, <em class="sig-param"><span class="n">sex</span></em>, <em class="sig-param"><span class="n">delta_time</span></em>, <em class="sig-param"><span class="n">is_weekend</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.get_leisure_probability_for_age_and_sex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the probabilities of going to different leisure activities,
+and dragging the household with the person that does the activity.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.leisure.Leisure.get_subgroup_for_person_and_housemates">
+<code class="sig-name descname">get_subgroup_for_person_and_housemates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.get_subgroup_for_person_and_housemates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main function of the Leisure class. For every possible activity a person can do,
+we chech the Poisson parameter lambda = probability / day * deltat of that activty 
+taking place. We then sum up the Poisson parameters to decide whether a person
+does any activity at all. The relative weight of the Poisson parameters gives then
+the specific activity a person does. 
+If a person ends up going to a social venue, we do a second check to see if his/her
+entire household accompanies him/her.
+The social venue subgroups are attached to the involved people, but they are not 
+added to the subgroups, since it is possible they change their plans if a policy is in
+place or they have other responsibilities.
+The function returns None if no activity takes place.</p>
+<dl class="simple">
+<dt>person</dt><dd><p>an instance of person</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.leisure.Leisure.send_household_with_person_if_necessary">
+<code class="sig-name descname">send_household_with_person_if_necessary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em>, <em class="sig-param"><span class="n">subgroup</span></em>, <em class="sig-param"><span class="n">probability</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.send_household_with_person_if_necessary" title="Permalink to this definition">¶</a></dt>
+<dd><p>When we know that the person does an activity in the social venue X,
+then we ask X whether the person needs to drag the household with
+him or her.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.leisure.Leisure.update_household_and_care_home_visits_targets">
+<code class="sig-name descname">update_household_and_care_home_visits_targets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">people</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.update_household_and_care_home_visits_targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the candidates to go for visiting households and care homes.
+This is necessary in case the relatives have died.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="june.groups.leisure.leisure.generate_leisure_for_config">
+<code class="sig-prename descclassname">june.groups.leisure.leisure.</code><code class="sig-name descname">generate_leisure_for_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span></em>, <em class="sig-param"><span class="n">config_filename</span><span class="o">=</span><span class="default_value">PosixPath('/home/sadie/JUNE/configs/config_example.yaml')</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.generate_leisure_for_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an instance of the leisure class for the specified geography and leisure groups.
+Parameters
+———-
+list_of_leisure_groups</p>
+<blockquote>
+<div><p>list of names of the lesire groups desired. Ex: [“pubs”, “cinemas”]</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="june.groups.leisure.leisure.generate_leisure_for_world">
+<code class="sig-prename descclassname">june.groups.leisure.leisure.</code><code class="sig-name descname">generate_leisure_for_world</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">list_of_leisure_groups</span></em>, <em class="sig-param"><span class="n">world</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.generate_leisure_for_world" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an instance of the leisure class for the specified geography and leisure groups.</p>
+<dl class="simple">
+<dt>list_of_leisure_groups</dt><dd><p>list of names of the lesire groups desired. Ex: [“pubs”, “cinemas”]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="june.groups.leisure.leisure.random">
+<code class="sig-prename descclassname">june.groups.leisure.leisure.</code><code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#june.groups.leisure.leisure.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="june.groups.leisure.leisure.random_choice_numba">
+<code class="sig-prename descclassname">june.groups.leisure.leisure.</code><code class="sig-name descname">random_choice_numba</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span></em>, <em class="sig-param"><span class="n">prob</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.random_choice_numba" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fast implementation of np.random.choice</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="june.groups.leisure.leisure.roll_activity_dice">
+<code class="sig-prename descclassname">june.groups.leisure.leisure.</code><code class="sig-name descname">roll_activity_dice</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">poisson_parameters</span></em>, <em class="sig-param"><span class="n">delta_time</span></em>, <em class="sig-param"><span class="n">n_activities</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.roll_activity_dice" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.groups.leisure.household_visits.html">june.groups.leisure.household_visits</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.groups.leisure.pub.html">june.groups.leisure.pub</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

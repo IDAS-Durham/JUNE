@@ -18,11 +18,48 @@ class LeisurePolicy(Policy):
         super().__init__(start_time, end_time)
         self.policy_type = "leisure"
 
+
 class LeisurePolicies(PolicyCollection):
     policy_type = "leisure"
+    original_leisure_probabilities_per_venue = None
+
     def apply(self, date: datetime, leisure: Leisure):
-        for policy in self.policies:
-            policy.apply(date=date, leisure=leisure)
+        """
+        Applies leisure policies. There are currently two types of leisure policies
+        implemented: CloseLeisureVenue, and ChangeLeisureProbability. To ensure
+        compatibility when adding multiple policies of the same type, we "clear" the
+        leisure module at the beginning of each application, ie, we set closed_venues = set(),
+        and the original probabilities for each social venue distributor. We then apply 
+        the policies currently active at the given date.
+        """
+        if self.original_leisure_probabilities_per_venue is None:
+            self.original_leisure_probabilities_per_venue = defaultdict(dict)
+            # first time step, save originals
+            for distributor in leisure.leisure_distributors.values():
+                self.original_leisure_probabilities_per_venue[distributor.spec][
+                    "men"
+                ] = distributor.male_probabilities
+                self.original_leisure_probabilities_per_venue[distributor.spec][
+                    "women"
+                ] = distributor.female_probabilities
+        else:
+            # set sv distributors to original values
+            for distributor in leisure.leisure_distributors.values():
+                distributor.male_probabilities = self.original_leisure_probabilities_per_venue[
+                    distributor.spec
+                ][
+                    "men"
+                ]
+                distributor.female_probabilities = self.original_leisure_probabilities_per_venue[
+                    distributor.spec
+                ][
+                    "women"
+                ]
+        leisure.closed_venues = set()
+        active_policies = self.get_active(date=date)
+        for policy in active_policies:
+            policy.apply(leisure=leisure)
+
 
 class CloseLeisureVenue(LeisurePolicy):
     def __init__(
@@ -47,14 +84,9 @@ class CloseLeisureVenue(LeisurePolicy):
         super().__init__(start_time, end_time)
         self.venues_to_close = venues_to_close
 
-    def apply(self, date: datetime.datetime, leisure: Leisure):
-        if self.is_active(date):
-            for venue in self.venues_to_close:
-                leisure.closed_venues.add(venue)
-            if self.end_time == date:
-                for venue in self.venues_to_close:
-                    leisure.closed_venues.remove(venue)
-
+    def apply(self, leisure: Leisure):
+        for venue in self.venues_to_close:
+            leisure.closed_venues.add(venue)
 
 
 class ChangeLeisureProbability(LeisurePolicy):
@@ -77,7 +109,6 @@ class ChangeLeisureProbability(LeisurePolicy):
         """
         super().__init__(start_time, end_time)
         self.leisure_probabilities = {}
-        self.original_leisure_probabilities = None
         for activity in leisure_activities_probabilities:
             self.leisure_probabilities[activity] = {}
             self.leisure_probabilities[activity]["men"] = parse_age_probabilities(
@@ -87,56 +118,17 @@ class ChangeLeisureProbability(LeisurePolicy):
                 leisure_activities_probabilities[activity]["women"]
             )
 
-    def apply(self, date: datetime.datetime, leisure: Leisure):
+    def apply(self, leisure: Leisure):
         """
         Changes probabilities of doing leisure activities according to the policies specified.
         The current probabilities are stored in the policies, and restored at the end of the policy 
         time span. Keep this in mind when trying to stack policies that modify the same social venue.
         """
-        if self.original_leisure_probabilities is None:
-            self.original_leisure_probabilities = defaultdict(dict)
-            for activity in self.leisure_probabilities:
-                if activity not in leisure.leisure_distributors:
-                    raise PolicyError(
-                        "Trying to change leisure probability for a non-existing activity"
-                    )
-                activity_distributor = leisure.leisure_distributors[activity]
-                self.original_leisure_probabilities[activity][
-                    "men"
-                ] = activity_distributor.male_probabilities
-                self.original_leisure_probabilities[activity][
-                    "women"
-                ] = activity_distributor.female_probabilities
-        if self.is_active(date):
-            for activity in self.leisure_probabilities:
-                activity_distributor = leisure.leisure_distributors[activity]
-                activity_distributor.male_probabilities = self.leisure_probabilities[
-                    activity
-                ][
-                    "men"
-                ]
-                activity_distributor.female_probabilities = self.leisure_probabilities[
-                    activity
-                ][
-                    "women"
-                ]
-        else:
-            # use original probabilities
-            for activity in self.leisure_probabilities:
-                if activity not in leisure.leisure_distributors:
-                    raise PolicyError(
-                        "Trying to restore a leisure probability for a non-existing activity"
-                    )
-                activity_distributor = leisure.leisure_distributors[activity]
-                activity_distributor.male_probabilities = self.original_leisure_probabilities[
-                    activity
-                ][
-                    "men"
-                ]
-                activity_distributor.female_probabilities = self.original_leisure_probabilities[
-                    activity
-                ][
-                    "women"
-                ]
-
-
+        for activity in self.leisure_probabilities:
+            activity_distributor = leisure.leisure_distributors[activity]
+            activity_distributor.male_probabilities = self.leisure_probabilities[
+                activity
+            ]["men"]
+            activity_distributor.female_probabilities = self.leisure_probabilities[
+                activity
+            ]["women"]

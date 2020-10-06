@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.groups.commute.commutehub.CommuteHubs &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.groups.commute.commutehub_distributor.CommuteHubDistributor" href="june.groups.commute.commutehub_distributor.CommuteHubDistributor.html" />
+    <link rel="prev" title="june.groups.commute.commutehub.CommuteHub" href="june.groups.commute.commutehub.CommuteHub.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.groups.commute.commutehub.CommuteHubs</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.groups.commute.commutehub.CommuteHub.html">june.groups.commute.commutehub.CommuteHub</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.groups.commute.commutehub_distributor.CommuteHubDistributor.html">june.groups.commute.commutehub_distributor.CommuteHubDistributor</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="june-groups-commute-commutehub-commutehubs">
+<h1>june.groups.commute.commutehub.CommuteHubs<a class="headerlink" href="#june-groups-commute-commutehub-commutehubs" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.commute.commutehub.</code><code class="sig-name descname">CommuteHubs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commutecities</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Initialises commute hubs given the location of the commute cities they are affiliated to</p>
+<p>Assumptions:
+- Each non-London station has 4 commute hubs associated with it</p>
+<blockquote>
+<div><p>(this is based on the Network Rail maps showing most major stations have 4 incoming lines)</p>
+</div></blockquote>
+<ul>
+<li><p>London has 8 commmute hubs associated with it</p></li>
+<li><p>The locations of the hubs are uniformly distibuted around a circle
+(this means we may not exactly account for the correct mixing as we draw from different locations</p>
+<blockquote>
+<div><p>the real stations, but we believe this gives a good approximation at the sub-regional level)</p>
+</div></blockquote>
+</li>
+</ul>
+<p>commutecities: (list) members of CommuteCities
+msoa_coordinates (pd.Dataframe) Dataframe containing all MSOA names and their coordinates
+init: (bool) if True, initialise hubs, if False do this manually
+members: (list) list of all commute hubs</p>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commutecities</span></em><span class="sig-paren">)</span></dt>
+<dd><p>commutecities: (list) members of CommuteCities
+msoa_coordinates (pd.Dataframe) Dataframe containing all MSOA names and their coordinates
+init: (bool) if True, initialise hubs, if False do this manually
+members: (list) list of all commute hubs</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_get_msoa_lat_lon</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msoa</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Given an MSOA, get the lat/lon</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">for_box_mode</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">for_geography</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">from_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">init_hubs</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Initialise all hubs</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.groups.commute.commutehub.CommuteHub.html">june.groups.commute.commutehub.CommuteHub</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.groups.commute.commutehub_distributor.CommuteHubDistributor.html">june.groups.commute.commutehub_distributor.CommuteHubDistributor</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

@@ -1,11 +1,14 @@
 import datetime
+from typing import Optional
 
 from .policy import Policy, Policies, PolicyCollection
-from june.groups import Hospitals
+from june.groups import Hospitals, Hospital, ExternalSubgroup
 from june.demography import Person
 from june.infection.symptom_tag import SymptomTag
 
 hospitalised_tags = (SymptomTag.hospitalised, SymptomTag.intensive_care)
+dead_hospital_tags = (SymptomTag.dead_hospital, SymptomTag.dead_icu)
+
 
 class MedicalCarePolicy(Policy):
     def __init__(self, start_time="1900-01-01", end_time="2500-01-01"):
@@ -19,9 +22,9 @@ class MedicalCarePolicy(Policy):
 class MedicalCarePolicies(PolicyCollection):
     policy_type = "medical_care"
 
-    def apply(self, person: Person, medical_facilities):
+    def apply(self, person: Person, medical_facilities, record: Optional["Record"]):
         for policy in self.policies:
-            policy.apply(person, medical_facilities)
+            policy.apply(person, medical_facilities, record=record)
 
 
 class Hospitalisation(MedicalCarePolicy):
@@ -30,24 +33,56 @@ class Hospitalisation(MedicalCarePolicy):
     enough. When the person recovers, releases the person from the hospital.
     """
 
-    def apply(self, person: Person, hospitals: Hospitals):
-        if person.health_information.recovered:
-            if person.medical_facility is not None:
-                person.medical_facility.group.release_as_patient(person)
-            return
-        symptoms_tag = person.health_information.tag
+    def __init__(
+        self,
+        start_time="1900-01-01",
+        end_time="2500-01-01",
+        probability_of_care_home_resident_admission=0.3,
+    ):
+        super().__init__(start_time, end_time)
+        self.probability_of_care_home_resident_admission = (
+            probability_of_care_home_resident_admission
+        )
+
+    def apply(
+        self, person: Person, hospitals: Hospitals, record: Optional["Record"] = None
+    ):
+        symptoms_tag = person.infection.tag
         if symptoms_tag in hospitalised_tags:
-            if person.medical_facility is None:
-                hospitals.allocate_patient(person)
-            elif person.health_information.tag == SymptomTag.hospitalised:
-                person.subgroups.medical_facility = person.medical_facility.group[
-                    person.medical_facility.group.SubgroupType.patients
-                ]
-            elif person.health_information.tag == SymptomTag.intensive_care:
-                person.subgroups.medical_facility = person.medical_facility.group[
-                    person.medical_facility.group.SubgroupType.icu_patients
-                ]
+            if person.medical_facility is not None:
+                patient_hospital = person.medical_facility.group
             else:
-                raise ValueError(
-                    f"Person with health information {person.health_information.tag} cannot go to hospital."
-                )
+                patient_hospital = person.super_area.closest_hospitals[0]
+            # note, we dont model hospital capacity here.
+            status = patient_hospital.allocate_patient(
+                person,
+                probability_of_care_home_resident_admission=self.probability_of_care_home_resident_admission,
+            )
+            if record is not None:
+                if status in [
+                    "ward_admitted"
+                ]:  # TODO: think if we want to count transfers as admissions.
+                    record.accumulate(
+                        table_name="hospital_admissions",
+                        hospital_id=patient_hospital.id,
+                        patient_id=person.id,
+                    )
+                elif status in ["icu_admitted"]:
+                    record.accumulate(
+                        table_name="icu_admissions",
+                        hospital_id=patient_hospital.id,
+                        patient_id=person.id,
+                    )
+        else:
+            if (
+                person.medical_facility is not None
+                and symptoms_tag not in dead_hospital_tags
+            ):
+                if record is not None:
+                    record.accumulate(
+                        table_name="discharges",
+                        hospital_id=person.medical_facility.group.id,
+                        patient_id=person.id,
+                    )
+                person.medical_facility.group.release_patient(person)
+            return

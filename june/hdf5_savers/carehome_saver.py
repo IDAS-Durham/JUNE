@@ -34,6 +34,7 @@ def save_care_homes_to_hdf5(
             idx2 = min((chunk + 1) * chunk_size, n_care_homes)
             ids = []
             areas = []
+            super_areas = []
             n_residents = []
             n_workers = []
             contact_matrices_sizes = []
@@ -43,8 +44,10 @@ def save_care_homes_to_hdf5(
                 ids.append(carehome.id)
                 if carehome.area is None:
                     areas.append(nan_integer)
+                    super_areas.append(nan_integer)
                 else:
                     areas.append(carehome.area.id)
+                    super_areas.append(carehome.super_area.id)
                 n_residents.append(carehome.n_residents)
                 n_workers.append(carehome.n_workers)
 
@@ -56,6 +59,7 @@ def save_care_homes_to_hdf5(
                 care_homes_dset.attrs["n_care_homes"] = n_care_homes
                 care_homes_dset.create_dataset("id", data=ids, maxshape=(None,))
                 care_homes_dset.create_dataset("area", data=areas, maxshape=(None,))
+                care_homes_dset.create_dataset("super_area", data=super_areas, maxshape=(None,))
                 care_homes_dset.create_dataset(
                     "n_residents", data=n_residents, maxshape=(None,)
                 )
@@ -68,13 +72,15 @@ def save_care_homes_to_hdf5(
                 care_homes_dset["id"][idx1:idx2] = ids
                 care_homes_dset["area"].resize(newshape)
                 care_homes_dset["area"][idx1:idx2] = areas
+                care_homes_dset["super_area"].resize(newshape)
+                care_homes_dset["super_area"][idx1:idx2] = super_areas
                 care_homes_dset["n_residents"].resize(newshape)
                 care_homes_dset["n_residents"][idx1:idx2] = n_residents
                 care_homes_dset["n_workers"].resize(newshape)
                 care_homes_dset["n_workers"][idx1:idx2] = n_workers
 
 
-def load_care_homes_from_hdf5(file_path: str, chunk_size=50000):
+def load_care_homes_from_hdf5(file_path: str, chunk_size=50000, domain_super_areas=None):
     """
     Loads carehomes from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -100,7 +106,19 @@ def load_care_homes_from_hdf5(file_path: str, chunk_size=50000):
             care_homes["n_workers"].read_direct(
                 n_workers, np.s_[idx1:idx2], np.s_[0:length]
             )
+            super_areas = np.empty(length, dtype=int)
+            care_homes["super_area"].read_direct(
+                super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
             for k in range(idx2 - idx1):
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
                 care_home = CareHome(
                     area=None, n_residents=n_residents[k], n_workers=n_workers[k]
                 )
@@ -110,7 +128,7 @@ def load_care_homes_from_hdf5(file_path: str, chunk_size=50000):
 
 
 def restore_care_homes_properties_from_hdf5(
-    world: World, file_path: str, chunk_size=50000
+    world: World, file_path: str, chunk_size=50000, domain_super_areas = None 
 ):
     """
     Loads carehomes from an hdf5 file located at ``file_path``.
@@ -118,10 +136,7 @@ def restore_care_homes_properties_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
-    print("restoring care homes...")
-    first_area_id = world.areas[0].id
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
-        first_care_home_id = world.care_homes[0].id
         carehomes = f["care_homes"]
         carehomes_list = []
         n_carehomes = carehomes.attrs["n_care_homes"]
@@ -131,11 +146,20 @@ def restore_care_homes_properties_from_hdf5(
             idx2 = min((chunk + 1) * chunk_size, n_carehomes)
             ids = carehomes["id"][idx1:idx2]
             areas = carehomes["area"][idx1:idx2]
+            super_areas = carehomes["super_area"][idx1:idx2]
             for k in range(idx2 - idx1):
-                care_home = world.care_homes[ids[k] - first_care_home_id]
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
+                care_home = world.care_homes.get_from_id(ids[k])
                 if areas[k] == nan_integer:
                     area = None
                 else:
-                    area = world.areas[areas[k] - first_area_id]
+                    area = world.areas.get_from_id(areas[k])
                 care_home.area = area
                 area.care_home = care_home

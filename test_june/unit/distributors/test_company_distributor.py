@@ -1,9 +1,9 @@
 import pytest
-from june.demography.geography import SuperArea
+from june.geography import SuperArea
 from june.groups import Company
 from june.demography import Person
 from june.distributors import CompanyDistributor
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.world import World, generate_world_from_geography
 from june.groups import (
     Hospitals,
@@ -15,7 +15,8 @@ from june.groups import (
     Cemeteries,
 )
 
-#TODO: This test shouldn't use from goegraphy! Create a world that has those characteristics
+# TODO: This test shouldn't use from goegraphy! Create a world that has those characteristics
+
 
 @pytest.fixture(name="super_area")
 def make_super_area():
@@ -27,6 +28,7 @@ def make_super_area():
         super_area.workers.append(person)
     return super_area
 
+
 def test__company_distributor(super_area):
     cd = CompanyDistributor()
     cd.distribute_adults_to_companies_in_super_area(super_area)
@@ -34,34 +36,20 @@ def test__company_distributor(super_area):
         assert len(company.people) == 1
         assert list(company.people)[0].sector == company.sector
 
-@pytest.fixture(name="super_area_big", scope="module")
-def create_big_geography():
-    g = Geography.from_file(filter_key={"super_area": [
-        "E02003282",
-        "E02001720",
-        "E00088544",
-        "E02002560",
-        "E02002559",
-        "E02004314"]})
-    return g
-
-def make_world(geography):
-    geography.hospitals = Hospitals.for_geography(geography)
-    geography.schools = Schools.for_geography(geography)
-    geography.companies = Companies.for_geography(geography)
-    geography.care_homes = CareHomes.for_geography(geography)
-    geography.universities = Universities.for_super_areas(geography.super_areas)
-    world = generate_world_from_geography(geography, include_households=False, include_commute=False)
-    return world
+def test__company_and_work_super_area(full_world):
+    has_people = False
+    for person in full_world.people:
+        if person.work_super_area is not None:
+            has_people = True
+            assert person.work_super_area == person.primary_activity.group.super_area
+    assert has_people
 
 
 class TestLockdownStatus:
-    def test__lockdown_status_random(self, super_area_big):
-        world = make_world(super_area_big)
-
+    def test__lockdown_status_random(self, full_world):
         found_worker = False
         found_child = False
-        for person in world.areas[0].people:
+        for person in full_world.areas[0].people:
             if person.age > 18:
                 worker = person
                 found_worker = True
@@ -74,22 +62,14 @@ class TestLockdownStatus:
         assert worker.lockdown_status is not None
         assert child.lockdown_status is None
 
-    def test__lockdown_status_teacher(self, super_area_big):
-        world = make_world(super_area_big)
+    def test__lockdown_status_teacher(self, full_world):
+        teacher = full_world.schools[0].teachers.people[0]
+        assert teacher.lockdown_status == "key_worker"
 
-        teacher = world.schools.members[0].teachers.people[0]
-        assert teacher.lockdown_status == 'key_worker'
+    def test__lockdown_status_medic(self, full_world):
+        medic = full_world.hospitals[0].people[0]
+        assert medic.lockdown_status == "key_worker"
 
-    def test__lockdown_status_medic(self, super_area_big):
-        world = make_world(super_area_big)
-
-        medic = world.hospitals.members[0].people[0]
-        assert medic.lockdown_status == 'key_worker'
-
-    def test__lockdown_status_care_home(self, super_area_big):
-        world = make_world(super_area_big)
-
-        care_home_worker = world.care_homes[0].people[0]
-        assert care_home_worker.lockdown_status == 'key_worker'
-
-
+    def test__lockdown_status_care_home(self, full_world):
+        care_home_worker = full_world.care_homes[0].people[0]
+        assert care_home_worker.lockdown_status == "key_worker"

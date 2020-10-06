@@ -1,100 +1,109 @@
 import h5py
 import numpy as np
-from june.groups.leisure import Pub, Pubs, Grocery, Groceries, Cinema, Cinemas
+from typing import List
+from june.groups.leisure import (
+    Pub,
+    Pubs,
+    Grocery,
+    Groceries,
+    Cinema,
+    Cinemas,
+    SocialVenue,
+    SocialVenues,
+)
+from june.world import World
 
 nan_integer = -999
+spec_to_group_dict = {"pubs": Pub, "cinemas": Cinema, "groceries": Grocery}
+spec_to_supergroup_dict = {"pubs": Pubs, "cinemas": Cinemas, "groceries": Groceries}
 
-# pubs 
-def save_pubs_to_hdf5(pubs: Pubs, file_path: str):
-    n_pubs = len(pubs)
+
+def save_social_venues_to_hdf5(social_venues_list: List[SocialVenues], file_path: str):
     with h5py.File(file_path, "a") as f:
-        pubs_dset = f.create_group("pubs")
-        ids = []
-        coordinates = []
-        for pub in pubs:
-            ids.append(pub.id)
-            coordinates.append(np.array(pub.coordinates, dtype=np.float))
-        ids = np.array(ids, dtype=np.int)
-        coordinates = np.array(coordinates, dtype=np.float)
-        pubs_dset.attrs["n_pubs"] = n_pubs
-        pubs_dset.create_dataset("id", data=ids)
-        pubs_dset.create_dataset("coordinates", data=coordinates)
+        f.create_group("social_venues")
+        for social_venues in social_venues_list:
+            n_svs = len(social_venues)
+            social_venues_dset = f["social_venues"].create_group(social_venues.spec)
+            ids = []
+            coordinates = []
+            areas = []
+            for sv in social_venues:
+                ids.append(sv.id)
+                coordinates.append(np.array(sv.coordinates, dtype=np.float))
+                if sv.super_area is None:
+                    areas.append(nan_integer)
+                else:
+                    areas.append(sv.area.id)
+            ids = np.array(ids, dtype=np.int)
+            coordinates = np.array(coordinates, dtype=np.float)
+            areas = np.array(areas, dtype=np.int)
+            social_venues_dset.attrs["n"] = n_svs
+            social_venues_dset.create_dataset("id", data=ids)
+            social_venues_dset.create_dataset("coordinates", data=coordinates)
+            social_venues_dset.create_dataset("area", data=areas)
 
 
-def load_pubs_from_hdf5(file_path: str):
+def load_social_venues_from_hdf5(file_path: str, domain_areas=None):
+    social_venues_dict = {}
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
-        pubs = f["pubs"]
-        pubs_list = []
-        n_pubs = pubs.attrs["n_pubs"]
-        ids = pubs["id"]
-        coordinates = pubs["coordinates"]
-        for k in range(n_pubs):
-            pub = Pub()
-            pub.id = ids[k]
-            pub.coordinates = coordinates[k]
-            pubs_list.append(pub)
-    return Pubs(pubs_list)
+        for spec in f["social_venues"]:
+            data = f["social_venues"][spec]
+            social_venues = []
+            n = data.attrs["n"]
+            if n == 0:
+                social_venues_dict[spec] = None
+                continue
+            ids = np.empty(n, dtype=int)
+            data["id"].read_direct(ids, np.s_[0:n], np.s_[0:n])
+            coordinates = np.empty((n, 2), dtype=float)
+            data["coordinates"].read_direct(coordinates, np.s_[0:n], np.s_[0:n])
+            areas = np.empty(n, dtype=int)
+            data["area"].read_direct(areas, np.s_[0:n], np.s_[0:n])
+            for k in range(n):
+                if domain_areas is not None:
+                    area = areas[k]
+                    if area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_areas`` is True, I expect not Nones super areas."
+                        )
+                    if area not in domain_areas:
+                        continue
+                social_venue = spec_to_group_dict[spec]()
+                social_venue.id = ids[k]
+                social_venue.coordinates = coordinates[k]
+                social_venues.append(social_venue)
+            social_venues_dict[spec] = spec_to_supergroup_dict[spec](social_venues)
+        return social_venues_dict
 
-# groceries 
-def save_groceries_to_hdf5(groceries: Groceries, file_path: str):
-    n_groceries = len(groceries)
-    with h5py.File(file_path, "a") as f:
-        groceries_dset = f.create_group("groceries")
-        ids = []
-        coordinates = []
-        for grocery in groceries:
-            ids.append(grocery.id)
-            coordinates.append(np.array(grocery.coordinates, dtype=np.float))
-        ids = np.array(ids, dtype=np.int)
-        coordinates = np.array(coordinates, dtype=np.float)
-        groceries_dset.attrs["n_groceries"] = n_groceries
-        groceries_dset.create_dataset("id", data=ids)
-        groceries_dset.create_dataset("coordinates", data=coordinates)
 
-
-def load_groceries_from_hdf5(file_path: str):
+def restore_social_venues_properties_from_hdf5(
+    world: World, file_path: str, domain_areas=None
+):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
-        groceries = f["groceries"]
-        groceries_list = []
-        n_groceries = groceries.attrs["n_groceries"]
-        ids = groceries["id"]
-        coordinates = groceries["coordinates"]
-        for k in range(n_groceries):
-            grocery = Grocery()
-            grocery.id = ids[k]
-            grocery.coordinates = coordinates[k]
-            groceries_list.append(grocery)
-    return Groceries(groceries_list)
-
-# cinemas
-
-def save_cinemas_to_hdf5(cinemas: Cinemas, file_path: str):
-    n_cinemas = len(cinemas)
-    with h5py.File(file_path, "a") as f:
-        cinemas_dset = f.create_group("cinemas")
-        ids = []
-        coordinates = []
-        for cinema in cinemas:
-            ids.append(cinema.id)
-            coordinates.append(np.array(cinema.coordinates, dtype=np.float))
-        ids = np.array(ids, dtype=np.int)
-        coordinates = np.array(coordinates, dtype=np.float)
-        cinemas_dset.attrs["n_cinemas"] = n_cinemas
-        cinemas_dset.create_dataset("id", data=ids)
-        cinemas_dset.create_dataset("coordinates", data=coordinates)
-
-
-def load_cinemas_from_hdf5(file_path: str):
-    with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
-        cinemas = f["cinemas"]
-        cinemas_list = []
-        n_cinemas = cinemas.attrs["n_cinemas"]
-        ids = cinemas["id"]
-        coordinates = cinemas["coordinates"]
-        for k in range(n_cinemas):
-            cinema = Cinema()
-            cinema.id = ids[k]
-            cinema.coordinates = coordinates[k]
-            cinemas_list.append(cinema)
-    return Cinemas(cinemas_list)
+        for spec in f["social_venues"]:
+            data = f["social_venues"][spec]
+            n = data.attrs["n"]
+            if n == 0:
+                continue
+            social_venues = getattr(world, spec)
+            ids = np.empty(n, dtype=int)
+            data["id"].read_direct(ids, np.s_[0:n], np.s_[0:n])
+            areas = np.empty(n, dtype=int)
+            data["area"].read_direct(areas, np.s_[0:n], np.s_[0:n])
+            for k in range(n):
+                if domain_areas is not None:
+                    area = areas[k]
+                    if area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_areas`` is True, I expect not Nones super areas."
+                        )
+                    if area not in domain_areas:
+                        continue
+                social_venue = social_venues.get_from_id(ids[k])
+                area = areas[k]
+                if area == nan_integer:
+                    area = None
+                else:
+                    area = world.areas.get_from_id(area)
+                social_venue.area = area
 

@@ -7,7 +7,7 @@ import pytest
 
 from june import paths
 from june.demography import Person, Population
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (
     Hospitals,
@@ -19,7 +19,7 @@ from june.groups import (
 )
 from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub
 from june.infection import SymptomTag
-from june.infection.infection import InfectionSelector
+from june.infection.infection_selector import InfectionSelector
 from june.policy import (
     Policy,
     SevereSymptomsStayHome,
@@ -38,8 +38,8 @@ from june.world import World
 
 def infect_person(person, selector, symptom_tag="mild"):
     selector.infect_person_at_time(person, 0.0)
-    person.health_information.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
-    person.health_information.time_of_symptoms_onset = 5.3
+    person.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
+    person.infection.symptoms.time_of_symptoms_onset = 5.3
     if symptom_tag != "asymptomatic":
         person.residence.group.quarantine_starting_date = 5.3
 
@@ -65,7 +65,7 @@ class TestSevereSymptomsStayHome:
         )
         assert worker in worker.residence.people
         assert pupil in pupil.primary_activity.people
-        worker.health_information = None
+        worker.infection = None
         sim.clear_world()
 
     def test__policy_adults_still_go_to_hospital(self, setup_policy_world, selector):
@@ -89,7 +89,7 @@ class TestSevereSymptomsStayHome:
         )
         assert worker in worker.medical_facility.people
         assert pupil in pupil.primary_activity.people
-        worker.health_information = None
+        worker.infection = None
         sim.clear_world()
 
     def test__default_policy_kids(self, selector, setup_policy_world):
@@ -107,13 +107,13 @@ class TestSevereSymptomsStayHome:
         sim.clear_world()
         infect_person(pupil, selector, "severe")
         sim.update_health_status(0.0, 0.0)
-        assert pupil.health_information.tag == SymptomTag.severe
+        assert pupil.infection.tag == SymptomTag.severe
         sim.activity_manager.move_people_to_active_subgroups(
             ["primary_activity", "residence"],
         )
         assert pupil in pupil.residence.people
         assert worker in worker.residence.people
-        pupil.health_information = None
+        pupil.infection = None
         sim.clear_world()
 
 
@@ -193,6 +193,120 @@ class TestClosure:
             activities=activities,
             days_from_start=0,
         ) == ["primary_activity", "residence",]
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_during_policy
+        )
+        assert pupil in pupil.primary_activity.people
+        assert worker in worker.primary_activity.people
+        sim.clear_world()
+        time_after_policy = datetime(2030, 2, 2)
+        active_individual_policies = policies.individual_policies.get_active(
+            date=time_after_policy
+        )
+        assert policies.individual_policies.apply(
+            active_individual_policies,
+            person=pupil,
+            activities=activities,
+            days_from_start=0,
+        ) == ["primary_activity", "residence",]
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_after_policy
+        )
+        assert pupil in pupil.primary_activity.people
+        assert worker in worker.primary_activity.people
+        sim.clear_world()
+
+    def test__reopen_schools(self, setup_policy_world):
+        world, pupil, student, worker, sim = setup_policy_world
+        super_area = world.super_areas[0]
+        school_closure = CloseSchools(
+            start_time="2020-1-1", end_time="2020-10-1", attending_compliance=0.5,
+        )
+        policies = Policies([school_closure])
+        sim.activity_manager.policies = policies
+
+        # non key worker
+        worker.lockdown_status = "furlough"
+        sim.clear_world()
+        activities = ["primary_activity", "residence"]
+        time_before_policy = datetime(2019, 2, 1)
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_before_policy
+        )
+        assert worker in worker.primary_activity.people
+        assert pupil in pupil.primary_activity.people
+        sim.clear_world()
+        time_during_policy = datetime(2020, 2, 1)
+        active_individual_policies = policies.individual_policies.get_active(
+            date=time_during_policy
+        )
+
+        # Move the pupil 500 times for five days
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in policies.individual_policies.apply(
+                    active_individual_policies,
+                    person=pupil,
+                    activities=activities,
+                    days_from_start=0,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(2.5, rel=0.1)
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_during_policy
+        )
+        assert worker in worker.primary_activity.people
+        sim.clear_world()
+        time_after_policy = datetime(2030, 2, 2)
+        active_individual_policies = policies.individual_policies.get_active(
+            date=time_after_policy
+        )
+        assert policies.individual_policies.apply(
+            active_individual_policies,
+            person=pupil,
+            activities=activities,
+            days_from_start=0,
+        ) == ["primary_activity", "residence",]
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_after_policy
+        )
+        assert pupil in pupil.primary_activity.people
+        assert worker in worker.primary_activity.people
+        sim.clear_world()
+
+        # key worker
+        worker.lockdown_status = "key_worker"
+        student.lockdown_status = "key_worker"
+        sim.clear_world()
+        activities = ["primary_activity", "residence"]
+        time_before_policy = datetime(2019, 2, 1)
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_before_policy
+        )
+        assert worker in worker.primary_activity.people
+        assert pupil in pupil.primary_activity.people
+        sim.clear_world()
+        time_during_policy = datetime(2020, 2, 1)
+        active_individual_policies = policies.individual_policies.get_active(
+            date=time_during_policy
+        )
+        # Move the pupil 500 times for five days
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in policies.individual_policies.apply(
+                    active_individual_policies,
+                    person=pupil,
+                    activities=activities,
+                    days_from_start=0,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(5.0, rel=0.1)
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy
         )
@@ -923,7 +1037,7 @@ class TestQuarantine:
             activities, time_during_policy, 20
         )
         assert worker in worker.primary_activity.people
-        worker.health_information = None
+        worker.infection = None
         sim.clear_world()
 
     def test__asymptomatic_is_free(self, setup_policy_world, selector):
@@ -948,7 +1062,7 @@ class TestQuarantine:
             activities=activities,
             days_from_start=6.0,
         )
-        worker.health_information = None
+        worker.infection = None
         sim.clear_world()
 
     def test__housemates_stay_for_two_weeks(self, setup_policy_world, selector):
@@ -986,7 +1100,7 @@ class TestQuarantine:
             activities=activities,
             days_from_start=25,
         )
-        worker.health_information = None
+        worker.infection = None
         sim.clear_world()
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy, 25
@@ -1023,7 +1137,7 @@ class TestQuarantine:
             activities=activities,
             days_from_start=25.0,
         )
-        worker.health_information = None
+        worker.infection = None
         sim.clear_world()
 
     def test__quarantine_zero_complacency(self, setup_policy_world, selector):
@@ -1067,7 +1181,7 @@ class TestQuarantine:
             activities=activities,
             days_from_start=25,
         )
-        worker.health_information = None
+        worker.infection = None
         sim.clear_world()
 
 
@@ -1077,7 +1191,7 @@ def test__kid_at_home_is_supervised(setup_policy_world, selector):
     sim.activity_manager.policies = policies
     assert pupil.primary_activity is not None
     infect_person(pupil, selector, "severe")
-    assert pupil.health_information.tag == SymptomTag.severe
+    assert pupil.infection.tag == SymptomTag.severe
     sim.activity_manager.move_people_to_active_subgroups(
         ["primary_activity", "residence"]
     )

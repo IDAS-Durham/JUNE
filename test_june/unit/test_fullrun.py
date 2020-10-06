@@ -7,11 +7,11 @@ from pathlib import Path
 from june.simulator import Simulator
 from june import world
 from june.time import Timer
-from june.demography.geography import Geography
-from june.demography import Demography, Person
+from june.geography import Geography
+from june.demography import Demography, Person, Population
 from june.interaction import Interaction
 from june.infection import InfectionSelector
-from june.commute import ModeOfTransport
+from june.groups.travel import ModeOfTransport, Travel
 from june.groups import (
     Hospitals,
     Schools,
@@ -27,12 +27,6 @@ from june.groups import (
     Household,
     University,
     CareHome,
-    CommuteHub,
-    CommuteHubs,
-    CommuteCity,
-    CommuteCities,
-    CommuteUnits,
-    CommuteCityUnits,
 )
 from june.groups import (
     Hospitals,
@@ -49,19 +43,21 @@ from june import World
 from june.world import generate_world_from_geography
 from june.infection_seed import InfectionSeed
 from june.policy import Policies
+from june.records import Record
 from june import paths
 
 from pathlib import Path
 
 selector_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
+interaction_config = paths.configs_path / "tests/interaction.yaml"
 
 
 def test__full_run(dummy_world, selector):
     world = dummy_world
     # restore health status of people
     for person in world.people:
-        person.health_information = None
+        person.infection = None
         person.susceptibility = 1.0
         person.dead = False
     leisure_instance = leisure.generate_leisure_for_world(
@@ -74,8 +70,14 @@ def test__full_run(dummy_world, selector):
             "care_home_visits",
         ],
     )
-    leisure_instance.distribute_social_venues_to_households(world.households, super_areas=world.super_areas)
-    interaction = Interaction.from_file()
+    leisure_instance.distribute_social_venues_to_areas(
+        areas=world.areas, super_areas=world.super_areas
+    )
+    travel = Travel()
+    interaction = Interaction.from_file(config_filename=interaction_config)
+    record = Record(
+            record_path = 'results',
+    )
     policies = Policies.from_file()
     sim = Simulator.from_file(
         world=world,
@@ -83,9 +85,10 @@ def test__full_run(dummy_world, selector):
         infection_selector=selector,
         config_filename=test_config,
         leisure=leisure_instance,
+        travel=travel,
         policies=policies,
-        save_path=None,
+        record=record,
     )
-    seed = InfectionSeed(sim.world.super_areas, selector)
-    seed.unleash_virus(1)
+    seed = InfectionSeed(world=sim.world, infection_selector=selector)
+    seed.unleash_virus(Population(sim.world.people), n_cases=1)
     sim.run()

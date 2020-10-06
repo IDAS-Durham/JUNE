@@ -2,8 +2,8 @@ from itertools import count
 from random import choice
 from recordclass import dataobject
 import numpy as np
-from june.infection.health_information import HealthInformation
-from june.commute import ModeOfTransport
+
+from june.infection import Infection
 
 
 class Activities(dataobject):
@@ -31,19 +31,17 @@ class Person(dataobject):
     socioecon_index: str = None
     area: "Area" = None
     # work info
-    work_super_area: str = None
+    work_super_area: "SuperArea" = None
     sector: str = None
     sub_sector: str = None
     lockdown_status: str = None
     comorbidity: str = None
     # commute
-    home_city: str = None
-    mode_of_transport: ModeOfTransport = None
-    # rail travel
+    mode_of_transport: "ModeOfTransport" = None
     # activities
     busy: bool = False
     subgroups: Activities = Activities(None, None, None, None, None, None, None)
-    health_information: HealthInformation = None
+    infection: Infection = None
     # infection
     susceptibility: float = 1.0
     dead: bool = False
@@ -74,13 +72,7 @@ class Person(dataobject):
 
     @property
     def infected(self):
-        if (
-            self.health_information is not None
-            and self.health_information.infection is not None
-        ):
-            return True
-
-        return False
+        return self.infection is not None
 
     @property
     def susceptible(self):
@@ -153,23 +145,32 @@ class Person(dataobject):
             return None
         guardian = choice(possible_guardians)
         if (
-            guardian.health_information is not None
-            and guardian.health_information.should_be_in_hospital
+            guardian.infection is not None and guardian.infection.should_be_in_hospital
         ) or guardian.dead:
             return None
         else:
             return guardian
 
     @property
-    def infection(self):
-        if self.health_information is None:
+    def symptoms(self):
+        if self.infection is None:
             return None
         else:
-            return self.health_information.infection
+            return self.infection.symptoms
 
     @property
-    def symptoms(self):
-        if self.health_information is None:
+    def super_area(self):
+        try:
+            return self.area.super_area
+        except:
             return None
-        else:
-            return self.health_information.infection.symptoms
+
+    @property
+    def home_city(self):
+        return self.area.super_area.city
+
+    @property
+    def work_city(self):
+        if self.work_super_area is None:
+            return None
+        return self.work_super_area.city

@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.groups.leisure.pub.Pubs &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.groups.leisure.pub.PubDistributor" href="june.groups.leisure.pub.PubDistributor.html" />
+    <link rel="prev" title="june.groups.leisure.pub.Pub" href="june.groups.leisure.pub.Pub.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.groups.leisure.pub.Pubs</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.groups.leisure.pub.Pub.html">june.groups.leisure.pub.Pub</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.groups.leisure.pub.PubDistributor.html">june.groups.leisure.pub.PubDistributor</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="june-groups-leisure-pub-pubs">
+<h1>june.groups.leisure.pub.Pubs<a class="headerlink" href="#june-groups-leisure-pub-pubs" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.leisure.pub.</code><code class="sig-name descname">Pubs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pubs</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.groups.leisure.pub.html#june.groups.leisure.pub.Pub" title="june.groups.leisure.pub.Pub">june.groups.leisure.pub.Pub</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">make_tree</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="py method">
+<dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pubs</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.groups.leisure.pub.html#june.groups.leisure.pub.Pub" title="june.groups.leisure.pub.Pub">june.groups.leisure.pub.Pub</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">make_tree</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">add_to_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas">june.demography.geography.SuperAreas</a></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Adds all venues to the closest super area</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">for_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Areas" title="june.demography.geography.Areas">june.demography.geography.Areas</a></span></em>, <em class="sig-param"><span class="n">coordinates_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/leisure/pubs_per_super_area.csv')</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Generates social venues in the given areas.</p>
+<dl class="simple">
+<dt>areas</dt><dd><p>list of areas to generate the venues in</p>
+</dd>
+<dt>venues_per_capita</dt><dd><p>number of venues per person in each area.</p>
+</dd>
+<dt>venues_per_area</dt><dd><p>number of venues in each area.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">for_box_mode</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">for_geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geography</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Geography" title="june.demography.geography.Geography">june.demography.geography.Geography</a></span></em>, <em class="sig-param"><span class="n">coordinates_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/leisure/pubs_per_super_area.csv')</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">for_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperArea" title="june.demography.geography.SuperArea">june.demography.geography.SuperArea</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">coordinates_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/leisure/pubs_per_super_area.csv')</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Generates social venues in the given super areas.</p>
+<dl class="simple">
+<dt>super_areas</dt><dd><p>list of areas to generate the venues in</p>
+</dd>
+<dt>venues_per_super_area</dt><dd><p>how many venus per super_area to generate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_coordinates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">List<span class="p">[</span>numpy.array<span class="p">]</span></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_closest_venues</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span></em>, <em class="sig-param"><span class="n">k</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Queries the ball tree for the closests venues.</p>
+<dl class="simple">
+<dt>coordinates</dt><dd><p>coordinates in the format [Latitude, Longitude]</p>
+</dd>
+<dt>k</dt><dd><p>number of neighbours desired</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_venues_in_radius</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">5</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Queries the ball tree for the closests venues.</p>
+<dl class="simple">
+<dt>coordinates</dt><dd><p>coordinates in the format [Latitude, Longitude]</p>
+</dd>
+<dt>radius</dt><dd><p>radius in km to query</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">make_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.groups.leisure.pub.Pub.html">june.groups.leisure.pub.Pub</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.groups.leisure.pub.PubDistributor.html">june.groups.leisure.pub.PubDistributor</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

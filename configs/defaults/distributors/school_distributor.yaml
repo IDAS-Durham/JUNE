@@ -7,3 +7,4 @@ sub_sector: ["teacher_secondary", "teacher_primary"]
 teacher_student_ratio_primary: 21
 teacher_student_ratio_secondary: 16
 teacher_min_age: 21
+max_classroom_size: 40 

@@ -1,9 +1,9 @@
 from june.interaction import Interaction, interaction
-from june.infection.infection import InfectionSelector
+from june.infection.infection_selector import InfectionSelector
 from june.groups import School
 from june.demography import Person
 from june import paths
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.interaction.interactive_group import InteractiveGroup
 from june.world import generate_world_from_geography
 from june.groups import Hospital, Hospitals
@@ -16,7 +16,7 @@ import numpy as np
 import os
 import pathlib
 
-test_config = paths.configs_path / "defaults/interaction/ContactInteraction.yaml"
+test_config = paths.configs_path / "tests/interaction.yaml"
 
 
 def test__contact_matrices_from_default():
@@ -60,7 +60,7 @@ def test__school_index_translation():
 
 
 def test__school_contact_matrices():
-    interaction_instance = Interaction.from_file()
+    interaction_instance = Interaction.from_file(config_filename=test_config)
     xi = 0.3
     age_min = 3
     age_max = 7
@@ -90,6 +90,18 @@ def test__school_contact_matrices():
         contact_matrix, school_years, 4, 0
     )
     assert n_contacts_student_teacher == 0.81 * 3
+
+def test__school_contact_matrices_different_classroom():
+    interaction_instance = Interaction.from_file(config_filename=test_config)
+    xi = 0.3
+    age_min = 3
+    age_max = 7
+    school_years = (3,4,4,5)
+    contact_matrix = interaction_instance.contact_matrices["school"]
+    n_contacts_same_year = interaction._get_contacts_in_school(
+        contact_matrix, school_years, 2, 3
+    )
+    assert n_contacts_same_year == 0.
 
 
 def days_to_infection(interaction, susceptible_person, group, people, n_students):
@@ -178,11 +190,12 @@ def test__average_time_to_infect(n_teachers, mode):
 def test__infection_is_isolated(selector):
     geography = Geography.from_file({"area": ["E00002559"]})
     world = generate_world_from_geography(geography, include_households=True)
-    interaction = Interaction.from_file()
-    infection_seed = InfectionSeed(world.super_areas, selector)
+    interaction = Interaction.from_file(config_filename=test_config)
+    infection_seed = InfectionSeed(world, selector)
     n_cases = 5
     infection_seed.unleash_virus(
-        n_cases
+        world.people,
+        n_cases=n_cases
     )  # play around with the initial number of cases
     policies = Policies([])
     simulator = Simulator.from_file(
@@ -193,7 +206,7 @@ def test__infection_is_isolated(selector):
         / "interaction_test_config.yaml",
         leisure=None,
         policies=policies,
-        save_path=None,
+        #save_path=None,
     )
     infected_people = [person for person in world.people if person.infected]
     assert len(infected_people) == 5
