@@ -329,7 +329,7 @@ class Record:
                 yaml.safe_dump(configs, f)
 
 
-def combine_summaries(record_path, remove_left_overs=False):
+def combine_summaries(record_path, remove_left_overs=False, full_summary_save_path = None):
     summary_files = record_path.glob("summary.*.csv")
     dfs = []
     for summary_file in summary_files:
@@ -338,7 +338,9 @@ def combine_summaries(record_path, remove_left_overs=False):
             summary_file.unlink()
     summary = pd.concat(dfs)
     summary = summary.groupby(["time_stamp", "region"]).sum()
-    summary.to_csv(record_path / "summary.csv")
+    if full_summary_save_path is None:
+        full_summary_save_path = record_path / "summary.csv"
+    summary.to_csv(full_summary_save_path)
 
 
 def combine_hdf5s(

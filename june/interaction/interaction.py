@@ -11,9 +11,7 @@ from june.exc import InteractionError
 from june.utils import parse_age_probabilities
 from june import paths
 
-default_config_filename = (
-    paths.configs_path / "defaults/interaction/interaction.yaml"
-)
+default_config_filename = paths.configs_path / "defaults/interaction/interaction.yaml"
 
 
 @nb.jit(nopython=True)
@@ -170,16 +168,15 @@ class Interaction:
                 raise InteractionError(
                     f"Need to pass population to change susceptibilities by age."
                 )
-            susceptibilities_array = parse_age_probabilities(susceptibilities_by_age)
-            for person in population:
-                if person.age >= len(susceptibilities_array):
-                    person.susceptibility = susceptibilities_array[-1]
-                else:
-                    person.susceptibility = susceptibilities_array[person.age]
+            self.set_population_susceptibilities(
+                susceptibilities_by_age=susceptibilities_by_age, population=population
+            )
 
     @classmethod
     def from_file(
-        cls, config_filename: str = default_config_filename, population: Population = None
+        cls,
+        config_filename: str = default_config_filename,
+        population: Population = None,
     ) -> "Interaction":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -193,8 +190,21 @@ class Interaction:
             beta=config["beta"],
             contact_matrices=contact_matrices,
             susceptibilities_by_age=susceptibilities_by_age,
-            population = population
+            population=population,
         )
+
+    def set_population_susceptibilities(
+        self, susceptibilities_by_age: dict, population: Population
+    ):
+        """
+        Changes the population susceptibility to the disease.
+        """
+        susceptibilities_array = parse_age_probabilities(susceptibilities_by_age)
+        for person in population:
+            if person.age >= len(susceptibilities_array):
+                person.susceptibility = susceptibilities_array[-1]
+            else:
+                person.susceptibility = susceptibilities_array[person.age]
 
     def process_contact_matrices(self, groups: List[str], input_contact_matrices: dict):
         contact_matrices = {}
