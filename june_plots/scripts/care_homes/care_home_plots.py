@@ -91,6 +91,6 @@ class CareHomePlots:
         f, ax = plt.subplots()
         self.percent["Persons"].plot.bar(ax=ax, label="NOMIS")
         june_percent["Persons"].plot.bar(ax=ax, alpha=0.5, label="JUNE")
-        ax.set_ylabel("Percentage of population in care homes")
+        ax.set_ylabel("\% of population in care homes")
         ax.legend()
         return ax

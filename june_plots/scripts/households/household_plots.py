@@ -233,7 +233,7 @@ class HouseholdPlots:
             label="NOMIS"
         )
         ax[1].hist(age_differences_first_kid, density=True, label="JUNE", bins=30)
-        ax[1].set_xlabel("Parent - first child age difference")
+        ax[1].set_xlabel("Parent - first child\nage difference")
         ax[1].set_xlim(15, 65)
         ax[1].legend()
 
@@ -244,7 +244,7 @@ class HouseholdPlots:
             label="NOMIS"
         )
         ax[2].hist(age_differences_second_kid, density=True, label="JUNE", bins=30)
-        ax[2].set_xlabel("Parent - second child age difference")
+        ax[2].set_xlabel("Parent - second child\nage difference")
         ax[2].set_xlim(15, 66)
         ax[2].legend()
         plt.subplots_adjust(wspace=0, hspace=0)
