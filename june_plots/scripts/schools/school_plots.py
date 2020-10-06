@@ -151,9 +151,9 @@ class SchoolPlots:
         ax.hist(secondary_sizes, bins=bins, label="secondary",alpha=0.7)
         ax.hist(mixed_sizes, bins=bins, label="mixed",alpha=0.7)
 
-        ax.plot(mids, primary_data_hist,label="census primary")
-        ax.plot(mids, secondary_data_hist,label="census secondary")
-        ax.plot(mids, mixed_data_hist, label="census mixed")
+        ax.plot(mids, primary_data_hist,label="NOMIS primary")
+        ax.plot(mids, secondary_data_hist,label="NOMIS secondary")
+        ax.plot(mids, mixed_data_hist, label="NOMIS mixed")
 
         ax.legend()
         ax.set_xlabel("School size (number of students)")
@@ -233,9 +233,9 @@ class SchoolPlots:
         ax.axvline(primary_data_mean,color='r',ls='--', label="2011 UK pri. mean")
         ax.axvline(secondary_mean,color='k',label="JUNE sec. mean")
         ax.axvline(secondary_data_mean,color='k',ls='--',label="2011 UK sec. mean")
-        ax.legend()
-        ax.set_xlabel("student:teacher ratio")
-        ax.set_ylabel("frequency")
+        ax.legend(bbox_to_anchor=(1.05, 1))
+        ax.set_xlabel("Student:Teacher ratio")
+        ax.set_ylabel("Frequency")
 
         return ax
 
@@ -310,7 +310,7 @@ class SchoolPlots:
             )
         ax.legend()
         ax.set_xlabel("Distance travelled to school (km)")
-        ax.set_ylabel("number of students")
+        ax.set_ylabel("Number of students")
 
         return ax
 
