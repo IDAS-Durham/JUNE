@@ -53,6 +53,8 @@ class Plotter:
 
         save_dir.mkdir(exist_ok=True, parents=True)
 
+        print ("Plotting into {}".format(save_dir))
+
         commute_plots = CommutePlots(self.world)
 
         print ("Plotting internal exteral numbers")
@@ -292,7 +294,6 @@ class Plotter:
         self.plot_schools()
         self.plot_contact_matrices()
         self.plot_life_expectancy()
-
 
 if __name__ == "__main__":
 
