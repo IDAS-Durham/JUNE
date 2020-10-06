@@ -106,3 +106,14 @@ class DemographyPlots:
         ax.set_ylabel('Frequency')
 
         return ax
+
+    @staticmethod
+    def process_socioeconomic_index(
+        socioeconomic_index_filename = default_socioeconomic_index_filename,
+        super_areas_foldername = default_super_areas_foldername,
+    ):
+
+        super_areas = gp.read_file(super_areas_foldername)
+        super_areas = super_areas.to_crs(epsg=3395)
+
+        
