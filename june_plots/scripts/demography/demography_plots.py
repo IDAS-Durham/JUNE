@@ -60,11 +60,11 @@ class DemographyPlots:
         fig, ax = plt.subplots(ncols=2, sharey=True, figsize=(6, 4))
         ax[0].barh(y, x_male, align='center', color='orange')
         ax[0].set_ylabel('Ages')
-        ax[0].set_xlabel('% of males')
+        ax[0].set_xlabel('\% of males')
         ax[0].set(yticks=y, yticklabels=df['Age'])
         ax[0].invert_xaxis()
         ax[1].barh(y, x_female, align='center', color='maroon')
-        ax[1].set_xlabel('% of females')
+        ax[1].set_xlabel('\% of females')
         plt.subplots_adjust(wspace=0, hspace=0)
 
         return fig, ax
