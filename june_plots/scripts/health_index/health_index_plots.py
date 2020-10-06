@@ -22,9 +22,7 @@ class HealthIndexPlots:
     Class for plotting helath index plots
 
     """
-    def zero_prevalence_plot(
-            self,default_seroprev_filename
-            ):
+    def zero_prevalence_plot():
         seroprev_data=pd.read_csv(default_seroprev_filename,skiprows=1,sep=' ')
         age_min=seroprev_data['Age_bin_minimum'].values
         age_max=seroprev_data['Age_bin_max'].values
@@ -42,9 +40,7 @@ class HealthIndexPlots:
         plt.savefig('../../plots/health_index/hosp_rate.pdfprevalence.pdf')
         
         
-    def rates_plot(
-            self,default_hosp_filename
-            ):
+    def rates_plot():
        hosp_data=pd.read_csv(default_hosp_filename,sep=' ')
     
        r_hosp=hosp_data['ages'].values
