@@ -16,7 +16,7 @@ default_super_areas_foldername = (
     paths.data_path / "plotting/super_area_boundaries/"
 )
 
-class DemogrpahyPlots:
+class DemographyPlots:
     """
     Class for plotting demography related plots
     
@@ -29,7 +29,7 @@ class DemogrpahyPlots:
     def __init__(self, world):
         self.world = world
 
-    def plot_age_distirbution(self):
+    def plot_age_distribution(self):
         "Plotting age pyramid"
 
         male_ages = []
@@ -57,7 +57,7 @@ class DemogrpahyPlots:
         x_male = df['Male']
         x_female = df['Female']
 
-        fig, ax = plt.subplots(ncols=2, sharey=True, figsize=(9, 6))
+        fig, ax = plt.subplots(ncols=2, sharey=True, figsize=(6, 4))
         ax[0].barh(y, x_male, align='center', color='orange')
         ax[0].set_ylabel('Ages')
         ax[0].set_xlabel('% of males')
@@ -67,9 +67,10 @@ class DemogrpahyPlots:
         ax[1].set_xlabel('% of females')
         plt.subplots_adjust(wspace=0, hspace=0)
 
-        return ax
+        return fig, ax
 
     def plot_population_density(
+            self,
             super_areas_foldername = default_super_areas_foldername,
     ):
     
@@ -78,7 +79,7 @@ class DemogrpahyPlots:
         super_areas = super_areas.to_crs(epsg=3395)
 
         super_area_names = []
-        for super_area in world.super_areas:
+        for super_area in self.world.super_areas:
             super_area_names.append(super_area.name)
         super_area_names = np.array(super_area_names)
 
@@ -87,7 +88,7 @@ class DemogrpahyPlots:
         super_area_population = []
         for super_area in list(world_super_areas["msoa11cd"]):
             loc = np.where(super_area_names == super_area)[0][0]
-            super_area_population.append(len(world.super_areas[loc].people))
+            super_area_population.append(len(self.world.super_areas[loc].people))
 
         world_super_areas["area"] = world_super_areas["geometry"].area/10**6
 

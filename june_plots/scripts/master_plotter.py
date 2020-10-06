@@ -58,15 +58,14 @@ class Plotter:
         demography_plots = DemographyPlots(self.world)
 
         print ("Plotting age distribution")
-        age_distribution_plot = demography_plots.plot_age_distribution()
-        age_distribution_plot.plot()
+        fig, ax = demography_plots.plot_age_distribution()
+        plt.plot()
         plt.savefig(save_dir / 'age_distribution.png', dpi=150, bbox_inches='tight')
 
         print ("Plotting population density")
         population_density_plot = demography_plots.plot_population_density()
         population_density_plot.plot()
         plt.savefig(save_dir / 'population_density.png', dpi=150, bbox_inches='tight')
-
         
 
     def plot_commute(
@@ -313,8 +312,8 @@ class Plotter:
 
     def plot_all(self):
         print ("Plotting the world")
-        self.plot_demography()
         self.plot_commute()
+        self.plot_demography()
         self.plot_companies()
         self.plot_households()
         self.plot_leisure()
