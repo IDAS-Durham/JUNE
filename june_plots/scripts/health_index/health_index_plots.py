@@ -11,15 +11,12 @@ default_seroprev_filename = paths.data_path / "plotting/seroprev.dat"
 
 default_transmission = paths.configs_path / "defaults/transmission/XNExp.yaml"
 
-plt.style.use("science")
-
-
 class HealthIndexPlots:
     """
     Class for plotting health index plots
     """
 
-    def zero_prevalence_plot(self, default_seroprev_filename=default_seroprev_filename):
+    def sero_prevalence_plot(self, default_seroprev_filename=default_seroprev_filename):
         seroprev_data = pd.read_csv(default_seroprev_filename, skiprows=1, sep=" ")
         age_min = seroprev_data["Age_bin_minimum"].values
         age_max = seroprev_data["Age_bin_max"].values
@@ -29,10 +26,9 @@ class HealthIndexPlots:
             seroprev[age_min[index] : age_max[index]] = seroprev_by_age[index]
 
         f, ax = plt.subplots()
-        # ax.tick_params(direction='in', which='both', top=True, right=True)#, labelsize=20)
         ax.plot(range(0, 105), seroprev * 100, linewidth=3, color="blue")
-        ax.set_xlabel("Age")  # ,fontsize=30)
-        ax.set_ylabel("Prevalence" + r"$[\%]$")  # ,fontsize=30)
+        ax.set_xlabel("Age")
+        ax.set_ylabel("Prevalence" + r"$[\%]$")
 
         return ax
 
@@ -154,4 +150,5 @@ class HealthIndexPlots:
         ax.set_ylabel("Infectivity")
         ax.legend(bbox_to_anchor = (0.5,1.02),loc='lower center',ncol=2)
         f.subplots_adjust(top=0.80)
+        
         return ax

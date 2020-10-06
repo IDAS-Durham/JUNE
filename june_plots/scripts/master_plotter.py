@@ -58,7 +58,7 @@ class Plotter:
         
         print ("Setting up demography plots")
         demography_plots = DemographyPlots(self.world)
-        """
+        
         print ("Plotting age distribution")
         fig, ax = demography_plots.plot_age_distribution()
         plt.plot()
@@ -68,7 +68,7 @@ class Plotter:
         population_density_plot = demography_plots.plot_population_density()
         population_density_plot.plot()
         plt.savefig(save_dir / 'population_density.png', dpi=150, bbox_inches='tight')
-        """
+        
         london_superareas_path = (
             Path(__file__).absolute().parent.parent.parent / "scripts/london_areas.txt"
         )
@@ -323,17 +323,20 @@ class Plotter:
         self,
         save_dir: Path = default_output_plots_path / "life_expectancy"
     ):
-        """Plot socioeconomic_index vs. life_expectancy"""
+        "Plot socioeconomic_index vs. life_expectancy"
 
         save_dir.mkdir(exist_ok=True, parents=True)
 
+        print ("Setting up life expectancy plots")
         le_plots = LifeExpectancyPlots()
+
         le_plots.load_geography_data()
         le_plots.load_iomd()
         le_plots.load_life_expectancy()
+
+        print ("Plotting life expectancy")
         le_plot = le_plots.plot_life_expectancy_socioecon_index()
         le_plot.plot()
-
         plt.savefig(save_dir / "socioecon_life_expectancy.png", dpi=150, bbox_inches="tight")
     
     def plot_health_index(
@@ -341,18 +344,23 @@ class Plotter:
         save_dir: Path = default_output_plots_path / "health_index"
         
     ):
-        """Plot socioeconomic_index vs. life_expectancy"""
+        "Plot socioeconomic_index vs. life_expectancy"
         save_dir.mkdir(exist_ok=True, parents=True)
 
+        print ("Setting up health index plots")
         hi_plots = HealthIndexPlots()
-        prevalence_plot = hi_plots.zero_prevalence_plot()
+
+        print ("Plotting seroprevalence")
+        prevalence_plot = hi_plots.sero_prevalence_plot()
         prevalence_plot.plot()
         plt.savefig(save_dir / "prevalence_plots.png", dpi=150, bbox_inches="tight")
 
+        print ("Plotting rates")
         rates_plot = hi_plots.rates_plot()
         rates_plot.plot()
         plt.savefig(save_dir / "rates.png", dpi=150, bbox_inches="tight")
 
+        print ("Plotting infectiousness")
         infectiousness_plot = hi_plots.infectiousness()
         infectiousness_plot.plot()
         plt.savefig(save_dir / "infectiousness.png", dpi=150, bbox_inches="tight")
