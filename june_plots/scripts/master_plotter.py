@@ -53,6 +53,8 @@ class Plotter:
 
         save_dir.mkdir(exist_ok=True, parents=True)
 
+        print ("Plotting into {}".format(save_dir))
+
         commute_plots = CommutePlots(self.world)
 
         print ("Plotting internal exteral numbers")
@@ -283,10 +285,10 @@ class Plotter:
 
     def plot_all(self):
         print ("Plotting the world")
-        self.plot_commute()
-        self.plot_companies()
+        #self.plot_commute()
+        #self.plot_companies()
         self.plot_households()
-        self.plot_leisure()
+        #self.plot_leisure()
         #self.plot_policies()
         self.plot_care_homes()
         self.plot_schools()
