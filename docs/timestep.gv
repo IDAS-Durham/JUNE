@@ -1,0 +1,81 @@
+digraph {
+ranksep=0.3
+
+    subgraph cluster_00 {label="simulator"
+
+
+    subgraph cluster_2 {label="Group Infection Loop"
+    style =filled fillcolor=blue fontcolor=white
+        node [style=filled fillcolor=white]
+        loop_over_groups -> loop_over_members
+        loop_over_members -> make_interactive_group
+        make_interactive_group -> interaction_timestep
+        interaction_timestep -> newly_infected
+        newly_infected -> assign_blame
+
+        }
+
+    subgraph cluster_3 {label="Update Health Loop\n(over each person)"
+        style =filled fillcolor=darkgreen fontcolor=white
+        node [style=filled fillcolor=white]
+        infect_person -> update_health_status
+        update_health_status -> apply_medical_policies
+        apply_medical_policies -> bury_recover_or_follow
+        bury_recover_or_follow
+
+         }
+
+    assign_blame -> infect_person [style=invis]
+
+
+    subgraph cluster_1 {label="timestep"
+
+            node [style="filled" fillcolor=orange]
+
+            update_policies -> current_activities
+            current_activities -> activity_manager_timestep
+            activity_manager_timestep -> group_infection_loop
+            group_infection_loop -> infect_people
+            infect_people -> update_health
+            update_health -> clear_world
+
+            group_infection_loop [label="Group Infection Loop\n(generates ids of people to infect)"
+            style = filled fillcolor=blue fontcolor=white]
+
+            infect_people [label="Infect People Loop\n(loop over newly infected)" style = filled fillcolor=yellow]
+
+            update_health [label="Update Health\nof each person"
+            fillcolor=darkgreen fontcolor=white]
+
+            clear_world [fillcolor=white]
+
+    }
+
+    subgraph cluster_0 {label="initialise"
+
+        load_config -> activity_to_groups
+        activity_to_groups -> setup_activities
+        setup_activities -> setup_timer
+        setup_timer -> setup_activity_manager
+    }
+
+}
+
+subgraph cluster_11 {label="activity_manager"
+
+subgraph cluster_4 {label="timestep"
+
+distribute_commuters -> distribute_rail_out
+distribute_rail_out -> distribute_rail_back
+distribute_rail_back -> setup_leisure
+setup_leisure -> leisure_probabilities
+leisure_probabilities -> move_people_2groups
+move_people_2groups -> get_activity_from_person #[label=" loop over people"]
+get_activity_from_person [label="get activity from person\n(loop over people)"]
+}
+
+
+}
+
+
+}
