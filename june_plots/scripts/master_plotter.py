@@ -284,34 +284,38 @@ class Plotter:
         le_plot = le_plots.plot_life_expectancy_socioecon_index()
         le_plot.plot()
 
-        plt.savefig(save_dir / 'socioecon_life_expectancy.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / "socioecon_life_expectancy.png", dpi=150, bbox_inches="tight")
     
     def plot_health_index(
         self,
+        save_dir: Path = default_output_plots_path / "health_index"
         
     ):
         """Plot socioeconomic_index vs. life_expectancy"""
-
-        
+        save_dir / "health_index"
 
         hi_plots = HealthIndexPlots()
-        hi_plots.zero_prevalence_plot()
-        hi_plots.rates_plot()
+        prevalence_plot = hi_plots.zero_prevalence_plot()
+        prevalence_plot.plot()
+        plt.savefig(save_dir / "prevalence_plots.png", dpi=150, bbox_inches="tight")
 
+        rates_plot = hi_plots.rates_plot()
+        rates_plot.plot()
+        plt.savefig(save_dir / "rates.png", dpi=150, bbox_inches="tight")
 
 
 
     def plot_all(self):
         print ("Plotting the world")
-        self.plot_commute()
-        self.plot_companies()
-        self.plot_households()
-        self.plot_leisure()
-        self.plot_policies()
-        self.plot_care_homes()
-        self.plot_schools()
-        self.plot_contact_matrices()
-        self.plot_life_expectancy()
+        #self.plot_commute()
+        #self.plot_companies()
+        #self.plot_households()
+        #self.plot_leisure()
+        #self.plot_policies()
+        #self.plot_care_homes()
+        #self.plot_schools()
+        #self.plot_contact_matrices()
+        #self.plot_life_expectancy()
         self.plot_health_index()
 
 if __name__ == "__main__":
