@@ -3,82 +3,145 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from june import paths
+from june.demography import Person
+from june.infection import HealthIndexGenerator, InfectionSelector, SymptomTag
 
 
 default_seroprev_filename = paths.data_path / "plotting/seroprev.dat"
 
-default_icu_hosp_filename = paths.configs_path / "defaults/ICU_hosp.dat"
-default_death_hosp_filename = paths.configs_path / "defaults/Death_hosp.dat"
-default_hosp_cases_filename = paths.configs_path / "defaults/cases_hosp.dat"
+default_transmission = paths.configs_path / "defaults/transmission/XNExp.yaml"
 
-plt.style.use('science')
+plt.style.use("science")
+
+
 class HealthIndexPlots:
     """
     Class for plotting health index plots
     """
-    def zero_prevalence_plot(
-        self,
-        default_seroprev_filename=default_seroprev_filename
-    ):
-        seroprev_data=pd.read_csv(default_seroprev_filename,skiprows=1,sep=' ')
-        age_min=seroprev_data['Age_bin_minimum'].values
-        age_max=seroprev_data['Age_bin_max'].values
-        seroprev_by_age=seroprev_data['Seroprevalence'].values
-        seroprev=np.zeros(age_max[-1])
+
+    def zero_prevalence_plot(self, default_seroprev_filename=default_seroprev_filename):
+        seroprev_data = pd.read_csv(default_seroprev_filename, skiprows=1, sep=" ")
+        age_min = seroprev_data["Age_bin_minimum"].values
+        age_max = seroprev_data["Age_bin_max"].values
+        seroprev_by_age = seroprev_data["Seroprevalence"].values
+        seroprev = np.zeros(age_max[-1])
         for index in range(len(seroprev_by_age)):
-           seroprev[age_min[index]:age_max[index]]=seroprev_by_age[index]
-        
-        
+            seroprev[age_min[index] : age_max[index]] = seroprev_by_age[index]
+
         f, ax = plt.subplots()
-       # ax.tick_params(direction='in', which='both', top=True, right=True)#, labelsize=20)
-        ax.plot(range(0,105), seroprev*100,linewidth=3,color='blue')
-        ax.set_xlabel('Age')#,fontsize=30)
-        ax.set_ylabel('Prevalence'+r'$[\%]$')#,fontsize=30)
+        # ax.tick_params(direction='in', which='both', top=True, right=True)#, labelsize=20)
+        ax.plot(range(0, 105), seroprev * 100, linewidth=3, color="blue")
+        ax.set_xlabel("Age")  # ,fontsize=30)
+        ax.set_ylabel("Prevalence" + r"$[\%]$")  # ,fontsize=30)
 
         return ax
-        #plt.savefig('../../plots/health_index/prevalence.pdf')
-        
-        
-    def rates_plot(
-        self, 
-        hosp_filename=default_hosp_cases_filename,
-        icu_filename=default_icu_hosp_filename,
-        death_filename=default_death_hosp_filename 
-    ):
-        hosp_data=pd.read_csv(hosp_filename,sep=' ')
-        
-        r_hosp=hosp_data['ages'].values
-        ratiof_hosp=hosp_data['hosp_cases_ratio_female'].values
-        ratiom_hosp=hosp_data['hosp_cases_ratio_male'].values
-        
-        icu_data=pd.read_csv(icu_filename,sep=' ')
-        r_icu=icu_data['ages'].values
-        ratiof_icu=icu_data['icu_hosp_ratio_female'].values
-        ratiom_icu=icu_data['icu_hosp_ratio_male'].values
-        
-        death_data=pd.read_csv(death_filename,sep=' ') 
-        r_death=death_data['ages'].values
-        ratiof_death=death_data['death_hosp_ratio_female'].values
-        ratiom_death=death_data['death_hosp_ratio_male'].values
-        
-        #ax = plt.figure()
-        #fig = plt.figure(figsize=(8, 8))
+
+    def rates_plot(self,):
+        ages = np.arange(100)
+        male_hospitalisation_rate, female_hospitalisation_rate = [], []
+        male_icu_rate, female_icu_rate = [], []
+        male_death_rate, female_death_rate = [], []
+        for age in ages:
+            health_index_generator = HealthIndexGenerator.from_file()
+            male = Person.from_attributes(age=age, sex="m")
+            female = Person.from_attributes(age=age, sex="f")
+            male_probabilities = np.diff(
+                health_index_generator(male), prepend=0, append=1
+            )
+            male_hospitalisation_rate.append(male_probabilities[[3, 6]].sum())
+            male_icu_rate.append(male_probabilities[[4, 7]].sum())
+            male_death_rate.append(male_probabilities[[5, 6, 7]].sum())
+            female_probabilities = np.diff(
+                health_index_generator(female), prepend=0, append=1
+            )
+            female_hospitalisation_rate.append(female_probabilities[[3, 6]].sum())
+            female_icu_rate.append(female_probabilities[[4, 7]].sum())
+            female_death_rate.append(female_probabilities[[5, 6, 7]].sum())
+
         f, ax = plt.subplots()
-        #ax.tick_params(direction='in', which='both', top=True, right=True)#, labelsize=20) 
-        ax.set_xlabel('Age [yr]') #, fontsize=20)
-        
+        ax.set_xlabel("Age [yr]")
+        ax.plot(
+            ages,
+            female_hospitalisation_rate,
+            color="blue",
+            linewidth=3,
+            label=" HR female",
+        )
+        ax.plot(
+            ages,
+            male_hospitalisation_rate,
+            linestyle="--",
+            color="blue",
+            linewidth=3,
+            label=" HR male",
+        )
 
+        ax.plot(ages, female_icu_rate, color="green", linewidth=3, label="ICUR female")
+        ax.plot(
+            ages,
+            male_icu_rate,
+            linestyle="--",
+            linewidth=3,
+            color="green",
+            label="ICUR male",
+        )
 
-        ax.plot(r_hosp, ratiof_hosp,color='blue',linewidth=3,label=" HR female")
-        ax.plot(r_hosp, ratiom_hosp,linestyle='--',color='blue',linewidth=3, label=" HR male")
-        
-        ax.plot(r_icu, ratiof_icu,color='green',linewidth=3,label="ICUR female")
-        ax.plot(r_icu, ratiom_icu,linestyle='--',linewidth=3,color='green', label="ICUR male")
-            
-        ax.plot(r_death, ratiof_death,color='red',linewidth=3,label="DR female")
-        ax.plot(r_death, ratiom_death,linestyle='--',color='red',linewidth=3, label="DR male")
-        
-        ax.legend() #prop={'size':16})
+        ax.plot(ages, female_death_rate, color="red", linewidth=3, label="DR female")
+        ax.plot(
+            ages,
+            male_death_rate,
+            linestyle="--",
+            color="red",
+            linewidth=3,
+            label="DR male",
+        )
+
+        ax.legend()
         return ax
-        #plt.savefig('../../plots/health_index/rates.pdf',bbox_inches='tight')
 
+    def get_infectiousness(self, person, final_time):
+        transmission = []
+        times = []
+        time = 0.0
+        delta_time = 0.1
+        while time < final_time:
+            transmission.append(person.infection.transmission.probability)
+            person.infection.update_symptoms_and_transmission(time + delta_time)
+            time += delta_time
+            times.append(time)
+        return times, transmission
+
+    def infectiousness(self,):
+        symptom_tags = ["severe", "mild", "asymptomatic"]
+        infection_selector = InfectionSelector.from_file(
+            transmission_config_path=default_transmission
+        )
+        f, ax = plt.subplots()
+        random_person = Person.from_attributes(sex="m", age=50)
+        infection_selector.infect_person_at_time(random_person, 0.0)
+        random_person.infection.symptoms.tag = getattr(SymptomTag, "severe")
+        ax.axvline(x=random_person.infection.time_of_symptoms_onset, 
+                linestyle="dashed",
+                color='gray',
+                alpha=0.3,
+                label='time of symptoms onset'
+        )
+
+        times, transmissions = self.get_infectiousness(random_person, 14.0)
+        ax.plot(times, transmissions, label="severe")
+        ax.plot(
+            times,
+            infection_selector.mild_infectious_factor.value * np.array(transmissions),
+            label="mild",
+        )
+        ax.plot(
+            times,
+            infection_selector.asymptomatic_infectious_factor.value
+            * np.array(transmissions),
+            label="asymptomatic",
+        )
+        ax.set_xlabel("Days from infection")
+
+        ax.set_ylabel("Infectivity")
+        ax.legend(loc='upper right', bbox_to_anchor=(1,1))
+        return ax
