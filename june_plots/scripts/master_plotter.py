@@ -285,16 +285,15 @@ class Plotter:
 
     def plot_all(self):
         print ("Plotting the world")
-        #self.plot_commute()
-        #self.plot_companies()
+        self.plot_commute()
+        self.plot_companies()
         self.plot_households()
-        #self.plot_leisure()
-        #self.plot_policies()
+        self.plot_leisure()
+        self.plot_policies()
         self.plot_care_homes()
         self.plot_schools()
-        #self.plot_contact_matrices()
+        self.plot_contact_matrices()
         self.plot_life_expectancy()
-
 
 if __name__ == "__main__":
 

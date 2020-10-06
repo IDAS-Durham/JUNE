@@ -222,7 +222,7 @@ class HouseholdPlots:
             linewidth=3,
             label="NOMIS"
         )
-        ax[0].hist(age_difference_couples, density=True, label="JUNE", bins=20)
+        ax[0].hist(age_difference_couples, density=True, label="JUNE", bins=20, alpha=0.7)
         ax[0].set_xlim(-15, 15)
         ax[0].legend()
 
@@ -232,7 +232,7 @@ class HouseholdPlots:
             linewidth=3,
             label="NOMIS"
         )
-        ax[1].hist(age_differences_first_kid, density=True, label="JUNE", bins=30)
+        ax[1].hist(age_differences_first_kid, density=True, label="JUNE", bins=30, alpha=0.7)
         ax[1].set_xlabel("Parent - first child\nage difference")
         ax[1].set_xlim(15, 65)
         ax[1].legend()
@@ -243,7 +243,7 @@ class HouseholdPlots:
             linewidth=3,
             label="NOMIS"
         )
-        ax[2].hist(age_differences_second_kid, density=True, label="JUNE", bins=30)
+        ax[2].hist(age_differences_second_kid, density=True, label="JUNE", bins=30, alpha=0.7)
         ax[2].set_xlabel("Parent - second child\nage difference")
         ax[2].set_xlim(15, 66)
         ax[2].legend()
