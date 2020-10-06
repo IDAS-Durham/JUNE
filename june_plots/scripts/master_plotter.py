@@ -292,7 +292,7 @@ class Plotter:
         
     ):
         """Plot socioeconomic_index vs. life_expectancy"""
-        save_dir / "health_index"
+        save_dir.mkdir(exist_ok=True, parents=True)
 
         hi_plots = HealthIndexPlots()
         prevalence_plot = hi_plots.zero_prevalence_plot()
@@ -302,6 +302,10 @@ class Plotter:
         rates_plot = hi_plots.rates_plot()
         rates_plot.plot()
         plt.savefig(save_dir / "rates.png", dpi=150, bbox_inches="tight")
+
+        infectiousness_plot = hi_plots.infectiousness()
+        infectiousness_plot.plot()
+        plt.savefig(save_dir / "infectiousness.png", dpi=150, bbox_inches="tight")
 
 
 
