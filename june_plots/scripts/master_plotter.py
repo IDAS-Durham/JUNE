@@ -17,6 +17,7 @@ from june_plots.scripts.schools import SchoolPlots
 from june_plots.scripts.commute import CommutePlots
 from june_plots.scripts.contact_matrix import ContactMatrixPlots
 from june_plots.scripts.life_expectancy import LifeExpectancyPlots
+from june_plots.scripts.demography import DemographyPlots
 
 plt.style.use(['science'])
 plt.style.reload_library()
@@ -45,6 +46,29 @@ class Plotter:
 
         return Plotter(world)
 
+    def plot_demography(
+            self,
+            save_dir: Path = default_output_plots_path / "demography",
+    ):
+        "Make all demography plots"
+
+        save_dir.mkdir(exist_ok=True, parents=True)
+
+        print ("Setting up demography plots")
+        demography_plots = DemographyPlots(self.world)
+
+        print ("Plotting age distribution")
+        age_distribution_plot = demography_plots.plot_age_distribution()
+        age_distribution_plot.plot()
+        plt.savefig(save_dir / 'age_distribution.png', dpi=150, bbox_inches='tight')
+
+        print ("Plotting population density")
+        population_density_plot = demography_plots.plot_population_density()
+        population_density_plot.plot()
+        plt.savefig(save_dir / 'population_density.png', dpi=150, bbox_inches='tight')
+
+        
+
     def plot_commute(
             self,
             save_dir: Path = default_output_plots_path / "commute",
@@ -53,8 +77,7 @@ class Plotter:
 
         save_dir.mkdir(exist_ok=True, parents=True)
 
-        print ("Plotting into {}".format(save_dir))
-
+        print ("Setting up commute plots")
         commute_plots = CommutePlots(self.world)
 
         print ("Plotting internal exteral numbers")
@@ -98,10 +121,17 @@ class Plotter:
             plt.savefig(save_dir / 'London_external_commute.png', dpi=150, bbox_inches='tight')
         
 
-    def plot_households(self, save_dir: Path = default_output_plots_path / "households"):
+    def plot_households(
+            self,
+            save_dir: Path = default_output_plots_path / "households"
+    ):
+        "Make all household plots"
+        
         save_dir.mkdir(exist_ok=True, parents=True)
+        
         print("Setting up household plots")
         household_plots = HouseholdPlots(self.world)
+
         household_plots.plot_all_household_plots(save_dir=save_dir)
 
 
@@ -149,7 +179,6 @@ class Plotter:
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up leisure plots")
-
         leisure_plots = LeisurePlots(self.world)
 
         print ("Running poisson process")
@@ -175,7 +204,6 @@ class Plotter:
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up policy plots")
-
         policy_plots = PolicyPlots(self.world)
 
         print ("Plotting restaurant reopening")
@@ -217,7 +245,7 @@ class Plotter:
         """Make all school plots"""
         save_dir.mkdir(exist_ok=True, parents=True)
 
-        print("Set up school plots")
+        print("Setting up school plots")
         school_plots = SchoolPlots(self.world)
         school_plots.load_school_data()
 
@@ -285,6 +313,7 @@ class Plotter:
 
     def plot_all(self):
         print ("Plotting the world")
+        self.plot_demography()
         self.plot_commute()
         self.plot_companies()
         self.plot_households()
