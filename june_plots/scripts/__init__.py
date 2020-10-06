@@ -7,5 +7,5 @@ from .households import HouseholdPlots
 from .contact_matrix import ContactMatrixPlots
 from .commute import CommutePlots
 from .schools import SchoolPlots
-from .life_expectancy import LifeExpectancy
-from .demography import Demography
+from .life_expectancy import LifeExpectancyPlots
+from .demography import DemographyPlots
