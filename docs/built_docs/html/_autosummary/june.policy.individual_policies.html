@@ -1,0 +1,814 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.policy.individual_policies &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.policy.interaction_policies" href="june.policy.interaction_policies.html" />
+    <link rel="prev" title="june.paths" href="june.paths.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.policy.individual_policies</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.paths.html">june.paths</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.policy.interaction_policies.html">june.policy.interaction_policies</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="module-june.policy.individual_policies">
+<span id="june-policy-individual-policies"></span><h1>june.policy.individual_policies<a class="headerlink" href="#module-june.policy.individual_policies" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="june.policy.individual_policies.CloseCompanies">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.individual_policies.</code><code class="sig-name descname">CloseCompanies</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">full_closure</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">avoid_work_probability</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">furlough_probability</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">key_probability</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.CloseCompanies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prevents workers with the tag <a href="#id1"><span class="problematic" id="id2">``</span></a>person.lockdown_status=furlough” to go to work.
+If full_closure is True, then no one will go to work.</p>
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseCompanies.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">full_closure</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">avoid_work_probability</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">furlough_probability</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">key_probability</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.CloseCompanies.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prevents workers with the tag <a href="#id3"><span class="problematic" id="id4">``</span></a>person.lockdown_status=furlough” to go to work.
+If full_closure is True, then no one will go to work.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseCompanies.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="headerlink" href="#june.policy.individual_policies.CloseCompanies.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove an activity from a list of activities</p>
+<dl class="simple">
+<dt>activities:</dt><dd><p>list of activities</p>
+</dd>
+<dt>activity_to_remove:</dt><dd><p>activity that will be removed from the list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseCompanies.check_skips_activity">
+<code class="sig-name descname">check_skips_activity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">furlough_ratio</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">key_ratio</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">random_ratio</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.CloseCompanies.check_skips_activity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the activity is to be skipped, otherwise False</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseCompanies.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.policy.individual_policies.CloseCompanies.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the policy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseCompanies.is_active">
+<code class="sig-name descname">is_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.CloseCompanies.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the policy is active, false otherwise</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to check</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseCompanies.read_date">
+<em class="property">static </em><code class="sig-name descname">read_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; datetime.datetime<a class="headerlink" href="#june.policy.individual_policies.CloseCompanies.read_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read date in two possible formats, either string or datetime.date, both
+are translated into datetime.datetime to be used by the simulator</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to translate into datetime.datetime</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>date in datetime format</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.individual_policies.CloseCompanies._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.policy.individual_policies.CloseCompanies._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.policy.individual_policies.CloseSchools">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.individual_policies.</code><code class="sig-name descname">CloseSchools</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">years_to_close</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">full_closure</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.CloseSchools" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseSchools.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">years_to_close</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">full_closure</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.CloseSchools.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseSchools._check_kid_goes_to_school">
+<code class="sig-name descname">_check_kid_goes_to_school</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.CloseSchools._check_kid_goes_to_school" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a kid should go to school when there is a lockdown.
+The rule is that a kid goes to school if the age is below 14 (not included)
+and there are at least two key workers at home.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseSchools.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="headerlink" href="#june.policy.individual_policies.CloseSchools.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove an activity from a list of activities</p>
+<dl class="simple">
+<dt>activities:</dt><dd><p>list of activities</p>
+</dd>
+<dt>activity_to_remove:</dt><dd><p>activity that will be removed from the list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseSchools.check_skips_activity">
+<code class="sig-name descname">check_skips_activity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.CloseSchools.check_skips_activity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the activity is to be skipped, otherwise False</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseSchools.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.policy.individual_policies.CloseSchools.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the policy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseSchools.is_active">
+<code class="sig-name descname">is_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.CloseSchools.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the policy is active, false otherwise</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to check</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseSchools.read_date">
+<em class="property">static </em><code class="sig-name descname">read_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; datetime.datetime<a class="headerlink" href="#june.policy.individual_policies.CloseSchools.read_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read date in two possible formats, either string or datetime.date, both
+are translated into datetime.datetime to be used by the simulator</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to translate into datetime.datetime</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>date in datetime format</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.individual_policies.CloseSchools._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.policy.individual_policies.CloseSchools._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.policy.individual_policies.CloseUniversities">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.individual_policies.</code><code class="sig-name descname">CloseUniversities</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.CloseUniversities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseUniversities.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.CloseUniversities.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseUniversities.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="headerlink" href="#june.policy.individual_policies.CloseUniversities.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove an activity from a list of activities</p>
+<dl class="simple">
+<dt>activities:</dt><dd><p>list of activities</p>
+</dd>
+<dt>activity_to_remove:</dt><dd><p>activity that will be removed from the list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseUniversities.check_skips_activity">
+<code class="sig-name descname">check_skips_activity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.CloseUniversities.check_skips_activity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the activity is to be skipped, otherwise False</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseUniversities.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.policy.individual_policies.CloseUniversities.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the policy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseUniversities.is_active">
+<code class="sig-name descname">is_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.CloseUniversities.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the policy is active, false otherwise</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to check</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.CloseUniversities.read_date">
+<em class="property">static </em><code class="sig-name descname">read_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; datetime.datetime<a class="headerlink" href="#june.policy.individual_policies.CloseUniversities.read_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read date in two possible formats, either string or datetime.date, both
+are translated into datetime.datetime to be used by the simulator</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to translate into datetime.datetime</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>date in datetime format</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.individual_policies.CloseUniversities._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.policy.individual_policies.CloseUniversities._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.policy.individual_policies.IndividualPolicies">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.individual_policies.</code><code class="sig-name descname">IndividualPolicies</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">policies</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.policy.policy.html#june.policy.policy.Policy" title="june.policy.policy.Policy">june.policy.policy.Policy</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.IndividualPolicies" title="Permalink to this definition">¶</a></dt>
+<dd><p>A collection of like policies active on the same date</p>
+<dl class="py method">
+<dt id="june.policy.individual_policies.IndividualPolicies.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">policies</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.policy.policy.html#june.policy.policy.Policy" title="june.policy.policy.Policy">june.policy.policy.Policy</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.IndividualPolicies.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>A collection of like policies active on the same date</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.IndividualPolicies.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">active_policies</span></em>, <em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">days_from_start</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">furlough_ratio</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">key_ratio</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">random_ratio</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.IndividualPolicies.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies all active individual policies to the person. Stay home policies are applied first,
+since if the person stays home we don’t need to check for the others.
+IF a person is below 15 years old, then we look for a guardian to stay with that person at home.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.IndividualPolicies.from_policies">
+<em class="property">classmethod </em><code class="sig-name descname">from_policies</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">policies</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.policy.policy.html#june.policy.policy.Policies" title="june.policy.policy.Policies">june.policy.policy.Policies</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.IndividualPolicies.from_policies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.IndividualPolicies.get_active">
+<code class="sig-name descname">get_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.date</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.IndividualPolicies.get_active" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.individual_policies.IndividualPolicies.min_age_home_alone">
+<code class="sig-name descname">min_age_home_alone</code><em class="property"> = 15</em><a class="headerlink" href="#june.policy.individual_policies.IndividualPolicies.min_age_home_alone" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.individual_policies.IndividualPolicies.policy_type">
+<code class="sig-name descname">policy_type</code><em class="property"> = 'individual'</em><a class="headerlink" href="#june.policy.individual_policies.IndividualPolicies.policy_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.policy.individual_policies.IndividualPolicy">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.individual_policies.</code><code class="sig-name descname">IndividualPolicy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.IndividualPolicy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.policy.individual_policies.IndividualPolicy.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.IndividualPolicy.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.IndividualPolicy.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.policy.individual_policies.IndividualPolicy.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the policy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.IndividualPolicy.is_active">
+<code class="sig-name descname">is_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.IndividualPolicy.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the policy is active, false otherwise</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to check</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.IndividualPolicy.read_date">
+<em class="property">static </em><code class="sig-name descname">read_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; datetime.datetime<a class="headerlink" href="#june.policy.individual_policies.IndividualPolicy.read_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read date in two possible formats, either string or datetime.date, both
+are translated into datetime.datetime to be used by the simulator</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to translate into datetime.datetime</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>date in datetime format</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.individual_policies.IndividualPolicy._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.policy.individual_policies.IndividualPolicy._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.policy.individual_policies.Quarantine">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.individual_policies.</code><code class="sig-name descname">Quarantine</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'2100-01-01'</span></em>, <em class="sig-param"><span class="n">n_days</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">7</span></em>, <em class="sig-param"><span class="n">n_days_household</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">14</span></em>, <em class="sig-param"><span class="n">compliance</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">household_compliance</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.Quarantine" title="Permalink to this definition">¶</a></dt>
+<dd><p>This policy forces people to stay at home for <code class="docutils literal notranslate"><span class="pre">`n_days`</span></code> days after they show symtpoms, and for <code class="docutils literal notranslate"><span class="pre">`n_days_household`</span></code> if someone else in their household shows symptoms</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+<dt>n_days:</dt><dd><p>days for which the person has to stay at home if they show symtpoms</p>
+</dd>
+<dt>n_days_household:</dt><dd><p>days for which the person has to stay at home if someone in their household shows symptoms</p>
+</dd>
+<dt>compliance:</dt><dd><p>percentage of symptomatic people that will adhere to the quarantine policy</p>
+</dd>
+<dt>household_compliance:</dt><dd><p>percentage of people that will adhere to the hoseuhold quarantine policy</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.policy.individual_policies.Quarantine.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'2100-01-01'</span></em>, <em class="sig-param"><span class="n">n_days</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">7</span></em>, <em class="sig-param"><span class="n">n_days_household</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">14</span></em>, <em class="sig-param"><span class="n">compliance</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">household_compliance</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.Quarantine.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>This policy forces people to stay at home for <code class="docutils literal notranslate"><span class="pre">`n_days`</span></code> days after they show symtpoms, and for <code class="docutils literal notranslate"><span class="pre">`n_days_household`</span></code> if someone else in their household shows symptoms</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+<dt>n_days:</dt><dd><p>days for which the person has to stay at home if they show symtpoms</p>
+</dd>
+<dt>n_days_household:</dt><dd><p>days for which the person has to stay at home if someone in their household shows symptoms</p>
+</dd>
+<dt>compliance:</dt><dd><p>percentage of symptomatic people that will adhere to the quarantine policy</p>
+</dd>
+<dt>household_compliance:</dt><dd><p>percentage of people that will adhere to the hoseuhold quarantine policy</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.Quarantine.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">days_from_start</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.Quarantine.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes all activities but residence if the person has to stay at home.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.Quarantine.check_stay_home_condition">
+<code class="sig-name descname">check_stay_home_condition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">days_from_start</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.Quarantine.check_stay_home_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if a person must stay at home.
+Parameters
+———-
+person:</p>
+<blockquote>
+<div><p>person to whom the policy is being applied</p>
+</div></blockquote>
+<dl class="simple">
+<dt>days_from_start:</dt><dd><p>time past from beginning of simulation, in units of days</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.Quarantine.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.policy.individual_policies.Quarantine.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the policy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.Quarantine.is_active">
+<code class="sig-name descname">is_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.Quarantine.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the policy is active, false otherwise</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to check</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.Quarantine.read_date">
+<em class="property">static </em><code class="sig-name descname">read_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; datetime.datetime<a class="headerlink" href="#june.policy.individual_policies.Quarantine.read_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read date in two possible formats, either string or datetime.date, both
+are translated into datetime.datetime to be used by the simulator</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to translate into datetime.datetime</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>date in datetime format</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.individual_policies.Quarantine._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.policy.individual_policies.Quarantine._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.policy.individual_policies.SevereSymptomsStayHome">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.individual_policies.</code><code class="sig-name descname">SevereSymptomsStayHome</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="o">=</span><span class="default_value">'2100-01-01'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.SevereSymptomsStayHome" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.policy.individual_policies.SevereSymptomsStayHome.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="o">=</span><span class="default_value">'2100-01-01'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.SevereSymptomsStayHome.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.SevereSymptomsStayHome.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">days_from_start</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.SevereSymptomsStayHome.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes all activities but residence if the person has to stay at home.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.SevereSymptomsStayHome.check_stay_home_condition">
+<code class="sig-name descname">check_stay_home_condition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">days_from_start</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.SevereSymptomsStayHome.check_stay_home_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if a person must stay at home.
+Parameters
+———-
+person:</p>
+<blockquote>
+<div><p>person to whom the policy is being applied</p>
+</div></blockquote>
+<dl class="simple">
+<dt>days_from_start:</dt><dd><p>time past from beginning of simulation, in units of days</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.SevereSymptomsStayHome.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.policy.individual_policies.SevereSymptomsStayHome.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the policy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.SevereSymptomsStayHome.is_active">
+<code class="sig-name descname">is_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.SevereSymptomsStayHome.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the policy is active, false otherwise</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to check</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.SevereSymptomsStayHome.read_date">
+<em class="property">static </em><code class="sig-name descname">read_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; datetime.datetime<a class="headerlink" href="#june.policy.individual_policies.SevereSymptomsStayHome.read_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read date in two possible formats, either string or datetime.date, both
+are translated into datetime.datetime to be used by the simulator</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to translate into datetime.datetime</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>date in datetime format</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.individual_policies.SevereSymptomsStayHome._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.policy.individual_policies.SevereSymptomsStayHome._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.policy.individual_policies.Shielding">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.individual_policies.</code><code class="sig-name descname">Shielding</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">min_age</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">compliance</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.Shielding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.policy.individual_policies.Shielding.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">min_age</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">compliance</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.Shielding.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.Shielding.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">days_from_start</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.Shielding.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes all activities but residence if the person has to stay at home.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.Shielding.check_stay_home_condition">
+<code class="sig-name descname">check_stay_home_condition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">days_from_start</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.Shielding.check_stay_home_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if a person must stay at home.
+Parameters
+———-
+person:</p>
+<blockquote>
+<div><p>person to whom the policy is being applied</p>
+</div></blockquote>
+<dl class="simple">
+<dt>days_from_start:</dt><dd><p>time past from beginning of simulation, in units of days</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.Shielding.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.policy.individual_policies.Shielding.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the policy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.Shielding.is_active">
+<code class="sig-name descname">is_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.Shielding.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the policy is active, false otherwise</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to check</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.Shielding.read_date">
+<em class="property">static </em><code class="sig-name descname">read_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; datetime.datetime<a class="headerlink" href="#june.policy.individual_policies.Shielding.read_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read date in two possible formats, either string or datetime.date, both
+are translated into datetime.datetime to be used by the simulator</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to translate into datetime.datetime</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>date in datetime format</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.individual_policies.Shielding._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.policy.individual_policies.Shielding._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.policy.individual_policies.SkipActivity">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.individual_policies.</code><code class="sig-name descname">SkipActivity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'2100-01-01'</span></em>, <em class="sig-param"><span class="n">activities_to_remove</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.SkipActivity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for policies that will ban an activity for a person</p>
+<p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.policy.individual_policies.SkipActivity.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'2100-01-01'</span></em>, <em class="sig-param"><span class="n">activities_to_remove</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.SkipActivity.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.SkipActivity.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="headerlink" href="#june.policy.individual_policies.SkipActivity.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove an activity from a list of activities</p>
+<dl class="simple">
+<dt>activities:</dt><dd><p>list of activities</p>
+</dd>
+<dt>activity_to_remove:</dt><dd><p>activity that will be removed from the list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.SkipActivity.check_skips_activity">
+<code class="sig-name descname">check_skips_activity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.SkipActivity.check_skips_activity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the activity is to be skipped, otherwise False</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.SkipActivity.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.policy.individual_policies.SkipActivity.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the policy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.SkipActivity.is_active">
+<code class="sig-name descname">is_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.SkipActivity.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the policy is active, false otherwise</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to check</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.SkipActivity.read_date">
+<em class="property">static </em><code class="sig-name descname">read_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; datetime.datetime<a class="headerlink" href="#june.policy.individual_policies.SkipActivity.read_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read date in two possible formats, either string or datetime.date, both
+are translated into datetime.datetime to be used by the simulator</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to translate into datetime.datetime</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>date in datetime format</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.individual_policies.SkipActivity._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.policy.individual_policies.SkipActivity._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.policy.individual_policies.StayHome">
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.individual_policies.</code><code class="sig-name descname">StayHome</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="o">=</span><span class="default_value">'2100-01-01'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.StayHome" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for policies that will force someone to stay at home</p>
+<p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.policy.individual_policies.StayHome.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="o">=</span><span class="default_value">'2100-01-01'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.StayHome.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Template for a general policy.</p>
+<dl class="simple">
+<dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
+</dd>
+<dt>end_time:</dt><dd><p>date from which the policy won’t apply</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.StayHome.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">days_from_start</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.StayHome.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes all activities but residence if the person has to stay at home.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.StayHome.check_stay_home_condition">
+<code class="sig-name descname">check_stay_home_condition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">days_from_start</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.individual_policies.StayHome.check_stay_home_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if a person must stay at home.
+Parameters
+———-
+person:</p>
+<blockquote>
+<div><p>person to whom the policy is being applied</p>
+</div></blockquote>
+<dl class="simple">
+<dt>days_from_start:</dt><dd><p>time past from beginning of simulation, in units of days</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.StayHome.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.policy.individual_policies.StayHome.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the policy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.StayHome.is_active">
+<code class="sig-name descname">is_active</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#june.policy.individual_policies.StayHome.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the policy is active, false otherwise</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to check</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.policy.individual_policies.StayHome.read_date">
+<em class="property">static </em><code class="sig-name descname">read_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>datetime.datetime<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; datetime.datetime<a class="headerlink" href="#june.policy.individual_policies.StayHome.read_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read date in two possible formats, either string or datetime.date, both
+are translated into datetime.datetime to be used by the simulator</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to translate into datetime.datetime</p>
+</dd>
+</dl>
+<blockquote>
+<div><p>date in datetime format</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.individual_policies.StayHome._abc_impl">
+<code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.policy.individual_policies.StayHome._abc_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="june.policy.individual_policies.random">
+<code class="sig-prename descclassname">june.policy.individual_policies.</code><code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#june.policy.individual_policies.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.paths.html">june.paths</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.policy.interaction_policies.html">june.policy.interaction_policies</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.commute &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.demography" href="june.demography.html" />
+    <link rel="prev" title="june.box" href="june.box.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.commute</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.box.html">june.box</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.demography.html">june.demography</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="module-june.commute">
+<span id="june-commute"></span><h1>june.commute<a class="headerlink" href="#module-june.commute" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="june.commute.CommuteGenerator">
+<em class="property">class </em><code class="sig-prename descclassname">june.commute.</code><code class="sig-name descname">CommuteGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">regional_generators</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span><a class="reference internal" href="#june.commute.RegionalGenerator" title="june.commute.RegionalGenerator">june.commute.RegionalGenerator</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.commute.CommuteGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a mode of transport that a person uses in their commute.</p>
+<p>Modes of transport are chosen randomly, weighted by the numbers taken
+from census data for each given Output area.</p>
+<dl class="simple">
+<dt>regional_generators</dt><dd><p>A dictionary mapping Geography msoareas to objects that randomly
+generate modes of transport</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.commute.CommuteGenerator.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">regional_generators</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span><a class="reference internal" href="#june.commute.RegionalGenerator" title="june.commute.RegionalGenerator">june.commute.RegionalGenerator</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.commute.CommuteGenerator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a mode of transport that a person uses in their commute.</p>
+<p>Modes of transport are chosen randomly, weighted by the numbers taken
+from census data for each given Output area.</p>
+<dl class="simple">
+<dt>regional_generators</dt><dd><p>A dictionary mapping Geography msoareas to objects that randomly
+generate modes of transport</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.commute.CommuteGenerator.from_file">
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/commute/commute_ew.csv')</span></em>, <em class="sig-param"><span class="n">config_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/commute.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#june.commute.CommuteGenerator" title="june.commute.CommuteGenerator">june.commute.CommuteGenerator</a><a class="headerlink" href="#june.commute.CommuteGenerator.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse configuration describing each included mode of transport
+along with census data describing the weightings for modes of
+transport in each output area.</p>
+<dl class="simple">
+<dt>filename</dt><dd><p>The path to the commute.csv file.
+This contains data on the number of people using each mode
+of transport.</p>
+</dd>
+<dt>config_filename</dt><dd><p>The path to the commute.yaml file</p>
+</dd>
+</dl>
+<p>An object used to generate commutes</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.commute.CommuteGenerator.regional_gen_from_msoarea">
+<code class="sig-name descname">regional_gen_from_msoarea</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#june.commute.RegionalGenerator" title="june.commute.RegionalGenerator">june.commute.RegionalGenerator</a><a class="headerlink" href="#june.commute.CommuteGenerator.regional_gen_from_msoarea" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a regional generator for an Area identified
+by its output output area, e.g. E00062207</p>
+<dl class="simple">
+<dt>super_area</dt><dd><p>A code for an super_area</p>
+</dd>
+</dl>
+<p>An object that weighted-randomly selects modes of transport for the region.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.commute.ModeOfTransport">
+<em class="property">class </em><code class="sig-prename descclassname">june.commute.</code><code class="sig-name descname">ModeOfTransport</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">description</span></em>, <em class="sig-param"><span class="n">is_public</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.commute.ModeOfTransport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a ModeOfTransport from its description.</p>
+<p>Only one instance of each mode of transport exists with instances being
+retrieved from the __all dictionary.</p>
+<dl class="simple">
+<dt>description</dt><dd><p>e.g. “Bus, minibus or coach”</p>
+</dd>
+<dt>is_public</dt><dd><p>True if this is public transport, for example a bus.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.commute.ModeOfTransport.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">description</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">is_public</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.commute.ModeOfTransport.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a ModeOfTransport from its description.</p>
+<p>Only one instance of each mode of transport exists with instances being
+retrieved from the __all dictionary.</p>
+<dl class="simple">
+<dt>description</dt><dd><p>e.g. “Bus, minibus or coach”</p>
+</dd>
+<dt>is_public</dt><dd><p>True if this is public transport, for example a bus.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.commute.ModeOfTransport.index">
+<code class="sig-name descname">index</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">headers</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#june.commute.ModeOfTransport.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the column index of this mode of transport.</p>
+<p>The first header that contains this mode of transport’s description
+is counted.</p>
+<dl class="simple">
+<dt>headers</dt><dd><p>A list of headers from a CSV file.</p>
+</dd>
+</dl>
+<p>The column index corresponding to this mode of transport.</p>
+<p>An assertion error if no such header is found.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.commute.ModeOfTransport.load_from_file">
+<em class="property">classmethod </em><code class="sig-name descname">load_from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config_filename</span><span class="o">=</span><span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/commute.yaml')</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="#june.commute.ModeOfTransport" title="june.commute.ModeOfTransport">june.commute.ModeOfTransport</a><span class="p">]</span><a class="headerlink" href="#june.commute.ModeOfTransport.load_from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load all of the modes of transport from commute.yaml.</p>
+<p>Modes of transport are globally unique. That is, even if the function
+is called twice identical mode of transport objects are returned.</p>
+<dl class="simple">
+<dt>config_filename</dt><dd><p>The path to the mode of transport yaml configuration</p>
+</dd>
+</dl>
+<p>A list of modes of transport</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.commute.ModeOfTransport.with_description">
+<em class="property">classmethod </em><code class="sig-name descname">with_description</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">description</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#june.commute.ModeOfTransport" title="june.commute.ModeOfTransport">june.commute.ModeOfTransport</a><a class="headerlink" href="#june.commute.ModeOfTransport.with_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a mode of transport by its description.</p>
+<dl class="simple">
+<dt>description</dt><dd><p>A description, e.g. ‘Bus, minibus or coach’</p>
+</dd>
+</dl>
+<p>The corresponding ModeOfTransport instance</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.commute.ModeOfTransport.is_private">
+<em class="property">property </em><code class="sig-name descname">is_private</code><a class="headerlink" href="#june.commute.ModeOfTransport.is_private" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if this is private transport, for example a car.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.commute.RegionalGenerator">
+<em class="property">class </em><code class="sig-prename descclassname">june.commute.</code><code class="sig-name descname">RegionalGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msoarea</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">weighted_modes</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Tuple<span class="p">[</span>int<span class="p">, </span><a class="reference internal" href="#june.commute.ModeOfTransport" title="june.commute.ModeOfTransport">ModeOfTransport</a><span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.commute.RegionalGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly generate modes of transport, weighted by usage, for
+one particular region.</p>
+<dl class="simple">
+<dt>msoarea</dt><dd><p>A unique identifier for a Output region</p>
+</dd>
+<dt>weighted_modes</dt><dd><p>A list of tuples comprising the number of people using a mode
+of a transport and a representation of that mode of transport</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.commute.RegionalGenerator.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msoarea</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">weighted_modes</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Tuple<span class="p">[</span>int<span class="p">, </span><a class="reference internal" href="#june.commute.ModeOfTransport" title="june.commute.ModeOfTransport">ModeOfTransport</a><span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.commute.RegionalGenerator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly generate modes of transport, weighted by usage, for
+one particular region.</p>
+<dl class="simple">
+<dt>msoarea</dt><dd><p>A unique identifier for a Output region</p>
+</dd>
+<dt>weighted_modes</dt><dd><p>A list of tuples comprising the number of people using a mode
+of a transport and a representation of that mode of transport</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.commute.RegionalGenerator.weighted_random_choice">
+<code class="sig-name descname">weighted_random_choice</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#june.commute.ModeOfTransport" title="june.commute.ModeOfTransport">june.commute.ModeOfTransport</a><a class="headerlink" href="#june.commute.RegionalGenerator.weighted_random_choice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly choose a mode of transport, weighted by usage in this region.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.commute.RegionalGenerator.modes">
+<em class="property">property </em><code class="sig-name descname">modes</code><a class="headerlink" href="#june.commute.RegionalGenerator.modes" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of modes of transport</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.commute.RegionalGenerator.total">
+<em class="property">property </em><code class="sig-name descname">total</code><a class="headerlink" href="#june.commute.RegionalGenerator.total" title="Permalink to this definition">¶</a></dt>
+<dd><p>The sum of the numbers of people using each mode of transport</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.commute.RegionalGenerator.weights">
+<em class="property">property </em><code class="sig-name descname">weights</code><a class="headerlink" href="#june.commute.RegionalGenerator.weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>The normalised weights for each mode of transport.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.box.html">june.box</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.demography.html">june.demography</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

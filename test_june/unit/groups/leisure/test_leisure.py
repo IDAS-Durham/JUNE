@@ -1,7 +1,7 @@
 import numpy as np
 from pytest import fixture
 from june.groups import Household
-from june.demography.geography import Area, SuperArea
+from june.geography import Area, SuperArea
 from june.world import generate_world_from_geography
 
 from june.groups.leisure import (
@@ -15,9 +15,13 @@ from june.groups.leisure import (
     PubDistributor,
     CinemaDistributor,
 )
-from june.demography.geography import Geography
+from june.geography import Geography
 from june.demography import Person, Demography
 from june import World
+
+class MockArea:
+    def __init__(self):
+        pass
 
 
 @fixture(name="geography")
@@ -47,15 +51,16 @@ def make_leisure():
     leisure = Leisure(
         leisure_distributors={"pubs": pub_distributor, "cinemas": cinema_distributor}
     )
-    leisure.generate_leisure_probabilities_for_timestep(0.01, False)
+    leisure.generate_leisure_probabilities_for_timestep(0.01, False, False)
     return leisure
 
 
 def test__probability_of_leisure(leisure):
     person = Person.from_attributes(sex="m", age=26)
+    person.area = MockArea()
     household = Household(type="student")
     household.add(person)
-    person.residence.group.social_venues = {
+    person.area.social_venues = {
         "cinemas": [leisure.leisure_distributors["cinemas"].social_venues[0]],
         "pubs": [leisure.leisure_distributors["pubs"].social_venues[0]],
     }
@@ -105,7 +110,7 @@ def test__person_drags_household(leisure):
 def test__generate_leisure_from_world():
     geography = Geography.from_file({"super_area": ["E02002135"]})
     world = generate_world_from_geography(
-        geography, include_households=True, include_commute=False
+        geography, include_households=True
     )
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
@@ -118,8 +123,8 @@ def test__generate_leisure_from_world():
     leisure = generate_leisure_for_world(
         list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world
     )
-    leisure.distribute_social_venues_to_households([household], super_areas=world.super_areas)
-    leisure.generate_leisure_probabilities_for_timestep(0.1, False)
+    leisure.distribute_social_venues_to_areas(world.areas, super_areas=world.super_areas)
+    leisure.generate_leisure_probabilities_for_timestep(0.1, False, False)
     n_pubs = 0
     n_cinemas = 0
     n_groceries = 0

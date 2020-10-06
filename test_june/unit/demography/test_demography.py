@@ -2,7 +2,7 @@ import collections
 import pytest
 import numpy as np
 
-from june.demography.geography import Geography
+from june.geography import Geography
 from june import demography as d
 from june.demography import AgeSexGenerator
 

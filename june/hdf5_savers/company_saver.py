@@ -1,11 +1,13 @@
 import h5py
 import numpy as np
+import logging
 
 from june.groups import Company, Companies
 from june.world import World
 
 nan_integer = -999
 
+logger = logging.getLogger(__name__)
 
 def save_companies_to_hdf5(
     companies: Companies, file_path: str, chunk_size: int = 500000
@@ -78,21 +80,21 @@ def save_companies_to_hdf5(
                 companies_dset["n_workers_max"][idx1:idx2] = n_workers_max
 
 
-def load_companies_from_hdf5(file_path: str, chunk_size=50000):
+def load_companies_from_hdf5(file_path: str, chunk_size=50000, domain_super_areas=None):
     """
     Loads companies from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+    logger.info("loading companies...")
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
-        print("loading companies from hdf5 ", end="")
         companies = f["companies"]
         companies_list = []
         n_companies = companies.attrs["n_companies"]
         n_chunks = int(np.ceil(n_companies / chunk_size))
         for chunk in range(n_chunks):
-            print(".", end="")
+            logger.info(f"Companies chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
             length = idx2 - idx1
@@ -104,7 +106,19 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000):
             companies["n_workers_max"].read_direct(
                 n_workers_maxs, np.s_[idx1:idx2], np.s_[0:length]
             )
+            super_areas = np.empty(length, dtype=int)
+            companies["super_area"].read_direct(
+                super_areas, np.s_[idx1:idx2], np.s_[0:length]
+            )
             for k in range(length):
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
                 company = Company(
                     super_area=None,
                     n_workers_max=n_workers_maxs[k],
@@ -112,23 +126,18 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000):
                 )
                 company.id = ids[k]
                 companies_list.append(company)
-    print("\n", end="")
     return Companies(companies_list)
 
 
-def restore_companies_properties_from_hdf5(world: World, file_path: str, chunk_size):
-    super_areas_first_id = world.super_areas[
-        0
-    ].id  # in case some super areas were created before
-    first_company_id = world.companies[0].id
-    print("restoring companies from hdf5 ", end="")
+def restore_companies_properties_from_hdf5(
+    world: World, file_path: str, chunk_size, domain_super_areas=None
+):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         companies = f["companies"]
         companies_list = []
         n_companies = companies.attrs["n_companies"]
         n_chunks = int(np.ceil(n_companies / chunk_size))
         for chunk in range(n_chunks):
-            print(".", end="")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
             length = idx2 - idx1
@@ -139,11 +148,16 @@ def restore_companies_properties_from_hdf5(world: World, file_path: str, chunk_s
                 super_areas, np.s_[idx1:idx2], np.s_[0:length]
             )
             for k in range(length):
-                company = world.companies[ids[k] - first_company_id]
+                if domain_super_areas is not None:
+                    super_area = super_areas[k]
+                    if super_area == nan_integer:
+                        raise ValueError(
+                            "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        )
+                    if super_area not in domain_super_areas:
+                        continue
+                company = world.companies.get_from_id(ids[k])
                 if super_areas[k] == nan_integer:
                     company.super_area = None
                 else:
-                    company.super_area = world.super_areas[
-                        super_areas[k] - super_areas_first_id
-                    ]
-    print("done")
+                    company.super_area = world.super_areas.get_from_id(super_areas[k])

@@ -1,5 +1,5 @@
 from june.demography.person import Person
-from june.groups.carehome import CareHome
+from june.groups.care_home import CareHome
 from june.groups.household import Household
 
 

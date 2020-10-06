@@ -7,8 +7,8 @@ import pytest
 
 from june import paths
 from june.demography import Person, Population
-from june.demography.geography import Geography
-from june.groups import Hospital, School, Company, Household, University
+from june.geography import Geography
+from june.groups import Hospital, School, Company, Household, University, CareHome
 from june.groups import (
     Hospitals,
     Schools,
@@ -19,7 +19,7 @@ from june.groups import (
 )
 from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub
 from june.infection import SymptomTag
-from june.infection.infection import InfectionSelector
+from june.infection.infection_selector import InfectionSelector
 from june.interaction import Interaction
 from june.policy import (
     Policy,
@@ -37,8 +37,8 @@ def test__hospitalise_the_sick(setup_policy_world, selector):
     policies = Policies([hospitalisation])
     sim.activity_manager.policies = policies
     selector.infect_person_at_time(worker, 0.0)
-    worker.health_information.infection.symptoms.tag = SymptomTag.hospitalised
-    assert worker.health_information.should_be_in_hospital
+    worker.infection.symptoms.tag = SymptomTag.hospitalised
+    assert worker.infection.should_be_in_hospital
     sim.update_health_status(0.0, 0.0)
     assert worker.medical_facility is not None
     sim.activity_manager.move_people_to_active_subgroups(
@@ -50,29 +50,23 @@ def test__hospitalise_the_sick(setup_policy_world, selector):
 
 def test__move_people_from_hospital_to_icu(setup_policy_world, selector):
     world, pupil, student, worker, sim = setup_policy_world
+    hospital = world.hospitals[0]
     selector.infect_person_at_time(worker, 0.0)
     hospitalisation = Hospitalisation()
     policies = Policies([hospitalisation])
     sim.activity_manager.policies = policies
-    worker.health_information.infection.symptoms.tag = SymptomTag.hospitalised
-    assert worker.health_information.should_be_in_hospital
+    worker.infection.symptoms.tag = SymptomTag.hospitalised
+    assert worker.infection.should_be_in_hospital
     sim.update_health_status(0.0, 0.0)
-    assert worker in worker.medical_facility.people
-    assert (
-        worker
-        in worker.medical_facility.group[
-            worker.medical_facility.group.SubgroupType.patients
-        ]
-    )
+    assert worker.medical_facility == hospital[hospital.SubgroupType.patients]
     sim.clear_world()
-    worker.health_information.infection.symptoms.tag = SymptomTag.intensive_care
+    worker.infection.symptoms.tag = SymptomTag.intensive_care
     sim.update_health_status(0.0, 0.0)
     hospital = worker.medical_facility.group
     sim.activity_manager.move_people_to_active_subgroups(
         ["medical_facility", "residence"]
     )
-    assert worker in hospital[hospital.SubgroupType.icu_patients]
-    assert worker not in hospital[hospital.SubgroupType.patients]
+    assert worker.medical_facility == hospital[hospital.SubgroupType.icu_patients]
     sim.clear_world()
 
 
@@ -82,23 +76,43 @@ def test__move_people_from_icu_to_hospital(setup_policy_world, selector):
     hospitalisation = Hospitalisation()
     policies = Policies([hospitalisation])
     sim.activity_manager.policies = policies
-    worker.health_information.infection.symptoms.tag = SymptomTag.intensive_care
-    assert worker.health_information.should_be_in_hospital
+    worker.infection.symptoms.tag = SymptomTag.intensive_care
+    assert worker.infection.should_be_in_hospital
+    hospital = world.hospitals[0]
     sim.update_health_status(0.0, 0.0)
-    assert worker in worker.medical_facility.people
-    assert (
-        worker
-        in worker.medical_facility.group[
-            worker.medical_facility.group.SubgroupType.icu_patients
-        ]
-    )
+    assert worker.medical_facility == hospital[hospital.SubgroupType.icu_patients]
     sim.clear_world()
-    worker.health_information.infection.symptoms.tag = SymptomTag.hospitalised
+    worker.infection.symptoms.tag = SymptomTag.hospitalised
     sim.update_health_status(0.0, 0.0)
     hospital = worker.medical_facility.group
     sim.activity_manager.move_people_to_active_subgroups(
         ["medical_facility", "residence"]
     )
-    assert worker in hospital[hospital.SubgroupType.patients]
-    assert worker not in hospital[hospital.SubgroupType.icu_patients]
+    assert worker.medical_facility == hospital[hospital.SubgroupType.patients]
     sim.clear_world()
+
+def test__care_home_residents_denied_treatment(setup_policy_world, selector):
+    world, pupil, student, worker, sim = setup_policy_world
+    person = Person.from_attributes()
+    person.area = world.areas[0]
+    care_home = CareHome()
+    care_home.add(person)
+    assert person.residence.group == care_home
+    selector.infect_person_at_time(person, 0.0)
+    person.infection.symptoms.tag = SymptomTag.hospitalised
+    assert person.infection.should_be_in_hospital
+    hospitalisation = Hospitalisation(probability_of_care_home_resident_admission=0.4)
+
+    times_admitted = 0
+    N = 1000
+    for _ in range(N):
+        hospitalisation.apply(person=person, hospitals=None, record = None)
+        if person.medical_facility is not None:
+            assert person.id in person.medical_facility.group.ward_ids
+            times_admitted += 1
+            person.medical_facility.group.ward_ids = set()
+            person.subgroups.medical_facility = None
+            continue
+        world.hospitals[0].denied_treatment_ids = set()
+    assert np.isclose(times_admitted, 0.4 * N, rtol=0.1)
+

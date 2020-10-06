@@ -4,7 +4,7 @@ male_age_probabilities:
 female_age_probabilities:
   18-65 : 0.90
   65-100 : 0.60
-neighbours_to_consider: 15
-maximum_distance: 15
+neighbours_to_consider: 7
+maximum_distance: 10
 weekend_boost: 0.70
 drags_household_probability: 0.2

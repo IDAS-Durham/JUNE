@@ -1,13 +1,15 @@
 import numpy as np
-from random import choice, random
+from random import choice, random, sample, randint
 from numba import jit
 from numba import typed
 from itertools import chain
+import yaml
 import re
 
 from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
 from june.groups import Household
 from june.utils.parse_probabilities import parse_age_probabilities
+from june.geography import Area
 
 
 @jit(nopython=True)
@@ -64,6 +66,14 @@ class SocialVenueDistributor:
         self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
         self.spec = "_".join(self.spec).lower()
 
+    @classmethod
+    def from_config(cls, social_venues: SocialVenues, config_filename: str = None):
+        if config_filename is None:
+            config_filename = cls.default_config_filename
+        with open(config_filename) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        return cls(social_venues, **config)
+
     def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
@@ -110,19 +120,44 @@ class SocialVenueDistributor:
         return 1 - np.exp(-poisson_parameter * delta_time)
 
     def get_possible_venues_for_household(self, household: Household):
+        """
+        Given a household location, searches for the social venues inside
+        ``self.maximum_distance``. It then returns ``self.neighbours_to_consider``
+        of them randomly. If there are no social venues inside the maximum distance,
+        it returns the closest one.
+        """
         house_location = household.area.coordinates
         potential_venues = self.social_venues.get_venues_in_radius(
             house_location, self.maximum_distance
         )
         if potential_venues is None:
-            venue = self.social_venues.get_closest_venues(house_location, k=1)[0]
-            return (venue,)
+            closest_venue = self.social_venues.get_closest_venues(house_location, k=1)
+            if closest_venue is None:
+                return
+            return (closest_venue[0], )
+        indices_len = min(len(potential_venues), self.neighbours_to_consider)
+        random_idx_choice = sample(range(len(potential_venues)), indices_len)
+        return tuple([potential_venues[idx] for idx in random_idx_choice])
 
-        potential_venues = np.random.choice(
-            potential_venues[: min(len(potential_venues), self.neighbours_to_consider)],
-            size=self.neighbours_to_consider,
+    def get_possible_venues_for_area(self, area: Area):
+        """
+        Given an area, searches for the social venues inside
+        ``self.maximum_distance``. It then returns ``self.neighbours_to_consider``
+        of them randomly. If there are no social venues inside the maximum distance,
+        it returns the closest one.
+        """
+        area_location = area.coordinates
+        potential_venues = self.social_venues.get_venues_in_radius(
+            area_location, self.maximum_distance
         )
-        return tuple(potential_venues,)
+        if potential_venues is None:
+            closest_venue = self.social_venues.get_closest_venues(area_location, k=1)
+            if closest_venue is None:
+                return
+            return (closest_venue[0], )
+        indices_len = min(len(potential_venues), self.neighbours_to_consider)
+        random_idx_choice = sample(range(len(potential_venues)), indices_len)
+        return tuple([potential_venues[idx] for idx in random_idx_choice])
 
     def get_social_venue_for_person(self, person):
         """
@@ -140,19 +175,13 @@ class SocialVenueDistributor:
             person_location, self.maximum_distance
         )
         if potential_venues is None:
-            venue = self.social_venues.get_closest_venues(person_location, k=1)[0]
-            return venue
+            return self.social_venues.get_closest_venues(person_location, k=1)[0]
         else:
-            venue_candidates = choice(
+            return choice(
                 potential_venues[
                     : min(len(potential_venues), self.neighbours_to_consider)
-                ],
-                size=self.neighbours_to_consider,
+                ]
             )
-            for venue in venue_candidates:
-                if venue.size < venue.max_size:
-                    return venue
-            return venue_candidates[0]
 
     def person_drags_household(self):
         """
@@ -162,3 +191,8 @@ class SocialVenueDistributor:
             return False
         else:
             return random() < self.drags_household_probability
+
+    def get_leisure_subgroup_type(self, person):
+        return 0
+
+

@@ -3,25 +3,116 @@ import logging
 from enum import IntEnum
 from june import paths
 from typing import List, Tuple, Optional
-
+from random import random
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
-from june.groups import Group, Supergroup
-
-from june.demography.geography import SuperArea
+from june.groups import Group, Supergroup, ExternalGroup, ExternalSubgroup
+from june.geography import SuperArea
 from june.infection import SymptomTag
+from june.exc import HospitalError
 
 logger = logging.getLogger(__name__)
 
-default_data_filename = (
-    paths.data_path / "input/hospitals/trusts.csv"
-)
+default_data_filename = paths.data_path / "input/hospitals/trusts.csv"
 default_config_filename = paths.configs_path / "defaults/groups/hospitals.yaml"
 
 
-class Hospital(Group):
+class AbstractHospital:
+    """
+    Hospital functionality common for all hospitals (internal to the domain and external).
+    """
+
+    def __init__(self):
+        self.ward_ids = set()
+        self.icu_ids = set()
+        self.denied_treatment_ids = set()
+
+    def add_to_ward(self, person):
+        self.ward_ids.add(person.id)
+        person.subgroups.medical_facility = self.ward
+
+    def remove_from_ward(self, person):
+        self.ward_ids.remove(person.id)
+        person.subgroups.medical_facility = None
+
+    def add_to_icu(self, person):
+        self.icu_ids.add(person.id)
+        person.subgroups.medical_facility = self.icu
+
+    def remove_from_icu(self, person):
+        self.icu_ids.remove(person.id)
+        person.subgroups.medical_facility = None
+
+    def add_to_denied_treatment(self, person):
+        self.denied_treatment_ids.add(person.id)
+
+    def allocate_patient(self, person, probability_of_care_home_resident_admission=0.3):
+        """
+        Allocate a patient inside the hospital, in the ward, in the ICU, or transfer.
+        To correctly log if the person has been just admitted, transfered, or released,
+        we return a few flags:
+        - "ward_admitted" : this person has been admitted to the ward.
+        - "icu_admitted" : this person has been directly admitted to icu.
+        - "ward_transferred" : this person has been transferred  to ward (from icu)
+        - "icu_transferred" : this person has been transferred to icu (from ward)
+        - "no_change" : no change respect to last time step.
+        - "denied_treatment" : person has not been accepted to the hospital
+        """
+        if person.medical_facility is None:
+            if person.residence.group.spec == "care_home":
+                if person.id not in self.denied_treatment_ids:
+                    if random() > probability_of_care_home_resident_admission:
+                        self.add_to_denied_treatment(person)
+                        return "denied_treatment"
+                    else:
+                        # this person can be treated, added this for readability.
+                        pass
+                else:
+                    return "denied_treatment"
+            if person.infection.tag.name == "hospitalised":
+                self.add_to_ward(person)
+                return "ward_admitted"
+            elif person.infection.tag.name == "intensive_care":
+                self.add_to_icu(person)
+                return "icu_admitted"
+            else:
+                raise HospitalError(
+                    f"Person with symptoms {person.infection.tag} trying to enter hospital."
+                )
+        else:
+            # this person has already been allocated in a hospital (this one)
+            if person.infection.tag.name == "hospitalised":
+                if person.id in self.ward_ids:
+                    return "no_change"
+                else:
+                    self.remove_from_icu(person)
+                    self.add_to_ward(person)
+                    return "ward_transferred"
+            elif person.infection.tag.name == "intensive_care":
+                if person.id in self.icu_ids:
+                    return "no_change"
+                else:
+                    self.remove_from_ward(person)
+                    self.add_to_icu(person)
+                    return "icu_transferred"
+
+    def release_patient(self, person):
+        """
+        Releases patient from hospital.
+        """
+        if person.id in self.ward_ids:
+            self.remove_from_ward(person)
+        elif person.id in self.icu_ids:
+            self.remove_from_icu(person)
+        else:
+            raise HospitalError(
+                f"Trying to release patient not located in icu or ward."
+            )
+
+
+class Hospital(Group, AbstractHospital):
     """
     The Hospital class represents a hospital and contains information about
     its patients and workers - the latter being the usual "people".
@@ -37,13 +128,13 @@ class Hospital(Group):
         patients = 1
         icu_patients = 2
 
-    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "super_area", "trust_code" 
+    __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "area", "trust_code"
 
     def __init__(
         self,
         n_beds: int,
         n_icu_beds: int,
-        super_area: str = None,
+        area: str = None,
         coordinates: Optional[Tuple[float, float]] = None,
         trust_code: str = None,
     ):
@@ -56,17 +147,30 @@ class Hospital(Group):
             total number of regular beds in the hospital
         n_icu_beds:
             total number of ICU beds in the hospital
-        super_area:
+        area:
             name of the super area the hospital belongs to
         coordinates:
             latitude and longitude 
         """
-        super().__init__()
-        self.super_area = super_area
+        Group.__init__(self)
+        AbstractHospital.__init__(self)
+        self.area = area
         self.coordinates = coordinates
         self.n_beds = n_beds
         self.n_icu_beds = n_icu_beds
         self.trust_code = trust_code
+
+    @property
+    def super_area(self):
+        return self.area.super_area
+
+    @property
+    def region(self):
+        return self.super_area.region
+
+    @property
+    def region_name(self):
+        return self.region.name
 
     @property
     def full(self):
@@ -98,42 +202,21 @@ class Hospital(Group):
             )
 
     @property
-    def icu_patients(self):
-        return self.subgroups[self.SubgroupType.icu_patients]
-
-    @property
-    def patients(self):
+    def ward(self):
         return self.subgroups[self.SubgroupType.patients]
 
-    def add_as_patient(self, person):
-        """
-        Add patient to hospital, depending on their healty information tag
-        they'll go to intensive care or regular beds.
+    @property
+    def icu(self):
+        return self.subgroups[self.SubgroupType.icu_patients]
 
-        Parameters
-        ----------
-        person:
-            person instance to add as patient
-        """
-
-        if person.health_information.tag == SymptomTag.intensive_care:
-            self.add(person, self.SubgroupType.icu_patients)
-        elif person.health_information.tag == SymptomTag.hospitalised:
-            self.add(person, self.SubgroupType.patients)
-        else:
-            raise AssertionError(
-                "ERROR: This person shouldn't be trying to get to a hospital"
-            )
-
-    def release_as_patient(self, person):
-        person.subgroups.medical_facility = None
 
 class Hospitals(Supergroup):
     def __init__(
         self,
         hospitals: List["Hospital"],
-        neighbour_hospitals: int = 5, 
+        neighbour_hospitals: int = 5,
         box_mode: bool = False,
+        ball_tree=True,
     ):
         """
         Create a group of hospitals, and provide functionality to locate patients
@@ -151,12 +234,11 @@ class Hospitals(Supergroup):
         box_mode:
             whether to run in single box mode, or full simulation
         """
-        super().__init__()
+        super().__init__(members=hospitals)
         self.box_mode = box_mode
-        self.members = hospitals
         self.neighbour_hospitals = neighbour_hospitals
-        coordinates = np.array([hospital.coordinates for hospital in hospitals])
-        if not box_mode:
+        if ball_tree and self.members:
+            coordinates = np.array([hospital.coordinates for hospital in hospitals])
             self.init_trees(coordinates)
 
     @classmethod
@@ -164,7 +246,7 @@ class Hospitals(Supergroup):
         hospitals = []
         hospitals.append(Hospital(coordinates=None, n_beds=10, n_icu_beds=2,))
         hospitals.append(Hospital(coordinates=None, n_beds=5000, n_icu_beds=5000,))
-        return cls(hospitals, neighbour_hospitals=None, box_mode=True)
+        return cls(hospitals, neighbour_hospitals=None, box_mode=True, ball_tree=False)
 
     @classmethod
     def from_file(
@@ -205,25 +287,21 @@ class Hospitals(Supergroup):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         neighbour_hospitals = config["neighbour_hospitals"]
-        hospital_df = pd.read_csv(filename, index_col=0)
-        super_area_names = [super_area.name for super_area in geography.super_areas]
-        hospital_df = hospital_df.loc[hospital_df.index.isin(super_area_names)]
+        hospital_df = pd.read_csv(filename, index_col=4)
+        area_names = [area.name for area in geography.areas]
+        hospital_df = hospital_df.loc[hospital_df.index.isin(area_names)]
         logger.info(f"There are {len(hospital_df)} hospitals in this geography.")
         total_hospitals = len(hospital_df)
         hospitals = []
-        for super_area in geography.super_areas:
-            if super_area.name in hospital_df.index:
-                hospitals_in_area = hospital_df.loc[super_area.name]
+        for area in geography.areas:
+            if area.name in hospital_df.index:
+                hospitals_in_area = hospital_df.loc[area.name]
                 if isinstance(hospitals_in_area, pd.Series):
-                    hospital = cls.create_hospital_from_df_row(
-                        super_area, hospitals_in_area, 
-                    )
+                    hospital = cls.create_hospital_from_df_row(area, hospitals_in_area,)
                     hospitals.append(hospital)
                 else:
                     for _, row in hospitals_in_area.iterrows():
-                        hospital = cls.create_hospital_from_df_row(
-                            super_area, row,  
-                        )
+                        hospital = cls.create_hospital_from_df_row(area, row,)
                         hospitals.append(hospital)
                 if len(hospitals) == total_hospitals:
                     break
@@ -231,14 +309,14 @@ class Hospitals(Supergroup):
 
     @classmethod
     def create_hospital_from_df_row(
-        cls, super_area, row,  
+        cls, area, row,
     ):
         coordinates = row[["latitude", "longitude"]].values.astype(np.float)
         n_beds = row["beds"]
-        n_icu_beds = row["icu_beds"] 
+        n_icu_beds = row["icu_beds"]
         trust_code = row["code"]
         hospital = Hospital(
-            super_area=super_area.name,
+            area=area,
             coordinates=coordinates,
             n_beds=n_beds,
             n_icu_beds=n_icu_beds,
@@ -246,9 +324,7 @@ class Hospitals(Supergroup):
         )
         return hospital
 
-    def init_hospitals(
-        self, hospital_df: pd.DataFrame, 
-    ) -> List["Hospital"]:
+    def init_hospitals(self, hospital_df: pd.DataFrame,) -> List["Hospital"]:
         """
         Create Hospital objects with the right characteristics,
         as given by dataframe.
@@ -261,7 +337,7 @@ class Hospitals(Supergroup):
         hospitals = []
         for index, row in hospital_df.iterrows():
             n_beds = row["beds"]
-            n_icu_beds = row["icu_beds"] 
+            n_icu_beds = row["icu_beds"]
             trust_code = row["code"]
             coordinates = row[["latitude", "longitude"]].values.astype(np.float)
             hospital = Hospital(
@@ -291,52 +367,8 @@ class Hospitals(Supergroup):
             np.deg2rad(hospital_coordinates), metric="haversine",
         )
 
-    def allocate_patient(self, person: "Person"):
-        """
-        Function to allocate patients into close by hospitals with available beds.
-        If there are no available beds within a maximum distance, the patient is
-        not allocated.
-
-        Parameters
-        ----------
-        person: 
-            patient to allocate into a hospital 
-        Returns
-        -------
-        hospital with availability
-
-        """
-        assign_icu = person.health_information.tag == SymptomTag.intensive_care
-        assign_patient = person.health_information.tag == SymptomTag.hospitalised
-
-        if self.box_mode:
-            for hospital in self.members:
-                if assign_patient and not hospital.full:
-                    return hospital
-                if assign_icu and not hospital.full_ICU:
-                    return hospital
-        else:
-            hospital = None
-            hospitals_idx = self.get_closest_hospitals(
-                coordinates=person.area.coordinates, k=self.neighbour_hospitals
-            )
-            closest_hospitals = []
-            for hospital_id in hospitals_idx:
-                hospital = self.members[hospital_id]
-                closest_hospitals.append(hospital)
-                if (assign_patient and not hospital.full) or (
-                    assign_icu and not hospital.full_ICU
-                ):
-                    break 
-            if hospital is None:
-                random_number = np.random.randint(
-                        0, min(len(closest_hospitals), len(self.members))
-                        )
-                hospital = closest_hospitals[random_number]
-            hospital.add_as_patient(person)
-
-    def get_closest_hospitals(
-        self, coordinates: Tuple[float, float], k: int 
+    def get_closest_hospitals_idx(
+        self, coordinates: Tuple[float, float], k: int
     ) -> Tuple[float, float]:
         """
         Get the k-th closest hospital to a given coordinate
@@ -355,8 +387,46 @@ class Hospitals(Supergroup):
         """
         k = min(k, len(list(self.hospital_trees.data)))
         distances, neighbours = self.hospital_trees.query(
-            np.deg2rad(coordinates.reshape(1, -1)),
-            k = k,
-            sort_results=True,
+            np.deg2rad(coordinates.reshape(1, -1)), k=k, sort_results=True,
         )
         return neighbours[0]
+
+    def get_closest_hospitals(
+        self, coordinates: Tuple[float, float], k: int
+    ) -> Tuple[float, float]:
+        """
+        Get the k-th closest hospital to a given coordinate
+
+        Parameters
+        ---------
+        coordinates: 
+            latitude and longitude
+        k:
+            k-th neighbour
+
+        Returns
+        -------
+        ID of the k-th closest hospital
+
+        """
+        k = min(k, len(list(self.hospital_trees.data)))
+        distances, neighbours = self.hospital_trees.query(
+            np.deg2rad(coordinates.reshape(1, -1)), k=k, sort_results=True,
+        )
+        return [self.members[index] for index in neighbours[0]]
+
+
+class ExternalHospital(ExternalGroup, AbstractHospital):
+    external = True
+    __slots__ = "spec", "id", "domain_id", "region_name", "ward_ids", "icu_ids"
+
+    def __init__(self, id, spec, domain_id, region_name):
+        ExternalGroup.__init__(self, id=id, spec=spec, domain_id=domain_id)
+        AbstractHospital.__init__(self)
+        self.region_name = region_name
+        self.ward = ExternalSubgroup(
+            group=self, subgroup_type=Hospital.SubgroupType.patients
+        )
+        self.icu = ExternalSubgroup(
+            group=self, subgroup_type=Hospital.SubgroupType.icu_patients
+        )

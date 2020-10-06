@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>june.logger.logger.Logger &#8212; JUNE  documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="june.logger.read_logger.ReadLogger" href="june.logger.read_logger.ReadLogger.html" />
+    <link rel="prev" title="june.interaction.matrix_interaction.MatrixInteraction" href="june.interaction.matrix_interaction.MatrixInteraction.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>JUNE  documentation</span></a></h1>
+        <h2 class="heading"><span>june.logger.logger.Logger</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.interaction.matrix_interaction.MatrixInteraction.html">june.interaction.matrix_interaction.MatrixInteraction</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.logger.read_logger.ReadLogger.html">june.logger.read_logger.ReadLogger</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <div class="section" id="june-logger-logger-logger">
+<h1>june.logger.logger.Logger<a class="headerlink" href="#june-logger-logger-logger" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.logger.logger.</code><code class="sig-name descname">Logger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Logger used by the simulator to store the relevant information.</p>
+<dl class="simple">
+<dt>save_path: </dt><dd><p>path to save file</p>
+</dd>
+<dt>file_name:</dt><dd><p>name of output hdf5 file</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Logger used by the simulator to store the relevant information.</p>
+<dl class="simple">
+<dt>save_path: </dt><dd><p>path to save file</p>
+</dd>
+<dt>file_name:</dt><dd><p>name of output hdf5 file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">accumulate_infection_location</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">location</span></em>, <em class="sig-param"><span class="n">n_infected</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Store where infections happend in a time step</p>
+<dl class="simple">
+<dt>location:</dt><dd><p>group type of the group in which the infection took place</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_number_group_instances</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n">World</span></em>, <em class="sig-param"><span class="n">location</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Given the world and a location, find the number of instances of that location that exist in the world</p>
+<dl class="simple">
+<dt>world:</dt><dd><p>world instance</p>
+</dd>
+<dt>location:</dt><dd><p>location type</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">log_hospital_capacity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime</span></em>, <em class="sig-param"><span class="n">hospitals</span><span class="p">:</span> <span class="n">Hospitals</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Log the variation of number of patients in hospitals over time</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>date to log</p>
+</dd>
+<dt>hospitals:</dt><dd><p>hospitals to log</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">log_hospital_characteristics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hospitals</span><span class="p">:</span> <span class="n">Hospitals</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Log hospital’s coordinates and number of beds per hospital</p>
+<dl class="simple">
+<dt>hospitals:</dt><dd><p>hospitals to log</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">log_infected</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime</span></em>, <em class="sig-param"><span class="n">infected_ids</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">symptoms</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n_secondary_infections</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Log relevant information of infected people per time step.</p>
+<dl class="simple">
+<dt>date:</dt><dd><p>datetime of time step to log</p>
+</dd>
+<dt>infected_ids:</dt><dd><p>list of IDs of everyone infected</p>
+</dd>
+<dt>symptoms:</dt><dd><p>list of symptoms of everyone infected</p>
+</dd>
+<dt>n_secondary_infections:</dt><dd><p>list of number of secondary infections for everyone infected</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">log_infection_location</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Log where did all infections in a time step happened, as a number count</p>
+<dl class="simple">
+<dt>time:</dt><dd><p>datetime to log</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">log_number_of_locations</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n">World</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Log relevant information on where did people get infected</p>
+<dl class="simple">
+<dt>world:</dt><dd><p>world instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">log_parameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">interaction</span><span class="p">:</span> <span class="n">Interaction</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">infection_seed</span><span class="p">:</span> <span class="n">InfectionSeed</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">infection_selector</span><span class="p">:</span> <span class="n">InfectionSelector</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">activity_manager</span><span class="p">:</span> <span class="n">ActivityManager</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">log_population</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">population</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Population" title="june.demography.demography.Population">june.demography.demography.Population</a></span></em>, <em class="sig-param"><span class="n">light_logger</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">100000</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Saves the Population object to hdf5 format file <code class="docutils literal notranslate"><span class="pre">self.save_path</span></code>. Currently for each person,
+the following values are stored:
+- id, age, sex, super_area</p>
+<dl class="simple">
+<dt>population:</dt><dd><p>population object</p>
+</dd>
+<dt>chunk_size:</dt><dd><p>number of people to save at a time. Note that they have to be copied to be saved,
+so keep the number below 1e6.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">unpack_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hdf5_obj</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">base_path</span></em>, <em class="sig-param"><span class="n">depth</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">5</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="june.interaction.matrix_interaction.MatrixInteraction.html">june.interaction.matrix_interaction.MatrixInteraction</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="june.logger.read_logger.ReadLogger.html">june.logger.read_logger.ReadLogger</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, IDAS-Durham.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>
