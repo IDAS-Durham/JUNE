@@ -371,6 +371,7 @@ class Simulator:
     def tell_domains_to_infect(self, infect_in_domains):
         people_to_infect = []
         tick, tickw = perf_counter(), wall_clock()
+        reqs = []
         for rank_sending in range(mpi_size):
             if rank_sending == mpi_rank:
                 # my turn to send my data
@@ -381,19 +382,23 @@ class Simulator:
                         infect_in_domains is None
                         or rank_receiving not in infect_in_domains
                     ):
-                        mpi_comm.send(None, dest=rank_receiving, tag=mpi_rank)
+                        reqs.append(mpi_comm.isend(None, dest=rank_receiving, tag=mpi_rank))
                     else:
-                        mpi_comm.send(
+                        reqs.append(mpi_comm.isend(
                             infect_in_domains[rank_receiving],
                             dest=rank_receiving,
                             tag=mpi_rank,
-                        )
+                        ))
                         continue
-            else:
+    
+        for rank_sending in range(mpi_size):
+            if not rank_sending == mpi_rank:
                 # I have to listen
                 data = mpi_comm.recv(source=rank_sending, tag=rank_sending)
                 if data is not None:
                     people_to_infect += data
+        for r in reqs:
+            r.wait()
         tock, tockw = perf_counter(), wall_clock()
         output_logger.info(
             f"CMS: Infection COMS for rank {mpi_rank}/{mpi_size} - {tock-tick},{tockw-tickw} - {self.timer.date}"
