@@ -28,6 +28,8 @@ from june.mpi_setup import (
 )
 
 logger = logging.getLogger(__name__)
+if mpi_rank > 0:
+    logger.propagate = False
 
 activity_hierarchy = [
     "box",
@@ -52,7 +54,6 @@ class ActivityManager:
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
     ):
-        self.logger = logger
         self.policies = policies
         self.world = world
         self.timer = timer

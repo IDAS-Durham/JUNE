@@ -6,13 +6,15 @@ from itertools import chain
 
 from june.world import World
 from june.groups import Household, Households
+from june.mpi_setup import mpi_rank
 from .utils import read_dataset
-
 nan_integer = -999
 
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 str_vlen_type = h5py.vlen_dtype(np.dtype("S20"))
 logger = logging.getLogger(__name__)
+if mpi_rank > 0:
+    logger.propagate = False
 
 
 def save_households_to_hdf5(
