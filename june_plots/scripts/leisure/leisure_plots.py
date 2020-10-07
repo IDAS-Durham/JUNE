@@ -22,15 +22,25 @@ config_files_leisure = (paths.configs_path / "defaults/groups/leisure").glob("*.
 simulation_config = paths.configs_path / "config_example.yaml"
 
 # source: private comm with Aoife
-time_survey = {
-    "residence": 0.635 + 0.002,
-    "work": 0.08,
-    "household visits": 0.034,
-    "groceries": 0.013,
-    "pubs": 0.012,
-    "commute": 0.003 + 0.001 + 0.00064 + 0.0004 + 0.0002 + 0.000157 + 0.000032,
+time_survey_workdays = {
+    "residence": 0.60 + 0.001,
+    "work": 0.12,
+    "household visits": 0.027,
+    "groceries": 0.011,
+    "pubs": 0.00887,
+    "commute": 0.004 + 0.002 + 0.00075 + 0.0002 + 0.00003,
 }
-time_survey["other"] = 1 - sum(time_survey.values())
+time_survey_workdays["other"] = 1 - sum(time_survey_workdays.values())
+time_survey_weekends = {
+    "residence": 0.67 + 0.003,
+    "work": 0.031712,
+    "household visits": 0.046,
+    "groceries": 0.015,
+    "pubs": 0.015,
+    "commute": 0.002 + 0.0014 + 0.00052 + 0.000256 + 0.000105 + 0.000044,
+}
+time_survey_weekends["other"] = 1 - sum(time_survey_weekends.values())
+
 
 class LeisurePlots:
     def __init__(self, world):
@@ -56,7 +66,7 @@ class LeisurePlots:
         )
         return simulator
 
-    def simulate_weekend_and_weekday(self, one_time = False):
+    def simulate_day(self, dates, stop_at_leisure=False):
         time_in_place = {
             "residence": 0,
             "work": 0,
@@ -67,8 +77,10 @@ class LeisurePlots:
             "other": 0,
         }
         self.timer.reset()
+        while str(self.timer.date.date()) not in dates:
+            next(self.timer)
         total_duration = 0
-        while str(self.timer.date.date()) in ["2020-03-01", "2020-03-02"]:
+        while str(self.timer.date.date()) in dates:
             self.simulator.clear_world()
             self.activity_manager.do_timestep()
             duration = self.timer.duration
@@ -129,32 +141,68 @@ class LeisurePlots:
                 rtol=0.01,
             )
             next(self.timer)
-            if one_time:
-                break
+            if stop_at_leisure:
+                if (
+                    "leisure" in self.simulator.timer.activities
+                    and "primary_activity" not in self.simulator.timer.activities
+                ):
+                    break
         return time_in_place
 
     def _normalise_times(self, times):
-        times_normed = {key: value for key,value in times.items() if key != "other"}
+        times_normed = {key: value for key, value in times.items() if key != "other"}
         n = sum(times_normed.values())
-        return  {key : value / n * 100 for key, value in times_normed.items()}
+        return {key: value / n for key, value in times_normed.items()}
 
     def plot_time_survey(self):
-        june_times = self.simulate_weekend_and_weekday()
-        june_times_normed = self._normalise_times(june_times)
-        time_survey_normed = self._normalise_times(time_survey)
+        june_times_weekend = self.simulate_day(["2020-03-01"])
+        june_times_workday = self.simulate_day(["2020-03-02"])
+        june_times_workday_normed = self._normalise_times(june_times_workday)
+        june_times_weekend_normed = self._normalise_times(june_times_weekend)
+        time_survey_workdays_normed = self._normalise_times(time_survey_workdays)
+        time_survey_weekends_normed = self._normalise_times(time_survey_weekends)
 
-        fig, ax = plt.subplots()
-        ax.bar(time_survey_normed.keys(), time_survey_normed.values(), alpha=0.7, label = "Time Survey")
-        ax.bar(june_times_normed.keys(), june_times_normed.values(), alpha=0.7, label = "JUNE")
-        ax.set_ylabel("Fraction of time [\%]")
-        ax.set_xlabel("Activity")
+        fig, ax = plt.subplots(1, 2, sharey=True, figsize=(6, 3))
+        ax[0].bar(
+            time_survey_workdays_normed.keys(),
+            time_survey_workdays_normed.values(),
+            alpha=0.7,
+            label="Time Survey",
+        )
+        ax[0].bar(
+            june_times_workday_normed.keys(),
+            june_times_workday_normed.values(),
+            alpha=0.7,
+            label="JUNE",
+        )
+        ax[0].set_title("Weekday")
+        ax[1].bar(
+            time_survey_weekends_normed.keys(),
+            time_survey_weekends_normed.values(),
+            alpha=0.7,
+            label="Time Survey",
+        )
+        ax[1].bar(
+            june_times_weekend_normed.keys(),
+            june_times_weekend_normed.values(),
+            alpha=0.7,
+            label="JUNE",
+        )
+        ax[1].set_title("Weekend")
+        ax[0].set_ylabel("Fraction of time [\%]")
+        ax[0].set_xlabel("Activity")
+        ax[1].set_xlabel("Activity")
+        ax[0].legend()
+        ax[1].legend()
+        ax[0].set_yscale('log')
+        ax[1].set_yscale('log')
         fig.autofmt_xdate()
         return ax
 
     def plot_occupancy(self):
-        self.simulate_weekend_and_weekday(one_time=True)
+        self.simulate_day(dates=["2020-03-01"], stop_at_leisure=True)
         # occupancy
-        f, ax = plt.subplots(1,3, figsize=(8,2), sharey=True) 
+        f, ax = plt.subplots(1, 3, figsize=(8, 2), sharey=True)
         pub_sizes = [pub.size for pub in self.world.pubs]
         grocery_sizes = [grocery.size for grocery in self.world.groceries]
         cinema_sizes = [cinema.size for cinema in self.world.cinemas]

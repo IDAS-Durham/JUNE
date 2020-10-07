@@ -231,9 +231,9 @@ class Plotter:
         print("Setting up leisure plots")
         leisure_plots = LeisurePlots(self.world)
 
-        # time_survey = leisure_plots.plot_time_survey()
-        # time_survey.plot()
-        # plt.savefig(save_dir / "time_survey.png", dpi=150, bbox_inches="tight")
+        time_survey = leisure_plots.plot_time_survey()
+        plt.plot()
+        plt.savefig(save_dir / "time_survey.png", dpi=150, bbox_inches="tight")
 
         occupancy = leisure_plots.plot_occupancy()
         plt.plot()
