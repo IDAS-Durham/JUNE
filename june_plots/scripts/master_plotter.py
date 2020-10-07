@@ -231,15 +231,13 @@ class Plotter:
         print("Setting up leisure plots")
         leisure_plots = LeisurePlots(self.world)
 
-        #time_survey = leisure_plots.plot_time_survey()
-        #time_survey.plot()
-        #plt.savefig(save_dir / "time_survey.png", dpi=150, bbox_inches="tight")
+        # time_survey = leisure_plots.plot_time_survey()
+        # time_survey.plot()
+        # plt.savefig(save_dir / "time_survey.png", dpi=150, bbox_inches="tight")
 
         occupancy = leisure_plots.plot_occupancy()
         plt.plot()
         plt.savefig(save_dir / "leisure_occupancy.png", dpi=150, bbox_inches="tight")
-
-
 
     def plot_policies(self, save_dir: Path = default_output_plots_path / "policy"):
         "Make all policy plots"
@@ -325,7 +323,7 @@ class Plotter:
         contact_matrix_plots.calculate_all_contact_matrices(pre_lockdown_date)
         contact_matrices = contact_matrix_plots.contact_matrices
         for location, contact_matrix in contact_matrices.items():
-            contact_matrix_plots.plot_contact_matrix(contact_matrix)
+            contact_matrix_plots.plot_contact_matrix(contact_matrix, location)
             plt.savefig(
                 save_dir / f"contact_matrix_{location}_prelockdown.png",
                 dpi=150,
@@ -336,7 +334,7 @@ class Plotter:
         contact_matrix_plots.calculate_all_contact_matrices(during_lockdown_date)
         contact_matrices = contact_matrix_plots.contact_matrices
         for location, contact_matrix in contact_matrices.items():
-            contact_matrix_plots.plot_contact_matrix(contact_matrix)
+            contact_matrix_plots.plot_contact_matrix(contact_matrix, location)
             plt.savefig(
                 save_dir / f"contact_matrix_{location}_lockdown.png",
                 dpi=150,
