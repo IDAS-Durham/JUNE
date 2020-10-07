@@ -41,6 +41,7 @@ class LearningCenter(Group):
         self.active_shift = 0
         self.has_shifts = True
         self.ids_per_shift = collections.defaultdict(list)
+        self.area = None
 
     def add(self, person: Person, shift: int, subgroup_type=SubgroupType.students):
         """
@@ -75,6 +76,10 @@ class LearningCenter(Group):
     @property
     def students(self):
         return self.subgroups[self.SubgroupType.students]
+
+    @property
+    def super_area(self):
+        return self.area.super_area
 
 
 class LearningCenters(Supergroup):
@@ -160,6 +165,8 @@ class LearningCenters(Supergroup):
         learning_centers = list()
         for coord in coordinates:
             lc = LearningCenter(coordinates=coord)
+            if areas is not None:
+                lc.area = areas.get_closest_area(coordinates=coord)
             learning_centers.append(lc)
         return cls(learning_centers, **kwargs)
 
