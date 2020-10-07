@@ -225,15 +225,22 @@ class ContactMatrixPlots():
         return beta_reductions
 
 
-    def plot_contact_matrix(self, contact_matrix):
+    def plot_contact_matrix(self, contact_matrix, location):
         fig, ax = plt.subplots()
-        # plt.title("{:%B %d, %Y}".format(date))
+
+        if location == 'household':
+            vmax = 1
+            ticks = np.linspace(0, vmax, 5+1, endpoint=True)
+        else:
+            vmax = 4
+            ticks = range(0, vmax+1, 1)
+
         im = plt.imshow(contact_matrix,
                         cmap='coolwarm',
                         interpolation='nearest',
                         origin='lower',
                         vmin=0,
-                        vmax=4
+                        vmax=vmax
                         )
 
         ages = ['0-4', '5-9', '10-12', '13-14', '15-17', '18-19', '20-21', '22-24', '25-29', '30-34',
@@ -246,8 +253,8 @@ class ContactMatrixPlots():
         ax.set_yticklabels(ages, fontsize='small')
         cbar = plt.colorbar(im,
                      ax=ax, 
-                     boundaries=np.linspace(0,4,100),
-                     ticks=[0, 1, 2, 3, 4]
+                     boundaries=np.linspace(0, vmax, 100),
+                     ticks=ticks
                      )
         ax.set_xlabel("Age group")
         ax.set_ylabel("Contact age group")
