@@ -147,7 +147,8 @@ parser.add_argument(
     help="Mask beta factor reduction",
     required=False,
     default=0.5,
-)parser.add_argument(
+)
+parser.add_argument(
     "-lc",
     "--learning_centers",
     help="Add learning centers",
@@ -400,30 +401,30 @@ if args.household_beta:
     interaction.beta['shelter'] = float(args.household_beta)
 
 if args.outdoor_beta_ratio:
-    interaction.beta['play_group'] = interaction.beta['household']*float(args.indoor_beta_ratio)
-    interaction.beta['pump_latrine'] = interaction.beta['household']*float(args.indoor_beta_ratio)
+    interaction.beta['play_group'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
+    interaction.beta['pump_latrine'] = interaction.beta['household']*float(args.outdoor_beta_ratio)
     
 if args.indoor_beta_ratio:
     interaction.beta["communal"] = interaction.beta["household"] * float(
-        args.outdoor_beta_ratio
+        args.indoor_beta_ratio
     )
     interaction.beta["female_communal"] = interaction.beta["household"] * float(
-        args.outdoor_beta_ratio
+        args.indoor_beta_ratio
     )
     interaction.beta["religious"] = interaction.beta["household"] * float(
-        args.outdoor_beta_ratio
+        args.indoor_beta_ratio
     )
     interaction.beta["distribution_center"] = interaction.beta["household"] * float(
-        args.outdoor_beta_ratio
+        args.indoor_beta_ratio
     )
     interaction.beta["n_f_distribution_center"] = interaction.beta["household"] * float(
-        args.outdoor_beta_ratio
+        args.indoor_beta_ratio
     )
     interaction.beta["e_voucher"] = interaction.beta["household"] * float(
-        args.outdoor_beta_ratio
+        args.indoor_beta_ratio
     )
     interaction.beta["learning_center"] = interaction.beta["household"] * float(
-        args.outdoor_beta_ratio
+        args.indoor_beta_ratio
     )
 
 cases_detected = {
@@ -534,4 +535,4 @@ infections_df = read.get_table_with_extras('infections',
 locations_df = infections_df.groupby(['location_specs', 
                                 'timestamp']).size()
 
-pd.to_csv(args.save_dir + 'locations.csv')
+locations_df.to_csv(args.save_dir + '/locations.csv')
