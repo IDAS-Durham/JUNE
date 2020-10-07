@@ -309,14 +309,14 @@ class Plotter:
         contact_matrix_plots.calculate_all_contact_matrices(pre_lockdown_date)
         contact_matrices = contact_matrix_plots.contact_matrices
         for location, contact_matrix in contact_matrices.items():
-            contact_matrix_plots.plot_contact_matrix(contact_matrix)
+            contact_matrix_plots.plot_contact_matrix(contact_matrix, location)
             plt.savefig(save_dir / f'contact_matrix_{location}_prelockdown.png', dpi=150, bbox_inches='tight')
 
         print("Plotting during lockdown contact matrices")
         contact_matrix_plots.calculate_all_contact_matrices(during_lockdown_date)
         contact_matrices = contact_matrix_plots.contact_matrices
         for location, contact_matrix in contact_matrices.items():
-            contact_matrix_plots.plot_contact_matrix(contact_matrix)
+            contact_matrix_plots.plot_contact_matrix(contact_matrix, location)
             plt.savefig(save_dir / f'contact_matrix_{location}_lockdown.png', dpi=150, bbox_inches='tight')
 
     def plot_life_expectancy(
