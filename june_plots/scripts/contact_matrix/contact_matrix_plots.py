@@ -230,7 +230,7 @@ class ContactMatrixPlots():
 
         if location == 'household':
             vmax = 1
-            ticks = np.arange(0, vmax, 0.2)
+            ticks = np.linspace(0, vmax, 5+1, endpoint=True)
         else:
             vmax = 4
             ticks = range(0, vmax+1, 1)
