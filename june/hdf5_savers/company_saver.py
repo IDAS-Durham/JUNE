@@ -4,10 +4,13 @@ import logging
 
 from june.groups import Company, Companies
 from june.world import World
+from june.mpi_setup import mpi_rank
 
 nan_integer = -999
 
 logger = logging.getLogger(__name__)
+if mpi_rank > 0:
+    logger.propagate = False
 
 def save_companies_to_hdf5(
     companies: Companies, file_path: str, chunk_size: int = 500000
