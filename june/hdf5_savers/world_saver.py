@@ -44,8 +44,11 @@ from . import (
 )
 from june.demography import Population
 from june.demography.person import Activities, Person
+from june.mpi_setup import mpi_rank
 
 logger = logging.getLogger(__name__)
+if mpi_rank > 0:
+    logger.propagate = False
 
 
 def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
@@ -281,9 +284,7 @@ def generate_domain_from_hdf5(
     if "universities" in f_keys:
         logger.info("loading universities...")
         domain.universities = load_universities_from_hdf5(
-            file_path=file_path,
-            chunk_size=chunk_size,
-            domain_areas=area_ids,
+            file_path=file_path, chunk_size=chunk_size, domain_areas=area_ids,
         )
     if "cities" in f_keys:
         logger.info("loading cities...")
@@ -355,7 +356,7 @@ def generate_domain_from_hdf5(
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
             domain_areas=area_ids,
-            super_areas_to_domain_dict=super_areas_to_domain_dict
+            super_areas_to_domain_dict=super_areas_to_domain_dict,
         )
     if "companies" in f_keys:
         logger.info("restoring companies...")
