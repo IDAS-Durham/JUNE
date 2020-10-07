@@ -1,6 +1,6 @@
 title: Covid configuration example
 
-activity_to_groups:
+activity_to_super_groups:
   primary_activity: ['learning_centers']
   leisure: ['distribution_centers', 'communals', 'female_communals', 'pump_latrines', 'religiouss', 'play_groups', 'e_vouchers', 'n_f_distribution_centers']
   residence: ['shelters']
@@ -8,7 +8,7 @@ activity_to_groups:
 
 time:
   initial_day: '2020-05-24'
-  total_days: 120
+  total_days: 200
   step_duration: 
       weekday:
           0: 2 
