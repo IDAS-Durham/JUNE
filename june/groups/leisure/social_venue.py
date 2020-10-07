@@ -7,10 +7,13 @@ from sklearn.neighbors import BallTree
 
 from june.groups import Supergroup, Group, Subgroup
 from june.geography import Area, Areas, SuperArea, SuperAreas, Geography
+from june.mpi_setup import mpi_rank
 
 earth_radius = 6371  # km
 
 logger = logging.getLogger(__name__)
+if mpi_rank > 0:
+    logger.propagate = False
 
 
 class SocialVenueError(BaseException):
@@ -40,7 +43,7 @@ class SocialVenues(Supergroup):
 
     def __init__(self, social_venues: List[SocialVenue], make_tree=True):
         super().__init__(members=social_venues)
-        logger.info(f"Initialized {len(self)} {self.spec}(s)")
+        logger.info(f"Domain {mpi_rank} has {len(self)} {self.spec}(s)")
         self.ball_tree = None
         if make_tree:
             if not social_venues:
