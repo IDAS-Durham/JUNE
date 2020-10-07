@@ -230,8 +230,10 @@ class ContactMatrixPlots():
 
         if location == 'household':
             vmax = 1
+            ticks = np.arange(0, vmax, 0.2)
         else:
             vmax = 4
+            ticks = range(0, vmax+1, 1)
 
         im = plt.imshow(contact_matrix,
                         cmap='coolwarm',
@@ -252,7 +254,7 @@ class ContactMatrixPlots():
         cbar = plt.colorbar(im,
                      ax=ax, 
                      boundaries=np.linspace(0, vmax, 100),
-                     ticks=range(0, vmax+1, 1)
+                     ticks=ticks
                      )
         ax.set_xlabel("Age group")
         ax.set_ylabel("Contact age group")
