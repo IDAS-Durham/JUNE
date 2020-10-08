@@ -50,20 +50,29 @@ class HouseholdPlots:
         print("Loading household data")
         self.load_household_data()
 
-        print ("Plotting household sizes")
+        print("Plotting household sizes")
         household_sizes_plot = self.plot_household_sizes()
         household_sizes_plot.plot()
-        plt.savefig(save_dir / 'household_sizes.png', dpi=150, bbox_inches='tight')
+        plt.savefig(save_dir / "household_sizes.png", dpi=150, bbox_inches="tight")
+        
+        print("Plotting household size comparison to England avg.")
+        household_sizes_ratios = self.plot_household_sizes_ratio_to_england()
+        household_sizes_ratios.plot()
+        plt.savefig(save_dir / "household_sizes_ratios.png", dpi=150, bbox_inches="tight")
 
-        print ("Plotting household probability matrix")
+        print("Plotting household probability matrix")
         household_probability_matrix = self.plot_household_probability_matrix()
         household_probability_matrix.plot()
-        plt.savefig(save_dir / 'household_prob_matrix.png', dpi=150, bbox_inches='tight')
+        plt.savefig(
+            save_dir / "household_prob_matrix.png", dpi=150, bbox_inches="tight"
+        )
 
-        print ("Plotting household age differences")
+        print("Plotting household age differences")
         f, ax = self.plot_household_age_differences()
         plt.plot()
-        plt.savefig(save_dir / 'household_age_differences.png', dpi=150, bbox_inches='tight')
+        plt.savefig(
+            save_dir / "household_age_differences.png", dpi=150, bbox_inches="tight"
+        )
 
         print("Plotting hc by age")
         hc_plot = self.plot_household_composition_by_age()
@@ -116,6 +125,51 @@ class HouseholdPlots:
         )
         ax.set_xlabel("Household size")
         ax.set_ylabel("Frequency [\%]")
+        ax.legend()
+        return ax
+
+    def plot_household_sizes_ratio_to_england(self):
+        "Plotting the size of households compared to england."
+        # JUNE
+        england_sizes = {
+            1: 6666493,
+            2: 7544404,
+            3: 3437917,
+            4: 2866800,
+            5: 1028477,
+            6: 369186,
+            7: 88823,
+            8: 61268,
+        }
+        n = sum(england_sizes.values())
+        for key in england_sizes:
+            england_sizes[key] = england_sizes[key] / n
+        JUNE_household_sizes = defaultdict(int)
+        n_households = 0
+        for household in self.world.households:
+            if household.type == "communal" or household.n_residents == 0:
+                continue
+            n_households += 1
+            if household.n_residents > 8:
+                n_residents = 8
+            else:
+                n_residents = household.n_residents
+            JUNE_household_sizes[n_residents] += 1
+
+        for key in JUNE_household_sizes:
+            JUNE_household_sizes[key] = JUNE_household_sizes[key] / n_households
+        # data
+        ratios = {}
+        for key in england_sizes:
+            ratios[key] = JUNE_household_sizes[key] / england_sizes[key]
+        f, ax = plt.subplots()
+        ax.bar(
+            ratios.keys(),
+            ratios.values(),
+        )
+        ax.set_title("Household size simulated world / England ratios..")
+        ax.set_xlabel("Household size")
+        ax.set_ylabel("Ratio")
         ax.legend()
         return ax
 
@@ -212,7 +266,7 @@ class HouseholdPlots:
             age_differences_first_kid,
             age_differences_second_kid,
         ) = self._compute_children_parent_age_difference()
-        
+
         f, ax = plt.subplots(1, 3, sharey=True, figsize=(8, 3))
         ax[0].set_xlabel("Couples' age difference")
         ax[0].set_ylabel("Frequency [\%]")
@@ -220,9 +274,11 @@ class HouseholdPlots:
             self.couples_age_diff_data.index,
             self.couples_age_diff_data.values,
             linewidth=2,
-            label="NOMIS"
+            label="NOMIS",
         )
-        ax[0].hist(age_difference_couples, density=True, label="JUNE", bins=20, alpha=0.7)
+        ax[0].hist(
+            age_difference_couples, density=True, label="JUNE", bins=20, alpha=0.7
+        )
         ax[0].set_xlim(-15, 15)
         ax[0].legend()
 
@@ -230,9 +286,11 @@ class HouseholdPlots:
             self.children_age_diff_data.index,
             self.children_age_diff_data["1"],
             linewidth=2,
-            label="NOMIS"
+            label="NOMIS",
         )
-        ax[1].hist(age_differences_first_kid, density=True, label="JUNE", bins=30, alpha=0.7)
+        ax[1].hist(
+            age_differences_first_kid, density=True, label="JUNE", bins=30, alpha=0.7
+        )
         ax[1].set_xlabel("Parent - first child\nage difference")
         ax[1].set_xlim(15, 65)
         ax[1].legend()
@@ -241,9 +299,11 @@ class HouseholdPlots:
             self.children_age_diff_data.index,
             self.children_age_diff_data["2"],
             linewidth=2,
-            label="NOMIS"
+            label="NOMIS",
         )
-        ax[2].hist(age_differences_second_kid, density=True, label="JUNE", bins=30, alpha=0.7)
+        ax[2].hist(
+            age_differences_second_kid, density=True, label="JUNE", bins=30, alpha=0.7
+        )
         ax[2].set_xlabel("Parent - second child\nage difference")
         ax[2].set_xlim(15, 66)
         ax[2].legend()
@@ -357,7 +417,7 @@ class HouseholdPlots:
             )
         ]
         # plot
-        r = np.array([0., 1., 2., 3., 4.]) + barWidth
+        r = np.array([0.0, 1.0, 2.0, 3.0, 4.0]) + barWidth
         # june bars
         single = [i / j * 100 for i, j in zip(june_hc["single"], totals)]
         couple = [i / j * 100 for i, j in zip(june_hc["couple"], totals)]
@@ -372,7 +432,7 @@ class HouseholdPlots:
             width=barWidth,
             label="JUNE single",
             align="center",
-            alpha=0.5
+            alpha=0.5,
         )
         # Create orange Bars
         ax.bar(
@@ -384,7 +444,7 @@ class HouseholdPlots:
             edgecolor="white",
             width=barWidth,
             label="JUNE couple",
-            alpha=0.5
+            alpha=0.5,
         )
         # Create blue Bars
         ax.bar(
@@ -396,7 +456,7 @@ class HouseholdPlots:
             align="center",
             width=barWidth,
             label="JUNE family",
-            alpha=0.5
+            alpha=0.5,
         )
         ax.bar(
             r,
@@ -407,10 +467,10 @@ class HouseholdPlots:
             align="center",
             width=barWidth,
             label="JUNE other",
-            alpha=0.5
+            alpha=0.5,
         )
         ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.xticks(r-barWidth /2, names)
+        plt.xticks(r - barWidth / 2, names)
         ax.set_ylabel("Household type")
 
         return ax
