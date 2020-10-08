@@ -292,7 +292,6 @@ class Hospitals(Supergroup):
         hospital_df = hospital_df.loc[hospital_df.index.isin(area_names)]
         logger.info(f"There are {len(hospital_df)} hospitals in this geography.")
         total_hospitals = len(hospital_df)
-        print(hospital_df)
         hospitals = []
         for area in geography.areas:
             if area.name in hospital_df.index:
