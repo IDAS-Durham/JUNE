@@ -292,6 +292,7 @@ class ExternalSuperArea:
         self.id = id
         self.domain_id = domain_id
 
+
 class Region:
     """
     Coarsest geographical resolution
@@ -320,12 +321,9 @@ class Regions:
     def __init__(self, regions: List[Region]):
         self.members_by_id = {region.id: region for region in regions}
         try:
-            self.members_by_name = {
-                region.name: region for region in regions 
-            }
+            self.members_by_name = {region.name: region for region in regions}
         except AttributeError:
             self.members_by_name = None
-
 
     def __iter__(self):
         return iter(self.members)
@@ -342,8 +340,6 @@ class Regions:
     @property
     def members(self):
         return list(self.members_by_id.values())
-
-
 
 
 class Geography:
@@ -474,11 +470,13 @@ class Geography:
         hierarchy: pd.DataFrame,
         area_coordinates: pd.DataFrame,
         super_area_coordinates: pd.DataFrame,
+        sort_identifiers=True,
     ):
         """
         Create geo-graph of the used geographical units.
 
         """
+        # this method ensure that super geo.super_areas, geo.areas, and so are ordered by identifier.
         region_hierarchy = hierarchy.reset_index().set_index("region")["super_area"]
         region_hierarchy = region_hierarchy.drop_duplicates()
         region_list = []
@@ -496,6 +494,10 @@ class Geography:
             total_super_areas_list += list(super_areas_list)
             total_areas_list += list(areas_list)
             region_list.append(region)
+        if sort_identifiers:
+            total_areas_list = sort_geo_unit_by_identifier(total_areas_list)
+            total_super_areas_list = sort_geo_unit_by_identifier(total_super_areas_list)
+
         areas = Areas(total_areas_list)
         super_areas = SuperAreas(total_super_areas_list)
         regions = Regions(region_list)
@@ -513,6 +515,7 @@ class Geography:
         hierarchy_filename: str = default_hierarchy_filename,
         area_coordinates_filename: str = default_area_coord_filename,
         super_area_coordinates_filename: str = default_superarea_coord_filename,
+        sort_identifiers=True,
     ) -> "Geography":
         """
         Load data from files and construct classes capable of generating
@@ -552,7 +555,10 @@ class Geography:
         super_areas_coord.set_index("super_area", inplace=True)
         geo_hierarchy.set_index("super_area", inplace=True)
         areas, super_areas, regions = cls.create_geographical_units(
-            geo_hierarchy, areas_coord, super_areas_coord
+            geo_hierarchy,
+            areas_coord,
+            super_areas_coord,
+            sort_identifiers=sort_identifiers,
         )
         return cls(areas, super_areas, regions)
 
@@ -564,3 +570,14 @@ def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame
     return data[
         data[list(filter_key.keys())[0]].isin(list(filter_key.values())[0]).values
     ]
+
+
+def sort_geo_unit_by_identifier(geo_units):
+    geo_identifiers = [unit.name for unit in geo_units]
+    sorted_idx = np.argsort(geo_identifiers)
+    first_unit_id = geo_units[0].id
+    units_sorted = [geo_units[idx] for idx in sorted_idx]
+    # reassign ids
+    for i, unit in enumerate(units_sorted):
+        unit.id = first_unit_id + i
+    return units_sorted
