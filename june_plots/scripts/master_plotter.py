@@ -92,6 +92,10 @@ class Plotter:
         mean_plot.plot()
         plt.savefig(save_dir / 'world_socioeconomic_stdev.png', dpi=150, bbox_inches='tight')
 
+        print("Plotting ethnicity")
+        ethnicity_plot = demography_plots.plot_ethnicity_distribution()
+        ethnicity_plot.plot()
+        plt.savefig(save_dir / "ethnicity_distribution.png", dpi=150, bbox_inches="tight")
 
 
     def plot_commute(
@@ -407,12 +411,22 @@ if __name__ == "__main__":
         required=False,
         default=False
     )
+    parser.add_argument(
+        "-d",
+        "--demography",
+        help="Plot only demography",
+        required=False,
+        default=False,
+        action="store_true"
+    )
 
     args = parser.parse_args()
     plotter = Plotter.from_file(args.world_filename)
     if args.households:
         plotter.plot_households()
-    if args.contact_matrix:
+    elif args.contact_matrix:
         plotter.plot_contact_matrices()
+    elif args.demography:
+        plotter.plot_demography()
     else:
         plotter.plot_all()
