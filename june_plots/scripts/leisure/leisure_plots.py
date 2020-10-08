@@ -206,9 +206,9 @@ class LeisurePlots:
         pub_sizes = [pub.size for pub in self.world.pubs]
         grocery_sizes = [grocery.size for grocery in self.world.groceries]
         cinema_sizes = [cinema.size for cinema in self.world.cinemas]
-        ax[0].hist(pub_sizes, density=True, color="C0", label="pubs/restaurants")
-        ax[1].hist(grocery_sizes, density=True, color="C1", label="stores")
-        ax[2].hist(cinema_sizes, density=True, label="cinemas", color="C2")
+        ax[0].hist(pub_sizes, density=True, color="C0", label="pubs/restaurants", bins=200)
+        ax[1].hist(grocery_sizes, density=True, color="C1", label="stores", bins=200)
+        ax[2].hist(cinema_sizes, density=True, label="cinemas", color="C2", bins=200)
         ax[0].legend()
         ax[1].legend()
         ax[2].legend()
