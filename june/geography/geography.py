@@ -110,6 +110,9 @@ class Areas:
     def get_from_id(self, id):
         return self.members_by_id[id]
 
+    def get_from_name(self, name):
+        return self.members_by_name[name]
+
     @property
     def members(self):
         return list(self.members_by_id.values())
@@ -234,6 +237,9 @@ class SuperAreas:
 
     def get_from_id(self, id):
         return self.members_by_id[id]
+
+    def get_from_name(self, name):
+        return self.members_by_name[name]
 
     @property
     def members(self):
