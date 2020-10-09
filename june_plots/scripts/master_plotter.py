@@ -37,8 +37,9 @@ class Plotter:
         Preloaded world which can also be passed from the master plotting script
     """
 
-    def __init__(self, world):
+    def __init__(self, world, dpi=150):
         self.world = world
+        self.dpi = dpi
 
     @classmethod
     def from_file(
@@ -61,12 +62,12 @@ class Plotter:
         print("Plotting age distribution")
         fig, ax = demography_plots.plot_age_distribution()
         plt.plot()
-        plt.savefig(save_dir / "age_distribution.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "age_distribution.png", dpi=self.dpi, bbox_inches="tight")
 
         print("Plotting population density")
         population_density_plot = demography_plots.plot_population_density()
         population_density_plot.plot()
-        plt.savefig(save_dir / "population_density.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "population_density.png", dpi=self.dpi, bbox_inches="tight")
 
         london_superareas_path = (
             Path(__file__).absolute().parent.parent.parent / "scripts/london_areas.txt"
@@ -81,14 +82,14 @@ class Plotter:
         )
         mean_plot.plot()
         plt.savefig(
-            save_dir / "london_socioeconomic_mean.png", dpi=150, bbox_inches="tight"
+            save_dir / "london_socioeconomic_mean.png", dpi=self.dpi, bbox_inches="tight"
         )
         mean_plot = demography_plots.plot_socioeconomic_index(
             super_areas, column="centile_std"
         )
         mean_plot.plot()
         plt.savefig(
-            save_dir / "london_socioeconomic_stdev.png", dpi=150, bbox_inches="tight"
+            save_dir / "london_socioeconomic_stdev.png", dpi=self.dpi, bbox_inches="tight"
         )
 
         super_areas = demography_plots.process_socioeconomic_index_for_world()
@@ -97,14 +98,14 @@ class Plotter:
         )
         mean_plot.plot()
         plt.savefig(
-            save_dir / "world_socioeconomic_mean.png", dpi=150, bbox_inches="tight"
+            save_dir / "world_socioeconomic_mean.png", dpi=self.dpi, bbox_inches="tight"
         )
         mean_plot = demography_plots.plot_socioeconomic_index(
             super_areas, column="centile_std"
         )
         mean_plot.plot()
         plt.savefig(
-            save_dir / "world_socioeconomic_stdev.png", dpi=150, bbox_inches="tight"
+            save_dir / "world_socioeconomic_stdev.png", dpi=self.dpi, bbox_inches="tight"
         )
 
     def plot_commute(
@@ -120,7 +121,7 @@ class Plotter:
         print("Plotting internal exteral numbers")
         internal_external_numbers_plot = commute_plots.plot_internal_external_numbers()
         internal_external_numbers_plot.plot()
-        plt.savefig(save_dir / "internal_external.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "internal_external.png", dpi=self.dpi, bbox_inches="tight")
 
         print("Processing Newcastle areas")
         (
@@ -138,7 +139,7 @@ class Plotter:
             commute_areas_plot.plot()
             plt.savefig(
                 save_dir / "Newcastle_internal_commute.png",
-                dpi=150,
+                dpi=self.dpi,
                 bbox_inches="tight",
             )
 
@@ -150,7 +151,7 @@ class Plotter:
             commute_areas_plot.plot()
             plt.savefig(
                 save_dir / "Newcastle_external_commute.png",
-                dpi=150,
+                dpi=self.dpi,
                 bbox_inches="tight",
             )
 
@@ -167,7 +168,7 @@ class Plotter:
             )
             commute_areas_plot.plot()
             plt.savefig(
-                save_dir / "London_internal_commute.png", dpi=150, bbox_inches="tight"
+                save_dir / "London_internal_commute.png", dpi=self.dpi, bbox_inches="tight"
             )
 
         if external_commute_areas is not None:
@@ -177,7 +178,7 @@ class Plotter:
             )
             commute_areas_plot.plot()
             plt.savefig(
-                save_dir / "London_external_commute.png", dpi=150, bbox_inches="tight"
+                save_dir / "London_external_commute.png", dpi=self.dpi, bbox_inches="tight"
             )
 
     def plot_households(
@@ -206,22 +207,22 @@ class Plotter:
         print("Plotting company sizes")
         company_sizes_plot = company_plots.plot_company_sizes()
         company_sizes_plot.plot()
-        plt.savefig(save_dir / "company_sizes.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "company_sizes.png", dpi=self.dpi, bbox_inches="tight")
 
         print("Plotting company workers")
         company_workers_plot = company_plots.plot_company_workers()
         company_workers_plot.plot()
-        plt.savefig(save_dir / "company_workers.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "company_workers.png", dpi=self.dpi, bbox_inches="tight")
 
         print("Plotting company sectors")
         company_sectors_plot = company_plots.plot_company_sectors()
         company_sectors_plot.plot()
-        plt.savefig(save_dir / "company_sectors.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "company_sectors.png", dpi=self.dpi, bbox_inches="tight")
 
         print("Plotting work distance travel")
         work_distance_travel_plot = company_plots.plot_work_distance_travel()
         work_distance_travel_plot.plot()
-        plt.savefig(save_dir / "work_distance_travel.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "work_distance_travel.png", dpi=self.dpi, bbox_inches="tight")
 
     def plot_leisure(self, save_dir: Path = default_output_plots_path / "leisure"):
         "Make all leisure plots"
@@ -231,13 +232,34 @@ class Plotter:
         print("Setting up leisure plots")
         leisure_plots = LeisurePlots(self.world)
 
-        time_survey = leisure_plots.plot_time_survey()
-        plt.plot()
-        plt.savefig(save_dir / "time_survey.png", dpi=150, bbox_inches="tight")
+        #time_survey = leisure_plots.plot_time_survey()
+        #plt.plot()
+        #plt.savefig(save_dir / "time_survey.png", dpi=self.dpi, bbox_inches="tight")
 
-        occupancy = leisure_plots.plot_occupancy()
-        plt.plot()
-        plt.savefig(save_dir / "leisure_occupancy.png", dpi=150, bbox_inches="tight")
+        #occupancy = leisure_plots.plot_occupancy()
+        #plt.plot()
+        #plt.savefig(save_dir / "leisure_occupancy.png", dpi=self.dpi, bbox_inches="tight")
+
+        #sv_ages = leisure_plots.plot_social_venues_age_distributions()
+        #plt.plot()
+        #plt.savefig(save_dir / "leisure_age_distribution.png", dpi=self.dpi, bbox_inches="tight")
+
+        #grocery_shopping_age = leisure_plots.plot_grocery_times_per_week_stata_vs_poisson()
+        #grocery_shopping_age.plot()
+        #plt.savefig(save_dir / "grocery_times_per_week.png", dpi=self.dpi)
+
+        #pubs_per_age = leisure_plots.plot_people_going_to_the_pub()
+        #pubs_per_age.plot()
+        #plt.savefig(save_dir / "pub_per_age.png", dpi=self.dpi)
+
+        #groceries_per_age = leisure_plots.plot_people_going_groceries()
+        #groceries_per_age.plot()
+        #plt.savefig(save_dir / "groceries_per_age.png", dpi=self.dpi)
+
+        leisure_by_age = leisure_plots.plot_leisure_type_by_age()
+        leisure_by_age.plot()
+        plt.savefig(save_dir / "leisure_by_age.png", dpi=self.dpi)
+
 
     def plot_policies(self, save_dir: Path = default_output_plots_path / "policy"):
         "Make all policy plots"
@@ -250,17 +272,17 @@ class Plotter:
         print("Plotting restaurant reopening")
         restaurant_reopening_plot = policy_plots.plot_restaurant_reopening()
         restaurant_reopening_plot.plot()
-        plt.savefig(save_dir / "restaurant_reopening.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "restaurant_reopening.png", dpi=self.dpi, bbox_inches="tight")
 
         print("Plotting school reopening")
         school_reopening_plot = policy_plots.plot_school_reopening()
         school_reopening_plot.plot()
-        plt.savefig(save_dir / "school_reopening.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "school_reopening.png", dpi=self.dpi, bbox_inches="tight")
 
         print("Plotting beta fraction")
         beta_fraction_plot = policy_plots.plot_beta_fraction()
         beta_fraction_plot.plot()
-        plt.savefig(save_dir / "beta_fraction.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "beta_fraction.png", dpi=self.dpi, bbox_inches="tight")
 
         print("All policy plots finished")
 
@@ -277,7 +299,7 @@ class Plotter:
         care_plots.load_care_home_data()
         care_age_plot = care_plots.plot_age_distribution()
         care_age_plot.plot()
-        plt.savefig(save_dir / "age_distribution.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "age_distribution.png", dpi=self.dpi, bbox_inches="tight")
 
     def plot_schools(self, save_dir: Path = default_output_plots_path / "schools"):
         """Make all school plots"""
@@ -289,19 +311,19 @@ class Plotter:
 
         school_size_plot = school_plots.plot_school_sizes()
         school_size_plot.plot()
-        plt.savefig(save_dir / "school_sizes.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "school_sizes.png", dpi=self.dpi, bbox_inches="tight")
 
         student_teacher_ratio_plot = school_plots.plot_student_teacher_ratio()
         student_teacher_ratio_plot.plot()
         plt.savefig(
-            save_dir / "student_teacher_ratios.png", dpi=150, bbox_inches="tight"
+            save_dir / "student_teacher_ratios.png", dpi=self.dpi, bbox_inches="tight"
         )
 
         distance_to_school_plot = school_plots.plot_distance_to_school()
         distance_to_school_plot.plot()
 
         print(save_dir / "distance_to_school.png")
-        plt.savefig(save_dir / "distance_to_school.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "distance_to_school.png", dpi=self.dpi, bbox_inches="tight")
 
     def plot_contact_matrices(
         self, save_dir: Path = default_output_plots_path / "contact_matrices"
@@ -326,7 +348,7 @@ class Plotter:
             contact_matrix_plots.plot_contact_matrix(contact_matrix, location)
             plt.savefig(
                 save_dir / f"contact_matrix_{location}_prelockdown.png",
-                dpi=150,
+                dpi=self.dpi,
                 bbox_inches="tight",
             )
 
@@ -337,7 +359,7 @@ class Plotter:
             contact_matrix_plots.plot_contact_matrix(contact_matrix, location)
             plt.savefig(
                 save_dir / f"contact_matrix_{location}_lockdown.png",
-                dpi=150,
+                dpi=self.dpi,
                 bbox_inches="tight",
             )
 
@@ -359,7 +381,7 @@ class Plotter:
         le_plot = le_plots.plot_life_expectancy_socioecon_index()
         le_plot.plot()
         plt.savefig(
-            save_dir / "socioecon_life_expectancy.png", dpi=150, bbox_inches="tight"
+            save_dir / "socioecon_life_expectancy.png", dpi=self.dpi, bbox_inches="tight"
         )
 
     def plot_health_index(
@@ -374,17 +396,17 @@ class Plotter:
         print("Plotting seroprevalence")
         prevalence_plot = hi_plots.sero_prevalence_plot()
         prevalence_plot.plot()
-        plt.savefig(save_dir / "prevalence_plots.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "prevalence_plots.png", dpi=self.dpi, bbox_inches="tight")
 
         print("Plotting rates")
         rates_plot = hi_plots.rates_plot()
         rates_plot.plot()
-        plt.savefig(save_dir / "rates.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "rates.png", dpi=self.dpi, bbox_inches="tight")
 
         print("Plotting infectiousness")
         infectiousness_plot = hi_plots.infectiousness()
         infectiousness_plot.plot()
-        plt.savefig(save_dir / "infectiousness.png", dpi=150, bbox_inches="tight")
+        plt.savefig(save_dir / "infectiousness.png", dpi=self.dpi, bbox_inches="tight")
 
     def plot_all(self):
         print("Plotting the world")
