@@ -325,15 +325,14 @@ class Leisure:
                 )
             else:
                 subgroup = group[leisure_subgroup_type]
-            assert subgroup is not None
-            self.send_household_with_person_if_necessary(
-                person,
-                subgroup,
-                prob_age_sex["drags_household"][activity],
-                to_send_abroad=to_send_abroad,
-            )
-            if activity == "household_visits":
-                group.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
+            #self.send_household_with_person_if_necessary(
+            #    person,
+            #    subgroup,
+            #    prob_age_sex["drags_household"][activity],
+            #    to_send_abroad=to_send_abroad,
+            #)
+            #if activity == "household_visits":
+            #    group.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
             person.subgroups.leisure = subgroup
             return subgroup
 

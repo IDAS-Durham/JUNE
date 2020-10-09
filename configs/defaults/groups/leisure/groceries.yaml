@@ -1,19 +1,19 @@
 # probabilites from https://www-statista-com.ezphost.dur.ac.uk/statistics/1125722/frequency-of-food-shopping-trips-by-age-group-uk/
 male_age_probabilities:
-  18-24: 1.30
-  25-34: 1.50
-  35-44: 1.7
-  45-54: 1.65
-  55-64: 1.65
+  16-25: 1.30
+  25-35: 1.50
+  35-45: 1.7
+  45-55: 1.65
+  55-65: 1.65
   65-100: 0.75
 female_age_probabilities:
-  18-24: 1.30
-  25-34: 1.50
-  35-44: 1.7
-  45-54: 1.65
-  55-64: 1.65
+  16-25: 1.30
+  25-35: 1.50
+  35-45: 1.7
+  45-55: 1.65
+  55-65: 1.65
   65-100: 0.75
-weekend_boost: 0.35
-drags_household_probability: 0.0
+weekend_boost: 1.0
+drags_household_probability: 0.5
 neighbours_to_consider: 15
 maximum_distance: 10

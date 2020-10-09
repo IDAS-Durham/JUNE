@@ -536,7 +536,7 @@ class LeisurePlots:
             else:
                 venue_types["None"][person.age] += 1
         venue_types = pd.DataFrame.from_dict(venue_types)
-        venue_types = venue_types / venue_types.sum(axis=0)
+        venue_types = venue_types.div(venue_types.sum(axis=1), axis=0)
         totals = [
             i + j + k + l + m + n
             for i, j, k, l, m, n in zip(

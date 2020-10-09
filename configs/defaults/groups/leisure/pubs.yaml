@@ -1,17 +1,17 @@
 # these are fined tuned so that we reproduce the ratios in https://www.statista.com/statistics/557584/going-to-pubs-bars-clubs-by-age-uk-england/
 male_age_probabilities:
-  16-24: 2.45
-  25-44: 2.5
-  45-64 : 1.25
-  65-74: 0.5
-  75-100: 0.18
+  16-25: 2.3
+  25-45: 2.5
+  45-65 : 2.3
+  65-75: 1.0
+  75-100: 0.7
 female_age_probabilities:
-  16-24: 2.45
-  25-44: 2.5
-  45-64 : 1.25
-  65-74: 0.5
-  75-100: 0.18
+  16-25: 2.45
+  25-45: 2.5
+  45-65 : 2.3
+  65-75: 1.0
+  75-100: 0.7
 neighbours_to_consider: 7
 maximum_distance: 5
-weekend_boost: 1.00
+weekend_boost: 2.00
 drags_household_probability: 0.5
