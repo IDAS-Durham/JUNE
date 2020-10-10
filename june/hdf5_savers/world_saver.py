@@ -235,7 +235,7 @@ def generate_domain_from_hdf5(
     # import here to avoid recurisve imports
     from june.domain import Domain
 
-    # get the super area ids of this domain
+    # get the super areas of this domain
     super_area_ids = set()
     for super_area, did in super_areas_to_domain_dict.items():
         if did == domain_id:

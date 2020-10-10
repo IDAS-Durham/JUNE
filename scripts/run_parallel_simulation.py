@@ -2,6 +2,7 @@ import time
 import numpy as np
 import numba as nb
 import random
+import json
 from pathlib import Path
 from mpi4py import MPI
 import h5py
@@ -10,7 +11,12 @@ import cProfile
 
 from june.hdf5_savers import generate_world_from_hdf5, load_population_from_hdf5
 from june.interaction import Interaction
-from june.infection import Infection, InfectionSelector, HealthIndexGenerator, SymptomTag
+from june.infection import (
+    Infection,
+    InfectionSelector,
+    HealthIndexGenerator,
+    SymptomTag,
+)
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.groups.travel import Travel
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
@@ -20,9 +26,11 @@ from june.policy import Policies
 from june import paths
 from june.groups.commute import *
 from june.records import Record
-from june.domain import Domain, generate_super_areas_to_domain_dict
+from june.domain import Domain, generate_domain_split
 from june.mpi_setup import mpi_comm, mpi_rank, mpi_size
 
+def keys_to_int(x):
+    return {int(k): v for k, v in x.items()}
 
 def set_random_seed(seed=999):
     """
@@ -39,8 +47,9 @@ def set_random_seed(seed=999):
     random.seed(seed)
     return
 
+
 # a decorator for profiling
-def profile(filename=None, comm=MPI.COMM_WORLD):
+def profile(filename=None, comm=mpi_comm):
     def prof_decorator(f):
         def wrap_f(*args, **kwargs):
             pr = cProfile.Profile()
@@ -51,7 +60,7 @@ def profile(filename=None, comm=MPI.COMM_WORLD):
             if filename is None:
                 pr.print_stats()
             else:
-                filename_r = filename + ".{}".format(comm.rank)
+                filename_r = filename + ".{}".format(mpi_rank)
                 pr.dump_stats(filename_r)
 
             return result
@@ -70,11 +79,6 @@ set_random_seed(seed)
 world_file = f"./tests.hdf5"
 config_path = "./config_simulation.yaml"
 
-# parallel setup
-
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
 if seed == 999:
     save_path = "results"
 else:
@@ -83,24 +87,40 @@ else:
 
 def generate_simulator():
     with h5py.File(world_file, "r") as f:
-        n_super_areas = f["geography"].attrs["n_super_areas"]
+        super_area_names = f["geography"]["super_area_name"][:]
+        super_area_ids = f["geography"]["super_area_id"][:]
+    super_area_names = [name.decode() for name in super_area_names]
+    super_area_name_to_id = {
+        key: value for key, value in zip(super_area_names, super_area_ids)
+    }
 
     record = Record(
-        record_path="results_records", record_static_data=True, mpi_rank=rank
+        record_path="results_records", record_static_data=True, mpi_rank=mpi_rank
     )
+    if mpi_rank == 0:
+        # make dictionary super_area_id -> domain
+        super_area_names_to_domain_dict = generate_domain_split(
+            super_areas=super_area_names, number_of_domains=mpi_size
+        )
+        super_areas_to_domain_dict = {}
+        for key, value in super_area_names_to_domain_dict.items():
+            super_areas_to_domain_dict[int(super_area_name_to_id[key])] = value
 
-    super_areas_to_domain_dict = generate_super_areas_to_domain_dict(
-        n_super_areas, size
-    )
-
+        with open("super_areas_to_domain.json", "w") as f:
+            json.dump(super_areas_to_domain_dict, f)
+    mpi_comm.Barrier()
+    if mpi_rank > 0:
+        with open("super_areas_to_domain.json", "r") as f:
+            super_areas_to_domain_dict = json.load(f, object_hook=keys_to_int)
+    print(f"Domain {mpi_rank} {super_areas_to_domain_dict}")
     domain = Domain.from_hdf5(
-        domain_id=rank,
+        domain_id=mpi_rank,
         super_areas_to_domain_dict=super_areas_to_domain_dict,
         hdf5_file_path=world_file,
     )
     record.static_data(world=domain)
     for hospital in domain.hospitals:
-        print(f"Rank {rank} hospital {hospital.id}")
+        print(f"Rank {mpi_rank} hospital {hospital.id}")
     # regenerate lesiure
     leisure = generate_leisure_for_config(domain, config_path)
     #
@@ -154,7 +174,6 @@ def run_simulator(simulator):
     simulator.run()
     t2 = time.time()
     print(f" Simulation took {t2-t1} seconds")
-
 
 
 if __name__ == "__main__":
