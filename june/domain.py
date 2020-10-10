@@ -1,7 +1,8 @@
 import numpy as np
 from typing import List
-from itertools import count
+from itertools import count, chain
 from sklearn.cluster import KMeans
+from sklearn.neighbors import KDTree
 import geopandas as gpd
 
 from june.demography import Population
@@ -51,9 +52,9 @@ class Domain:
         return domain
 
 
-#def generate_super_areas_to_domain_dict(
+# def generate_super_areas_to_domain_dict(
 #    number_of_super_areas: int, number_of_domains: int
-#):
+# ):
 #    """
 #    Generates a dictionary mapping super_area ids ===> domain id.
 #    We attempt to have the same number of super areas per domain,
@@ -112,8 +113,19 @@ def generate_domain_split(
     centroids = super_area_shapes_df.geometry.centroid
     X = np.array(list(zip(centroids.x.values, centroids.y.values)))
     kmeans = KMeans(n_clusters=number_of_domains).fit(X)
-    labels = kmeans.labels_
-    super_area_shapes_df["labels"] = labels
-    ret = super_area_shapes_df.loc[:,["super_area", "labels"]]
-    ret.set_index("super_area", inplace=True)
-    return ret.to_dict()['labels']
+    cluster_centers = kmeans.cluster_centers_
+    kdtree = KDTree(cluster_centers)
+    clusters = [[] for _ in range(number_of_domains)]
+    for _, row in super_area_shapes_df.iterrows():
+        closest_centroid_id = kdtree.query(
+            np.array([row["geometry"].centroid.x, row["geometry"].centroid.y]).reshape(
+                1, -1
+            ),
+            k=1,
+        )[1][0][0]
+        clusters[closest_centroid_id].append(row["super_area"])
+    super_area_shapes_df.set_index("super_area", inplace=True)
+    labels = [i for i, cluster in enumerate(clusters) for super_area in cluster]
+    super_areas = super_area_shapes_df.index.values
+    ret = {super_area: label for super_area, label in zip(super_areas, labels)}
+    return ret
