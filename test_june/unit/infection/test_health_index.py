@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from june.groups import CareHome
 from june import paths
 from june.groups import CareHome, Household
 from june.demography import Person
@@ -18,7 +19,32 @@ def test__smaller_than_one():
             increasing_count += 1
         else:
             increasing_count == increasing_count
-    assert increasing_count == 121
+    assert increasing_count == 100
+
+
+def test__smaller_than_one_ch():
+    index_list = HealthIndexGenerator.from_file()
+    increasing_count = 0
+    for i in range(len(index_list.prob_lists_ch[0])):
+        male=Person.from_attributes(age=i, sex="m")
+        female=Person.from_attributes(age=i, sex="f")
+
+
+        care_home =CareHome()
+        care_home.add(male)
+        care_home.add(female)
+
+        index_m = index_list(male)
+        index_w = index_list(female)
+
+
+        bool_m = np.sum(np.round(index_m, 7) <= 1)
+        bool_w = np.sum(np.round(index_w, 7) <= 1)
+        if bool_m + bool_w == 14:
+            increasing_count += 1
+        else:
+            increasing_count == increasing_count
+    assert increasing_count == 35
 
 
 def test__non_negative_probability():
@@ -31,12 +57,55 @@ def test__non_negative_probability():
     assert negatives == 0
 
 
+
+def test__non_negative_probabilityi_ch():
+    probability_object = HealthIndexGenerator.from_file()
+    probability_list_ch = probability_object.prob_lists_ch
+    negatives = 0.0
+    for i in range(len(probability_list_ch[0])):
+        negatives += sum(probability_list_ch[0][i] < 0)
+        negatives += sum(probability_list_ch[1][i] < 0)
+    assert negatives == 0
+
+
+
+
 def test__growing_index():
     index_list = HealthIndexGenerator.from_file()
     increasing_count = 0
     for i in range(len(index_list.prob_lists[0])):
-        index_m = index_list(Person.from_attributes(age=i, sex="m"))
-        index_w = index_list(Person.from_attributes(age=i, sex="f"))
+        male=Person.from_attributes(age=i, sex="m")
+        female=Person.from_attributes(age=i, sex="f")
+
+        index_m = index_list(male)
+        index_w = index_list(female)
+    
+
+        if sum(np.sort(index_w) == index_w) != len(index_w):
+            increasing_count += 0
+
+        if sum(np.sort(index_m) == index_m) != len(index_m):
+            increasing_count += 0
+
+    assert increasing_count == 0
+
+
+
+def test__growing_index_ch():
+    index_list = HealthIndexGenerator.from_file()
+    increasing_count = 0
+    for i in range(len(index_list.prob_lists[0])):
+        male=Person.from_attributes(age=i, sex="m")
+        female=Person.from_attributes(age=i, sex="f")
+        
+        
+        care_home =CareHome()
+        care_home.add(male)
+        care_home.add(female)
+        
+        index_m = index_list(male)
+        index_w = index_list(female)
+
 
         if sum(np.sort(index_w) == index_w) != len(index_w):
             increasing_count += 0
@@ -156,7 +225,7 @@ def test__comorbidities_effect():
         guapo_probabilities[2:].sum(),
         comorbidity_multipliers['guapo']/mean_multiplier_uk * dummy_probabilities[2:].sum()
     )
-
+'''
 def test__apply_hospitalisation_correction():
  
     health_index = HealthIndexGenerator.from_file()
@@ -203,3 +272,4 @@ def test__apply_hospitalisation_correction():
     assert adjusted_hi[5] == hi[5]
     assert adjusted_hi[6] == pytest.approx(hi[6]*0.9/(1-0.15), rel=0.01)
     assert adjusted_hi[7] == pytest.approx(hi[7]*0.9/(1-0.15), rel=0.01)
+'''
