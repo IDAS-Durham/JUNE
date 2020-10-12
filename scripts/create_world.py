@@ -25,7 +25,7 @@ scripts_path = Path(__file__).parent
 
 # load london super areas
 london_areas_path = scripts_path / "london_areas.txt"
-london_areas = np.loadtxt(london_areas_path, dtype=np.str_)[45:50]
+london_areas = np.loadtxt(london_areas_path, dtype=np.str_)[0:60]
 
 # add King's cross area for station
 if "E00004734" not in london_areas:

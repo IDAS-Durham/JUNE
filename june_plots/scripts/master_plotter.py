@@ -14,15 +14,16 @@ from june_plots.scripts.companies import CompanyPlots
 from june_plots.scripts.households import HouseholdPlots
 from june_plots.scripts.care_homes import CareHomePlots
 from june_plots.scripts.schools import SchoolPlots
-from june_plots.scripts.commute import CommutePlots
+#from june_plots.scripts.commute import CommutePlots
 from june_plots.scripts.contact_matrix import ContactMatrixPlots
 from june_plots.scripts.life_expectancy import LifeExpectancyPlots
-from june_plots.scripts.demography import DemographyPlots
+#from june_plots.scripts.demography import DemographyPlots
 from june_plots.scripts.health_index import HealthIndexPlots
+from june_plots.scripts.contact_tracker import ContactTracker
 
 
-plt.style.use(['science'])
-plt.style.reload_library()
+#plt.style.use(['science'])
+#plt.style.reload_library()
 
 default_world_filename = 'world.hdf5'
 default_output_plots_path = Path(__file__).absolute().parent.parent / "plots"
@@ -47,7 +48,7 @@ class Plotter:
         world = generate_world_from_hdf5(world_filename)
 
         return Plotter(world)
-
+    """
     def plot_demography(
             self,
             save_dir: Path = default_output_plots_path / "demography",
@@ -149,7 +150,7 @@ class Plotter:
             commute_areas_plot.plot()
             plt.savefig(save_dir / 'London_external_commute.png', dpi=150, bbox_inches='tight')
         
-
+    """
     def plot_households(
             self,
             save_dir: Path = default_output_plots_path / "households"
@@ -369,6 +370,48 @@ class Plotter:
         infectiousness_plot.plot()
         plt.savefig(save_dir / "infectiousness.png", dpi=150, bbox_inches="tight")
 
+    def plot_contact_tracker(
+        self,
+        save_dir: Path = default_output_plots_path / "contact_tracker"
+        
+    ):
+        """Simulate and plot contacts"""
+        save_dir.mkdir(exist_ok=True, parents=True)
+
+        max_age = 100
+        bbc_bins = np.array([0,5,10,13,15,18,20,22,25,30,35,40,45,50,55,60,65,70,75,max_age])
+
+        age_bins = {"bbc": bbc_bins, "5yr": np.arange(0,105,5)}
+        contact_types = [
+            "household", "school", "grocery", "household_visits", "pub", "university", 
+            "company", "city_transport", "inter_city_transports", "care_home", 
+            "care_home_visits", "cinema", "hospital",
+        ]
+
+        #ct_plots = ContactTracker(self.world, age_bins=age_bins)        
+        #ct_plots.generate_simulator()
+        #ct_plots.run_simulation()
+        ct_plots = ContactTracker.from_pickle(self.world)
+        ct_plots.process_contacts()
+        
+        ct_plots.load_contact_data()
+        relevant_contact_types = ["household", "school", "company"]
+        relevant_bin_types = ["bbc","syoa"]
+        print("Plotting...")
+        for rbt in relevant_bin_types:  
+            stacked_contacts_plot = ct_plots.plot_stacked_contacts(
+                bin_type=rbt, contact_types=contact_types
+            )
+            stacked_contacts_plot.plot()
+            plt.savefig(save_dir / f"{rbt}_contacts.png", dpi=150, bbox_inches='tight')
+            cm_dir = save_dir / f"{rbt}"
+            cm_dir.mkdir(exist_ok=True, parents=True)
+            for rct in relevant_contact_types:
+                cm_plot = ct_plots.plot_contact_matrix(
+                    bin_type=rbt, contact_type=rct
+                )
+                cm_plot.plot()
+                plt.savefig(cm_dir / f"{rct}.png", dpi=150, bbox_inches='tight')
 
 
     def plot_all(self):
@@ -384,6 +427,7 @@ class Plotter:
         self.plot_contact_matrices()
         self.plot_life_expectancy()
         self.plot_health_index()
+        self.plot_contact_tracker()
 
 if __name__ == "__main__":
 
@@ -419,6 +463,14 @@ if __name__ == "__main__":
         default=False,
         action="store_true"
     )
+    parser.add_argument(
+        "-t",
+        "--tracker",
+        help="Plot contact tracker only",
+        required=False,
+        default=False,
+        action="store_true",
+    )
 
     args = parser.parse_args()
     plotter = Plotter.from_file(args.world_filename)
@@ -428,5 +480,7 @@ if __name__ == "__main__":
         plotter.plot_contact_matrices()
     elif args.demography:
         plotter.plot_demography()
+    elif args.tracker:
+        plotter.plot_contact_tracker()
     else:
         plotter.plot_all()
