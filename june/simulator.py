@@ -24,6 +24,7 @@ from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
 from june.world import World
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+from june.utils.profiler import profile
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -376,27 +377,36 @@ class Simulator:
         people_to_infect_locally = []
         tick, tickw = perf_counter(), wall_clock()
         reqs = []
+        len_1 = np.array([1], dtype=np.int)
+        none = np.array([-1], dtype=np.int)
         for rank in range(mpi_size):
             if mpi_rank == rank:
                 continue
             if rank in infect_in_domains:
-                people_to_infect_in_rank = np.array(infect_in_domains[rank], dtype=np.int)
-                reqs.append(mpi_comm.isend(people_to_infect_in_rank, dest=rank, tag=100))
+                people_to_infect_in_rank = np.array(
+                    infect_in_domains[rank], dtype=np.int
+                )
+                mpi_comm.Send(
+                    np.array(people_to_infect_in_rank.shape[0], dtype=np.int),
+                    dest=rank,
+                    tag=100,
+                )
+                mpi_comm.Send(people_to_infect_in_rank, dest=rank, tag=100)
             else:
-                reqs.append(mpi_comm.isend(None, dest=rank, tag=100))
+                mpi_comm.Send(len_1, dest=rank, tag=100)
+                mpi_comm.Send(none, dest=rank, tag=100)
 
         # now it has all been sent, we can start the receiving.
 
         for rank in range(mpi_size):
-
             if rank == mpi_rank:
                 continue
-            data = mpi_comm.recv(source=rank, tag=100)
-            if data is not None:
+            length = np.array([0], dtype=np.int)
+            mpi_comm.Recv(length, source=rank, tag=100)
+            data = np.empty(length, dtype=np.int)
+            mpi_comm.Recv(data, source=rank, tag=100)
+            if data[0] != -1:
                 people_to_infect_locally += list(data)
-
-        for r in reqs:
-            r.wait()
 
         tock, tockw = perf_counter(), wall_clock()
         output_logger.info(
@@ -406,7 +416,7 @@ class Simulator:
             person = self.world.people.get_from_id(person_id)
             self.infection_selector.infect_person_at_time(person, self.timer.now)
 
-    #def tell_domains_to_infect(self, infect_in_domains):
+    # def tell_domains_to_infect(self, infect_in_domains):
     #   people_to_infect_locally = []
     #   tick, tickw = perf_counter(), wall_clock()
     #   reqs = []
@@ -460,7 +470,7 @@ class Simulator:
         of the people who got infected. We record the infection locations, update the health
         status of the population, and distribute scores among the infectors to calculate R0.
         """
-        #print("################### time step ############################")
+        # print("################### time step ############################")
         mpi_comm.Barrier()
         output_logger.info("==================== timestep ====================")
         tick, tickw = perf_counter(), wall_clock()
