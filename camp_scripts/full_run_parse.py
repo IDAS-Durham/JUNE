@@ -163,7 +163,7 @@ parser.add_argument(
     default=4,
 )
 parser.add_argument(
-    "-lc",
+    "-lce",
     "--extra_learning_centers",
     help="Number of learning centers to add based on enrolment",
     required=False,
@@ -282,7 +282,7 @@ CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
 #world = generate_empty_world({"super_area": ["CXB-219-C"]})
-world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
+world = generate_empty_world({"region": ["CXB-219", "CXB-217", "CXB-209"]})
 #world = generate_empty_world()
 
 # populate empty world
@@ -309,7 +309,7 @@ world.isolation_units = IsolationUnits([IsolationUnit(area=world.areas[0])])
 hospital_distributor.distribute_medics_from_world(world.people)
 
 if args.learning_centers:
-    world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=args.learning_center_shifts)
+    world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=int(args.learning_center_shifts))
 
     if args.extra_learning_centers:
         # add extra learning centers based on enrollment
@@ -327,7 +327,7 @@ if args.learning_centers:
         for learning_center in top_k:
             extra_lc = LearningCenter(coordinates=learning_center.super_area.coordinates)
             world.learning_centers.members.append(extra_lc)
-        world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=args.learning_center_shifts)
+        world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=int(args.learning_center_shifts))
         
     learning_center_distributor = LearningCenterDistributor.from_file(
         learning_centers=world.learning_centers
@@ -424,6 +424,7 @@ selector = InfectionSelector.from_file(
 
 interaction = Interaction.from_file(
     config_filename=camp_configs_path / "defaults/interaction/" / args.parameters,
+    population=world.people,
 )
 
 if args.household_beta:
@@ -469,7 +470,7 @@ if args.play_group_beta_ratio:
     )
 
 if args.child_susceptibility:
-    interaction.susceptibilities["0-13"] = args.child_susceptibility
+    interaction.susceptibilities["0-13"] = float(args.child_susceptibility)
     
 cases_detected = {
     "CXB-202": 3,
@@ -579,4 +580,4 @@ infections_df = read.get_table_with_extras('infections',
 locations_df = infections_df.groupby(['location_specs', 
                                 'timestamp']).size()
 
-locations_df.to_csv(args.save_dir + '/locations.csv')
+locations_df.to_csv(args.save_path + '/locations.csv')
