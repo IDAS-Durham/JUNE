@@ -156,11 +156,18 @@ parser.add_argument(
     default=False,
 )
 parser.add_argument(
-    "-lc",
+    "-lcs",
     "--learning_center_shifts",
     help="Number of learning center shifts",
     required=False,
     default=4,
+)
+parser.add_argument(
+    "-lc",
+    "--extra_learning_centers",
+    help="Number of learning centers to add based on enrolment",
+    required=False,
+    default=False,
 )
 parser.add_argument(
     "-lch",
@@ -210,6 +217,11 @@ if args.learning_centers == "True":
 else:
     args.learning_centers = False
 
+if args.extra_learning_centers == "True":
+    args.extra_learning_centers = True
+else:
+    args.extra_learning_centers = False
+
 if args.infectiousness_path == "nature":
     transmission_config_path = camp_configs_path / "defaults/transmission/nature.yaml"
 elif args.infectiousness_path == "correction_nature":
@@ -258,6 +270,9 @@ if args.learning_centers:
     print(
         "Learning center shifts set to: {}".format(args.learning_center_shifts)
     )
+    print(
+        "Extra learning centers is set to: {}".format(args.extra_learning_centers)
+    )
 
 print("Plag group beta ratio set to: {}".format(args.play_group_beta_ratio))
 print("Save path set to: {}".format(args.save_path))
@@ -295,6 +310,25 @@ hospital_distributor.distribute_medics_from_world(world.people)
 
 if args.learning_centers:
     world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=args.learning_center_shifts)
+
+    if args.extra_learning_centers:
+        # add extra learning centers based on enrolment
+        enrolled = []
+        learning_centers = []
+        for learning_center in world.learning_centers:
+            total = 0
+            for i in range(4):
+                total += len(learning_center.ids_per_shift[i])
+            enrolled.append(total) 
+            learning_centers.append(learning_center)
+        learning_centers = np.array(learning_centers)
+        learning_centers_sorted = learning_centers[np.argsort(enrolled)]
+        top_k = learning_centers_sorted[-args.extra_learning_centers:]
+        for learning_center in top_k:
+            extra_lc = LearningCenter(coordinates=learning_center.super_area.coordinates)
+            world.learning_centers.members.append(extra_lc)
+        world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=args.learning_center_shifts)
+        
     learning_center_distributor = LearningCenterDistributor.from_file(
         learning_centers=world.learning_centers
     )
