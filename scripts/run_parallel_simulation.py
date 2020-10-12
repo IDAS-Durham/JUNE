@@ -76,7 +76,7 @@ else:
     seed = 999
 set_random_seed(seed)
 
-world_file = f"./tests.hdf5"
+world_file = f"./ne.hdf5"
 config_path = "./config_simulation.yaml"
 
 if seed == 999:
@@ -86,18 +86,17 @@ else:
 
 
 def generate_simulator():
-    with h5py.File(world_file, "r") as f:
-        super_area_names = f["geography"]["super_area_name"][:]
-        super_area_ids = f["geography"]["super_area_id"][:]
-    super_area_names = [name.decode() for name in super_area_names]
-    super_area_name_to_id = {
-        key: value for key, value in zip(super_area_names, super_area_ids)
-    }
-
     record = Record(
         record_path="results_records", record_static_data=True, mpi_rank=mpi_rank
     )
     if mpi_rank == 0:
+        with h5py.File(world_file, "r") as f:
+            super_area_names = f["geography"]["super_area_name"][:]
+            super_area_ids = f["geography"]["super_area_id"][:]
+        super_area_names = [name.decode() for name in super_area_names]
+        super_area_name_to_id = {
+            key: value for key, value in zip(super_area_names, super_area_ids)
+        }
         # make dictionary super_area_id -> domain
         super_area_names_to_domain_dict = generate_domain_split(
             super_areas=super_area_names, number_of_domains=mpi_size
@@ -112,15 +111,12 @@ def generate_simulator():
     if mpi_rank > 0:
         with open("super_areas_to_domain.json", "r") as f:
             super_areas_to_domain_dict = json.load(f, object_hook=keys_to_int)
-    print(f"Domain {mpi_rank} {super_areas_to_domain_dict}")
     domain = Domain.from_hdf5(
         domain_id=mpi_rank,
         super_areas_to_domain_dict=super_areas_to_domain_dict,
         hdf5_file_path=world_file,
     )
     record.static_data(world=domain)
-    for hospital in domain.hospitals:
-        print(f"Rank {mpi_rank} hospital {hospital.id}")
     # regenerate lesiure
     leisure = generate_leisure_for_config(domain, config_path)
     #

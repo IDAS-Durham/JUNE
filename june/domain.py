@@ -3,7 +3,7 @@ from typing import List
 from itertools import count, chain
 from sklearn.cluster import KMeans
 from sklearn.neighbors import KDTree
-import geopandas as gpd
+import pandas as pd
 
 from june.demography import Population
 from june.geography import SuperArea
@@ -11,6 +11,9 @@ from june.hdf5_savers import generate_domain_from_hdf5
 from june import paths
 
 default_super_area_shapes_path = paths.data_path / "plotting/super_area_boundaries"
+defalt_super_area_centroids = (
+    paths.data_path / "input/geography/super_area_centroids.csv"
+)
 
 
 class Domain:
@@ -81,51 +84,161 @@ class Domain:
 #    return ret
 
 
-def generate_domain_split(
-    super_areas: List[str],
-    number_of_domains: int,
-    super_area_boundaries_path: str = default_super_area_shapes_path,
-    super_area_key: str = "msoa11cd",
-) -> dict:
-    """
-    Uses KMeans clustering algorithm to split a map of super areas into
-    ``number_of_domains`` clusters. Returns a dict mapping each super area
-    to the domain it belongs.
+# def generate_domain_split(
+#    super_areas: List[str],
+#    number_of_domains: int,
+#    super_area_boundaries_path: str = default_super_area_shapes_path,
+#    super_area_key: str = "msoa11cd",
+# ) -> dict:
+#    """
+#    Uses KMeans clustering algorithm to split a map of super areas into
+#    ``number_of_domains`` clusters. Returns a dict mapping each super area
+#    to the domain it belongs.
+#
+#    Parameters
+#    ----------
+#    super_areas
+#        a list of super area names
+#    number_of_domains
+#        how many domains to split for
+#    super_area_boundaries_path
+#        path to a shape file containing the shapes of super areas
+#    super_area_key
+#        column name of the shape file that contains the super area identifiers.
+#    """
+#    super_area_shapes_df = gpd.read_file(super_area_boundaries_path)
+#    super_area_shapes_df = super_area_shapes_df.rename(
+#        columns={super_area_key: "super_area"}
+#    )
+#    super_area_shapes_df = super_area_shapes_df.loc[
+#        super_area_shapes_df["super_area"].isin(super_areas)
+#    ]
+#    centroids = super_area_shapes_df.geometry.centroid
+#    X = np.array(list(zip(centroids.x.values, centroids.y.values)))
+#    kmeans = KMeans(n_clusters=number_of_domains).fit(X)
+#    cluster_centers = kmeans.cluster_centers_
+#    kdtree = KDTree(cluster_centers)
+#    clusters = [[] for _ in range(number_of_domains)]
+#    for _, row in super_area_shapes_df.iterrows():
+#        closest_centroid_id = kdtree.query(
+#            np.array([row["geometry"].centroid.x, row["geometry"].centroid.y]).reshape(
+#                1, -1
+#            ),
+#            k=1,
+#        )[1][0][0]
+#        clusters[closest_centroid_id].append(row["super_area"])
+#    super_area_shapes_df.set_index("super_area", inplace=True)
+#    labels = [i for i, cluster in enumerate(clusters) for super_area in cluster]
+#    super_areas = super_area_shapes_df.index.values
+#    ret = {super_area: label for super_area, label in zip(super_areas, labels)}
+#    return ret
 
-    Parameters
-    ----------
-    super_areas
-        a list of super area names
-    number_of_domains
-        how many domains to split for
-    super_area_boundaries_path
-        path to a shape file containing the shapes of super areas
-    super_area_key
-        column name of the shape file that contains the super area identifiers.
+
+class DomainSplitter:
     """
-    super_area_shapes_df = gpd.read_file(super_area_boundaries_path)
-    super_area_shapes_df = super_area_shapes_df.rename(
-        columns={super_area_key: "super_area"}
-    )
-    super_area_shapes_df = super_area_shapes_df.loc[
-        super_area_shapes_df["super_area"].isin(super_areas)
-    ]
-    centroids = super_area_shapes_df.geometry.centroid
-    X = np.array(list(zip(centroids.x.values, centroids.y.values)))
-    kmeans = KMeans(n_clusters=number_of_domains).fit(X)
-    cluster_centers = kmeans.cluster_centers_
-    kdtree = KDTree(cluster_centers)
-    clusters = [[] for _ in range(number_of_domains)]
-    for _, row in super_area_shapes_df.iterrows():
-        closest_centroid_id = kdtree.query(
-            np.array([row["geometry"].centroid.x, row["geometry"].centroid.y]).reshape(
-                1, -1
-            ),
-            k=1,
-        )[1][0][0]
-        clusters[closest_centroid_id].append(row["super_area"])
-    super_area_shapes_df.set_index("super_area", inplace=True)
-    labels = [i for i, cluster in enumerate(clusters) for super_area in cluster]
-    super_areas = super_area_shapes_df.index.values
-    ret = {super_area: label for super_area, label in zip(super_areas, labels)}
-    return ret
+    Class used to split the world into ``n`` domains containing an equal number
+    of super areas continuous to each other.
+    """
+
+    def __init__(
+        self,
+        number_of_domains: int,
+        super_areas: List[str] = None,
+        super_area_centroids: List[List[float]] = None,
+    ):
+        """
+        Parameters
+        ----------
+        super_areas
+            a list of super area names
+        number_of_domains
+            how many domains to split for
+        super_area_boundaries_path
+            path to a shape file containing the shapes of super areas
+        super_area_key
+            column name of the shape file that contains the super area identifiers.
+        """
+        self.super_area_names = super_areas
+        self.number_of_domains = number_of_domains
+        self.super_area_names = super_area_centroids
+        if self.super_area_centroids is None:
+            self.super_area_centroids = pd.read_csv(
+                default_super_area_shapes_path, index_col=0
+            )
+        if super_areas is not None:
+            self.super_area_centroids = self.super_area_centroids.loc[super_areas]
+        else:
+            self.super_area_centroids = self.super_area_centroids
+
+    def _get_kmeans_centroids(self):
+        X = np.array(
+            list(zip(self.super_area_centroids["X"], self.super_area_centroids["Y"]))
+        )
+        kmeans = KMeans(n_clusters=self.number_of_domains).fit(X)
+        cluster_centers = kmeans.cluster_centers_
+        return cluster_centers
+
+    def _initialise_kdtree(self, data):
+        kdtree = KDTree(data)
+        return kdtree
+
+    def _get_closest_centroid_ids(self, kdtree, coordinates):
+        closest_centroid_ids = kdtree.query(coordinates.reshape(1, -1), k=1,)[1][0]
+        return closest_centroid_ids
+
+    def _get_distance_to_closest_centroid(self, kdtree, coordinates):
+        distance = kdtree.query(coordinates.reshape(1, -1), k=1,)[0][0][0]
+        return distance
+
+    def _get_furthest_super_areas(self, domain_centroids, kdtree_centroids):
+        super_areas_per_domain = len(self.super_area_names) / self.number_of_domains
+        kdtree_centroids = self._initialise_kdtree(domain_centroids)
+        # sort super areas by further away from closest to any cluster
+        _distances = []
+        for super_area, super_area_centroid in zip(
+            self.super_area_names, self.super_area_centroids
+        ):
+            _distances.append(
+                self._get_distance_to_closest_centroid(
+                    kdtree_centroids, super_area_centroid[["X", "Y"]]
+                )
+            )
+        sorted_idx = np.argsort(_distances)[::-1]
+        super_area_names = np.array(self.super_area_names)[sorted_idx]
+        return super_area_names
+
+    def assign_super_areas_to_centroids(self, domain_centroids):
+        kdtree_centroids = self._initialise_kdtree(domain_centroids)
+        furthest_super_areas = self._get_furthest_super_areas(
+            domain_centroids, kdtree_centroids
+        )
+        n_super_areas_per_centroid = np.ceil(len(self.super_area_names) / len(domain_centroids))
+        occupany_per_centroid = {centroid_id: 0 for centroid_id in range(len(domain_centroids))}
+        super_areas_per_domain = {centroid_id: [] for centroid_id in range(len(domain_centroids))}
+        for super_area_name in furthest_super_areas:
+            closest_centroid_ids =  self._get_closest_centroid_id(kdtree_centroids, self.super_area_centroids.loc[super_area_name, ['X', 'Y']])
+            for centroid_id in closest_centroid_ids:
+                if occupany_per_centroid[centroid_id] < n_super_areas_per_centroid:
+                    occupany_per_centroid[centroid_id] += 1
+                    super_areas_per_domain[centroid_id].append(super_area_name)
+                    break
+        return super_areas_per_domain
+
+    def compute_domain_centroids(self, super_areas_per_domain):
+        centroids = []
+        for domain, super_area_names in super_areas_per_domain:
+            super_area_centroids = self.super_area_centroids.loc[super_area_names, ['X', 'Y']].values
+            centroid = np.array(super_area_centroids, axis =0)
+            centroids.append(centroid)
+        return centroids
+
+    def generate_domain_split(self):
+        # first make an initial guess with KMeans.
+        domain_centroids = self._get_kmeans_centroids()
+        for _ in range(3):
+            super_areas_per_domain = self.assign_super_areas_to_centroids(domain_centroids)
+            domain_centroids = self.compute_domain_centroids(super_areas_per_domain)
+
+
+
+
