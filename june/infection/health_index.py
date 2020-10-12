@@ -10,7 +10,7 @@ from typing import Optional, List
 default_icu_hosp_filename = paths.configs_path / "defaults/ICU_hosp.dat"
 default_death_hosp_filename = paths.configs_path / "defaults/Death_hosp.dat"
 default_hosp_cases_filename = paths.configs_path / "defaults/cases_hosp.dat"
-default_death_home_filename = paths.configs_path / "defaults/percent_deaths_home.dat"
+default_death_home_filename = paths.configs_path / "percent_deaths_home.dat"
 
 default_death_home_ch_filename=paths.configs_path /'frac_deaths_home_smoothed.dat'
 default_hosp_cases_ch_filename=paths.configs_path /'hosp_over_cases_care_home.dat'
