@@ -7,23 +7,22 @@ from june import paths
 from june.utils.parse_probabilities import parse_age_probabilities
 from typing import Optional, List
 
-default_icu_hosp_filename = paths.configs_path / "defaults/ICU_hosp.dat"
-default_death_hosp_filename = paths.configs_path / "defaults/Death_hosp.dat"
-default_hosp_cases_filename = paths.configs_path / "defaults/cases_hosp.dat"
-default_death_home_filename = paths.configs_path / "defaults/percent_deaths_home.dat"
+default_icu_hosp_filename = paths.configs_path / "defaults/infection/health_index/ICU_hosp.dat"
+default_death_hosp_filename = paths.configs_path / "defaults/infection/health_index/Death_hosp.dat"
+default_hosp_cases_filename = paths.configs_path / "defaults/infection/health_index/cases_hosp.dat"
+default_death_home_filename = paths.configs_path / "defaults/infection/health_index/percent_deaths_home.dat"
 
-default_death_home_ch_filename=paths.configs_path /'frac_deaths_home_smoothed.dat'
-default_hosp_cases_ch_filename=paths.configs_path /'hosp_over_cases_care_home.dat'
+default_death_home_ch_filename=paths.configs_path /'defaults/infection/health_index/frac_deaths_home_smoothed.dat'
+default_hosp_cases_ch_filename=paths.configs_path /'defaults/infection/health_index/hosp_over_cases_care_home.dat'
 
 
 RKIdata = [
-    [0.0, 4.0 / 100.0],
-    [5.0, 4.0 / 100.0],
-    [15.0, 1.5 / 100.0],
-    [35.0, 4.0 / 100.0],
-    [60.0, 14.0 / 100.0],
-    [80.0, 46.0 / 100.0],
-    [95.0, 60.0 / 100.0],
+    [2.5, 4.0 / 100.0],
+    [10, 4.0 / 100.0],
+    [22.5, 1.5 / 100.0],
+    [47.5,4.0 / 100.0],
+    [70.0, 14.0 / 100.0],
+    [90.0, 46.0 / 100.0],
 ]
 
 # Taken from ICNARC report
@@ -350,13 +349,27 @@ class HealthIndexGenerator:
         fit_surv_icu=np.polyfit(age_surv_icu,surv_icu, 3)
         survival_icu=np.poly1d(fit_surv_icu)(age)
 
+        #survival_icu = np.ones(101)
+        #for survival_icu_index in range(len(survival_rate_icu) - 1):
+        #    boolean = (
+        #        survival_rate_icu[survival_icu_index][0] <= np.arange(0, 121, 1)
+        #    ) & (np.arange(0, 121, 1) < survival_rate_icu[survival_icu_index + 1][0])
+        #    survival_icu[boolean] = survival_rate_icu[survival_icu_index][1]
+        #survival_icu[np.arange(0, 121, 1) >= 80] = survival_rate_icu[
+        #    len(survival_rate_icu) - 1
+        #][1]
 
+        
+        #survival_icu=survival_icu[age[0]:age[len(age)-1]]
+        
         prob_list[0, :, 4] = (
             ratio_hosp_cases_female * ratio_icu_hosp_female
         ) * survival_icu  # computes icu_survivors/cases
         prob_list[1, :, 4] = (
             ratio_hosp_cases_male * ratio_icu_hosp_male
         ) * survival_icu
+
+
 
         # probavility of Dying in icu
         icu_deaths_female = ratio_icu_hosp_female * (1 - survival_icu)
@@ -413,7 +426,7 @@ class HealthIndexGenerator:
             sex = 0
         
         if (
-            person.age > 65
+            person.age >= 65
             and person.residence is not None
             and person.residence.group.spec == "care_home"
         ):
@@ -440,7 +453,7 @@ class HealthIndexGenerator:
     def adjust_hospitalisation(self, probabilities, person, male_care_home_ratio,
             female_care_home_ratio):
         if (
-            person.age > 65
+            person.age >= 65
             and person.residence is not None
             and person.residence.group.spec != "care_home"
         ):
