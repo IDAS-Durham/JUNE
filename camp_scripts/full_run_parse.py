@@ -99,7 +99,7 @@ parser.add_argument(
 parser.add_argument(
     "-cs",
     "--child_susceptibility",
-    help="Reduce child susceptibility",
+    help="Reduce child susceptibility for under 12s",
     required=False,
     default=False,
 )
@@ -257,8 +257,8 @@ CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
 #world = generate_empty_world({"super_area": ["CXB-219-C"]})
-#world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
-world = generate_empty_world()
+world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
+#world = generate_empty_world()
 
 # populate empty world
 populate_world(world)
@@ -366,10 +366,7 @@ else:
         camp_configs_path / "defaults/policy/home_care_policy.yaml",
         base_policy_modules=("june.policy", "camps.policy"),
     )
-
-if args.child_susceptibility:
-    policies.policies[3].susceptibility = 0.5
-    policies.policies[4].susceptibility = 0.75
+    
 
 # ============================================================================#
 
@@ -384,16 +381,6 @@ selector = InfectionSelector.from_file(
 interaction = Interaction.from_file(
     config_filename=camp_configs_path / "defaults/interaction/" / args.parameters,
 )
-
-if args.learning_centers and args.learning_center_beta_ratio:
-    interaction.beta["learning_center"] = interaction.beta["household"] * float(
-        args.learning_center_beta_ratio
-    )
-
-if args.play_group_beta_ratio:
-    interaction.beta["play_group"] = interaction.beta["household"] * float(
-        args.play_group_beta_ratio
-    )
 
 if args.household_beta:
     interaction.beta["household"] = float(args.household_beta)
@@ -427,6 +414,19 @@ if args.indoor_beta_ratio:
         args.indoor_beta_ratio
     )
 
+if args.learning_centers and args.learning_center_beta_ratio:
+    interaction.beta["learning_center"] = interaction.beta["household"] * float(
+        args.learning_center_beta_ratio
+    )
+
+if args.play_group_beta_ratio:
+    interaction.beta["play_group"] = interaction.beta["household"] * float(
+        args.play_group_beta_ratio
+    )
+
+if args.child_susceptibility:
+    interaction.susceptibilities["0-13"] = args.child_susceptibility
+    
 cases_detected = {
     "CXB-202": 3,
     "CXB-204": 6,
