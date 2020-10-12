@@ -391,10 +391,10 @@ class Simulator:
                     dest=rank,
                     tag=100,
                 )
-                mpi_comm.Send(people_to_infect_in_rank, dest=rank, tag=100)
+                mpi_comm.Send(people_to_infect_in_rank, dest=rank, tag=200)
             else:
                 mpi_comm.Send(len_1, dest=rank, tag=100)
-                mpi_comm.Send(none, dest=rank, tag=100)
+                mpi_comm.Send(none, dest=rank, tag=200)
 
         # now it has all been sent, we can start the receiving.
 
@@ -404,7 +404,7 @@ class Simulator:
             length = np.array([0], dtype=np.int)
             mpi_comm.Recv(length, source=rank, tag=100)
             data = np.empty(length, dtype=np.int)
-            mpi_comm.Recv(data, source=rank, tag=100)
+            mpi_comm.Recv(data, source=rank, tag=200)
             if data[0] != -1:
                 people_to_infect_locally += list(data)
 
@@ -415,50 +415,6 @@ class Simulator:
         for person_id in people_to_infect_locally:
             person = self.world.people.get_from_id(person_id)
             self.infection_selector.infect_person_at_time(person, self.timer.now)
-
-    # def tell_domains_to_infect(self, infect_in_domains):
-    #   people_to_infect_locally = []
-    #   tick, tickw = perf_counter(), wall_clock()
-    #   reqs = []
-    #   for rank_sending in range(mpi_size):
-    #       if rank_sending == mpi_rank:
-    #           # my turn to send my data
-    #           for rank_receiving in range(mpi_size):
-    #               if rank_sending == rank_receiving:
-    #                   continue
-    #               if (
-    #                   infect_in_domains is None
-    #                   or rank_receiving not in infect_in_domains
-    #               ):
-    #                   reqs.append(
-    #                       mpi_comm.isend(None, dest=rank_receiving, tag=mpi_rank)
-    #                   )
-    #               else:
-    #                   reqs.append(
-    #                       mpi_comm.isend(
-    #                           infect_in_domains[rank_receiving],
-    #                           dest=rank_receiving,
-    #                           tag=mpi_rank,
-    #                       )
-    #                   )
-    #                   continue
-
-    #   for rank_sending in range(mpi_size):
-    #       if not rank_sending == mpi_rank:
-    #           # I have to listen
-    #           data = mpi_comm.recv(source=rank_sending, tag=rank_sending)
-    #           if data is not None:
-    #               people_to_infect += data
-    #   for r in reqs:
-    #       r.wait()
-    #   tock, tockw = perf_counter(), wall_clock()
-    #   output_logger.info(
-    #       f"CMS: Infection COMS for rank {mpi_rank}/{mpi_size} - {tock-tick},{tockw-tickw} - {self.timer.date}"
-    #   )
-    #   print(f"I am rank {mpi_rank} and I'm infecting {len(people_to_infect)} people. It took {tockw-tickw} seconds.")
-    #   for infection_data in people_to_infect:
-    #       person = self.world.people.get_from_id(infection_data)
-    #       self.infection_selector.infect_person_at_time(person, self.timer.now)
 
     def do_timestep(self):
         """
