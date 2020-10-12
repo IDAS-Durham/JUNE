@@ -417,8 +417,8 @@ class HealthIndexGenerator:
         And for male and female 
         
         Retruns:
-             3D matrix of dimensions 2 X 120 X 7. With all the probabilities of all 8 
-             outcomes for 120 ages and the 2 sex (last outcome inferred from 1-sum(probabilities)).
+             3D matrix of dimensions 2 X 100 X 7. With all the probabilities of all 8 
+             outcomes for 100 ages and the 2 sex (last outcome inferred from 1-sum(probabilities)).
         """
         if person.sex == "m":
             sex = 1
@@ -433,7 +433,7 @@ class HealthIndexGenerator:
             probabilities = self.prob_lists_ch[sex][int(person.age)-65]
         
         else:
-            probabilities = self.prob_lists[sex][int(person.age)]
+            probabilities = self.prob_lists[sex][min(99, int(person.age))]
         
         
         
