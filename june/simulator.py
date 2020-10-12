@@ -28,6 +28,8 @@ from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 default_config_filename = paths.configs_path / "config_example.yaml"
 
 output_logger = logging.getLogger(__name__)
+if mpi_rank > 0:
+    output_logger.propagate = False
 
 
 class Simulator:
@@ -384,6 +386,7 @@ class Simulator:
     def tell_domains_to_infect(self, infect_in_domains):
         people_to_infect = []
         tick, tickw = perf_counter(), wall_clock()
+        reqs = []
         for rank_sending in range(mpi_size):
             if rank_sending == mpi_rank:
                 # my turn to send my data
@@ -394,19 +397,27 @@ class Simulator:
                         infect_in_domains is None
                         or rank_receiving not in infect_in_domains
                     ):
-                        mpi_comm.send(None, dest=rank_receiving, tag=mpi_rank)
+                        reqs.append(
+                            mpi_comm.isend(None, dest=rank_receiving, tag=mpi_rank)
+                        )
                     else:
-                        mpi_comm.send(
-                            infect_in_domains[rank_receiving],
-                            dest=rank_receiving,
-                            tag=mpi_rank,
+                        reqs.append(
+                            mpi_comm.isend(
+                                infect_in_domains[rank_receiving],
+                                dest=rank_receiving,
+                                tag=mpi_rank,
+                            )
                         )
                         continue
-            else:
+
+        for rank_sending in range(mpi_size):
+            if not rank_sending == mpi_rank:
                 # I have to listen
                 data = mpi_comm.recv(source=rank_sending, tag=rank_sending)
                 if data is not None:
                     people_to_infect += data
+        for r in reqs:
+            r.wait()
         tock, tockw = perf_counter(), wall_clock()
         output_logger.info(
             f"CMS: Infection COMS for rank {mpi_rank}/{mpi_size} - {tock-tick},{tockw-tickw} - {self.timer.date}"
@@ -425,6 +436,7 @@ class Simulator:
         of the people who got infected. We record the infection locations, update the health
         status of the population, and distribute scores among the infectors to calculate R0.
         """
+        output_logger.info("==================== timestep ====================")
         tick, tickw = perf_counter(), wall_clock()
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
@@ -456,6 +468,7 @@ class Simulator:
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
         output_logger.info(
+            f"Info for rank {mpi_rank}, "
             f"Date = {self.timer.date}, "
             f"number of deaths =  {n_people}, "
             f"number of infected = {len(self.world.people.infected)}"
@@ -527,7 +540,7 @@ class Simulator:
         self.clear_world()
         tock, tockw = perf_counter(), wall_clock()
         output_logger.info(
-            f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick}, {tockw-tickw} - {self.timer.date}"
+            f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick}, {tockw-tickw} - {self.timer.date}\n"
         )
 
     def run(self):
@@ -540,10 +553,10 @@ class Simulator:
         self.clear_world()
         if self.record is not None:
             self.record.parameters(
-                    interaction=self.interaction,
-                    infection_seed=self.infection_seed,
-                    infection_selector=self.infection_selector,
-                    activity_manager=self.activity_manager
+                interaction=self.interaction,
+                infection_seed=self.infection_seed,
+                infection_selector=self.infection_selector,
+                activity_manager=self.activity_manager,
             )
         while self.timer.date < self.timer.final_date:
             if self.infection_seed:
