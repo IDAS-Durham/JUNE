@@ -3,6 +3,7 @@ import tables
 import pandas as pd
 import yaml
 import numpy as np
+import subprocess
 import csv
 import json
 from datetime import datetime
@@ -200,7 +201,7 @@ class Record:
                         [timestamp.strftime("%Y-%m-%d"), region,] + data
                     )
 
-    def combine_outputs(self, remove_left_overs=True):
+    def combine_outputs(self, remove_left_overs=False):
         if self.mpi_rank == 0:
             combine_records(self.record_path, remove_left_overs=remove_left_overs)
 
@@ -347,7 +348,8 @@ def combine_hdf5s(
     record_path, table_names=("infections", "population"), remove_left_overs=False
 ):
     record_files = record_path.glob("june_record.*.h5")
-    with tables.open_file(record_path / "june_record.h5", "w") as merged_record:
+    merged_record_path = record_path / "june_record.h5"
+    with tables.open_file(str(merged_record_path), mode="w") as merged_record:
         for i, record_file in enumerate(record_files):
             with tables.open_file(str(record_file), "r") as record:
                 datasets = record.root._f_list_nodes()
@@ -366,7 +368,7 @@ def combine_hdf5s(
                 record_file.unlink()
 
 
-def combine_records(record_path, remove_left_overs=False):
+def combine_records(record_path, remove_left_overs=False,full_summary_save_path=None):
     record_path = Path(record_path)
-    combine_summaries(record_path, remove_left_overs=remove_left_overs)
+    combine_summaries(record_path, remove_left_overs=remove_left_overs,full_summary_save_path=full_summary_save_path)
     combine_hdf5s(record_path, remove_left_overs=remove_left_overs)
