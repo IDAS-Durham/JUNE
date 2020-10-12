@@ -411,16 +411,16 @@ class HealthIndexGenerator:
             sex = 1
         else:
             sex = 0
-        round_age = int(round(person.age))
+        
         if (
             person.age > 65
             and person.residence is not None
             and person.residence.group.spec == "care_home"
         ):
-            probabilities = self.prob_lists_ch[sex][round_age-65]
+            probabilities = self.prob_lists_ch[sex][int(person.age)-65]
         
         else:
-            probabilities = self.prob_lists[sex][round_age-65]
+            probabilities = self.prob_lists[sex][int(person.age)]
         
         
         
