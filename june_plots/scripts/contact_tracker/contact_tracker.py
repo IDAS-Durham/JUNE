@@ -172,36 +172,8 @@ class ContactTracker:
         #    config_filename=self.baseline_interaction_path, 
             population=self.world.people
         )
-        health_index_generator = HealthIndexGenerator.from_file(
-            asymptomatic_ratio=0.3
-        )
-        transmission_path = paths.configs_path / "defaults/transmission/XNExp.yaml"
-        infection_selector = InfectionSelector.from_file(
-            transmission_config_path=transmission_path,
-            health_index_generator=health_index_generator,
-        )
-        oc = Observed2Cases.from_file(
-            health_index_generator=infection_selector.health_index_generator,
-            smoothing=True,
-        )
-        daily_cases_per_region = oc.get_regional_latent_cases()
-        daily_cases_per_super_area = oc.convert_regional_cases_to_super_area(
-            daily_cases_per_region, dates=["2020-02-28","2020-03-02"]
-        )
-        infection_seed = InfectionSeed(
-            world=self.world,
-            infection_selector=infection_selector,
-            daily_super_area_cases=daily_cases_per_super_area,
-            seed_strength=1.0,
-            age_profile=None,
-        )
         travel = Travel()
         policies = Policies.from_file()
-        record = Record(
-            record_path="out",
-            record_static_data=True,
-            #mpi_rank=mpi_rank,
-        )
         leisure = generate_leisure_for_config(
             self.world,
         )
@@ -214,7 +186,7 @@ class ContactTracker:
             infection_seed=None, #infection_seed,
             infection_selector=None, #infection_selector,
             policies=policies,
-            record=record,
+            record=Record,
         )
 
     @staticmethod
