@@ -420,7 +420,7 @@ class HealthIndexGenerator:
             probabilities = self.prob_lists_ch[sex][int(person.age)-65]
         
         else:
-            probabilities = self.prob_lists[sex][int(person.age)]
+            probabilities = self.prob_lists[sex][min(99, int(person.age))]
         
         
         
