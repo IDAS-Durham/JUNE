@@ -10,8 +10,8 @@ from june.geography import SuperArea
 from june.hdf5_savers import generate_domain_from_hdf5
 from june import paths
 
-default_super_area_shapes_path = paths.data_path / "plotting/super_area_boundaries"
-defalt_super_area_centroids = (
+# default_super_area_shapes_path = paths.data_path / "plotting/super_area_boundaries"
+default_super_area_centroids = (
     paths.data_path / "input/geography/super_area_centroids.csv"
 )
 
@@ -161,14 +161,15 @@ class DomainSplitter:
         self.super_area_names = super_areas
         self.number_of_domains = number_of_domains
         self.super_area_names = super_area_centroids
+        self.super_area_centroids = super_area_centroids
         if self.super_area_centroids is None:
             self.super_area_centroids = pd.read_csv(
-                default_super_area_shapes_path, index_col=0
+                default_super_area_centroids, index_col=0
             )
-        if super_areas is not None:
-            self.super_area_centroids = self.super_area_centroids.loc[super_areas]
-        else:
-            self.super_area_centroids = self.super_area_centroids
+        self.super_area_names = super_areas
+        if self.super_area_names is None:
+            self.super_area_names = self.super_area_centroids.index.values
+        self.super_area_centroids = self.super_area_centroids.loc[self.super_area_names]
 
     def _get_kmeans_centroids(self):
         X = np.array(
@@ -212,11 +213,20 @@ class DomainSplitter:
         furthest_super_areas = self._get_furthest_super_areas(
             domain_centroids, kdtree_centroids
         )
-        n_super_areas_per_centroid = np.ceil(len(self.super_area_names) / len(domain_centroids))
-        occupany_per_centroid = {centroid_id: 0 for centroid_id in range(len(domain_centroids))}
-        super_areas_per_domain = {centroid_id: [] for centroid_id in range(len(domain_centroids))}
+        n_super_areas_per_centroid = np.ceil(
+            len(self.super_area_names) / len(domain_centroids)
+        )
+        occupany_per_centroid = {
+            centroid_id: 0 for centroid_id in range(len(domain_centroids))
+        }
+        super_areas_per_domain = {
+            centroid_id: [] for centroid_id in range(len(domain_centroids))
+        }
         for super_area_name in furthest_super_areas:
-            closest_centroid_ids =  self._get_closest_centroid_id(kdtree_centroids, self.super_area_centroids.loc[super_area_name, ['X', 'Y']])
+            closest_centroid_ids = self._get_closest_centroid_id(
+                kdtree_centroids,
+                self.super_area_centroids.loc[super_area_name, ["X", "Y"]],
+            )
             for centroid_id in closest_centroid_ids:
                 if occupany_per_centroid[centroid_id] < n_super_areas_per_centroid:
                     occupany_per_centroid[centroid_id] += 1
@@ -227,18 +237,20 @@ class DomainSplitter:
     def compute_domain_centroids(self, super_areas_per_domain):
         centroids = []
         for domain, super_area_names in super_areas_per_domain:
-            super_area_centroids = self.super_area_centroids.loc[super_area_names, ['X', 'Y']].values
-            centroid = np.array(super_area_centroids, axis =0)
+            super_area_centroids = self.super_area_centroids.loc[
+                super_area_names, ["X", "Y"]
+            ].values
+            centroid = np.array(super_area_centroids, axis=0)
             centroids.append(centroid)
         return centroids
 
-    def generate_domain_split(self):
+    def generate_domain_split(self, niter=3):
         # first make an initial guess with KMeans.
         domain_centroids = self._get_kmeans_centroids()
-        for _ in range(3):
-            super_areas_per_domain = self.assign_super_areas_to_centroids(domain_centroids)
+        for _ in range(niter):
+            super_areas_per_domain = self.assign_super_areas_to_centroids(
+                domain_centroids
+            )
             domain_centroids = self.compute_domain_centroids(super_areas_per_domain)
-
-
-
-
+        super_areas_per_domain = self.assign_super_areas_to_centroids(domain_centroids)
+        return super_areas_per_domain
