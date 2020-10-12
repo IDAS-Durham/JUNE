@@ -111,7 +111,7 @@ def generate_simulator():
                 super_area_names_to_domain_dict[super_area] = domain
                 super_area_ids_to_domain_dict[
                     int(super_area_name_to_id[super_area])
-                ] = domain
+                ] = random.randint(0, len(super_areas_per_domain)-1)#domain
 
         with open("super_area_ids_to_domain.json", "w") as f:
             json.dump(super_area_ids_to_domain_dict, f)
@@ -119,7 +119,7 @@ def generate_simulator():
             json.dump(super_area_names_to_domain_dict, f)
     mpi_comm.Barrier()
     if mpi_rank > 0:
-        with open("super_areas_names_to_domain.json", "r") as f:
+        with open("super_area_ids_to_domain.json", "r") as f:
             super_area_ids_to_domain_dict = json.load(f, object_hook=keys_to_int)
     domain = Domain.from_hdf5(
         domain_id=mpi_rank,
@@ -146,7 +146,7 @@ def generate_simulator():
         world=domain,
         infection_selector=infection_selector,
         daily_super_area_cases=daily_cases_per_super_area,
-        seed_strength=10,
+        seed_strength=100,
     )
 
     # interaction
@@ -173,7 +173,7 @@ def generate_simulator():
     print("simulator ready to go")
     return simulator
 
-
+#@profile
 def run_simulator(simulator):
 
     t1 = time.time()

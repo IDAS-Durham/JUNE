@@ -28,7 +28,7 @@ from june.mpi_setup import (
 )
 
 logger = logging.getLogger(__name__)
-if mpi_rank > 0:
+if mpi_rank >= 0:
     logger.propagate = False
 
 activity_hierarchy = [
@@ -257,6 +257,7 @@ class ActivityManager:
                 continue
             keys, data, n_this_rank = movable_people.serialise(rank)
             if n_this_rank:
+                print(f"I am rank {mpi_rank} sending {len(keys)} to rank {rank}")
                 reqs.append(mpi_comm.isend(keys, dest=rank, tag=100))
                 reqs.append(mpi_comm.isend(data, dest=rank, tag=200))
                 n_people_going_abroad += n_this_rank
@@ -274,6 +275,7 @@ class ActivityManager:
             data = mpi_comm.recv(source=rank, tag=200)
 
             if keys is not None:
+                print(f"I am rank {mpi_rank} receiving {len(keys)} from rank {rank}")
                 movable_people.update(rank, keys, data)
                 n_people_from_abroad += data.shape[0]
 
@@ -284,4 +286,5 @@ class ActivityManager:
         logger.info(
             f"CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw - tickw} - {self.timer.date}"
         )
+        print(f"People transfer in {mpi_rank} took {tockw-tickw} seconds.")
         return movable_people.skinny_in, n_people_from_abroad, n_people_going_abroad
