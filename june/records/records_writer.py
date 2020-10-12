@@ -5,6 +5,7 @@ import yaml
 import numpy as np
 import csv
 import json
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
@@ -366,7 +367,7 @@ def combine_hdf5s(
                 record_file.unlink()
 
 
-def combine_records(record_path, remove_left_overs=False):
+def combine_records(record_path, remove_left_overs=False, save_dir=False):
     record_path = Path(record_path)
-    combine_summaries(record_path, remove_left_overs=remove_left_overs)
+    combine_summaries(record_path, remove_left_overs=remove_left_overs, full_summary_save_path=save_dir / 'summary.csv')
     combine_hdf5s(record_path, remove_left_overs=remove_left_overs)
