@@ -345,10 +345,12 @@ def combine_summaries(record_path, remove_left_overs=False, full_summary_save_pa
 
 
 def combine_hdf5s(
-    record_path, table_names=("infections", "population"), remove_left_overs=False
+    record_path, table_names=("infections", "population"), remove_left_overs=False, full_record_save_path=False
 ):
     record_files = record_path.glob("june_record.*.h5")
-    with tables.open_file(record_path / "june_record.h5", "w") as merged_record:
+    if full_record_save_path is None:
+        full_record_save_path = record_path / "june_record.h5"
+    with tables.open_file(full_record_save_path, "w") as merged_record:
         for i, record_file in enumerate(record_files):
             with tables.open_file(str(record_file), "r") as record:
                 datasets = record.root._f_list_nodes()
@@ -369,5 +371,5 @@ def combine_hdf5s(
 
 def combine_records(record_path, remove_left_overs=False, save_dir=False):
     record_path = Path(record_path)
-    combine_summaries(record_path, remove_left_overs=remove_left_overs, full_summary_save_path=save_dir / 'summary.csv')
-    combine_hdf5s(record_path, remove_left_overs=remove_left_overs)
+    combine_summaries(record_path, remove_left_overs=remove_left_overs, full_summary_save_path=save_dir / "summary.csv")
+    combine_hdf5s(record_path, remove_left_overs=remove_left_overs, full_record_save_path=save_dir / "june_record.h5")
