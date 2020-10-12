@@ -183,8 +183,14 @@ class DomainSplitter:
         kdtree = KDTree(data)
         return kdtree
 
+    def _get_closest_centroid_id(self, kdtree, coordinates):
+        closest_centroid_ids = kdtree.query(coordinates.reshape(1, -1), k=1,)[1][0][0]
+        return closest_centroid_ids
+
     def _get_closest_centroid_ids(self, kdtree, coordinates, centroids):
-        closest_centroid_ids = kdtree.query(coordinates.reshape(1, -1), k=len(centroids),)[1][0]
+        closest_centroid_ids = kdtree.query(
+            coordinates.reshape(1, -1), k=len(centroids),
+        )[1][0]
         return closest_centroid_ids
 
     def _get_distance_to_closest_centroid(self, kdtree, coordinates):
@@ -199,7 +205,8 @@ class DomainSplitter:
         for super_area in self.super_area_names:
             _distances.append(
                 self._get_distance_to_closest_centroid(
-                    kdtree_centroids, self.super_area_centroids.loc[super_area, ["X", "Y"]].values
+                    kdtree_centroids,
+                    self.super_area_centroids.loc[super_area, ["X", "Y"]].values,
                 )
             )
         sorted_idx = np.argsort(_distances)[::-1]
@@ -214,25 +221,26 @@ class DomainSplitter:
         n_super_areas_per_centroid = np.ceil(
             len(self.super_area_names) / len(domain_centroids)
         )
-        print(n_super_areas_per_centroid)
         occupany_per_centroid = {
             centroid_id: 0 for centroid_id in range(len(domain_centroids))
         }
         super_areas_per_domain = {
             centroid_id: [] for centroid_id in range(len(domain_centroids))
         }
+        total = 0
         for super_area_name in furthest_super_areas:
             closest_centroid_ids = self._get_closest_centroid_ids(
                 kdtree_centroids,
                 self.super_area_centroids.loc[super_area_name, ["X", "Y"]].values,
-                domain_centroids
+                domain_centroids,
             )
             for centroid_id in closest_centroid_ids:
                 if occupany_per_centroid[centroid_id] < n_super_areas_per_centroid:
                     occupany_per_centroid[centroid_id] += 1
                     super_areas_per_domain[centroid_id].append(super_area_name)
+                    total += 1
                     break
-        print(occupany_per_centroid)
+        assert total == len(self.super_area_names)
         return super_areas_per_domain
 
     def compute_domain_centroids(self, super_areas_per_domain):
@@ -254,5 +262,15 @@ class DomainSplitter:
                 domain_centroids
             )
             domain_centroids = self.compute_domain_centroids(super_areas_per_domain)
-        super_areas_per_domain = self.assign_super_areas_to_centroids(domain_centroids)
-        return super_areas_per_domain
+        # assign each to closest
+        super_areas_per_domain = {
+            centroid_id: [] for centroid_id in range(len(domain_centroids))
+        }
+        kdtree_centroids = self._initialise_kdtree(domain_centroids)
+        for super_area_name in self.super_area_names:
+            closest_centroid_id = self._get_closest_centroid_id(
+                kdtree_centroids,
+                self.super_area_centroids.loc[super_area_name, ["X", "Y"]].values,
+            )
+            super_areas_per_domain[closest_centroid_id].append(super_area_name)
+        return super_areas_per_domain, domain_centroids
