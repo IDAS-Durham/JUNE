@@ -114,9 +114,7 @@ class Record:
         for hospital in world.hospitals:
             if not hospital.external:
                 current_hospitalised[hospital.region_name] += len(hospital.ward)
-                current_intensive_care[hospital.region_name] += len(
-                    hospital.icu
-                )
+                current_intensive_care[hospital.region_name] += len(hospital.icu)
         return (
             hospital_admissions,
             icu_admissions,
@@ -239,9 +237,15 @@ class Record:
         if infection_seed is not None:
             infection_seed_dict = {}
             infection_seed_dict["seed_strength"] = infection_seed.seed_strength
-            infection_seed_dict["min_date"] = infection_seed.min_date.strftime("%Y-%m-%d")
-            infection_seed_dict["max_date"] = infection_seed.max_date.strftime("%Y-%m-%d")
-            self.append_dict_to_configs(config_dict={"infection_seed": infection_seed_dict})
+            infection_seed_dict["min_date"] = infection_seed.min_date.strftime(
+                "%Y-%m-%d"
+            )
+            infection_seed_dict["max_date"] = infection_seed.max_date.strftime(
+                "%Y-%m-%d"
+            )
+            self.append_dict_to_configs(
+                config_dict={"infection_seed": infection_seed_dict}
+            )
 
     def parameters_infection(
         self, infection_selector: "InfectionSelector" = None,
@@ -330,7 +334,7 @@ class Record:
                 yaml.safe_dump(configs, f)
 
 
-def combine_summaries(record_path, remove_left_overs=False, save_dir = None):
+def combine_summaries(record_path, remove_left_overs=False, save_dir=None):
     record_path = Path(record_path)
     summary_files = record_path.glob("summary.*.csv")
     dfs = []
@@ -349,7 +353,10 @@ def combine_summaries(record_path, remove_left_overs=False, save_dir = None):
 
 
 def combine_hdf5s(
-    record_path, table_names=("infections", "population"), remove_left_overs=False, save_dir = None
+    record_path,
+    table_names=("infections", "population"),
+    remove_left_overs=False,
+    save_dir=None,
 ):
     record_files = record_path.glob("june_record.*.h5")
     if save_dir is None:
@@ -378,5 +385,7 @@ def combine_hdf5s(
 
 def combine_records(record_path, remove_left_overs=False, save_dir=None):
     record_path = Path(record_path)
-    combine_summaries(record_path, remove_left_overs=remove_left_overs, save_dir=save_dir)
+    combine_summaries(
+        record_path, remove_left_overs=remove_left_overs, save_dir=save_dir
+    )
     combine_hdf5s(record_path, remove_left_overs=remove_left_overs, save_dir=save_dir)

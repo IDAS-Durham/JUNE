@@ -104,22 +104,26 @@ def generate_simulator():
             number_of_domains=mpi_size, super_areas=super_area_names
         )
         super_areas_per_domain = domain_splitter.generate_domain_split(niter=10)
-        super_areas_to_domain_dict = {}
+        super_area_names_to_domain_dict = {}
+        super_area_ids_to_domain_dict = {}
         for domain, super_areas in super_areas_per_domain.items():
             for super_area in super_areas:
-                super_areas_to_domain_dict[
+                super_area_names_to_domain_dict[super_area] = domain
+                super_area_ids_to_domain_dict[
                     int(super_area_name_to_id[super_area])
                 ] = domain
 
-        with open("super_areas_to_domain.json", "w") as f:
-            json.dump(super_areas_to_domain_dict, f)
+        with open("super_area_ids_to_domain.json", "w") as f:
+            json.dump(super_area_ids_to_domain_dict, f)
+        with open("super_area_names_to_domain.json", "w") as f:
+            json.dump(super_area_names_to_domain_dict, f)
     mpi_comm.Barrier()
     if mpi_rank > 0:
-        with open("super_areas_to_domain.json", "r") as f:
-            super_areas_to_domain_dict = json.load(f, object_hook=keys_to_int)
+        with open("super_areas_names_to_domain.json", "r") as f:
+            super_area_ids_to_domain_dict = json.load(f, object_hook=keys_to_int)
     domain = Domain.from_hdf5(
         domain_id=mpi_rank,
-        super_areas_to_domain_dict=super_areas_to_domain_dict,
+        super_areas_to_domain_dict=super_area_ids_to_domain_dict,
         hdf5_file_path=world_file,
     )
     record.static_data(world=domain)
