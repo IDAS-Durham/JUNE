@@ -26,11 +26,13 @@ from june.policy import Policies
 from june import paths
 from june.groups.commute import *
 from june.records import Record
-from june.domain import Domain, generate_domain_split
+from june.domain import Domain, DomainSplitter
 from june.mpi_setup import mpi_comm, mpi_rank, mpi_size
+
 
 def keys_to_int(x):
     return {int(k): v for k, v in x.items()}
+
 
 def set_random_seed(seed=999):
     """
@@ -98,12 +100,16 @@ def generate_simulator():
             key: value for key, value in zip(super_area_names, super_area_ids)
         }
         # make dictionary super_area_id -> domain
-        super_area_names_to_domain_dict = generate_domain_split(
-            super_areas=super_area_names, number_of_domains=mpi_size
+        domain_splitter = DomainSplitter(
+            number_of_domains=mpi_size, super_areas=super_area_names
         )
+        super_areas_per_domain = domain_splitter.generate_domain_split(niter=10)
         super_areas_to_domain_dict = {}
-        for key, value in super_area_names_to_domain_dict.items():
-            super_areas_to_domain_dict[int(super_area_name_to_id[key])] = value
+        for domain, super_areas in super_areas_per_domain.items():
+            for super_area in super_areas:
+                super_areas_to_domain_dict[
+                    int(super_area_name_to_id[super_area])
+                ] = domain
 
         with open("super_areas_to_domain.json", "w") as f:
             json.dump(super_areas_to_domain_dict, f)

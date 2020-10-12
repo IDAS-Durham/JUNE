@@ -4,6 +4,9 @@ from itertools import count, chain
 from sklearn.cluster import KMeans
 from sklearn.neighbors import KDTree
 import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
 
 from june.demography import Population
 from june.geography import SuperArea
@@ -253,11 +256,11 @@ class DomainSplitter:
             centroids.append(centroid)
         return np.array(centroids)
 
-    def generate_domain_split(self, niter=3):
+    def generate_domain_split(self, niter=15):
         # first make an initial guess with KMeans.
         domain_centroids = self._get_kmeans_centroids()
         for i in range(niter):
-            print(f"Iteration {i} of {niter}")
+            logger.info(f"Domain splitter -- iteration {i+1} of {niter}")
             super_areas_per_domain = self.assign_super_areas_to_centroids(
                 domain_centroids
             )
@@ -273,4 +276,4 @@ class DomainSplitter:
                 self.super_area_centroids.loc[super_area_name, ["X", "Y"]].values,
             )
             super_areas_per_domain[closest_centroid_id].append(super_area_name)
-        return super_areas_per_domain, domain_centroids
+        return super_areas_per_domain 
