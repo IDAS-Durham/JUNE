@@ -9,10 +9,11 @@ from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import pandas as pd
 #import seaborn as sns
 
-from june_runs import Runner
+#from june_runs import Runner
 
 #default_run_config_path = (
 #    "/home/aidan/covid/june_runs/example_run/runs/run_000/parameters.json"#"/home/aidan/covid/june_runs/configuration/run_sets/quick_examples/local_example.yaml"
@@ -35,23 +36,30 @@ from june import paths
 from june.simulator import Simulator
 
 default_simulation_config_path = (
-    "/home/aidan/covid/june_runs/configuration/default_baseline_configs/simulation_config.yaml"
+    paths.configs_path / "config_example.yaml"
 )
 default_interaction_path = (
     paths.configs_path / "defaults/interaction/interaction.yaml"
 )
 
+default_pkl_path = Path(__file__).parent / "tracker.pkl"
+
+default_contact_data_paths = {
+    "bbc": paths.data_path / "plotting/contact_tracking/BBC.csv",
+    "polymod": paths.data_path / "plotting/contact_tracking/polymod.csv",
+}
+
 class ContactTracker:
 
     def __init__(
         self, 
-        world, 
+        world=None, 
         age_bins = {"5yr": np.arange(0,105,5)},
         contact_counts=None,
         contact_matrices=None,
         simulation_days=7,
         interaction_type="1d",
-        pickle_path=Path("./tracker.pkl")
+        pickle_path=default_pkl_path
     ):
         self.world = world
         self.age_bins = {"syoa": np.arange(0,101,1), **age_bins}
@@ -96,7 +104,7 @@ class ContactTracker:
         self.load_interactions()
 
     @classmethod
-    def from_pickle(cls, world, pickle_path=Path("./tracker.pkl")):
+    def from_pickle(cls, world, pickle_path=default_pkl_path):
         with open(pickle_path,'rb') as pkl:
             print("Loading from pkl...")
             tracker = pickle.load(pkl)          
@@ -113,16 +121,6 @@ class ContactTracker:
             simulation_days=simulation_days
         )
 
-    """
-    def get_simulator_from_runner(self, run_config_path=default_run_config_path):
-        runner = Runner(run_config_path)
-        self.simulator = runner.generate_simulator()
-        simulation_days = 7
-
-        start_time = self.simulator.timer.date
-        self.end_time = start_time + dt.timedelta(days=simulation_days)
-    """
-
     def initialise_contact_matrices(self, age_bins):
         self.contact_matrices = {}
         # For each type of contact matrix binning, eg BBC, polymod, SYOA...
@@ -136,7 +134,6 @@ class ContactTracker:
                     self.contact_matrices[bin_type][spec] = (
                         np.zeros( (len(bins)-1,len(bins)-1) )
                     )
-                    print(bin_type,spec,self.contact_matrices[bin_type][spec].shape)
             #self.contact_matrices[bin_type]["age_bins"] = bins
 
     def intitalise_contact_counters(self):
@@ -149,9 +146,9 @@ class ContactTracker:
     def hash_ages(self):
         """store all ages and age_bin indexes in python dict for quick lookup"""
         self.age_idxs = {}
-        for bins_name, bins in self.age_bins.items():    
-            print(bins_name)
-            self.age_idxs[bins_name] = {
+        for bin_type, bins in self.age_bins.items():    
+            print(bin_type)
+            self.age_idxs[bin_type] = {
                 person.id: np.digitize(person.age, bins)-1 for person in self.world.people
             }
             self.ages = {person.id: person.age for person in self.world.people}
@@ -268,17 +265,17 @@ class ContactTracker:
         
         """ 
         spec = group.spec
-        cms = self.interaction_matrices[spec]["contacts"]
+        matrix = self.interaction_matrices[spec]["contacts"]
         delta_t = self.simulator.timer.delta_time.seconds/3600.
         characteristic_time = self.interaction_matrices[spec]["characteristic_time"]
         if spec == "household":
             factor = delta_t / characteristic_time
             contacts_per_subgroup = [
-                cms[subgroup_type][ii]*factor for ii in range(len(group.subgroups))
+                matrix[subgroup_type][ii]*factor for ii in range(len(group.subgroups))
             ]
         elif spec == "school":
             contacts_per_subgroup = [
-                _get_contacts_in_school(cms, group.years, subgroup_type, subgroup.subgroup_type )
+                _get_contacts_in_school(matrix, group.years, subgroup_type, subgroup.subgroup_type )
                 if len(subgroup.people) > 0 else 0 for subgroup in group.subgroups 
             ] 
 
@@ -288,12 +285,12 @@ class ContactTracker:
                 min(time, group_timings[subgroup_type])/24. for time in group_timings
             ]
             contacts_per_subgroup = [
-                cms[subgroup_type][ii]*factors[ii] for ii in range(len(group.subgroups))
+                matrix[subgroup_type][ii]*factors[ii] for ii in range(len(group.subgroups))
             ]
         elif spec == "company":
-            contacts_per_subgroup = cms[subgroup_type]
+            contacts_per_subgroup = matrix[subgroup_type]
         else:
-            contacts_per_subgroup = cms[subgroup_type]
+            contacts_per_subgroup = matrix[subgroup_type]
        
         return contacts_per_subgroup
 
@@ -328,15 +325,15 @@ class ContactTracker:
                         contact_ids.append(contact.id)
                 
                 # For each type of contact matrix binning, eg BBC, polymod, SYOA...
-                for bins_name in self.contact_matrices.keys():
-                    age_idx = self.age_idxs[bins_name][person.id]
+                for bin_type in self.contact_matrices.keys():
+                    age_idx = self.age_idxs[bin_type][person.id]
                     contact_age_idxs = [
-                        self.age_idxs[bins_name][contact_id] for contact_id in contact_ids
+                        self.age_idxs[bin_type][contact_id] for contact_id in contact_ids
                     ]
 
                     for cidx in contact_age_idxs:
-                        self.contact_matrices[bins_name]["global"][age_idx,cidx] += 1
-                        self.contact_matrices[bins_name][group.spec][age_idx,cidx] += 1
+                        self.contact_matrices[bin_type]["global"][age_idx,cidx] += 1
+                        self.contact_matrices[bin_type][group.spec][age_idx,cidx] += 1
                 
                 # NOTE: self.contact_matrices["global"][age_idx, contact_age_idxs] += 1 # DOES NOT WORK for repeated ind
             
@@ -365,7 +362,7 @@ class ContactTracker:
 
         next(self.simulator.timer)
 
-    def save_tracker(self):
+    def save_tracker(self, overwrite=True):
         tracker = {
             "contact_counts" : self.contact_counts,
             "contact_matrices" : self.contact_matrices,
@@ -373,14 +370,15 @@ class ContactTracker:
             "simulation_days": self.simulation_days
         }
 
-        if self.pickle_path.exists():
-            pkldir = self.pickle_path.parent
-            pkldir.mkdir(exist_ok=True,parents=True)
-            stem = self.pickle_path.stem
-            i = 1
-            while self.pickle_path.exists():
-                self.pickle_path = pkldir / f"{stem}_{i}.pkl"
-                i = i+1
+        if overwrite is False:
+            if self.pickle_path.exists():
+                pkldir = self.pickle_path.parent
+                pkldir.mkdir(exist_ok=True,parents=True)
+                stem = self.pickle_path.stem
+                i = 1
+                while self.pickle_path.exists():
+                    self.pickle_path = pkldir / f"{stem}_{i}.pkl"
+                    i = i+1
         with open(self.pickle_path,"wb+") as pkl:
             pickle.dump(tracker, pkl)
 
@@ -424,26 +422,59 @@ class ContactTracker:
             matrices = self.contact_matrices[bin_type]
             age_profile = self.age_profiles[bin_type]
             
-            for contact_type, cm in matrices.items():
+            for contact_type, mat in matrices.items():
                 if contact_type == "age_bins":
                     continue
-                cm = cm / (self.simulation_days*age_profile[:, np.newaxis])
-                norm_cm = np.zeros( cm.shape )
-                for i,row in enumerate(norm_cm):
-                    for j,col in enumerate(norm_cm.T):
+                mat = mat / (self.simulation_days*age_profile[np.newaxis, :])
+                norm_mat = np.zeros( mat.shape )
+                for i,row in enumerate(norm_mat):
+                    for j,col in enumerate(norm_mat.T):
                         norm_factor = age_profile[i]/age_profile[j]
-                        norm_cm[i,j] = (
-                            0.5*(cm[i,j] + cm[j,i]*norm_factor)
+                        norm_mat[i,j] = (
+                            0.5*(mat[i,j] + mat[j,i]*norm_factor)
                         )
-                self.contact_matrices[bin_type][contact_type] = norm_cm
+                norm_mat[ norm_mat == 0. ] = np.nan
+                self.contact_matrices[bin_type][contact_type] = norm_mat
 
-    def post_process_simulation(self):
+    def process_contacts(self):
         self.convert_dict_to_df()
         self.calc_age_profiles()
         self.calc_average_contacts()
         self.normalise_contact_matrices()
 
-    def plot_stacked_contacts(self, bin_type="syoa", contact_types=None):
+    @staticmethod
+    def _read_contact_data(contact_data_path):
+        contact_data = pd.read_csv(contact_data_path)
+        important_cols = np.array(["age_min", "age_max", "contacts"])
+        mask = np.array([col in contact_data.columns for col in important_cols])
+        if any(mask):
+            print(f"{contact_data_path} missing col(s) {important_cols[mask]}")
+        return contact_data
+
+    def load_contact_data(
+        self, 
+        contact_data_paths=default_contact_data_paths
+    ):
+        if type(contact_data_paths) is dict:
+            contact_data = {}
+            for key, data_path in contact_data_paths.items():
+                contact_data[key] = self._read_contact_data(data_path)
+        else:
+            contact_data = self._read_contact_data(contact_data_paths)
+        self.contact_data = contact_data               
+
+    def _plot_real_data(self, ax, data, **kwargs):
+        endpoints = np.array(
+            [x for x in data["age_min"].values] + [data["age_max"].values[-1]]
+        )
+        mids = 0.5*(endpoints[:-1] + endpoints[1:])
+        widths = 0.5*(endpoints[1:] - endpoints[:-1])
+        ydat = data["contacts"]
+        ax.errorbar(mids, ydat, xerr=widths, **kwargs)
+
+    def plot_stacked_contacts(
+        self, bin_type="syoa", contact_types=None, plot_real_data=True
+    ):
         f, ax = plt.subplots()
 
         average_contacts = self.average_contacts[bin_type]
@@ -457,36 +488,52 @@ class ContactTracker:
             contact_types = self.contact_types
 
         for ii, contact_type in enumerate(contact_types):
+            print(average_contacts.columns)
             if contact_type not in average_contacts.columns:
                 print(f"No contact_type {contact_type}")
                 continue
             if contact_type == "global":
                 continue
 
-            if plotted > 9:
+            if plotted > 6:
                 hatch="/"
             else:
                 hatch=None
 
             heights = average_contacts[contact_type]
+            
+            label = " ".join(x for x in contact_type.split("_")) # Avoids idiotic latex error.
             ax.bar(
                 mids, heights, widths, bottom=lower,
-                hatch=hatch, label=contact_type,
+                hatch=hatch, label=label
             )
             plotted += 1
 
             lower = lower + heights
+
+        if plot_real_data:
+            real_kwargs = {"marker":"x","ms":5, "lw":1, "color":"k"}
+            line_styles=["-","--",":"]
+            if type(self.contact_data) is dict:
+                for ii,(key, data) in enumerate(self.contact_data.items()):
+                    self._plot_real_data(
+                        ax, data, label=key, **real_kwargs, ls=line_styles[ii]
+                    )
+            else:
+                self.plot_real_data(
+                    ax, self.contact_data, label="real", **real_kwargs, ls=line_styles[ii]
+                )
 
         ax.set_xlim(bins[0], bins[-1])
 
         ax.legend(bbox_to_anchor = (0.5,1.02),loc='lower center',ncol=3)
         ax.set_xlabel('Age')
         ax.set_ylabel('average contacts per day')
-        f.subplots_adjust(top=0.70)
+        #f.subplots_adjust(top=0.9)
         return ax 
         
     def plot_contact_matrix(self, bin_type="bbc", contact_type="school", **kwargs):
-        f, ax = plt.subplots()
+
         bins = self.age_bins[bin_type]
 
         if len(bins) < 25:
@@ -495,12 +542,17 @@ class ContactTracker:
             ]
         else:
             labels = None
-        cm = self.contact_matrices[bin_type][contact_type]
-        im = ax.imshow(cm.T,origin='lower',cmap='RdYlBu_r',vmin=0,vmax=4.0)
+        mat = self.contact_matrices[bin_type][contact_type]
+
+        cmap = cm.get_cmap('RdYlBu_r')
+        cmap.set_bad(color="lightgrey")
+
+        f, ax = plt.subplots()
+        im = ax.imshow(mat.T,origin='lower',cmap=cmap,vmin=0.)
         if labels is not None:
-            ax.set_xticks(np.arange(len(cm)))
-            ax.set_xticklabels(labels,rotation=45)
-            ax.set_yticks(np.arange(len(cm)))
+            ax.set_xticks(np.arange(len(mat)))
+            ax.set_xticklabels(labels,rotation=90)
+            ax.set_yticks(np.arange(len(mat)))
             ax.set_yticklabels(labels)
         f.colorbar(im)
         ax.set_title(f"{bin_type} binned contacts in {contact_type}")
@@ -525,7 +577,7 @@ if __name__ == "__main__":
     #ct_plots.generate_simulator()
     #ct_plots.run_simulation()
     ct_plots = ContactTracker.from_pickle(world)
-    ct_plots.post_process_simulation()
+    ct_plots.process_contacts()
     
 
     relevant_contact_types = ["household", "school", "company"]
@@ -538,14 +590,14 @@ if __name__ == "__main__":
         )
         stacked_contacts_plot.plot()
         plt.savefig(plot_dir / f"{rbt}_contacts.png", dpi=150, bbox_inches='tight')
-        cm_dir = plot_dir / f"{rbt}"
-        cm_dir.mkdir(exist_ok=True, parents=True)
+        mat_dir = plot_dir / f"{rbt}"
+        mat_dir.mkdir(exist_ok=True, parents=True)
         for rct in relevant_contact_types:
-            cm_plot = ct_plots.plot_contact_matrix(
+            mat_plot = ct_plots.plot_contact_matrix(
                 bin_type=rbt, contact_type=rct
             )
-            cm_plot.plot()
-            plt.savefig(cm_dir / f"{rct}.png", dpi=150, bbox_inches='tight')
+            mat_plot.plot()
+            plt.savefig(mat_dir / f"{rct}.png", dpi=150, bbox_inches='tight')
 
     plt.show()
 
