@@ -119,6 +119,7 @@ class Household(Group):
     def coordinates(self):
         return self.area.coordinates
 
+    @property
     def n_residents(self):
         return len(self.residents)
 

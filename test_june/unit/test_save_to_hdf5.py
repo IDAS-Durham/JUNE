@@ -327,7 +327,13 @@ class TestSaveWorld:
         ):
             assert super_area1.id == super_area2.id
             assert super_area1.name == super_area2.name
-            for area1, area2 in zip(super_area1.areas, super_area2.areas):
+            assert len(super_area1.areas) == len(super_area2.areas)
+            area1_ids = [area.id for area in super_area1.areas]
+            area2_ids = [area.id for area in super_area2.areas]
+            assert set(area1_ids) == set(area2_ids)
+            sa1_areas = [super_area1.areas[idx] for idx in np.argsort(area1_ids)]
+            sa2_areas = [super_area2.areas[idx] for idx in np.argsort(area2_ids)]
+            for area1, area2 in zip(sa1_areas, sa2_areas):
                 assert area1.id == area2.id
                 assert area1.super_area.id == area2.super_area.id
                 assert area1.super_area.name == area2.super_area.name
@@ -339,7 +345,13 @@ class TestSaveWorld:
         for region1, region2 in zip(full_world.regions, full_world_loaded.regions):
             assert region1.id == region2.id
             assert region1.name == region2.name
-            for superarea1, superarea2 in zip(region1.super_areas, region2.super_areas):
+            super_area1_ids = [super_area.id for super_area in region1.super_areas]
+            super_area2_ids = [super_area.id for super_area in region2.super_areas]
+            assert len(super_area1_ids) == len(super_area2_ids)
+            assert set(super_area1_ids) == set(super_area2_ids)
+            region1_super_areas = [region1.super_areas[idx] for idx in np.argsort(super_area1_ids)]
+            region2_super_areas = [region2.super_areas[idx] for idx in np.argsort(super_area2_ids)]
+            for superarea1, superarea2 in zip(region1_super_areas, region2_super_areas):
                 assert superarea1.id == superarea2.id
                 assert superarea1.name == superarea2.name
 
