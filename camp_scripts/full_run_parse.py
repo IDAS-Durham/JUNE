@@ -156,6 +156,13 @@ parser.add_argument(
     default=False,
 )
 parser.add_argument(
+    "-lc",
+    "--learning_center_shifts",
+    help="Number of learning center shifts",
+    required=False,
+    default=4,
+)
+parser.add_argument(
     "-lch",
     "--learning_center_beta_ratio",
     help="Learning center/household beta ratio scaling",
@@ -248,6 +255,9 @@ if args.learning_centers:
     print(
         "Learning center beta ratio set to: {}".format(args.learning_center_beta_ratio)
     )
+    print(
+        "Learning center shifts set to: {}".format(args.learning_center_shifts)
+    )
 
 print("Plag group beta ratio set to: {}".format(args.play_group_beta_ratio))
 print("Save path set to: {}".format(args.save_path))
@@ -284,7 +294,7 @@ world.isolation_units = IsolationUnits([IsolationUnit(area=world.areas[0])])
 hospital_distributor.distribute_medics_from_world(world.people)
 
 if args.learning_centers:
-    world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=4)
+    world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=args.learning_center_shifts)
     learning_center_distributor = LearningCenterDistributor.from_file(
         learning_centers=world.learning_centers
     )
