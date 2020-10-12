@@ -92,6 +92,10 @@ class Plotter:
         mean_plot.plot()
         plt.savefig(save_dir / 'world_socioeconomic_stdev.png', dpi=150, bbox_inches='tight')
 
+        print("Plotting ethnicity")
+        ethnicity_plot = demography_plots.plot_ethnicity_distribution()
+        ethnicity_plot.plot()
+        plt.savefig(save_dir / "ethnicity_distribution.png", dpi=150, bbox_inches="tight")
 
 
     def plot_commute(
@@ -309,14 +313,14 @@ class Plotter:
         contact_matrix_plots.calculate_all_contact_matrices(pre_lockdown_date)
         contact_matrices = contact_matrix_plots.contact_matrices
         for location, contact_matrix in contact_matrices.items():
-            contact_matrix_plots.plot_contact_matrix(contact_matrix)
+            contact_matrix_plots.plot_contact_matrix(contact_matrix, location)
             plt.savefig(save_dir / f'contact_matrix_{location}_prelockdown.png', dpi=150, bbox_inches='tight')
 
         print("Plotting during lockdown contact matrices")
         contact_matrix_plots.calculate_all_contact_matrices(during_lockdown_date)
         contact_matrices = contact_matrix_plots.contact_matrices
         for location, contact_matrix in contact_matrices.items():
-            contact_matrix_plots.plot_contact_matrix(contact_matrix)
+            contact_matrix_plots.plot_contact_matrix(contact_matrix, location)
             plt.savefig(save_dir / f'contact_matrix_{location}_lockdown.png', dpi=150, bbox_inches='tight')
 
     def plot_life_expectancy(
@@ -407,12 +411,22 @@ if __name__ == "__main__":
         required=False,
         default=False
     )
+    parser.add_argument(
+        "-d",
+        "--demography",
+        help="Plot only demography",
+        required=False,
+        default=False,
+        action="store_true"
+    )
 
     args = parser.parse_args()
     plotter = Plotter.from_file(args.world_filename)
     if args.households:
         plotter.plot_households()
-    if args.contact_matrix:
+    elif args.contact_matrix:
         plotter.plot_contact_matrices()
+    elif args.demography:
+        plotter.plot_demography()
     else:
         plotter.plot_all()
