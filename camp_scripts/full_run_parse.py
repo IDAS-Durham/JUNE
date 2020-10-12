@@ -312,7 +312,7 @@ if args.learning_centers:
     world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=args.learning_center_shifts)
 
     if args.extra_learning_centers:
-        # add extra learning centers based on enrolment
+        # add extra learning centers based on enrollment
         enrolled = []
         learning_centers = []
         for learning_center in world.learning_centers:
