@@ -19,7 +19,7 @@ default_data_filename = paths.data_path / "input/schools/england_schools.csv"
 default_areas_map_path = paths.data_path / "input/geography/area_super_area_region.csv"
 default_config_filename = paths.configs_path / "defaults/groups/schools.yaml"
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("schools")
 
 
 class SchoolError(BaseException):

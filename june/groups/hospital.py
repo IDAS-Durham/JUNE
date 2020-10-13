@@ -13,7 +13,7 @@ from june.geography import SuperArea
 from june.infection import SymptomTag
 from june.exc import HospitalError
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("hospitals")
 
 default_data_filename = paths.data_path / "input/hospitals/trusts.csv"
 default_config_filename = paths.configs_path / "defaults/groups/hospitals.yaml"
