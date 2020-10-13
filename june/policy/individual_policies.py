@@ -55,7 +55,9 @@ class IndividualPolicies(PolicyCollection):
                     )
                     # TODO: make it work with parallelisation
                     if mpi_rank == 0:
-                        if person.age < self.min_age_home_alone:  # can't stay home alone
+                        if (
+                            person.age < self.min_age_home_alone
+                        ):  # can't stay home alone
                             possible_guardians = [
                                 housemate
                                 for housemate in person.residence.group.people
@@ -123,8 +125,7 @@ class StayHome(IndividualPolicy):
 class SevereSymptomsStayHome(StayHome):
     def check_stay_home_condition(self, person: Person, days_from_start: float) -> bool:
         return (
-            person.infection is not None
-            and person.infection.tag is SymptomTag.severe
+            person.infection is not None and person.infection.tag is SymptomTag.severe
         )
 
 
@@ -161,14 +162,13 @@ class Quarantine(StayHome):
         self.n_days_household = n_days_household
         self.compliance = compliance
         self.household_compliance = household_compliance
+        self.compliance = compliance
 
     def check_stay_home_condition(self, person: Person, days_from_start):
         self_quarantine = False
         try:
             if person.symptoms.tag in (SymptomTag.mild, SymptomTag.severe):
-                time_of_symptoms_onset = (
-                    person.infection.time_of_symptoms_onset
-                )
+                time_of_symptoms_onset = person.infection.time_of_symptoms_onset
                 release_day = time_of_symptoms_onset + self.n_days
                 if release_day > days_from_start > time_of_symptoms_onset:
                     if random() < self.compliance:
@@ -242,14 +242,19 @@ class SkipActivity(IndividualPolicy):
 
 class CloseSchools(SkipActivity):
     def __init__(
-            self, start_time: str, end_time: str, years_to_close=None, attending_compliance=1., full_closure=None,
+        self,
+        start_time: str,
+        end_time: str,
+        years_to_close=None,
+        attending_compliance=1.0,
+        full_closure=None,
     ):
         super().__init__(
             start_time, end_time, activities_to_remove=["primary_activity"]
         )
         self.full_closure = full_closure
         self.years_to_close = years_to_close
-        self.attending_compliance = attending_compliance # compliance with opening
+        self.attending_compliance = attending_compliance  # compliance with opening
         if self.years_to_close == "all":
             self.years_to_close = list(np.arange(20))
 

@@ -28,8 +28,7 @@ class Household(Group):
         "max_size",
         "residents",
         "quarantine_starting_date",
-        "households_to_visit",
-        "care_homes_to_visit",
+        "residences_to_visit",
         "ids_checked",
     )
 
@@ -52,8 +51,7 @@ class Household(Group):
         self.relatives_in_households = None
         self.max_size = max_size
         self.residents = ()
-        self.households_to_visit = None
-        self.care_homes_to_visit = None
+        self.residences_to_visit = {}
 
     def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
         if activity == "leisure":

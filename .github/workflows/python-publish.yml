@@ -36,6 +36,9 @@ jobs:
     - name: Get JUNE data
       run: bash get_data.sh
       
+    - name: Get camp data
+      run: bash get_camp_data.sh
+      
     - name: Install simulation
       run: python setup.py install
 

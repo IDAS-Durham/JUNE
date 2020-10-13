@@ -96,26 +96,26 @@ def save_households_to_hdf5(
         care_homes_to_visit = []
         for household in households:
             if (
-                household.households_to_visit is None
-                or len(household.households_to_visit) == 0
+                "household" not in household.residences_to_visit 
+                or len(household.residences_to_visit["household"]) == 0
             ):
                 households_to_visit.append(np.array([nan_integer], dtype=np.int))
             else:
                 households_to_visit.append(
                     np.array(
-                        [household.id for household in household.households_to_visit],
+                        [household.id for household in household.residences_to_visit["household"]],
                         dtype=np.int,
                     )
                 )
             if (
-                household.care_homes_to_visit is None
-                or len(household.care_homes_to_visit) == 0
+                "care_home" not in household.residences_to_visit
+                or len(household.residences_to_visit["care_home"]) == 0
             ):
                 care_homes_to_visit.append(np.array([nan_integer], dtype=np.int))
             else:
                 care_homes_to_visit.append(
                     np.array(
-                        [care_home.id for care_home in household.care_homes_to_visit],
+                        [care_home.id for care_home in household.residences_to_visit["care_home"]],
                         dtype=np.int,
                     )
                 )
@@ -238,21 +238,21 @@ def restore_households_properties_from_hdf5(
                 # relatives
                 if has_household_visits:
                     if households_to_visit_list[k][0] == nan_integer:
-                        household.households_to_visit = None
+                        pass
                     else:
                         households_to_visit = []
                         for house_id in households_to_visit_list[k]:
                             households_to_visit.append(
                                 world.households.get_from_id(house_id)
                             )
-                        household.households_to_visit = tuple(households_to_visit)
+                        household.residences_to_visit["household"] = tuple(households_to_visit)
                 if has_care_home_visits:
                     if care_homes_to_visit_list[k][0] == nan_integer:
-                        household.care_homes_to_visit = None
+                        pass
                     else:
                         care_homes_to_visit = []
                         for care_home_id in care_homes_to_visit_list[k]:
                             care_homes_to_visit.append(
                                 world.care_homes.get_from_id(care_home_id)
                             )
-                        household.care_homes_to_visit = tuple(care_homes_to_visit)
+                        household.residences_to_visit["care_home"] = tuple(care_homes_to_visit)

@@ -93,7 +93,6 @@ class World:
         """
         Distributes people to buildings assuming default configurations.
         """
-
         if (
             self.companies is not None
             or self.hospitals is not None
@@ -106,7 +105,6 @@ class World:
             worker_distr.distribute(
                 areas=self.areas, super_areas=self.super_areas, population=self.people
             )
-
         if self.care_homes is not None:
             carehome_distr = CareHomeDistributor.from_file()
             carehome_distr.populate_care_homes_in_super_areas(
