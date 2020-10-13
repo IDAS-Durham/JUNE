@@ -123,7 +123,39 @@ class MovablePeople:
                 print('failing', rank, 'f-done')
                 raise
 
+def move_info(info2move):
+    """
+    Send a list of arrays of uint32 integers to all ranks,
+    and receive arrays from all ranks.
+    
+    """
+    
+    # flatten list of uneven vectors of data, ensure correct type
+    assert len(info2move) == mpi_size
+    buffer = np.concatenate(info2move)
+    assert buffer.dtype == np.uint32
+    
+    n_sending = len(buffer)
+    count = np.array([len(x) for x in info2move])
+    displ = np.array([sum(count[:p]) for p in range(len(info2move))])
+    print('MPI_COMS', mpi_rank, count)
+   
+    # send my count to all processes
+    values = mpi_comm.alltoall(count)
+    
+    n_receiving = sum(values)
+    
+    # now all processes know how much data they will get,
+    # and how much from each rank
 
+    r_buffer = np.zeros(n_receiving, dtype=np.uint32)
+    rdisp = np.array([sum(values[:p]) for p in range(len(values))])
+
+    mpi_comm.Alltoallv([buffer, count, displ, MPI.UINT32_T],
+                   [r_buffer, values, rdisp, MPI.UINT32_T])
+    
+    
+    return r_buffer, n_sending, n_receiving
 
 
 
