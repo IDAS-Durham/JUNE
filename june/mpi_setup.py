@@ -9,33 +9,6 @@ mpi_comm = MPI.COMM_WORLD
 mpi_rank = mpi_comm.Get_rank()
 mpi_size = mpi_comm.Get_size()
 
-def add_person_entry_old(to_send_abroad, person, external_subgroup: ExternalSubgroup):
-    domain_id = external_subgroup.domain_id
-    group_spec = external_subgroup.group_spec
-    group_id = external_subgroup.group_id
-    subgroup_type = external_subgroup.subgroup_type
-    if domain_id not in to_send_abroad:
-        to_send_abroad[domain_id] = {}  # allocate domain id
-    if group_spec not in to_send_abroad[domain_id]:
-        to_send_abroad[domain_id][group_spec] = {}
-    if group_id not in to_send_abroad[domain_id][group_spec]:
-        to_send_abroad[domain_id][group_spec][group_id] = {}
-    if subgroup_type not in to_send_abroad[domain_id][group_spec][group_id]:
-        to_send_abroad[domain_id][group_spec][group_id][subgroup_type] = {}
-    if person.infected:
-        to_send_abroad[domain_id][group_spec][group_id][subgroup_type][person.id] = {
-            "inf_prob": person.infection.transmission.probability,
-            "susc": 0.0,
-            "dom": mpi_rank,
-        }
-    else:
-        to_send_abroad[domain_id][group_spec][group_id][subgroup_type][person.id] = {
-            "inf_prob": 0.0,
-            "susc": person.susceptibility,
-            "dom": mpi_rank,
-        }
-
-
 class MovablePeople:
     """
     Holds information about people who might be present in a domain, but may or may not be be,

@@ -5,6 +5,7 @@ from sklearn.cluster import KMeans
 from sklearn.neighbors import KDTree
 import pandas as pd
 import logging
+import h5py
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +147,7 @@ class DomainSplitter:
     def __init__(
         self,
         number_of_domains: int,
-        super_areas: List[str] = None,
+        world_path: str,
         super_area_centroids: List[List[float]] = None,
     ):
         """
@@ -161,7 +162,10 @@ class DomainSplitter:
         super_area_key
             column name of the shape file that contains the super area identifiers.
         """
-        self.super_area_names = super_areas
+        with h5py.File(world_path, "r") as f:
+            self.super_area_names = [
+                super_area.decode() for super_area in f["geography"]["super_area_name"]
+            ]
         self.number_of_domains = number_of_domains
         self.super_area_names = super_area_centroids
         self.super_area_centroids = super_area_centroids
@@ -169,7 +173,6 @@ class DomainSplitter:
             self.super_area_centroids = pd.read_csv(
                 default_super_area_centroids, index_col=0
             )
-        self.super_area_names = super_areas
         if self.super_area_names is None:
             self.super_area_names = self.super_area_centroids.index.values
         self.super_area_centroids = self.super_area_centroids.loc[self.super_area_names]
@@ -276,4 +279,4 @@ class DomainSplitter:
                 self.super_area_centroids.loc[super_area_name, ["X", "Y"]].values,
             )
             super_areas_per_domain[closest_centroid_id].append(super_area_name)
-        return super_areas_per_domain 
+        return super_areas_per_domain
