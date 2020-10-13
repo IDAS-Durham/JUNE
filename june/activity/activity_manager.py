@@ -27,7 +27,7 @@ from june.mpi_setup import (
     MovablePeople,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("activity_manager")
 if mpi_rank > 0:
     logger.propagate = False
 

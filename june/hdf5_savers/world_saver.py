@@ -46,7 +46,7 @@ from june.demography import Population
 from june.demography.person import Activities, Person
 from june.mpi_setup import mpi_rank
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("world_saver")
 if mpi_rank > 0:
     logger.propagate = False
 

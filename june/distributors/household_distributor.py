@@ -14,7 +14,7 @@ from june.demography import Person
 from june.geography import Area
 from june.groups import Household, Households
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("household_distributor")
 
 default_config_filename = (
     paths.configs_path / "defaults/distributors/household_distributor.yaml"

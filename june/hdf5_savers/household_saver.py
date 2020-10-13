@@ -12,7 +12,7 @@ nan_integer = -999
 
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 str_vlen_type = h5py.vlen_dtype(np.dtype("S20"))
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("household_saver")
 if mpi_rank > 0:
     logger.propagate = False
 
@@ -152,22 +152,14 @@ def load_households_from_hdf5(
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
         for chunk in range(n_chunks):
-            logger.info(f"Households chunk {chunk} of {n_chunks}")
+            logger.info(f"Loaded chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             length = idx2 - idx1
-            ids = np.empty(length, dtype=int)
-            types = np.empty(length, dtype="S20")
-            max_sizes = np.empty(length, dtype=float)
-            households["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
-            households["type"].read_direct(types, np.s_[idx1:idx2], np.s_[0:length])
-            households["max_size"].read_direct(
-                max_sizes, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            super_areas = np.empty(length, dtype=int)
-            households["super_area"].read_direct(
-                super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
+            ids = read_dataset(households["id"], idx1, idx2)
+            types = read_dataset(households["type"], idx1, idx2)
+            max_sizes = read_dataset(households["max_size"], idx1, idx2)
+            super_areas = read_dataset(households["super_area"], idx1, idx2)
             for k in range(length):
                 if domain_super_areas is not None:
                     super_area = super_areas[k]
@@ -207,7 +199,7 @@ def restore_households_properties_from_hdf5(
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
         for chunk in range(n_chunks):
-            logger.info(f"Households chunk {chunk} of {n_chunks}")
+            logger.info(f"Restored chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             length = idx2 - idx1
