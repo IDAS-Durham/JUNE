@@ -56,7 +56,6 @@ class Hospitalisation(MedicalCarePolicy):
             # note, we dont model hospital capacity here.
             status = patient_hospital.allocate_patient(
                 person,
-                #probability_of_care_home_resident_admission=self.probability_of_care_home_resident_admission,
             )
             if record is not None:
                 if status in [
