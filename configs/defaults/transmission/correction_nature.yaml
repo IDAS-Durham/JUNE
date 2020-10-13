@@ -16,8 +16,8 @@ shift:
         value: -25.6
 asymptomatic_infectious_factor:
         type: constant
-        value: 0.29
+        value: 0.33
 mild_infectious_factor:
         type: constant
-        value: 0.48
+        value: 0.72
 
