@@ -373,48 +373,70 @@ class Simulator:
             return infect_in_domains
         return {}
 
+    def move_info(self, info2move):
+        """
+        Send a list of arrays of uint32 integers to all ranks,
+        and receive arrays from all ranks.
+        
+        """
+
+        # flatten list of uneven vectors of data, ensure correct type
+        assert len(info2move) == mpi_size
+        buffer = np.concatenate(info2move)
+        assert buffer.dtype == np.uint32
+
+        n_sending = len(buffer)
+        count = np.array([len(x) for x in info2move])
+        displ = np.array([sum(count[:p]) for p in range(len(info2move))])
+        #print("MPI_COMS", mpi_rank, count)
+
+        # send my count to all processes
+        values = mpi_comm.alltoall(count)
+
+        n_receiving = sum(values)
+
+        # now all processes know how much data they will get,
+        # and how much from each rank
+        r_buffer = np.zeros(n_receiving, dtype=np.uint32)
+        rdisp = np.array([sum(values[:p]) for p in range(len(values))])
+        mpi_comm.Alltoallv(
+            [buffer, count, displ, MPI.UINT32_T],
+            [r_buffer, values, rdisp, MPI.UINT32_T],
+        )
+
+        return r_buffer, n_sending, n_receiving
+
     def tell_domains_to_infect(self, infect_in_domains):
-        people_to_infect_locally = []
+        mpi_comm.Barrier()
         tick, tickw = perf_counter(), wall_clock()
-        reqs = []
-        len_1 = np.array([1], dtype=np.int)
-        none = np.array([-1], dtype=np.int)
-        for rank in range(mpi_size):
-            if mpi_rank == rank:
-                continue
-            if rank in infect_in_domains:
-                people_to_infect_in_rank = np.array(
-                    infect_in_domains[rank], dtype=np.int
-                )
-                mpi_comm.Send(
-                    np.array(people_to_infect_in_rank.shape[0], dtype=np.int),
-                    dest=rank,
-                    tag=100,
-                )
-                mpi_comm.Send(people_to_infect_in_rank, dest=rank, tag=200)
-            else:
-                mpi_comm.Send(len_1, dest=rank, tag=100)
-                mpi_comm.Send(none, dest=rank, tag=200)
 
-        # now it has all been sent, we can start the receiving.
+        invalid_id = 4294967295  # largest possible uint32
+        empty = np.array([invalid_id,], dtype=np.uint32)
 
-        for rank in range(mpi_size):
-            if rank == mpi_rank:
-                continue
-            length = np.array([0], dtype=np.int)
-            mpi_comm.Recv(length, source=rank, tag=100)
-            data = np.empty(length, dtype=np.int)
-            mpi_comm.Recv(data, source=rank, tag=200)
-            if data[0] != -1:
-                people_to_infect_locally += list(data)
+        # we want to make sure we transfer something for every domain.
+        # (we have an np.concatenate which doesn't work on empty arrays)
+
+        toinfect = [empty for x in range(mpi_size)]
+
+        # FIXME: domain id should not be floats! Origin is well upstream!
+        for x in infect_in_domains:
+            toinfect[int(x)] = np.array(infect_in_domains[x], dtype=np.uint32)
+
+        people_to_infect, n_sending, n_receiving = self.move_info(toinfect)
 
         tock, tockw = perf_counter(), wall_clock()
         output_logger.info(
-            f"CMS: Infection COMS for rank {mpi_rank}/{mpi_size} - {tock-tick},{tockw-tickw} - {self.timer.date}"
+            f"CMS: Infection COMS-v2 for rank {mpi_rank}/{mpi_size}({n_sending+n_receiving}) {tock-tick},{tockw-tickw} - {self.timer.date}"
         )
-        for person_id in people_to_infect_locally:
-            person = self.world.people.get_from_id(person_id)
-            self.infection_selector.infect_person_at_time(person, self.timer.now)
+
+        for infection_data in people_to_infect:
+            try:
+                person = self.world.people.get_from_id(infection_data)
+                self.infection_selector.infect_person_at_time(person, self.timer.now)
+            except:
+                if infection_data == invalid_id:
+                    continue
+                raise
 
     def do_timestep(self):
         """
@@ -427,7 +449,6 @@ class Simulator:
         status of the population, and distribute scores among the infectors to calculate R0.
         """
         # print("################### time step ############################")
-        mpi_comm.Barrier()
         output_logger.info("==================== timestep ====================")
         tick, tickw = perf_counter(), wall_clock()
         if self.activity_manager.policies is not None:
