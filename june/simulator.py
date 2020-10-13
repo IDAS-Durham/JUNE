@@ -8,6 +8,7 @@ from typing import Optional, List
 from pathlib import Path
 from time import perf_counter
 from time import time as wall_clock
+from mpi4py import MPI
 
 from june import paths
 from june.activity import ActivityManager, activity_hierarchy
@@ -22,7 +23,8 @@ from june.interaction import Interaction, InteractiveGroup
 from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
 from june.world import World
-from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
+from june.utils.profiler import profile
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -341,6 +343,11 @@ class Simulator:
                 self.bury_the_dead(self.world, person)
 
     def infect_people(self, infected_ids, people_from_abroad_dict):
+        """
+        Given a list of infected ids, it initialises an infection object for them
+        and sets it to person.infection. For the people who do not live in this domain
+        a dictionary with their ids and domains is prepared to be sent through MPI.
+        """
         foreign_ids = []
         for inf_id in infected_ids:
             if inf_id in self.world.people.people_dict:
@@ -348,8 +355,9 @@ class Simulator:
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
             else:
                 foreign_ids.append(inf_id)
+        infect_in_domains = {}
+
         if foreign_ids:
-            infect_in_domains = {}
             people_ids = []
             people_domains = []
             for spec in people_from_abroad_dict:
@@ -368,50 +376,42 @@ class Simulator:
                     if domain not in infect_in_domains:
                         infect_in_domains[domain] = []
                     infect_in_domains[domain].append(id)
-            return infect_in_domains
+        return infect_in_domains
 
     def tell_domains_to_infect(self, infect_in_domains):
-        people_to_infect = []
+        """
+        Sends information about the people who got infected in this domain to the other domains.
+        """
+        mpi_comm.Barrier()
         tick, tickw = perf_counter(), wall_clock()
-        reqs = []
-        for rank_sending in range(mpi_size):
-            if rank_sending == mpi_rank:
-                # my turn to send my data
-                for rank_receiving in range(mpi_size):
-                    if rank_sending == rank_receiving:
-                        continue
-                    if (
-                        infect_in_domains is None
-                        or rank_receiving not in infect_in_domains
-                    ):
-                        reqs.append(
-                            mpi_comm.isend(None, dest=rank_receiving, tag=mpi_rank)
-                        )
-                    else:
-                        reqs.append(
-                            mpi_comm.isend(
-                                infect_in_domains[rank_receiving],
-                                dest=rank_receiving,
-                                tag=mpi_rank,
-                            )
-                        )
-                        continue
 
-        for rank_sending in range(mpi_size):
-            if not rank_sending == mpi_rank:
-                # I have to listen
-                data = mpi_comm.recv(source=rank_sending, tag=rank_sending)
-                if data is not None:
-                    people_to_infect += data
-        for r in reqs:
-            r.wait()
+        invalid_id = 4294967295  # largest possible uint32
+        empty = np.array([invalid_id,], dtype=np.uint32)
+
+        # we want to make sure we transfer something for every domain.
+        # (we have an np.concatenate which doesn't work on empty arrays)
+
+        toinfect = [empty for x in range(mpi_size)]
+
+        # FIXME: domain id should not be floats! Origin is well upstream!
+        for x in infect_in_domains:
+            toinfect[int(x)] = np.array(infect_in_domains[x], dtype=np.uint32)
+
+        people_to_infect, n_sending, n_receiving = move_info(toinfect)
+
         tock, tockw = perf_counter(), wall_clock()
         output_logger.info(
-            f"CMS: Infection COMS for rank {mpi_rank}/{mpi_size} - {tock-tick},{tockw-tickw} - {self.timer.date}"
+            f"CMS: Infection COMS-v2 for rank {mpi_rank}/{mpi_size}({n_sending+n_receiving}) {tock-tick},{tockw-tickw} - {self.timer.date}"
         )
+
         for infection_data in people_to_infect:
-            person = self.world.people.get_from_id(infection_data)
-            self.infection_selector.infect_person_at_time(person, self.timer.now)
+            try:
+                person = self.world.people.get_from_id(infection_data)
+                self.infection_selector.infect_person_at_time(person, self.timer.now)
+            except:
+                if infection_data == invalid_id:
+                    continue
+                raise
 
     def do_timestep(self):
         """
