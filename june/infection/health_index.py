@@ -339,9 +339,6 @@ class HealthIndexGenerator:
         deaths_at_home_male[locs_male]=no_hosp_male[locs_male]
         no_hosp_male[locs_male]*=0.0
         
-        print('deaths_at_home_female',deaths_at_home_female)
-        print('deaths_at_home_male',deaths_at_home_male)
-        
         prob_list[0, :, 5] = deaths_at_home_female
         prob_list[1, :, 5] = deaths_at_home_male
 
