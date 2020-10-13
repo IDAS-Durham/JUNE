@@ -287,7 +287,7 @@ class Leisure:
         person
             an instance of person
         """
-        if person.residence.group.spec != "household":
+        if person.residence.group.spec == "care_home":
             return
         prob_age_sex = self.probabilities_by_age_sex[person.sex][person.age]
         if random() < prob_age_sex["does_activity"]:
@@ -300,14 +300,12 @@ class Leisure:
             leisure_subgroup_type = activity_distributor.get_leisure_subgroup_type(
                 person
             )
-            if activity == "household_visits":
-                candidates = person.residence.group.households_to_visit
-                if candidates is None:
+            if "visits" in activity:
+                residence_type = "_".join(activity.split("_")[:-1])
+                if residence_type not in person.residence.group.residences_to_visit:
                     return
-            elif activity == "care_home_visits":
-                candidates = person.residence.group.care_homes_to_visit
-                if candidates is None:
-                    return
+                else:
+                    candidates = person.residence.group.residences_to_visit[residence_type]
             else:
                 candidates = person.area.social_venues[activity]
             candidates_length = len(candidates)

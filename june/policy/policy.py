@@ -1,6 +1,7 @@
 import datetime
 import re
 import sys
+import importlib
 import numpy as np
 from abc import ABC
 from typing import List, Union
@@ -16,8 +17,14 @@ from june.interaction import Interaction
 default_config_filename = paths.configs_path / "defaults/policy/policy.yaml"
 
 
-def str_to_class(classname):
-    return getattr(sys.modules["june.policy"], classname)
+def str_to_class(classname, base_policy_modules=("june.policy",)):
+    for module_name in base_policy_modules:
+        try:
+            module = importlib.import_module(module_name)
+            return getattr(module, classname)
+        except AttributeError:
+            continue
+    raise ValueError("Cannot find policy in paths!")
 
 
 class Policy(ABC):
@@ -98,7 +105,7 @@ class Policies:
 
     @classmethod
     def from_file(
-        cls, config_file=default_config_filename,
+        cls, config_file=default_config_filename, base_policy_modules=("june.policy",)
     ):
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -112,9 +119,15 @@ class Policies:
                         or "end_time" not in policy_data_i.keys()
                     ):
                         raise ValueError("policy config file not valid.")
-                    policies.append(str_to_class(camel_case_key)(**policy_data_i))
+                    policies.append(
+                        str_to_class(camel_case_key, base_policy_modules)(
+                            **policy_data_i
+                        )
+                    )
             else:
-                policies.append(str_to_class(camel_case_key)(**policy_data))
+                policies.append(
+                    str_to_class(camel_case_key, base_policy_modules)(**policy_data)
+                )
         return Policies(policies=policies)
 
     def get_policies_for_type(self, policy_type):
@@ -125,6 +138,7 @@ class Policies:
 
 
 class PolicyCollection:
+
     def __init__(self, policies: List[Policy]):
         """
         A collection of like policies active on the same date

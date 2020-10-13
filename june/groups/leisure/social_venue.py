@@ -56,7 +56,7 @@ class SocialVenues(Supergroup):
         cls,
         coordinates: List[np.array],
         super_areas: Optional[Areas],
-        max_distance_to_area=5,
+        max_distance_to_area=15,
         **kwargs,
     ):
         if len(coordinates) == 0:
@@ -88,13 +88,9 @@ class SocialVenues(Supergroup):
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
-        sv_coordinates = pd.read_csv(coordinates_filename)
-        sa_names = [super_area.name for super_area in super_areas]
-        sv_coordinates_in_super_areas = sv_coordinates.loc[
-            sv_coordinates.super_area.isin(sa_names), ["lat", "lon"]
-        ]
+        sv_coordinates = pd.read_csv(coordinates_filename, index_col=0).values
         return cls.from_coordinates(
-            sv_coordinates_in_super_areas.values, super_areas=super_areas
+            sv_coordinates, super_areas=super_areas
         )
 
     @classmethod
@@ -103,7 +99,7 @@ class SocialVenues(Supergroup):
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
-        super_areas = [area.super_area for area in areas]
+        super_areas = SuperAreas([area.super_area for area in areas])
         return cls.for_super_areas(super_areas, coordinates_filename)
 
     @classmethod

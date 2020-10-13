@@ -9,10 +9,12 @@ from itertools import chain
 from june.logger.read_logger import ReadLogger
 from june.paths import data_path
 
+from camps.paths import camp_data_path
+
 import dash_html_components as html
 
 super_area_coordinates_filename = (
-    data_path / "input/geography/super_area_coordinates.csv"
+    camp_data_path / "input/geography/super_area_coordinates.csv"
 )
 
 mapbox_access_token = "pk.eyJ1IjoiYXN0cm9ieXRlIiwiYSI6ImNrYWwxeHNxZTA3cXMyeG15dGlsbzd1aHAifQ.XvkJbn9mEZ2cuctaX1UwTw"
@@ -124,7 +126,7 @@ class DashPlotter:
             size="infected",
             color_continuous_scale=px.colors.cyclical.IceFire,
             size_max=15,
-            zoom=5,
+            zoom=12,
         )
         fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
         return fig
@@ -382,7 +384,7 @@ class DashPlotter:
     @property
     def days(self):
         dates = np.unique(self.dates)
-        days = np.arange(0, len(dates), 3)
+        days = np.arange(0, len(dates), 5)
         dates = dates[days]
 
         dates_reformat = []

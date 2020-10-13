@@ -144,6 +144,9 @@ class ActivityManager:
             )
         )
 
+    def get_personal_subgroup(self, person: "Person", activity: str):
+        return getattr(person, activity)
+
     def move_to_active_subgroup(
         self, activities: List[str], person: Person, to_send_abroad=None
     ) -> Optional["Subgroup"]:
@@ -169,7 +172,7 @@ class ActivityManager:
             elif activity == "commute":
                 subgroup = self.travel.get_commute_subgroup(person=person)
             else:
-                subgroup = getattr(person, activity)
+                subgroup = self.get_personal_subgroup(person=person, activity=activity)
             if subgroup is not None:
                 if subgroup.external:
                     person.busy = True

@@ -17,7 +17,7 @@ with open(join(this_dir, "requirements.txt")) as f:
 
 setup(
         name="june",
-        version="0.1.0",
+        version="0.2.0",
         description="The most amazing covid simulation",
         url="https://github.com/idas-durham/june",
         long_description=long_description,
