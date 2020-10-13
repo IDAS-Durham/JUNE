@@ -79,9 +79,9 @@ def generate_simulator():
         }
         # make dictionary super_area_id -> domain
         domain_splitter = DomainSplitter(
-            number_of_domains=mpi_size, super_areas=super_area_names
+            number_of_domains=mpi_size, world_path=world_file
         )
-        super_areas_per_domain = domain_splitter.generate_domain_split(niter=10)
+        super_areas_per_domain = domain_splitter.generate_domain_split(niter=5)
         super_area_names_to_domain_dict = {}
         super_area_ids_to_domain_dict = {}
         for domain, super_areas in super_areas_per_domain.items():
@@ -89,7 +89,7 @@ def generate_simulator():
                 super_area_names_to_domain_dict[super_area] = domain
                 super_area_ids_to_domain_dict[
                     int(super_area_name_to_id[super_area])
-                ] = random.randint(0, len(super_areas_per_domain)-1)#domain
+                ] = domain
 
         with open("super_area_ids_to_domain.json", "w") as f:
             json.dump(super_area_ids_to_domain_dict, f)

@@ -88,7 +88,6 @@ class DomainSplitter:
                 super_area.decode() for super_area in f["geography"]["super_area_name"]
             ]
         self.number_of_domains = number_of_domains
-        self.super_area_names = super_area_centroids
         self.super_area_centroids = super_area_centroids
         if self.super_area_centroids is None:
             self.super_area_centroids = pd.read_csv(
