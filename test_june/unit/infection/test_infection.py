@@ -165,7 +165,7 @@ class TestInfectionSelector:
             statistics.median(norms), 1.00, rtol=0.05,
         )
         np.testing.assert_allclose(
-            statistics.median(maxprobs) / true_avg_peak_infectivity, 1.0, rtol=0.06
+            statistics.median(maxprobs) / true_avg_peak_infectivity, 1.0, rtol=0.1
         )
 
     def test__infectivity_for_asymptomatic_carriers(self):
