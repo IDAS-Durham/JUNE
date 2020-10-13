@@ -22,7 +22,7 @@ from june import paths
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("leisure")
 
 
 @jit(nopython=True)

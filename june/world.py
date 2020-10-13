@@ -25,7 +25,7 @@ from june.groups.travel import (
 )
 from june.groups import *
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("world")
 
 possible_groups = [
     "households",

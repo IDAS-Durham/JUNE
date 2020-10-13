@@ -11,7 +11,7 @@ from june.mpi_setup import mpi_rank
 
 earth_radius = 6371  # km
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("social_venue")
 if mpi_rank > 0:
     logger.propagate = False
 

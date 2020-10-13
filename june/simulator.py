@@ -23,13 +23,14 @@ from june.infection_seed import InfectionSeed
 from june.interaction import Interaction, InteractiveGroup
 from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
+from june.records import Record
 from june.world import World
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
 from june.utils.profiler import profile
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
-output_logger = logging.getLogger(__name__)
+output_logger = logging.getLogger("simulator")
 if mpi_rank > 0:
     output_logger.propagate = False
 
@@ -45,7 +46,7 @@ class Simulator:
         activity_manager: ActivityManager,
         infection_selector: InfectionSelector = None,
         infection_seed: Optional["InfectionSeed"] = None,
-        record: Optional["Record"] = None,
+        record: Optional[Record] = None,
         checkpoint_dates: List[datetime.date] = None,
         checkpoint_path: str = None,
     ):
@@ -85,7 +86,7 @@ class Simulator:
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
         checkpoint_path: str = None,
-        record: Optional["Record"] = None,
+        record: Optional[Record] = None,
     ) -> "Simulator":
 
         """
@@ -168,7 +169,6 @@ class Simulator:
             activity_manager=activity_manager,
             infection_selector=infection_selector,
             infection_seed=infection_seed,
-            # comment=comment,
             record=record,
             checkpoint_dates=checkpoint_dates,
             checkpoint_path=checkpoint_path,
@@ -186,7 +186,7 @@ class Simulator:
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
-        record: Optional["Record"] = None,
+        record: Optional[Record] = None,
         # comment: Optional[str] = None,
     ):
         from june.hdf5_savers.checkpoint_saver import generate_simulator_from_checkpoint
@@ -202,7 +202,6 @@ class Simulator:
             travel=travel,
             config_filename=config_filename,
             record=record,
-            # comment=comment,
         )
 
     def clear_world(self):

@@ -7,7 +7,7 @@ import pandas as pd
 import logging
 import h5py
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("domain")
 
 from june.demography import Population
 from june.geography import SuperArea

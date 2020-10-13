@@ -11,7 +11,7 @@ from june import paths
 from june.geography import Area, Areas, SuperArea, SuperAreas
 from june.groups import CareHome
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("care_home_distributor")
 
 care_homes_per_area_filename = paths.data_path / "input/care_homes/care_homes_ew.csv"
 

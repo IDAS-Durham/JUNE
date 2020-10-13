@@ -7,7 +7,7 @@ from itertools import chain
 import numpy as np
 from collections import defaultdict
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("travel")
 
 from june.paths import configs_path, data_path
 from june.geography import Cities, Stations, Station

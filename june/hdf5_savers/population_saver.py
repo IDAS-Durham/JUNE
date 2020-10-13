@@ -12,7 +12,7 @@ from june.demography.person import Activities
 from june.geography import ExternalSuperArea
 from june.world import World
 from june.mpi_setup import mpi_rank
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("population saver")
 if mpi_rank > 0:
     logger.propagate = False
 
@@ -295,7 +295,7 @@ def load_population_from_hdf5(
         n_people = population.attrs["n_people"]
         n_chunks = int(np.ceil(n_people / chunk_size))
         for chunk in range(n_chunks):
-            logger.info(f"Population chunk {chunk} of {n_chunks}")
+            logger.info(f"Loaded chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             length = idx2 - idx1
@@ -380,7 +380,7 @@ def restore_population_properties_from_hdf5(
         n_people = population.attrs["n_people"]
         n_chunks = int(np.ceil(n_people / chunk_size))
         for chunk in range(n_chunks):
-            logger.info(f"Population chunk {chunk} of {n_chunks}")
+            logger.info(f"Restored chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             length = idx2 - idx1
