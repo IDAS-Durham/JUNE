@@ -215,8 +215,8 @@ class HealthIndexGenerator:
          
         hosp_cases_ch_data=np.loadtxt(hosp_cases_ch_filename,skiprows=1)
         age_hosp_cases= hosp_cases_ch_data[:,0]
-        hosp_cases_ch= [hosp_cases_ch_data[:,1],hosp_cases_ch_data[:,1]]#This will change when done for male and female
-        
+        hosp_cases_ch= [hosp_cases_ch_data[:,1],hosp_cases_ch_data[:,2]]#This will change when done for male and female
+       
 
 
         if care_home_ratios_filename is not None:
@@ -305,32 +305,45 @@ class HealthIndexGenerator:
         prob_list[:, :, 0] = self.asymptomatic_ratio
         # hosp,ICU,death ratios
 
-        ratio_hosp_cases_female = hosp_cases[0]  # hospital/cases rate
+        ratio_hosp_cases_female = np.array([min(1-self.asymptomatic_ratio,hosp_cases[0][i]) for i in range(len(hosp_cases[0]))]) # hospital/cases rate
         ratio_icu_hosp_female = icu_hosp[0]  # ICU/hosp rate
         ratio_death_hosp_female = death_hosp[0]  # deaths in hosp/hosp rate
-
-        ratio_hosp_cases_male = hosp_cases[1]  # hospital/cases rate
+        
+        ratio_hosp_cases_male = np.array([min(1-self.asymptomatic_ratio,hosp_cases[1][i]) for i in range(len(hosp_cases[1]))])  # hospital/cases rate
         ratio_icu_hosp_male = icu_hosp[1]  # ICU/hosp rate
         ratio_death_hosp_male = death_hosp[1]  # deaths in hosp/hosp rate
         
         percent_death_home=death_home # deaths_home/deaths_total
-        
+       
         
         percent_death_hosp=1-percent_death_home
+        
         
        
         deaths_at_home_female=(ratio_death_hosp_female*percent_death_home/percent_death_hosp)*ratio_hosp_cases_female
         deaths_at_home_male=(ratio_death_hosp_male*percent_death_home/percent_death_hosp)*ratio_hosp_cases_male
-        prob_list[0, :, 5] = deaths_at_home_female
-        prob_list[1, :, 5] = deaths_at_home_male
-
-        # Going to the hospital but not to ICU/hosp
-        hosp_noicu_female = 1.0 - ratio_icu_hosp_female
-        hosp_noicu_male = 1.0 - ratio_icu_hosp_male
-
+        
+        
+       
+        
         # Probability of being simptomatic but not going to hospital
         no_hosp_female = 1.0 - self.asymptomatic_ratio - ratio_hosp_cases_female
         no_hosp_male = 1.0 - self.asymptomatic_ratio - ratio_hosp_cases_male
+       
+        locs_female = np.where(no_hosp_female <= deaths_at_home_female)[0]
+        locs_male = np.where(no_hosp_male <= deaths_at_home_male)[0]
+        
+        deaths_at_home_female[locs_female]=no_hosp_female[locs_female] # everybody sick at home dies
+        no_hosp_female[locs_female]*=0.0 # nobody left at home
+                
+        deaths_at_home_male[locs_male]=no_hosp_male[locs_male]
+        no_hosp_male[locs_male]*=0.0
+        
+        print('deaths_at_home_female',deaths_at_home_female)
+        print('deaths_at_home_male',deaths_at_home_male)
+        
+        prob_list[0, :, 5] = deaths_at_home_female
+        prob_list[1, :, 5] = deaths_at_home_male
 
         # Probability of getting severe
         age_rki=np.array(RKIdata)[:,0]
@@ -338,10 +351,26 @@ class HealthIndexGenerator:
         fit_rki=np.polyfit(age_rki,severe, 3)
         prob_severe=np.poly1d(fit_rki)(age)
 
-
-        # probavility of  mild simptoms
-        prob_list[0, :, 1] = no_hosp_female * (1 - prob_severe)
-        prob_list[1, :, 1] = no_hosp_male * (1 - prob_severe)
+        # probability of  mild simptoms          
+        prob_list[0, :, 1] = (no_hosp_female-deaths_at_home_female) * (1 - prob_severe)
+        prob_list[1, :, 1] = (no_hosp_male-deaths_at_home_male) * (1 - prob_severe)
+        
+        prob_list[0, np.where(no_hosp_female == 0)[0], 1] = 0
+        prob_list[1, np.where(no_hosp_male == 0)[0], 1] = 0
+        
+        # Probability of having sever simptoms at home but surviving
+        prob_home_severe_female = (no_hosp_female-deaths_at_home_female) * prob_severe
+        prob_home_severe_male = (no_hosp_male-deaths_at_home_male) * prob_severe
+        
+        prob_list[0, :, 2] = prob_home_severe_female
+        prob_list[1, :, 2] = prob_home_severe_male
+        
+        prob_list[0, np.where(no_hosp_female == 0)[0], 2] = 0
+        prob_list[1, np.where(no_hosp_male == 0)[0], 2] = 0
+        
+        # Going to the hospital but not to ICU/hosp
+        hosp_noicu_female = 1.0 - ratio_icu_hosp_female
+        hosp_noicu_male = 1.0 - ratio_icu_hosp_male
 
         # probavility of Surviving ICU
         age_surv_icu=np.array(survival_rate_icu)[:,0]
@@ -383,8 +412,8 @@ class HealthIndexGenerator:
         deaths_hosp_noicu_male = ratio_death_hosp_male - icu_deaths_male
 
         # If the death rate in icu is around the number of deaths virtually everyone in that age dies in icu.
-        deaths_hosp_noicu_female[deaths_hosp_noicu_female < 0] = 1e-3
-        deaths_hosp_noicu_male[deaths_hosp_noicu_male < 0] = 1e-3
+        deaths_hosp_noicu_female[deaths_hosp_noicu_female < 0] = 0.0
+        deaths_hosp_noicu_male[deaths_hosp_noicu_male < 0] = 0.0
 
         prob_list[0, :, 3] = (
             hosp_noicu_female - deaths_hosp_noicu_female
@@ -397,17 +426,7 @@ class HealthIndexGenerator:
         prob_list[0, :, 6] = deaths_hosp_noicu_female * ratio_hosp_cases_female
         prob_list[1, :, 6] = deaths_hosp_noicu_male * ratio_hosp_cases_male
         
-        
-        # Probability of having sever simptoms at home but surviving
-
-        prob_home_severe_female = no_hosp_female * prob_severe
-        prob_home_severe_male = no_hosp_male * prob_severe
-
-        prob_list[0, :, 2] = prob_home_severe_female - deaths_at_home_female
-        prob_list[1, :, 2] = prob_home_severe_male - deaths_at_home_male
-        
-        prob_list[0, :, 2][prob_list[0, :, 2]<0]=1e-5
-        prob_list[1, :, 2][prob_list[1, :, 2]<0]=1e-5
+       
         
         return prob_list
 
