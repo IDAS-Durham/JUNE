@@ -343,6 +343,11 @@ class Simulator:
                 self.bury_the_dead(self.world, person)
 
     def infect_people(self, infected_ids, people_from_abroad_dict):
+        """
+        Given a list of infected ids, it initialises an infection object for them
+        and sets it to person.infection. For the people who do not live in this domain
+        a dictionary with their ids and domains is prepared to be sent through MPI.
+        """
         foreign_ids = []
         for inf_id in infected_ids:
             if inf_id in self.world.people.people_dict:
@@ -350,8 +355,9 @@ class Simulator:
                 self.infection_selector.infect_person_at_time(person, self.timer.now)
             else:
                 foreign_ids.append(inf_id)
+        infect_in_domains = {}
+
         if foreign_ids:
-            infect_in_domains = {}
             people_ids = []
             people_domains = []
             for spec in people_from_abroad_dict:
@@ -370,11 +376,12 @@ class Simulator:
                     if domain not in infect_in_domains:
                         infect_in_domains[domain] = []
                     infect_in_domains[domain].append(id)
-            return infect_in_domains
-        return {}
-
+        return infect_in_domains
 
     def tell_domains_to_infect(self, infect_in_domains):
+        """
+        Sends information about the people who got infected in this domain to the other domains.
+        """
         mpi_comm.Barrier()
         tick, tickw = perf_counter(), wall_clock()
 

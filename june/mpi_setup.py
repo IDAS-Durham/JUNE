@@ -9,6 +9,7 @@ mpi_comm = MPI.COMM_WORLD
 mpi_rank = mpi_comm.Get_rank()
 mpi_size = mpi_comm.Get_size()
 
+
 class MovablePeople:
     """
     Holds information about people who might be present in a domain, but may or may not be be,
@@ -16,6 +17,7 @@ class MovablePeople:
     susceptibility, home domain, and whether active or not. For now, we mimic the original structure,
     but with an additional interface.
     """
+
     def __init__(self):
         self.skinny_out = {}
         self.skinny_in = {}
@@ -38,11 +40,19 @@ class MovablePeople:
             self.skinny_out[domain_id][group_spec][group_id][subgroup_type] = {}
 
         if person.infected:
-            view = [person.id, person.infection.transmission.probability, 0.0, mpi_rank, True]
+            view = [
+                person.id,
+                person.infection.transmission.probability,
+                0.0,
+                mpi_rank,
+                True,
+            ]
         else:
             view = [person.id, 0.0, person.susceptibility, mpi_rank, True]
 
-        self.skinny_out[domain_id][group_spec][group_id][subgroup_type][person.id] = view
+        self.skinny_out[domain_id][group_spec][group_id][subgroup_type][
+            person.id
+        ] = view
 
     def delete_person(self, person, external_subgroup):
         """ Remove a person from the external subgroup. For now we actually do it. Later
@@ -52,7 +62,9 @@ class MovablePeople:
         group_id = external_subgroup.group_id
         subgroup_type = external_subgroup.subgroup_type
         try:
-            del self.skinny_out[domain_id][group_spec][group_id][subgroup_type][person.id]
+            del self.skinny_out[domain_id][group_spec][group_id][subgroup_type][
+                person.id
+            ]
             return 0
         except KeyError:
             return 1
@@ -65,10 +77,24 @@ class MovablePeople:
         for group_spec in self.skinny_out[rank]:
             for group_id in self.skinny_out[rank][group_spec]:
                 for subgroup_type in self.skinny_out[rank][group_spec][group_id]:
-                    keys.append((group_spec, group_id, subgroup_type,
-                                 len(self.skinny_out[rank][group_spec][group_id][subgroup_type])))
-                    data += [view for pid, view in
-                             self.skinny_out[rank][group_spec][group_id][subgroup_type].items()]
+                    keys.append(
+                        (
+                            group_spec,
+                            group_id,
+                            subgroup_type,
+                            len(
+                                self.skinny_out[rank][group_spec][group_id][
+                                    subgroup_type
+                                ]
+                            ),
+                        )
+                    )
+                    data += [
+                        view
+                        for pid, view in self.skinny_out[rank][group_spec][group_id][
+                            subgroup_type
+                        ].items()
+                    ]
         outbound = np.array(data)
         return keys, outbound, outbound.shape[0]
 
@@ -88,15 +114,20 @@ class MovablePeople:
                 self.skinny_in[group_spec][group_id] = {}
             if subgroup_type not in self.skinny_in[group_spec][group_id]:
                 self.skinny_in[group_spec][group_id][subgroup_type] = {}
-            data = rank_data[index:index+n_data]
+            data = rank_data[index : index + n_data]
             index += n_data
 
             try:
-                self.skinny_in[group_spec][group_id][subgroup_type].update({
-                    int(k):  {"inf_prob": i, "susc": s, "dom": d, "active":a} for k,i,s,d,a in data})
+                self.skinny_in[group_spec][group_id][subgroup_type].update(
+                    {
+                        int(k): {"inf_prob": i, "susc": s, "dom": d, "active": a}
+                        for k, i, s, d, a in data
+                    }
+                )
             except:
-                print('failing', rank, 'f-done')
+                print("failing", rank, "f-done")
                 raise
+
 
 def move_info(info2move):
     """
@@ -104,7 +135,6 @@ def move_info(info2move):
     and receive arrays from all ranks.
     
     """
-
     # flatten list of uneven vectors of data, ensure correct type
     assert len(info2move) == mpi_size
     buffer = np.concatenate(info2move)
@@ -121,11 +151,12 @@ def move_info(info2move):
 
     # now all processes know how much data they will get,
     # and how much from each rank
+
     r_buffer = np.zeros(n_receiving, dtype=np.uint32)
     rdisp = np.array([sum(values[:p]) for p in range(len(values))])
+
     mpi_comm.Alltoallv(
-        [buffer, count, displ, MPI.UINT32_T],
-        [r_buffer, values, rdisp, MPI.UINT32_T],
+        [buffer, count, displ, MPI.UINT32_T], [r_buffer, values, rdisp, MPI.UINT32_T]
     )
 
     return r_buffer, n_sending, n_receiving
