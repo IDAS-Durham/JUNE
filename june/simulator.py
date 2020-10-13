@@ -23,7 +23,7 @@ from june.interaction import Interaction, InteractiveGroup
 from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
 from june.world import World
-from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
 from june.utils.profiler import profile
 
 default_config_filename = paths.configs_path / "config_example.yaml"
@@ -373,38 +373,6 @@ class Simulator:
             return infect_in_domains
         return {}
 
-    def move_info(self, info2move):
-        """
-        Send a list of arrays of uint32 integers to all ranks,
-        and receive arrays from all ranks.
-        
-        """
-
-        # flatten list of uneven vectors of data, ensure correct type
-        assert len(info2move) == mpi_size
-        buffer = np.concatenate(info2move)
-        assert buffer.dtype == np.uint32
-
-        n_sending = len(buffer)
-        count = np.array([len(x) for x in info2move])
-        displ = np.array([sum(count[:p]) for p in range(len(info2move))])
-        #print("MPI_COMS", mpi_rank, count)
-
-        # send my count to all processes
-        values = mpi_comm.alltoall(count)
-
-        n_receiving = sum(values)
-
-        # now all processes know how much data they will get,
-        # and how much from each rank
-        r_buffer = np.zeros(n_receiving, dtype=np.uint32)
-        rdisp = np.array([sum(values[:p]) for p in range(len(values))])
-        mpi_comm.Alltoallv(
-            [buffer, count, displ, MPI.UINT32_T],
-            [r_buffer, values, rdisp, MPI.UINT32_T],
-        )
-
-        return r_buffer, n_sending, n_receiving
 
     def tell_domains_to_infect(self, infect_in_domains):
         mpi_comm.Barrier()
@@ -422,7 +390,7 @@ class Simulator:
         for x in infect_in_domains:
             toinfect[int(x)] = np.array(infect_in_domains[x], dtype=np.uint32)
 
-        people_to_infect, n_sending, n_receiving = self.move_info(toinfect)
+        people_to_infect, n_sending, n_receiving = move_info(toinfect)
 
         tock, tockw = perf_counter(), wall_clock()
         output_logger.info(
@@ -448,7 +416,6 @@ class Simulator:
         of the people who got infected. We record the infection locations, update the health
         status of the population, and distribute scores among the infectors to calculate R0.
         """
-        # print("################### time step ############################")
         output_logger.info("==================== timestep ====================")
         tick, tickw = perf_counter(), wall_clock()
         if self.activity_manager.policies is not None:
