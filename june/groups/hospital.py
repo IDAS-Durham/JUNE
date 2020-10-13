@@ -27,7 +27,6 @@ class AbstractHospital:
     def __init__(self):
         self.ward_ids = set()
         self.icu_ids = set()
-        self.denied_treatment_ids = set()
 
     def add_to_ward(self, person):
         self.ward_ids.add(person.id)
@@ -55,7 +54,6 @@ class AbstractHospital:
         - "ward_transferred" : this person has been transferred  to ward (from icu)
         - "icu_transferred" : this person has been transferred to icu (from ward)
         - "no_change" : no change respect to last time step.
-        - "denied_treatment" : person has not been accepted to the hospital
         """
         if person.medical_facility is None:
             if person.infection.tag.name == "hospitalised":
