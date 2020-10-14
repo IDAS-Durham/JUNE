@@ -31,5 +31,6 @@ setup(
         license="MIT license",
         install_requires=requirements,
         packages = find_packages(exclude=["docs"]),
+        include_package_data=True
 )
 

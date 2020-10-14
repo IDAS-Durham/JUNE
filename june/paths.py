@@ -1,24 +1,19 @@
 import logging
 import os
+import subprocess
 from pathlib import Path
 from sys import argv
 
-logger = logging.getLogger(
-    __name__
-)
+logger = logging.getLogger(__name__)
 
-project_directory = Path(
-    os.path.abspath(__file__)
-).parent.parent
+project_directory = Path(os.path.abspath(__file__)).parent
 
-working_directory = Path(
-    os.getcwd()
-)
+working_directory = Path(os.getcwd())
 
 working_directory_parent = working_directory.parent
 
 
-def find_default(name: str) -> Path:
+def find_default(name: str, look_in_package=True) -> Path:
     """
     Get a default path when no command line argument is passed.
 
@@ -39,22 +34,17 @@ def find_default(name: str) -> Path:
     -------
     The full path to that directory
     """
-    for directory in (
-        working_directory,
-        project_directory,
-        working_directory_parent
-    ):
+    directories_to_look = [working_directory, working_directory_parent]
+    if look_in_package:
+        directories_to_look.append(project_directory)
+    for directory in directories_to_look:
         path = directory / name
-        if os.path.exists(
-                path
-        ):
+        if os.path.exists(path):
             return path
-    raise FileNotFoundError(
-        f"Could not find a default path for {name}"
-    )
+    raise FileNotFoundError(f"Could not find a default path for {name}")
 
 
-def path_for_name(name: str) -> Path:
+def path_for_name(name: str, look_in_package=True) -> Path:
     """
     Get a path input using a flag when the program is run.
 
@@ -77,17 +67,21 @@ def path_for_name(name: str) -> Path:
     try:
         path = Path(argv[argv.index(flag) + 1])
         if not path.exists():
-            raise FileNotFoundError(
-                f"No such folder {path}"
-            )
+            raise FileNotFoundError(f"No such folder {path}")
     except (IndexError, ValueError):
-        path = find_default(name)
-        logger.warning(
-            f"No {flag} argument given - defaulting to:\n{path}"
-        )
+        path = find_default(name, look_in_package=look_in_package)
+        logger.warning(f"No {flag} argument given - defaulting to:\n{path}")
 
     return path
 
 
-data_path = path_for_name("data")
+try:
+    data_path = path_for_name("data", look_in_package=False)
+except FileNotFoundError:
+    answer = input(
+        "I couldn't find any data folder, do you want me to download it for you? (y/N) "
+    )
+    if answer == "y":
+        subprocess.call(["get_june_data.sh"])
+
 configs_path = path_for_name("configs")
