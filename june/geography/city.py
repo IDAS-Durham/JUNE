@@ -219,9 +219,17 @@ class ExternalCity(ExternalGroup):
         self.name = name
 
     def get_commute_subgroup(self, person):
-        if not self.commuter_ids:
+        """
+        Gets the commute subgroup of the person. We first check if
+        the person is in the list of the internal city commuters. If not,
+        we then check if the person is a commuter in their closest city station.
+        If none of the above, then that person doesn't need commuting.
+        """
+        if len(self.city_transports) == 0:
             return
-        group = self.city_transports[
-            randint(0, len(self.city_transports) - 1)
-        ]
-        return ExternalSubgroup(group=group, subgroup_type=0)
+        if person.id in self.commuter_ids:
+            return self.city_transports[randint(0, len(self.city_transports) - 1)][0]
+        else:
+            closest_station = person.super_area.closest_station_for_city[self.name]
+            if person.id in closest_station.commuter_ids:
+                return closest_station.get_commute_subgroup(person)
