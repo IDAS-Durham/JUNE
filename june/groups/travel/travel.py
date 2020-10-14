@@ -162,7 +162,7 @@ class Travel:
             external = value["external"]
             if len(internal) + len(external) > 0:
                 logger.info(
-                    f"City {key} has {internal} internal and {external} external commuters."
+                    f"City {key} has {len(internal)} internal and {len(external)} external commuters."
                 )
         return ret
 

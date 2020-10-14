@@ -351,20 +351,20 @@ def restore_cities_and_stations_properties_from_hdf5(
                 [commuter_id for commuter_id in city_internal_commuters_list[k]]
             )
             city.internal_commuter_ids = commuters
+            city.city_stations = []
+            city.inter_city_stations = []
+            for station_id in city_city_station_ids[k]:
+                station = world.stations.get_from_id(station_id)
+                city.city_stations.append(station)
+            for station_id in city_inter_city_station_ids[k]:
+                station = world.stations.get_from_id(station_id)
+                city.inter_city_stations.append(station)
             if domain_super_areas is None or city_super_area in domain_super_areas:
                 city_super_area_instance = world.super_areas.get_from_id(
                     city_super_area
                 )
                 city.super_area = city_super_area_instance
                 city_super_area_instance.city = city
-                city.city_stations = []
-                city.inter_city_stations = []
-                for station_id in city_city_station_ids[k]:
-                    station = world.stations.get_from_id(station_id)
-                    city.city_stations.append(station)
-                for station_id in city_inter_city_station_ids[k]:
-                    station = world.stations.get_from_id(station_id)
-                    city.inter_city_stations.append(station)
         # super areas info
         geography = f["geography"]
         n_super_areas = geography.attrs["n_super_areas"]

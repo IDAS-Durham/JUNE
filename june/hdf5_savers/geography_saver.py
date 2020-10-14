@@ -74,6 +74,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         social_venues_ids = []
         social_venues_specs = []
         social_venues_sas = []
+        social_venues_lengths = []
         for spec in area.social_venues.keys():
             for social_venue in area.social_venues[spec]:
                 social_venues_specs.append(spec.encode("ascii", "ignore"))
@@ -82,9 +83,15 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         social_venues_specs_list.append(np.array(social_venues_specs, dtype="S20"))
         social_venues_ids_list.append(np.array(social_venues_ids, dtype=np.int))
         social_venues_super_areas.append(np.array(social_venues_sas, dtype=np.int))
-    social_venues_specs_list = np.array(social_venues_specs_list, dtype=str_vlen_type)
-    social_venues_ids_list = np.array(social_venues_ids_list, dtype=int_vlen_type)
-    social_venues_super_areas = np.array(social_venues_super_areas, dtype=int_vlen_type)
+        social_venues_lengths.append(len(social_venues_specs))
+    if len(np.unique(social_venues_lengths)) == 1:
+        social_venues_specs_list = np.array(social_venues_specs_list, dtype="S20")
+        social_venues_ids_list = np.array(social_venues_ids_list, dtype=np.int)
+        social_venues_super_areas = np.array(social_venues_super_areas, dtype=np.int)
+    else:
+        social_venues_specs_list = np.array(social_venues_specs_list, dtype=str_vlen_type)
+        social_venues_ids_list = np.array(social_venues_ids_list, dtype=int_vlen_type)
+        social_venues_super_areas = np.array(social_venues_super_areas, dtype=int_vlen_type)
 
     for super_area in geography.super_areas:
         super_area_ids.append(super_area.id)
