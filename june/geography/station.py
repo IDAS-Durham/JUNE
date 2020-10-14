@@ -78,15 +78,35 @@ class Station:
         self.commuter_ids = set()
         self.city = city
         self.super_area = super_area
-        self.inter_city_transports = []
 
     @property
     def coordinates(self):
         return self.super_area.coordinates
 
-    def get_commute_subgroup(self, person):
-        return self.inter_city_transports[
-            randint(0, len(self.inter_city_transports) - 1)
+class CityStation(Station):
+    """
+    This is a city station for internal commuting
+    """
+    def __init__(self, city: str = None, super_areas: SuperArea = None):
+        super().__init__(city=city, super_areas=super_areas)
+        self.city_transports = []
+
+    def get_commute_subgroup(self):
+        return self.city_transports[
+            randint(0, len(self.city_transports) - 1)
+        ][0]
+
+class InterCityStation(Station):
+    """
+    This is an inter-city station for inter-city commuting
+    """
+    def __init__(self, city: str = None, super_areas: SuperArea = None):
+        super().__init__(city=city, super_areas=super_areas)
+        self.city_transports = []
+
+    def get_commute_subgroup(self):
+        return self.city_transports[
+            randint(0, len(self.city_transports) - 1)
         ][0]
 
 

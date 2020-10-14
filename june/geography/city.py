@@ -63,10 +63,10 @@ class City:
         self.super_areas = super_areas
         self.name = name
         self.super_stations = None
-        self.stations = []
+        self.city_stations = []
+        self.inter_city_stations = []
         self.coordinates = coordinates
-        self.city_transports = []
-        self.commuter_ids = set()  # internal commuters in the city
+        self.internal_commuter_ids = set()  # internal commuters in the city
 
     @classmethod
     def from_file(cls, name, city_super_areas_filename=default_cities_filename):
@@ -88,8 +88,9 @@ class City:
         """
         if not self.stations:
             return
-        if person.id in self.commuter_ids:
-            return self.city_transports[randint(0, len(self.city_transports) - 1)][0]
+        if person.id in self.internal_commuter_ids:
+            internal_station = self.internal_stations[randint(0, len(self.internal_stations)-1)]
+            return internal_station.get_commute_subgroup()
         else:
             closest_station = person.super_area.closest_station_for_city[self.name]
             if person.id in closest_station.commuter_ids:

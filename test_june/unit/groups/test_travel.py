@@ -89,9 +89,9 @@ class TestCommute:
                     public_transports += 1
         commuters = 0
         for city in world.cities:
-            commuters += len(city.commuter_ids)
-        for station in world.stations:
-            commuters += len(station.commuter_ids)
+            commuters += len(city.internal_commuter_ids)
+            for station in city.external_stations:
+                commuters += len(station.commuter_ids)
         assert public_transports == commuters
 
     def test__all_commuters_get_commute(self, travel_world):
@@ -115,7 +115,9 @@ class TestCommute:
         seats_per_passenger = 2.28
         seats_per_train = 50
 
-        n_city_transports = sum([len(station.city_transports) for station in newcastle.internal_stations])
+        n_city_transports = sum(
+            [len(station.city_transports) for station in newcastle.internal_stations]
+        )
         assert n_city_transports > 0
         n_city_commuters = len(newcastle.internal_commuter_ids)
         assert n_city_commuters > 0
@@ -124,11 +126,11 @@ class TestCommute:
             == n_city_transports
         )
         n_inter_city_transports = sum(
-            len(station.inter_city_transports) for station in newcastle.stations
+            len(station.inter_city_transports) for station in newcastle.external_stations
         )
         assert n_inter_city_transports > 0
         n_inter_city_commuters = sum(
-            len(station.commuter_ids) for station in newcastle.stations
+            len(station.commuter_ids) for station in newcastle.external_stations
         )
         assert n_inter_city_commuters > 0
         assert (
