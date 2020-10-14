@@ -25,7 +25,7 @@ scripts_path = Path(__file__).parent
 
 # load london super areas
 london_areas_path = scripts_path / "london_areas.txt"
-london_areas = np.loadtxt(london_areas_path, dtype=np.str_)[0:60]
+london_areas = np.loadtxt(london_areas_path, dtype=np.str_)
 
 # add King's cross area for station
 if "E00004734" not in london_areas:
@@ -71,7 +71,7 @@ travel.initialise_commute(world)
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 # save the world to hdf5 to load it later
-world_name = "tiny_world"
+world_name = "london"
 world.to_hdf5(f"{world_name}.hdf5")
 
 
