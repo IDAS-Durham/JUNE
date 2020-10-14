@@ -99,6 +99,10 @@ class CityStation(Station):
     def get_commute_subgroup(self):
         return self.city_transports[randint(0, self.n_city_transports - 1)][0]
 
+    @property
+    def station_type(self):
+        return "city"
+
 
 class InterCityStation(Station):
     """
@@ -117,6 +121,10 @@ class InterCityStation(Station):
         return self.inter_city_transports[randint(0, self.n_inter_city_transports - 1)][
             0
         ]
+
+    @property
+    def station_type(self):
+        return "inter_city"
 
 
 class Stations(Supergroup):
@@ -213,6 +221,10 @@ class ExternalCityStation(ExternalStation):
         super().__init__(id=id, domain_id=domain_id, city=city)
         self.city_transports = []
 
+    @property
+    def n_city_transports(self):
+        return len(self.city_transports)
+
     def get_commute_subgroup(self):
         group = self.city_transports[randint(0, self.n_city_transports - 1)]
         return ExternalSubgroup(group=group, subgroup_type=0)
@@ -226,6 +238,10 @@ class ExternalInterCityStation(ExternalStation):
     def __init__(self, id: int, domain_id: int, city: str = None):
         super().__init__(id=id, domain_id=domain_id, city=city)
         self.inter_city_transports = []
+
+    @property
+    def n_inter_city_transports(self):
+        return len(self.city_transports)
 
     def get_commute_subgroup(self):
         group = self.inter_city_transports[randint(0, self.n_inter_city_transports - 1)]
