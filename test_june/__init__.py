@@ -4,6 +4,5 @@ import pytest
 
 test_path = Path(__file__).parent
 def run_all_tests():
-    print(test_path)
     pytest.main(["-x", f"{test_path}"])
 
