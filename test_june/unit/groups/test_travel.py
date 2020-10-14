@@ -32,7 +32,7 @@ def make_commuting_network(geo):
         people.append(person)
     world.people = Population(people)
     travel = Travel()
-    travel.initialise_commute(world, maximum_number_commuters_per_city=200000)
+    travel.initialise_commute(world, maximum_number_commuters_per_internal_station=150)
     return world, travel
 
 
@@ -43,7 +43,8 @@ class TestCommute:
         city = world.cities[0]
         assert city.name == "Newcastle upon Tyne"
         assert city.super_areas[0] == "E02001731"
-        assert len(city.stations) == 4
+        assert len(city.internal_stations) == 2
+        assert len(city.external_stations) == 4
         for super_area in world.super_areas:
             if super_area.name == "E02001731":
                 assert super_area.city.name == "Newcastle upon Tyne"
@@ -54,9 +55,11 @@ class TestCommute:
         world, travel = travel_world
         city = world.cities[0]
         n_external_commuters = 0
-        for station in city.stations:
+        n_internal_commuters = 0
+        for station in city.external_stations:
             n_external_commuters += len(station.commuter_ids)
-        n_internal_commuters = len(city.commuter_ids)
+        for station in city.internal_stations:
+            n_internal_commuters += len(station.commuter_ids)
         assert n_internal_commuters == 300
         assert n_external_commuters == 900
 
@@ -100,9 +103,9 @@ class TestCommute:
                 assigned_commuters += 1
         commuters = 0
         for city in world.cities:
-            commuters += len(city.commuter_ids)
-        for station in world.stations:
-            commuters += len(station.commuter_ids)
+            commuters += len(city.internal_commuter_ids)
+            for station in city.external_stations:
+                commuters += len(station.commuter_ids)
         assert commuters > 0
         assert commuters == assigned_commuters
 
@@ -112,9 +115,9 @@ class TestCommute:
         seats_per_passenger = 2.28
         seats_per_train = 50
 
-        n_city_transports = len(newcastle.city_transports)
+        n_city_transports = sum([len(station.city_transports) for station in newcastle.internal_stations])
         assert n_city_transports > 0
-        n_city_commuters = len(newcastle.commuter_ids)
+        n_city_commuters = len(newcastle.internal_commuter_ids)
         assert n_city_commuters > 0
         assert (
             np.ceil(n_city_commuters * seats_per_passenger / seats_per_train)
