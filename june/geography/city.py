@@ -212,8 +212,8 @@ class ExternalCity(ExternalGroup):
     external = True
     def __init__(self, id, domain_id, coordinates= None, commuter_ids = None, name=None):
         super().__init__(spec="city", domain_id=domain_id, id=id)
-        self.commuter_ids = commuter_ids
-        self.city_transports = None
+        self.commuter_ids = commuter_ids or set()
+        self.city_transports = None or []
         self.super_area = None
         self.coordinates = coordinates
         self.name = name
