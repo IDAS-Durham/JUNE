@@ -4,6 +4,7 @@ import numba as nb
 import numpy as np
 import pytest
 import h5py
+from pathlib import Path
 
 import june.infection.symptoms
 from june.interaction import Interaction
@@ -35,6 +36,12 @@ import logging
 
 # disable logging for testing
 logging.disable(logging.CRITICAL)
+
+@pytest.fixture(autouse=True, name="test_results", scope="session")
+def make_test_output():
+    save_path = Path("./test_results")
+    save_path.mkdir(exist_ok=True)
+    return save_path
 
 
 @pytest.fixture(autouse=True)

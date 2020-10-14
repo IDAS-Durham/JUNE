@@ -14,9 +14,9 @@ available_groups = [
 
 
 @pytest.fixture(name="domains", scope="module")
-def decomp(domains_world):
+def decomp(domains_world, test_results):
     world = domains_world
-    world.to_hdf5("test_domains_world.hdf5")
+    world.to_hdf5(test_results / "test_domains_world.hdf5")
     domains = []
     super_areas_to_domain_dict = {
         domains_world.super_areas[0].id: 0,
@@ -27,12 +27,12 @@ def decomp(domains_world):
     domain1 = Domain.from_hdf5(
         domain_id=0,
         super_areas_to_domain_dict=super_areas_to_domain_dict,
-        hdf5_file_path="test_domains_world.hdf5",
+        hdf5_file_path=test_results / "test_domains_world.hdf5",
     )
     domain2 = Domain.from_hdf5(
         domain_id=1,
         super_areas_to_domain_dict=super_areas_to_domain_dict,
-        hdf5_file_path="test_domains_world.hdf5",
+        hdf5_file_path=test_results / "test_domains_world.hdf5",
     )
     domains = [domain1, domain2]
     # append everyone everywhere for checks
