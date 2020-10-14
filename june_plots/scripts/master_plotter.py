@@ -22,8 +22,9 @@ from june_plots.scripts.health_index import HealthIndexPlots
 from june_plots.scripts.contact_tracker import ContactTracker
 
 
-#plt.style.use(['science'])
-#plt.style.reload_library()
+plt.style.use(['science'])
+plt.style.reload_library()
+
 
 default_world_filename = 'world.hdf5'
 default_output_plots_path = Path(__file__).absolute().parent.parent / "plots"
@@ -388,10 +389,15 @@ class Plotter:
             "care_home_visits", "cinema", "hospital",
         ]
 
-        #ct_plots = ContactTracker(self.world, age_bins=age_bins)        
-        #ct_plots.generate_simulator()
-        #ct_plots.run_simulation()
-        ct_plots = ContactTracker.from_pickle(self.world)
+        ct_plots = ContactTracker(
+            self.world, 
+            pickle_path=Path(__file__).parent / "contact_tracker/tracker.pkl",
+            age_bins=age_bins,
+            interaction_type="network",
+        )        
+        ct_plots.generate_simulator()
+        ct_plots.run_simulation()
+        #ct_plots = ContactTracker.from_pickle(self.world)
         ct_plots.process_contacts()
         
         ct_plots.load_contact_data()

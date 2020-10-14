@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import pandas as pd
+import networkx as nx
 #import seaborn as sns
 
 #from june_runs import Runner
@@ -191,6 +192,9 @@ class ContactTracker:
 
     @staticmethod
     def _random_round(x):
+        """round float to integer randomly with probability x%1.
+            eg. round 3.7 to 4 with probability 70%, else round to 3.
+        """
         f = x % 1
         if np.random.uniform(0,1,1) < f:
             return int(x)+1
@@ -266,7 +270,7 @@ class ContactTracker:
        
         return contacts_per_subgroup
 
-    def simulate_1d_contacts(self, group: Group):
+    def simulate_1d_contacts(self, group: Group, N_random=100):
         for person in group.people:
             active_subgroups = self.get_active_subgroup(person)
             if len(active_subgroups) == 0:
@@ -290,24 +294,26 @@ class ContactTracker:
                 total_contacts = total_contacts + subgroup_contacts
                 int_contacts = self._random_round(subgroup_contacts)
 
-                contact_ids = []
-                while len(contact_ids) < int_contacts:
-                    contact = np.random.choice(subgroup)
-                    if person.id != contact.id: # could loop forever without potential_contacts check.
-                        contact_ids.append(contact.id)
-                
+                subgroup_ids = [other.id for other in subgroup]
+                if subgroup_idx == subgroup.subgroup_type:
+                    subgroup_ids.remove(person.id)
+                contact_ids = np.random.choice(subgroup_ids, int_contacts)
+            
                 # For each type of contact matrix binning, eg BBC, polymod, SYOA...
                 for bin_type in self.contact_matrices.keys():
                     age_idx = self.age_idxs[bin_type][person.id]
-                    contact_age_idxs = [
+                    contact_age_idxes = [
                         self.age_idxs[bin_type][contact_id] for contact_id in contact_ids
                     ]
-
-                    for cidx in contact_age_idxs:
-                        self.contact_matrices[bin_type]["global"][age_idx,cidx] += 1
-                        self.contact_matrices[bin_type][group.spec][age_idx,cidx] += 1
+                    inds = (age_idx, contact_age_idxes)
+                    np.add.at(
+                        self.contact_matrices[bin_type]["global"], inds, 1.
+                    )
+                    np.add.at(
+                        self.contact_matrices[bin_type][group.spec], inds, 1.
+                    )
                 
-                # NOTE: self.contact_matrices["global"][age_idx, contact_age_idxs] += 1 # DOES NOT WORK for repeated ind
+                    # NOTE: self.contact_matrices["global"][age_idx, contact_age_idxs] += 1 # DOES NOT WORK for repeated ind
             
             self.contact_counts[person.id]["global"] += total_contacts
             if person.leisure == active_subgroup and person.leisure.group.spec == "household":
@@ -318,8 +324,84 @@ class ContactTracker:
                 contact_type = group.spec
             self.contact_counts[person.id][contact_type] += total_contacts
 
+    def initialise_graph(self, group: Group):
+        G = nx.MultiGraph()
+
+        if len(group.people) <= 1:
+            return G
+        
+        N_subgroups = len(group.subgroups)
+        # initialise graph
+        for subgroup in group.subgroups:
+            for person in subgroup:
+                max_contacts = [
+                    self._random_round(x) for x in self.get_contacts_per_subgroup(
+                        subgroup.subgroup_type, group
+                    )
+                ]
+                G.add_node(
+                    person.id, 
+                    subgroup_type=subgroup.subgroup_type,
+                    subgroup_contacts=np.zeros(N_subgroups),
+                    max_contacts=max_contacts,
+                )
+        return G
+
+    def build_graph(self, group: Group):
+        G = self.initialise_graph(group) # Node for every person.
+
+        if len(group.people) <= 1:
+            return G
+        
+        idxes1 = np.arange(len(group.people))
+        np.random.shuffle(idxes1)
+
+        subgroup_idxes = [
+            np.arange(len(subgroup)) for subgroup in group
+        ]
+
+        missing_contacts = 0
+
+        for idx1 in idxes1:
+            person = group.people[idx1]
+            person_node = G.nodes[person.id]
+            person_type = person_node["subgroup_type"]
+            for subgroup in group.subgroups:
+                contact_type = subgroup.subgroup_type
+                subgroup_size = len(subgroup.people)
+                if subgroup_size == 0:
+                    continue
+                if person_type == contact_type and subgroup_size == 1:
+                    continue
+                np.random.shuffle(subgroup_idxes[contact_type])
+                for idx2 in subgroup_idxes[contact_type]:
+                    # look at each person in the subgroup, see if they can be contacted.
+                    if ( person_node["subgroup_contacts"][contact_type] 
+                        >= person_node["max_contacts"][contact_type]):
+                        break # If person already has enough contacts for this subgroup_type...
+                    contact = subgroup.people[idx2]
+                    contact_node = G.nodes[contact.id]
+                    if contact.id == person.id:
+                        continue
+                    if ( contact_node["subgroup_contacts"][person_type] 
+                        < contact_node["max_contacts"][person_type]):
+                        G.add_edge(person.id, contact.id)
+                        person_node["subgroup_contacts"][contact_type] += 1
+                        contact_node["subgroup_contacts"][person_type] += 1
+
+                missing = (
+                    person_node["max_contacts"][contact_type]
+                    - person_node["subgroup_contacts"][contact_type]
+                )
+                missing_contacts += missing
+
+        nx.draw(G)
+        plt.show()
+                    
+        return G
+        
     def simulate_network_contacts(self, group: Group):
-        raise NotImplementedError
+        G = self.build_graph(group)
 
     def advance_step(self):
         print(self.simulator.timer.date)
@@ -330,11 +412,15 @@ class ContactTracker:
 
         for group_type in self.group_types:
             for group in group_type:
-                self.simulate_1d_contacts(group)
+                if self.interaction_type == "1d":
+                    self.simulate_1d_contacts(group)
+                elif self.interaction_type == "network":
+                    self.simulate_network_contacts(group)
+                
 
         next(self.simulator.timer)
 
-    def save_tracker(self, overwrite=True):
+    def save_tracker(self, overwrite=False):
         tracker = {
             "contact_counts" : self.contact_counts,
             "contact_matrices" : self.contact_matrices,
@@ -363,8 +449,6 @@ class ContactTracker:
 
         if save_tracker:
             self.save_tracker()
-
-        self.post_process_simulation()
 
     def convert_dict_to_df(self):
         self.contacts_df = pd.DataFrame.from_dict(self.contact_counts,orient="index")
@@ -466,21 +550,14 @@ class ContactTracker:
                 continue
             if contact_type == "global":
                 continue
-
-            if plotted > 6:
-                hatch="/"
-            else:
-                hatch=None
-
-            heights = average_contacts[contact_type]
-            
+            hatch = "/" if plotted > 6 else None
+            heights = average_contacts[contact_type]            
             label = " ".join(x for x in contact_type.split("_")) # Avoids idiotic latex error.
             ax.bar(
                 mids, heights, widths, bottom=lower,
                 hatch=hatch, label=label
             )
             plotted += 1
-
             lower = lower + heights
 
         if plot_real_data:
@@ -532,7 +609,9 @@ class ContactTracker:
 
 
 if __name__ == "__main__":
-    world_path = "../../../scripts/tests.hdf5"
+
+    world_name = "tests"
+    world_path = "../../../scripts/{world_name}.hdf5"
     world = generate_world_from_hdf5(world_path)
 
     max_age = 100
@@ -569,7 +648,7 @@ if __name__ == "__main__":
                 bin_type=rbt, contact_type=rct
             )
             mat_plot.plot()
-            plt.savefig(mat_dir / f"{rct}.png", dpi=150, bbox_inches='tight')
+            plt.savefig(mat_dir / f"{rct}_.png", dpi=150, bbox_inches='tight')
 
     plt.show()
 
