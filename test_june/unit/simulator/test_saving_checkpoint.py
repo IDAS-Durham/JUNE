@@ -17,7 +17,7 @@ from june.groups import Cemeteries
 from june.geography import Geography
 from june.geography import Areas
 from june.hdf5_savers import generate_world_from_hdf5
-from june.groups.travel import Travel, generate_commuting_network
+from june.groups.travel import Travel 
 from june.policy import Policies
 from june.interaction import Interaction
 from june.simulator import Simulator

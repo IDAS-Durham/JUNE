@@ -1,4 +1,4 @@
-number_of_stations: # each city also acts like an station for internal commuters.
+number_of_inter_city_stations: # each city also acts like an station for internal commuters.
   "Birmingham": 4
   "Bristol": 4
   "Brighton and Hove": 4

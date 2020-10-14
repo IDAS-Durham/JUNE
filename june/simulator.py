@@ -500,6 +500,7 @@ class Simulator:
                             n_infected,
                             # TODO: p=np.array(transmission_probabilities) / tprob_norm,
                         )
+                        print(group.spec)
                         self.record.accumulate(
                             table_name="infections",
                             location_spec=group.spec,
