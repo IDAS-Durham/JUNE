@@ -32,7 +32,7 @@ def make_commuting_network(geo):
         people.append(person)
     world.people = Population(people)
     travel = Travel()
-    travel.initialise_commute(world)
+    travel.initialise_commute(world, maximum_number_commuters_per_city=200000)
     return world, travel
 
 
