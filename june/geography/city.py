@@ -228,7 +228,7 @@ class ExternalCity(ExternalGroup):
         if len(self.city_transports) == 0:
             return
         if person.id in self.commuter_ids:
-            return self.city_transports[randint(0, len(self.city_transports) - 1)][0]
+            return self.city_transports[randint(0, len(self.city_transports) - 1)]
         else:
             closest_station = person.super_area.closest_station_for_city[self.name]
             if person.id in closest_station.commuter_ids:
