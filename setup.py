@@ -20,7 +20,7 @@ scripts = glob("scripts/*.py") + glob("scripts/*.sh")
 
 setup(
         name="june",
-        version="0.2.0.3",
+        version="0.2.0.4",
         description="The most amazing covid simulation",
         url="https://github.com/idas-durham/june",
         long_description_content_type='text/markdown',

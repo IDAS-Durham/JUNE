@@ -85,7 +85,7 @@ def create_world():
     return world
 
 
-def run_simulator(selector):
+def run_simulator(selector, test_results):
     world = create_world()
     interaction = Interaction.from_file(config_filename=config_interaction)
     policies = Policies([])
@@ -96,7 +96,7 @@ def run_simulator(selector):
         config_filename=test_config,
         leisure=None,
         policies=policies,
-        checkpoint_path='checkpoint_tests',
+        checkpoint_path=test_results / 'checkpoint_tests',
     )
     seed = InfectionSeed(sim.world, selector)
     seed.unleash_virus(sim.world.people, n_cases=50)
@@ -105,10 +105,10 @@ def run_simulator(selector):
 
 
 class TestCheckpoints:
-    def test__checkpoints_are_saved(self, selector):
-        checkpoint_folder = Path("checkpoint_tests")
+    def test__checkpoints_are_saved(self, selector, test_results):
+        checkpoint_folder = Path(test_results / "checkpoint_tests")
         checkpoint_folder.mkdir(exist_ok=True, parents=True)
-        sim = run_simulator(selector)
+        sim = run_simulator(selector, test_results)
         assert len(sim.world.people.infected) > 0
         assert len(sim.world.people.recovered) > 0
         assert len(sim.world.people.susceptible) > 0
@@ -118,7 +118,7 @@ class TestCheckpoints:
         policies = Policies([])
         sim_recovered = Simulator.from_checkpoint(
             world=fresh_world,
-            checkpoint_path="checkpoint_tests/checkpoint_2020-03-25.hdf5",
+            checkpoint_path=checkpoint_folder / "checkpoint_2020-03-25.hdf5",
             interaction=interaction,
             infection_selector=selector,
             config_filename=test_config,
