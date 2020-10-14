@@ -20,6 +20,7 @@ earth_radius = 6371  # km
 
 logger = logging.getLogger(__name__)
 
+
 def _haversine_distance(origin, destination):
     """
     Taken from https://gist.github.com/rochacbruno/2883505
@@ -63,17 +64,15 @@ def _add_distance_to_lat_lon(latitude, longitude, distance, bearing):
     return lat2, lon2
 
 
-
 class Station:
     """
-    This represents a railway station (like King's Cross).
+    This represents a general station.
     """
+
     external = False
     _id = count()
 
-    def __init__(
-        self, city: str = None, super_area: SuperArea = None
-    ):
+    def __init__(self, city: str = None, super_area: SuperArea = None):
         self.id = next(self._id)
         self.commuter_ids = set()
         self.city = city
@@ -83,31 +82,41 @@ class Station:
     def coordinates(self):
         return self.super_area.coordinates
 
+
 class CityStation(Station):
     """
     This is a city station for internal commuting
     """
-    def __init__(self, city: str = None, super_areas: SuperArea = None):
-        super().__init__(city=city, super_areas=super_areas)
+
+    def __init__(self, city: str = None, super_area: SuperArea = None):
+        super().__init__(city=city, super_area=super_area)
         self.city_transports = []
 
+    @property
+    def n_city_transports(self):
+        return len(self.city_transports)
+
     def get_commute_subgroup(self):
-        return self.city_transports[
-            randint(0, len(self.city_transports) - 1)
-        ][0]
+        return self.city_transports[randint(0, self.n_city_transports - 1)][0]
+
 
 class InterCityStation(Station):
     """
     This is an inter-city station for inter-city commuting
     """
-    def __init__(self, city: str = None, super_areas: SuperArea = None):
-        super().__init__(city=city, super_areas=super_areas)
-        self.city_transports = []
+
+    def __init__(self, city: str = None, super_area: SuperArea = None):
+        super().__init__(city=city, super_area=super_area)
+        self.inter_city_transports = []
+
+    @property
+    def n_inter_city_transports(self):
+        return len(self.inter_city_transports)
 
     def get_commute_subgroup(self):
-        return self.city_transports[
-            randint(0, len(self.city_transports) - 1)
-        ][0]
+        return self.inter_city_transports[randint(0, self.n_inter_city_transports - 1)][
+            0
+        ]
 
 
 class Stations(Supergroup):
@@ -123,6 +132,7 @@ class Stations(Supergroup):
     def from_city_center(
         cls,
         city: City,
+        type: str,
         super_areas: SuperAreas,
         number_of_stations: int = 4,
         distance_to_city_center: int = 20,
@@ -152,10 +162,12 @@ class Stations(Supergroup):
             )
             angle += delta_angle
             super_area = super_areas.get_closest_super_area(np.array(station_position))
-            station = Station(
-                city=city.name,
-                super_area=super_area,
-            )
+            if type == "city_station":
+                station = CityStation(city=city.name, super_area=super_area,)
+            elif type == "inter_city_station":
+                station = InterCityStation(city=city.name, super_area=super_area,)
+            else:
+                raise ValueError
             stations.append(station)
         return cls(stations)
 
@@ -175,20 +187,46 @@ class Stations(Supergroup):
         super_areas = [self[idx] for idx in indcs[:, 0]]
         return super_areas[0]
 
-class ExternalStation(ExternalGroup):
-    """
-    This a station that lives outside the simulated domain.
-    """
-    __slots__ = "commuter_ids", "inter_city_transports", "super_area"
-    external = True
-    def __init__(self, id, domain_id, commuter_ids = None):
-        super().__init__(spec="station", domain_id=domain_id, id=id)
-        self.commuter_ids = commuter_ids
-        self.inter_city_transports = None
-        self.super_area = None
 
-    def get_commute_subgroup(self, person):
-        group = self.inter_city_transports[
-            randint(0, len(self.inter_city_transports) - 1)
-        ]
+class ExternalStation(ExternalGroup):
+    external = True
+
+    def __init__(self, id: int, domain_id: int, city: str = None):
+        super().__init__(spec="station", domain_id=domain_id, id=id)
+        self.commuter_ids = set()
+        self.city = city
+
+    @property
+    def coordinates(self):
+        return self.super_area.coordinates
+
+    def get_commute_subgroup(self):
+        raise NotImplementedError
+
+
+class ExternalCityStation(ExternalStation):
+    """
+    This an external city station that lives outside the simulated domain.
+    """
+
+    def __init__(self, id: int, domain_id: int, city: str = None):
+        super().__init__(id=id, domain_id=domain_id, city=city)
+        self.city_transports = []
+
+    def get_commute_subgroup(self):
+        group = self.city_transports[randint(0, self.n_city_transports - 1)]
+        return ExternalSubgroup(group=group, subgroup_type=0)
+
+
+class ExternalInterCityStation(ExternalStation):
+    """
+    This an external city station that lives outside the simulated domain.
+    """
+
+    def __init__(self, id: int, domain_id: int, city: str = None):
+        super().__init__(id=id, domain_id=domain_id, city=city)
+        self.inter_city_transports = []
+
+    def get_commute_subgroup(self):
+        group = self.inter_city_transports[randint(0, self.n_inter_city_transports - 1)]
         return ExternalSubgroup(group=group, subgroup_type=0)

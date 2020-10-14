@@ -154,10 +154,14 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
         )
     if "cities" in f_keys:
         logger.info("loading cities...")
-        world.cities, world.city_transports = load_cities_from_hdf5(file_path)
+        world.cities = load_cities_from_hdf5(file_path)
     if "stations" in f_keys:
         logger.info("loading stations...")
-        world.stations, world.inter_city_transports = load_stations_from_hdf5(file_path)
+        (
+            world.stations,
+            world.inter_city_transports,
+            world.city_transports,
+        ) = load_stations_from_hdf5(file_path)
     if "households" in f_keys:
         world.households = load_households_from_hdf5(file_path, chunk_size=chunk_size)
     if "population" in f_keys:
@@ -288,14 +292,18 @@ def generate_domain_from_hdf5(
         )
     if "cities" in f_keys:
         logger.info("loading cities...")
-        domain.cities, domain.city_transports = load_cities_from_hdf5(
+        domain.cities = load_cities_from_hdf5(
             file_path=file_path,
             domain_super_areas=super_area_ids,
             super_areas_to_domain_dict=super_areas_to_domain_dict,
         )
     if "stations" in f_keys:
         logger.info("loading stations...")
-        domain.stations, domain.inter_city_transports = load_stations_from_hdf5(
+        (
+            domain.stations,
+            domain.inter_city_transports,
+            domain.city_transports,
+        ) = load_stations_from_hdf5(
             file_path,
             domain_super_areas=super_area_ids,
             super_areas_to_domain_dict=super_areas_to_domain_dict,

@@ -116,13 +116,13 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
             region_names.append(region.name)
         cities = []
         stations = []
-        for key, value in super_area.closest_station_for_city.items():
+        for key, value in super_area.closest_inter_city_station_for_city.items():
             cities.append(key.encode("ascii", "ignore"))
             stations.append(value.id)
         super_area_closest_stations_cities.append(cities)
         super_area_closest_stations_stations.append(stations)
         super_area_closest_stations_lengths.append(
-            len(super_area.closest_station_for_city)
+            len(super_area.closest_inter_city_station_for_city)
         )
 
     area_ids = np.array(area_ids, dtype=np.int)
