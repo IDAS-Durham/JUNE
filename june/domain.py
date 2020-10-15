@@ -3,6 +3,7 @@ from typing import List
 from itertools import count, chain
 from sklearn.cluster import KMeans
 from sklearn.neighbors import KDTree
+from collections import defaultdict
 import pandas as pd
 import logging
 import h5py
@@ -96,6 +97,59 @@ class DomainSplitter:
         if self.super_area_names is None:
             self.super_area_names = self.super_area_centroids.index.values
         self.super_area_centroids = self.super_area_centroids.loc[self.super_area_names]
+        self.score_per_super_area = self.get_scores_per_super_area(world_path)
+        self.average_score_per_domain = (
+            sum(self.score_per_super_area.values()) / number_of_domains
+        )
+        self.super_areas_sorted = self._sort_super_areas_by_score()
+
+    def get_scores_per_super_area(self, world_path):
+        people_weight = 3
+        workers_weight = 1
+        commute_weight = 3
+        ret = defaultdict(float)
+        with h5py.File(world_path, "r") as f:
+            geography_dset = f["geography"]
+            super_area_names = geography_dset["super_area_name"][:]
+            super_area_ids = geography_dset["super_area_id"][:]
+            super_area_names = [name.decode() for name in super_area_names]
+            super_area_id_to_name = {
+                key: value for key, value in zip(super_area_ids, super_area_names)
+            }
+            stations_dset = f["stations"]
+            for station_super_area, station_commuters in zip(
+                stations_dset["super_area"], stations_dset["commuters"]
+            ):
+                ret[super_area_id_to_name[station_super_area]] += commute_weight * len(
+                    station_commuters
+                )
+            for super_area_name, n_people, n_workers in zip(
+                geography_dset["super_area_name"],
+                geography_dset["super_area_n_people"],
+                geography_dset["super_area_n_workers"],
+            ):
+                ret[super_area_name.decode()] += (
+                    people_weight * n_people + workers_weight * n_workers
+                )
+        return ret
+
+    def _sort_super_areas_by_score(self):
+        super_area_scores = [
+            self.score_per_super_area[super_area]
+            for super_area in self.super_area_names
+        ]
+        return [
+            self.super_area_names[idx] for idx in np.argsort(super_area_scores)[::-1]
+        ]
+
+    def get_score_per_domain(self, super_areas_per_domain):
+        ret = defaultdict(float)
+        for key, value in super_areas_per_domain.items():
+            score = 0
+            for sa in value:
+                score += self.score_per_super_area[sa]
+            ret[key] = score
+        return ret
 
     def _get_kmeans_centroids(self):
         X = np.array(
@@ -141,31 +195,33 @@ class DomainSplitter:
 
     def assign_super_areas_to_centroids(self, domain_centroids):
         kdtree_centroids = self._initialise_kdtree(domain_centroids)
-        furthest_super_areas = self._get_furthest_super_areas(
-            domain_centroids, kdtree_centroids
-        )
-        n_super_areas_per_centroid = np.ceil(
-            len(self.super_area_names) / len(domain_centroids)
-        )
-        occupany_per_centroid = {
+        score_per_domain = {
             centroid_id: 0 for centroid_id in range(len(domain_centroids))
         }
         super_areas_per_domain = {
             centroid_id: [] for centroid_id in range(len(domain_centroids))
         }
         total = 0
-        for super_area_name in furthest_super_areas:
-            closest_centroid_ids = self._get_closest_centroid_ids(
-                kdtree_centroids,
-                self.super_area_centroids.loc[super_area_name, ["X", "Y"]].values,
-                domain_centroids,
-            )
-            for centroid_id in closest_centroid_ids:
-                if occupany_per_centroid[centroid_id] < n_super_areas_per_centroid:
-                    occupany_per_centroid[centroid_id] += 1
-                    super_areas_per_domain[centroid_id].append(super_area_name)
-                    total += 1
-                    break
+        flagged = np.zeros(len(self.super_area_names))
+        for tolerance in [0.0, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, np.inf]:
+            for i, super_area_name in enumerate(self.super_areas_sorted):
+                if flagged[i]:
+                    continue
+                super_area_score = self.score_per_super_area[super_area_name]
+                closest_centroid_ids = self._get_closest_centroid_ids(
+                    kdtree_centroids,
+                    self.super_area_centroids.loc[super_area_name, ["X", "Y"]].values,
+                    domain_centroids,
+                )
+                for centroid_id in closest_centroid_ids:
+                    if score_per_domain[centroid_id] < self.average_score_per_domain * (
+                        1 + tolerance
+                    ):
+                        score_per_domain[centroid_id] += super_area_score
+                        super_areas_per_domain[centroid_id].append(super_area_name)
+                        total += 1
+                        flagged[i] = 1
+                        break
         assert total == len(self.super_area_names)
         return super_areas_per_domain
 
@@ -179,15 +235,20 @@ class DomainSplitter:
             centroids.append(centroid)
         return np.array(centroids)
 
-    def generate_domain_split(self, niter=15):
+    def _domain_split_iteration(self, domain_centroids):
+        super_areas_per_domain = self.assign_super_areas_to_centroids(domain_centroids)
+        domain_centroids = self.compute_domain_centroids(super_areas_per_domain)
+        return domain_centroids
+
+    def iterate_domain_split(self, domain_centroids, niter=20):
         # first make an initial guess with KMeans.
-        domain_centroids = self._get_kmeans_centroids()
         for i in range(niter):
-            logger.info(f"Domain splitter -- iteration {i+1} of {niter}")
-            super_areas_per_domain = self.assign_super_areas_to_centroids(
-                domain_centroids
-            )
-            domain_centroids = self.compute_domain_centroids(super_areas_per_domain)
+            if i % 5 == 0:
+                logger.info(f"Domain splitter -- iteration {i+1} of {niter}")
+            domain_centroids = self._domain_split_iteration(domain_centroids)
+        return domain_centroids
+
+    def generate_split_from_centroids(self, domain_centroids):
         # assign each to closest
         super_areas_per_domain = {
             centroid_id: [] for centroid_id in range(len(domain_centroids))
@@ -199,4 +260,10 @@ class DomainSplitter:
                 self.super_area_centroids.loc[super_area_name, ["X", "Y"]].values,
             )
             super_areas_per_domain[closest_centroid_id].append(super_area_name)
+        return super_areas_per_domain
+
+    def generate_domain_split(self, niter=20):
+        initial_centroids = self._get_kmeans_centroids()
+        domain_centroids = self.iterate_domain_split(initial_centroids, niter=niter)
+        super_areas_per_domain = self.generate_split_from_centroids(domain_centroids)
         return super_areas_per_domain
