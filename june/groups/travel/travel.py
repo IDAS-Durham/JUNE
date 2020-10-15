@@ -192,7 +192,7 @@ class Travel:
                     super_areas=world.super_areas,
                     number_of_stations=n_inter_city_stations,
                     type="inter_city_station",
-                    distance_to_city_center=40,
+                    distance_to_city_center=10,
                 )
                 city.inter_city_stations._construct_ball_tree()
                 world.stations += city.inter_city_stations
@@ -207,7 +207,7 @@ class Travel:
                     super_areas=world.super_areas,
                     number_of_stations=n_city_stations,
                     type="city_station",
-                    distance_to_city_center=10,
+                    distance_to_city_center=5,
                 )
                 city.city_stations._construct_ball_tree()
                 world.stations += city.city_stations

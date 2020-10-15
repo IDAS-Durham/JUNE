@@ -39,28 +39,13 @@ def _haversine_distance(origin, destination):
     return d
 
 
-def _add_distance_to_lat_lon(latitude, longitude, distance, bearing):
+def _add_distance_to_lat_lon(latitude, longitude, x, y):
     """
-    Given a latitude and a longitude (in degrees), a distance (IN KM), and a bearing (IN RADIANS),
-    returns the new latitude and longitude (in degrees) given by the displacement.
-
-    Taken from https://stackoverflow.com/questions/7222382/get-lat-long-given-current-point-distance-and-bearing
+    Given a latitude and a longitude (in degrees), and two distances (x, y) in km, adds those distances
+    to lat and lon
     """
-    lat1 = math.radians(latitude)  # Current lat point converted to radians
-    lon1 = math.radians(longitude)  # Current long point converted to radians
-
-    lat2 = math.asin(
-        math.sin(lat1) * math.cos(distance / earth_radius)
-        + math.cos(lat1) * math.sin(distance / earth_radius) * math.cos(bearing)
-    )
-
-    lon2 = lon1 + math.atan2(
-        math.sin(bearing) * math.sin(distance / earth_radius) * math.cos(lat1),
-        math.cos(distance / earth_radius) - math.sin(lat1) * math.sin(lat2),
-    )
-
-    lat2 = math.degrees(lat2)
-    lon2 = math.degrees(lon2)
+    lat2 = latitude + 180 * y / (earth_radius * np.pi)
+    lon2 = longitude + 180 * x / (earth_radius * np.pi * np.cos(latitude))
     return lat2, lon2
 
 
@@ -160,15 +145,19 @@ class Stations(Supergroup):
         stations = []
         angle = 0
         delta_angle = 2 * np.pi / number_of_stations
+        x = distance_to_city_center
+        y = 0
         city_coordinates = city.coordinates
         for i in range(number_of_stations):
             station_position = _add_distance_to_lat_lon(
                 city_coordinates[0],
                 city_coordinates[1],
-                distance_to_city_center,
-                angle,
+                x=x,
+                y=y
             )
             angle += delta_angle
+            x = distance_to_city_center * np.cos(angle)
+            y = distance_to_city_center * np.sin(angle)
             super_area = super_areas.get_closest_super_area(np.array(station_position))
             if type == "city_station":
                 station = CityStation(city=city.name, super_area=super_area,)
