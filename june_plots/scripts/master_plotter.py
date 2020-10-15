@@ -211,6 +211,11 @@ class Plotter:
         company_sectors_plot.plot()
         plt.savefig(save_dir / 'company_sectors.png', dpi=150, bbox_inches='tight')
 
+        print ("Plotting sector by sex")
+        sectors_by_sex_plot = company_plots.plot_sector_by_sex()
+        sectors_by_sex_plot.plot()
+        plt.savefig(save_dir / 'sectors_by_sex.png', dpi=150, bbox_inches='tight')
+
         print ("Plotting work distance travel")
         work_distance_travel_plot = company_plots.plot_work_distance_travel()
         work_distance_travel_plot.plot()

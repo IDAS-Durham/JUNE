@@ -6,6 +6,7 @@ import argparse
 import os
 import mpu
 import matplotlib.pyplot as plt
+from collections import defaultdict
 
 from june import paths
 
@@ -14,6 +15,9 @@ default_size_nr_file = (
 )
 default_sector_nr_per_msoa_file = (
     paths.data_path / "input/companies/company_sector_2011.csv"
+)
+default_sex_per_sector_per_superarea_file = (
+    paths.data_path / "input/work/industry_by_sex_ew.csv"
 )
 
 class CompanyPlots:
@@ -141,6 +145,73 @@ class CompanyPlots:
 
         return ax
 
+    def plot_sector_by_sex(
+            self,
+            sector_by_sex_filename = default_sex_per_sector_per_superarea_file,
+    )
+        "Plotting sector by sex distributions"
+
+        sex_per_sector = pd.read_csv(sector_by_sex_filename)
+
+        areas = []
+        for area in world.areas:
+            areas.append(area.name)
+
+        sex_per_sector = sex_per_sector[sex_per_sector['oareas'].isin(areas)]
+
+        JUNE_male_dict = defaultdict(int)
+        JUNE_female_dict = defaultdict(int)
+        for person in world.people:
+            if person.sector is not None:
+                if person.sex == 'f':
+                    JUNE_female_dict[person.sector] += 1
+                else:
+                    JUNE_male_dict[person.sector] += 1
+
+        m_columns = [col for col in sex_per_sector.columns.values if "m " in col]
+        m_columns.remove("m all")
+        m_columns.remove("m R S T U")
+        f_columns = [col for col in sex_per_sector.columns.values if "f " in col]
+        f_columns.remove("f all")
+        f_columns.remove("f R S T U")
+
+        male_dict = defaultdict(int)
+        female_dict = defaultdict(int)
+        for column in m_columns:
+            male_dict[column.split(' ')[1]] = np.sum(sex_per_sector[column])
+        for column in f_columns:
+            female_dict[column.split(' ')[1]] = np.sum(sex_per_sector[column])
+
+        sector_dict = {
+                    (idx + 1): col.split(" ")[-1] for idx, col in enumerate(m_columns)
+                }
+
+        sectors = []
+        male_sector = []
+        female_sector = []
+        JUNE_male_sector = []
+        JUNE_female_sector = []
+        for key in sector_dict:
+            sectors.append(sector_dict[key])
+            male_sector.append(male_dict[sector_dict[key]])
+            female_sector.append(female_dict[sector_dict[key]])
+            JUNE_male_sector.append(JUNE_male_dict[sector_dict[key]])
+            JUNE_female_sector.append(JUNE_female_dict[sector_dict[key]])
+
+        x = np.arange(len(sectors))
+        width = 0.35
+
+        f, ax = plt.subplots()
+        ax.bar(x+width/2, JUNE_female_sector, width, alpha=0.7, label='Female')
+        ax.bar(x-width/2, JUNE_male_sector, width, label='Male')
+        ax.set_ylabel('Frequency')
+        ax.set_xlabel('Company sector')
+        ax.set_xticks(x)
+        ax.set_xticklabels(sectors)
+        ax.legend()
+
+        return ax
+            
     def plot_work_distance_travel(self):
         "Plotting distance travelled to work by sex"
 
