@@ -230,7 +230,7 @@ class ExternalInterCityStation(ExternalStation):
 
     @property
     def n_inter_city_transports(self):
-        return len(self.city_transports)
+        return len(self.inter_city_transports)
 
     def get_commute_subgroup(self):
         group = self.inter_city_transports[randint(0, self.n_inter_city_transports - 1)]
