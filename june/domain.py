@@ -101,8 +101,12 @@ class DomainSplitter:
         self.average_score_per_domain = (
             sum(self.score_per_super_area.values()) / number_of_domains
         )
+        self.super_areas_sorted = self._sort_super_areas_by_score()
 
     def get_scores_per_super_area(self, world_path):
+        people_weight = 3
+        workers_weight = 1
+        commute_weight = 3
         ret = defaultdict(float)
         with h5py.File(world_path, "r") as f:
             geography_dset = f["geography"]
@@ -116,7 +120,7 @@ class DomainSplitter:
             for station_super_area, station_commuters in zip(
                 stations_dset["super_area"], stations_dset["commuters"]
             ):
-                ret[super_area_id_to_name[station_super_area]] += 0.2 * len(
+                ret[super_area_id_to_name[station_super_area]] += commute_weight * len(
                     station_commuters
                 )
             for super_area_name, n_people, n_workers in zip(
@@ -124,8 +128,19 @@ class DomainSplitter:
                 geography_dset["super_area_n_people"],
                 geography_dset["super_area_n_workers"],
             ):
-                ret[super_area_name.decode()] += 0.6 * n_people + 0.2 * n_workers
+                ret[super_area_name.decode()] += (
+                    people_weight * n_people + workers_weight * n_workers
+                )
         return ret
+
+    def _sort_super_areas_by_score(self):
+        super_area_scores = [
+            self.score_per_super_area[super_area]
+            for super_area in self.super_area_names
+        ]
+        return [
+            self.super_area_names[idx] for idx in np.argsort(super_area_scores)[::-1]
+        ]
 
     def get_score_per_domain(self, super_areas_per_domain):
         ret = defaultdict(float)
@@ -180,9 +195,6 @@ class DomainSplitter:
 
     def assign_super_areas_to_centroids(self, domain_centroids):
         kdtree_centroids = self._initialise_kdtree(domain_centroids)
-        furthest_super_areas = self._get_furthest_super_areas(
-            domain_centroids, kdtree_centroids
-        )
         score_per_domain = {
             centroid_id: 0 for centroid_id in range(len(domain_centroids))
         }
@@ -190,9 +202,9 @@ class DomainSplitter:
             centroid_id: [] for centroid_id in range(len(domain_centroids))
         }
         total = 0
-        flagged = np.zeros(len(furthest_super_areas))
-        for tolerance in [0., 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, np.inf]:
-            for i, super_area_name in enumerate(furthest_super_areas):
+        flagged = np.zeros(len(self.super_area_names))
+        for tolerance in [0.0, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, np.inf]:
+            for i, super_area_name in enumerate(self.super_areas_sorted):
                 if flagged[i]:
                     continue
                 super_area_score = self.score_per_super_area[super_area_name]
@@ -202,9 +214,7 @@ class DomainSplitter:
                     domain_centroids,
                 )
                 for centroid_id in closest_centroid_ids:
-                    if score_per_domain[
-                        centroid_id
-                    ] + super_area_score < self.average_score_per_domain * (
+                    if score_per_domain[centroid_id] < self.average_score_per_domain * (
                         1 + tolerance
                     ):
                         score_per_domain[centroid_id] += super_area_score
