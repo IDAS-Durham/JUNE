@@ -1,11 +1,13 @@
 import numpy as np
 import h5py
+import pytest
 from collections import defaultdict
 from itertools import count
 from june.groups.leisure import generate_leisure_for_world, Pubs, Groceries, Cinemas
 from june.demography import Demography, Person, Population
 from june.geography import Geography, Area, SuperArea
-from june.groups.travel import generate_commuting_network, Travel
+from june.geography.station import CityStation, InterCityStation
+from june.groups.travel import Travel, CityTransport, InterCityTransport
 from june.groups import (
     Households,
     Companies,
@@ -49,6 +51,11 @@ from june.hdf5_savers import (
 from june import paths
 
 from pytest import fixture
+
+@pytest.fixture(autouse=True)
+def remove_hdf5(test_results):
+    with h5py.File(test_results / "test.hdf5", "w"):
+        pass
 
 
 class TestSavePeople:
@@ -243,41 +250,56 @@ class TestSaveTravel:
         city_transports = full_world.city_transports
         assert len(cities) > 0
         save_cities_to_hdf5(cities, test_results / "test.hdf5")
-        cities_recovered, city_transports_recovered = load_cities_from_hdf5(
+        cities_recovered = load_cities_from_hdf5(
             test_results / "test.hdf5"
         )
         assert len(cities) == len(cities_recovered)
-        assert len(city_transports) == len(city_transports_recovered)
         for city, city_recovered in zip(cities, cities_recovered):
             assert city.name == city_recovered.name
             for sa1, sa2 in zip(city.super_areas, city_recovered.super_areas):
                 assert sa1 == sa2
             assert city.coordinates[0] == city_recovered.coordinates[0]
             assert city.coordinates[1] == city_recovered.coordinates[1]
-            assert len(city.city_transports) == len(city_recovered.city_transports)
-            for ct1, ct2 in zip(city.city_transports, city_recovered.city_transports):
-                assert ct1.id == ct2.id
 
     def test__save_stations(self, full_world, test_results):
         stations = full_world.stations
         inter_city_transports = full_world.inter_city_transports
         assert len(stations) > 0
         save_stations_to_hdf5(stations, test_results / "test.hdf5")
-        stations_recovered, inter_city_transports_recovered = load_stations_from_hdf5(
-            test_results / "test.hdf5"
-        )
+        (
+            stations_recovered,
+            inter_city_transports_recovered,
+            city_transports_recovered,
+        ) = load_stations_from_hdf5(test_results / "test.hdf5")
         assert len(stations) == len(stations_recovered)
         assert len(inter_city_transports) == len(inter_city_transports_recovered)
         for station, station_recovered in zip(stations, stations_recovered):
             assert station.id == station_recovered.id
             assert station.city == station_recovered.city
-            assert len(station.inter_city_transports) == len(
-                station_recovered.inter_city_transports
-            )
-            for ict1, ict2 in zip(
-                station.inter_city_transports, station_recovered.inter_city_transports
-            ):
-                assert ict1.id == ict2.id
+            if isinstance(station, CityStation):
+                assert isinstance(station_recovered, CityStation)
+                assert len(station.city_transports) == len(
+                    station_recovered.city_transports
+                )
+                for ct1, ct2 in zip(
+                    station.city_transports, station_recovered.city_transports
+                ):
+                    assert isinstance(ct1, CityTransport)
+                    assert isinstance(ct2, CityTransport)
+                    assert ct1.id == ct2.id
+            else:
+                assert isinstance(station, InterCityStation)
+                assert isinstance(station_recovered, InterCityStation)
+                assert len(station.inter_city_transports) == len(
+                    station_recovered.inter_city_transports
+                )
+                for ict1, ict2 in zip(
+                    station.inter_city_transports,
+                    station_recovered.inter_city_transports,
+                ):
+                    assert isinstance(ict1, InterCityTransport)
+                    assert isinstance(ict2, InterCityTransport)
+                    assert ict1.id == ict2.id
 
 
 class TestSaveUniversities:
@@ -443,9 +465,15 @@ class TestSaveWorld:
                 has_city = True
                 assert sa1.city.id == sa2.city.id
                 assert sa1.city.name == sa2.city.name
-            for city, closest_station in sa1.closest_station_for_city.items():
-                assert city in sa2.closest_station_for_city
-                assert sa2.closest_station_for_city[city].id == closest_station.id
+            for (
+                city,
+                closest_station,
+            ) in sa1.closest_inter_city_station_for_city.items():
+                assert city in sa2.closest_inter_city_station_for_city
+                assert (
+                    sa2.closest_inter_city_station_for_city[city].id
+                    == closest_station.id
+                )
         assert has_city
 
     def test__care_home_area(self, full_world, full_world_loaded):
@@ -494,11 +522,20 @@ class TestSaveWorld:
         )
         for city1, city2 in zip(full_world.cities, full_world_loaded.cities):
             assert city1.name == city2.name
-            assert len(city1.commuter_ids) == len(city2.commuter_ids)
-            assert city1.commuter_ids == city2.commuter_ids
-            assert len(city1.stations) == len(city2.stations)
+            assert len(city1.internal_commuter_ids) == len(city2.internal_commuter_ids)
+            assert city1.internal_commuter_ids == city2.internal_commuter_ids
             assert city1.super_area.id == city2.super_area.id
-            for station1, station2 in zip(city1.stations, city2.stations):
+            assert len(city1.inter_city_stations) == len(city2.inter_city_stations)
+            for station1, station2 in zip(
+                city1.inter_city_stations, city2.inter_city_stations
+            ):
+                assert station1.id == station2.id
+                assert station1.super_area.id == station2.super_area.id
+                assert len(station1.commuter_ids) == len(station2.commuter_ids)
+                assert station1.commuter_ids == station2.commuter_ids
+            assert len(city1.city_stations) == len(city2.city_stations)
+            for station1, station2 in zip(city1.city_stations, city2.city_stations):
+                assert station1.id == station2.id
                 assert station1.super_area.id == station2.super_area.id
                 assert len(station1.commuter_ids) == len(station2.commuter_ids)
                 assert station1.commuter_ids == station2.commuter_ids

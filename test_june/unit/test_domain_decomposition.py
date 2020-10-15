@@ -2,6 +2,7 @@ import pytest
 
 from june.domain import Domain
 from june.groups import Subgroup, ExternalSubgroup, ExternalGroup
+from june.geography.station import CityStation, InterCityStation
 
 available_groups = [
     "companies",
@@ -110,7 +111,7 @@ class TestDomainDecomposition:
                             )
 
     def test__hospitals(self, domains_world, domains):
-        assert len(domains_world.hospitals)> 0 
+        assert len(domains_world.hospitals) > 0
         for hospital in domains_world.hospitals:
             for domain in domains:
                 assert len(domain.hospitals) == len(domains_world.hospitals)
@@ -119,14 +120,19 @@ class TestDomainDecomposition:
                     for hospital_domain in domain.hospitals:
                         if hospital.id == hospital_domain.id:
                             assert hospital_domain.external is False
-                            assert hospital.super_area.id == hospital_domain.super_area.id
-                            assert hospital.trust_code == hospital_domain.trust_code 
-                            assert hospital.region_name == hospital_domain.region_name 
+                            assert (
+                                hospital.super_area.id == hospital_domain.super_area.id
+                            )
+                            assert hospital.trust_code == hospital_domain.trust_code
+                            assert hospital.region_name == hospital_domain.region_name
                         else:
                             for hospital_domain in domain.hospitals:
                                 if hospital_domain.id == domain.hospitals.id:
                                     assert hospital_domain.external
-                                    assert hospital.region_name == hospital_domain.region_name 
+                                    assert (
+                                        hospital.region_name
+                                        == hospital_domain.region_name
+                                    )
 
     def test__stations_and_cities(self, domains_world, domains):
         assert len(domains_world.cities) > 0
@@ -143,26 +149,19 @@ class TestDomainDecomposition:
                             assert city_domain.external is False
                             assert city.super_area.id == city_domain.super_area.id
                             assert city.name == city_domain.name
-                            assert len(city.city_transports) == len(
-                                city_domain.city_transports
+                            assert (
+                                city.internal_commuter_ids
+                                == city_domain.internal_commuter_ids
                             )
-                            for ct1, ct2 in zip(
-                                city.city_transports, city_domain.city_transports
-                            ):
-                                assert ct2.external is False
-                                assert ct1.id == ct2.id
-                            assert city.commuter_ids == city_domain.commuter_ids
                             break
                 else:
                     for city_domain in domain.cities:
                         if city.id == city_domain.id:
                             assert city_domain.external
-                            for ct1, ct2 in zip(
-                                city.city_transports, city_domain.city_transports
-                            ):
-                                assert ct2.external
-                                assert ct1.id == ct2.id
-                            assert city.commuter_ids == city_domain.commuter_ids
+                            assert (
+                                city.internal_commuter_ids
+                                == city_domain.internal_commuter_ids
+                            )
                             break
 
         for station in domains_world.stations:
@@ -172,11 +171,13 @@ class TestDomainDecomposition:
                 if station.super_area.id in domain_super_area_ids:
                     for super_area in domain.super_areas:
                         if (
-                            super_area.closest_station_for_city[station.city].id
+                            super_area.closest_inter_city_station_for_city[
+                                station.city
+                            ].id
                             == station.id
                         ):
                             assert (
-                                super_area.closest_station_for_city[
+                                super_area.closest_inter_city_station_for_city[
                                     station.city
                                 ].external
                                 is False
@@ -185,25 +186,38 @@ class TestDomainDecomposition:
                         if station.id == station_domain.id:
                             assert station_domain.external is False
                             assert station.super_area.id == station_domain.super_area.id
-                            assert len(station.inter_city_transports) == len(
-                                station_domain.inter_city_transports
-                            )
-                            for ct1, ct2 in zip(
-                                station.inter_city_transports,
-                                station_domain.inter_city_transports,
-                            ):
-                                assert ct2.external is False
-                                assert ct1.id == ct2.id
+                            if isinstance(station, InterCityStation):
+                                assert len(station.inter_city_transports) == len(
+                                    station_domain.inter_city_transports
+                                )
+                                for ct1, ct2 in zip(
+                                    station.inter_city_transports,
+                                    station_domain.inter_city_transports,
+                                ):
+                                    assert ct2.external is False
+                                    assert ct1.id == ct2.id
+                            else:
+                                assert len(station.city_transports) == len(
+                                    station_domain.city_transports
+                                )
+                                for ct1, ct2 in zip(
+                                    station.city_transports,
+                                    station_domain.city_transports,
+                                ):
+                                    assert ct2.external is False
+                                    assert ct1.id == ct2.id
                             assert station.commuter_ids == station_domain.commuter_ids
                             break
                 else:
                     for super_area in domain.super_areas:
                         if (
-                            super_area.closest_station_for_city[station.city].id
+                            super_area.closest_inter_city_station_for_city[
+                                station.city
+                            ].id
                             == station.id
                         ):
                             assert (
-                                super_area.closest_station_for_city[
+                                super_area.closest_inter_city_station_for_city[
                                     station.city
                                 ].external
                                 is True
@@ -211,11 +225,19 @@ class TestDomainDecomposition:
                     for station_domain in domain.stations:
                         if station.id == station_domain.id:
                             assert station_domain.external
-                            for ct1, ct2 in zip(
-                                station.inter_city_transports,
-                                station_domain.inter_city_transports,
-                            ):
-                                assert ct2.external
-                                assert ct1.id == ct2.id
+                            if isinstance(station, InterCityStation):
+                                for ct1, ct2 in zip(
+                                    station.inter_city_transports,
+                                    station_domain.inter_city_transports,
+                                ):
+                                    assert ct2.external
+                                    assert ct1.id == ct2.id
+                            else:
+                                for ct1, ct2 in zip(
+                                    station.city_transports,
+                                    station_domain.city_transports,
+                                ):
+                                    assert ct2.external
+                                    assert ct1.id == ct2.id
                             assert station.commuter_ids == station_domain.commuter_ids
                             break

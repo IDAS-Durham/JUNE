@@ -18,11 +18,6 @@ from june.distributors import (
     UniversityDistributor,
 )
 from june.geography import Geography, Areas
-from june.groups.travel import (
-    generate_commuting_network,
-    Travel,
-    ModeOfTransportGenerator,
-)
 from june.groups import *
 
 logger = logging.getLogger("world")
