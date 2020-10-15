@@ -307,6 +307,45 @@ def test__log_hospital_admissions(world, interaction, selector):
                 )
     clean_world(world)
 
+def test__log_icu_admissions(world, interaction, selector):
+    clean_world(world)
+    sim = create_sim(world, interaction, selector, seed="hospitalised")
+    sim.timer.reset()
+    counter = 0
+    saved_ids = []
+    icu_admissions = {}
+    while counter < 50:
+        timer = sim.timer.date.strftime("%Y-%m-%d")
+        daily_icu_ids = []
+        sim.update_health_status(sim.timer.now, sim.timer.duration)
+        for person in world.people.infected:
+            if person.infection.symptoms.tag == SymptomTag.intensive_care and person.id not in saved_ids:
+                daily_icu_ids.append(person.id)
+                saved_ids.append(person.id)
+        icu_admissions[timer] = daily_icu_ids
+        sim.record.time_step(timestamp=sim.timer.date)
+        next(sim.timer)
+        counter += 1
+    with tables.open_file(sim.record.record_path / sim.record.filename, mode="r") as f:
+        table = f.root.icu_admissions
+        admissions_df = pd.DataFrame.from_records(table.read())
+    admissions_df["timestamp"] = admissions_df["timestamp"].str.decode("utf-8")
+    admissions_df.set_index("timestamp", inplace=True)
+    for timestamp in icu_admissions.keys():
+        if icu_admissions[timestamp]:
+            if type(admissions_df.loc[timestamp]["patient_ids"]) is np.int32:
+                assert (
+                    admissions_df.loc[timestamp]["patient_ids"]
+                    == icu_admissions[timestamp]
+                )
+            else:
+                assert set(admissions_df.loc[timestamp]["patient_ids"].values) == set(
+                    icu_admissions[timestamp]
+                )
+    clean_world(world)
+
+
+
 
 def test__symptoms_transition(world, interaction, selector):
     sim = create_sim(world, interaction, selector, seed="dead")
