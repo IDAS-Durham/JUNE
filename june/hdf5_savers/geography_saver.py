@@ -58,6 +58,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     social_venues_specs_list = []
     social_venues_ids_list = []
     social_venues_super_areas = []
+    social_venues_lengths = []
     super_area_city = []
     super_area_closest_stations_cities = []
     super_area_closest_stations_stations = []
@@ -74,7 +75,6 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         social_venues_ids = []
         social_venues_specs = []
         social_venues_sas = []
-        social_venues_lengths = []
         for spec in area.social_venues.keys():
             for social_venue in area.social_venues[spec]:
                 social_venues_specs.append(spec.encode("ascii", "ignore"))
