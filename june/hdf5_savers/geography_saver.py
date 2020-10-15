@@ -58,6 +58,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     social_venues_specs_list = []
     social_venues_ids_list = []
     social_venues_super_areas = []
+    social_venues_lengths = []
     super_area_city = []
     super_area_closest_stations_cities = []
     super_area_closest_stations_stations = []
@@ -82,9 +83,15 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         social_venues_specs_list.append(np.array(social_venues_specs, dtype="S20"))
         social_venues_ids_list.append(np.array(social_venues_ids, dtype=np.int))
         social_venues_super_areas.append(np.array(social_venues_sas, dtype=np.int))
-    social_venues_specs_list = np.array(social_venues_specs_list, dtype=str_vlen_type)
-    social_venues_ids_list = np.array(social_venues_ids_list, dtype=int_vlen_type)
-    social_venues_super_areas = np.array(social_venues_super_areas, dtype=int_vlen_type)
+        social_venues_lengths.append(len(social_venues_specs))
+    if len(np.unique(social_venues_lengths)) == 1:
+        social_venues_specs_list = np.array(social_venues_specs_list, dtype="S20")
+        social_venues_ids_list = np.array(social_venues_ids_list, dtype=np.int)
+        social_venues_super_areas = np.array(social_venues_super_areas, dtype=np.int)
+    else:
+        social_venues_specs_list = np.array(social_venues_specs_list, dtype=str_vlen_type)
+        social_venues_ids_list = np.array(social_venues_ids_list, dtype=int_vlen_type)
+        social_venues_super_areas = np.array(social_venues_super_areas, dtype=int_vlen_type)
 
     for super_area in geography.super_areas:
         super_area_ids.append(super_area.id)
@@ -116,13 +123,13 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
             region_names.append(region.name)
         cities = []
         stations = []
-        for key, value in super_area.closest_station_for_city.items():
+        for key, value in super_area.closest_inter_city_station_for_city.items():
             cities.append(key.encode("ascii", "ignore"))
             stations.append(value.id)
         super_area_closest_stations_cities.append(cities)
         super_area_closest_stations_stations.append(stations)
         super_area_closest_stations_lengths.append(
-            len(super_area.closest_station_for_city)
+            len(super_area.closest_inter_city_station_for_city)
         )
 
     area_ids = np.array(area_ids, dtype=np.int)

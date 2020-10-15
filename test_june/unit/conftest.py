@@ -10,6 +10,7 @@ import june.infection.symptoms
 from june.interaction import Interaction
 from june import paths
 from june.geography import Geography, Areas, SuperAreas, Regions,Cities, City, Station, Stations
+from june.geography.station import CityStation, InterCityStation
 from june.groups.travel import (
     ModeOfTransport,
     CityTransport,
@@ -224,28 +225,32 @@ def make_dummy_world():
     world.regions = Regions([super_area.region])
     cinema = Cinema()
     cinema.coordinates = super_area.coordinates
+    cinema.area = area
     world.cinemas = Cinemas([cinema])
     pub = Pub()
     pub.coordinates = super_area.coordinates
+    pub.area = area
     world.pubs = Pubs([pub])
     grocery = Grocery()
     grocery.coordinates = super_area.coordinates
+    grocery.area = area
     world.groceries = Groceries([grocery])
     city = City(name="test", coordinates=[1, 2])
     world.cities = Cities([city])
-    city.commuter_ids.add(commuter.id)
-    city.stations = [
-        Station(super_area=world.super_areas[0], city=world.cities[0])
+    city.internal_commuter_ids.add(commuter.id)
+    city.city_stations = [
+        CityStation(super_area=world.super_areas[0], city=city)
     ]
-    world.stations = city.stations
-    world.super_areas[0].city = city
-    world.super_areas[0].closest_station_for_city[city.name] = city.stations[0]
-    city_transports = CityTransports([CityTransport(city=city)])
+    world.stations = city.city_stations
+    station = city.city_stations[0]
+    super_area.city = city
+    #world.super_areas[0].closest_inter_city_station_for_city[city.name] = station
+    city_transports = CityTransports([CityTransport(station=station)])
     world.city_transports = city_transports
-    city.city_transports = city_transports
-    inter_city_transports = InterCityTransports([InterCityTransport(station=city.stations[0])])
+    inter_city_transports = InterCityTransports([InterCityTransport(station=station)])
     world.inter_city_transports = inter_city_transports
-    city.stations[0].inter_city_transports = inter_city_transports
+    station.city_transports = city_transports 
+    station.inter_city_transports = inter_city_transports
     world.cemeteries = Cemeteries()
     return world
 

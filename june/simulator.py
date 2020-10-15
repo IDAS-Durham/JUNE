@@ -472,6 +472,7 @@ class Simulator:
             f"number of deaths =  {n_people}, "
             f"number of infected = {len(self.world.people.infected)}"
         )
+
         # main interaction loop
         infected_ids = []
         for super_group in super_group_instances:

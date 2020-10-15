@@ -32,6 +32,7 @@ class City:
     A city is a collection of areas, with some added methods for functionality,
     such as commuting or local lockdowns.
     """
+
     external = False
 
     _id = count()
@@ -63,10 +64,10 @@ class City:
         self.super_areas = super_areas
         self.name = name
         self.super_stations = None
-        self.stations = []
+        self.city_stations = []
+        self.inter_city_stations = []
         self.coordinates = coordinates
-        self.city_transports = []
-        self.commuter_ids = set()  # internal commuters in the city
+        self.internal_commuter_ids = set()  # internal commuters in the city
 
     @classmethod
     def from_file(cls, name, city_super_areas_filename=default_cities_filename):
@@ -86,21 +87,28 @@ class City:
         we then check if the person is a commuter in their closest city station.
         If none of the above, then that person doesn't need commuting.
         """
-        if not self.stations:
+        if not self.has_stations:
             return
-        if person.id in self.commuter_ids:
-            return self.city_transports[randint(0, len(self.city_transports) - 1)][0]
+        if person.id in self.internal_commuter_ids:
+            internal_station = self.city_stations[
+                randint(0, len(self.city_stations) - 1)
+            ]
+            return internal_station.get_commute_subgroup()
         else:
-            closest_station = person.super_area.closest_station_for_city[self.name]
-            if person.id in closest_station.commuter_ids:
-                return closest_station.get_commute_subgroup(person)
-    
-    def get_closest_station(self, coordinates):
-        return self.stations.get_closest_station(coordinates)
-    
+            closest_inter_city_station = person.super_area.closest_inter_city_station_for_city[
+                self.name
+            ]
+            if person.id in closest_inter_city_station.commuter_ids:
+                return closest_inter_city_station.get_commute_subgroup()
+
+    def get_closest_inter_city_station(self, coordinates):
+        return self.inter_city_stations.get_closest_station(coordinates)
+
     @property
     def has_stations(self):
-        return (self.stations is not None) and (len(self.stations) > 0)
+        return ((self.city_stations is not None) and (len(self.city_stations) > 0)) or (
+            (self.inter_city_stations is not None) and len(self.inter_city_stations) > 0
+        )
 
 
 class Cities(Supergroup):
@@ -110,7 +118,7 @@ class Cities(Supergroup):
 
     def __init__(self, cities: List[City], ball_tree=True):
         super().__init__(cities)
-        self.members_by_name = {city.name : city for city in cities}
+        self.members_by_name = {city.name: city for city in cities}
         if ball_tree:
             self._ball_tree = self._construct_ball_tree()
 
@@ -204,24 +212,44 @@ class Cities(Supergroup):
                 return city
         logger.warning("No commuting city in this world.")
 
+
 class ExternalCity(ExternalGroup):
     """
     This a city that lives outside the simulated domain.
     """
-    __slots__ = "commuter_ids", "city_transports", "super_area", "coordinates", "name"
+
     external = True
-    def __init__(self, id, domain_id, coordinates= None, commuter_ids = None, name=None):
+
+    def __init__(self, id, domain_id, coordinates=None, commuter_ids=None, name=None):
         super().__init__(spec="city", domain_id=domain_id, id=id)
-        self.commuter_ids = commuter_ids
-        self.city_transports = None
+        self.internal_commuter_ids = commuter_ids or set()
+        self.city_stations = []
+        self.inter_city_stations = []
         self.super_area = None
         self.coordinates = coordinates
         self.name = name
 
+    @property
+    def has_stations(self):
+        return len(self.city_stations) > 0
+
     def get_commute_subgroup(self, person):
-        if not self.commuter_ids:
+        """
+        Gets the commute subgroup of the person. We first check if
+        the person is in the list of the internal city commuters. If not,
+        we then check if the person is a commuter in their closest city station.
+        If none of the above, then that person doesn't need commuting.
+        """
+        if not self.has_stations:
             return
-        group = self.city_transports[
-            randint(0, len(self.city_transports) - 1)
-        ]
-        return ExternalSubgroup(group=group, subgroup_type=0)
+        if person.id in self.internal_commuter_ids:
+            internal_station = self.city_stations[
+                randint(0, len(self.city_stations) - 1)
+            ]
+            return internal_station.get_commute_subgroup()
+        else:
+            closest_inter_city_station = person.super_area.closest_inter_city_station_for_city[
+                self.name
+            ]
+            if person.id in closest_inter_city_station.commuter_ids:
+                return closest_inter_city_station.get_commute_subgroup()
