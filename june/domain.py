@@ -235,15 +235,20 @@ class DomainSplitter:
             centroids.append(centroid)
         return np.array(centroids)
 
-    def generate_domain_split(self, niter=15):
+    def _domain_split_iteration(self, domain_centroids):
+        super_areas_per_domain = self.assign_super_areas_to_centroids(domain_centroids)
+        domain_centroids = self.compute_domain_centroids(super_areas_per_domain)
+        return domain_centroids
+
+    def iterate_domain_split(self, domain_centroids, niter=20):
         # first make an initial guess with KMeans.
-        domain_centroids = self._get_kmeans_centroids()
         for i in range(niter):
-            logger.info(f"Domain splitter -- iteration {i+1} of {niter}")
-            super_areas_per_domain = self.assign_super_areas_to_centroids(
-                domain_centroids
-            )
-            domain_centroids = self.compute_domain_centroids(super_areas_per_domain)
+            if i % 5 == 0:
+                logger.info(f"Domain splitter -- iteration {i+1} of {niter}")
+            domain_centroids = self._domain_split_iteration(domain_centroids)
+        return domain_centroids
+
+    def generate_split_from_centroids(self, domain_centroids):
         # assign each to closest
         super_areas_per_domain = {
             centroid_id: [] for centroid_id in range(len(domain_centroids))
@@ -255,4 +260,10 @@ class DomainSplitter:
                 self.super_area_centroids.loc[super_area_name, ["X", "Y"]].values,
             )
             super_areas_per_domain[closest_centroid_id].append(super_area_name)
+        return super_areas_per_domain
+
+    def generate_domain_split(self, niter=20):
+        initial_centroids = self._get_kmeans_centroids()
+        domain_centroids = self.iterate_domain_split(initial_centroids, niter=niter)
+        super_areas_per_domain = self.generate_split_from_centroids(domain_centroids)
         return super_areas_per_domain
