@@ -37,6 +37,7 @@ def find_default(name: str, look_in_package=True) -> Path:
     directories_to_look = [working_directory, working_directory_parent]
     if look_in_package:
         directories_to_look.append(project_directory)
+        directories_to_look.append(project_directory.parent)
     for directory in directories_to_look:
         path = directory / name
         if os.path.exists(path):
@@ -76,7 +77,7 @@ def path_for_name(name: str, look_in_package=True) -> Path:
 
 
 try:
-    data_path = path_for_name("data", look_in_package=False)
+    data_path = path_for_name("data", look_in_package=True)
 except FileNotFoundError:
     answer = input(
         "I couldn't find any data folder, do you want me to download it for you? (y/N) "
