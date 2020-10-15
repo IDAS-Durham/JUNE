@@ -44,7 +44,7 @@ class CommutePlots:
             internal = len(city.commuter_ids)
             if external != 0 and internal != 0:
                 external_commuters.append(external)
-                names.append(city.name)
+                names.append(str(city.name).split(' ')[0])
                 internal_commuters.append(internal)
 
         internal_commuters = np.array(internal_commuters)
@@ -60,8 +60,9 @@ class CommutePlots:
         ax.set_ylabel('Number of people')
         ax.set_xticks(x)
         ax.set_xticklabels(names)
+        ax.set_yscale('log')
         ax.legend()
-        plt.xticks(rotation=45)
+        plt.xticks(rotation=90)
 
         return ax
 
