@@ -132,6 +132,24 @@ class Plotter:
             plt.savefig(save_dir / 'Newcastle_external_commute.png', dpi=150, bbox_inches='tight')
             
 
+       print ("Processing Birmingham areas")
+        internal_commute_areas, external_commute_areas = commute_plots.process_internal_external_areas(
+            city_to_plot = "Birmingham"
+        )
+
+        if internal_commute_areas is not None:
+            print ("Plotting Birmingham internal areas")
+            commute_areas_plot = commute_plots.plot_commute_areas(internal_commute_areas)
+            commute_areas_plot.plot()
+            plt.savefig(save_dir / 'Birmingham_internal_commute.png', dpi=150, bbox_inches='tight')
+
+        if external_commute_areas is not None:
+            print ("Plotting Birmingham external areas")
+            commute_areas_plot = commute_plots.plot_commute_areas(external_commute_areas)
+            commute_areas_plot.plot()
+            plt.savefig(save_dir / 'Birmingham_external_commute.png', dpi=150, bbox_inches='tight')
+
+            
         print ("Processing London areas")
         internal_commute_areas, external_commute_areas = commute_plots.process_internal_external_areas(
             city_to_plot = "London"
