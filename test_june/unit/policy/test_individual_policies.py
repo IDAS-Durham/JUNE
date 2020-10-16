@@ -7,7 +7,7 @@ import pytest
 
 from june import paths
 from june.demography import Person, Population
-from june.geography import Geography
+from june.geography import Geography, Area, SuperArea
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (
     Hospitals,
@@ -31,9 +31,11 @@ from june.policy import (
     Policies,
     IndividualPolicies,
     Hospitalisation,
+    LimitLongCommute,
 )
 from june.simulator import Simulator
 from june.world import World
+from june.utils.distances import haversine_distance
 
 
 def infect_person(person, selector, symptom_tag="mild"):
@@ -1201,3 +1203,44 @@ def test__kid_at_home_is_supervised(setup_policy_world, selector):
     ]
     assert len(guardians_at_home) != 0
     sim.clear_world()
+
+
+class TestLimitLongCommute:
+    def test__haversine_distance(self):
+        area = Area(coordinates=[0, 1])
+        super_area = SuperArea(coordinates=[0, 0])
+        distance = haversine_distance(area.coordinates, super_area.coordinates)
+        assert 100 < distance < 150
+
+    def test__distance_policy_check(self):
+        worker = Person.from_attributes()
+        area = Area(coordinates=[0, 1])
+        super_area = SuperArea(coordinates=[0, 0])
+        super_area.add_worker(worker)
+        area.add(worker)
+        limit_long_commute = LimitLongCommute(
+            apply_from_distance=150, going_to_work_probability=0.2
+        )
+        ret = limit_long_commute._does_long_commute(worker)
+        assert ret == False
+
+    def test__probability_of_going_to_work(self):
+        worker = Person.from_attributes()
+        area = Area(coordinates=[0, 3])
+        super_area = SuperArea(coordinates=[0, 0])
+        limit_long_commute = LimitLongCommute(
+            apply_from_distance=150, going_to_work_probability=0.2
+        )
+        assert limit_long_commute.activities_to_remove == [
+            "commute",
+            "primary_activity",
+        ]
+        ret = limit_long_commute._check_work_probability(worker)
+        assert ret == True
+        skips = 0
+        n = 1000
+        for _ in range(n):
+            ret = limit_long_commute.check_skips_activity(worker)
+            if ret:
+                skips += 1
+        assert np.isclose(skips, 0.2 * n)

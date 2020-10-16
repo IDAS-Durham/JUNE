@@ -8,6 +8,7 @@ from june.infection.symptom_tag import SymptomTag
 from june.demography.person import Person
 from june.policy import Policy, PolicyCollection
 from june.mpi_setup import mpi_rank
+from june.utils.distances import haversine_distance
 
 
 class IndividualPolicy(Policy):
@@ -445,3 +446,25 @@ class CloseCompanies(SkipActivity):
                     return True
 
         return False
+
+class LimitLongCommute(SkipActivity):
+    """
+    Limits long distance commuting from a certain distance.
+    If the person has its workplace further than a certain threshold,
+    then their probability of going to work every day decreases.
+    """
+    def __init__(self, apply_from_distance:float = 150, going_to_work_probability: float = 0.2):
+        self.apply_from_distance = apply_from_distance
+        self.going_to_work_probability = going_to_work_probability
+        self.long_distance_commuter_ids = None
+
+    def _does_long_commute(self, person: Person):
+        if person.work_super_area is None:
+            return False
+        distance_to_work = haversine_distance(person.area.coordinates, person.work_super_area.coordinates)
+        if distance_to_work > self.apply_from_distance:
+            return True
+
+    def check_skips_activity(person: Person):
+
+
