@@ -80,6 +80,16 @@ class TestDomainDecomposition:
             domain_super_areas = [sa.name for sa in domain.super_areas]
             for person_domain in domain.people:
                 person_world = domains_world.people.get_from_id(person_domain.id)
+                # work super area
+                if person_world.work_super_area is not None:
+                    assert (
+                        person_domain.work_super_area.coordinates
+                        == person_world.work_super_area.coordinates
+                    )
+                    assert (
+                        person_domain.work_super_area.id
+                        == person_world.work_super_area.id
+                    )
                 for subgroup, subgroup_domain in zip(
                     person_world.subgroups.iter(), person_domain.subgroups.iter()
                 ):
