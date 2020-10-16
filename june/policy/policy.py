@@ -136,6 +136,16 @@ class Policies:
     def __iter__(self):
         return iter(self.policies)
 
+    def init_policies(self, world):
+        """
+        This function is meant to be used for those policies that need world information to initialise,
+        like policies depending on workers' behaviours during lockdown.
+        """
+        from june.policy import CloseCompanies, LimitLongCommute
+        CloseCompanies.set_ratios(world=world)
+        LimitLongCommute.get_long_commuters(world=world)
+
+
 
 class PolicyCollection:
 
@@ -144,6 +154,10 @@ class PolicyCollection:
         A collection of like policies active on the same date
         """
         self.policies = policies
+        self.policies_by_name = {self._get_policy_name(policy) : policy for policy in policies}
+
+    def _get_policy_name(self, policy):
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", policy.__class__.__name__).lower()
 
     @classmethod
     def from_policies(cls, policies: Policies):
@@ -160,3 +174,10 @@ class PolicyCollection:
 
     def __getitem__(self, index):
         return self.policies[index]
+
+    def get_from_name(self, name):
+        return self.policies_by_name[name]
+
+    def __contains__(self, policy_name):
+        return policy_name in self.policies_by_name
+
