@@ -83,8 +83,12 @@ class TestDomainDecomposition:
                 # work super area
                 if person_world.work_super_area is not None:
                     assert (
-                        person_domain.work_super_area.coordinates
-                        == person_world.work_super_area.coordinates
+                        person_domain.work_super_area.coordinates[0]
+                        == person_world.work_super_area.coordinates[0]
+                    )
+                    assert (
+                        person_domain.work_super_area.coordinates[1]
+                        == person_world.work_super_area.coordinates[1]
                     )
                     assert (
                         person_domain.work_super_area.id
