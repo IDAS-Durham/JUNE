@@ -9,7 +9,7 @@ activity_to_super_groups:
 
 time:
   total_days: 60
-  initial_day: "2020-03-01" 
+  initial_day: "2020-02-28" 
   step_duration: 
       weekday:
           0: 1 

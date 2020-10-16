@@ -22,8 +22,8 @@ from june_plots.scripts.health_index import HealthIndexPlots
 from june_plots.scripts.contact_tracker import ContactTracker
 
 
-plt.style.use(['science'])
-plt.style.reload_library()
+#plt.style.use(['science'])
+#plt.style.reload_library()
 
 
 default_world_filename = 'world.hdf5'
@@ -490,3 +490,4 @@ if __name__ == "__main__":
         plotter.plot_contact_tracker()
     else:
         plotter.plot_all()
+
