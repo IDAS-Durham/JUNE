@@ -68,15 +68,15 @@ class ContactTracker:
         self.pickle_path = pickle_path
 
         self.group_types = [
-            self.world.care_homes,
-            self.world.cinemas, 
-            self.world.city_transports,
-            self.world.inter_city_transports, 
-            self.world.companies,
-            self.world.groceries, 
-            self.world.hospitals, 
-            self.world.households, 
-            self.world.pubs, 
+            #self.world.care_homes,
+            #self.world.cinemas, 
+            #self.world.city_transports,
+            #self.world.inter_city_transports, 
+            #self.world.companies,
+            #self.world.groceries, 
+            #self.world.hospitals, 
+            #self.world.households, 
+            #self.world.pubs, 
             self.world.schools, 
             self.world.universities
         ]
@@ -90,6 +90,8 @@ class ContactTracker:
             list(self.contact_matrices["syoa"].keys()) 
             + ["care_home_visits", "household_visits"]
         )
+
+        self.contact_ids = {person.id:[] for person in self.world.people}
 
         if interaction_type in ["1d", "network"]:
             self.interaction_type = interaction_type
@@ -230,7 +232,17 @@ class ContactTracker:
                     continue
                 active_subgroups.append( subgroup )
                 subgroup_ids.append(subgroup_id)
-        return active_subgroups
+
+        if len(active_subgroups) == 0:
+            print(f"CHECK: person {person.id} active in NO subgroups!?")
+            None
+        elif len(active_subgroups) > 1:
+            print(f"CHECK: person {person.id} is in more than one subgroup!?")
+            None
+        else:
+            active_subgroup = active_subgroups[0]
+
+        return active_subgroup
 
     def get_contacts_per_subgroup(self, subgroup_type, group: Group):
         """
@@ -270,18 +282,16 @@ class ContactTracker:
        
         return contacts_per_subgroup
 
-    def simulate_1d_contacts(self, group: Group, N_random=100):
+    def simulate_1d_contacts(self, group: Group):
+        """get the total number of contacts each person has in a simulation.
+            Estimate contact matrices by choosing the the allotted number of people
+            per subgroup.
+        """
         for person in group.people:
-            active_subgroups = self.get_active_subgroup(person)
-            if len(active_subgroups) == 0:
-                print(f"CHECK: person {person.id} active in NO subgroups!?")
+            active_subgroup = self.get_active_subgroup(person)
+            if active_subgroup is None:
                 continue
-            elif len(active_subgroups) > 1:
-                print(f"CHECK: person {person.id} is in more than one subgroup!?")
-                continue
-            else:
-                active_subgroup = active_subgroups[0]
-                subgroup_idx = active_subgroup.subgroup_type # this is an INT.
+            subgroup_idx = active_subgroup.subgroup_type # this is an INT.
 
             contacts_per_subgroup = self.get_contacts_per_subgroup(subgroup_idx, group)
             total_contacts = 0
@@ -325,13 +335,8 @@ class ContactTracker:
             self.contact_counts[person.id][contact_type] += total_contacts
 
     def initialise_graph(self, group: Group):
-        G = nx.MultiGraph()
-
-        if len(group.people) <= 1:
-            return G
-        
+        G = nx.MultiGraph()       
         N_subgroups = len(group.subgroups)
-        # initialise graph
         for subgroup in group.subgroups:
             for person in subgroup:
                 max_contacts = [
@@ -361,7 +366,7 @@ class ContactTracker:
         ]
 
         missing_contacts = 0
-
+        print(group.spec)
         for idx1 in idxes1:
             person = group.people[idx1]
             person_node = G.nodes[person.id]
@@ -394,14 +399,135 @@ class ContactTracker:
                     - person_node["subgroup_contacts"][contact_type]
                 )
                 missing_contacts += missing
-
-        nx.draw(G)
-        plt.show()
-                    
+        if missing_contacts > 0:                
+            print(missing_contacts, len(group.people))               
+                        
         return G
         
     def simulate_network_contacts(self, group: Group):
         G = self.build_graph(group)
+
+        #if group.spec=="school":
+        #    if len(G) > 3:
+        #        self.plot_network(G, subgroups=[0,1,2], internal_only=False)
+
+        for person in group.people:
+            active_subgroup = self.get_active_subgroup(person)
+            neighbors = list(G.neighbors(person.id))
+            
+            total_contacts = len(neighbors)
+            self.contact_ids[person.id].extend(neighbors)
+
+            self.contact_counts[person.id]["global"] += total_contacts
+            if person.leisure == active_subgroup and person.leisure.group.spec == "household":
+                contact_type = "household_visits"
+            elif person.leisure == active_subgroup and person.leisure.group.spec == "care_home":
+                contact_type = "care_home_visits"
+            else:
+                contact_type = group.spec
+            self.contact_counts[person.id][contact_type] += total_contacts
+        
+        for bin_type in self.contact_matrices.keys():
+            
+            idx1 = []
+            idx2 = []
+            for edge in G.edges():
+                idx1.extend( 
+                    (self.age_idxs[bin_type][edge[0]], # extend with tuple.
+                    self.age_idxs[bin_type][edge[1]])
+                )
+                idx2.extend( 
+                    (self.age_idxs[bin_type][edge[1]], # swap the order! - reciprocal contact
+                    self.age_idxs[bin_type][edge[0]])
+                )
+
+            inds = (idx1, idx2)
+            np.add.at(
+                self.contact_matrices[bin_type]["global"], inds, 1.
+            )
+            np.add.at(
+                self.contact_matrices[bin_type][group.spec], inds, 1.
+            )
+
+    def plot_network(
+            self, G, subgroups=None, internal_only=True, try_clustering=True, **kwargs
+        ):
+        if subgroups is None:
+            subgroups = np.unique([n[1]["subgroup_type"] for n in G.nodes(data=True)])
+
+        internal_nodes = np.unique([
+            n[0] for n in G.nodes(data=True) if n[1]["subgroup_type"] in subgroups
+        ])
+        internal_edges = [e for e in G.edges() if all(np.in1d(e,internal_nodes)) ]
+        all_edges = [e for e in G.edges() if any(np.in1d(e,internal_nodes)) ]
+        external_edges = [e for e in all_edges if e not in internal_edges]
+    
+        all_nodes = np.unique([node for e in all_edges for node in e]).tolist()
+        external_nodes = [node for node in all_nodes if node not in internal_nodes]
+        #nodes = [
+        #    n for n in G.nodes(data=True) if n[0] in all_nodes
+        #]
+        plot_G = G #nx.MultiGraph()
+        
+        #plot_G.add_nodes_from(all_nodes)
+        #plot_G.add_edges_from(all_edges)
+
+        node_colors = [
+            n[1]["subgroup_type"] for n in G.nodes(data=True) 
+        ]
+        node_colors2 = [
+            n[1]["subgroup_type"] for n in plot_G.nodes(data=True) 
+        ]
+
+        internal_colors = [
+            f'C{n[1]["subgroup_type"]}' for n in plot_G.nodes(data=True) if n[0] in internal_nodes
+        ]
+
+        external_colors = [
+            n[1]["subgroup_type"] for n in plot_G.nodes(data=True) if n[0] in external_nodes
+        ]
+
+        cluster_centers = {
+            c: np.array([np.sin(th),np.cos(th)]) for c, th in zip(
+                subgroups, np.linspace(0, 2*np.pi,len(subgroups), endpoint=False)
+            )
+        }
+        
+        fixed = []
+        pos = nx.drawing.layout.random_layout(plot_G) # generate initial positions for nodes.
+        print(pos)
+        if try_clustering:
+            i=0
+            for node in plot_G.nodes(data=True):
+                st = node[1]["subgroup_type"]
+                
+                if st in subgroups:
+
+                    pos[node[0]] = cluster_centers[st] + np.random.uniform(-0.1,0.1,2)
+                    print(st, internal_colors[i], cluster_centers[st], pos[node[0]])
+                    fixed.append(node[0])
+                    i+=1
+
+        #fig,ax=plt.subplots()
+        #nx.draw(G,node_size=40, node_color=node_colors, cmap="tab10")
+        fig,ax=plt.subplots()
+        pos = nx.drawing.layout.spring_layout(
+            plot_G, pos=pos, fixed=fixed
+        )
+
+        if internal_only is False:
+            # Draw external nodes first.
+            nx.draw_networkx_nodes(
+                G, pos=pos, nodelist=external_nodes, node_size=10, 
+                node_color=external_colors, alpha=0.5, vmin=min(subgroups), vmax=max(subgroups)
+            )
+            nx.draw_networkx_edges(G, pos=pos, edgelist=external_edges, alpha=0.3)
+        nx.draw_networkx_nodes(
+            G, pos={k:v for k,v in pos.items() if k in internal_nodes}, nodelist=internal_nodes, node_size=40, 
+            node_color=internal_colors, cmap="tab10"
+        )
+        nx.draw_networkx_edges(G, pos=pos, edgelist=internal_edges)
+        plt.show()
 
     def advance_step(self):
         print(self.simulator.timer.date)
@@ -421,6 +547,11 @@ class ContactTracker:
         next(self.simulator.timer)
 
     def save_tracker(self, overwrite=False):
+        """Dump the contact_tracker data (contact_counter, raw contact_matrices, 
+            age_bins, simulation_days) into pkl file, path defined on initialisation.
+            if overwrite is False, and self.pickle_path exists,
+            try pickle_1.pkl, pickle_2.pkl, etc.
+        """
         tracker = {
             "contact_counts" : self.contact_counts,
             "contact_matrices" : self.contact_matrices,
@@ -441,6 +572,7 @@ class ContactTracker:
             pickle.dump(tracker, pkl)
 
     def run_simulation(self, save_tracker=True):
+        """Run simulation for self.simulation_days (defined at init)."""
         start_time = self.simulator.timer.date
         end_time = start_time + dt.timedelta(days=self.simulation_days)
 
@@ -451,6 +583,10 @@ class ContactTracker:
             self.save_tracker()
 
     def convert_dict_to_df(self):
+        """Convert the list of nested dictionaries for number of contacts per 
+            person into a pandas df, with rows person ID, columns of number of 
+            contacts per group type, along with the person's age 
+            and bin index in each set of bin in age_bins."""
         self.contacts_df = pd.DataFrame.from_dict(self.contact_counts,orient="index")
         self.contacts_df["age"] = pd.Series(self.ages)
         for bins_type, age_idxes in self.age_idxs.items():
@@ -458,6 +594,7 @@ class ContactTracker:
             self.contacts_df[col_name] = pd.Series(age_idxes)
 
     def calc_age_profiles(self):
+        """get number of people in each age bin for each of set of bins in age_bins"""
         self.age_profiles = {}
         for bin_type in self.age_bins.keys():
             bins_idx = f"{bin_type}_idx"
@@ -466,6 +603,8 @@ class ContactTracker:
             )
         
     def calc_average_contacts(self):
+        """ average contacts over age bins. Returns a dict of {bin_type: df} -- where df is
+            has rows of age bins, columns of group_type -- for each set of bins in age_bins"""
         self.average_contacts = {}
         for bin_type in self.age_bins.keys():
             bins_idx = f"{bin_type}_idx"
@@ -493,6 +632,8 @@ class ContactTracker:
                 self.contact_matrices[bin_type][contact_type] = norm_mat
 
     def process_contacts(self):
+        """convenience method. calls convert_dict_to_df(), calc_age_profiles(), 
+        calc_average_contacts(), normalise_contact_matrices()"""
         self.convert_dict_to_df()
         self.calc_age_profiles()
         self.calc_average_contacts()
@@ -511,6 +652,14 @@ class ContactTracker:
         self, 
         contact_data_paths=default_contact_data_paths
     ):
+        """
+        Parameters
+        ----------
+        contact_data_path
+            either the path to a csv containing "real" data, or a dict of "data_name": path
+            for plotting several sets of real data. eg. {"bbc_data": "/path/to/data"}.
+            CSV(s) should contain at least columns: age_min, age_max, contacts.
+        """
         if type(contact_data_paths) is dict:
             contact_data = {}
             for key, data_path in contact_data_paths.items():
@@ -561,17 +710,20 @@ class ContactTracker:
             lower = lower + heights
 
         if plot_real_data:
-            real_kwargs = {"marker":"x","ms":5, "lw":1, "color":"k"}
-            line_styles=["-","--",":"]
-            if type(self.contact_data) is dict:
-                for ii,(key, data) in enumerate(self.contact_data.items()):
-                    self._plot_real_data(
-                        ax, data, label=key, **real_kwargs, ls=line_styles[ii]
+            if "contact_data" in self.__dict__:
+                real_kwargs = {"marker":"x","ms":5, "lw":1, "color":"k"}
+                line_styles=["-","--",":"]
+                if type(self.contact_data) is dict:
+                    for ii,(key, data) in enumerate(self.contact_data.items()):
+                        self._plot_real_data(
+                            ax, data, label=key, **real_kwargs, ls=line_styles[ii]
+                        )
+                else:
+                    self.plot_real_data(
+                        ax, self.contact_data, label="real", **real_kwargs, ls=line_styles[ii]
                     )
             else:
-                self.plot_real_data(
-                    ax, self.contact_data, label="real", **real_kwargs, ls=line_styles[ii]
-                )
+                print("\"Real\" data not loaded - do contact_tracker.load_contact_data() before plotting.")
 
         ax.set_xlim(bins[0], bins[-1])
 
@@ -607,11 +759,10 @@ class ContactTracker:
         ax.set_title(f"{bin_type} binned contacts in {contact_type}")
         return ax
 
-
 if __name__ == "__main__":
 
-    world_name = "tests"
-    world_path = "../../../scripts/{world_name}.hdf5"
+    world_name = "tiny_world"
+    world_path = Path(__file__).absolute().parent.parent.parent.parent / f"scripts/{world_name}.hdf5"
     world = generate_world_from_hdf5(world_path)
 
     max_age = 100
@@ -624,12 +775,16 @@ if __name__ == "__main__":
         "care_home_visits", "cinema", "hospital",
     ]
 
-    #ct_plots = ContactTracker(world, age_bins=age_bins)
-    #ct_plots.generate_simulator()
-    #ct_plots.run_simulation()
-    ct_plots = ContactTracker.from_pickle(world)
+    ct_plots = ContactTracker(
+        world, 
+        age_bins=age_bins, 
+        interaction_type="network"
+    )
+    ct_plots.generate_simulator()
+    ct_plots.run_simulation()
+    #ct_plots = ContactTracker.from_pickle(world)
     ct_plots.process_contacts()
-    
+    ct_plots.load_contact_data()
 
     relevant_contact_types = ["household", "school", "company"]
     relevant_bin_types = ["bbc","syoa"]
