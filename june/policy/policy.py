@@ -143,7 +143,7 @@ class Policies:
         """
         from june.policy import CloseCompanies, LimitLongCommute
         CloseCompanies.set_ratios(world=world)
-        LimitLongCommute.get_long_commuters(world=world)
+        LimitLongCommute.get_long_commuters(people=world.people)
 
 
 
