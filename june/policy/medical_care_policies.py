@@ -56,7 +56,6 @@ class Hospitalisation(MedicalCarePolicy):
             # note, we dont model hospital capacity here.
             status = patient_hospital.allocate_patient(
                 person,
-                probability_of_care_home_resident_admission=self.probability_of_care_home_resident_admission,
             )
             if record is not None:
                 if status in [
@@ -67,7 +66,7 @@ class Hospitalisation(MedicalCarePolicy):
                         hospital_id=patient_hospital.id,
                         patient_id=person.id,
                     )
-                elif status in ["icu_admitted"]:
+                elif status in ["icu_transferred"]:
                     record.accumulate(
                         table_name="icu_admissions",
                         hospital_id=patient_hospital.id,
