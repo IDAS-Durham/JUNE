@@ -525,7 +525,6 @@ class LimitLongCommute(SkipActivity):
         distance_to_work = haversine_distance(
             person.area.coordinates, person.work_super_area.coordinates
         )
-        print(distance_to_work)
         if distance_to_work > cls.apply_from_distance:
             return True
         return False
