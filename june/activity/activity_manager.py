@@ -55,7 +55,8 @@ class ActivityManager:
         travel: Optional[Travel] = None,
     ):
         self.policies = policies
-        self.policies.init_policies(world=world)
+        if self.policies is not None:
+            self.policies.init_policies(world=world)
         self.world = world
         self.timer = timer
         self.leisure = leisure
@@ -212,9 +213,6 @@ class ActivityManager:
                 person=person,
                 activities=activities,
                 days_from_start=days_from_start,
-                furlough_ratio=self.furlough_ratio,
-                key_ratio=self.key_ratio,
-                random_ratio=self.random_ratio,
             )
             external_subgroup = self.move_to_active_subgroup(
                 allowed_activities, person, to_send_abroad

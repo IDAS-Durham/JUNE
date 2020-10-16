@@ -494,19 +494,27 @@ class LimitLongCommute(SkipActivity):
     If the person has its workplace further than a certain threshold,
     then their probability of going to work every day decreases.
     """
+
     long_distance_commuter_ids = set()
     apply_from_distance = 150
+
     def __init__(
-        self, apply_from_distance: float = 150, going_to_work_probability: float = 0.2
+        self,
+        start_time: str = "1000-01-01",
+        end_time: str = "9999-12-31",
+        apply_from_distance: float = 150,
+        going_to_work_probability: float = 0.2,
     ):
+        super().__init__(
+            start_time, end_time, activities_to_remove=["primary_activity", "commute"]
+        )
         self.going_to_work_probability = going_to_work_probability
         self.__class__.apply_from_distance = apply_from_distance
         self.__class__.long_distance_commuter_ids = set()
 
-
     @classmethod
-    def get_long_commuters(cls, world):
-        for person in world.people:
+    def get_long_commuters(cls, people):
+        for person in people:
             if cls._does_long_commute(person):
                 cls.long_distance_commuter_ids.add(person.id)
 
@@ -517,8 +525,10 @@ class LimitLongCommute(SkipActivity):
         distance_to_work = haversine_distance(
             person.area.coordinates, person.work_super_area.coordinates
         )
+        print(distance_to_work)
         if distance_to_work > cls.apply_from_distance:
             return True
+        return False
 
     def check_skips_activity(self, person: Person):
         if person.id not in self.long_distance_commuter_ids:
