@@ -19,6 +19,7 @@ from june_plots.scripts.contact_matrix import ContactMatrixPlots
 from june_plots.scripts.life_expectancy import LifeExpectancyPlots
 from june_plots.scripts.demography import DemographyPlots
 from june_plots.scripts.health_index import HealthIndexPlots
+from june_plots.scripts.university import UniversityPlots
 
 
 plt.style.use(['science'])
@@ -369,6 +370,21 @@ class Plotter:
         infectiousness_plot.plot()
         plt.savefig(save_dir / "infectiousness.png", dpi=150, bbox_inches="tight")
 
+    def plot_universities(self, save_dir: Path = default_output_plots_path / "universities"):
+        save_dir.mkdir(exist_ok=True, parents=True)
+        uni_plots = UniversityPlots(world=self.world)
+        uni_plots.load_univeristy_data()
+        if uni_plots.no_uni:
+            return
+        print("Plotting uni students household types")
+        household_type_plot = uni_plots.plot_students_household_type_histogram()
+        household_type_plot.plot()
+        plt.savefig(save_dir / "household_type_hist.png", dpi=150, bbox_inches="tight")
+
+        print("Plotting uni students household locations")
+        uni_map = uni_plots.plot_where_students_live()
+        uni_map.plot()
+        plt.savefig(save_dir / "student_household_locations.png", dpi=150, bbox_inches="tight")
 
 
     def plot_all(self):
@@ -384,6 +400,7 @@ class Plotter:
         self.plot_contact_matrices()
         self.plot_life_expectancy()
         self.plot_health_index()
+        self.plot_universities()
 
 if __name__ == "__main__":
 
@@ -419,6 +436,14 @@ if __name__ == "__main__":
         default=False,
         action="store_true"
     )
+    parser.add_argument(
+        "-u",
+        "--universities",
+        help="Plot only universities",
+        required=False,
+        default=False,
+        action="store_true"
+    )
 
     args = parser.parse_args()
     plotter = Plotter.from_file(args.world_filename)
@@ -428,5 +453,7 @@ if __name__ == "__main__":
         plotter.plot_contact_matrices()
     elif args.demography:
         plotter.plot_demography()
+    elif args.universities:
+        plotter.plot_universities()
     else:
         plotter.plot_all()
