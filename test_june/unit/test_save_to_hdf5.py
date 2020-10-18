@@ -438,6 +438,8 @@ class TestSaveWorld:
                 assert p1.work_super_area == p1.primary_activity.group.super_area
                 assert p2.work_super_area == p2.primary_activity.group.super_area
                 assert p1.work_super_area.id == p2.primary_activity.group.super_area.id
+                assert p1.work_super_area.coordinates[0] == p2.work_super_area.coordinates[0]
+                assert p1.work_super_area.coordinates[1] == p2.work_super_area.coordinates[1]
                 if p1.work_super_area.city is None:
                     assert p2.work_super_area.city is None
                 else:

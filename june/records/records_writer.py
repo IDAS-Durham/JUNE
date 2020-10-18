@@ -339,11 +339,16 @@ def combine_summaries(record_path, remove_left_overs=False, save_dir=None):
     summary_files = record_path.glob("summary.*.csv")
     dfs = []
     for summary_file in summary_files:
-        dfs.append(pd.read_csv(summary_file))
+        df = pd.read_csv(summary_file)
+        aggregator = {
+            col: np.mean if "current" in col else sum for col in df.columns[2:]
+        }
+        df = df.groupby(["region", "time_stamp"], as_index=False).agg(aggregator)
+        dfs.append(df)
         if remove_left_overs:
             summary_file.unlink()
     summary = pd.concat(dfs)
-    summary = summary.groupby(["time_stamp", "region"]).sum()
+    summary = summary.groupby(["region", "time_stamp"]).sum()
     if save_dir is None:
         save_path = record_path
     else:
