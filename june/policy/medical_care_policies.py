@@ -90,7 +90,7 @@ class Hospitalisation(MedicalCarePolicy):
                         hospital_id=patient_hospital.id,
                         patient_id=person.id,
                     )
-                elif status in ["icu_admitted"]:
+                elif status in ["icu_transferred"]:
                     record.accumulate(
                         table_name="icu_admissions",
                         hospital_id=patient_hospital.id,
