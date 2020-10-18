@@ -2,7 +2,7 @@ import pandas as pd
 import yaml
 import numpy as np
 from datetime import timedelta
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union, Dict
 from collections import defaultdict, Counter
 from scipy.ndimage import gaussian_filter1d
 
@@ -367,7 +367,9 @@ class Observed2Cases:
         return people_per_super_aera_and_region[["weights", "region"]]
 
     def convert_regional_cases_to_super_area(
-        self, n_cases_per_region_df: pd.DataFrame, dates: List[str]
+        self,
+        n_cases_per_region_df: pd.DataFrame,
+        dates: Union[List[str], Dict[str,List]],
     ) -> pd.DataFrame:
         """
         Converts regional cases to cases by super area by weighting each super area
@@ -378,13 +380,21 @@ class Observed2Cases:
         n_cases_per_region_df:
             data frame with the number of cases by region, indexed by date
         dates:
-            dates to select
+            dates to select (it can be a dictinary with different dates for different regions
         
         Returns
         -------
         data frame with the number of cases by super area, indexed by date
         """
-        n_cases_per_region_df = n_cases_per_region_df.loc[dates[0] : dates[-1]]
+        if type(dates) == dict:
+            n_cases_per_region_asynchronised = {}
+            for region, dates in dates.items():
+                n_cases_per_region_asynchronised[region] = n_cases_per_region_df.loc[
+                    dates[0] : dates[1], region
+                ]
+            n_cases_per_region_df = pd.DataFrame.from_dict(n_cases_by_region).fillna(0)
+        else:
+            n_cases_per_region_df = n_cases_per_region_df.loc[dates[0] : dates[-1]]
         n_cases_per_super_area_df = pd.DataFrame(
             0,
             index=n_cases_per_region_df.index,
