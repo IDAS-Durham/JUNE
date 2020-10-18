@@ -373,9 +373,9 @@ class Plotter:
     def plot_universities(self, save_dir: Path = default_output_plots_path / "universities"):
         save_dir.mkdir(exist_ok=True, parents=True)
         uni_plots = UniversityPlots(world=self.world)
-        uni_plots.load_univeristy_data()
         if uni_plots.no_uni:
             return
+        uni_plots.load_university_data()
         print("Plotting uni students household types")
         household_type_plot = uni_plots.plot_students_household_type_histogram()
         household_type_plot.plot()

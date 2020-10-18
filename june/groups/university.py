@@ -5,29 +5,24 @@ from typing import List
 import logging
 
 from june.groups import Group, Subgroup, Supergroup
-from june.geography import SuperAreas, Areas
+from june.geography import SuperAreas, Areas, Geography
 from june.paths import data_path
 
-age_to_years = {19: 1, 20: 2, 21: 3, 22: 4, 23 : 5}
+age_to_years = {19: 1, 20: 2, 21: 3, 22: 4, 23: 5}
 
 default_universities_filename = data_path / "input/universities/uk_universities.csv"
 
 logger = logging.getLogger("universities")
 
+
 class University(Group):
     def __init__(
-        self,
-        coordinates=None,
-        n_students_max=None,
-        n_years=5,
-        ukprn=None,
-        area=None,
+        self, n_students_max=None, n_years=5, ukprn=None, area=None,
     ):
-        self.coordinates = coordinates
         self.n_students_max = n_students_max
         self.n_years = n_years
         self.ukprn = ukprn
-        self.area = area 
+        self.area = area
         super().__init__()
         self.subgroups = [Subgroup(self, i) for i in range(self.n_years + 1)]
 
@@ -63,17 +58,21 @@ class University(Group):
     def is_full(self):
         return self.n_students >= self.n_students_max
 
+    @property
+    def coordinates(self):
+        return self.area.coordinates
+
 
 class Universities(Supergroup):
     def __init__(self, universities: List[University]):
         super().__init__(members=universities)
 
     @classmethod
-    def for_super_areas(
+    def for_areas(
         cls,
-        super_areas: SuperAreas,
+        areas: SuperAreas,
         universities_filename: str = default_universities_filename,
-        max_distance_to_super_area=20,
+        max_distance_to_area=20,
     ):
         """
         Initializes universities from super areas. By looking at the coordinates
@@ -93,24 +92,31 @@ class Universities(Supergroup):
         coordinates = np.array(list(zip(latitudes, longitudes)))
         n_students = universities_df["n_students"].values
         ukprn_values = universities_df["UKPRN"].values
-        super_areas, distances = super_areas.get_closest_super_areas(
-            coordinates, k=1, return_distance=True
-        )
-        distances_close = distances < max_distance_to_super_area
-        coordinates = coordinates[distances_close]
-        n_students = n_students[distances_close]
-        ukprn_values = ukprn_values[distances_close]
         universities = []
-        for coord, n_stud, ukprn, super_area in zip(
-            coordinates, n_students, ukprn_values, super_areas
-        ):
-            area = Areas(super_area.areas).get_closest_area(coordinates=coordinates)
+        for coord, n_stud, ukprn in zip(coordinates, n_students, ukprn_values):
+            closest_area, distance = areas.get_closest_areas(
+                coordinates=coord, return_distance=True, k=1
+            )
+            distance = distance[0]
+            closest_area = closest_area[0]
+            if distance > max_distance_to_area:
+                continue
             university = University(
-                coordinates=coord,
-                n_students_max=n_stud,
-                ukprn =ukprn,
-                area = area 
+                area=closest_area, n_students_max=n_stud, ukprn=ukprn
             )
             universities.append(university)
         logger.info(f"There are {len(universities)} universities in this world.")
         return cls(universities)
+
+    @classmethod
+    def for_geography(
+        cls,
+        geography: Geography,
+        universities_filename: str = default_universities_filename,
+        max_distance_to_area: float = 20,
+    ):
+        return cls.for_areas(
+            geography.areas,
+            universities_filename=universities_filename,
+            max_distance_to_area=max_distance_to_area,
+        )
