@@ -142,7 +142,7 @@ class Areas:
             indcs = self.ball_tree.query(
                 np.deg2rad(coordinates), return_distance=return_distance, k=k
             )
-            areas = [self[idx] for idx in indcs[:, 0]]
+            areas = [self[idx] for idx in indcs.flatten()]
             return areas
 
     def get_closest_area(self, coordinates):
@@ -276,8 +276,7 @@ class SuperAreas:
                 k=k,
                 sort_results=True,
             )
-            indcs = chain.from_iterable(indcs)
-            super_areas = [self[idx] for idx in indcs]
+            super_areas = [self[idx] for idx in indcs.flatten()]
             return super_areas
 
     def get_closest_super_area(self, coordinates):

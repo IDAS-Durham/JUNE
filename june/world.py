@@ -125,7 +125,9 @@ class World:
 
         if self.universities is not None:
             uni_distributor = UniversityDistributor(self.universities)
-            uni_distributor.distribute_students_to_universities(self.super_areas)
+            uni_distributor.distribute_students_to_universities(
+                areas=self.areas, people=self.people
+            )
 
         if self.hospitals is not None:
             hospital_distributor = HospitalDistributor.from_file(self.hospitals)
