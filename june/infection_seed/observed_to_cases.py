@@ -369,7 +369,7 @@ class Observed2Cases:
     def convert_regional_cases_to_super_area(
         self,
         n_cases_per_region_df: pd.DataFrame,
-        dates: Union[List[str], Dict[str,List]],
+        dates: Union[List[str], Dict[str, List]],
     ) -> pd.DataFrame:
         """
         Converts regional cases to cases by super area by weighting each super area
@@ -392,7 +392,9 @@ class Observed2Cases:
                 n_cases_per_region_asynchronised[region] = n_cases_per_region_df.loc[
                     dates[0] : dates[1], region
                 ]
-            n_cases_per_region_df = pd.DataFrame.from_dict(n_cases_by_region).fillna(0)
+            n_cases_per_region_df = pd.DataFrame.from_dict(
+                n_cases_per_region_asynchronised
+            ).fillna(0)
         else:
             n_cases_per_region_df = n_cases_per_region_df.loc[dates[0] : dates[-1]]
         n_cases_per_super_area_df = pd.DataFrame(
