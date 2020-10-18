@@ -75,12 +75,6 @@ class IndividualPolicies(PolicyCollection):
                                     guardian.residence.append(guardian)
                     return activities  # if it stays at home we don't need to check the rest
             elif policy.policy_subtype == "skip_activity":
-                # if policy.spec == "close_companies":
-                #    if policy.check_skips_activity(
-                #        person, furlough_ratio, key_ratio, random_ratio
-                #    ):
-                #        activities = policy.apply(activities=activities)
-                # else:
                 if policy.check_skips_activity(person):
                     activities = policy.apply(activities=activities)
             else:
