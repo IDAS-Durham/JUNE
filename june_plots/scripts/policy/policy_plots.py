@@ -29,7 +29,7 @@ class PolicyPlots:
         Preloaded world which can also be passed from the master plotting script
     """
 
-    def __init__(self, world):
+    def __init__(self, world, colors):
         self.world = world
         self.colors = colors
 
