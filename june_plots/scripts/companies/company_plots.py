@@ -155,14 +155,14 @@ class CompanyPlots:
         sex_per_sector = pd.read_csv(sector_by_sex_filename)
 
         areas = []
-        for area in world.areas:
+        for area in self.world.areas:
             areas.append(area.name)
 
         sex_per_sector = sex_per_sector[sex_per_sector['oareas'].isin(areas)]
 
         JUNE_male_dict = defaultdict(int)
         JUNE_female_dict = defaultdict(int)
-        for person in world.people:
+        for person in self.world.people:
             if person.sector is not None:
                 if person.sex == 'f':
                     JUNE_female_dict[person.sector] += 1

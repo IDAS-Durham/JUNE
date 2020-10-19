@@ -59,6 +59,7 @@ class HealthIndexPlots:
 
         f, ax = plt.subplots()
         ax.set_xlabel("Age")
+        ax.set_ylabel("Ratio")
         ax.plot(
             ages,
             female_hospitalisation_rate,
