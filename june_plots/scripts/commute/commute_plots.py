@@ -39,10 +39,10 @@ class CommutePlots:
         names = []
         for city in self.world.cities:
             external = 0
-            for station in city.stations:
+            for station in city.city_stations:
                 external += len(station.commuter_ids)
 
-            internal = len(city.commuter_ids)
+            internal = len(city.internal_commuter_ids)
             if external != 0 and internal != 0:
                 external_commuters.append(external)
                 names.append(str(city.name).split(' ')[0])
@@ -90,10 +90,10 @@ class CommutePlots:
             internal_commuters_ids = []
             external_commuters_ids = []
             commuters_ids = []
-            for commuter in list(city.commuter_ids):
+            for commuter in list(city.internal_commuter_ids):
                 internal_commuters_ids.append(commuter)
                 commuters_ids.append(commuter)
-            for station in city.stations:
+            for station in city.city_stations:
                 for commuter in list(station.commuter_ids):
                     commuters_ids.append(commuter)
                     external_commuters_ids.append(commuter)
