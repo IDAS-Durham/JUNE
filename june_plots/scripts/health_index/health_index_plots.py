@@ -31,7 +31,7 @@ class HealthIndexPlots:
         f, ax = plt.subplots()
         ax.plot(range(0, 105), seroprev * 100, linewidth=2, color=self.colors['general_4'])
         ax.set_xlabel("Age")
-        ax.set_ylabel("Prevalence" + r"$[\%]$")
+        ax.set_ylabel("Prevalence [\%]")
 
         return ax
 
@@ -58,7 +58,7 @@ class HealthIndexPlots:
             female_death_rate.append(female_probabilities[[5, 6, 7]].sum())
 
         f, ax = plt.subplots()
-        ax.set_xlabel("Age [yr]")
+        ax.set_xlabel("Age")
         ax.plot(
             ages,
             female_hospitalisation_rate,
