@@ -82,7 +82,7 @@ def generate_simulator():
         domain_splitter = DomainSplitter(
             number_of_domains=mpi_size, world_path=world_file
         )
-        super_areas_per_domain = domain_splitter.generate_domain_split(niter=5)
+        super_areas_per_domain = domain_splitter.generate_domain_split(niter=20)
         super_area_names_to_domain_dict = {}
         super_area_ids_to_domain_dict = {}
         for domain, super_areas in super_areas_per_domain.items():
