@@ -24,6 +24,21 @@ from june_plots.scripts.health_index import HealthIndexPlots
 plt.style.use(['science'])
 plt.style.reload_library()
 
+colors = {
+    'JUNE': '#0c5da5',
+    'ONS': '#00b945',
+    'general_1': '#ff9500',
+    'general_2': '#ff2c00',
+    'general_3': '#845b97',
+    'general_4': '#474747',
+    'general_5': '#9e9e9e',
+    'male': 'orange',
+    'female': 'maroon',
+    '16_March': 'C2',
+    '23_March': 'C3',
+    '4_July': 'C1'
+}
+
 default_world_filename = 'world.hdf5'
 default_output_plots_path = Path(__file__).absolute().parent.parent / "plots"
 
@@ -51,13 +66,14 @@ class Plotter:
     def plot_demography(
             self,
             save_dir: Path = default_output_plots_path / "demography",
+            colors = colors,
     ):
         "Make all demography plots"
 
         save_dir.mkdir(exist_ok=True, parents=True)
         
         print ("Setting up demography plots")
-        demography_plots = DemographyPlots(self.world)
+        demography_plots = DemographyPlots(self.world, colors = colors)
         
         print ("Plotting age distribution")
         fig, ax = demography_plots.plot_age_distribution()
@@ -101,13 +117,14 @@ class Plotter:
     def plot_commute(
             self,
             save_dir: Path = default_output_plots_path / "commute",
+            colors = colors,
     ):
         "Make all commute plots"
 
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up commute plots")
-        commute_plots = CommutePlots(self.world)
+        commute_plots = CommutePlots(self.world, colors = colors)
 
         print ("Plotting internal exteral numbers")
         internal_external_numbers_plot = commute_plots.plot_internal_external_numbers()
@@ -170,28 +187,30 @@ class Plotter:
 
     def plot_households(
             self,
-            save_dir: Path = default_output_plots_path / "households"
+            save_dir: Path = default_output_plots_path / "households",
+            colors = colors,
     ):
         "Make all household plots"
         
         save_dir.mkdir(exist_ok=True, parents=True)
         
         print("Setting up household plots")
-        household_plots = HouseholdPlots(self.world)
+        household_plots = HouseholdPlots(self.world, colors = colors)
 
         household_plots.plot_all_household_plots(save_dir=save_dir)
 
 
     def plot_companies(
             self,
-            save_dir: Path = default_output_plots_path / "companies"
+            save_dir: Path = default_output_plots_path / "companies",
+            colors = colors,
     ):
         "Make all company plots"
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up company plots")
 
-        company_plots = CompanyPlots(self.world)
+        company_plots = CompanyPlots(self.world, colors = colors)
 
         print ("Loading company data")
         company_plots.load_company_data()
@@ -224,14 +243,15 @@ class Plotter:
     
     def plot_leisure(
             self,
-            save_dir: Path = default_output_plots_path / "leisure"
+            save_dir: Path = default_output_plots_path / "leisure",
+            colors = colors,
     ):
         "Make all leisure plots"
 
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up leisure plots")
-        leisure_plots = LeisurePlots(self.world)
+        leisure_plots = LeisurePlots(self.world, colors = colors)
 
         print ("Running poisson process")
         leisure_plots.run_poisson_process()
@@ -249,14 +269,15 @@ class Plotter:
         
     def plot_policies(
             self,
-            save_dir: Path = default_output_plots_path / "policy"
+            save_dir: Path = default_output_plots_path / "policy",
+            colors = colors,
     ):
         "Make all policy plots"
 
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up policy plots")
-        policy_plots = PolicyPlots(self.world)
+        policy_plots = PolicyPlots(self.world, colors = colors)
 
         print ("Plotting restaurant reopening")
         restaurant_reopening_plot = policy_plots.plot_restaurant_reopening()
@@ -276,13 +297,14 @@ class Plotter:
         print ("All policy plots finished")
 
     def plot_care_homes(self,
-        save_dir: Path = default_output_plots_path / "care_homes"
+                        save_dir: Path = default_output_plots_path / "care_homes",
+                        colors = colors,
     ):
         "Make all care home plots"
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print("Setting up care home plots")
-        care_plots = CareHomePlots(self.world)
+        care_plots = CareHomePlots(self.world, colors = colors)
 
         print("Plotting age distribution in care homes")
         care_plots.load_care_home_data()
@@ -291,14 +313,15 @@ class Plotter:
         plt.savefig(save_dir / 'age_distribution.png', dpi=150, bbox_inches='tight')
 
     def plot_schools(
-        self,
-        save_dir: Path = default_output_plots_path / "schools"
+            self,
+            save_dir: Path = default_output_plots_path / "schools",
+            colors = colors,
     ):
         """Make all school plots"""
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print("Setting up school plots")
-        school_plots = SchoolPlots(self.world)
+        school_plots = SchoolPlots(self.world, colors = colors)
         school_plots.load_school_data()
 
         school_size_plot = school_plots.plot_school_sizes()        
@@ -317,7 +340,8 @@ class Plotter:
 
     def plot_contact_matrices(
             self,
-            save_dir: Path = default_output_plots_path / "contact_matrices"
+            save_dir: Path = default_output_plots_path / "contact_matrices",
+            colors = colors,
     ):
         "Plot contact matrices pre-lockdown and during lockdown."
 
@@ -327,7 +351,7 @@ class Plotter:
         during_lockdown_date = datetime(2020, 4, 15)
 
         print("Setting up contact matrix plots")
-        contact_matrix_plots = ContactMatrixPlots(self.world)
+        contact_matrix_plots = ContactMatrixPlots(self.world, colors = colors)
 
         print("Loading world data")
         contact_matrix_plots.load_world_data()
@@ -347,15 +371,16 @@ class Plotter:
             plt.savefig(save_dir / f'contact_matrix_{location}_lockdown.png', dpi=150, bbox_inches='tight')
 
     def plot_life_expectancy(
-        self,
-        save_dir: Path = default_output_plots_path / "life_expectancy"
+            self,
+            save_dir: Path = default_output_plots_path / "life_expectancy",
+            colors = colors,
     ):
         "Plot socioeconomic_index vs. life_expectancy"
 
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up life expectancy plots")
-        le_plots = LifeExpectancyPlots()
+        le_plots = LifeExpectancyPlots(colors = colors)
 
         le_plots.load_geography_data()
         le_plots.load_iomd()
@@ -367,15 +392,16 @@ class Plotter:
         plt.savefig(save_dir / "socioecon_life_expectancy.png", dpi=150, bbox_inches="tight")
     
     def plot_health_index(
-        self,
-        save_dir: Path = default_output_plots_path / "health_index"
+            self,
+            save_dir: Path = default_output_plots_path / "health_index",
+            colors = colors
         
     ):
         "Plot socioeconomic_index vs. life_expectancy"
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print ("Setting up health index plots")
-        hi_plots = HealthIndexPlots()
+        hi_plots = HealthIndexPlots(colors = colors)
 
         print ("Plotting seroprevalence")
         prevalence_plot = hi_plots.sero_prevalence_plot()
