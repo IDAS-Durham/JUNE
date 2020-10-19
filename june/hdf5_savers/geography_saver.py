@@ -63,6 +63,8 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     super_area_closest_stations_cities = []
     super_area_closest_stations_stations = []
     super_area_closest_stations_lengths = []
+    super_area_n_people = []
+    super_area_n_workers = []
     n_regions = len(geography.regions)
     region_ids = []
     region_names = []
@@ -98,6 +100,8 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         super_area_names.append(super_area.name.encode("ascii", "ignore"))
         super_area_regions.append(super_area.region.id)
         super_area_coordinates.append(np.array(super_area.coordinates))
+        super_area_n_people.append(len(super_area.people))
+        super_area_n_workers.append(len(super_area.workers))
         if super_area.closest_hospitals is None:
             closest_hospitals_ids.append(np.array([nan_integer], dtype=np.int))
             closest_hospitals_super_areas.append(np.array([nan_integer], dtype=np.int))
@@ -140,6 +144,8 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     super_area_names = np.array(super_area_names, dtype="S20")
     super_area_coordinates = np.array(super_area_coordinates, dtype=np.float)
     super_area_regions = np.array(super_area_regions, dtype=np.int)
+    super_area_n_people = np.array(super_area_n_people, dtype=np.int)
+    super_area_n_workers = np.array(super_area_n_workers, dtype=np.int)
     region_ids = np.array(region_ids, dtype=np.int)
     region_names = np.array(region_names, dtype='S20')
     if len(np.unique(hospital_lengths)) == 1:
@@ -181,6 +187,8 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         geography_dset.create_dataset("super_area_name", data=super_area_names)
         geography_dset.create_dataset("super_area_region", data=super_area_regions)
         geography_dset.create_dataset("super_area_city", data=super_area_city)
+        geography_dset.create_dataset("super_area_n_people", data=super_area_n_people)
+        geography_dset.create_dataset("super_area_n_workers", data=super_area_n_workers)
         geography_dset.create_dataset(
             "super_area_closest_stations_cities",
             data=super_area_closest_stations_cities,
