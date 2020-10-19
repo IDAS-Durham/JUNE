@@ -205,7 +205,7 @@ class CompanyPlots:
         f, ax = plt.subplots()
         ax.bar(x+width/2, JUNE_female_sector, width, alpha=0.7, label='Female', color=self.colors['female'])
         ax.bar(x-width/2, JUNE_male_sector, width, label='Male', color=self.colors['male'])
-        ax.set_ylabel('Frequency')
+        ax.set_ylabel('Frequency [\%]')
         ax.set_xlabel('Company sector')
         ax.set_xticks(x)
         ax.set_xticklabels(sectors)
