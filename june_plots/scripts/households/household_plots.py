@@ -115,7 +115,7 @@ class HouseholdPlots:
             sizes_all_world_dict_ordered.keys(),
             sizes_all_world_dict_ordered.values(),
             alpha=0.7,
-            label="NOMIS sizes",
+            label="ONS sizes",
         )
         ax.bar(
             JUNE_household_sizes.keys(),
@@ -274,7 +274,7 @@ class HouseholdPlots:
             self.couples_age_diff_data.index,
             self.couples_age_diff_data.values,
             linewidth=2,
-            label="NOMIS",
+            label="ONS",
         )
         ax[0].hist(
             age_difference_couples, density=True, label="JUNE", bins=20, alpha=0.7
@@ -286,7 +286,7 @@ class HouseholdPlots:
             self.children_age_diff_data.index,
             self.children_age_diff_data["1"],
             linewidth=2,
-            label="NOMIS",
+            label="ONS",
         )
         ax[1].hist(
             age_differences_first_kid, density=True, label="JUNE", bins=30, alpha=0.7
@@ -299,7 +299,7 @@ class HouseholdPlots:
             self.children_age_diff_data.index,
             self.children_age_diff_data["2"],
             linewidth=2,
-            label="NOMIS",
+            label="ONS",
         )
         ax[2].hist(
             age_differences_second_kid, density=True, label="JUNE", bins=30, alpha=0.7
@@ -371,7 +371,7 @@ class HouseholdPlots:
             color="C0",
             edgecolor="white",
             width=barWidth,
-            label="NOMIS single",
+            label="ONS single",
             align="center",
         )
         # Create orange Bars
@@ -383,7 +383,7 @@ class HouseholdPlots:
             align="center",
             edgecolor="white",
             width=barWidth,
-            label="NOMIS couple",
+            label="ONS couple",
         )
         # Create blue Bars
         ax.bar(
@@ -394,7 +394,7 @@ class HouseholdPlots:
             edgecolor="white",
             align="center",
             width=barWidth,
-            label="NOMIS family",
+            label="ONS family",
         )
         ax.bar(
             r,
@@ -404,7 +404,7 @@ class HouseholdPlots:
             edgecolor="white",
             align="center",
             width=barWidth,
-            label="NOMIS other",
+            label="ONS other",
         )
         # JUNE
         totals = [
