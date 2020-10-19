@@ -145,7 +145,7 @@ class Plotter:
 
         if external_commute_areas is not None:
             print ("Plotting Birmingham external areas")
-            commute_areas_plot = commute_plots.plot_commute_areas(external_commute_areas)
+            commute_areas_plot = commute_plots.plot_commute_areas(external_commute_areas, figsize=(6,8))
             commute_areas_plot.plot()
             plt.savefig(save_dir / 'Birmingham_external_commute.png', dpi=150, bbox_inches='tight')
 
@@ -165,7 +165,7 @@ class Plotter:
             print ("Plotting London external areas")
             commute_areas_plot = commute_plots.plot_commute_areas(external_commute_areas)
             commute_areas_plot.plot()
-            plt.savefig(save_dir / 'London_external_commute.png', dpi=150, bbox_inches='tight')
+            plt.savefig(save_dir / 'London_external_commute.png', dpi=150, bbox_inches='tight', figsize=(6,8))
         
 
     def plot_households(
