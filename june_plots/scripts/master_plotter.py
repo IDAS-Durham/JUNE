@@ -86,7 +86,7 @@ class Plotter:
         plt.savefig(save_dir / 'population_density.png', dpi=150, bbox_inches='tight')
         
         london_superareas_path = (
-            Path(__file__).absolute().parent.parent.parent / "scripts/london_areas.txt"
+            Path(__file__).absolute().parent.parent.parent / "example_scripts/london_areas.txt"
         )
         london_superareas = pd.read_csv(london_superareas_path,names=["msoa"])["msoa"]
         
