@@ -144,20 +144,32 @@ class SchoolPlots:
         secondary_data_hist,_ = np.histogram(self.secondary_data['NOR'],bins=bins)
         mixed_data_hist,_ = np.histogram(self.mixed_data['NOR'],bins=bins)
 
-        
-        f, ax = plt.subplots()
+
+        primary_data_hist,_ = np.histogram(primary_data['NOR'],bins=bins)
+        secondary_data_hist,_ = np.histogram(secondary_data['NOR'],bins=bins)
+        mixed_data_hist,_ = np.histogram(mixed_data['NOR'],bins=bins)
+
+
+        f, ax = plt.subplots(1, 3, figsize=(8, 3), sharex=True, sharey=False)
         #ax.hist(school_sizes,bins=bins,label="all")
-        ax.hist(primary_sizes, bins=bins, label="primary",alpha=0.7)
-        ax.hist(secondary_sizes, bins=bins, label="secondary",alpha=0.7)
-        ax.hist(mixed_sizes, bins=bins, label="mixed",alpha=0.7)
 
-        ax.plot(mids, primary_data_hist,label="NOMIS primary")
-        ax.plot(mids, secondary_data_hist,label="NOMIS secondary")
-        ax.plot(mids, mixed_data_hist, label="NOMIS mixed")
+        ax[0].plot(mids, primary_data_hist,label="ONS primary", linewidth=2)
+        ax[1].plot(mids, secondary_data_hist,label="ONS secondary", linewidth=2)
+        ax[2].plot(mids, mixed_data_hist, label="ONS mixed", linewidth=2)
 
-        ax.legend()
-        ax.set_xlabel("School size (number of students)")
-        ax.set_ylabel("Frequency")
+        ax[0].hist(primary_sizes, bins=bins, label="JUNE primary",alpha=0.7)
+        ax[1].hist(secondary_sizes, bins=bins, label="JUNE secondary",alpha=0.7)
+        ax[2].hist(mixed_sizes, bins=bins, label="JUNE mixed",alpha=0.7)
+
+        ax[0].legend()
+        ax[1].legend()
+        ax[2].legend()
+
+        ax[0].set_xlabel("School size - primary")
+        ax[1].set_xlabel("School size - secondary")
+        ax[2].set_xlabel("School size - mixed")
+
+        ax[0].set_ylabel("Frequency")
 
         return ax
 
