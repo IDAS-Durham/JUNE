@@ -40,8 +40,9 @@ class DemographyPlots:
         Preloaded world which can also be passed from the master plotting script
     """
 
-    def __init__(self, world):
+    def __init__(self, world, colors):
         self.world = world
+        self.colors = colors
 
     def plot_age_distribution(self):
         "Plotting age pyramid"
@@ -88,12 +89,12 @@ class DemographyPlots:
         x_female = df["Female"]
 
         fig, ax = plt.subplots(ncols=2, sharey=True, figsize=(6, 4))
-        ax[0].barh(y, x_male, align="center", color="orange")
+        ax[0].barh(y, x_male, align="center", color=self.colors['male'])
         ax[0].set_ylabel("Ages")
         ax[0].set_xlabel("\% of males")
         ax[0].set(yticks=y, yticklabels=df["Age"])
         ax[0].invert_xaxis()
-        ax[1].barh(y, x_female, align="center", color="maroon")
+        ax[1].barh(y, x_female, align="center", color=self.colors['female'])
         ax[1].set_xlabel("\% of females")
         plt.subplots_adjust(wspace=0, hspace=0)
 
@@ -130,7 +131,7 @@ class DemographyPlots:
         population_area = super_area_population / area_km
 
         fig, ax = plt.subplots()
-        ax.hist(population_area, color="green", alpha=0.7)
+        ax.hist(population_area, color=self.colors['JUNE'])
         ax.set_xlabel("People per sq. km")
         ax.set_ylabel("Frequency")
 
@@ -153,7 +154,7 @@ class DemographyPlots:
         ax.legend()
         ax.set_xlabel("Ethnicity")
         ax.set_ylabel("Ratio")
-        ax.axhline(1, linestyle="--")
+        ax.axhline(1, linestyle="--", color=self.colors['JUNE'])
         return ax
 
     @staticmethod  # so can call on any set of super areas.
@@ -224,7 +225,7 @@ class DemographyPlots:
             legend=True,
             edgecolor="black",
             ax=ax,
-            linewidth=0.2,
+            linewidth=0.1,
         )
 
         return ax

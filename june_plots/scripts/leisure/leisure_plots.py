@@ -15,8 +15,9 @@ config_files_leisure = (paths.configs_path / "defaults/groups/leisure").glob("*.
 
 class LeisurePlots:
 
-    def __init__(self, world):
+    def __init__(self, world, colors):
         self.world = world
+        self.colors = colors
 
     def run_poisson_process(
             self,
@@ -65,7 +66,7 @@ class LeisurePlots:
         "Plotting time spent in leisure by age"
         
         f, ax = plt.subplots()
-        ax.bar(self.time_spent_in_leisure.keys(), self.time_spent_in_leisure.values())
+        ax.bar(self.time_spent_in_leisure.keys(), self.time_spent_in_leisure.values(), color=self.colors['JUNE'])
         ax.axvline(65, color = "red", linestyle=":")
         ax.set_ylabel("Hours of leisure a week")
         ax.set_xlabel("Age")

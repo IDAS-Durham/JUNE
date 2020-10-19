@@ -7,8 +7,9 @@ default_care_home_age_filename = paths.data_path / "plotting/care_home_data.xlsx
 
 
 class CareHomePlots:
-    def __init__(self, world):
-        self.world = world
+    def __init__(self, world, colors):
+        self.world = world,
+        self.colors=colors
 
     def load_care_home_data(
         self, care_home_age_filename=default_care_home_age_filename
@@ -89,8 +90,8 @@ class CareHomePlots:
             )
 
         f, ax = plt.subplots()
-        self.percent["Persons"].plot.bar(ax=ax, label="ONS", color='blue', alpha=0.7)
-        june_percent["Persons"].plot.bar(ax=ax, label="JUNE", color='green', alpha=0.7)
+        self.percent["Persons"].plot.bar(ax=ax, label="ONS", color=self.colors['ONS'], alpha=0.7)
+        june_percent["Persons"].plot.bar(ax=ax, label="JUNE", color=self.colots['JUNE'], alpha=0.7)
         ax.set_ylabel("\% of population in care homes")
         ax.legend()
         return ax

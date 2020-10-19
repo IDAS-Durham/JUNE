@@ -27,8 +27,9 @@ class CommutePlots:
         Preloaded world which can also be passed from the master plotting script
     """
 
-    def __init__(self, world):
+    def __init__(self, world, colors):
         self.world = world
+        self.colors = colors
 
     def plot_internal_external_numbers(self):
         "Plotting number of internal and external commuters across all cities in World"
@@ -54,9 +55,9 @@ class CommutePlots:
         width = 0.35  # the width of the bars
 
         f, ax = plt.subplots()
-        ax.bar(x, internal_commuters, width/2, label = 'Internal commuters')
-        ax.bar(x - width/2, external_commuters, width/2, label = 'External commuters')
-        ax.bar(x + width/2, external_commuters+internal_commuters, width/2, label = 'Total commuters')
+        ax.bar(x, internal_commuters, width/2, label = 'Internal commuters', color=self.colors['general_1'])
+        ax.bar(x - width/2, external_commuters, width/2, label = 'External commuters', color=self.colors['general_2'])
+        ax.bar(x + width/2, external_commuters+internal_commuters, width/2, label = 'Total commuters', color=self.colors['general_3'])
         ax.set_ylabel('Number of people')
         ax.set_xticks(x)
         ax.set_xticklabels(names)
@@ -131,7 +132,7 @@ class CommutePlots:
         fig, ax = plt.subplots(figsize=figsize
         gplt.choropleth(
             commute_areas, hue='commuters',
-            cmap='Reds', legend=True, edgecolor="black", ax=ax, linewidth=0.2
+            cmap='Reds', legend=True, edgecolor="black", ax=ax, linewidth=0.1
         )
 
         return ax

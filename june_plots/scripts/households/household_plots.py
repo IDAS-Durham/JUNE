@@ -24,8 +24,9 @@ default_hc_by_age_filename = paths.data_path / "plotting/hc_england_by_age.csv"
 
 
 class HouseholdPlots:
-    def __init__(self, world):
+    def __init__(self, world, colors):
         self.world = world
+        self.colors = colors
 
     def load_household_data(
         self,
@@ -116,12 +117,14 @@ class HouseholdPlots:
             sizes_all_world_dict_ordered.values(),
             alpha=0.7,
             label="ONS sizes",
+            color=self.colors['ONS']
         )
         ax.bar(
             JUNE_household_sizes.keys(),
             JUNE_household_sizes.values(),
             alpha=0.7,
             label="JUNE sizes",
+            color=self.colors['JUNE']
         )
         ax.set_xlabel("Household size")
         ax.set_ylabel("Frequency [\%]")
@@ -166,6 +169,7 @@ class HouseholdPlots:
         ax.bar(
             ratios.keys(),
             ratios.values(),
+            color=self.colors['JUNE'],
         )
         ax.set_title("Household size simulated world / England ratios..")
         ax.set_xlabel("Household size")
@@ -275,9 +279,10 @@ class HouseholdPlots:
             self.couples_age_diff_data.values,
             linewidth=2,
             label="ONS",
+            color=self.colors['ONS']
         )
         ax[0].hist(
-            age_difference_couples, density=True, label="JUNE", bins=20, alpha=0.7
+            age_difference_couples, density=True, label="JUNE", bins=20, alpha=0.7, color=self.colors['JUNE']
         )
         ax[0].set_xlim(-15, 15)
         ax[0].legend()
@@ -287,9 +292,10 @@ class HouseholdPlots:
             self.children_age_diff_data["1"],
             linewidth=2,
             label="ONS",
+            color=self.colors['ONS']
         )
         ax[1].hist(
-            age_differences_first_kid, density=True, label="JUNE", bins=30, alpha=0.7
+            age_differences_first_kid, density=True, label="JUNE", bins=30, alpha=0.7, color=self.colors['JUNE']
         )
         ax[1].set_xlabel("Parent - first child\nage difference")
         ax[1].set_xlim(15, 65)
@@ -300,9 +306,10 @@ class HouseholdPlots:
             self.children_age_diff_data["2"],
             linewidth=2,
             label="ONS",
+            color=self.colors['ONS']
         )
         ax[2].hist(
-            age_differences_second_kid, density=True, label="JUNE", bins=30, alpha=0.7
+            age_differences_second_kid, density=True, label="JUNE", bins=30, alpha=0.7, color=self.colors['JUNE']
         )
         ax[2].set_xlabel("Parent - second child\nage difference")
         ax[2].set_xlim(15, 66)

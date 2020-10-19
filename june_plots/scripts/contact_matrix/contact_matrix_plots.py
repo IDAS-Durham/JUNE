@@ -75,12 +75,14 @@ class ContactMatrixPlots():
     def __init__(
             self,
             world,
+            colors,
             policy_filename = default_policy_filename,
             company_closure_filename = default_company_closure_filename,
             household_contact_matrix = default_household_contact_matrix,
-            school_contact_matrix = default_school_contact_matrix
+            school_contact_matrix = default_school_contact_matrix,
     ):
         self.world = world
+        self.colors = colors
         self.policies = Policies.from_file(policy_filename)
         with open(company_closure_filename) as f:
             company_closure = yaml.load(f, Loader=yaml.FullLoader)
