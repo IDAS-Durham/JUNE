@@ -149,7 +149,7 @@ class CompanyPlots:
     def plot_sector_by_sex(
             self,
             sector_by_sex_filename = default_sex_per_sector_per_superarea_file,
-    )
+    ):
         "Plotting sector by sex distributions"
 
         sex_per_sector = pd.read_csv(sector_by_sex_filename)

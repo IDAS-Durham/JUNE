@@ -129,7 +129,7 @@ class CommutePlots:
 
     def plot_commute_areas(self, commute_areas, figsize=(7,5)):
 
-        fig, ax = plt.subplots(figsize=figsize
+        fig, ax = plt.subplots(figsize=figsize)
         gplt.choropleth(
             commute_areas, hue='commuters',
             cmap='Reds', legend=True, edgecolor="black", ax=ax, linewidth=0.1
