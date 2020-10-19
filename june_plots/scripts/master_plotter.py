@@ -149,7 +149,7 @@ class Plotter:
             plt.savefig(save_dir / 'Newcastle_external_commute.png', dpi=150, bbox_inches='tight')
             
 
-       print ("Processing Birmingham areas")
+        print ("Processing Birmingham areas")
         internal_commute_areas, external_commute_areas = commute_plots.process_internal_external_areas(
             city_to_plot = "Birmingham"
         )
@@ -430,7 +430,7 @@ class Plotter:
         self.plot_policies()
         self.plot_care_homes()
         self.plot_schools()
-        self.plot_contact_matrices()
+        #self.plot_contact_matrices()
         self.plot_life_expectancy()
         self.plot_health_index()
 
