@@ -174,8 +174,8 @@ class LifeExpectancyPlots:
         male_le.set_index('cmwd',inplace=True,verify_integrity=True)
         female_le.set_index('cmwd',inplace=True,verify_integrity=True)
 
-        male_le = male_le.query('index.str.startswith("E")')
-        female_le = female_le.query('index.str.startswith("E")') # Drop Wales
+        male_le = male_le[male_le.index.str.startswith("E")]
+        female_le = female_le[female_le.index.str.startswith("E")] # Drop Wales
         
         # A transform from
         labels = self.oa_cmwd.loc[ self.oa_iomd.index ]["cmwd"]
