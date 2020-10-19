@@ -24,8 +24,8 @@ class LifeExpectancyPlots:
     Plot life expectancy
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, colors):
+        self.colors = colors
 
     def load_oa_lsoa_mapping(self, oa_lsoa_path=default_oa_lsoa_path):
         oa_lsoa = pd.read_csv(oa_lsoa_path)
@@ -217,10 +217,10 @@ class LifeExpectancyPlots:
 
         f,ax = plt.subplots()
         #ax.scatter(oa_iomd["percentile"]+0.005,oa_iomd["male_le"],s=1,alpha=0.1)
-        ax.plot(percentile_mids,m_mean,color='C0',label='male')
-        ax.fill_between(percentile_mids,m_mean-m_std,m_mean+m_std,color='C0',alpha = 0.5)
-        ax.plot(percentile_mids,f_mean,color='C1',label='female')
-        ax.fill_between(percentile_mids,f_mean-f_std,f_mean+f_std,color='C1',alpha = 0.5)
+        ax.plot(percentile_mids,m_mean,label='male',color=self.colors['male'])
+        ax.fill_between(percentile_mids,m_mean-m_std,m_mean+m_std,color=self.colors['male'],alpha = 0.5)
+        ax.plot(percentile_mids,f_mean,color=self.colors['female'],label='female')
+        ax.fill_between(percentile_mids,f_mean-f_std,f_mean+f_std,color=self.colors['female'],alpha = 0.5)
         #ax.scatter(oa_iomd["percentile"],oa_iomd["female_le"],s=1,alpha=0.1)
 
         ax.set_xlabel("Scaled socio-economic index (lower is more deprived)")

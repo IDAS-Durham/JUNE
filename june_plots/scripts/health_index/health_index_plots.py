@@ -16,6 +16,9 @@ class HealthIndexPlots:
     Class for plotting health index plots
     """
 
+    def __init__(self, colors):
+        self.colors = colors
+
     def sero_prevalence_plot(self, default_seroprev_filename=default_seroprev_filename):
         seroprev_data = pd.read_csv(default_seroprev_filename, skiprows=1, sep=" ")
         age_min = seroprev_data["Age_bin_minimum"].values
@@ -26,7 +29,7 @@ class HealthIndexPlots:
             seroprev[age_min[index] : age_max[index]] = seroprev_by_age[index]
 
         f, ax = plt.subplots()
-        ax.plot(range(0, 105), seroprev * 100, linewidth=2, color="blue")
+        ax.plot(range(0, 105), seroprev * 100, linewidth=2, color=self.colors['general_4'])
         ax.set_xlabel("Age")
         ax.set_ylabel("Prevalence" + r"$[\%]$")
 
@@ -59,7 +62,7 @@ class HealthIndexPlots:
         ax.plot(
             ages,
             female_hospitalisation_rate,
-            color="blue",
+            color=self.colors['general_1'],
             linewidth=2,
             label=" HR female",
         )
@@ -67,27 +70,27 @@ class HealthIndexPlots:
             ages,
             male_hospitalisation_rate,
             linestyle="--",
-            color="blue",
+            color=self.colors['general_1'],
             linewidth=2,
             label=" HR male",
         )
 
-        ax.plot(ages, female_icu_rate, color="green", linewidth=3, label="ICUR female")
+        ax.plot(ages, female_icu_rate, color=self.colors['general_2'], linewidth=3, label="ICUR female")
         ax.plot(
             ages,
             male_icu_rate,
             linestyle="--",
             linewidth=2,
-            color="green",
+            color=self.colors['general_2'],
             label="ICUR male",
         )
 
-        ax.plot(ages, female_death_rate, color="red", linewidth=3, label="DR female")
+        ax.plot(ages, female_death_rate, color=self.colors['general_3'], linewidth=3, label="DR female")
         ax.plot(
             ages,
             male_death_rate,
             linestyle="--",
-            color="red",
+            color=self.colors['general_3'],
             linewidth=2,
             label="DR male",
         )
@@ -134,12 +137,13 @@ class HealthIndexPlots:
                 pass
 
         times, transmissions = self.get_infectiousness(random_person, 14.0)
-        ax.plot(times, transmissions, label="severe", linewidth=2)
+        ax.plot(times, transmissions, label="severe", linewidth=2, color=self.colors['general_1'])
         ax.plot(
             times,
             infection_selector.mild_infectious_factor.value * np.array(transmissions),
             label="mild",
             linewidth=2,
+            color=self.colors['general_2']
         )
         ax.plot(
             times,
@@ -147,6 +151,7 @@ class HealthIndexPlots:
             * np.array(transmissions),
             label="asymptomatic",
             linewidth=2,
+            color=self.colors['general_3']
         )
         ax.set_xlabel("Days from infection")
 

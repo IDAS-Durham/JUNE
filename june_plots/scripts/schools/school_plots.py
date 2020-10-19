@@ -153,13 +153,13 @@ class SchoolPlots:
         f, ax = plt.subplots(1, 3, figsize=(8, 3), sharex=True, sharey=False)
         #ax.hist(school_sizes,bins=bins,label="all")
 
-        ax[0].plot(mids, primary_data_hist,label="ONS primary", linewidth=2)
-        ax[1].plot(mids, secondary_data_hist,label="ONS secondary", linewidth=2)
-        ax[2].plot(mids, mixed_data_hist, label="ONS mixed", linewidth=2)
+        ax[0].plot(mids, primary_data_hist,label="ONS", linewidth=2, colors=self.colors['ONS'])
+        ax[1].plot(mids, secondary_data_hist,label="ONS", linewidth=2, colors=self.colors['ONS'])
+        ax[2].plot(mids, mixed_data_hist, label="ONS", linewidth=2, colors=self.colors['ONS'])
 
-        ax[0].hist(primary_sizes, bins=bins, label="JUNE primary",alpha=0.7)
-        ax[1].hist(secondary_sizes, bins=bins, label="JUNE secondary",alpha=0.7)
-        ax[2].hist(mixed_sizes, bins=bins, label="JUNE mixed",alpha=0.7)
+        ax[0].hist(primary_sizes, bins=bins, label="JUNE",alpha=0.7, colors=self.colors['JUNE'])
+        ax[1].hist(secondary_sizes, bins=bins, label="JUNE",alpha=0.7, colors=self.colors['JUNE'])
+        ax[2].hist(mixed_sizes, bins=bins, label="JUNE",alpha=0.7, colors=self.colors['JUNE'])
 
         ax[0].legend()
         ax[1].legend()
@@ -238,13 +238,13 @@ class SchoolPlots:
         mids = 0.5*(bins[1:] + bins[:-1])   
 
         f, ax = plt.subplots()
-        ax.hist(primary_st_ratio,bins=bins,label="primary",alpha=0.7)
-        ax.hist(secondary_st_ratio,bins=bins,label="secondary",alpha=0.7)
-        ax.hist(mixed_st_ratio,bins=bins,label="mixed",alpha=0.7)
-        ax.axvline(primary_mean,color='r',label="JUNE pri. mean")
-        ax.axvline(primary_data_mean,color='r',ls='--', label="2011 UK pri. mean")
-        ax.axvline(secondary_mean,color='k',label="JUNE sec. mean")
-        ax.axvline(secondary_data_mean,color='k',ls='--',label="2011 UK sec. mean")
+        ax.hist(primary_st_ratio,bins=bins,label="primary",alpha=0.7, colors=self.colors['general_1'])
+        ax.hist(secondary_st_ratio,bins=bins,label="secondary",alpha=0.7, colors=self.colors['general_2'])
+        ax.hist(mixed_st_ratio,bins=bins,label="mixed",alpha=0.7, colors=self.colors['general_3'])
+        ax.axvline(primary_mean,color=colors=self.colors['general_4'],label="JUNE primary mean")
+        ax.axvline(primary_data_mean,colors=self.colors['general_4'],ls='--', label="DfE primary mean")
+        ax.axvline(secondary_mean,color='k',label="JUNE secondary mean")
+        ax.axvline(secondary_data_mean,color='k',ls='--',label="DfE secondary mean")
         ax.legend(bbox_to_anchor=(1.05, 1))
         ax.set_xlabel("Student:Teacher ratio")
         ax.set_ylabel("Frequency")
@@ -301,28 +301,39 @@ class SchoolPlots:
                         mixed_distances.append(dist)
         if bins is None:
             bins = np.arange(0,80,5)
+
+        primary_distances_binned, primary_distances_bins = np.histogram(primary_distances, bins=bins)
+        secondary_distances_binned, secondary_distances_bins = np.histogram(secondary_distances, bins=bins)
+        mixed_distances_binned, mixed_distances_bins = np.histogram(mixed_distances, bins=bins)
             
         f, ax = plt.subplots()
         #ax.hist(
         #    school_distances, bins=bins, log=True,
         #    label="all", alpha=0.5,
         #)
-        ax.hist(
-            primary_distances, bins=bins, log=True,
-            label="primary", alpha=0.7,
-        )
-        ax.hist(
-            secondary_distances, bins=bins, log=True,
-            label="secondary", alpha=0.7,
-        )
+        # ax.hist(
+        #     primary_distances, bins=bins, log=True,
+        #     label="primary", alpha=0.7,
+        # )
+        # ax.hist(
+        #     secondary_distances, bins=bins, log=True,
+        #     label="secondary", alpha=0.7,
+        # )
+        # if len(mixed_distances) > 0:
+        #     ax.hist(
+        #         mixed_distances, bins=bins, log=True,
+        #         label="mixed", alpha=0.7,
+        #     )
+
+
+        ax.scatter(primary_distances_bins[1:], primary_distances_binned, label="primary", s=50)
+        ax.scatter(secondary_distances_bins[1:], secondary_distances_binned, label="secondary", s=50)
         if len(mixed_distances) > 0:
-            ax.hist(
-                mixed_distances, bins=bins, log=True,
-                label="mixed", alpha=0.7,
-            )
+            ax.scatter(mixed_distances_bins[1:], mixed_distances_binned, label="mixed", s=50)
+        ax.set_yscale('log')
         ax.legend()
         ax.set_xlabel("Distance travelled to school (km)")
-        ax.set_ylabel("Number of students")
+        ax.set_ylabel("Frequency")
 
         return ax
 
