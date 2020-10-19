@@ -149,12 +149,13 @@ class DemographyPlots:
             ratios.keys(),
             ratios.values(),
             alpha=1.0,
+            color=self.colors['JUNE']
         )
-        ax.set_title("Ethnicity distribution ratios compared to England average.")
+        #ax.set_title("Ethnicity distribution ratios compared to England average.")
         ax.legend()
         ax.set_xlabel("Ethnicity")
         ax.set_ylabel("Ratio")
-        ax.axhline(1, linestyle="--", color=self.colors['JUNE'])
+        ax.axhline(1, linestyle="--", color='black')
         return ax
 
     @staticmethod  # so can call on any set of super areas.
