@@ -21,5 +21,5 @@ def make_geography():
 class TestPubs:
     def test__create_pubs_in_geography(self, geography):
         pubs = Pubs.for_geography(geography)
-        assert len(pubs) == 7
+        assert len(pubs) == 257
         return pubs

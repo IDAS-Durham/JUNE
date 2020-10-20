@@ -23,7 +23,7 @@ default_config_file = (
 )
 default_policy_config_file = paths.configs_path / "defaults/policy/company_closure.yaml"
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("worker_distributor")
 
 
 class WorkerDistributor:

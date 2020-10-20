@@ -14,7 +14,7 @@ from june.groups.group import Group, Supergroup
 default_data_filename = paths.data_path / "input/care_homes/care_homes_ew.csv"
 default_areas_map_path = paths.data_path / "input/geography/area_super_area_region.csv"
 default_config_filename = paths.configs_path / "defaults/groups/care_home.yaml"
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("care_homes")
 
 
 class CareHomeError(BaseException):

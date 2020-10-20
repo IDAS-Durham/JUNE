@@ -26,6 +26,7 @@ from june.policy import Policies
 from june import paths
 from june.groups.commute import *
 from june.records import Record
+from june.records.records_writer import combine_records
 from june.domain import Domain, DomainSplitter
 from june.mpi_setup import mpi_comm, mpi_rank, mpi_size
 
@@ -67,7 +68,7 @@ else:
 
 def generate_simulator():
     record = Record(
-        record_path="results_records", record_static_data=True, mpi_rank=mpi_rank
+        record_path=save_path, record_static_data=True, mpi_rank=mpi_rank
     )
     if mpi_rank == 0:
         with h5py.File(world_file, "r") as f:
@@ -81,7 +82,7 @@ def generate_simulator():
         domain_splitter = DomainSplitter(
             number_of_domains=mpi_size, world_path=world_file
         )
-        super_areas_per_domain = domain_splitter.generate_domain_split(niter=5)
+        super_areas_per_domain = domain_splitter.generate_domain_split(niter=20)
         super_area_names_to_domain_dict = {}
         super_area_ids_to_domain_dict = {}
         for domain, super_areas in super_areas_per_domain.items():
@@ -162,4 +163,7 @@ def run_simulator(simulator):
 if __name__ == "__main__":
     simulator = generate_simulator()
     run_simulator(simulator)
-    simulator.record.combine_outputs()
+    mpi_comm.Barrier()
+    if mpi_rank == 0:
+        combine_records(save_path)
+        

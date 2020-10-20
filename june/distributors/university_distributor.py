@@ -4,7 +4,7 @@ import logging
 from june.groups import University
 from june.geography import SuperArea, SuperAreas
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("university_distributor")
 
 
 class UniversityDistributor:

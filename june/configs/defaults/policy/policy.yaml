@@ -1,10 +1,18 @@
 hospitalisation:
-    start_time: 1000-01-01
-    end_time: 9999-01-01
+  start_time: 1000-01-01
+  end_time: 9999-01-01
 
 severe_symptoms_stay_home:
-    start_time: 1000-01-01
-    end_time: 9999-01-01
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+
+limit_long_commute:
+  # prevents people that have their workplace
+  # far away from their homes of commuting daily.
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  apply_from_distance: 100
+  going_to_work_probability: 0.2 # once a week
 
 quarantine:
     1:

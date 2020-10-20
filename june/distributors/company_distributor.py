@@ -6,7 +6,7 @@ from random import randint
 
 from june.groups import Companies
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("company_distributor")
 
 """
 This file contains routines to attribute people with different characteristics

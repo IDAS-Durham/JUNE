@@ -5,10 +5,11 @@ import logging
 from june.groups import Company, Companies
 from june.world import World
 from june.mpi_setup import mpi_rank
+from .utils import read_dataset
 
 nan_integer = -999
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("company_saver")
 if mpi_rank > 0:
     logger.propagate = False
 
@@ -101,18 +102,10 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
             length = idx2 - idx1
-            ids = np.empty(length, dtype=int)
-            companies["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
-            sectors = np.empty(length, dtype="S20")
-            companies["sector"].read_direct(sectors, np.s_[idx1:idx2], np.s_[0:length])
-            n_workers_maxs = np.empty(length, dtype=int)
-            companies["n_workers_max"].read_direct(
-                n_workers_maxs, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            super_areas = np.empty(length, dtype=int)
-            companies["super_area"].read_direct(
-                super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
+            ids = read_dataset(companies["id"], idx1, idx2)
+            sectors = read_dataset(companies["sector"], idx1, idx2)
+            n_workers_maxs = read_dataset(companies["n_workers_max"], idx1, idx2)
+            super_areas = read_dataset(companies["super_area"], idx1, idx2)
             for k in range(length):
                 if domain_super_areas is not None:
                     super_area = super_areas[k]
@@ -144,12 +137,8 @@ def restore_companies_properties_from_hdf5(
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_companies)
             length = idx2 - idx1
-            ids = np.empty(length, dtype=int)
-            companies["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
-            super_areas = np.empty(length, dtype=int)
-            companies["super_area"].read_direct(
-                super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
+            ids = read_dataset(companies["id"], idx1, idx2)
+            super_areas = read_dataset(companies["super_area"], idx1, idx2)
             for k in range(length):
                 if domain_super_areas is not None:
                     super_area = super_areas[k]

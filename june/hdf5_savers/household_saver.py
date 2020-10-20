@@ -12,7 +12,7 @@ nan_integer = -999
 
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 str_vlen_type = h5py.vlen_dtype(np.dtype("S20"))
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("household_saver")
 if mpi_rank > 0:
     logger.propagate = False
 
@@ -96,26 +96,26 @@ def save_households_to_hdf5(
         care_homes_to_visit = []
         for household in households:
             if (
-                household.households_to_visit is None
-                or len(household.households_to_visit) == 0
+                "household" not in household.residences_to_visit 
+                or len(household.residences_to_visit["household"]) == 0
             ):
                 households_to_visit.append(np.array([nan_integer], dtype=np.int))
             else:
                 households_to_visit.append(
                     np.array(
-                        [household.id for household in household.households_to_visit],
+                        [household.id for household in household.residences_to_visit["household"]],
                         dtype=np.int,
                     )
                 )
             if (
-                household.care_homes_to_visit is None
-                or len(household.care_homes_to_visit) == 0
+                "care_home" not in household.residences_to_visit
+                or len(household.residences_to_visit["care_home"]) == 0
             ):
                 care_homes_to_visit.append(np.array([nan_integer], dtype=np.int))
             else:
                 care_homes_to_visit.append(
                     np.array(
-                        [care_home.id for care_home in household.care_homes_to_visit],
+                        [care_home.id for care_home in household.residences_to_visit["care_home"]],
                         dtype=np.int,
                     )
                 )
@@ -152,22 +152,14 @@ def load_households_from_hdf5(
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
         for chunk in range(n_chunks):
-            logger.info(f"Households chunk {chunk} of {n_chunks}")
+            logger.info(f"Loaded chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             length = idx2 - idx1
-            ids = np.empty(length, dtype=int)
-            types = np.empty(length, dtype="S20")
-            max_sizes = np.empty(length, dtype=float)
-            households["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
-            households["type"].read_direct(types, np.s_[idx1:idx2], np.s_[0:length])
-            households["max_size"].read_direct(
-                max_sizes, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            super_areas = np.empty(length, dtype=int)
-            households["super_area"].read_direct(
-                super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
+            ids = read_dataset(households["id"], idx1, idx2)
+            types = read_dataset(households["type"], idx1, idx2)
+            max_sizes = read_dataset(households["max_size"], idx1, idx2)
+            super_areas = read_dataset(households["super_area"], idx1, idx2)
             for k in range(length):
                 if domain_super_areas is not None:
                     super_area = super_areas[k]
@@ -207,7 +199,7 @@ def restore_households_properties_from_hdf5(
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
         for chunk in range(n_chunks):
-            logger.info(f"Households chunk {chunk} of {n_chunks}")
+            logger.info(f"Restored chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_households)
             length = idx2 - idx1
@@ -238,21 +230,21 @@ def restore_households_properties_from_hdf5(
                 # relatives
                 if has_household_visits:
                     if households_to_visit_list[k][0] == nan_integer:
-                        household.households_to_visit = None
+                        pass
                     else:
                         households_to_visit = []
                         for house_id in households_to_visit_list[k]:
                             households_to_visit.append(
                                 world.households.get_from_id(house_id)
                             )
-                        household.households_to_visit = tuple(households_to_visit)
+                        household.residences_to_visit["household"] = tuple(households_to_visit)
                 if has_care_home_visits:
                     if care_homes_to_visit_list[k][0] == nan_integer:
-                        household.care_homes_to_visit = None
+                        pass
                     else:
                         care_homes_to_visit = []
                         for care_home_id in care_homes_to_visit_list[k]:
                             care_homes_to_visit.append(
                                 world.care_homes.get_from_id(care_home_id)
                             )
-                        household.care_homes_to_visit = tuple(care_homes_to_visit)
+                        household.residences_to_visit["care_home"] = tuple(care_homes_to_visit)

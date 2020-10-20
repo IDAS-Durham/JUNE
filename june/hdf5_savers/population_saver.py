@@ -12,7 +12,8 @@ from june.demography.person import Activities
 from june.geography import ExternalSuperArea
 from june.world import World
 from june.mpi_setup import mpi_rank
-logger = logging.getLogger(__name__)
+
+logger = logging.getLogger("population saver")
 if mpi_rank > 0:
     logger.propagate = False
 
@@ -64,6 +65,7 @@ def save_population_to_hdf5(
             super_areas = []
             work_super_areas = []
             work_super_areas_cities = []
+            work_super_area_coords = []
             sectors = []
             sub_sectors = []
             group_ids = []
@@ -96,6 +98,9 @@ def save_population_to_hdf5(
                     super_areas.append(nan_integer)
                 if person.work_super_area is not None:
                     work_super_areas.append(person.work_super_area.id)
+                    work_super_area_coords.append(
+                        np.array(person.work_super_area.coordinates, dtype=np.float)
+                    )
                     if person.work_super_area.city is not None:
                         work_super_areas_cities.append(person.work_super_area.city.id)
                     else:
@@ -103,6 +108,9 @@ def save_population_to_hdf5(
                 else:
                     work_super_areas.append(nan_integer)
                     work_super_areas_cities.append(nan_integer)
+                    work_super_area_coords.append(
+                        np.array([nan_integer, nan_integer], dtype=np.float)
+                    )
                 if person.sector is None:
                     sectors.append(" ".encode("ascii", "ignore"))
                 else:
@@ -160,6 +168,7 @@ def save_population_to_hdf5(
             super_areas = np.array(super_areas, dtype=np.int)
             work_super_areas = np.array(work_super_areas, dtype=np.int)
             work_super_areas_cities = np.array(work_super_areas_cities, dtype=np.int)
+            work_super_area_coords = np.array(work_super_area_coords, dtype=np.float)
             group_ids = np.array(group_ids, dtype=np.int)
             subgroup_types = np.array(subgroup_types, dtype=np.int)
             group_specs = np.array(group_specs, dtype="S20")
@@ -186,9 +195,6 @@ def save_population_to_hdf5(
                 people_dset.create_dataset(
                     "socioecon_index", data=socioecon_indices, maxshape=(None,)
                 )
-                # people_dset.create_dataset(
-                #    "home_city", data=home_city, maxshape=(None,)
-                # )
                 people_dset.create_dataset("ethnicity", data=ethns, maxshape=(None,))
                 people_dset.create_dataset(
                     "group_ids", data=group_ids, maxshape=(None, group_ids.shape[1]),
@@ -214,6 +220,11 @@ def save_population_to_hdf5(
                 )
                 people_dset.create_dataset(
                     "work_super_area", data=work_super_areas, maxshape=(None,)
+                )
+                people_dset.create_dataset(
+                    "work_super_area_coords",
+                    data=work_super_area_coords,
+                    maxshape=(None, work_super_area_coords.shape[1]),
                 )
                 people_dset.create_dataset(
                     "work_super_area_city",
@@ -255,6 +266,10 @@ def save_population_to_hdf5(
                 people_dset["super_area"][idx1:idx2] = super_areas
                 people_dset["work_super_area"].resize(newshape)
                 people_dset["work_super_area"][idx1:idx2] = work_super_areas
+                people_dset["work_super_area_coords"].resize(newshape[0], axis=0)
+                people_dset["work_super_area_coords"][
+                    idx1:idx2
+                ] = work_super_area_coords
                 people_dset["work_super_area_city"].resize(newshape)
                 people_dset["work_super_area_city"][idx1:idx2] = work_super_areas_cities
                 people_dset["group_ids"].resize(newshape[0], axis=0)
@@ -295,7 +310,7 @@ def load_population_from_hdf5(
         n_people = population.attrs["n_people"]
         n_chunks = int(np.ceil(n_people / chunk_size))
         for chunk in range(n_chunks):
-            logger.info(f"Population chunk {chunk} of {n_chunks}")
+            logger.info(f"Loaded chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             length = idx2 - idx1
@@ -380,7 +395,7 @@ def restore_population_properties_from_hdf5(
         n_people = population.attrs["n_people"]
         n_chunks = int(np.ceil(n_people / chunk_size))
         for chunk in range(n_chunks):
-            logger.info(f"Population chunk {chunk} of {n_chunks}")
+            logger.info(f"Restored chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
             length = idx2 - idx1
@@ -394,6 +409,7 @@ def restore_population_properties_from_hdf5(
             areas = read_dataset(population["area"], idx1, idx2)
             super_areas = read_dataset(population["super_area"], idx1, idx2)
             work_super_areas = read_dataset(population["work_super_area"], idx1, idx2)
+            work_super_areas_coords = read_dataset(population["work_super_area_coords"], idx1, idx2)
             work_super_areas_cities = read_dataset(
                 population["work_super_area_city"], idx1, idx2
             )
@@ -431,6 +447,7 @@ def restore_population_properties_from_hdf5(
                         person.work_super_area = ExternalSuperArea(
                             domain_id=super_areas_to_domain_dict[work_super_area_id],
                             id=work_super_area_id,
+                            coordinates=work_super_areas_coords[k],
                         )
                         if work_super_areas_cities[k] == nan_integer:
                             person.work_super_area.city = None
