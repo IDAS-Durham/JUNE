@@ -27,7 +27,7 @@ from june.mpi_setup import (
     MovablePeople,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("activity_manager")
 if mpi_rank > 0:
     logger.propagate = False
 
@@ -55,6 +55,8 @@ class ActivityManager:
         travel: Optional[Travel] = None,
     ):
         self.policies = policies
+        if self.policies is not None:
+            self.policies.init_policies(world=world)
         self.world = world
         self.timer = timer
         self.leisure = leisure
@@ -78,28 +80,6 @@ class ActivityManager:
                 "commute": activity_to_super_groups.get("commute", []),
                 "rail_travel": activity_to_super_groups.get("rail_travel", []),
             }
-        self.furlough_ratio = 0
-        self.key_ratio = 0
-        self.random_ratio = 0
-        for person in self.world.people:
-            if person.lockdown_status == "furlough":
-                self.furlough_ratio += 1
-            elif person.lockdown_status == "key_worker":
-                self.key_ratio += 1
-            elif person.lockdown_status == "random":
-                self.random_ratio += 1
-        if self.furlough_ratio != 0 and self.key_ratio != 0 and self.random_ratio != 0:
-            self.furlough_ratio /= (
-                self.furlough_ratio + self.key_ratio + self.random_ratio
-            )
-            self.key_ratio /= self.furlough_ratio + self.key_ratio + self.random_ratio
-            self.random_ratio /= (
-                self.furlough_ratio + self.key_ratio + self.random_ratio
-            )
-        else:
-            self.furlough_ratio = None
-            self.key_ratio = None
-            self.random_ratio = None
 
     @property
     def all_super_groups(self):
@@ -144,6 +124,9 @@ class ActivityManager:
             )
         )
 
+    def get_personal_subgroup(self, person: "Person", activity: str):
+        return getattr(person, activity)
+
     def move_to_active_subgroup(
         self, activities: List[str], person: Person, to_send_abroad=None
     ) -> Optional["Subgroup"]:
@@ -169,7 +152,7 @@ class ActivityManager:
             elif activity == "commute":
                 subgroup = self.travel.get_commute_subgroup(person=person)
             else:
-                subgroup = getattr(person, activity)
+                subgroup = self.get_personal_subgroup(person=person, activity=activity)
             if subgroup is not None:
                 if subgroup.external:
                     person.busy = True
@@ -230,9 +213,6 @@ class ActivityManager:
                 person=person,
                 activities=activities,
                 days_from_start=days_from_start,
-                furlough_ratio=self.furlough_ratio,
-                key_ratio=self.key_ratio,
-                random_ratio=self.random_ratio,
             )
             external_subgroup = self.move_to_active_subgroup(
                 allowed_activities, person, to_send_abroad

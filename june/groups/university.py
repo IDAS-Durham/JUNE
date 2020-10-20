@@ -12,7 +12,7 @@ age_to_years = {19: 1, 20: 2, 21: 3, 22: 4, 23 : 5}
 
 default_universities_filename = data_path / "input/universities/uk_universities.csv"
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("universities")
 
 class University(Group):
     def __init__(

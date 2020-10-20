@@ -1,7 +1,9 @@
 import h5py
 import numpy as np
+
 from june.groups import CareHome, CareHomes
 from june.world import World
+from .utils import read_dataset
 
 nan_integer = -999
 
@@ -96,20 +98,10 @@ def load_care_homes_from_hdf5(file_path: str, chunk_size=50000, domain_super_are
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_carehomes)
             length = idx2 - idx1
-            ids = np.zeros(length, dtype=int)
-            care_homes["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
-            n_residents = np.empty(length, dtype=int)
-            care_homes["n_residents"].read_direct(
-                n_residents, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            n_workers = np.empty(length, dtype=int)
-            care_homes["n_workers"].read_direct(
-                n_workers, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            super_areas = np.empty(length, dtype=int)
-            care_homes["super_area"].read_direct(
-                super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
+            ids = read_dataset(care_homes["id"], idx1, idx2)
+            n_residents = read_dataset(care_homes["n_residents"], idx1, idx2)
+            n_workers = read_dataset(care_homes["n_workers"], idx1, idx2)
+            super_areas = read_dataset(care_homes["super_area"], idx1, idx2)
             for k in range(idx2 - idx1):
                 if domain_super_areas is not None:
                     super_area = super_areas[k]

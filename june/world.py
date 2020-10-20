@@ -18,14 +18,9 @@ from june.distributors import (
     UniversityDistributor,
 )
 from june.geography import Geography, Areas
-from june.groups.travel import (
-    generate_commuting_network,
-    Travel,
-    ModeOfTransportGenerator,
-)
 from june.groups import *
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("world")
 
 possible_groups = [
     "households",
@@ -93,7 +88,6 @@ class World:
         """
         Distributes people to buildings assuming default configurations.
         """
-
         if (
             self.companies is not None
             or self.hospitals is not None
@@ -106,7 +100,6 @@ class World:
             worker_distr.distribute(
                 areas=self.areas, super_areas=self.super_areas, population=self.people
             )
-
         if self.care_homes is not None:
             carehome_distr = CareHomeDistributor.from_file()
             carehome_distr.populate_care_homes_in_super_areas(

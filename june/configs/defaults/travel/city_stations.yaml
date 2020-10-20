@@ -1,0 +1,15 @@
+number_of_inter_city_stations: # each city also acts like an station for internal commuters.
+  "Birmingham": 4
+  "Bristol": 4
+  "Brighton and Hove": 4
+  "Cambridge": 4
+  "Cardiff": 4
+  "Leeds": 4
+  "Leicester": 4
+  "Liverpool": 4
+  "London": 8
+  "Manchester": 4
+  "Newcastle upon Tyne": 4
+  "Nottingham": 4
+  "Reading": 4
+  "Sheffield": 4

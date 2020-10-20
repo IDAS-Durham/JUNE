@@ -32,15 +32,15 @@ def test__every_household_has_up_to_2_links(world_visits, visits_distributor):
                     "other",
                     "communal",
                 ]:
-                    assert household.care_homes_to_visit is None
+                    assert "care_home" not in household.residences_to_visit
                 elif household.type in ["family", "ya_parents", "nokids"]:
                     assert (
-                        household.care_homes_to_visit is None
-                        or len(household.care_homes_to_visit) <= 2
+                        "care_home" not in household.residences_to_visit
+                        or len(household.residences_to_visit["care_home"]) <= 2
                     )
-                    if household.care_homes_to_visit is not None:
+                    if "care_home" in household.residences_to_visit:
                         # for now we only allow household -> care_home
-                        for link in household.care_homes_to_visit:
+                        for link in household.residences_to_visit["care_home"]:
                             assert link.spec == "care_home"
                 else:
                     raise ValueError
@@ -52,7 +52,7 @@ def test__household_goes_visit_care_home(world_visits, visits_distributor):
     for super_area in super_areas:
         for area in super_area.areas:
             for household in area.households:
-                if household.care_homes_to_visit is not None:
+                if "care_home" in household.residences_to_visit:
                     person = household.people[0]
                     found_person = True
                     break
@@ -85,7 +85,7 @@ def test__care_home_visits_leisure_integration(world_visits, leisure):
     for area in world_visits.areas:
         if area.care_home is not None:
             break
-    person1.residence.group.care_homes_to_visit = [area.care_home]
+    person1.residence.group.residences_to_visit["care_home"] = [area.care_home]
     assigned = False
     for _ in range(0, 100):
         subgroup = leisure.get_subgroup_for_person_and_housemates(person1)

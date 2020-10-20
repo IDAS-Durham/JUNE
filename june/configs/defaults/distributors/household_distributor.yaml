@@ -1,0 +1,30 @@
+kid_max_age : 17
+student_min_age : 18
+student_max_age : 25
+old_min_age : 65
+old_max_age : 99
+adult_min_age : 18
+adult_max_age : 64
+young_adult_min_age : 18
+young_adult_max_age : 35
+max_age_to_be_parent : 64
+max_household_size : 8
+allowed_household_compositions : [
+    "1 0 >=0 1 0",
+    ">=2 0 >=0 1 0",
+    "1 0 >=0 2 0",
+    ">=2 0 >=0 2 0",
+    "1 0 >=0 >=1 >=0",
+    ">=2 0 >=0 >=1 >=0",
+    "0 0 0 0 >=2",
+    "0 >=1 0 0 0",
+    "0 0 0 0 1",
+    "0 0 0 0 2",
+    "0 0 0 1 0",
+    "0 0 0 2 0",
+    "0 0 >=1 1 0",
+    "0 0 >=1 2 0",
+    "0 0 >=0 >=0 >=0",
+    ">=0 >=0 >=0 >=0 >=0",
+]
+ignore_orphans: False

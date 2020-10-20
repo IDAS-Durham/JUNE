@@ -1,10 +1,12 @@
 import datetime
-from typing import Optional
+from typing import List, Optional
+from june.groups import Hospitals, Hospital, MedicalFacilities, MedicalFacility
 
 from .policy import Policy, Policies, PolicyCollection
 from june.groups import Hospitals, Hospital, ExternalSubgroup
 from june.demography import Person
 from june.infection.symptom_tag import SymptomTag
+from june.records import Record
 
 hospitalised_tags = (SymptomTag.hospitalised, SymptomTag.intensive_care)
 dead_hospital_tags = (SymptomTag.dead_hospital, SymptomTag.dead_icu)
@@ -22,9 +24,29 @@ class MedicalCarePolicy(Policy):
 class MedicalCarePolicies(PolicyCollection):
     policy_type = "medical_care"
 
-    def apply(self, person: Person, medical_facilities, record: Optional["Record"]):
-        for policy in self.policies:
-            policy.apply(person, medical_facilities, record=record)
+    def apply(
+        self,
+        person: Person,
+        medical_facilities,
+        days_from_start: float,
+        record: Optional[Record],
+    ):
+        """
+        Applies medical care policies. Hospitalisation takes preference over all.
+        """
+        hospitalisation_policies = [
+            policy for policy in self.policies if isinstance(policy, Hospitalisation)
+        ]
+        for policy in hospitalisation_policies:
+            activates = policy.apply(person=person, record=record)
+            if activates:
+                return
+        for policy in [
+            policy for policy in self.policies if policy not in hospitalisation_policies
+        ]:
+            activates = policy.apply(person, medical_facilities, days_from_start)
+            if activates:
+                return
 
 
 class Hospitalisation(MedicalCarePolicy):
@@ -45,7 +67,9 @@ class Hospitalisation(MedicalCarePolicy):
         )
 
     def apply(
-        self, person: Person, hospitals: Hospitals, record: Optional["Record"] = None
+        self,
+        person: Person,
+        record: Optional[Record] = None,
     ):
         symptoms_tag = person.infection.tag
         if symptoms_tag in hospitalised_tags:
