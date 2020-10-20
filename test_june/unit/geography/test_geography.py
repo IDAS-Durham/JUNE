@@ -105,7 +105,7 @@ def test_create_ball_tree_for_super_areas():
     )
     assert (
         len(
-            geo.super_areas.get_closestareas(
+            geo.areas.get_closest_areas(
                 coordinates=[54.770512, -1.594221], k=10
             )
         )
