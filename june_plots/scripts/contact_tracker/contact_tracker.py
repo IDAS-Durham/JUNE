@@ -235,10 +235,10 @@ class ContactTracker:
 
         if len(active_subgroups) == 0:
             print(f"CHECK: person {person.id} active in NO subgroups!?")
-            None
+            return None
         elif len(active_subgroups) > 1:
             print(f"CHECK: person {person.id} is in more than one subgroup!?")
-            None
+            return None
         else:
             active_subgroup = active_subgroups[0]
 
