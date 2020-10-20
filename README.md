@@ -1,30 +1,45 @@
 ![Python package](https://github.com/IDAS-Durham/JUNE/workflows/Python%20package/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/idas-durham/june/branch/master/graph/badge.svg?token=6TKUHtWxJZ)](https://codecov.io/gh/idas-durham/june)
 
-# Policy simulation tool based on multi-agent epidemic modelling within settlements
+# JUNE a COVID-19 modelling code
 
-This repo is a fork of the JUNE simulation tool originall designed for modelling the spread of COVID-19 in the UK. The model is named after [June Almeida](https://en.wikipedia.org/wiki/June_Almeida). June was the female Scottish virologist that first identified the coronavirus group of viruses. 
+Repository for data and models built, named after [June Almeida](https://en.wikipedia.org/wiki/June_Almeida). June was the female Scottish virologist that first identified the coronavirus group of viruses. 
 
-We focus on Cox's Bazar Kutupalong-Batukhali Expansion Site located in Banghladesh. The relevant sections of the camp under analysis can be found in the `camp_data/inputs/geography` folder (see Data section below).
 
-# Contributing
+# Setup
 
-Issues are being created and will serve as initial sources of jobs to be done.
+The easiest way to get JUNE up and running is to install the latest stable version,
 
-Please create a new brach and, when done, submit a pull request and assign a reviewer. There are also tests which must pass before merging into master. While most of these tests are currently for the original UK cmodelling ode (and so please do not overwrite them), camp specific tests will be placed here: `test_june/camp_tests`.
+```
+pip install june
+```
 
-With new code additions and alterations, please write tests to ensure future consistency.
+and download the data with
 
-All contributions to the codebase which are specific to camps should be in the ``camps/`` folder to make it easier to merge with the main repository. Changes that concern general functionality that can be applied to other countries, can be added to the ``june/`` source code folder.
+```
+get_june_data.sh
+```
 
-In all possible instances, code should be added to the original codebase and not overwritten. E.g. if the default for the code is a file used for the UK, manually pass the camp file rather than altering the default. If writing a new file, feel free to customise it to the camp setting!
+This will require a working installation of Openmpi or Intelmpi to compile ``mpi4py``. 
+
+If you want to get the most up-to-date version of the code, then you can clone this repository, and install it using
+
+```
+pip install -e .
+```
+
+This should automatically install any requirements as well. You can then get the data using the same command above.
+
+# How to use the code
+
+Have a look at ``Notebooks/quickstart.ipynb`` for a gentle introduction to how JUNE works. You can also checkout the scripts in ``example_scripts``
 
 # Tests
 
 Run the tests with
 
 ```
-cd test_june
+cd tests
 pytest
 ```
 
@@ -79,47 +94,49 @@ Feel free to add content via new sections and pages!
 
 [MVP Google Doc with testing strategy](https://docs.google.com/document/d/1O0v6O3rOlCDKFD66Y9KbZTfKLQPgmP1ScuwrFv4sspo/edit?usp=sharing)
 
->>>>>>> original_june/master
 [Epidem. Parameters of COVID-19](https://docs.google.com/document/d/1724PeV7bg9V0JRuQE1vpktB08bFWDmjHrd6HKyOG1Ns/edit#heading=h.xiukf7vmhszk)
+
+
 
 # Setup
 
+Install Python3 header files. In Ubuntu and variants, this is the ``python3-dev`` package.
 
-1. Clone the repo and install Python3 header files. In Ubuntu and variants, this is the ``python3-dev`` package.
+To install the package, install requisites
 
+``pip install -r requirements.txt``
 
-2. To install the package, install requisites
+and
 
-```
-pip install -r requirements.txt
-pip install -e .
-```
-
-3. Get the data (see section below)
+``pip install -e .``
 
 # Quickstart
 
-Refer to ``Notebooks/quickstart camp.ipynb``
+Refer to ``Notebooks/quickstart.ipynb``
 
 # Data
 
-We have a GitLab LFS server for secure data storage. To run the model you will need to have a local version of this. To get access:
-
-1. Sign up for an account on the [GitLab](https://idas-gitlab.dur.scotgrid.ac.uk) (Note: you do **not** need a Durham email as the text says)
-
-2. Inform the repo owner (Joseph Bullock) and access will be granted to the [data repo](https://idas-gitlab.dur.scotgrid.ac.uk/Bullock/cpmodelling)
-
-3. Clone the repo and [set up Git LFS](https://git-lfs.github.com)
-
-4. Move the folder that will be greated to the JUNE home directory and call it: `camp_data` - this will allow the paths to be correctly initialised
-
-5. Follow instructions below for Git LFS usage
+The [IDAS gitlab](https://idas-gitlab.dur.scotgrid.ac.uk) [data repo](https://idas-gitlab.dur.scotgrid.ac.uk/JUNE/data) is used for storing all data files associated with JUNE covid modelling project. The repo makes use of git-lfs which works in a very similar way to regular git versioning but requires a few more steps.
 
 **ATTENTION:** Please read the instructions below before doing anything with this repository.
 
-**Note** Often all files in the data directory will be tracked (the line `**` in the `.gitattributes` file does this). This means that all new files in the data folder should be tracked recursively.
+**Note** Currently all files in the data directory will be tracked (the line `**` in the `.gitattributes` file does this). This means that all new files in the data folder should be tracked recursively, but this needs testing.
 
 ## Instructions
+
+**Important**: If you only need to get the data, and do not want to add anything new
+
+```
+bash get_data.sh
+```
+
+will get you the data folder.
+
+**Important** This is only for people who want to add new data. The data folder has to be a clone of the git lab repo. Make sure you do not initialize git lfs in this repo, but in the git-lab data one.
+
+Before going any further, make a clean `JUNE/data/` folder to ensure nothing is overwritten.
+
+To make data changes you must be in the `JUNE/data` foler which will have it's own git history separate from this one.
 
 Large files are handled by git-lfs. First, git-lfs must be set up locally on your computer, please download it [here](https://git-lfs.github.com)
 

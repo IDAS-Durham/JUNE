@@ -289,13 +289,14 @@ class ExternalSuperArea:
     """
 
     external = True
-    __slots__ = "city", "spec", "id", "domain_id"
+    __slots__ = "city", "spec", "id", "domain_id", "coordinates"
 
-    def __init__(self, id, domain_id):
+    def __init__(self, id, domain_id, coordinates):
         self.city = None
         self.spec = "super_area"
         self.id = id
         self.domain_id = domain_id
+        self.coordinates = coordinates
 
 
 class Region:
