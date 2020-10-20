@@ -212,43 +212,7 @@ class CompanyPlots:
         ax.legend()
 
         return ax
-            
-    def plot_work_distance_travel(self):
-        "Plotting distance travelled to work by sex"
-
-        residence_super_areas_male = []
-        residence_super_areas_female = []
-        work_super_areas_male = []
-        work_super_areas_female = []
-        for person in self.world.people:
-            if person.work_super_area is not None:
-                if person.sex == 'f':
-                    residence_super_areas_female.append(person.super_area.coordinates)
-                    work_super_areas_female.append(person.work_super_area.coordinates)
-                else:
-                    residence_super_areas_male.append(person.super_area.coordinates)
-                    work_super_areas_male.append(person.work_super_area.coordinates)
-
-        work_travel_male = []
-        for idx, coord in enumerate(residence_super_areas_male):
-            work_travel_male.append(mpu.haversine_distance((coord[0], coord[1]), (work_super_areas_male[idx][0], work_super_areas_male[idx][1])))
-        work_travel_female = []
-        for idx, coord in enumerate(residence_super_areas_female):
-            work_travel_female.append(mpu.haversine_distance((coord[0], coord[1]), (work_super_areas_female[idx][0], work_super_areas_female[idx][1])))
-
-        work_travel_male_binned, work_travel_male_bins = np.histogram(work_travel_male, bins=100)
-        work_travel_female_binned, work_travel_female_bins = np.histogram(work_travel_female, bins=100)
-
-        f, ax = plt.subplots()
-        ax.scatter(work_travel_male_bins[1:], work_travel_male_binned, label='Male',s=10,color=self.colors['male'])
-        ax.set_ylabel('Frequency')
-        ax.set_xlabel('Company sector')
-        ax.set_xticks(x)
-        ax.set_xticklabels(sectors)
-        ax.legend()
-
-        return ax
-            
+    
     def plot_work_distance_travel(self):
         "Plotting distance travelled to work by sex"
 
