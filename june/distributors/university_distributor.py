@@ -13,8 +13,7 @@ logger = logging.getLogger("university_distributor")
 
 class UniversityDistributor:
     def __init__(
-        self,
-        universities: List[University],
+        self, universities: List[University],
     ):
         """
         For each university it searches in the nearby areas for students living
