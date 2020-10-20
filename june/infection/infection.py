@@ -32,6 +32,7 @@ class Infection:
         "start_time",
         "transmission",
         "symptoms",
+        "time_of_testing",
     )
 
     def __init__(
@@ -51,6 +52,7 @@ class Infection:
         self.transmission = transmission
         self.symptoms = symptoms
         self.number_of_infected = 0.0
+        self.time_of_testing = None
 
     def update_health_status(self, time, delta_time):
         """

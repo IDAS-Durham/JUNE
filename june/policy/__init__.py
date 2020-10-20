@@ -21,6 +21,7 @@ from .individual_policies import (
     CloseCompanies,
     CloseSchools,
     CloseUniversities,
+    LimitLongCommute
 )
 
 from .medical_care_policies import (

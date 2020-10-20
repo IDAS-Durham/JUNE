@@ -81,7 +81,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                     person_idx = randint(0, len(house.people) - 1)
                     households_to_visit.append(house)
                 if households_to_visit:
-                    household.households_to_visit = tuple(households_to_visit)
+                    household.residences_to_visit["household"] = tuple(households_to_visit)
 
     def get_possible_venues_for_household(self, household: Household):
         """
@@ -98,7 +98,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         )
 
     def get_social_venue_for_person(self, person):
-        households_to_visit = person.residence.group.households_to_visit
+        households_to_visit = person.residence.group.residences_to_visit["household"]
         if households_to_visit is None:
             return None
         return households_to_visit[

@@ -1,5 +1,5 @@
 from .mode_of_transport import ModeOfTransport, ModeOfTransportGenerator
-from .travel import generate_commuting_network, Travel
+from .travel import Travel
 from .transport import (
     Transport,
     Transports,
@@ -7,6 +7,4 @@ from .transport import (
     CityTransports,
     InterCityTransport,
     InterCityTransports,
-    InterRegionalTransport,
-    InterRegionalTransports,
 )

@@ -88,6 +88,7 @@ def setup_sim(dummy_world, selector):
     sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
         3, False, False
     )
+    sim.clear_world()
     return sim
 
 

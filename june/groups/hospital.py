@@ -13,10 +13,18 @@ from june.geography import SuperArea
 from june.infection import SymptomTag
 from june.exc import HospitalError
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("hospitals")
 
 default_data_filename = paths.data_path / "input/hospitals/trusts.csv"
 default_config_filename = paths.configs_path / "defaults/groups/hospitals.yaml"
+
+
+class MedicalFacility:
+    pass
+
+
+class MedicalFacilities:
+    pass
 
 
 class AbstractHospital:
@@ -97,7 +105,7 @@ class AbstractHospital:
             )
 
 
-class Hospital(Group, AbstractHospital):
+class Hospital(Group, AbstractHospital, MedicalFacility):
     """
     The Hospital class represents a hospital and contains information about
     its patients and workers - the latter being the usual "people".
@@ -195,7 +203,7 @@ class Hospital(Group, AbstractHospital):
         return self.subgroups[self.SubgroupType.icu_patients]
 
 
-class Hospitals(Supergroup):
+class Hospitals(Supergroup, MedicalFacilities):
     def __init__(
         self,
         hospitals: List["Hospital"],

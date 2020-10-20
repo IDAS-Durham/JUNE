@@ -4,6 +4,7 @@ from setuptools.command.install import install
 import subprocess
 import os
 from os.path import abspath, dirname, join
+from glob import glob
 
 this_dir = abspath(dirname(__file__))
 with open(join(this_dir, "LICENSE")) as f:
@@ -15,16 +16,21 @@ with open(join(this_dir, "README.md"), encoding="utf-8") as file:
 with open(join(this_dir, "requirements.txt")) as f:
     requirements = f.read().split("\n")
 
+scripts = glob("scripts/*.py") + glob("scripts/*.sh")
+
 setup(
         name="june",
-        version="0.1.0",
+        version="0.2.0.6",
         description="The most amazing covid simulation",
         url="https://github.com/idas-durham/june",
-        long_description=long_description,
+        long_description_content_type='text/markdown',
+        long_description="hello, yes, this is dog",
+        scripts=scripts,
         author="IDAS-Durham",
         author_email='arnauq@protonmail.com',
         license="MIT license",
         install_requires=requirements,
         packages = find_packages(exclude=["docs"]),
+        include_package_data=True
 )
 
