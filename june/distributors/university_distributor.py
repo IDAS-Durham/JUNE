@@ -15,8 +15,6 @@ class UniversityDistributor:
     def __init__(
         self,
         universities: List[University],
-        first_radius_to_look=5,
-        second_radius_to_look=30,
     ):
         """
         For each university it searches in the nearby areas for students living
@@ -31,8 +29,6 @@ class UniversityDistributor:
             maximum number of neighbour areas to look for students
         """
         self.universities = universities
-        self.first_radius_to_look = first_radius_to_look
-        self.second_radius_to_look = second_radius_to_look
         self.min_student_age = 19
         self.max_student_age = 24
 
