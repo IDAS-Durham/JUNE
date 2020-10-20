@@ -68,15 +68,15 @@ class ContactTracker:
         self.pickle_path = pickle_path
 
         self.group_types = [
-            #self.world.care_homes,
-            #self.world.cinemas, 
-            #self.world.city_transports,
-            #self.world.inter_city_transports, 
-            #self.world.companies,
-            #self.world.groceries, 
-            #self.world.hospitals, 
-            #self.world.households, 
-            #self.world.pubs, 
+            self.world.care_homes,
+            self.world.cinemas, 
+            self.world.city_transports,
+            self.world.inter_city_transports, 
+            self.world.companies,
+            self.world.groceries, 
+            self.world.hospitals, 
+            self.world.households, 
+            self.world.pubs, 
             self.world.schools, 
             self.world.universities
         ]
@@ -202,21 +202,6 @@ class ContactTracker:
             return int(x)+1
         else:
             return int(x)
-
-    @staticmethod
-    def _partition(n_contacts, m_groups):
-        """
-        Divide n_contacts evenly between m_groups, and randomly allocate the 'leftover'
-        contacts to all groups
-        """
-        c = np.array([n_contacts//m_groups for _ in range(m_groups)])
-        diff = n_contacts % m_groups
-
-        idxs = np.random.randint(0,m_groups,diff)
-
-        for idx in idxs:
-            c[idx] += 1 # can't do as array operation. as repeat indices are ignored??   
-        return c
 
     def get_active_subgroup(self, person: Person):
         active_subgroups = []
@@ -405,6 +390,7 @@ class ContactTracker:
         return G
         
     def simulate_network_contacts(self, group: Group):
+        raise NotImplementedError
         G = self.build_graph(group)
 
         #if group.spec=="school":
@@ -452,6 +438,7 @@ class ContactTracker:
     def plot_network(
             self, G, subgroups=None, internal_only=True, try_clustering=True, **kwargs
         ):
+        raise NotImplementedError
         if subgroups is None:
             subgroups = np.unique([n[1]["subgroup_type"] for n in G.nodes(data=True)])
 
@@ -495,16 +482,12 @@ class ContactTracker:
         
         fixed = []
         pos = nx.drawing.layout.random_layout(plot_G) # generate initial positions for nodes.
-        print(pos)
         if try_clustering:
             i=0
             for node in plot_G.nodes(data=True):
-                st = node[1]["subgroup_type"]
-                
+                st = node[1]["subgroup_type"]            
                 if st in subgroups:
-
                     pos[node[0]] = cluster_centers[st] + np.random.uniform(-0.1,0.1,2)
-                    print(st, internal_colors[i], cluster_centers[st], pos[node[0]])
                     fixed.append(node[0])
                     i+=1
 
@@ -527,7 +510,15 @@ class ContactTracker:
             node_color=internal_colors, cmap="tab10"
         )
         nx.draw_networkx_edges(G, pos=pos, edgelist=internal_edges)
-        plt.show()
+        return ax
+
+    def operations(self): # This should be moved to the ContactTracker class as a function        
+        for group_type in self.group_types:
+            for group in group_type:
+                if self.interaction_type == "1d":
+                    self.simulate_1d_contacts(group)
+                elif self.interaction_type == "network":
+                    self.simulate_network_contacts(group)
 
     def advance_step(self):
         print(self.simulator.timer.date)
@@ -536,13 +527,7 @@ class ContactTracker:
 
         self.simulator.activity_manager.do_timestep()
 
-        for group_type in self.group_types:
-            for group in group_type:
-                if self.interaction_type == "1d":
-                    self.simulate_1d_contacts(group)
-                elif self.interaction_type == "network":
-                    self.simulate_network_contacts(group)
-                
+        self.operations()
 
         next(self.simulator.timer)
 
@@ -648,7 +633,7 @@ class ContactTracker:
             print(f"{contact_data_path} missing col(s) {important_cols[mask]}")
         return contact_data
 
-    def load_contact_data(
+    def load_real_contact_data(
         self, 
         contact_data_paths=default_contact_data_paths
     ):
@@ -759,6 +744,28 @@ class ContactTracker:
         ax.set_title(f"{bin_type} binned contacts in {contact_type}")
         return ax
 
+    def make_plots(
+        self, 
+        relevant_contact_types=["household", "school", "company"],
+        relevant_bin_types=["bbc", "syoa"]
+    ):
+        self.load_real_contact_data()
+        save_dir.mkdir(exist_ok=True, parents=True)
+        for rbt in relevant_bin_types:
+            stacked_contacts_plot = ct_plots.plot_stacked_contacts(
+                bin_type="bbc", contact_types=contact_types
+            )
+            stacked_contacts_plot.plot()
+            plt.savefig(save_dir / f"{rbt}_contacts.png", dpi=150, bbox_inches='tight')
+            mat_dir = plot_dir / f"{rbt}_matrices"
+            mat_dir.mkdir(exist_ok=True, parents=True)
+            for rct in relevant_contact_types:
+                mat_plot = ct_plots.plot_contact_matrix(
+                    bin_type=rbt, contact_type=rct
+                )
+                mat_plot.plot()
+                plt.savefig(mat_dir / f"{rct}.png", dpi=150, bbox_inches='tight')        
+
 if __name__ == "__main__":
 
     world_name = "tiny_world"
@@ -784,28 +791,9 @@ if __name__ == "__main__":
     ct_plots.run_simulation()
     #ct_plots = ContactTracker.from_pickle(world)
     ct_plots.process_contacts()
-    ct_plots.load_contact_data()
 
-    relevant_contact_types = ["household", "school", "company"]
-    relevant_bin_types = ["bbc","syoa"]
-    for rbt in relevant_bin_types:  
-        plot_dir = Path(f"./plots/")  
-        plot_dir.mkdir(exist_ok=True, parents=True)
-        stacked_contacts_plot = ct_plots.plot_stacked_contacts(
-            bin_type="bbc", contact_types=contact_types
-        )
-        stacked_contacts_plot.plot()
-        plt.savefig(plot_dir / f"{rbt}_contacts.png", dpi=150, bbox_inches='tight')
-        mat_dir = plot_dir / f"{rbt}"
-        mat_dir.mkdir(exist_ok=True, parents=True)
-        for rct in relevant_contact_types:
-            mat_plot = ct_plots.plot_contact_matrix(
-                bin_type=rbt, contact_type=rct
-            )
-            mat_plot.plot()
-            plt.savefig(mat_dir / f"{rct}_.png", dpi=150, bbox_inches='tight')
-
-    plt.show()
+    
+    
 
 
 

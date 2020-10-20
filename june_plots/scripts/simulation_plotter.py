@@ -4,6 +4,7 @@ import pickle
 import time
 import datetime as dt
 import yaml
+import argparse
 from itertools import combinations
 from pathlib import Path
 
@@ -29,7 +30,7 @@ from june import paths
 from june.simulator import Simulator
 
 from contact_tracker import ContactTracker
-from leisure_simulator import LeisureSimulator
+#from leisure_simulator import LeisureSimulator
 
 default_simulation_config_path = (
     paths.configs_path / "config_example.yaml"
@@ -59,6 +60,9 @@ colors = {
 default_world_filename = 'world.hdf5'
 default_output_plots_path = Path(__file__).absolute().parent.parent / "plots"
 
+max_age = 100
+bbc_bins = np.array([0,5,10,13,15,18,20,22,25,30,35,40,45,50,55,60,65,70,75,max_age])
+
 class SimulationPlotter:
 
     def __init__(
@@ -75,22 +79,7 @@ class SimulationPlotter:
         world = generate_world_from_hdf5(world_filename)
 
         return SimulationPlotter(world)
-
-    def load_operations(self):
-        "Loads classes with functions to be called during the simuation timesteps"
-
-        self.contact_simulator = ContactTracker([args])
-        self.leisure_simulator = LeisureSimulator([args])
-
-    def contact_simulator_operations(self): # This should be moved to the ContactTracker class as a function
-        
-        for group_type in self.contact_simulator.group_types:
-            for group in group_type:
-                if self.contact_simulator.interaction_type == "1d":
-                    self.contact_simulator.simulate_1d_contacts(group)
-                elif self.contact_simulator.interaction_type == "network":
-                    self.contact_simulator.simulate_network_contacts(group)
-    
+  
     def generate_simulator(
             self,
             simulation_config_path=default_simulation_config_path
@@ -117,6 +106,24 @@ class SimulationPlotter:
             record=Record,
         )
 
+    def load_operations(self, contact_tracker_pickle=None):
+        "Loads classes with functions to be called during the simuation timesteps"
+
+        if contact_tracker_pickle is None:
+            self.contact_simulator = ContactTracker(
+                self.simulator.world,
+                age_bins={"bbc":bbc_bins, "five_yr": np.arange(0,105,5)}
+                
+            )
+            self.do_tracker=True
+        else:
+            self.contact_simulator = ContactTracker.from_pickle(
+                self.simulator.world,
+                contact_tracker_pickle=contact_tracker_pickle
+            )
+            self.do_tracker=False
+        #self.leisure_simulator = LeisureSimulator([args])
+
     def advance_step(self):
         "Advance a simulation time step and carry out operations"
         
@@ -127,8 +134,9 @@ class SimulationPlotter:
         self.simulator.activity_manager.do_timestep()
 
         # carry out timestep operations
-        self.contact_simulator_operations() # this should be a function in the ContactTracker class
-        self.leisure_simulator_operations() # this should be a function in the LeisureSimulator class
+        if self.do_tracker: # No need to tracker counting if reading prev. sim. from pickle...
+            self.contact_simulator.operations()
+        #self.leisure_simulator_operations() # this should be a function in the LeisureSimulator class
 
         next(self.simulator.timer)
         
@@ -150,10 +158,14 @@ class SimulationPlotter:
             self.contact_simulator.save_tracker()
             #### SAVE OUT OTHERS HERE ####
 
+        self.contact_simulator.process_contacts()
+
     def make_plots(self):
         "Call class functions to create plots"
         
-        self.contact_tracker.make_plots(save_dir: Path = default_output_plots_path / "contact_tracker")
+        self.contact_tracker.make_plots(
+            save_dir = default_output_plots_path / "contact_tracker"
+        )
         ### CALL class functions which make plots ###
 
     def run_all(self, make_plots = True):
@@ -162,8 +174,8 @@ class SimulationPlotter:
         Note: What is called here is all that should need to be called
         """
         
-        self.load_operations()
         self.generate_simulator()
+        self.load_operations()        
         self.run_simulation()
         if make_plots:
             self.make_plots()
