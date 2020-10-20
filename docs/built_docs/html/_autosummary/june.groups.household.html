@@ -40,7 +40,7 @@
 <span id="june-groups-household"></span><h1>june.groups.household<a class="headerlink" href="#module-june.groups.household" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="june.groups.household.Household">
-<em class="property">class </em><code class="sig-prename descclassname">june.groups.household.</code><code class="sig-name descname">Household</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_size</span><span class="o">=</span><span class="default_value">inf</span></em>, <em class="sig-param"><span class="n">household_complacency</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.household.Household" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.household.</code><code class="sig-name descname">Household</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_size</span><span class="o">=</span><span class="default_value">inf</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.household.Household" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Household class represents a household and contains information about 
 its residents.
 We assume four subgroups:
@@ -78,7 +78,7 @@ Relatives is a list of people that are related to the family living in the house
 
 <dl class="py method">
 <dt id="june.groups.household.Household.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_size</span><span class="o">=</span><span class="default_value">inf</span></em>, <em class="sig-param"><span class="n">household_complacency</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.household.Household.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_size</span><span class="o">=</span><span class="default_value">inf</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.household.Household.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Type should be on of [“family”, “student”, “young_adults”, “old”, “other”, “nokids”, “ya_parents”, “communal”].
 Relatives is a list of people that are related to the family living in the household</p>
 </dd></dl>
@@ -119,14 +119,16 @@ a student is added to the subgroup matching their age.</p>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="june.groups.household.Household.get_leisure_subgroup">
-<code class="sig-name descname">get_leisure_subgroup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.household.Household.get_leisure_subgroup" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt id="june.groups.household.Household.get_spec">
 <code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.groups.household.Household.get_spec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the speciailization of the group.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.household.Household.make_household_residents_stay_home">
+<code class="sig-name descname">make_household_residents_stay_home</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">to_send_abroad</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.household.Household.make_household_residents_stay_home" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forces the residents to stay home if they are away doing leisure.
+This is used to welcome visitors.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -160,6 +162,11 @@ from the subgroup to which they belong</p>
 <code class="sig-name descname">area</code><a class="headerlink" href="#june.groups.household.Household.area" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt id="june.groups.household.Household.care_homes_to_visit">
+<code class="sig-name descname">care_homes_to_visit</code><a class="headerlink" href="#june.groups.household.Household.care_homes_to_visit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt id="june.groups.household.Household.contains_people">
 <em class="property">property </em><code class="sig-name descname">contains_people</code><a class="headerlink" href="#june.groups.household.Household.contains_people" title="Permalink to this definition">¶</a></dt>
@@ -167,18 +174,33 @@ from the subgroup to which they belong</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="june.groups.household.Household.coordinates">
+<em class="property">property </em><code class="sig-name descname">coordinates</code><a class="headerlink" href="#june.groups.household.Household.coordinates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="june.groups.household.Household.dead">
 <em class="property">property </em><code class="sig-name descname">dead</code><a class="headerlink" href="#june.groups.household.Household.dead" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt id="june.groups.household.Household.household_complacency">
-<code class="sig-name descname">household_complacency</code><a class="headerlink" href="#june.groups.household.Household.household_complacency" title="Permalink to this definition">¶</a></dt>
+<dt id="june.groups.household.Household.external">
+<code class="sig-name descname">external</code><em class="property"> = False</em><a class="headerlink" href="#june.groups.household.Household.external" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.household.Household.households_to_visit">
+<code class="sig-name descname">households_to_visit</code><a class="headerlink" href="#june.groups.household.Household.households_to_visit" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="june.groups.household.Household.id">
 <code class="sig-name descname">id</code><a class="headerlink" href="#june.groups.household.Household.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.household.Household.ids_checked">
+<code class="sig-name descname">ids_checked</code><a class="headerlink" href="#june.groups.household.Household.ids_checked" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -206,9 +228,9 @@ from the subgroup to which they belong</p>
 <em class="property">property </em><code class="sig-name descname">must_timestep</code><a class="headerlink" href="#june.groups.household.Household.must_timestep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="py method">
 <dt id="june.groups.household.Household.n_residents">
-<code class="sig-name descname">n_residents</code><a class="headerlink" href="#june.groups.household.Household.n_residents" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">n_residents</code><a class="headerlink" href="#june.groups.household.Household.n_residents" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -240,16 +262,6 @@ the name fo the class with the id of the instance.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt id="june.groups.household.Household.relatives_in_care_homes">
-<code class="sig-name descname">relatives_in_care_homes</code><a class="headerlink" href="#june.groups.household.Household.relatives_in_care_homes" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="june.groups.household.Household.relatives_in_households">
-<code class="sig-name descname">relatives_in_households</code><a class="headerlink" href="#june.groups.household.Household.relatives_in_households" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
 <dt id="june.groups.household.Household.residents">
 <code class="sig-name descname">residents</code><a class="headerlink" href="#june.groups.household.Household.residents" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -275,11 +287,6 @@ the name fo the class with the id of the instance.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt id="june.groups.household.Household.social_venues">
-<code class="sig-name descname">social_venues</code><a class="headerlink" href="#june.groups.household.Household.social_venues" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
 <dt id="june.groups.household.Household.spec">
 <code class="sig-name descname">spec</code><a class="headerlink" href="#june.groups.household.Household.spec" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -287,6 +294,11 @@ the name fo the class with the id of the instance.</p>
 <dl class="py attribute">
 <dt id="june.groups.household.Household.subgroups">
 <code class="sig-name descname">subgroups</code><a class="headerlink" href="#june.groups.household.Household.subgroups" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.household.Household.super_area">
+<em class="property">property </em><code class="sig-name descname">super_area</code><a class="headerlink" href="#june.groups.household.Household.super_area" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -317,6 +329,22 @@ the name fo the class with the id of the instance.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="june.groups.household.Households._make_member_ids_dict">
+<code class="sig-name descname">_make_member_ids_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">members</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.household.Households._make_member_ids_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes a dictionary with the ids of the members.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.household.Households.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">group</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.household.Households.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.household.Households.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.household.Households.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="june.groups.household.Households.for_box_mode">
 <em class="property">classmethod </em><code class="sig-name descname">for_box_mode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.household.Households.for_box_mode" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -329,6 +357,27 @@ the name fo the class with the id of the instance.</p>
 <dl class="py method">
 <dt id="june.groups.household.Households.from_file">
 <em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.household.Households.from_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.household.Households.get_from_id">
+<code class="sig-name descname">get_from_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.household.Households.get_from_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.household.Households.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.groups.household.Households.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the super group.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.household.Households.group_spec">
+<em class="property">property </em><code class="sig-name descname">group_spec</code><a class="headerlink" href="#june.groups.household.Households.group_spec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.household.Households.member_ids">
+<em class="property">property </em><code class="sig-name descname">member_ids</code><a class="headerlink" href="#june.groups.household.Households.member_ids" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

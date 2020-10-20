@@ -40,17 +40,17 @@
 <span id="june-activity-activity-manager"></span><h1>june.activity.activity_manager<a class="headerlink" href="#module-june.activity.activity_manager" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="june.activity.activity_manager.ActivityManager">
-<em class="property">class </em><code class="sig-prename descclassname">june.activity.activity_manager.</code><code class="sig-name descname">ActivityManager</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span></em>, <em class="sig-param"><span class="n">policies</span></em>, <em class="sig-param"><span class="n">timer</span></em>, <em class="sig-param"><span class="n">all_activities</span></em>, <em class="sig-param"><span class="n">activity_to_groups</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">leisure</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.groups.leisure.leisure.html#june.groups.leisure.leisure.Leisure" title="june.groups.leisure.leisure.Leisure">june.groups.leisure.leisure.Leisure</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_age_home_alone</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">15</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.activity.activity_manager.</code><code class="sig-name descname">ActivityManager</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span></em>, <em class="sig-param"><span class="n">policies</span></em>, <em class="sig-param"><span class="n">timer</span></em>, <em class="sig-param"><span class="n">all_activities</span></em>, <em class="sig-param"><span class="n">activity_to_super_groups</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">leisure</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.groups.leisure.leisure.html#june.groups.leisure.leisure.Leisure" title="june.groups.leisure.leisure.Leisure">june.groups.leisure.leisure.Leisure</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">travel</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>june.groups.travel.travel.Travel<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt id="june.activity.activity_manager.ActivityManager.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span></em>, <em class="sig-param"><span class="n">policies</span></em>, <em class="sig-param"><span class="n">timer</span></em>, <em class="sig-param"><span class="n">all_activities</span></em>, <em class="sig-param"><span class="n">activity_to_groups</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">leisure</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.groups.leisure.leisure.html#june.groups.leisure.leisure.Leisure" title="june.groups.leisure.leisure.Leisure">june.groups.leisure.leisure.Leisure</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_age_home_alone</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">15</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span></em>, <em class="sig-param"><span class="n">policies</span></em>, <em class="sig-param"><span class="n">timer</span></em>, <em class="sig-param"><span class="n">all_activities</span></em>, <em class="sig-param"><span class="n">activity_to_super_groups</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">leisure</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.groups.leisure.leisure.html#june.groups.leisure.leisure.Leisure" title="june.groups.leisure.leisure.Leisure">june.groups.leisure.leisure.Leisure</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">travel</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>june.groups.travel.travel.Travel<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.activity.activity_manager.ActivityManager.activities_to_groups">
-<code class="sig-name descname">activities_to_groups</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.activities_to_groups" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts activities into Groups, the interaction will run over these Groups.</p>
+<dt id="june.activity.activity_manager.ActivityManager.activities_to_super_groups">
+<code class="sig-name descname">activities_to_super_groups</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.activities_to_super_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts activities into Supergroups, the interaction will run over these Groups.</p>
 <dl class="simple">
 <dt>activities:</dt><dd><p>list of activities that take place at a given time step</p>
 </dd>
@@ -71,37 +71,9 @@ and shuflling the random one.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.activity.activity_manager.ActivityManager.distribute_commuters">
-<code class="sig-name descname">distribute_commuters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.distribute_commuters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.activity.activity_manager.ActivityManager.distribute_rail_back">
-<code class="sig-name descname">distribute_rail_back</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.distribute_rail_back" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.activity.activity_manager.ActivityManager.distribute_rail_out">
-<code class="sig-name descname">distribute_rail_out</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.distribute_rail_out" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt id="june.activity.activity_manager.ActivityManager.do_timestep">
 <code class="sig-name descname">do_timestep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.do_timestep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.activity.activity_manager.ActivityManager.get_personal_subgroup">
-<code class="sig-name descname">get_personal_subgroup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">activity</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.groups.group.subgroup.html#june.groups.group.subgroup.Subgroup" title="june.groups.group.subgroup.Subgroup">june.groups.group.subgroup.Subgroup</a><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.get_personal_subgroup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find the subgroup a person belongs to for a particular activity.</p>
-<dl class="simple">
-<dt>person:</dt><dd><p>person that is looking for a subgroup</p>
-</dd>
-<dt>activity:</dt><dd><p>the activity the person wants to find a subgroup for</p>
-</dd>
-</dl>
-<p>Subgroup for activity</p>
-</dd></dl>
 
 <dl class="py method">
 <dt id="june.activity.activity_manager.ActivityManager.move_people_to_active_subgroups">
@@ -112,7 +84,7 @@ they stay at home</p>
 
 <dl class="py method">
 <dt id="june.activity.activity_manager.ActivityManager.move_to_active_subgroup">
-<code class="sig-name descname">move_to_active_subgroup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span> &#x2192; Optional<span class="p">[</span><a class="reference internal" href="june.groups.group.subgroup.html#june.groups.group.subgroup.Subgroup" title="june.groups.group.subgroup.Subgroup">june.groups.group.subgroup.Subgroup</a><span class="p">]</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.move_to_active_subgroup" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">move_to_active_subgroup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">activities</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">to_send_abroad</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Optional<span class="p">[</span><a class="reference internal" href="june.groups.group.subgroup.html#june.groups.group.subgroup.Subgroup" title="june.groups.group.subgroup.Subgroup">june.groups.group.subgroup.Subgroup</a><span class="p">]</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.move_to_active_subgroup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given the hierarchy of activities and a person, decide what subgroup
 should they go to</p>
 <dl class="simple">
@@ -125,13 +97,19 @@ should they go to</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.activity.activity_manager.ActivityManager.active_groups">
-<em class="property">property </em><code class="sig-name descname">active_groups</code><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.active_groups" title="Permalink to this definition">¶</a></dt>
+<dt id="june.activity.activity_manager.ActivityManager.send_and_receive_people_from_abroad">
+<code class="sig-name descname">send_and_receive_people_from_abroad</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">movable_people</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.send_and_receive_people_from_abroad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deal with the MPI comms.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.activity.activity_manager.ActivityManager.active_super_groups">
+<em class="property">property </em><code class="sig-name descname">active_super_groups</code><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.active_super_groups" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="june.activity.activity_manager.ActivityManager.all_groups">
-<em class="property">property </em><code class="sig-name descname">all_groups</code><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.all_groups" title="Permalink to this definition">¶</a></dt>
+<dt id="june.activity.activity_manager.ActivityManager.all_super_groups">
+<em class="property">property </em><code class="sig-name descname">all_super_groups</code><a class="headerlink" href="#june.activity.activity_manager.ActivityManager.all_super_groups" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

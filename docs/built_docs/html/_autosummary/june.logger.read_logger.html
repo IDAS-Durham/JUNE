@@ -40,24 +40,40 @@
 <span id="june-logger-read-logger"></span><h1>june.logger.read_logger<a class="headerlink" href="#module-june.logger.read_logger" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="june.logger.read_logger.ReadLogger">
-<em class="property">class </em><code class="sig-prename descclassname">june.logger.read_logger.</code><code class="sig-name descname">ReadLogger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em>, <em class="sig-param"><span class="n">output_file_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'logger.hdf5'</span></em>, <em class="sig-param"><span class="n">light_logger</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">load_real</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.logger.read_logger.</code><code class="sig-name descname">ReadLogger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em>, <em class="sig-param"><span class="n">root_output_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'logger'</span></em>, <em class="sig-param"><span class="n">n_processes</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read hdf5 file saved by the logger, and produce useful data frames</p>
 <dl class="simple">
 <dt>output_path:</dt><dd><p>path to simulation’s output</p>
 </dd>
-<dt>output_file_name:</dt><dd><p>name of file saved by simulation</p>
+<dt>root_output_path:</dt><dd><p>name of file saved by simulation</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt id="june.logger.read_logger.ReadLogger.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em>, <em class="sig-param"><span class="n">output_file_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'logger.hdf5'</span></em>, <em class="sig-param"><span class="n">light_logger</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">load_real</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em>, <em class="sig-param"><span class="n">root_output_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'logger'</span></em>, <em class="sig-param"><span class="n">n_processes</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read hdf5 file saved by the logger, and produce useful data frames</p>
 <dl class="simple">
 <dt>output_path:</dt><dd><p>path to simulation’s output</p>
 </dd>
-<dt>output_file_name:</dt><dd><p>name of file saved by simulation</p>
+<dt>root_output_path:</dt><dd><p>name of file saved by simulation</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.logger.read_logger.ReadLogger._load_infected_data_for_rank">
+<code class="sig-name descname">_load_infected_data_for_rank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rank</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger._load_infected_data_for_rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data on infected people over time and convert to a list of data frames 
+<code class="docutils literal notranslate"><span class="pre">self.infections_per_super_area</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.logger.read_logger.ReadLogger._load_infection_location_for_rank">
+<code class="sig-name descname">_load_infection_location_for_rank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rank</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.logger.read_logger.ReadLogger._load_infection_location_for_rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data frame with informtion on where did people get infected</p>
+<blockquote>
+<div><p>data frame with infection locations, and average count of infections per group type</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
@@ -91,14 +107,14 @@ in a time window starting at a random time and recording for <code class="docuti
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.logger.read_logger.ReadLogger.get_daily_updates">
-<code class="sig-name descname">get_daily_updates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symptoms_df</span></em>, <em class="sig-param"><span class="n">lambda_to_filter</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.get_daily_updates" title="Permalink to this definition">¶</a></dt>
+<dt id="june.logger.read_logger.ReadLogger.get_config">
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.get_config" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="june.logger.read_logger.ReadLogger.get_locations_infections">
-<code class="sig-name descname">get_locations_infections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">end_date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.logger.read_logger.ReadLogger.get_locations_infections" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a data frame with the number of infection happening at each type of place, within the given time
+<dt id="june.logger.read_logger.ReadLogger.get_location_infections_timeseries">
+<code class="sig-name descname">get_location_infections_timeseries</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">end_date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.get_location_infections_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a data frame timeseries with the number of infection happening at each type of place, within the given time
 period</p>
 <dl class="simple">
 <dt>start_date:</dt><dd><p>first date to count</p>
@@ -109,9 +125,37 @@ period</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.logger.read_logger.ReadLogger.get_parameters">
-<code class="sig-name descname">get_parameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parameters</span><span class="o">=</span><span class="default_value">['beta', 'alpha_physical']</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">8</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.get_parameters" title="Permalink to this definition">¶</a></dt>
+<dt id="june.logger.read_logger.ReadLogger.get_locations_infections">
+<code class="sig-name descname">get_locations_infections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">end_date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.logger.read_logger.ReadLogger.get_locations_infections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a data frame with the number of infection happening at each type of place, 
+within the given time period</p>
+<dl class="simple">
+<dt>start_date:</dt><dd><p>first date to count</p>
+</dd>
+<dt>end_date:</dt><dd><p>last date to count</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.logger.read_logger.ReadLogger.get_meta_info">
+<code class="sig-name descname">get_meta_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parameters</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.get_meta_info" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.logger.read_logger.ReadLogger.get_parameters">
+<code class="sig-name descname">get_parameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parameters</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">8</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.get_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the parameters which are stored in the logger.</p>
+<dl class="simple">
+<dt>parameters:</dt><dd><p>which parameters to recover.
+default [“beta”, “alpha_physical”, “infection_seed”, “asyptomatic_ratio”].</p>
+</dd>
+<dt>max_depth:</dt><dd><p>maximum nested dictionary depth to stop searching. Default = 8.</p>
+</dd>
+<dt>Returns</dt><dd><p>nested dictionary of parameters the simulation was run with.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt id="june.logger.read_logger.ReadLogger.get_r">
@@ -121,21 +165,6 @@ period</p>
 <div><p>data frame with R value, date as index</p>
 </div></blockquote>
 </dd></dl>
-
-<dl class="py method">
-<dt id="june.logger.read_logger.ReadLogger.infection_duration">
-<code class="sig-name descname">infection_duration</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.infection_duration" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.logger.read_logger.ReadLogger.load_confirmed_cases">
-<code class="sig-name descname">load_confirmed_cases</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.load_confirmed_cases" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.logger.read_logger.ReadLogger.load_estimated_cases">
-<code class="sig-name descname">load_estimated_cases</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.load_estimated_cases" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt id="june.logger.read_logger.ReadLogger.load_hospital_capacity">
@@ -158,33 +187,18 @@ period</p>
 <dl class="py method">
 <dt id="june.logger.read_logger.ReadLogger.load_infected_data">
 <code class="sig-name descname">load_infected_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.load_infected_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load data on infected people over time and convert to a data frame <code class="docutils literal notranslate"><span class="pre">self.infections_df</span></code></p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt id="june.logger.read_logger.ReadLogger.load_infection_location">
 <code class="sig-name descname">load_infection_location</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.logger.read_logger.ReadLogger.load_infection_location" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load data frame with informtion on where did people get infected</p>
-<blockquote>
-<div><p>data frame with infection locations, and average count of infections per group type</p>
-</div></blockquote>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt id="june.logger.read_logger.ReadLogger.load_population_data">
-<code class="sig-name descname">load_population_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">light_logger</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.load_population_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">load_population_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.load_population_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load data related to population (age, sex, …)</p>
 </dd></dl>
-
-<dl class="py method">
-<dt id="june.logger.read_logger.ReadLogger.load_real_deaths">
-<code class="sig-name descname">load_real_deaths</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.load_real_deaths" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.logger.read_logger.ReadLogger.load_real_time_series">
-<code class="sig-name descname">load_real_time_series</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.load_real_time_series" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt id="june.logger.read_logger.ReadLogger.process_symptoms">
@@ -202,13 +216,33 @@ and hospitalised people</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.logger.read_logger.ReadLogger.repack_dict">
-<code class="sig-name descname">repack_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hdf5_obj</span></em>, <em class="sig-param"><span class="n">output_dict</span></em>, <em class="sig-param"><span class="n">base_path</span></em>, <em class="sig-param"><span class="n">output_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">depth</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">8</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.repack_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="june.logger.read_logger.ReadLogger.region_summary">
+<code class="sig-name descname">region_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.logger.read_logger.ReadLogger.region_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a summary for regions, on how many people are recovered, dead, infected,
+susceptible, hospitalised or in intensive care, per time step.
+Returns
+——-
+A data frame whose index is the date recorded, and columns are regions, number of recovered,
+dead, infected…</p>
+</dd></dl>
 
 <dl class="py method">
-<dt id="june.logger.read_logger.ReadLogger.subtract_previous">
-<code class="sig-name descname">subtract_previous</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">row</span></em>, <em class="sig-param"><span class="n">hospitalised_id</span></em>, <em class="sig-param"><span class="n">prev_hospitalised_id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.subtract_previous" title="Permalink to this definition">¶</a></dt>
+<dt id="june.logger.read_logger.ReadLogger.repack_dict">
+<code class="sig-name descname">repack_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hdf5_obj</span></em>, <em class="sig-param"><span class="n">output_dict</span></em>, <em class="sig-param"><span class="n">base_path</span></em>, <em class="sig-param"><span class="n">output_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">depth</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">8</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.repack_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pack datesets into a (nested) dictionary.</p>
+<dl class="simple">
+<dt>hdf5_obj</dt><dd><p>an open hdf5 object.</p>
+</dd>
+<dt>output_dict</dt><dd><p>an empty dictionary to store output data in</p>
+</dd>
+<dt>base_path</dt><dd><p>the path to start at</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.logger.read_logger.ReadLogger.run_summary">
+<code class="sig-name descname">run_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.run_summary" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -221,11 +255,17 @@ dead, infected…</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="june.logger.read_logger.ReadLogger.super_areas_to_region_mapping">
+<code class="sig-name descname">super_areas_to_region_mapping</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span></em>, <em class="sig-param"><span class="n">super_area_region_path</span><span class="o">=</span><span class="default_value">PosixPath('/home/sadie/JUNE/data/input/geography/area_super_area_region.csv')</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.logger.read_logger.ReadLogger.super_areas_to_region_mapping" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="june.logger.read_logger.ReadLogger.world_summary">
 <code class="sig-name descname">world_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.logger.read_logger.ReadLogger.world_summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a summary at the world level, on how many people are recovered, dead, infected,
 susceptible, hospitalised or in intensive care, per time step.</p>
-<p>A data frame whose index is the date recorded, and columns are number of recovered, dead, infected…</p>
+<p>A data frame whose index is the date recorded, and columns are number of recovered, 
+dead, infected…</p>
 </dd></dl>
 
 </dd></dl>

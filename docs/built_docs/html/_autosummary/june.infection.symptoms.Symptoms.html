@@ -49,32 +49,68 @@
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">is_recovered</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">_compute_time_from_infection_to_symptoms</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">max_tag</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">_make_symptom_trajectory</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">health_index</span></em><span class="sig-paren">)</span></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">time_exposed</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">update_trajectory_stage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_from_infection</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Updates the current symptom tag from the symptoms trajectory,
+given how much time has passed since the person was infected.</p>
+<dl class="simple">
+<dt>time_from_infection: float</dt><dd><p>Time in days since the person got infected.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">dead</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">max_severity</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">max_tag</code></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">time_from_infection_to_symptoms</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<em class="property">property </em><code class="sig-name descname">recovered</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">stage</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">tag</code></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">update_severity_from_delta_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_from_infection</span></em><span class="sig-paren">)</span></dt>
+<em class="property">property </em><code class="sig-name descname">time_exposed</code></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="py attribute">
 <dt>
-<code class="sig-name descname">update_trajectory</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">time_of_symptoms_onset</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">trajectory</code></dt>
 <dd></dd></dl>
 
 </dd></dl>

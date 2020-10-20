@@ -40,7 +40,7 @@
 <h1>june.policy.medical_care_policies.Hospitalisation<a class="headerlink" href="#june-policy-medical-care-policies-hospitalisation" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">june.policy.medical_care_policies.</code><code class="sig-name descname">Hospitalisation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="o">=</span><span class="default_value">'2500-01-01'</span></em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.policy.medical_care_policies.</code><code class="sig-name descname">Hospitalisation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="o">=</span><span class="default_value">'2500-01-01'</span></em>, <em class="sig-param"><span class="n">probability_of_care_home_resident_admission</span><span class="o">=</span><span class="default_value">0.3</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Hospitalisation policy. When applied to a sick person, allocates that person to a hospital, if the symptoms are severe
 enough. When the person recovers, releases the person from the hospital.</p>
 <p>Template for a general policy.</p>
@@ -52,7 +52,7 @@ enough. When the person recovers, releases the person from the hospital.</p>
 </dl>
 <dl class="py method">
 <dt>
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="o">=</span><span class="default_value">'2500-01-01'</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">'1900-01-01'</span></em>, <em class="sig-param"><span class="n">end_time</span><span class="o">=</span><span class="default_value">'2500-01-01'</span></em>, <em class="sig-param"><span class="n">probability_of_care_home_resident_admission</span><span class="o">=</span><span class="default_value">0.3</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Template for a general policy.</p>
 <dl class="simple">
 <dt>start_time:</dt><dd><p>date at which to start applying the policy</p>
@@ -64,7 +64,7 @@ enough. When the person recovers, releases the person from the hospital.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">hospitals</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.hospital.html#june.groups.hospital.Hospitals" title="june.groups.hospital.Hospitals">june.groups.hospital.Hospitals</a></span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">hospitals</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.hospital.html#june.groups.hospital.Hospitals" title="june.groups.hospital.Hospitals">june.groups.hospital.Hospitals</a></span></em>, <em class="sig-param"><span class="n">record</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Record<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd></dd></dl>
 
 <dl class="py method">
