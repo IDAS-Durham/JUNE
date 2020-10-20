@@ -310,7 +310,7 @@ def create_full_world(full_world_geography):
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
-    geography.universities = Universities.for_super_areas(geography.super_areas)
+    geography.universities = Universities.for_geography(geography)
     world = generate_world_from_geography(
         geography=geography, include_households=True
     )
@@ -337,7 +337,7 @@ def create_domains_world():
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
-    geography.universities = Universities.for_super_areas(geography.super_areas)
+    geography.universities = Universities.for_geography(geography)
     world = generate_world_from_geography(
         geography=geography, include_households=True
     )
