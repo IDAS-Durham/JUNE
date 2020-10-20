@@ -222,5 +222,7 @@ def test__infection_is_isolated(selector):
     assert len(infected_households) <= 5
     simulator.run()
     for person in world.people:
-        if not (person.residence.group in infected_households):
+        if person.residence is None:
+            assert person.dead
+        elif not (person.residence.group in infected_households):
             assert not person.infected and person.susceptible
