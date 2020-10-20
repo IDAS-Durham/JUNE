@@ -32,14 +32,13 @@ Package `__init__`-based modules
 
    activity
    box
-   .. commute
    demography
    distributors
    groups
    groups.commute
    groups.group
    groups.leisure
-   .. groups.travel
+   groups.travel
    hdf5_savers
    infection
    interaction
@@ -87,7 +86,6 @@ Demography
    :template: module.rst
 
    demography.demography
-   .. demography.geography
    demography.person
 
 
@@ -98,7 +96,6 @@ Distributors
    :toctree: _autosummary
    :template: module.rst
 
-   .. distributors.carehome_distributor
    distributors.company_distributor
    distributors.hospital_distributor
    distributors.household_distributor
@@ -125,7 +122,6 @@ Groups
    :template: module.rst
 
    groups.boundary
-   .. groups.carehome
    groups.cemetery
    groups.company
    groups.hospital
@@ -135,22 +131,6 @@ Groups
 
 See also the sub-sections grouping together related types of `Groups`.
 
-
-Commute Groups
-""""""""""""""
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: module.rst
-
-   .. groups.commute.commutecity_distributor
-   .. groups.commute.commutecity
-   .. groups.commute.commutecityunit_distributor
-   .. groups.commute.commutecityunit
-   .. groups.commute.commutehub_distributor
-   .. groups.commute.commutehub
-   .. groups.commute.commuteunit_distributor
-   .. groups.commute.commuteunit
 
 Group Groups
 """"""""""""
@@ -182,19 +162,6 @@ Leisure Groups
    groups.leisure.social_venue
 
 
-Travel Groups
-"""""""""""""
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: module.rst
-
-   .. groups.travel.travelcity_distributor
-   .. groups.travel.travelcity
-   .. groups.travel.travelunit_distributor
-   .. groups.travel.travelunit
-
-
 HDF5 Savers
 ^^^^^^^^^^^
 
@@ -222,8 +189,7 @@ Infection
    :template: module.rst
 
    infection.health_index
-   .. infection.health_information
-   .. infection.infection
+   infection.infection
    infection_seed.infection_seed
    infection_seed.observed_to_cases
    infection_seed
@@ -242,10 +208,8 @@ Interaction
    :toctree: _autosummary
    :template: module.rst
 
-   .. interaction.contact_sampling
-   .. interaction.interaction
-   .. interaction.interactive_group
-   .. interaction.matrix_interaction
+   interaction.interaction
+   interaction.interactive_group
 
 
 Logger

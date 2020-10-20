@@ -42,28 +42,6 @@ Box
    box.box_mode.Boxes
 
 
-Commute
-^^^^^^^
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: class.rst
-
-   .. commute.ModeOfTransport
-   .. commute.RegionalGenerator
-   .. commute.CommuteGenerator
-
-
-.. Data Formatting
-   ^^^^^^^^^^^^^^^
-
-   Note that:
-       data_formatting.google_api.gmapi.APICall
-       data_formatting.google_api.gmapi.MSOASearch
-   have been omitted since they are not in the june namespace so can't be
-   imported to be processed by the Sphinx autosummary extension.
-
-
 Demography
 ^^^^^^^^^^
 
@@ -74,11 +52,6 @@ Demography
    demography.demography.AgeSexGenerator
    demography.demography.Population
    demography.demography.Demography
-   .. demography.geography.Area
-   .. demography.geography.Areas
-   .. demography.geography.SuperArea
-   .. demography.geography.SuperAreas
-   .. demography.geography.Geography
    demography.person.Activities
    demography.person.Person
 
@@ -90,7 +63,6 @@ Exceptions (Exception classes):
    :template: exceptions.rst
 
    demography.demography.DemographyError
-   .. demography.geography.GeographyError
 
 
 Distributors
@@ -100,7 +72,6 @@ Distributors
    :toctree: _autosummary
    :template: class.rst
 
-   .. distributors.carehome_distributor.CareHomeDistributor
    distributors.company_distributor.CompanyDistributor
    distributors.hospital_distributor.HospitalDistributor
    distributors.household_distributor.HouseholdDistributor
@@ -115,7 +86,6 @@ Exceptions (Exception classes):
    :toctree: _autosummary
    :template: exceptions.rst
 
-   .. distributors.carehome_distributor.CareHomeError
    distributors.household_distributor.HouseholdError
 
 
@@ -141,9 +111,6 @@ Groups
    :template: class.rst
 
    groups.boundary.Boundary
-   .. groups.carehome.CareHome
-   .. groups.carehome.CareHome.SubgroupType
-   .. groups.carehome.CareHomes
    groups.cemetery.Cemetery
    groups.cemetery.Cemeteries
    groups.company.Company
@@ -169,33 +136,11 @@ Exceptions (Exception classes):
    :template: exceptions.rst
 
    groups.boundary.BoundaryError
-   .. groups.carehome.CareHomeError
    groups.company.CompanyError
    groups.school.SchoolError
 
 
 See also the sub-sections grouping together related types of `Groups`.
-
-
-Commute Groups
-""""""""""""""
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: class.rst
-
-   .. groups.commute.commutecity.CommuteCity
-   .. groups.commute.commutecity.CommuteCities
-   .. groups.commute.commutecity_distributor.CommuteCityDistributor
-   .. groups.commute.commutecityunit.CommuteCityUnit
-   .. groups.commute.commutecityunit.CommuteCityUnits
-   .. groups.commute.commutecityunit_distributor.CommuteCityUnitDistributor
-   .. groups.commute.commutehub.CommuteHub
-   .. groups.commute.commutehub.CommuteHubs
-   .. groups.commute.commutehub_distributor.CommuteHubDistributor
-   .. groups.commute.commuteunit.CommuteUnit
-   .. groups.commute.commuteunit.CommuteUnits
-   .. groups.commute.commuteunit_distributor.CommuteUnitDistributor
 
 
 Group Groups
@@ -245,21 +190,6 @@ Exceptions (Exception classes):
    groups.leisure.social_venue.SocialVenueError
 
 
-Travel Groups
-"""""""""""""
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: class.rst
-
-   .. groups.travel.travelcity_distributor.TravelCityDistributor
-   .. groups.travel.travelcity.TravelCity
-   .. groups.travel.travelcity.TravelCities
-   .. groups.travel.travelunit_distributor.TravelUnitDistributor
-   .. groups.travel.travelunit.TravelUnit
-   .. groups.travel.travelunit.TravelUnits
-
-
 Infection
 ^^^^^^^^^
 
@@ -267,11 +197,7 @@ Infection
    :toctree: _autosummary
    :template: class.rst
 
-   .. infection.health_index.HealthIndexGenerator
-   .. infection.health_information.HealthInformation
-   .. infection.infection.SymptomsType
-   .. infection.infection.InfectionSelector
-   .. infection.infection.Infection
+   infection.health_index.HealthIndexGenerator
    infection_seed.infection_seed.InfectionSeed
    infection_seed.observed_to_cases.Observed2Cases
    infection.symptoms.Symptoms
@@ -300,10 +226,8 @@ Interaction
    :toctree: _autosummary
    :template: class.rst
 
-   .. interaction.contact_sampling.ContactSampling
    interaction.interaction.Interaction
    interaction.interactive_group.InteractiveGroup
-   .. interaction.matrix_interaction.MatrixInteraction
 
 
 Logger
