@@ -25,8 +25,8 @@ plt.style.use(['science'])
 plt.style.reload_library()
 
 colors = {
-    'JUNE': '#0c5da5',
-    'ONS': '#00b945',
+    'ONS': '#0c5da5',
+    'JUNE': '#00b945',
     'general_1': '#ff9500',
     'general_2': '#ff2c00',
     'general_3': '#845b97',
@@ -196,8 +196,40 @@ class Plotter:
         
         print("Setting up household plots")
         household_plots = HouseholdPlots(self.world, colors = colors)
+        household_plots.load_household_data()
 
-        household_plots.plot_all_household_plots(save_dir=save_dir)
+        print("Plotting household sizes")
+        household_sizes_plot = household_plots.plot_household_sizes()
+        household_sizes_plot.plot()
+        plt.savefig(save_dir / "household_sizes.png", dpi=150, bbox_inches="tight")
+        
+        print("Plotting household size comparison to England avg.")
+        household_sizes_ratios = household_plots.plot_household_sizes_ratio_to_england()
+        household_sizes_ratios.plot()
+        plt.savefig(save_dir / "household_sizes_ratios.png", dpi=150, bbox_inches="tight")
+
+        print("Plotting household probability matrix")
+        household_probability_matrix = household_plots.plot_household_probability_matrix()
+        household_probability_matrix.plot()
+        plt.savefig(
+            save_dir / "household_prob_matrix.png", dpi=150, bbox_inches="tight"
+        )
+
+        print("Plotting household age differences")
+        f, ax = household_plots.plot_household_age_differences()
+        plt.plot()
+        plt.savefig(
+            save_dir / "household_age_differences.png", dpi=150, bbox_inches="tight"
+        )
+
+        print("Plotting hc by age")
+        hc_plot = household_plots.plot_household_composition_by_age()
+        hc_plot.plot()
+        plt.savefig(
+            save_dir / "household_composition_by_age.png", dpi=150, bbox_inches="tight"
+        )
+
+        #household_plots.plot_all_household_plots(save_dir=save_dir)
 
 
     def plot_companies(
@@ -324,8 +356,8 @@ class Plotter:
         school_plots = SchoolPlots(self.world, colors = colors)
         school_plots.load_school_data()
 
-        school_size_plot = school_plots.plot_school_sizes()        
-        school_size_plot.plot()
+        f, ax = school_plots.plot_school_sizes()        
+        plt.plot()
         plt.savefig(save_dir / 'school_sizes.png', dpi=150, bbox_inches='tight')
         
         student_teacher_ratio_plot = school_plots.plot_student_teacher_ratio()
@@ -430,7 +462,7 @@ class Plotter:
         self.plot_policies()
         self.plot_care_homes()
         self.plot_schools()
-        #self.plot_contact_matrices()
+        self.plot_contact_matrices()
         self.plot_life_expectancy()
         self.plot_health_index()
 
