@@ -1,4 +1,4 @@
-﻿june.groups.school.SchoolError
+june.groups.school.SchoolError
 ==============================
 
 .. currentmodule:: june.groups.school

@@ -1,4 +1,4 @@
-﻿june.demography.demography.DemographyError
+june.demography.demography.DemographyError
 ==========================================
 
 .. currentmodule:: june.demography.demography

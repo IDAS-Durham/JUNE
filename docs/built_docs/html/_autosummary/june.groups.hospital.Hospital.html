@@ -40,7 +40,7 @@
 <h1>june.groups.hospital.Hospital<a class="headerlink" href="#june-groups-hospital-hospital" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">june.groups.hospital.</code><code class="sig-name descname">Hospital</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">n_icu_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trust_code</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.hospital.</code><code class="sig-name descname">Hospital</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">n_icu_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trust_code</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><p>The Hospital class represents a hospital and contains information about
 its patients and workers - the latter being the usual “people”.</p>
 <p>We currently use three subgroups: 
@@ -53,7 +53,7 @@ its patients and workers - the latter being the usual “people”.</p>
 </dd>
 <dt>n_icu_beds:</dt><dd><p>total number of ICU beds in the hospital</p>
 </dd>
-<dt>super_area:</dt><dd><p>name of the super area the hospital belongs to</p>
+<dt>area:</dt><dd><p>name of the super area the hospital belongs to</p>
 </dd>
 <dt>coordinates:</dt><dd><p>latitude and longitude</p>
 </dd>
@@ -81,14 +81,14 @@ its patients and workers - the latter being the usual “people”.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">n_icu_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trust_code</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">n_icu_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trust_code</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Create a Hospital given its description.</p>
 <dl class="simple">
 <dt>n_beds:</dt><dd><p>total number of regular beds in the hospital</p>
 </dd>
 <dt>n_icu_beds:</dt><dd><p>total number of ICU beds in the hospital</p>
 </dd>
-<dt>super_area:</dt><dd><p>name of the super area the hospital belongs to</p>
+<dt>area:</dt><dd><p>name of the super area the hospital belongs to</p>
 </dd>
 <dt>coordinates:</dt><dd><p>latitude and longitude</p>
 </dd>
@@ -127,13 +127,25 @@ a student is added to the subgroup matching their age.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">add_as_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Add patient to hospital, depending on their healty information tag
-they’ll go to intensive care or regular beds.</p>
-<dl class="simple">
-<dt>person:</dt><dd><p>person instance to add as patient</p>
-</dd>
-</dl>
+<code class="sig-name descname">add_to_icu</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">add_to_ward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">allocate_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Allocate a patient inside the hospital, in the ward, in the ICU, or transfer.
+To correctly log if the person has been just admitted, transfered, or released,
+we return a few flags:
+- “ward_admitted” : this person has been admitted to the ward.
+- “icu_admitted” : this person has been directly admitted to icu.
+- “ward_transferred” : this person has been transferred  to ward (from icu)
+- “icu_transferred” : this person has been transferred to icu (from ward)
+- “no_change” : no change respect to last time step.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -149,7 +161,18 @@ they’ll go to intensive care or regular beds.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">release_as_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">release_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Releases patient from hospital.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">remove_from_icu</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">remove_from_ward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -168,6 +191,11 @@ from the subgroup to which they belong</p>
 <code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">area</code></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt>
 <em class="property">property </em><code class="sig-name descname">contains_people</code></dt>
@@ -184,6 +212,11 @@ from the subgroup to which they belong</p>
 <em class="property">property </em><code class="sig-name descname">dead</code></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">external</code><em class="property"> = False</em></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt>
 <em class="property">property </em><code class="sig-name descname">full</code></dt>
@@ -198,7 +231,7 @@ from the subgroup to which they belong</p>
 
 <dl class="py method">
 <dt>
-<em class="property">property </em><code class="sig-name descname">icu_patients</code></dt>
+<em class="property">property </em><code class="sig-name descname">icu</code></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -240,11 +273,6 @@ the name fo the class with the id of the instance.</p>
 
 <dl class="py method">
 <dt>
-<em class="property">property </em><code class="sig-name descname">patients</code></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt>
 <em class="property">property </em><code class="sig-name descname">people</code></dt>
 <dd><p>All the people in this group</p>
 </dd></dl>
@@ -252,6 +280,16 @@ the name fo the class with the id of the instance.</p>
 <dl class="py method">
 <dt>
 <em class="property">property </em><code class="sig-name descname">recovered</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">region</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">region_name</code></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -284,9 +322,9 @@ the name fo the class with the id of the instance.</p>
 <code class="sig-name descname">subgroups</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="py method">
 <dt>
-<code class="sig-name descname">super_area</code></dt>
+<em class="property">property </em><code class="sig-name descname">super_area</code></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -297,6 +335,11 @@ the name fo the class with the id of the instance.</p>
 <dl class="py attribute">
 <dt>
 <code class="sig-name descname">trust_code</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">ward</code></dt>
 <dd></dd></dl>
 
 </dd></dl>

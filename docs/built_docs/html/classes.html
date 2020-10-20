@@ -82,26 +82,6 @@ be highlighted though.</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="commute">
-<h2>Commute<a class="headerlink" href="#commute" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.commute.html#june.commute.ModeOfTransport" title="june.commute.ModeOfTransport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">commute.ModeOfTransport</span></code></a>(description[, is_public])</p></td>
-<td><p>Create a ModeOfTransport from its description.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.commute.html#june.commute.RegionalGenerator" title="june.commute.RegionalGenerator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">commute.RegionalGenerator</span></code></a>(msoarea, …)</p></td>
-<td><p>Randomly generate modes of transport, weighted by usage, for one particular region.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.commute.html#june.commute.CommuteGenerator" title="june.commute.CommuteGenerator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">commute.CommuteGenerator</span></code></a>(…)</p></td>
-<td><p>Generate a mode of transport that a person uses in their commute.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
 <div class="section" id="demography">
 <h2>Demography<a class="headerlink" href="#demography" title="Permalink to this headline">¶</a></h2>
 <table class="longtable docutils align-default">
@@ -119,26 +99,11 @@ be highlighted though.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.demography.demography.html#june.demography.demography.Demography" title="june.demography.demography.Demography"><code class="xref py py-obj docutils literal notranslate"><span class="pre">demography.demography.Demography</span></code></a>(area_names, …)</p></td>
 <td><p>Tool to generate population for a certain geographical regin.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.demography.geography.html#june.demography.geography.Area" title="june.demography.geography.Area"><code class="xref py py-obj docutils literal notranslate"><span class="pre">demography.geography.Area</span></code></a>(name, super_area, …)</p></td>
-<td><p>Fine geographical resolution.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.demography.geography.html#june.demography.geography.Areas" title="june.demography.geography.Areas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">demography.geography.Areas</span></code></a>(areas[, super_area])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.demography.geography.html#june.demography.geography.SuperArea" title="june.demography.geography.SuperArea"><code class="xref py py-obj docutils literal notranslate"><span class="pre">demography.geography.SuperArea</span></code></a>(name, areas, …)</p></td>
-<td><p>Coarse geographical resolution.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">demography.geography.SuperAreas</span></code></a>(super_areas, …)</p></td>
-<td><p>Group to aggregate SuperArea objects.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.demography.geography.html#june.demography.geography.Geography" title="june.demography.geography.Geography"><code class="xref py py-obj docutils literal notranslate"><span class="pre">demography.geography.Geography</span></code></a>(areas, …)</p></td>
-<td><p>Generate hierachical devision of geography.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.demography.person.html#june.demography.person.Activities" title="june.demography.person.Activities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">demography.person.Activities</span></code></a>(residence, …)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.demography.person.html#june.demography.person.Activities" title="june.demography.person.Activities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">demography.person.Activities</span></code></a>(residence, …)</p></td>
 <td><p>Create new instance: Activities(residence, primary_activity, medical_facility, commute, rail_travel, leisure, box)</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person"><code class="xref py py-obj docutils literal notranslate"><span class="pre">demography.person.Person</span></code></a>(id, sex, age, …)</p></td>
-<td><p>Create new instance: Person(id, sex, age, ethnicity, socioecon_index, area, work_super_area, sector, sub_sector, lockdown_status, comorbidity, home_city, mode_of_transport, busy, subgroups, health_information, susceptibility, dead)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person"><code class="xref py py-obj docutils literal notranslate"><span class="pre">demography.person.Person</span></code></a>(id, sex, age, …)</p></td>
+<td><p>Create new instance: Person(id, sex, age, ethnicity, socioecon_index, area, work_super_area, sector, sub_sector, lockdown_status, comorbidity, mode_of_transport, busy, subgroups, infection, susceptibility, dead)</p></td>
 </tr>
 </tbody>
 </table>
@@ -152,9 +117,6 @@ be highlighted though.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.demography.demography.DemographyError.html#june.demography.demography.DemographyError" title="june.demography.demography.DemographyError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">demography.demography.DemographyError</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.demography.geography.GeographyError.html#june.demography.geography.GeographyError" title="june.demography.geography.GeographyError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">demography.geography.GeographyError</span></code></a></p></td>
-<td><p></p></td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -166,25 +128,22 @@ be highlighted though.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.distributors.carehome_distributor.html#june.distributors.carehome_distributor.CareHomeDistributor" title="june.distributors.carehome_distributor.CareHomeDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.carehome_distributor.CareHomeDistributor</span></code></a>(…)</p></td>
-<td><p>Tool to distribute people from a certain area into a care home, if there is one.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.distributors.company_distributor.html#june.distributors.company_distributor.CompanyDistributor" title="june.distributors.company_distributor.CompanyDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.company_distributor.CompanyDistributor</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.distributors.company_distributor.html#june.distributors.company_distributor.CompanyDistributor" title="june.distributors.company_distributor.CompanyDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.company_distributor.CompanyDistributor</span></code></a>()</p></td>
 <td><p>Distributes workers that are not yet working in key company sectors (e.g.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.distributors.hospital_distributor.html#june.distributors.hospital_distributor.HospitalDistributor" title="june.distributors.hospital_distributor.HospitalDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.hospital_distributor.HospitalDistributor</span></code></a>(…)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.distributors.hospital_distributor.html#june.distributors.hospital_distributor.HospitalDistributor" title="june.distributors.hospital_distributor.HospitalDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.hospital_distributor.HospitalDistributor</span></code></a>(…)</p></td>
 <td><p>Distributes people to work as health care workers in hospitals</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.distributors.household_distributor.html#june.distributors.household_distributor.HouseholdDistributor" title="june.distributors.household_distributor.HouseholdDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.household_distributor.HouseholdDistributor</span></code></a>(…)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.distributors.household_distributor.html#june.distributors.household_distributor.HouseholdDistributor" title="june.distributors.household_distributor.HouseholdDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.household_distributor.HouseholdDistributor</span></code></a>(…)</p></td>
 <td><p>Tool to populate areas with households and fill them with the correct composition based on census data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.distributors.school_distributor.html#june.distributors.school_distributor.SchoolDistributor" title="june.distributors.school_distributor.SchoolDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.school_distributor.SchoolDistributor</span></code></a>(schools)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.distributors.school_distributor.html#june.distributors.school_distributor.SchoolDistributor" title="june.distributors.school_distributor.SchoolDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.school_distributor.SchoolDistributor</span></code></a>(schools)</p></td>
 <td><p>Distributes students in an area to different schools</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.distributors.university_distributor.html#june.distributors.university_distributor.UniversityDistributor" title="june.distributors.university_distributor.UniversityDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.university_distributor.UniversityDistributor</span></code></a>(…)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.distributors.university_distributor.html#june.distributors.university_distributor.UniversityDistributor" title="june.distributors.university_distributor.UniversityDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.university_distributor.UniversityDistributor</span></code></a>(…)</p></td>
 <td><p>For each university it searches in the nearby super areas for students living in student households.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.distributors.worker_distributor.html#june.distributors.worker_distributor.WorkerDistributor" title="june.distributors.worker_distributor.WorkerDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.worker_distributor.WorkerDistributor</span></code></a>(…)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.distributors.worker_distributor.html#june.distributors.worker_distributor.WorkerDistributor" title="june.distributors.worker_distributor.WorkerDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.worker_distributor.WorkerDistributor</span></code></a>(…)</p></td>
 <td><p>This class distributes people to their work.</p></td>
 </tr>
 </tbody>
@@ -196,10 +155,7 @@ be highlighted though.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.distributors.carehome_distributor.CareHomeError.html#june.distributors.carehome_distributor.CareHomeError" title="june.distributors.carehome_distributor.CareHomeError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.carehome_distributor.CareHomeError</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.distributors.household_distributor.HouseholdError.html#june.distributors.household_distributor.HouseholdError" title="june.distributors.household_distributor.HouseholdError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.household_distributor.HouseholdError</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.distributors.household_distributor.HouseholdError.html#june.distributors.household_distributor.HouseholdError" title="june.distributors.household_distributor.HouseholdError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distributors.household_distributor.HouseholdError</span></code></a></p></td>
 <td><p>class for throwing household related errors</p></td>
 </tr>
 </tbody>
@@ -237,61 +193,52 @@ be highlighted though.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.boundary.html#june.groups.boundary.Boundary" title="june.groups.boundary.Boundary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.boundary.Boundary</span></code></a>(world)</p></td>
 <td><p>A group of people such as in a hospital or a school.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.carehome.html#june.groups.carehome.CareHome" title="june.groups.carehome.CareHome"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.carehome.CareHome</span></code></a>(area, n_residents, …)</p></td>
-<td><p>The Carehome class represents a carehome and contains information about  its residents, workers and visitors.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.carehome.html#june.groups.carehome.CareHome.SubgroupType" title="june.groups.carehome.CareHome.SubgroupType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.carehome.CareHome.SubgroupType</span></code></a>(value)</p></td>
-<td><p>An enumeration.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.carehome.html#june.groups.carehome.CareHomes" title="june.groups.carehome.CareHomes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.carehome.CareHomes</span></code></a>(care_homes)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.cemetery.html#june.groups.cemetery.Cemetery" title="june.groups.cemetery.Cemetery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.cemetery.Cemetery</span></code></a>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.cemetery.html#june.groups.cemetery.Cemeteries" title="june.groups.cemetery.Cemeteries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.cemetery.Cemeteries</span></code></a>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.company.html#june.groups.company.Company" title="june.groups.company.Company"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.company.Company</span></code></a>([super_area, …])</p></td>
-<td><p>The Company class represents a company that contains information about  its workers which are not yet distributed to key company sectors (e.g.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.company.html#june.groups.company.Company.SubgroupType" title="june.groups.company.Company.SubgroupType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.company.Company.SubgroupType</span></code></a>(value)</p></td>
-<td><p>An enumeration.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.company.html#june.groups.company.Companies" title="june.groups.company.Companies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.company.Companies</span></code></a>(companies)</p></td>
-<td><p>Create companies and provide functionality to allocate workers.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.hospital.html#june.groups.hospital.Hospital" title="june.groups.hospital.Hospital"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.hospital.Hospital</span></code></a>(n_beds, n_icu_beds, …)</p></td>
-<td><p>The Hospital class represents a hospital and contains information about its patients and workers - the latter being the usual “people”.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.hospital.html#june.groups.hospital.Hospital.SubgroupType" title="june.groups.hospital.Hospital.SubgroupType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.hospital.Hospital.SubgroupType</span></code></a>(value)</p></td>
-<td><p>An enumeration.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.hospital.html#june.groups.hospital.Hospitals" title="june.groups.hospital.Hospitals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.hospital.Hospitals</span></code></a>(hospitals, …)</p></td>
-<td><p>Create a group of hospitals, and provide functionality to locate patients to a nearby hospital.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.household.html#june.groups.household.Household" title="june.groups.household.Household"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.household.Household</span></code></a>([type, area, …])</p></td>
-<td><p>The Household class represents a household and contains information about  its residents.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.household.html#june.groups.household.Household.SubgroupType" title="june.groups.household.Household.SubgroupType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.household.Household.SubgroupType</span></code></a>(value)</p></td>
-<td><p>An enumeration.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.household.html#june.groups.household.Households" title="june.groups.household.Households"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.household.Households</span></code></a>(households)</p></td>
-<td><p>Contains all households for the given area, and information about them.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.school.html#june.groups.school.School" title="june.groups.school.School"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.school.School</span></code></a>(coordinates, float], …)</p></td>
-<td><p>Create a School given its description.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.school.html#june.groups.school.School.SubgroupType" title="june.groups.school.School.SubgroupType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.school.School.SubgroupType</span></code></a>(value)</p></td>
-<td><p>An enumeration.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.school.html#june.groups.school.Schools" title="june.groups.school.Schools"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.school.Schools</span></code></a>(schools, school_trees, …)</p></td>
-<td><p>Create a group of Schools, and provide functionality to access closest school</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.university.html#june.groups.university.University" title="june.groups.university.University"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.university.University</span></code></a>([coordinates, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.cemetery.html#june.groups.cemetery.Cemetery" title="june.groups.cemetery.Cemetery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.cemetery.Cemetery</span></code></a>()</p></td>
 <td><p>A group of people such as in a hospital or a school.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.university.html#june.groups.university.Universities" title="june.groups.university.Universities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.university.Universities</span></code></a>(universities)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.cemetery.html#june.groups.cemetery.Cemeteries" title="june.groups.cemetery.Cemeteries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.cemetery.Cemeteries</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.company.html#june.groups.company.Company" title="june.groups.company.Company"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.company.Company</span></code></a>([super_area, …])</p></td>
+<td><p>The Company class represents a company that contains information about  its workers which are not yet distributed to key company sectors (e.g.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.company.html#june.groups.company.Company.SubgroupType" title="june.groups.company.Company.SubgroupType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.company.Company.SubgroupType</span></code></a>(value)</p></td>
+<td><p>An enumeration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.company.html#june.groups.company.Companies" title="june.groups.company.Companies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.company.Companies</span></code></a>(companies)</p></td>
+<td><p>Create companies and provide functionality to allocate workers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.hospital.html#june.groups.hospital.Hospital" title="june.groups.hospital.Hospital"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.hospital.Hospital</span></code></a>(n_beds, n_icu_beds, …)</p></td>
+<td><p>The Hospital class represents a hospital and contains information about its patients and workers - the latter being the usual “people”.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.hospital.html#june.groups.hospital.Hospital.SubgroupType" title="june.groups.hospital.Hospital.SubgroupType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.hospital.Hospital.SubgroupType</span></code></a>(value)</p></td>
+<td><p>An enumeration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.hospital.html#june.groups.hospital.Hospitals" title="june.groups.hospital.Hospitals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.hospital.Hospitals</span></code></a>(hospitals, …[, …])</p></td>
+<td><p>Create a group of hospitals, and provide functionality to locate patients to a nearby hospital.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.household.html#june.groups.household.Household" title="june.groups.household.Household"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.household.Household</span></code></a>([type, area, …])</p></td>
+<td><p>The Household class represents a household and contains information about  its residents.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.household.html#june.groups.household.Household.SubgroupType" title="june.groups.household.Household.SubgroupType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.household.Household.SubgroupType</span></code></a>(value)</p></td>
+<td><p>An enumeration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.household.html#june.groups.household.Households" title="june.groups.household.Households"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.household.Households</span></code></a>(households)</p></td>
+<td><p>Contains all households for the given area, and information about them.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.school.html#june.groups.school.School" title="june.groups.school.School"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.school.School</span></code></a>(coordinates, …)</p></td>
+<td><p>Create a School given its description.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.school.html#june.groups.school.School.SubgroupType" title="june.groups.school.School.SubgroupType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.school.School.SubgroupType</span></code></a>(value)</p></td>
+<td><p>An enumeration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.school.html#june.groups.school.Schools" title="june.groups.school.Schools"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.school.Schools</span></code></a>(schools, school_trees, …)</p></td>
+<td><p>Create a group of Schools, and provide functionality to access closest school</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.university.html#june.groups.university.University" title="june.groups.university.University"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.university.University</span></code></a>([coordinates, …])</p></td>
+<td><p>A group of people such as in a hospital or a school.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.university.html#june.groups.university.Universities" title="june.groups.university.Universities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.university.Universities</span></code></a>(universities)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -306,65 +253,15 @@ be highlighted though.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.boundary.BoundaryError.html#june.groups.boundary.BoundaryError" title="june.groups.boundary.BoundaryError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.boundary.BoundaryError</span></code></a></p></td>
 <td><p>Class for throwing boundary related errors.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.carehome.CareHomeError.html#june.groups.carehome.CareHomeError" title="june.groups.carehome.CareHomeError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.carehome.CareHomeError</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.company.CompanyError.html#june.groups.company.CompanyError" title="june.groups.company.CompanyError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.company.CompanyError</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.company.CompanyError.html#june.groups.company.CompanyError" title="june.groups.company.CompanyError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.company.CompanyError</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.school.SchoolError.html#june.groups.school.SchoolError" title="june.groups.school.SchoolError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.school.SchoolError</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.school.SchoolError.html#june.groups.school.SchoolError" title="june.groups.school.SchoolError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.school.SchoolError</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
 </table>
 <p>See also the sub-sections grouping together related types of <cite>Groups</cite>.</p>
-<div class="section" id="commute-groups">
-<h3>Commute Groups<a class="headerlink" href="#commute-groups" title="Permalink to this headline">¶</a></h3>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.commute.commutecity.html#june.groups.commute.commutecity.CommuteCity" title="june.groups.commute.commutecity.CommuteCity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.commute.commutecity.CommuteCity</span></code></a>([…])</p></td>
-<td><p>Defines a city with details about its metropolitan area and who commutes MSOAs within that area.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.commute.commutecity.html#june.groups.commute.commutecity.CommuteCities" title="june.groups.commute.commutecity.CommuteCities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.commute.commutecity.CommuteCities</span></code></a>()</p></td>
-<td><p>Initialises commute cities by using postcode data on the station location and constructing metropolitan areas from these by expanding around their centriods</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.commute.commutecity_distributor.html#june.groups.commute.commutecity_distributor.CommuteCityDistributor" title="june.groups.commute.commutecity_distributor.CommuteCityDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.commute.commutecity_distributor.CommuteCityDistributor</span></code></a>(…)</p></td>
-<td><p>Distirbute people to commute cities based on where they work</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.commute.commutecityunit.html#june.groups.commute.commutecityunit.CommuteCityUnit" title="june.groups.commute.commutecityunit.CommuteCityUnit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.commute.commutecityunit.CommuteCityUnit</span></code></a>(…)</p></td>
-<td><p>A group of people such as in a hospital or a school.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.commute.commutecityunit.html#june.groups.commute.commutecityunit.CommuteCityUnits" title="june.groups.commute.commutecityunit.CommuteCityUnits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.commute.commutecityunit.CommuteCityUnits</span></code></a>(…)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.commute.commutecityunit_distributor.html#june.groups.commute.commutecityunit_distributor.CommuteCityUnitDistributor" title="june.groups.commute.commutecityunit_distributor.CommuteCityUnitDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.commute.commutecityunit_distributor.CommuteCityUnitDistributor</span></code></a>(…)</p></td>
-<td><p>Distirbute people to commutecity units based on the cities they are affiliated to</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.commute.commutehub.html#june.groups.commute.commutehub.CommuteHub" title="june.groups.commute.commutehub.CommuteHub"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.commute.commutehub.CommuteHub</span></code></a>(…)</p></td>
-<td><p>Defines hubs around cities through with people commute and assigns people to those commute hubs</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.commute.commutehub.html#june.groups.commute.commutehub.CommuteHubs" title="june.groups.commute.commutehub.CommuteHubs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.commute.commutehub.CommuteHubs</span></code></a>(…)</p></td>
-<td><p>Initialises commute hubs given the location of the commute cities they are affiliated to</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.commute.commutehub_distributor.html#june.groups.commute.commutehub_distributor.CommuteHubDistributor" title="june.groups.commute.commutehub_distributor.CommuteHubDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.commute.commutehub_distributor.CommuteHubDistributor</span></code></a>(…)</p></td>
-<td><p>Distribute people to commute hubs based on where they live and where they are commuting to</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.commute.commuteunit.html#june.groups.commute.commuteunit.CommuteUnit" title="june.groups.commute.commuteunit.CommuteUnit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.commute.commuteunit.CommuteUnit</span></code></a>(city, …)</p></td>
-<td><p>Defines commute unites (e.g.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.commute.commuteunit.html#june.groups.commute.commuteunit.CommuteUnits" title="june.groups.commute.commuteunit.CommuteUnits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.commute.commuteunit.CommuteUnits</span></code></a>(…)</p></td>
-<td><p>Initialise commute units given the commute hubs they are affilited to</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.commute.commuteunit_distributor.html#june.groups.commute.commuteunit_distributor.CommuteUnitDistributor" title="june.groups.commute.commuteunit_distributor.CommuteUnitDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.commute.commuteunit_distributor.CommuteUnitDistributor</span></code></a>(…)</p></td>
-<td><p>Distirbute people to commute units based on the hubs they are affiliated to</p></td>
-</tr>
-</tbody>
-</table>
-</div>
 <div class="section" id="group-groups">
 <h3>Group Groups<a class="headerlink" href="#group-groups" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
@@ -385,7 +282,7 @@ be highlighted though.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.group.subgroup.html#june.groups.group.subgroup.Subgroup" title="june.groups.group.subgroup.Subgroup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.group.subgroup.Subgroup</span></code></a>(group, …)</p></td>
 <td><p>A group within a group.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.group.supergroup.html#june.groups.group.supergroup.Supergroup" title="june.groups.group.supergroup.Supergroup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.group.supergroup.Supergroup</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.group.supergroup.html#june.groups.group.supergroup.Supergroup" title="june.groups.group.supergroup.Supergroup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.group.supergroup.Supergroup</span></code></a>(members)</p></td>
 <td><p>A group containing a collection of groups of the same specification, like households, carehomes, etc.</p></td>
 </tr>
 </tbody>
@@ -403,15 +300,15 @@ be highlighted though.</p>
 <td><p>A sex/age profile for the social venue attendees can be specified as male_age_probabilities = {“18-65” : 0.3} any non-specified ages in the range (0,99) will have 0 probabilty Parameters ———- social_venues     A SocialVenues object male_age_probabilities     a dictionary containg age as keys and the probabilty per day (think of it as     the Poisson parameter lambda) of a male person of that age going to the social     venue as value. This probability value is per day. So the     chance of going to the social venue in a time delta_t is     1 - exp(- probabilty * delta_t) female_age_probabilities     a dictionary containg age as keys and the probabilty of a female person of that age     going to the social venue as value weekend_boost     boosting factor for the weekend probability.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.cinema.html#june.groups.leisure.cinema.Cinema" title="june.groups.leisure.cinema.Cinema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.cinema.Cinema</span></code></a>()</p></td>
-<td><p>cinemas are fun.</p></td>
+<td><p>A group of people such as in a hospital or a school.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.cinema.html#june.groups.leisure.cinema.Cinemas" title="june.groups.leisure.cinema.Cinemas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.cinema.Cinemas</span></code></a>(cinemas, make_tree)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.cinema.html#june.groups.leisure.cinema.Cinemas" title="june.groups.leisure.cinema.Cinemas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.cinema.Cinemas</span></code></a>(social_venues)</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.grocery.html#june.groups.leisure.grocery.Grocery" title="june.groups.leisure.grocery.Grocery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.grocery.Grocery</span></code></a>()</p></td>
 <td><p>A group of people such as in a hospital or a school.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.grocery.html#june.groups.leisure.grocery.Groceries" title="june.groups.leisure.grocery.Groceries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.grocery.Groceries</span></code></a>(groceries)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.grocery.html#june.groups.leisure.grocery.Groceries" title="june.groups.leisure.grocery.Groceries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.grocery.Groceries</span></code></a>(social_venues)</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.grocery.html#june.groups.leisure.grocery.GroceryDistributor" title="june.groups.leisure.grocery.GroceryDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.grocery.GroceryDistributor</span></code></a>(…)</p></td>
@@ -424,18 +321,18 @@ be highlighted though.</p>
 <td><p>Class to manage all possible activites that happen during leisure time.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.pub.html#june.groups.leisure.pub.Pub" title="june.groups.leisure.pub.Pub"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.pub.Pub</span></code></a>()</p></td>
-<td><p>Pubs are fun.</p></td>
+<td><p>A group of people such as in a hospital or a school.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.pub.html#june.groups.leisure.pub.Pubs" title="june.groups.leisure.pub.Pubs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.pub.Pubs</span></code></a>(pubs[, make_tree])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.pub.html#june.groups.leisure.pub.Pubs" title="june.groups.leisure.pub.Pubs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.pub.Pubs</span></code></a>(social_venues[, …])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.pub.html#june.groups.leisure.pub.PubDistributor" title="june.groups.leisure.pub.PubDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.pub.PubDistributor</span></code></a>(pubs, …)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.pub.html#june.groups.leisure.pub.PubDistributor" title="june.groups.leisure.pub.PubDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.pub.PubDistributor</span></code></a>(…[, …])</p></td>
 <td><p>A sex/age profile for the social venue attendees can be specified as male_age_probabilities = {“18-65” : 0.3} any non-specified ages in the range (0,99) will have 0 probabilty Parameters ———- social_venues     A SocialVenues object male_age_probabilities     a dictionary containg age as keys and the probabilty per day (think of it as     the Poisson parameter lambda) of a male person of that age going to the social     venue as value. This probability value is per day. So the     chance of going to the social venue in a time delta_t is     1 - exp(- probabilty * delta_t) female_age_probabilities     a dictionary containg age as keys and the probabilty of a female person of that age     going to the social venue as value weekend_boost     boosting factor for the weekend probability.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.social_venue_distributor.html#june.groups.leisure.social_venue_distributor.SocialVenueDistributor" title="june.groups.leisure.social_venue_distributor.SocialVenueDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.social_venue_distributor.SocialVenueDistributor</span></code></a>(…)</p></td>
 <td><p>Tool to associate social venues to people.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.social_venue.html#june.groups.leisure.social_venue.SocialVenue" title="june.groups.leisure.social_venue.SocialVenue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.social_venue.SocialVenue</span></code></a>([…])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.social_venue.html#june.groups.leisure.social_venue.SocialVenue" title="june.groups.leisure.social_venue.SocialVenue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.social_venue.SocialVenue</span></code></a>()</p></td>
 <td><p>A group of people such as in a hospital or a school.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.leisure.social_venue.html#june.groups.leisure.social_venue.SocialVenue.SubgroupType" title="june.groups.leisure.social_venue.SocialVenue.SubgroupType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.leisure.social_venue.SocialVenue.SubgroupType</span></code></a>(value)</p></td>
@@ -459,35 +356,6 @@ be highlighted though.</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="travel-groups">
-<h3>Travel Groups<a class="headerlink" href="#travel-groups" title="Permalink to this headline">¶</a></h3>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.travel.travelcity_distributor.html#june.groups.travel.travelcity_distributor.TravelCityDistributor" title="june.groups.travel.travelcity_distributor.TravelCityDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.travel.travelcity_distributor.TravelCityDistributor</span></code></a>(…)</p></td>
-<td><p>Distirbute msoas to travel cities based on proximity</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.travel.travelcity.html#june.groups.travel.travelcity.TravelCity" title="june.groups.travel.travelcity.TravelCity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.travel.travelcity.TravelCity</span></code></a>(city, …)</p></td>
-<td><p>Defines a city with details abouts its metropolitan area and who has arrived at the station after initial distirbution</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.travel.travelcity.html#june.groups.travel.travelcity.TravelCities" title="june.groups.travel.travelcity.TravelCities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.travel.travelcity.TravelCities</span></code></a>(…)</p></td>
-<td><p>Initialise travel cities based on commute cities</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.travel.travelunit_distributor.html#june.groups.travel.travelunit_distributor.TravelUnitDistributor" title="june.groups.travel.travelunit_distributor.TravelUnitDistributor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.travel.travelunit_distributor.TravelUnitDistributor</span></code></a>(…)</p></td>
-<td><p>Distirbute people to other cities and back again if not active elsewhere</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.groups.travel.travelunit.html#june.groups.travel.travelunit.TravelUnit" title="june.groups.travel.travelunit.TravelUnit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.travel.travelunit.TravelUnit</span></code></a>(city)</p></td>
-<td><p>city: (string) City unit belongs to people: (Group structure) passengers travelingin the travel unit no_passengers: (int) number of passengers in travel unit max_passengers: (int) capacity of the travel unit</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.groups.travel.travelunit.html#june.groups.travel.travelunit.TravelUnits" title="june.groups.travel.travelunit.TravelUnits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups.travel.travelunit.TravelUnits</span></code></a>()</p></td>
-<td><p>Initialise travel unit members list to be dynamically filled as people fill units</p></td>
-</tr>
-</tbody>
-</table>
-</div>
 </div>
 <div class="section" id="infection">
 <h2>Infection<a class="headerlink" href="#infection" title="Permalink to this headline">¶</a></h2>
@@ -500,23 +368,11 @@ be highlighted though.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.infection.health_index.html#june.infection.health_index.HealthIndexGenerator" title="june.infection.health_index.HealthIndexGenerator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infection.health_index.HealthIndexGenerator</span></code></a>(…)</p></td>
 <td><p>Computes probabilities for (asymptomatic, mild symptoms, severe symptoms,  hospitalisation, intensive care, fatality), using the age and sex of the subject.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.infection.health_information.html#june.infection.health_information.HealthInformation" title="june.infection.health_information.HealthInformation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infection.health_information.HealthInformation</span></code></a>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.infection.infection.html#june.infection.infection.SymptomsType" title="june.infection.infection.SymptomsType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infection.infection.SymptomsType</span></code></a>(value)</p></td>
-<td><p>An enumeration.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.infection.infection.html#june.infection.infection.InfectionSelector" title="june.infection.infection.InfectionSelector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infection.infection.InfectionSelector</span></code></a>(…[, …])</p></td>
-<td><p>Selects the type of infection a person is given</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.infection.infection.html#june.infection.infection.Infection" title="june.infection.infection.Infection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infection.infection.Infection</span></code></a>(transmission, …)</p></td>
-<td><p>The infection class combines the transmission (infectiousness profile) of the infected person, and their symptoms trajectory.</p></td>
-</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.infection_seed.infection_seed.html#june.infection_seed.infection_seed.InfectionSeed" title="june.infection_seed.infection_seed.InfectionSeed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infection_seed.infection_seed.InfectionSeed</span></code></a>(…)</p></td>
-<td><p>Class to initialize the infection</p></td>
+<td><p>Class that generates the seed for the infection.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.infection_seed.observed_to_cases.html#june.infection_seed.observed_to_cases.Observed2Cases" title="june.infection_seed.observed_to_cases.Observed2Cases"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infection_seed.observed_to_cases.Observed2Cases</span></code></a>([…])</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.infection_seed.observed_to_cases.html#june.infection_seed.observed_to_cases.Observed2Cases" title="june.infection_seed.observed_to_cases.Observed2Cases"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infection_seed.observed_to_cases.Observed2Cases</span></code></a>(…)</p></td>
+<td><p>Class to convert observed deaths over time into predicted number of latent cases  over time, use for the seed of the infection.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.infection.symptoms.html#june.infection.symptoms.Symptoms" title="june.infection.symptoms.Symptoms"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infection.symptoms.Symptoms</span></code></a>([health_index])</p></td>
 <td><p></p></td>
@@ -566,7 +422,7 @@ be highlighted though.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.infection.transmission.html#june.infection.transmission.TransmissionGamma" title="june.infection.transmission.TransmissionGamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infection.transmission.TransmissionGamma</span></code></a>(…)</p></td>
 <td><p>Module to simulate the infectiousness profiles found in :</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.infection.transmission_xnexp.html#june.infection.transmission_xnexp.TransmissionXNExp" title="june.infection.transmission_xnexp.TransmissionXNExp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infection.transmission_xnexp.TransmissionXNExp</span></code></a>([…])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.infection.transmission_xnexp.html#june.infection.transmission_xnexp.TransmissionXNExp" title="june.infection.transmission_xnexp.TransmissionXNExp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infection.transmission_xnexp.TransmissionXNExp</span></code></a>(…)</p></td>
 <td><p>Class that defines the time profile of the infectiousness to be of the form x^n exp(-x/alpha)</p></td>
 </tr>
 </tbody>
@@ -580,17 +436,11 @@ be highlighted though.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.interaction.contact_sampling.html#june.interaction.contact_sampling.ContactSampling" title="june.interaction.contact_sampling.ContactSampling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interaction.contact_sampling.ContactSampling</span></code></a>(…)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.interaction.interaction.html#june.interaction.interaction.Interaction" title="june.interaction.interaction.Interaction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interaction.interaction.Interaction</span></code></a>(…)</p></td>
+<td><p>Class to handle interaction in groups.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.interaction.interaction.html#june.interaction.interaction.Interaction" title="june.interaction.interaction.Interaction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interaction.interaction.Interaction</span></code></a>(…)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.interaction.interactive_group.html#june.interaction.interactive_group.InteractiveGroup" title="june.interaction.interactive_group.InteractiveGroup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interaction.interactive_group.InteractiveGroup</span></code></a>(group)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.interaction.interactive_group.html#june.interaction.interactive_group.InteractiveGroup" title="june.interaction.interactive_group.InteractiveGroup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interaction.interactive_group.InteractiveGroup</span></code></a>(group)</p></td>
 <td><p>Extracts the necessary information about a group to perform an interaction time step over it.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.interaction.matrix_interaction.html#june.interaction.matrix_interaction.MatrixInteraction" title="june.interaction.matrix_interaction.MatrixInteraction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interaction.matrix_interaction.MatrixInteraction</span></code></a>()</p></td>
-<td><p>We assume that the matrices are symmetric, with age indexing rows and columns, and that they are organised in a dictionary with the group_type as key.</p></td>
 </tr>
 </tbody>
 </table>
@@ -603,7 +453,7 @@ be highlighted though.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.logger.logger.html#june.logger.logger.Logger" title="june.logger.logger.Logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger.logger.Logger</span></code></a>(save_path)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.logger.logger.html#june.logger.logger.Logger" title="june.logger.logger.Logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger.logger.Logger</span></code></a>(save_path, file_name, …)</p></td>
 <td><p>Logger used by the simulator to store the relevant information.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.logger.read_logger.html#june.logger.read_logger.ReadLogger" title="june.logger.read_logger.ReadLogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger.read_logger.ReadLogger</span></code></a>(output_path, …)</p></td>

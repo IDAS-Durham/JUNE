@@ -40,7 +40,7 @@
 <h1>june.groups.household.Household<a class="headerlink" href="#june-groups-household-household" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">june.groups.household.</code><code class="sig-name descname">Household</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_size</span><span class="o">=</span><span class="default_value">inf</span></em>, <em class="sig-param"><span class="n">household_complacency</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.household.</code><code class="sig-name descname">Household</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_size</span><span class="o">=</span><span class="default_value">inf</span></em><span class="sig-paren">)</span></dt>
 <dd><p>The Household class represents a household and contains information about 
 its residents.
 We assume four subgroups:
@@ -78,7 +78,7 @@ Relatives is a list of people that are related to the family living in the house
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_size</span><span class="o">=</span><span class="default_value">inf</span></em>, <em class="sig-param"><span class="n">household_complacency</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_size</span><span class="o">=</span><span class="default_value">inf</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Type should be on of [“family”, “student”, “young_adults”, “old”, “other”, “nokids”, “ya_parents”, “communal”].
 Relatives is a list of people that are related to the family living in the household</p>
 </dd></dl>
@@ -120,13 +120,15 @@ a student is added to the subgroup matching their age.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">get_leisure_subgroup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><p>Returns the speciailization of the group.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
-<dd><p>Returns the speciailization of the group.</p>
+<code class="sig-name descname">make_household_residents_stay_home</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">to_send_abroad</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Forces the residents to stay home if they are away doing leisure.
+This is used to welcome visitors.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -160,6 +162,11 @@ from the subgroup to which they belong</p>
 <code class="sig-name descname">area</code></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">care_homes_to_visit</code></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt>
 <em class="property">property </em><code class="sig-name descname">contains_people</code></dt>
@@ -168,17 +175,32 @@ from the subgroup to which they belong</p>
 
 <dl class="py method">
 <dt>
+<em class="property">property </em><code class="sig-name descname">coordinates</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
 <em class="property">property </em><code class="sig-name descname">dead</code></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt>
-<code class="sig-name descname">household_complacency</code></dt>
+<code class="sig-name descname">external</code><em class="property"> = False</em></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">households_to_visit</code></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt>
 <code class="sig-name descname">id</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">ids_checked</code></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -206,9 +228,9 @@ from the subgroup to which they belong</p>
 <em class="property">property </em><code class="sig-name descname">must_timestep</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="py method">
 <dt>
-<code class="sig-name descname">n_residents</code></dt>
+<em class="property">property </em><code class="sig-name descname">n_residents</code></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -241,16 +263,6 @@ the name fo the class with the id of the instance.</p>
 
 <dl class="py attribute">
 <dt>
-<code class="sig-name descname">relatives_in_care_homes</code></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">relatives_in_households</code></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt>
 <code class="sig-name descname">residents</code></dt>
 <dd></dd></dl>
 
@@ -276,17 +288,17 @@ the name fo the class with the id of the instance.</p>
 
 <dl class="py attribute">
 <dt>
-<code class="sig-name descname">social_venues</code></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt>
 <code class="sig-name descname">spec</code></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt>
 <code class="sig-name descname">subgroups</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">super_area</code></dt>
 <dd></dd></dl>
 
 <dl class="py method">

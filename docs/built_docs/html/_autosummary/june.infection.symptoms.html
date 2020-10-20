@@ -48,33 +48,69 @@
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.infection.symptoms.Symptoms.is_recovered">
-<code class="sig-name descname">is_recovered</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.infection.symptoms.Symptoms.is_recovered" title="Permalink to this definition">¶</a></dt>
+<dt id="june.infection.symptoms.Symptoms._compute_time_from_infection_to_symptoms">
+<code class="sig-name descname">_compute_time_from_infection_to_symptoms</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.infection.symptoms.Symptoms._compute_time_from_infection_to_symptoms" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt id="june.infection.symptoms.Symptoms._make_symptom_trajectory">
+<code class="sig-name descname">_make_symptom_trajectory</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">health_index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection.symptoms.Symptoms._make_symptom_trajectory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.infection.symptoms.Symptoms.update_trajectory_stage">
+<code class="sig-name descname">update_trajectory_stage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_from_infection</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection.symptoms.Symptoms.update_trajectory_stage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the current symptom tag from the symptoms trajectory,
+given how much time has passed since the person was infected.</p>
+<dl class="simple">
+<dt>time_from_infection: float</dt><dd><p>Time in days since the person got infected.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.infection.symptoms.Symptoms.dead">
+<em class="property">property </em><code class="sig-name descname">dead</code><a class="headerlink" href="#june.infection.symptoms.Symptoms.dead" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptoms.Symptoms.max_severity">
+<code class="sig-name descname">max_severity</code><a class="headerlink" href="#june.infection.symptoms.Symptoms.max_severity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt id="june.infection.symptoms.Symptoms.max_tag">
-<code class="sig-name descname">max_tag</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.infection.symptoms.Symptoms.max_tag" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">max_tag</code><a class="headerlink" href="#june.infection.symptoms.Symptoms.max_tag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.infection.symptoms.Symptoms.recovered">
+<em class="property">property </em><code class="sig-name descname">recovered</code><a class="headerlink" href="#june.infection.symptoms.Symptoms.recovered" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptoms.Symptoms.stage">
+<code class="sig-name descname">stage</code><a class="headerlink" href="#june.infection.symptoms.Symptoms.stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.infection.symptoms.Symptoms.tag">
+<code class="sig-name descname">tag</code><a class="headerlink" href="#june.infection.symptoms.Symptoms.tag" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="june.infection.symptoms.Symptoms.time_exposed">
-<code class="sig-name descname">time_exposed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.infection.symptoms.Symptoms.time_exposed" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">time_exposed</code><a class="headerlink" href="#june.infection.symptoms.Symptoms.time_exposed" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt id="june.infection.symptoms.Symptoms.time_from_infection_to_symptoms">
-<code class="sig-name descname">time_from_infection_to_symptoms</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.infection.symptoms.Symptoms.time_from_infection_to_symptoms" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt id="june.infection.symptoms.Symptoms.time_of_symptoms_onset">
+<code class="sig-name descname">time_of_symptoms_onset</code><a class="headerlink" href="#june.infection.symptoms.Symptoms.time_of_symptoms_onset" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt id="june.infection.symptoms.Symptoms.update_severity_from_delta_time">
-<code class="sig-name descname">update_severity_from_delta_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_from_infection</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection.symptoms.Symptoms.update_severity_from_delta_time" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.infection.symptoms.Symptoms.update_trajectory">
-<code class="sig-name descname">update_trajectory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.infection.symptoms.Symptoms.update_trajectory" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt id="june.infection.symptoms.Symptoms.trajectory">
+<code class="sig-name descname">trajectory</code><a class="headerlink" href="#june.infection.symptoms.Symptoms.trajectory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

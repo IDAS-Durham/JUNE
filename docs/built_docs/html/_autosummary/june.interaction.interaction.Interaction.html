@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="june.interaction.interactive_group.InteractiveGroup" href="june.interaction.interactive_group.InteractiveGroup.html" />
-    <link rel="prev" title="june.interaction.contact_sampling.ContactSampling" href="june.interaction.contact_sampling.ContactSampling.html" /> 
+    <link rel="prev" title="june.infection.transmission_xnexp.TransmissionXNExp" href="june.infection.transmission_xnexp.TransmissionXNExp.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
           <span>JUNE  documentation</span></a></h1>
@@ -25,7 +25,7 @@
       <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
-        «&#160;&#160;<a href="june.interaction.contact_sampling.ContactSampling.html">june.interaction.contact_sampling.ContactSampling</a>
+        «&#160;&#160;<a href="june.infection.transmission_xnexp.TransmissionXNExp.html">june.infection.transmission_xnexp.TransmissionXNExp</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -40,10 +40,26 @@
 <h1>june.interaction.interaction.Interaction<a class="headerlink" href="#june-interaction-interaction-interaction" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">june.interaction.interaction.</code><code class="sig-name descname">Interaction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alpha_physical</span></em>, <em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">contact_matrices</span></em><span class="sig-paren">)</span></dt>
-<dd><dl class="py method">
+<em class="property">class </em><code class="sig-prename descclassname">june.interaction.interaction.</code><code class="sig-name descname">Interaction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alpha_physical</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">beta</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">contact_matrices</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">susceptibilities_by_age</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">population</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Population" title="june.demography.demography.Population">june.demography.demography.Population</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Class to handle interaction in groups.</p>
+<dl class="simple">
+<dt>alpha_physical</dt><dd><p>Scaling factor for physical contacts, an alpha_physical factor of 1, means that physical
+contacts count as much as non-physical contacts.</p>
+</dd>
+<dt>beta</dt><dd><p>dictionary mapping the group specs with their contact intensities</p>
+</dd>
+<dt>contact_matrices</dt><dd><p>dictionary mapping the group specs with their contact matrices</p>
+</dd>
+<dt>susceptibilities_by_age</dt><dd><p>dictionary mapping age ranges to their susceptibility.
+Example: susceptibilities_by_age = {“0-13” : 0.5, “13-99” : 0.5}
+note that the right limit of the range is not included.</p>
+</dd>
+<dt>population</dt><dd><p>list of people to have the susceptibilities changed.</p>
+</dd>
+</dl>
+<dl class="py method">
 <dt>
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alpha_physical</span></em>, <em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">contact_matrices</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alpha_physical</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">beta</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">contact_matrices</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">susceptibilities_by_age</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">population</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Population" title="june.demography.demography.Population">june.demography.demography.Population</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -54,7 +70,7 @@
 
 <dl class="py method">
 <dt>
-<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/interaction/ContactInteraction.yaml')</span></em><span class="sig-paren">)</span> &#x2192; ContactAveraging</dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/interaction/interaction.yaml')</span></em>, <em class="sig-param"><span class="n">population</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Population" title="june.demography.demography.Population">june.demography.demography.Population</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.interaction.interaction.html#june.interaction.interaction.Interaction" title="june.interaction.interaction.Interaction">june.interaction.interaction.Interaction</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -69,12 +85,18 @@
 
 <dl class="py method">
 <dt>
+<code class="sig-name descname">set_population_susceptibilities</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">susceptibilities_by_age</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">population</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Population" title="june.demography.demography.Population">june.demography.demography.Population</a></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Changes the population susceptibility to the disease.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
 <code class="sig-name descname">time_step_for_group</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">delta_time</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">group</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.interaction.interactive_group.html#june.interaction.interactive_group.InteractiveGroup" title="june.interaction.interactive_group.InteractiveGroup">june.interaction.interactive_group.InteractiveGroup</a></span></em><span class="sig-paren">)</span></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">time_step_for_subgroup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">subgroup_transmission_probabilities</span></em>, <em class="sig-param"><span class="n">susceptible_ids</span></em>, <em class="sig-param"><span class="n">infector_subgroups</span></em>, <em class="sig-param"><span class="n">infector_subgroup_sizes</span></em>, <em class="sig-param"><span class="n">contact_matrix</span></em>, <em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">delta_time</span></em>, <em class="sig-param"><span class="n">subgroup_idx</span></em>, <em class="sig-param"><span class="n">school_years</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>int<span class="p">]</span></dt>
+<code class="sig-name descname">time_step_for_subgroup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">subgroup_transmission_probabilities</span></em>, <em class="sig-param"><span class="n">susceptible_ids</span></em>, <em class="sig-param"><span class="n">susceptibilities</span></em>, <em class="sig-param"><span class="n">infector_subgroups</span></em>, <em class="sig-param"><span class="n">infector_subgroup_sizes</span></em>, <em class="sig-param"><span class="n">contact_matrix</span></em>, <em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">delta_time</span></em>, <em class="sig-param"><span class="n">subgroup_idx</span></em>, <em class="sig-param"><span class="n">school_years</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>int<span class="p">]</span></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -86,7 +108,7 @@
       <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
-        «&#160;&#160;<a href="june.interaction.contact_sampling.ContactSampling.html">june.interaction.contact_sampling.ContactSampling</a>
+        «&#160;&#160;<a href="june.infection.transmission_xnexp.TransmissionXNExp.html">june.infection.transmission_xnexp.TransmissionXNExp</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;

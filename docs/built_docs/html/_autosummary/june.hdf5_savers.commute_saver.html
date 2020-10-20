@@ -39,31 +39,36 @@
   <div class="section" id="module-june.hdf5_savers.commute_saver">
 <span id="june-hdf5-savers-commute-saver"></span><h1>june.hdf5_savers.commute_saver<a class="headerlink" href="#module-june.hdf5_savers.commute_saver" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
-<dt id="june.hdf5_savers.commute_saver.load_commute_cities_from_hdf5">
-<code class="sig-prename descclassname">june.hdf5_savers.commute_saver.</code><code class="sig-name descname">load_commute_cities_from_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.hdf5_savers.commute_saver.load_commute_cities_from_hdf5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads commute_cities from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.
+<dt id="june.hdf5_savers.commute_saver.load_cities_from_hdf5">
+<code class="sig-prename descclassname">june.hdf5_savers.commute_saver.</code><code class="sig-name descname">load_cities_from_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">domain_super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">super_areas_to_domain_dict</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.hdf5_savers.commute_saver.load_cities_from_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads cities from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.
 Note that this object will not be ready to use, as the links to
 object instances of other classes need to be restored first.
 This function should be rarely be called oustide world.py</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="june.hdf5_savers.commute_saver.load_commute_hubs_from_hdf5">
-<code class="sig-prename descclassname">june.hdf5_savers.commute_saver.</code><code class="sig-name descname">load_commute_hubs_from_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.hdf5_savers.commute_saver.load_commute_hubs_from_hdf5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads commute_hubs from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.
+<dt id="june.hdf5_savers.commute_saver.load_stations_from_hdf5">
+<code class="sig-prename descclassname">june.hdf5_savers.commute_saver.</code><code class="sig-name descname">load_stations_from_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">domain_super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">super_areas_to_domain_dict</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.hdf5_savers.commute_saver.load_stations_from_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads cities from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.
 Note that this object will not be ready to use, as the links to
 object instances of other classes need to be restored first.
 This function should be rarely be called oustide world.py</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="june.hdf5_savers.commute_saver.save_commute_cities_to_hdf5">
-<code class="sig-prename descclassname">june.hdf5_savers.commute_saver.</code><code class="sig-name descname">save_commute_cities_to_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commute_cities</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.commute.commutecity.html#june.groups.commute.commutecity.CommuteCities" title="june.groups.commute.commutecity.CommuteCities">june.groups.commute.commutecity.CommuteCities</a></span></em>, <em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.hdf5_savers.commute_saver.save_commute_cities_to_hdf5" title="Permalink to this definition">¶</a></dt>
+<dt id="june.hdf5_savers.commute_saver.restore_cities_and_stations_properties_from_hdf5">
+<code class="sig-prename descclassname">june.hdf5_savers.commute_saver.</code><code class="sig-name descname">restore_cities_and_stations_properties_from_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.world.html#june.world.World" title="june.world.World">june.world.World</a></span></em>, <em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">domain_super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">super_areas_to_domain_dict</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.hdf5_savers.commute_saver.restore_cities_and_stations_properties_from_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt id="june.hdf5_savers.commute_saver.save_commute_hubs_to_hdf5">
-<code class="sig-prename descclassname">june.hdf5_savers.commute_saver.</code><code class="sig-name descname">save_commute_hubs_to_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commute_hubs</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.commute.commutehub.html#june.groups.commute.commutehub.CommuteHubs" title="june.groups.commute.commutehub.CommuteHubs">june.groups.commute.commutehub.CommuteHubs</a></span></em>, <em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.hdf5_savers.commute_saver.save_commute_hubs_to_hdf5" title="Permalink to this definition">¶</a></dt>
+<dt id="june.hdf5_savers.commute_saver.save_cities_to_hdf5">
+<code class="sig-prename descclassname">june.hdf5_savers.commute_saver.</code><code class="sig-name descname">save_cities_to_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cities</span><span class="p">:</span> <span class="n">june.geography.city.Cities</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.hdf5_savers.commute_saver.save_cities_to_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="june.hdf5_savers.commute_saver.save_stations_to_hdf5">
+<code class="sig-prename descclassname">june.hdf5_savers.commute_saver.</code><code class="sig-name descname">save_stations_to_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">stations</span><span class="p">:</span> <span class="n">june.geography.station.Stations</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.hdf5_savers.commute_saver.save_stations_to_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>

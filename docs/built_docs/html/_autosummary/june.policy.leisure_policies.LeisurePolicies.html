@@ -51,7 +51,13 @@
 <dl class="py method">
 <dt>
 <code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">date: &lt;module 'datetime' from '/home/sadie/anaconda3/envs/june/lib/python3.8/datetime.py'&gt;</em>, <em class="sig-param">leisure: june.groups.leisure.leisure.Leisure</em><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
+<dd><p>Applies leisure policies. There are currently two types of leisure policies
+implemented: CloseLeisureVenue, and ChangeLeisureProbability. To ensure
+compatibility when adding multiple policies of the same type, we “clear” the
+leisure module at the beginning of each application, ie, we set closed_venues = set(),
+and the original probabilities for each social venue distributor. We then apply 
+the policies currently active at the given date.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt>
@@ -61,6 +67,11 @@
 <dl class="py method">
 <dt>
 <code class="sig-name descname">get_active</code><span class="sig-paren">(</span><em class="sig-param">date: &lt;module 'datetime' from '/home/sadie/anaconda3/envs/june/lib/python3.8/datetime.py'&gt;</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">original_leisure_probabilities_per_venue</code><em class="property"> = None</em></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">

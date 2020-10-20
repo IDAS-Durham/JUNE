@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="june.infection_seed.observed_to_cases.Observed2Cases" href="june.infection_seed.observed_to_cases.Observed2Cases.html" />
-    <link rel="prev" title="june.infection.infection.Infection" href="june.infection.infection.Infection.html" /> 
+    <link rel="prev" title="june.infection.health_index.HealthIndexGenerator" href="june.infection.health_index.HealthIndexGenerator.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
           <span>JUNE  documentation</span></a></h1>
@@ -25,7 +25,7 @@
       <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
-        «&#160;&#160;<a href="june.infection.infection.Infection.html">june.infection.infection.Infection</a>
+        «&#160;&#160;<a href="june.infection.health_index.HealthIndexGenerator.html">june.infection.health_index.HealthIndexGenerator</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -40,125 +40,108 @@
 <h1>june.infection_seed.infection_seed.InfectionSeed<a class="headerlink" href="#june-infection-seed-infection-seed-infectionseed" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">june.infection_seed.infection_seed.</code><code class="sig-name descname">InfectionSeed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas">june.demography.geography.SuperAreas</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">selector</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.infection.html#june.infection.infection.InfectionSelector" title="june.infection.infection.InfectionSelector">june.infection.infection.InfectionSelector</a></span></em>, <em class="sig-param"><span class="n">n_cases_region</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">msoa_region</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>datetime<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed_strength</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">age_profile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Class to initialize the infection</p>
+<em class="property">class </em><code class="sig-prename descclassname">june.infection_seed.infection_seed.</code><code class="sig-name descname">InfectionSeed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n">World</span></em>, <em class="sig-param"><span class="n">infection_selector</span><span class="p">:</span> <span class="n">june.infection.infection_selector.InfectionSelector</span></em>, <em class="sig-param"><span class="n">seed_strength</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">age_profile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">daily_super_area_cases</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Class that generates the seed for the infection.</p>
 <dl class="simple">
-<dt>super_areas:</dt><dd><p>a SuperAreas instance containing populated super_areas and areas.</p>
+<dt>world:</dt><dd><p>world to infect</p>
 </dd>
-<dt>infection:</dt><dd><p>an instance of the infection class to infect the selected seed.</p>
+<dt>infection_selector:</dt><dd><p>selector to generate infections</p>
 </dd>
-<dt>n_cases_region:</dt><dd><p>data frame containing the number of cases per region starting at a given date.</p>
+<dt>seed_strength:</dt><dd><p>float that controls the strength of the seed</p>
 </dd>
-<dt>msoa_region:</dt><dd><p>mapping between super areas and regions.</p>
+<dt>age_profile:</dt><dd><p>dictionary with weight on age groups. Example:
+age_profile = {‘0-20’: 0., ‘21-50’:1, ‘51-100’:0.}
+would only infect people aged between 21 and 50</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt>
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas">june.demography.geography.SuperAreas</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">selector</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.infection.html#june.infection.infection.InfectionSelector" title="june.infection.infection.InfectionSelector">june.infection.infection.InfectionSelector</a></span></em>, <em class="sig-param"><span class="n">n_cases_region</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">msoa_region</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>datetime<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed_strength</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">age_profile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Class to initialize the infection</p>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n">World</span></em>, <em class="sig-param"><span class="n">infection_selector</span><span class="p">:</span> <span class="n">june.infection.infection_selector.InfectionSelector</span></em>, <em class="sig-param"><span class="n">seed_strength</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">age_profile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">daily_super_area_cases</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Class that generates the seed for the infection.</p>
 <dl class="simple">
-<dt>super_areas:</dt><dd><p>a SuperAreas instance containing populated super_areas and areas.</p>
+<dt>world:</dt><dd><p>world to infect</p>
 </dd>
-<dt>infection:</dt><dd><p>an instance of the infection class to infect the selected seed.</p>
+<dt>infection_selector:</dt><dd><p>selector to generate infections</p>
 </dd>
-<dt>n_cases_region:</dt><dd><p>data frame containing the number of cases per region starting at a given date.</p>
+<dt>seed_strength:</dt><dd><p>float that controls the strength of the seed</p>
 </dd>
-<dt>msoa_region:</dt><dd><p>mapping between super areas and regions.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">_filter_region</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">region</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'North East'</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>SuperArea<span class="p">]</span></dt>
-<dd><p>Given a region, return a list of super areas belonging to that region</p>
-<dl class="simple">
-<dt>region:</dt><dd><p>name of the region</p>
+<dt>age_profile:</dt><dd><p>dictionary with weight on age groups. Example:
+age_profile = {‘0-20’: 0., ‘21-50’:1, ‘51-100’:0.}
+would only infect people aged between 21 and 50</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt>
-<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">SuperAreas</span></em>, <em class="sig-param"><span class="n">selector</span><span class="p">:</span> <span class="n">InfectionSelector</span></em>, <em class="sig-param"><span class="n">n_cases_region</span></em>, <em class="sig-param"><span class="n">msoa_region_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/geography/area_super_area_region.csv')</span></em>, <em class="sig-param"><span class="n">seed_strength</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">age_profile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Seed</dt>
-<dd><p>Initialize Seed from file containing the number of cases per region, and mapping
-between super areas and regions</p>
+<code class="sig-name descname">get_people_from_age_group</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">susceptible_ids</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n_people</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">age_group</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>int<span class="p">]</span></dt>
+<dd><p>Get <code class="docutils literal notranslate"><span class="pre">`n_people`</span></code> in a given <code class="docutils literal notranslate"><span class="pre">`age_group`</span></code> from the list of susceptible_ids</p>
 <dl class="simple">
-<dt>super_areas:</dt><dd><p>a SuperAreas instance containing populated super_areas and areas.</p>
+<dt>susceptible_ids:</dt><dd><p>list of ids of susceptible people to select from</p>
 </dd>
-<dt>infection:</dt><dd><p>an instance of the infection class to infect the selected seed.</p>
+<dt>n_people:</dt><dd><p>number of people to select</p>
 </dd>
-<dt>health_index_generator:</dt><dd><p>an instance of health index generator to assign symptoms to selected seed.</p>
-</dd>
-<dt>n_cases_region:</dt><dd><p>pandas dataframe with number of cases per region.</p>
-</dd>
-<dt>msoa_region:</dt><dd><p>path to csv file containing mapping between super areas and regions.</p>
-</dd>
-<dt>seed_strengh:</dt><dd><p>seed only a <code class="docutils literal notranslate"><span class="pre">`seed_strength`</span></code> percent of the original cases</p>
+<dt>age_group:</dt><dd><p>age limits to select from (Example: ‘18-25’)</p>
 </dd>
 </dl>
-<p>Seed instance</p>
+<p>ids of people in age group</p>
 </dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">get_people_from_age_group</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">people</span></em>, <em class="sig-param"><span class="n">n_people</span></em>, <em class="sig-param"><span class="n">age_group</span></em><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">infect_super_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n">SuperArea</span></em>, <em class="sig-param"><span class="n">n_cases</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Infect n_cases random people from a super_area.</p>
+<code class="sig-name descname">infect_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_cases_per_super_area</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">record</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Record<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Infect super areas with numer of cases given by data frame</p>
 <dl class="simple">
-<dt>super_area:</dt><dd><p>SuperArea instance, <strong>must be populated</strong></p>
-</dd>
-<dt>n_cases:</dt><dd><p>number of cases to seed</p>
+<dt>n_cases_per_super_area:</dt><dd><p>data frame containig the number of cases per super area</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">infect_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span>SuperArea<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n_cases</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Infect n_cases random people from a list of super_areas. It will place
-more cases in proportion to the super_area population</p>
+<code class="sig-name descname">select_susceptiles_by_age</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">susceptible_ids</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n_cases</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>int<span class="p">]</span></dt>
+<dd><p>Select cases according to an age profile</p>
 <dl class="simple">
-<dt>super_areas:</dt><dd><p>list of super areas to seed.</p>
+<dt>susceptible_ids:</dt><dd><p>list of ids of susceptible people to select from</p>
 </dd>
-<dt>n_cases:</dt><dd><p>number of cases to seed.</p>
+<dt>n_cases:</dt><dd><p>number of cases</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>choices:</dt><dd><p>ids of people to infect, following the age profile given</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">select_from_susceptible</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">susceptibles</span></em>, <em class="sig-param"><span class="n">n_cases</span></em>, <em class="sig-param"><span class="n">age_profile</span></em><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">unleash_virus</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_cases</span></em>, <em class="sig-param"><span class="n">box_mode</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Seed the infection with n_cases random people being infected,
-proportionally place more cases in the more populated super areas.</p>
+<code class="sig-name descname">unleash_virus</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">population</span><span class="p">:</span> <span class="n">Population</span></em>, <em class="sig-param"><span class="n">n_cases</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">mpi_rank</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">mpi_comm</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>MPI.COMM_WORLD<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mpi_size</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">box_mode</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">record</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Record<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Infects <code class="docutils literal notranslate"><span class="pre">`n_cases`</span></code> people in <code class="docutils literal notranslate"><span class="pre">`population`</span></code></p>
+<dl class="simple">
+<dt>population:</dt><dd><p>population to infect</p>
+</dd>
+<dt>n_cases:</dt><dd><p>number of initial cases</p>
+</dd>
+<dt>mpi_rank:</dt><dd><p>rank of the process</p>
+</dd>
+<dt>mpi_comm:</dt><dd><p>mpi comm_world to enable communication between
+different processes</p>
+</dd>
+<dt>mpi_size:</dt><dd><p>number of processes</p>
+</dd>
+<dt>box_mode:</dt><dd><p>whether to run on box mode</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">unleash_virus_per_day</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">area</span></em>, <em class="sig-param"><span class="n">n_cases</span></em>, <em class="sig-param"><span class="n">date</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Seed the infection in a given area, over several days</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">unleash_virus_per_region</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Seed the infection per region, using data on number of infected people/region</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">unleash_virus_regional_cases</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">region</span></em>, <em class="sig-param"><span class="n">n_cases</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Seed the infection with n_cases random people being infected in region <code class="docutils literal notranslate"><span class="pre">`region`</span></code>,
-proportionally place more cases in the more populated super areas.</p>
+<code class="sig-name descname">unleash_virus_per_day</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime</span></em>, <em class="sig-param"><span class="n">record</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Record<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Infect super areas at a given <code class="docutils literal notranslate"><span class="pre">`date`</span></code></p>
+<dl class="simple">
+<dt>date:</dt><dd><p>datetime object</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -170,7 +153,7 @@ proportionally place more cases in the more populated super areas.</p>
       <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
-        «&#160;&#160;<a href="june.infection.infection.Infection.html">june.infection.infection.Infection</a>
+        «&#160;&#160;<a href="june.infection.health_index.HealthIndexGenerator.html">june.infection.health_index.HealthIndexGenerator</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
