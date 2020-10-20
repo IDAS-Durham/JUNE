@@ -1,6 +1,7 @@
 from collections import defaultdict
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
+from matplotlib import colors
 import numpy as np
 import pandas as pd
 import contextily as ctx
@@ -19,12 +20,9 @@ class UniversityPlots:
         self, world,
     ):
         self.world = world
-        # self.shapefile = newcastle_shapefiles
-        self.shapefile = county_durham_shapefiles 
+        self.shapefile = county_durham_shapefiles
         self.area_centroids = pd.read_csv(default_area_centroids_filename, index_col=0)
-        # uni_ukprn = 10007799
         uni_ukprn = 10007143
-        # uni_ukprn = 10007161
         uni = [
             university
             for university in self.world.universities
@@ -58,9 +56,7 @@ class UniversityPlots:
                 household_type = "non-communal"
             household_types[household_type] += 1
         total = sum(household_types.values())
-        to_plot = {
-            cat: household_types[cat] / total * 100 for cat in household_types
-        }
+        to_plot = {cat: household_types[cat] / total * 100 for cat in household_types}
         f, ax = plt.subplots()
         ax.bar(to_plot.keys(), to_plot.values())
         ax.set_xlabel("Household type")
@@ -86,15 +82,34 @@ class UniversityPlots:
                     counts.append(area_populations[area])
                     areas.append(area)
         toplot = self.world_map.loc[areas]
-        toplot["counts"] = counts
+        toplot["counts"] = counts / np.sum(counts) * 100
+        norm = colors.Normalize(vmin=toplot.counts.min(), vmax=toplot.counts.max())
+        cbar = plt.cm.ScalarMappable(norm=norm, cmap="viridis")
+
         fig, ax = plt.subplots()
         toplot = toplot.to_crs(epsg=3857)
-        toplot.plot('counts', ax=ax, alpha=0.7, cmap="viridis", norm=LogNorm())
+        toplot.plot(
+            "counts",
+            ax=ax,
+            alpha=0.7,
+            cmap="viridis",
+            legend=True,
+        )
         ax.set_xlim(-178000, -172000)
         ax.set_ylim(7.315e6, 7.320e6)
         ctx.add_basemap(ax, source=ctx.providers.Stamen.Toner, attribution_size=5)
         ax.xaxis.set_major_formatter(plt.NullFormatter())
         ax.yaxis.set_major_formatter(plt.NullFormatter())
-        uni_centroid = self.area_centroids.loc[self.uni.area.name].values
-        ax.scatter(*uni_centroid, color="red", marker="*")
+        uni_centroid = toplot.loc[self.uni.area.name]
+        ax.scatter(
+            uni_centroid.geometry.centroid.x,
+            uni_centroid.geometry.centroid.y,
+            marker="*",
+            color="red",
+        )
+        ax.tick_params(left=False, labelleft=False, bottom=False, labelbottom=False)
+        ax_cbar = fig.colorbar(cbar, ax=ax)
+        ax_cbar.set_label("Fraction of students [\%]", rotation=-90)
+        plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+        plt.margins(0, 0)
         return ax
