@@ -83,9 +83,6 @@ class UniversityPlots:
                     areas.append(area)
         toplot = self.world_map.loc[areas]
         toplot["counts"] = counts / np.sum(counts) * 100
-        norm = colors.Normalize(vmin=toplot.counts.min(), vmax=toplot.counts.max())
-        cbar = plt.cm.ScalarMappable(norm=norm, cmap="viridis")
-
         fig, ax = plt.subplots()
         toplot = toplot.to_crs(epsg=3857)
         toplot.plot(
@@ -93,7 +90,9 @@ class UniversityPlots:
             ax=ax,
             alpha=0.7,
             cmap="viridis",
-            legend=True,
+            legend=False,
+            vmin=1, 
+            vmax=4.5
         )
         ax.set_xlim(-178000, -172000)
         ax.set_ylim(7.315e6, 7.320e6)
@@ -108,8 +107,17 @@ class UniversityPlots:
             color="red",
         )
         ax.tick_params(left=False, labelleft=False, bottom=False, labelbottom=False)
+
+        # colorbar
+        norm = colors.Normalize(vmin=1, vmax=4)
+        cbar = plt.cm.ScalarMappable(norm=norm, cmap="viridis")
         ax_cbar = fig.colorbar(cbar, ax=ax)
-        ax_cbar.set_label("Fraction of students [\%]", rotation=-90)
+        ax_cbar.set_label("Fraction of students [\%]", rotation=-90, labelpad=20)
+        yticklabels = ax_cbar.ax.get_yticklabels()
+        yticklabels = list(map(str, yticklabels))
+        yticklabels[-1] = r">4"
+        ax_cbar.ax.set_yticklabels(yticklabels)
+        # margins
         plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
         plt.margins(0, 0)
         return ax
