@@ -259,8 +259,9 @@ class Interaction:
             input_contact_matrices["characteristic_time"],
         )
 
+    @staticmethod
     def adapt_contacts_to_schools(
-        self, input_contact_matrix, xi, age_min, age_max, physical=False
+        input_contact_matrix, xi, age_min, age_max, physical=False
     ):
         n_subgroups_max = (age_max - age_min) + 2  # adding teachers
         contact_matrix = np.zeros((n_subgroups_max, n_subgroups_max))
