@@ -9,7 +9,7 @@ from june import paths
 from june.geography import SuperAreas, SuperArea
 from june.groups import Hospitals
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("hospital_distributor")
 
 default_config_filename = (
     paths.configs_path / "defaults/distributors/hospital_distributor.yaml"

@@ -11,9 +11,8 @@ from june.geography import Geography
 from june import paths
 from june.distributors import WorkerDistributor, load_workflow_df, load_sex_per_sector
 
-default_base_path = Path(os.path.abspath(__file__)).parent.parent.parent.parent
 default_config_file = (
-    default_base_path / "configs/defaults/distributors/worker_distributor.yaml"
+    paths.configs_path/ "defaults/distributors/worker_distributor.yaml"
 )
 
 

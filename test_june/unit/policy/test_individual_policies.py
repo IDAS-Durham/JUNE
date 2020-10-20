@@ -7,7 +7,7 @@ import pytest
 
 from june import paths
 from june.demography import Person, Population
-from june.geography import Geography
+from june.geography import Geography, Area, SuperArea
 from june.groups import Hospital, School, Company, Household, University
 from june.groups import (
     Hospitals,
@@ -31,9 +31,11 @@ from june.policy import (
     Policies,
     IndividualPolicies,
     Hospitalisation,
+    LimitLongCommute,
 )
 from june.simulator import Simulator
 from june.world import World
+from june.utils.distances import haversine_distance
 
 
 def infect_person(person, selector, symptom_tag="mild"):
@@ -566,7 +568,7 @@ class TestClosure:
             date=time_during_policy
         )
         # Move the person 1_0000 times for five days
-
+        company_closure.furlough_ratio = 0.0
         n_days_in_week = []
         for i in range(500):
             n_days = 0
@@ -576,12 +578,26 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    furlough_ratio=0.0,
+                ):
+                    n_days += 1.0
+            n_days_in_week.append(n_days)
+        assert np.mean(n_days_in_week) == pytest.approx(0.0, rel=0.1)
+        company_closure.furlough_ratio = 0.1
+        n_days_in_week = []
+        for i in range(500):
+            n_days = 0
+            for j in range(5):
+                if "primary_activity" in policies.individual_policies.apply(
+                    active_individual_policies,
+                    person=worker,
+                    activities=activities,
+                    days_from_start=0,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(0.0, rel=0.1)
         n_days_in_week = []
+        company_closure.furlough_ratio = 0.4
         for i in range(500):
             n_days = 0
             for j in range(5):
@@ -590,21 +606,6 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    furlough_ratio=0.1,
-                ):
-                    n_days += 1.0
-            n_days_in_week.append(n_days)
-        assert np.mean(n_days_in_week) == pytest.approx(0.0, rel=0.1)
-        n_days_in_week = []
-        for i in range(500):
-            n_days = 0
-            for j in range(5):
-                if "primary_activity" in policies.individual_policies.apply(
-                    active_individual_policies,
-                    person=worker,
-                    activities=activities,
-                    days_from_start=0,
-                    furlough_ratio=0.4,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
@@ -653,6 +654,7 @@ class TestClosure:
         # Move the person 1_0000 times for five days
 
         # Testing key_ratio and key_worker feature in random_ratio
+        company_closure.key_ratio = 0.0
         n_days_in_week = []
         for i in range(500):
             n_days = 0
@@ -662,11 +664,11 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    key_ratio=0.0,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(5.0, rel=0.1)
+        company_closure.key_ratio = 0.1
         n_days_in_week = []
         for i in range(500):
             n_days = 0
@@ -676,11 +678,11 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    key_ratio=0.1,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(5.0, rel=0.1)
+        company_closure.key_ratio = 0.4
         n_days_in_week = []
         for i in range(500):
             n_days = 0
@@ -690,7 +692,6 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    key_ratio=0.4,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
@@ -743,6 +744,8 @@ class TestClosure:
         # Move the person 1_0000 times for five days
 
         # Testing key_ratio feature in random_ratio
+        company_closure.random_ratio = 1.0
+        company_closure.key_ratio = 0.0
         n_days_in_week = []
         for i in range(500):
             n_days = 0
@@ -752,13 +755,13 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    key_ratio=0.0,
-                    random_ratio=1.0,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(4.2, rel=0.1)
         n_days_in_week = []
+        company_closure.random_ratio = 1.0
+        company_closure.key_ratio = 0.1
         for i in range(500):
             n_days = 0
             for j in range(5):
@@ -767,12 +770,12 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    key_ratio=0.1,
-                    random_ratio=1.0,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(4.1, rel=0.1)
+        company_closure.random_ratio = 1.0
+        company_closure.key_ratio = 0.2
         n_days_in_week = []
         for i in range(500):
             n_days = 0
@@ -782,13 +785,13 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    key_ratio=0.2,
-                    random_ratio=1.0,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(4.0, rel=0.1)
-
+        company_closure.key_ratio = 0.0
+        company_closure.random_ratio = 1.0
+        company_closure.furlough_ratio = 0.0
         # Testing furlough_ratio feature in random_ratio
         n_days_in_week = []
         for i in range(500):
@@ -799,13 +802,13 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    furlough_ratio=0.0,
-                    random_ratio=1.0,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(3.2, rel=0.1)
         n_days_in_week = []
+        company_closure.random_ratio = 1.0
+        company_closure.furlough_ratio = 0.1
         for i in range(500):
             n_days = 0
             for j in range(5):
@@ -814,13 +817,13 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    furlough_ratio=0.1,
-                    random_ratio=1.0,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(3.6, rel=0.1)
         n_days_in_week = []
+        company_closure.random_ratio = 1.0
+        company_closure.furlough_ratio = 0.3
         for i in range(500):
             n_days = 0
             for j in range(5):
@@ -829,8 +832,6 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    furlough_ratio=0.3,
-                    random_ratio=1.0,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
@@ -838,6 +839,9 @@ class TestClosure:
 
         # Testing furlough_ratio and key_ratio mixing feature in random_ratio
         n_days_in_week = []
+        company_closure.random_ratio = 1.0
+        company_closure.furlough_ratio = 0.0
+        company_closure.key_ratio = 0.0
         for i in range(500):
             n_days = 0
             for j in range(5):
@@ -846,14 +850,14 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    key_ratio=0.0,
-                    furlough_ratio=0.0,
-                    random_ratio=1.0,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(3.4, rel=0.1)
         n_days_in_week = []
+        company_closure.random_ratio = 1.0
+        company_closure.key_ratio = 0.0
+        company_closure.furlough_ratio = 0.1
         for i in range(500):
             n_days = 0
             for j in range(5):
@@ -862,14 +866,14 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    key_ratio=0.0,
-                    furlough_ratio=0.1,
-                    random_ratio=1.0,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(3.8, rel=0.1)
         n_days_in_week = []
+        company_closure.random_ratio = 1.0
+        company_closure.furlough_ratio = 0.1
+        company_closure.key_ratio = 0.1
         for i in range(1000):
             n_days = 0
             for j in range(5):
@@ -878,14 +882,14 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    key_ratio=0.1,
-                    furlough_ratio=0.1,
-                    random_ratio=1.0,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
         assert np.mean(n_days_in_week) == pytest.approx(3.7, rel=0.1)
         n_days_in_week = []
+        company_closure.random_ratio = 1.0
+        company_closure.furlough_ratio = 0.3
+        company_closure.key_ratio = 0.3
         for i in range(500):
             n_days = 0
             for j in range(5):
@@ -894,9 +898,6 @@ class TestClosure:
                     person=worker,
                     activities=activities,
                     days_from_start=0,
-                    key_ratio=0.3,
-                    furlough_ratio=0.3,
-                    random_ratio=1.0,
                 ):
                     n_days += 1.0
             n_days_in_week.append(n_days)
@@ -1201,3 +1202,45 @@ def test__kid_at_home_is_supervised(setup_policy_world, selector):
     ]
     assert len(guardians_at_home) != 0
     sim.clear_world()
+
+
+class TestLimitLongCommute:
+    def test__haversine_distance(self):
+        area = Area(coordinates=[0, 1])
+        super_area = SuperArea(coordinates=[0, 0])
+        distance = haversine_distance(area.coordinates, super_area.coordinates)
+        assert 100 < distance < 150
+
+    def test__distance_policy_check(self):
+        worker = Person.from_attributes()
+        area = Area(coordinates=[0, 1])
+        super_area = SuperArea(coordinates=[0, 0])
+        super_area.add_worker(worker)
+        area.add(worker)
+        limit_long_commute = LimitLongCommute(
+            apply_from_distance=150, going_to_work_probability=0.2
+        )
+        ret = limit_long_commute._does_long_commute(worker)
+        assert ret == False
+
+    def test__probability_of_going_to_work(self):
+        worker = Person.from_attributes()
+        area = Area(coordinates=[0, 3])
+        super_area = SuperArea(coordinates=[0, 0])
+        area.add(worker)
+        super_area.add_worker(worker)
+        limit_long_commute = LimitLongCommute(
+            apply_from_distance=150, going_to_work_probability=0.2
+        )
+        assert set(limit_long_commute.activities_to_remove) == set([
+            "commute",
+            "primary_activity",
+        ])
+        limit_long_commute.get_long_commuters([worker])
+        skips = 0
+        n = 5000
+        for _ in range(n):
+            ret = limit_long_commute.check_skips_activity(worker)
+            if ret:
+                skips += 1
+        assert np.isclose(skips, 0.2 * n, rtol=0.1)

@@ -87,7 +87,9 @@ class PeopleRecord(StaticRecord):
         for person in world.people:
             ids.append(person.id)
             age.append(person.age)
-            socioeconomic_index.append(person.socioecon_index)
+            socioeconomic_index.append(
+                person.socioecon_index if person.socioecon_index is not None else 0
+            )
             primary_activity_type.append(
                 person.primary_activity.group.spec
                 if person.primary_activity is not None
@@ -106,7 +108,7 @@ class PeopleRecord(StaticRecord):
             )
             area_id.append(person.area.id)
             sex.append(person.sex)
-            ethnicity.append(person.ethnicity)
+            ethnicity.append(person.ethnicity if person.ethnicity is not None else "None")
         int_data = [
             ids,
             age,
