@@ -183,10 +183,10 @@ class Population:
 
     def __getitem__(self, index):
         return self.people[index]
-    
+
     def __add__(self, population: "Population"):
         self.people.extend(population.people)
-        self.people_dict  = {**self.people_dict, **population.people_dict}
+        self.people_dict = {**self.people_dict, **population.people_dict}
         return self
 
     def add(self, person):
@@ -519,50 +519,42 @@ class ComorbidityGenerator:
         return comorbidity
 
 
-# def generate_comorbidity(person, comorbidity_data):
-#    if comorbidity_data is not None:
-#
-#        male_co = comorbidity_data[0]
-#        female_co = comorbidity_data[1]
-#        ages = np.array(male_co.columns).astype(int)
-#
-#        column_index = 0
-#        for idx, i in enumerate(ages):
-#            if person.age <= i:
-#                break
-#            else:
-#                column_index = idx
-#        if column_index != 0:
-#            column_index += 1
-#
-#        if person.sex == "m":
-#            # comorbidity = np.random.choice(
-#            #    list(male_co.index), 1, p=list(male_co[male_co.columns[column_index]])
-#            # )[0]
-#            comorbidity = random_choice_numba(
-#                male_co.index.values.astype(str),
-#                male_co[male_co.columns[column_index]].values,
-#            )
-#            if comorbidity == "no_condition":
-#                comorbidity = None
-#            return comorbidity
-#
-#        elif person.sex == "f":
-#            # comorbidity = np.random.choice(
-#            #    list(female_co.index),
-#            #    1,
-#            #    p=list(female_co[female_co.columns[column_index]]),
-#            # )[0]
-#            comorbidity = random_choice_numba(
-#                female_co.index.values.astype(str),
-#                female_co[female_co.columns[column_index]].values,
-#            )
-#            if comorbidity == "no_condition":
-#                comorbidity = None
-#            return comorbidity
-#
-#    else:
-#        return None
+def generate_comorbidity(person, comorbidity_data):
+    if comorbidity_data is not None:
+
+        male_co = comorbidity_data[0]
+        female_co = comorbidity_data[1]
+        ages = np.array(male_co.columns).astype(int)
+
+        column_index = 0
+        for idx, i in enumerate(ages):
+            if person.age <= i:
+                break
+            else:
+                column_index = idx
+        if column_index != 0:
+            column_index += 1
+
+        if person.sex == "m":
+            comorbidity = random_choice_numba(
+                male_co.index.values.astype(str),
+                male_co[male_co.columns[column_index]].values,
+            )
+            if comorbidity == "no_condition":
+                comorbidity = None
+            return comorbidity
+
+        elif person.sex == "f":
+            comorbidity = random_choice_numba(
+                female_co.index.values.astype(str),
+                female_co[female_co.columns[column_index]].values,
+            )
+            if comorbidity == "no_condition":
+                comorbidity = None
+            return comorbidity
+
+    else:
+        return None
 
 
 def load_age_and_sex_generators_for_bins(

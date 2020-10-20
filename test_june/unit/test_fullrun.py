@@ -53,7 +53,7 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 interaction_config = paths.configs_path / "tests/interaction.yaml"
 
 
-def test__full_run(dummy_world, selector):
+def test__full_run(dummy_world, selector, test_results):
     world = dummy_world
     # restore health status of people
     for person in world.people:
@@ -76,7 +76,7 @@ def test__full_run(dummy_world, selector):
     travel = Travel()
     interaction = Interaction.from_file(config_filename=interaction_config)
     record = Record(
-            record_path = 'results',
+            record_path = test_results / 'results',
     )
     policies = Policies.from_file()
     sim = Simulator.from_file(

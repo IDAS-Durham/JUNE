@@ -5,7 +5,34 @@
 
 Repository for data and models built, named after [June Almeida](https://en.wikipedia.org/wiki/June_Almeida). June was the female Scottish virologist that first identified the coronavirus group of viruses. 
 
-Given the size of this team we should work in branches and merge regularly and separate folders for projects.
+
+# Setup
+
+The easiest way to get JUNE up and running is to install the latest stable version,
+
+```
+pip install june
+```
+
+and download the data with
+
+```
+get_june_data.sh
+```
+
+This will require a working installation of Openmpi or Intelmpi to compile ``mpi4py``. 
+
+If you want to get the most up-to-date version of the code, then you can clone this repository, and install it using
+
+```
+pip install -e .
+```
+
+This should automatically install any requirements as well. You can then get the data using the same command above.
+
+# How to use the code
+
+Have a look at ``Notebooks/quickstart.ipynb`` for a gentle introduction to how JUNE works. You can also checkout the scripts in ``example_scripts``
 
 # Tests
 

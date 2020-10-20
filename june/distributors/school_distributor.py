@@ -12,7 +12,7 @@ default_config_filename = (
     paths.configs_path / "defaults/distributors/school_distributor.yaml"
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("school_distributor")
 
 EARTH_RADIUS = 6371  # km
 

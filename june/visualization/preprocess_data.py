@@ -13,6 +13,8 @@ print ('####### Loading super area summary #########')
 super_area_summary = read_logger.super_area_summary()
 print ('####### Super area summary loaded #########')
 
+super_area_summary.to_csv(results_path + '/super_area_summary.csv')
+
 super_area_summary = super_area_summary.reset_index()
 
 print ('####### Extracting relevant information from dates #########')

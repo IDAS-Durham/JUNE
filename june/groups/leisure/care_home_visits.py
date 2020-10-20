@@ -33,9 +33,7 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
         )
 
     @classmethod
-    def from_config(
-        cls, config_filename: str = default_config_filename
-    ):
+    def from_config(cls, config_filename: str = default_config_filename):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(**config)
@@ -66,12 +64,17 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
                         person for person in area.care_home.residents
                     ]
                     for i, person in enumerate(people_in_care_home):
-                        if households_super_area[i].care_homes_to_visit is None:
-                            households_super_area[i].care_homes_to_visit = (area.care_home,)
+                        if (
+                            "care_home"
+                            not in households_super_area[i].residences_to_visit
+                        ):
+                            households_super_area[i].residences_to_visit[
+                                "care_home"
+                            ] = (area.care_home,)
                         else:
-                            households_super_area[i].care_homes_to_visit = tuple(
+                            households_super_area[i].residences_to_visit["care_home"] = tuple(
                                 (
-                                    *households_super_area[i].care_homes_to_visit,
+                                    *households_super_area[i].residences_to_visit["care_home"],
                                     area.care_home,
                                 )
                             )
@@ -86,12 +89,10 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
         )
 
     def get_social_venue_for_person(self, person):
-        care_homes_to_visit = person.residence.group.care_homes_to_visit
+        care_homes_to_visit = person.residence.group.residences_to_visit["care_home"]
         if care_homes_to_visit is None:
             return None
-        return care_homes_to_visit[
-            randint(0, len(care_homes_to_visit) - 1)
-        ]
+        return care_homes_to_visit[randint(0, len(care_homes_to_visit) - 1)]
 
     def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
         """
