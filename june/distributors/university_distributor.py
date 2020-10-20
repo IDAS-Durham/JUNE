@@ -12,7 +12,12 @@ logger = logging.getLogger("university_distributor")
 
 
 class UniversityDistributor:
-    def __init__(self, universities: List[University], max_radius = 15):
+    def __init__(
+        self,
+        universities: List[University],
+        first_radius_to_look=5,
+        second_radius_to_look=30,
+    ):
         """
         For each university it searches in the nearby areas for students living
         in student households. Once it has enough to fill the university, it stops
@@ -26,7 +31,8 @@ class UniversityDistributor:
             maximum number of neighbour areas to look for students
         """
         self.universities = universities
-        self.max_radius = max_radius
+        self.first_radius_to_look = first_radius_to_look
+        self.second_radius_to_look = second_radius_to_look
         self.min_student_age = 19
         self.max_student_age = 24
 
@@ -38,17 +44,23 @@ class UniversityDistributor:
                 if household.type == "student":
                     for student in household.residents:
                         if student.primary_activity is None:
-                            students_dict["student"][student.id].append(university)
+                            students_dict[university.ukprn]["student"].append(
+                                student.id
+                            )
                 elif household.type == "communal":
                     for person in household.residents:
                         if self.min_student_age <= person.age <= self.max_student_age:
                             if person.primary_activity is None:
-                                students_dict["communal"][person.id].append(university)
+                                students_dict[university.ukprn]["communal"].append(
+                                    person.id
+                                )
                 else:
                     for person in household.residents:
                         if self.min_student_age <= person.age <= self.max_student_age:
                             if person.primary_activity is None:
-                                students_dict["other"][person.id].append(university)
+                                students_dict[university.ukprn]["other"].append(
+                                    person.id
+                                )
 
     def distribute_students_to_universities(self, areas: Areas, people: Population):
         """
@@ -56,32 +68,47 @@ class UniversityDistributor:
         the university.
         """
         logger.info(f"Distributing students to universities")
-        n_total_students = 0
+        need_more_students = True
+        distance_increment = 10
+        distance = 5
+        while need_more_students and distance < 45:
+            students_dict = self._build_student_dict(areas=areas, distance=distance)
+            self._assign_students_to_unis(students_dict=students_dict, people=people)
+            distance += distance_increment
+            need_more_students = False
+            for university in self.universities:
+                if university.n_students < university.n_students_max:
+                    need_more_students = True
+                    break
+        uni_info_dict = {
+            university.ukprn: university.n_students for university in self.universities
+        }
+        for key, value in uni_info_dict.items():
+            logger.info(f"University {key} has {value} students.")
+
+    def _build_student_dict(self, areas, distance):
         students_dict = defaultdict(lambda: defaultdict(list))
         # get students in areas
         for university in self.universities:
             close_areas, distances = areas.get_closest_areas(
-                coordinates=university.coordinates,
-                k=len(areas),
-                return_distance=True,
+                coordinates=university.coordinates, k=len(areas), return_distance=True,
             )
-            close_areas = np.array(close_areas)[distances < self.max_radius]
+            close_areas = np.array(close_areas)[distances < distance]
             self.find_students_in_areas(
                 students_dict=students_dict, areas=close_areas, university=university,
             )
-        # shuffle lists first
-        for key in students_dict:
-            for student_id in students_dict[key]:
-                shuffle(students_dict[key][student_id])
-        # allocate students in student households first, then communal, then other
+        return students_dict
+
+    def _assign_students_to_unis(self, students_dict, people):
         for key in ["student", "communal", "other"]:
-            for student_id, uni_candidates in students_dict[key].items():
-                for uni in uni_candidates:
-                    if uni.n_students < uni.n_students_max:
+            keep_key = True
+            while keep_key:
+                keep_key = False
+                for university in self.universities:
+                    student_candidates = students_dict[university.ukprn][key]
+                    if student_candidates and not university.is_full:
+                        student_id = student_candidates.pop()
                         university.add(
                             people.get_from_id(student_id), subgroup="student"
                         )
-
-        logger.info(
-            f"Distributed {n_total_students} students to {len(self.universities)} universities"
-        )
+                        keep_key = True
