@@ -8,19 +8,10 @@ import geopandas as gpd
 
 from june.paths import data_path
 
-# default_super_areas_shapefile = list(
-#    (data_path / "plotting/super_area_boundaries").glob("*.shp")
-# )[0]
 default_area_centroids_filename = data_path / "input/geography/area_centroids.csv"
-newcastle_shapefiles = list(
-    (data_path / "plotting/newcastle_shapefiles").glob("*.shp")
-)[0]
 county_durham_shapefiles = list(
     (data_path / "plotting/county_durham_oa_shapefiles").glob("*.shp")
 )[0]
-england_shapefiles = (
-    "/home/arnau/Downloads/england_oa_shapefiles/infuse_oa_lyr_2011_clipped.shp"
-)
 
 
 class UniversityPlots:
