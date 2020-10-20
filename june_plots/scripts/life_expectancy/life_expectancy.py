@@ -127,7 +127,7 @@ class LifeExpectancyPlots:
         eng_iomd['iomd_centile'] = self.get_xtile(eng_iomd['iomd_rank'],x=100) / 100
         #eng_iomd['permiltile'] = get_xtile(eng_iomd['iomd_rank'],x=1000) / 1000
 
-        eng_oa_lsoa = self.oa_lsoa.query('index.str.startswith("E")') # Get rid of all the Welsh OAs
+        eng_oa_lsoa = self.oa_lsoa[self.oa_lsoa.index.str.startswith("E")] # Get rid of all the Welsh OAs
 
 
         ### IOMD is given on an LSOA level... we need to find convert to OAs in each LSOA.
@@ -223,7 +223,7 @@ class LifeExpectancyPlots:
         ax.fill_between(percentile_mids,f_mean-f_std,f_mean+f_std,color=self.colors['female'],alpha = 0.5)
         #ax.scatter(oa_iomd["percentile"],oa_iomd["female_le"],s=1,alpha=0.1)
 
-        ax.set_xlabel("Scaled socio-economic index (lower is more deprived)")
-        ax.set_ylabel("Expected life expectancy (for adults age 65)")
+        ax.set_xlabel("Scaled socio-economic index")
+        ax.set_ylabel("Life expectancy (65 year old)")
         ax.legend()
         return ax

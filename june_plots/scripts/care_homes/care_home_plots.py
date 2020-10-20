@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from june import paths
@@ -8,7 +9,7 @@ default_care_home_age_filename = paths.data_path / "plotting/care_home_data.xlsx
 
 class CareHomePlots:
     def __init__(self, world, colors):
-        self.world = world,
+        self.world = world
         self.colors=colors
 
     def load_care_home_data(
@@ -76,7 +77,7 @@ class CareHomePlots:
             if age_interval[0] == 85:
                 loc_str = "85 and over"
             else:
-                loc_str = f"{age_interval[0]}-{age_interval[1]}"
+                loc_str = f"{age_interval[0]} to {age_interval[1]}"
             june_percent.loc[loc_str, "Males"] = (
                 care_home_males_interval / all_males_interval * 100
             )
@@ -91,7 +92,9 @@ class CareHomePlots:
 
         f, ax = plt.subplots()
         self.percent["Persons"].plot.bar(ax=ax, label="ONS", color=self.colors['ONS'], alpha=0.7)
-        june_percent["Persons"].plot.bar(ax=ax, label="JUNE", color=self.colots['JUNE'], alpha=0.7)
+        june_percent["Persons"].plot.bar(ax=ax, label="JUNE", color=self.colors['JUNE'], alpha=0.7)
+        ax.set_xticks(np.arange(8))
+        ax.set_xticklabels(["0-15", "16-24", "25-34", "35-44", "45-54", "55-64", "75-84", "85-100"])
         ax.set_ylabel("Population in care homes [\%]")
         ax.legend()
         return ax

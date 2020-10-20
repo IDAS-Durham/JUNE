@@ -203,7 +203,7 @@ class CompanyPlots:
         width = 0.35
 
         f, ax = plt.subplots()
-        ax.bar(x+width/2, JUNE_female_sector, width, alpha=0.7, label='Female', color=self.colors['female'])
+        ax.bar(x+width/2, JUNE_female_sector, width, label='Female', color=self.colors['female'])
         ax.bar(x-width/2, JUNE_male_sector, width, label='Male', color=self.colors['male'])
         ax.set_ylabel('Frequency [\%]')
         ax.set_xlabel('Company sector')
@@ -278,7 +278,7 @@ class CompanyPlots:
         f, ax = plt.subplots()
         ax.scatter(work_travel_male_bins[1:], work_travel_male_binned, label='Male',s=10,color=self.colors['male'])
         ax.scatter(work_travel_female_bins[1:], work_travel_female_binned, label='Female',s=10,color=self.colors['female'])
-        ax.set_xlabel('Distance to work (km)')
+        ax.set_xlabel('Distance to work [km]')
         ax.set_ylabel('Frequency')
         ax.set_yscale('log')
         ax.legend()
