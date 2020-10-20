@@ -1,6 +1,8 @@
 import h5py
 import numpy as np
 from typing import List
+
+from .utils import read_dataset
 from june.groups.leisure import (
     Pub,
     Pubs,
@@ -53,12 +55,9 @@ def load_social_venues_from_hdf5(file_path: str, domain_areas=None):
             if n == 0:
                 social_venues_dict[spec] = None
                 continue
-            ids = np.empty(n, dtype=int)
-            data["id"].read_direct(ids, np.s_[0:n], np.s_[0:n])
-            coordinates = np.empty((n, 2), dtype=float)
-            data["coordinates"].read_direct(coordinates, np.s_[0:n], np.s_[0:n])
-            areas = np.empty(n, dtype=int)
-            data["area"].read_direct(areas, np.s_[0:n], np.s_[0:n])
+            ids = read_dataset(data["id"])
+            coordinates = read_dataset(data["coordinates"])
+            areas = read_dataset(data["area"])
             for k in range(n):
                 if domain_areas is not None:
                     area = areas[k]
@@ -86,10 +85,8 @@ def restore_social_venues_properties_from_hdf5(
             if n == 0:
                 continue
             social_venues = getattr(world, spec)
-            ids = np.empty(n, dtype=int)
-            data["id"].read_direct(ids, np.s_[0:n], np.s_[0:n])
-            areas = np.empty(n, dtype=int)
-            data["area"].read_direct(areas, np.s_[0:n], np.s_[0:n])
+            ids = read_dataset(data["id"])
+            areas = read_dataset(data["area"])
             for k in range(n):
                 if domain_areas is not None:
                     area = areas[k]

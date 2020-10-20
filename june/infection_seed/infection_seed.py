@@ -5,6 +5,8 @@ import datetime
 from collections import Counter
 from june import paths
 from typing import List, Optional
+
+from june.records import Record
 from june.domain import Domain
 from june.demography import Population
 from june.geography import SuperAreas
@@ -202,7 +204,7 @@ class InfectionSeed:
             except KeyError as e:
                 raise KeyError("There is no data on cases for super area: %s" % str(e))
 
-    def unleash_virus_per_day(self, date: "datetime", record: Optional["Record"]=None):
+    def unleash_virus_per_day(self, date: "datetime", record: Optional[Record]=None):
         """
         Infect super areas at a given ```date```
 

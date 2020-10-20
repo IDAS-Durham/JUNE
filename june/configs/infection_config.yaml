@@ -1,0 +1,6 @@
+transmission:
+  type:          Constant
+  probability:   0.3
+symptoms:
+  type:          Constant
+  recovery_rate: 0.05

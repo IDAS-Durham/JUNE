@@ -15,6 +15,7 @@ from june.activity import ActivityManager, activity_hierarchy
 from june.demography import Person, Activities
 from june.exc import SimulatorError
 from june.groups.leisure import Leisure
+from june.groups import MedicalFacilities
 from june.groups.travel import Travel
 from june.infection.symptom_tag import SymptomTag
 from june.infection import InfectionSelector
@@ -22,13 +23,14 @@ from june.infection_seed import InfectionSeed
 from june.interaction import Interaction, InteractiveGroup
 from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
 from june.time import Timer
+from june.records import Record
 from june.world import World
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
 from june.utils.profiler import profile
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
-output_logger = logging.getLogger(__name__)
+output_logger = logging.getLogger("simulator")
 if mpi_rank > 0:
     output_logger.propagate = False
 
@@ -44,7 +46,7 @@ class Simulator:
         activity_manager: ActivityManager,
         infection_selector: InfectionSelector = None,
         infection_seed: Optional["InfectionSeed"] = None,
-        record: Optional["Record"] = None,
+        record: Optional[Record] = None,
         checkpoint_dates: List[datetime.date] = None,
         checkpoint_path: str = None,
     ):
@@ -69,6 +71,7 @@ class Simulator:
             self.checkpoint_dates = checkpoint_dates
         else:
             self.checkpoint_dates = ()
+        self.medical_facilities = self._get_medical_facilities()
         self.record = record
 
     @classmethod
@@ -83,8 +86,7 @@ class Simulator:
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
         checkpoint_path: str = None,
-        # comment: str = None,
-        record: Optional["Record"] = None,
+        record: Optional[Record] = None,
     ) -> "Simulator":
 
         """
@@ -167,7 +169,6 @@ class Simulator:
             activity_manager=activity_manager,
             infection_selector=infection_selector,
             infection_seed=infection_seed,
-            # comment=comment,
             record=record,
             checkpoint_dates=checkpoint_dates,
             checkpoint_path=checkpoint_path,
@@ -185,7 +186,7 @@ class Simulator:
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
-        record: Optional["Record"] = None,
+        record: Optional[Record] = None,
         # comment: Optional[str] = None,
     ):
         from june.hdf5_savers.checkpoint_saver import generate_simulator_from_checkpoint
@@ -201,7 +202,6 @@ class Simulator:
             travel=travel,
             config_filename=config_filename,
             record=record,
-            # comment=comment,
         )
 
     def clear_world(self):
@@ -210,7 +210,7 @@ class Simulator:
         to False.
         """
         for super_group_name in self.activity_manager.all_super_groups:
-            if super_group_name in ["care_home_visits", "household_visits"]:
+            if "visits" in super_group_name:
                 continue
             grouptype = getattr(self.world, super_group_name)
             if grouptype is not None:
@@ -221,6 +221,17 @@ class Simulator:
         for person in self.world.people.members:
             person.busy = False
             person.subgroups.leisure = None
+
+    def _get_medical_facilities(self):
+        medical_facilities = []
+        for group_name in self.activity_manager.all_super_groups:
+            if "visits" in group_name:
+                continue
+            grouptype = getattr(self.world, group_name)
+            if grouptype is not None:
+                if isinstance(grouptype, MedicalFacilities):
+                    medical_facilities.append(grouptype)
+        return medical_facilities
 
     @staticmethod
     def check_inputs(time_config: dict):
@@ -334,7 +345,8 @@ class Simulator:
             # Take actions on new symptoms
             self.activity_manager.policies.medical_care_policies.apply(
                 person=person,
-                medical_facilities=self.world.hospitals,
+                medical_facilities=self.medical_facilities,
+                days_from_start=time,
                 record=self.record,
             )
             if new_status == "recovered":
@@ -443,7 +455,7 @@ class Simulator:
         active_super_groups = self.activity_manager.active_super_groups
         super_group_instances = []
         for super_group_name in active_super_groups:
-            if super_group_name not in ["household_visits", "care_home_visits"]:
+            if "visits" not in super_group_name:
                 super_group_instance = getattr(self.world, super_group_name)
                 if super_group_instance is None or len(super_group_instance) == 0:
                     continue
@@ -460,6 +472,7 @@ class Simulator:
             f"number of deaths =  {n_people}, "
             f"number of infected = {len(self.world.people.infected)}"
         )
+
         # main interaction loop
         infected_ids = []
         for super_group in super_group_instances:
