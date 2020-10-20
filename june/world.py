@@ -105,9 +105,6 @@ class World:
             carehome_distr.populate_care_homes_in_super_areas(
                 super_areas=self.super_areas
             )
-            carehome_distr.distribute_workers_to_care_homes(
-                super_areas=self.super_areas
-            )
 
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
@@ -127,6 +124,11 @@ class World:
             uni_distributor = UniversityDistributor(self.universities)
             uni_distributor.distribute_students_to_universities(
                 areas=self.areas, people=self.people
+            )
+        if self.care_homes is not None:
+            # this goes after unis to ensure students go to uni
+            carehome_distr.distribute_workers_to_care_homes(
+                super_areas=self.super_areas
             )
 
         if self.hospitals is not None:

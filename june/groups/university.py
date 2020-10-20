@@ -17,12 +17,13 @@ logger = logging.getLogger("universities")
 
 class University(Group):
     def __init__(
-        self, n_students_max=None, n_years=5, ukprn=None, area=None,
+        self, n_students_max=None, n_years=5, ukprn=None, area=None, coordinates = None
     ):
         self.n_students_max = n_students_max
         self.n_years = n_years
         self.ukprn = ukprn
         self.area = area
+        self.coordinates = coordinates
         super().__init__()
         self.subgroups = [Subgroup(self, i) for i in range(self.n_years + 1)]
 
@@ -50,6 +51,8 @@ class University(Group):
                 year = age_to_years[person.age]
             self.subgroups[year].append(person)
             person.subgroups.primary_activity = self.subgroups[year]
+            if person.work_super_area is not None:
+                    person.work_super_area.remove_worker(person)
         elif subgroup == "professors":
             self.subgroups[0].append(person)
             person.subgroups.primary_activity = self.subgroups[0]
@@ -57,10 +60,6 @@ class University(Group):
     @property
     def is_full(self):
         return self.n_students >= self.n_students_max
-
-    @property
-    def coordinates(self):
-        return self.area.coordinates
 
 
 class Universities(Supergroup):
@@ -72,7 +71,7 @@ class Universities(Supergroup):
         cls,
         areas: SuperAreas,
         universities_filename: str = default_universities_filename,
-        max_distance_to_area=20,
+        max_distance_to_area=5,
     ):
         """
         Initializes universities from super areas. By looking at the coordinates
@@ -102,7 +101,7 @@ class Universities(Supergroup):
             if distance > max_distance_to_area:
                 continue
             university = University(
-                area=closest_area, n_students_max=n_stud, ukprn=ukprn
+                area=closest_area, n_students_max=n_stud, ukprn=ukprn, coordinates=coord
             )
             universities.append(university)
         logger.info(f"There are {len(universities)} universities in this world.")
