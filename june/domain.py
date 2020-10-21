@@ -104,9 +104,14 @@ class DomainSplitter:
         self.super_areas_sorted = self._sort_super_areas_by_score()
 
     def get_scores_per_super_area(self, world_path):
-        people_weight = 3
+        """
+        Given a world path, loads the world and computes the score per super area.
+        The score is calculated as:
+        score = people_weight * n_people + workers_weight * n_workers + commute_weight * n_commuters
+        """
+        people_weight = 2
         workers_weight = 1
-        commute_weight = 3
+        commute_weight = 1
         ret = defaultdict(float)
         with h5py.File(world_path, "r") as f:
             geography_dset = f["geography"]
@@ -134,6 +139,9 @@ class DomainSplitter:
         return ret
 
     def _sort_super_areas_by_score(self):
+        """
+        Sorts super areas by score
+        """
         super_area_scores = [
             self.score_per_super_area[super_area]
             for super_area in self.super_area_names
@@ -143,6 +151,10 @@ class DomainSplitter:
         ]
 
     def get_score_per_domain(self, super_areas_per_domain):
+        """
+        Returns a dict mapping domain -> score, where score is the sum of the scores
+        of all super areas in the domain.
+        """
         ret = defaultdict(float)
         for key, value in super_areas_per_domain.items():
             score = 0
@@ -172,26 +184,6 @@ class DomainSplitter:
             coordinates.reshape(1, -1), k=len(centroids),
         )[1][0]
         return closest_centroid_ids
-
-    def _get_distance_to_closest_centroid(self, kdtree, coordinates):
-        distance = kdtree.query(coordinates.reshape(1, -1), k=1,)[0][0][0]
-        return distance
-
-    def _get_furthest_super_areas(self, domain_centroids, kdtree_centroids):
-        super_areas_per_domain = len(self.super_area_names) / self.number_of_domains
-        kdtree_centroids = self._initialise_kdtree(domain_centroids)
-        # sort super areas by further away from closest to any cluster
-        _distances = []
-        for super_area in self.super_area_names:
-            _distances.append(
-                self._get_distance_to_closest_centroid(
-                    kdtree_centroids,
-                    self.super_area_centroids.loc[super_area, ["X", "Y"]].values,
-                )
-            )
-        sorted_idx = np.argsort(_distances)[::-1]
-        super_area_names = np.array(self.super_area_names)[sorted_idx]
-        return super_area_names
 
     def assign_super_areas_to_centroids(self, domain_centroids):
         kdtree_centroids = self._initialise_kdtree(domain_centroids)
@@ -235,20 +227,37 @@ class DomainSplitter:
             centroids.append(centroid)
         return np.array(centroids)
 
-    def _domain_split_iteration(self, domain_centroids):
-        super_areas_per_domain = self.assign_super_areas_to_centroids(domain_centroids)
+    def _domain_split_iteration(self, super_areas_per_domain):
         domain_centroids = self.compute_domain_centroids(super_areas_per_domain)
         return domain_centroids
 
+    def compute_decomposition_unbalance(self, super_areas_per_domain):
+        scores_per_domain = self.get_score_per_domain(super_areas_per_domain)
+        return max(scores_per_domain.values()) / min(scores_per_domain.values())
+
     def iterate_domain_split(self, domain_centroids, niter=20):
+        """
+        Iterates the splitting of domains
+        """
         # first make an initial guess with KMeans.
+        best_candidate_score = np.inf
+        best_centroids = None
         for i in range(niter):
             if i % 5 == 0:
                 logger.info(f"Domain splitter -- iteration {i+1} of {niter}")
-            domain_centroids = self._domain_split_iteration(domain_centroids)
-        return domain_centroids
+            super_areas_per_domain = self.assign_super_areas_to_centroids(domain_centroids)
+            domain_centroids = self._domain_split_iteration(super_areas_per_domain)
+            unbalance_score = self.compute_decomposition_unbalance(super_areas_per_domain)
+            if unbalance_score < best_candidate_score:
+                best_candidate_score = unbalance_score
+                best_centroids = domain_centroids
+        return best_centroids
 
     def generate_split_from_centroids(self, domain_centroids):
+        """
+        Given domain centroids, assigns each super area to the closest centroid,
+        generating a tesselation of the world.
+        """
         # assign each to closest
         super_areas_per_domain = {
             centroid_id: [] for centroid_id in range(len(domain_centroids))
@@ -263,6 +272,9 @@ class DomainSplitter:
         return super_areas_per_domain
 
     def generate_domain_split(self, niter=20):
+        """
+        Main function of this class, generates a domain split using ``niter`` iterations.
+        """
         initial_centroids = self._get_kmeans_centroids()
         domain_centroids = self.iterate_domain_split(initial_centroids, niter=niter)
         super_areas_per_domain = self.generate_split_from_centroids(domain_centroids)
