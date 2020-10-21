@@ -111,12 +111,10 @@ class UniversityPlots:
         # colorbar
         norm = colors.Normalize(vmin=1, vmax=4)
         cbar = plt.cm.ScalarMappable(norm=norm, cmap="viridis")
-        ax_cbar = fig.colorbar(cbar, ax=ax)
-        ax_cbar.set_label("Fraction of students [\%]", rotation=-90, labelpad=20)
+        ax_cbar = fig.colorbar(cbar, ax=ax, ticks=[1, 2, 3, 4])
+        ax_cbar.set_label("Fraction of students [\%]", rotation=-90, labelpad=10)
         yticklabels = ax_cbar.ax.get_yticklabels()
-        yticklabels = list(map(str, yticklabels))
-        yticklabels[-1] = r">4"
-        ax_cbar.ax.set_yticklabels(yticklabels)
+        ax_cbar.ax.set_yticklabels(["1", "2", "3", r"$>4$"])
         # margins
         plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
         plt.margins(0, 0)
