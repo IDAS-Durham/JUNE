@@ -46,7 +46,7 @@ from camps.groups import FemaleCommunals, FemaleCommunalDistributor
 from camps.groups import Religiouss, ReligiousDistributor
 from camps.groups import Shelter, Shelters, ShelterDistributor
 from camps.groups import IsolationUnit, IsolationUnits
-from camps.groups import LearningCenters
+from camps.groups import LearningCenter, LearningCenters
 from camps.distributors import LearningCenterDistributor
 from camps.groups import PlayGroups, PlayGroupDistributor
 from camps.groups import EVouchers, EVoucherDistributor
@@ -470,7 +470,7 @@ if args.play_group_beta_ratio:
     )
 
 if args.child_susceptibility:
-    interaction.susceptibilities["0-13"] = float(args.child_susceptibility)
+    interaction.susceptibilities_by_age["0-13"] = float(args.child_susceptibility)
     
 cases_detected = {
     "CXB-202": 3,
