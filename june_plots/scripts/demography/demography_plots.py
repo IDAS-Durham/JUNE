@@ -241,16 +241,29 @@ class DemographyPlots:
         area_to_super_area = pd.read_csv(area_super_area_filename)
         area_to_super_area.set_index("region", inplace=True)
         population = pd.read_csv(population_filename)
-        population.set_index("area", inplace=True)
+        population.set_index("output_area", inplace=True)
         regions_to_compare = ["London", "North East", "England"]
-        f, ax = plt.subplots(1, len(regions_to_compare))
+        f, ax = plt.subplots(1, len(regions_to_compare), figsize=(7, 2), sharex=True, sharey=True)
+        colors = [self.colors[color] for color in ["general_1", "general_2", "general_3"]]
         for i, region in enumerate(regions_to_compare):
             if region == "England":
                 filt = population.index.str.startswith("E")
                 population_region = population.loc[filt]
             else:
-                population_region = population.loc[area_to_super_area.loc[region]]
-            population_region = population_region.sum(axis=0)
-            population_region.plot(ax=ax[i])
+                population_region = population.loc[
+                    area_to_super_area.loc[region].area.values
+                ]
+            population_region = population_region.sum(axis=0) 
+            keys = np.array(population_region.index, dtype=np.int)
+            values = np.array(population_region.values / np.sum(population_region.values) * 100, dtype=np.float)
+            ax[i].bar(
+                keys,
+                values,
+                width=1,
+                color = colors[i]
+            )
+            ax[i].set_xlabel("Age")
+            ax[i].set_title(region)
+        ax[0].set_ylabel("Frequency [\%]")
+        plt.subplots_adjust(wspace=0, hspace=0)
         return ax
-
