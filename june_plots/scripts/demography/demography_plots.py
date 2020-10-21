@@ -18,6 +18,13 @@ default_socioeconomic_index_filename = (
     paths.data_path / "input/demography/socioeconomic_index.csv"
 )
 
+default_area_to_super_area_filename = (
+    paths.data_path / "input/geography/area_super_area_region.csv"
+)
+default_population_area_filename = (
+    paths.data_path / "input/demography/age_structure_single_year.csv"
+)
+
 ethnicity_england = {
     "A": 45281142,
     "B": 1192879,
@@ -89,12 +96,12 @@ class DemographyPlots:
         x_female = df["Female"]
 
         fig, ax = plt.subplots(ncols=2, sharey=True, figsize=(6, 4))
-        ax[0].barh(y, x_male, align="center", color=self.colors['male'])
+        ax[0].barh(y, x_male, align="center", color=self.colors["male"])
         ax[0].set_ylabel("Ages")
         ax[0].set_xlabel("Males [\%]")
         ax[0].set(yticks=y, yticklabels=df["Age"])
         ax[0].invert_xaxis()
-        ax[1].barh(y, x_female, align="center", color=self.colors['female'])
+        ax[1].barh(y, x_female, align="center", color=self.colors["female"])
         ax[1].set_xlabel("Females [\%]")
         plt.subplots_adjust(wspace=0, hspace=0)
 
@@ -131,7 +138,7 @@ class DemographyPlots:
         population_area = super_area_population / area_km
 
         fig, ax = plt.subplots()
-        ax.hist(population_area, color=self.colors['JUNE'])
+        ax.hist(population_area, color=self.colors["JUNE"])
         ax.set_xlabel("People per sq. km")
         ax.set_ylabel("Frequency")
 
@@ -145,17 +152,12 @@ class DemographyPlots:
         for key in ethnicities:
             ratios[key] = ethnicities[key] / ethnicity_england[key]
         fig, ax = plt.subplots()
-        ax.bar(
-            ratios.keys(),
-            ratios.values(),
-            alpha=1.0,
-            color=self.colors['JUNE']
-        )
-        #ax.set_title("Ethnicity distribution ratios compared to England average.")
+        ax.bar(ratios.keys(), ratios.values(), alpha=1.0, color=self.colors["JUNE"])
+        # ax.set_title("Ethnicity distribution ratios compared to England average.")
         ax.legend()
         ax.set_xlabel("Ethnicity")
         ax.set_ylabel("Ratio")
-        ax.axhline(1, linestyle="--", color='black')
+        ax.axhline(1, linestyle="--", color="black")
         return ax
 
     @staticmethod  # so can call on any set of super areas.
@@ -230,3 +232,25 @@ class DemographyPlots:
         )
 
         return ax
+
+    def plot_age_distribution_comparison(
+        self,
+        area_super_area_filename=default_area_to_super_area_filename,
+        population_filename=default_population_area_filename,
+    ):
+        area_to_super_area = pd.read_csv(area_super_area_filename)
+        area_to_super_area.set_index("region", inplace=True)
+        population = pd.read_csv(population_filename)
+        population.set_index("area", inplace=True)
+        regions_to_compare = ["London", "North East", "England"]
+        f, ax = plt.subplots(1, len(regions_to_compare))
+        for i, region in enumerate(regions_to_compare):
+            if region == "England":
+                filt = population.index.str.startswith("E")
+                population_region = population.loc[filt]
+            else:
+                population_region = population.loc[area_to_super_area.loc[region]]
+            population_region = population_region.sum(axis=0)
+            population_region.plot(ax=ax[i])
+        return ax
+
