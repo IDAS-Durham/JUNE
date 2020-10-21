@@ -310,11 +310,18 @@ hospital_distributor.distribute_medics_from_world(world.people)
 
 if args.learning_centers:
     world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=int(args.learning_center_shifts))
+    learning_center_distributor = LearningCenterDistributor.from_file(
+        learning_centers=world.learning_centers
+    )
+    learning_center_distributor.distribute_kids_to_learning_centers(world.areas)
+    learning_center_distributor.distribute_teachers_to_learning_centers(world.areas)
 
+    
     if args.extra_learning_centers:
         # add extra learning centers based on enrollment
         enrolled = []
         learning_centers = []
+        # find current enrollment rates
         for learning_center in world.learning_centers:
             total = 0
             for i in range(4):
@@ -323,17 +330,23 @@ if args.learning_centers:
             learning_centers.append(learning_center)
         learning_centers = np.array(learning_centers)
         learning_centers_sorted = learning_centers[np.argsort(enrolled)]
+
+        # find top k most filled learning centers
         top_k = learning_centers_sorted[-args.extra_learning_centers:]
         for learning_center in top_k:
             extra_lc = LearningCenter(coordinates=learning_center.super_area.coordinates)
             world.learning_centers.members.append(extra_lc)
-        world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=int(args.learning_center_shifts))
-        
-    learning_center_distributor = LearningCenterDistributor.from_file(
-        learning_centers=world.learning_centers
-    )
-    learning_center_distributor.distribute_kids_to_learning_centers(world.areas)
-    learning_center_distributor.distribute_teachers_to_learning_centers(world.areas)
+        world.learning_centers = LearningCenters(world.learning_centers.members, n_shifts=4)
+
+        # clear and redistirbute kids to learning centers
+        for learning_center in world.learning_centers:
+            learning_center.ids_per_shift = defaultdict(list)
+        learning_center_distributor = LearningCenterDistributor.from_file(
+            learning_centers=world.learning_centers
+        )
+        learning_center_distributor.distribute_kids_to_learning_centers(world.areas)
+        learning_center_distributor.distribute_teachers_to_learning_centers(world.areas)
+
     CONFIG_PATH = camp_configs_path / "learning_center_config.yaml"
 
 
