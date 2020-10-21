@@ -95,3 +95,19 @@ def test_create_ball_tree_for_super_areas():
         coordinates=[54.770512, -1.594221]
     )[0]
     assert super_area.name == "E02004935"
+    assert (
+        len(
+            geo.super_areas.get_closest_super_areas(
+                coordinates=[54.770512, -1.594221], k=2
+            )
+        )
+        == 2
+    )
+    assert (
+        len(
+            geo.areas.get_closest_areas(
+                coordinates=[54.770512, -1.594221], k=10
+            )
+        )
+        == 10
+    )
