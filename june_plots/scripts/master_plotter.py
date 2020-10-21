@@ -74,7 +74,7 @@ class Plotter:
         save_dir.mkdir(exist_ok=True, parents=True)
 
         print("Setting up demography plots")
-        demography_plots = DemographyPlots(self.world)
+        demography_plots = DemographyPlots(self.world, colors=colors)
 
         print("Plotting age distribution")
         fig, ax = demography_plots.plot_age_distribution()
