@@ -14,10 +14,10 @@ from june_plots.scripts.companies import CompanyPlots
 from june_plots.scripts.households import HouseholdPlots
 from june_plots.scripts.care_homes import CareHomePlots
 from june_plots.scripts.schools import SchoolPlots
-#from june_plots.scripts.commute import CommutePlots
+from june_plots.scripts.commute import CommutePlots
 from june_plots.scripts.contact_matrix import ContactMatrixPlots
 from june_plots.scripts.life_expectancy import LifeExpectancyPlots
-#from june_plots.scripts.demography import DemographyPlots
+from june_plots.scripts.demography import DemographyPlots
 from june_plots.scripts.health_index import HealthIndexPlots
 from june_plots.scripts.contact_tracker import ContactTracker
 
@@ -64,7 +64,7 @@ class Plotter:
         world = generate_world_from_hdf5(world_filename)
 
         return Plotter(world)
-    """
+
     def plot_demography(
             self,
             save_dir: Path = default_output_plots_path / "demography",
@@ -114,6 +114,11 @@ class Plotter:
         ethnicity_plot = demography_plots.plot_ethnicity_distribution()
         ethnicity_plot.plot()
         plt.savefig(save_dir / "ethnicity_distribution.png", dpi=150, bbox_inches="tight")
+
+        print("Plotting age comparisons")
+        age_per_region = demography_plots.plot_age_distribution_comparison()
+        plt.plot()
+        plt.savefig(save_dir / "regional_age_comparison.png", dpi=150, bbox_inches="tight")
 
 
     def plot_commute(
@@ -186,7 +191,6 @@ class Plotter:
             commute_areas_plot.plot()
             plt.savefig(save_dir / 'London_external_commute.png', dpi=150, bbox_inches='tight', figsize=(6,8))
         
-    """
     def plot_households(
             self,
             save_dir: Path = default_output_plots_path / "households",
@@ -230,8 +234,6 @@ class Plotter:
         plt.savefig(
             save_dir / "household_composition_by_age.png", dpi=150, bbox_inches="tight"
         )
-
-        #household_plots.plot_all_household_plots(save_dir=save_dir)
 
 
     def plot_companies(
