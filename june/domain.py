@@ -251,6 +251,7 @@ class DomainSplitter:
             if unbalance_score < best_candidate_score:
                 best_candidate_score = unbalance_score
                 best_centroids = domain_centroids
+        logger.info(f"Best split candidate has a score of {best_candidate_score:.2f}")
         return best_centroids
 
     def generate_split_from_centroids(self, domain_centroids):
