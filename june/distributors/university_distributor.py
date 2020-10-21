@@ -86,7 +86,7 @@ class UniversityDistributor:
         # get students in areas
         for university in self.universities:
             close_areas, distances = areas.get_closest_areas(
-                coordinates=university.coordinates, k=len(areas), return_distance=True,
+                coordinates=university.coordinates, k=min(len(areas), 1000), return_distance=True,
             )
             close_areas = np.array(close_areas)[distances < distance]
             self.find_students_in_areas(
