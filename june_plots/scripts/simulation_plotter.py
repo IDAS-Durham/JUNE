@@ -106,20 +106,21 @@ class SimulationPlotter:
             record=Record,
         )
 
-    def load_operations(self, contact_tracker_pickle=None):
+    def load_operations(self, simulation_days=7, contact_tracker_pickle_path=None):
         "Loads classes with functions to be called during the simuation timesteps"
 
-        if contact_tracker_pickle is None:
+        if contact_tracker_pickle_path is None:
             self.contact_simulator = ContactTracker(
-                self.simulator.world,
-                age_bins={"bbc":bbc_bins, "five_yr": np.arange(0,105,5)}
-                
+                world=self.simulator.world,
+                timer=self.simulator.timer,
+                age_bins={"bbc":bbc_bins, "five_yr": np.arange(0,105,5)},
+                simulation_days=simulation_days             
             )
             self.do_tracker=True
         else:
             self.contact_simulator = ContactTracker.from_pickle(
                 self.simulator.world,
-                contact_tracker_pickle=contact_tracker_pickle
+                pickle_path=contact_tracker_pickle_path
             )
             self.do_tracker=False
         #self.leisure_simulator = LeisureSimulator([args])
@@ -163,20 +164,23 @@ class SimulationPlotter:
     def make_plots(self):
         "Call class functions to create plots"
         
-        self.contact_tracker.make_plots(
+        self.contact_simulator.make_plots(
             save_dir = default_output_plots_path / "contact_tracker"
         )
         ### CALL class functions which make plots ###
 
-    def run_all(self, make_plots = True):
+    def run_all(self, simulation_days=7, make_plots = True):
         """
         Run everything
         Note: What is called here is all that should need to be called
         """
         
         self.generate_simulator()
-        self.load_operations()        
-        self.run_simulation()
+        self.load_operations(
+            simulation_days=simulation_days,
+            #contact_tracker_pickle_path=None
+        )        
+        self.run_simulation(simulation_days=simulation_days)
         if make_plots:
             self.make_plots()
         
@@ -184,7 +188,7 @@ class SimulationPlotter:
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Plotter for JUNE's world.")
+    parser = argparse.ArgumentParser(description="Plotter for mini-simulations's world.")
 
     parser.add_argument(
         "-w",

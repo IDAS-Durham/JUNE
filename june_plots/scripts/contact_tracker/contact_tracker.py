@@ -54,7 +54,8 @@ class ContactTracker:
 
     def __init__(
         self, 
-        world=None, 
+        world=None,
+        timer=None,
         age_bins = {"5yr": np.arange(0,105,5)},
         contact_counts=None,
         contact_matrices=None,
@@ -63,6 +64,7 @@ class ContactTracker:
         pickle_path=default_pkl_path
     ):
         self.world = world
+        self.timer = timer
         self.age_bins = {"syoa": np.arange(0,101,1), **age_bins}
         self.simulation_days = simulation_days
         self.pickle_path = pickle_path
@@ -239,7 +241,7 @@ class ContactTracker:
         """ 
         spec = group.spec
         matrix = self.interaction_matrices[spec]["contacts"]
-        delta_t = self.simulator.timer.delta_time.seconds/3600.
+        delta_t = self.timer.delta_time.seconds/3600.
         characteristic_time = self.interaction_matrices[spec]["characteristic_time"]
         if spec == "household":
             factor = delta_t / characteristic_time
@@ -273,43 +275,44 @@ class ContactTracker:
             per subgroup.
         """
         for person in group.people:
+            t1 = time.time()
             active_subgroup = self.get_active_subgroup(person)
             if active_subgroup is None:
                 continue
+
             subgroup_idx = active_subgroup.subgroup_type # this is an INT.
-
             contacts_per_subgroup = self.get_contacts_per_subgroup(subgroup_idx, group)
-            total_contacts = 0
-            for subgroup_contacts, subgroup in zip(contacts_per_subgroup, group.subgroups):
-                # potential contacts is one less if you're in that subgroup - can't contact yourself!
-                is_same_subgroup = subgroup.subgroup_type == subgroup_idx
-                potential_contacts = len(subgroup) - (is_same_subgroup)
-                if potential_contacts == 0:
-                    continue
-                total_contacts = total_contacts + subgroup_contacts
-                int_contacts = self._random_round(subgroup_contacts)
+            t1 = time.time()           
+            subgroup_members = [
+                [other.id for other in subgroup] for subgroup in group.subgroups
+            ]
+            subgroup_members[subgroup_idx].remove(person.id) # Can't contact yourself!
+            total_contacts = sum([ 
+                c for c,m in zip(contacts_per_subgroup, subgroup_members) if len(m) > 0
+            ])
+            int_contacts = [
+                self._random_round( x ) for x in contacts_per_subgroup
+            ]
+            potential_contacts = [ 
+                c if len(m) > 0 else 0 for c,m in zip(int_contacts, subgroup_members)
+            ]
+            contact_ids = [
+                c_id
+                for members,x in zip(subgroup_members, potential_contacts)
+                for c_id in np.random.choice(members, x)
+            ]
+            for bin_type in self.contact_matrices.keys():
+                age_idx = self.age_idxs[bin_type][person.id]
+                lookup = self.age_idxs[bin_type]
+                contact_age_idxes = [
+                    lookup[contact_id] for contact_id in contact_ids
+                ]
+                bincount = np.bincount(
+                    contact_age_idxes, minlength=len(self.age_bins[bin_type])-1
+                )
+                self.contact_matrices[bin_type]["global"][age_idx,:] += bincount
+                self.contact_matrices[bin_type][group.spec][age_idx,:] += bincount
 
-                subgroup_ids = [other.id for other in subgroup]
-                if subgroup_idx == subgroup.subgroup_type:
-                    subgroup_ids.remove(person.id)
-                contact_ids = np.random.choice(subgroup_ids, int_contacts)
-            
-                # For each type of contact matrix binning, eg BBC, polymod, SYOA...
-                for bin_type in self.contact_matrices.keys():
-                    age_idx = self.age_idxs[bin_type][person.id]
-                    contact_age_idxes = [
-                        self.age_idxs[bin_type][contact_id] for contact_id in contact_ids
-                    ]
-                    inds = (age_idx, contact_age_idxes)
-                    np.add.at(
-                        self.contact_matrices[bin_type]["global"], inds, 1.
-                    )
-                    np.add.at(
-                        self.contact_matrices[bin_type][group.spec], inds, 1.
-                    )
-                
-                    # NOTE: self.contact_matrices["global"][age_idx, contact_age_idxs] += 1 # DOES NOT WORK for repeated ind
-            
             self.contact_counts[person.id]["global"] += total_contacts
             if person.leisure == active_subgroup and person.leisure.group.spec == "household":
                 contact_type = "household_visits"
@@ -318,6 +321,7 @@ class ContactTracker:
             else:
                 contact_type = group.spec
             self.contact_counts[person.id][contact_type] += total_contacts
+
 
     def initialise_graph(self, group: Group):
         G = nx.MultiGraph()       
@@ -374,7 +378,8 @@ class ContactTracker:
                     if contact.id == person.id:
                         continue
                     if ( contact_node["subgroup_contacts"][person_type] 
-                        < contact_node["max_contacts"][person_type]):
+                        < contact_node["max_contacts"][person_type]
+                    ):
                         G.add_edge(person.id, contact.id)
                         person_node["subgroup_contacts"][contact_type] += 1
                         contact_node["subgroup_contacts"][person_type] += 1
@@ -513,12 +518,14 @@ class ContactTracker:
         return ax
 
     def operations(self): # This should be moved to the ContactTracker class as a function        
+        
         for group_type in self.group_types:
             for group in group_type:
                 if self.interaction_type == "1d":
                     self.simulate_1d_contacts(group)
                 elif self.interaction_type == "network":
                     self.simulate_network_contacts(group)
+            
 
     def advance_step(self):
         print(self.simulator.timer.date)
@@ -746,21 +753,28 @@ class ContactTracker:
 
     def make_plots(
         self, 
+        save_dir,
         relevant_contact_types=["household", "school", "company"],
         relevant_bin_types=["bbc", "syoa"]
     ):
+        contact_types = [
+            "household", "school", "grocery", "household_visits", "pub", "university", 
+            "company", "city_transport", "inter_city_transports", "care_home", 
+            "care_home_visits", "cinema", "hospital",
+        ]
+
         self.load_real_contact_data()
         save_dir.mkdir(exist_ok=True, parents=True)
         for rbt in relevant_bin_types:
-            stacked_contacts_plot = ct_plots.plot_stacked_contacts(
-                bin_type="bbc", contact_types=contact_types
+            stacked_contacts_plot = self.plot_stacked_contacts(
+                bin_type=rbt, contact_types=contact_types
             )
             stacked_contacts_plot.plot()
             plt.savefig(save_dir / f"{rbt}_contacts.png", dpi=150, bbox_inches='tight')
-            mat_dir = plot_dir / f"{rbt}_matrices"
+            mat_dir = save_dir / f"{rbt}_matrices"
             mat_dir.mkdir(exist_ok=True, parents=True)
             for rct in relevant_contact_types:
-                mat_plot = ct_plots.plot_contact_matrix(
+                mat_plot = self.plot_contact_matrix(
                     bin_type=rbt, contact_type=rct
                 )
                 mat_plot.plot()
@@ -791,7 +805,7 @@ if __name__ == "__main__":
     ct_plots.run_simulation()
     #ct_plots = ContactTracker.from_pickle(world)
     ct_plots.process_contacts()
-
+    ct_plots.make_plots()
     
     
 
