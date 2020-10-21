@@ -118,7 +118,8 @@ class Areas:
         return list(self.members_by_id.values())
 
     def construct_ball_tree(self):
-        coordinates = np.array([np.deg2rad(area.coordinates) for area in self])
+        all_members = self.members
+        coordinates = np.array([np.deg2rad(area.coordinates) for area in all_members])
         ball_tree = BallTree(coordinates, metric="haversine")
         return ball_tree
 
@@ -133,16 +134,19 @@ class Areas:
                 np.deg2rad(coordinates), return_distance=return_distance, k=k
             )
             if coordinates.shape == (1, 2):
-                areas = [self[idx] for idx in indcs[0]]
+                all_areas = self.members
+                areas = [all_areas[idx] for idx in indcs[0]]
                 return areas, distances[0] * earth_radius
             else:
-                areas = [self[idx] for idx in indcs[:, 0]]
+                all_areas = self.members
+                areas = [all_areas[idx] for idx in indcs[:, 0]]
                 return areas, distances[:, 0] * earth_radius
         else:
             indcs = self.ball_tree.query(
                 np.deg2rad(coordinates), return_distance=return_distance, k=k
             )
-            areas = [self[idx] for idx in indcs.flatten()]
+            all_areas = self.members
+            areas = [all_areas[idx] for idx in indcs.flatten()]
             return areas
 
     def get_closest_area(self, coordinates):
@@ -246,8 +250,9 @@ class SuperAreas:
         return list(self.members_by_id.values())
 
     def construct_ball_tree(self):
+        all_members = self.members
         coordinates = np.array(
-            [np.deg2rad(super_area.coordinates) for super_area in self]
+            [np.deg2rad(super_area.coordinates) for super_area in all_members]
         )
         ball_tree = BallTree(coordinates, metric="haversine")
         return ball_tree
@@ -266,7 +271,8 @@ class SuperAreas:
                 sort_results=True,
             )
             indcs = chain.from_iterable(indcs)
-            super_areas = [self[idx] for idx in indcs]
+            all_super_areas = self.members
+            super_areas = [all_super_areas[idx] for idx in indcs]
             distances = distances.flatten()
             return super_areas, distances * earth_radius
         else:
@@ -276,7 +282,8 @@ class SuperAreas:
                 k=k,
                 sort_results=True,
             )
-            super_areas = [self[idx] for idx in indcs.flatten()]
+            all_super_areas = self.members
+            super_areas = [all_super_areas[idx] for idx in indcs.flatten()]
             return super_areas
 
     def get_closest_super_area(self, coordinates):
