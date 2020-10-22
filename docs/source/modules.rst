@@ -34,6 +34,7 @@ Package `__init__`-based modules
    box
    demography
    distributors
+   geography
    groups
    groups.commute
    groups.group
@@ -45,8 +46,10 @@ Package `__init__`-based modules
    interaction
    logger
    policy
+   records
    utils
-   
+   visualization
+
 
 Activity
 ^^^^^^^^
@@ -94,16 +97,6 @@ Distributors
    distributors.school_distributor
    distributors.university_distributor
    distributors.worker_distributor
-
-
-Domain
-^^^^^^
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: class.rst
-
-   domain
 
 
 Exceptions (`exc`)
@@ -353,16 +346,6 @@ Utilities (`utils`)
    utils.parse_probabilities
    utils.profiler
    utils.numba_random
-
-
-Visualization
-^^^^^^^^^^^^^
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: module.rst
-
-   visualization
 
 
 World

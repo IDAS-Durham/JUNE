@@ -15,20 +15,6 @@ the corresponding class. Note these functions can also be viewed in the
 API reference page for the module they are defined within.
 
 
-Other
-^^^^^
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: function.rst
-
-   commute_rail_travel.distribute_passengers
-   domain.generate_domain_from_hdf5
-   mpi_setup.move_info
-   simulator.move_info
-   simulator.profile
-
-
 Distributors
 ^^^^^^^^^^^^
 
@@ -121,3 +107,17 @@ World
    world._populate_areas
    world.generate_commuting_network
    world.generate_world_from_geography
+
+
+Other/miscellaneous
+^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: function.rst
+
+   commute_rail_travel.distribute_passengers
+   domain.generate_domain_from_hdf5
+   mpi_setup.move_info
+   simulator.move_info
+   simulator.profile
