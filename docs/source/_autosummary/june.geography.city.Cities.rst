@@ -1,9 +1,10 @@
-﻿june.commute_rail_travel
-========================
+﻿june.geography.city.Cities
+==========================
 
 .. currentmodule:: june
 
-.. automodule:: june.commute_rail_travel
+.. autoclass:: june.geography.city.Cities
+   :noindex:
    :members:
    :undoc-members:
    :special-members:
