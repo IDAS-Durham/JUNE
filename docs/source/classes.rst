@@ -42,6 +42,16 @@ Box
    box.box_mode.Boxes
 
 
+.. Data Formatting
+   ^^^^^^^^^^^^^^^
+
+   Note that:
+       data_formatting.google_api.gmapi.APICall
+       data_formatting.google_api.gmapi.MSOASearch
+   have been omitted since they are not in the june namespace so can't be
+   imported to be processed by the Sphinx autosummary extension.
+
+
 Demography
 ^^^^^^^^^^
 
@@ -52,6 +62,7 @@ Demography
    demography.demography.AgeSexGenerator
    demography.demography.Population
    demography.demography.Demography
+   demography.demography.ComorbidityGenerator
    demography.person.Activities
    demography.person.Person
 
@@ -72,6 +83,7 @@ Distributors
    :toctree: _autosummary
    :template: class.rst
 
+   distributors.care_home_distributor.CareHomeDistributor
    distributors.company_distributor.CompanyDistributor
    distributors.hospital_distributor.HospitalDistributor
    distributors.household_distributor.HouseholdDistributor
@@ -86,7 +98,19 @@ Exceptions (Exception classes):
    :toctree: _autosummary
    :template: exceptions.rst
 
+   distributors.care_home_distributor.CareHomeError
    distributors.household_distributor.HouseholdError
+
+
+Domain
+^^^^^^
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
+   domain.Domain
+   domain.DomainSplitter
 
 
 Exceptions (`exc`)
@@ -100,7 +124,40 @@ Exceptions (Exception classes):
 
    exc.GroupException
    exc.PolicyError
+   exc.HospitalError
    exc.SimulatorError
+   exc.InteractionError
+
+
+Geography
+^^^^^^^^^
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
+   geography.city.City
+   geography.city.Cities
+   geography.city.ExternalCity
+   geography.geography.Area
+   geography.geography.Areas
+   geography.geography.SuperArea
+   geography.geography.SuperAreas
+   geography.geography.ExternalSuperArea
+   geography.geography.Region
+   geography.geography.Regions
+   geography.geography.Geography
+   geography.station.Station
+   geography.station.Stations
+   geography.station.ExternalStation
+
+Exceptions (Exception classes):
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: exceptions.rst
+
+   geography.geography.GeographyError
 
 
 Groups
@@ -111,14 +168,19 @@ Groups
    :template: class.rst
 
    groups.boundary.Boundary
+   groups.care_home.CareHome
+   groups.care_home.CareHome.SubgroupType
+   groups.care_home.CareHomes
    groups.cemetery.Cemetery
    groups.cemetery.Cemeteries
    groups.company.Company
    groups.company.Company.SubgroupType
    groups.company.Companies
+   groups.hospital.AbstractHospital
    groups.hospital.Hospital
    groups.hospital.Hospital.SubgroupType
    groups.hospital.Hospitals
+   groups.hospital.ExternalHospital
    groups.household.Household
    groups.household.Household.SubgroupType
    groups.household.Households
@@ -136,6 +198,7 @@ Exceptions (Exception classes):
    :template: exceptions.rst
 
    groups.boundary.BoundaryError
+   groups.care_home.CareHomeError
    groups.company.CompanyError
    groups.school.SchoolError
 
@@ -151,6 +214,8 @@ Group Groups
    :template: class.rst
 
    groups.group.abstract.AbstractGroup
+   groups.group.external.ExternalGroup
+   groups.group.external.ExternalSubgroup
    groups.group.group.Group
    groups.group.group.Group.SubgroupType
    groups.group.subgroup.Subgroup
@@ -190,6 +255,74 @@ Exceptions (Exception classes):
    groups.leisure.social_venue.SocialVenueError
 
 
+.. Commute Groups
+   """"""""""""""
+
+   .. groups.commute.commutecity.CommuteCity
+   .. groups.commute.commutecity.CommuteCities
+   .. groups.commute.commutehub.CommuteHub
+   .. groups.commute.commutehub.CommuteHubs
+   .. groups.commute.commutehub_distributor.CommuteHubDistributor
+
+
+   Exceptions (Exception classes):
+
+   .. groups.commute.commutecity.CommuteError
+
+
+Travel Groups
+"""""""""""""
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
+   groups.travel
+   groups.travel.mode_of_transport.ModeOfTransport
+   groups.travel.mode_of_transport.RegionalGenerator
+   groups.travel.mode_of_transport.ModeOfTransportGenerator
+   groups.travel.transport.Transport
+   groups.travel.transport.Transport.SubgroupType
+   groups.travel.transport.Transports
+   groups.travel.transport.CityTransport
+   groups.travel.transport.CityTransports
+   groups.travel.transport.InterCityTransport
+   groups.travel.transport.InterCityTransports
+   groups.travel.transport.InterRegionalTransport
+   groups.travel.transport.InterRegionalTransports
+   groups.travel.travel.Travel
+
+
+.. Travel Groups (*Old*)
+   """""""""""""""""""""
+
+   .. groups.travel_old.commute_old.Commute
+   .. groups.travel_old.commute_old.commutecity.CommuteCity
+   .. groups.travel_old.commute_old.commutecity.CommuteCities
+   .. groups.travel_old.commute_old.commutecity_distributor.CommuteCityDistributor
+   .. groups.travel_old.commute_old.commutecityunit.CommuteCityUnit
+   .. groups.travel_old.commute_old.commutecityunit.CommuteCityUnits
+   .. groups.travel_old.commute_old.commutecityunit.CommuteCityUnits
+   .. groups.travel_old.commute_old.commutecityunit_distributor.CommuteCityUnitDistributor
+   .. groups.travel_old.commute_old.commutehub.CommuteHub
+   .. groups.travel_old.commute_old.commutehub.CommuteHubs
+   .. groups.travel_old.commute_old.commutehub_distributor.CommuteHubDistributor
+   .. groups.travel_old.commute_old.commuteunit.CommuteUnit
+   .. groups.travel_old.commute_old.commuteunit.CommuteUnits
+   .. groups.travel_old.commute_old.commuteunit_distributor.CommuteUnitDistributor
+   .. groups.travel_old.travelcity.TravelCity
+   .. groups.travel_old.travelcity.TravelCities
+   .. groups.travel_old.travelcity_distributor.TravelCityDistributor
+   .. groups.travel_old.travelunit.TravelUnit
+   .. groups.travel_old.travelunit.TravelUnits
+   .. groups.travel_old.travelunit_distributor.TravelUnitDistributor
+
+
+.. Exceptions (Exception classes):
+
+   .. groups.travel_old.commute_old.commutecity.CommuteError
+
+
 Infection
 ^^^^^^^^^
 
@@ -197,11 +330,22 @@ Infection
    :toctree: _autosummary
    :template: class.rst
 
+   infection.infection.Infection
+   infection.infection_selector.InfectionSelector
    infection.health_index.HealthIndexGenerator
    infection_seed.infection_seed.InfectionSeed
    infection_seed.observed_to_cases.Observed2Cases
-   infection.symptoms.Symptoms
    infection.symptom_tag.SymptomTag
+   infection.symptoms.Symptoms
+
+
+Infection Trajectory Maker
+""""""""""""""""""""""""""
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
    infection.trajectory_maker.CompletionTime
    infection.trajectory_maker.ConstantCompletionTime
    infection.trajectory_maker.DistributionCompletionTime
@@ -213,10 +357,30 @@ Infection
    infection.trajectory_maker.Stage
    infection.trajectory_maker.TrajectoryMaker
    infection.trajectory_maker.TrajectoryMakers
+
+
+Infection Transmission
+""""""""""""""""""""""
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
    infection.transmission.Transmission
    infection.transmission.TransmissionConstant
    infection.transmission.TransmissionGamma
    infection.transmission_xnexp.TransmissionXNExp
+
+
+Infection Seed
+^^^^^^^^^^^^^^
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
+   infection_seed.infection_seed.InfectionSeed
+   infection_seed.observed_to_cases.Observed2Cases
 
 
 Interaction
@@ -239,6 +403,17 @@ Logger
 
    logger.logger.Logger
    logger.read_logger.ReadLogger
+   logger.read_logger_legacy.ReadLoggerLegacy
+
+
+MPI Setup
+^^^^^^^^^
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
+    mpi_setup.MovablePeople
 
 
 Policy
@@ -273,6 +448,30 @@ Policy
    policy.policy.Policies
    policy.policy.PolicyCollection
 
+
+Records
+^^^^^^^
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
+   records.event_records_writer.EventRecord
+   records.event_records_writer.InfectionRecord
+   records.event_records_writer.HospitalAdmissionsRecord
+   records.event_records_writer.ICUAdmissionsRecord
+   records.event_records_writer.DischargesRecord
+   records.event_records_writer.DeathsRecord
+   records.event_records_writer.RecoveriesRecord
+   records.event_records_writer.SymptomsRecord
+   records.records_reader.RecordReader
+   records.records_writer.Record
+   records.static_records_writer.StaticRecord
+   records.static_records_writer.PeopleRecord
+   records.static_records_writer.LocationRecord
+   records.static_records_writer.AreaRecord
+   records.static_records_writer.SuperAreaRecord
+   records.static_records_writer.RegionRecord
 
 Simulator Box
 ^^^^^^^^^^^^^
@@ -320,7 +519,7 @@ Time
 
 .. Visualization
    ^^^^^^^^^^^^^
-
+ 
    Note that 'visualization.plotter.DashPlotter' has been omitted since it
    has not been added to the june namespace so can't be imported to be
    processed like the other items here by the Sphinx autosummary extension.
