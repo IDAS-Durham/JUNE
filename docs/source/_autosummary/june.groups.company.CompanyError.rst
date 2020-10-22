@@ -1,4 +1,4 @@
-june.groups.company.CompanyError
+﻿june.groups.company.CompanyError
 ================================
 
 .. currentmodule:: june.groups.company

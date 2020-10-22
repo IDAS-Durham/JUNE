@@ -1,9 +1,9 @@
-﻿june.infection.symptoms_trajectory
+﻿june.records.static_records_writer
 ==================================
 
 .. currentmodule:: june
 
-.. automodule:: june.infection.symptoms_trajectory
+.. automodule:: june.records.static_records_writer
    :members:
    :undoc-members:
    :special-members:

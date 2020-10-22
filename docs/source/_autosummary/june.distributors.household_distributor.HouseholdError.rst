@@ -1,4 +1,4 @@
-june.distributors.household\_distributor.HouseholdError
+﻿june.distributors.household\_distributor.HouseholdError
 =======================================================
 
 .. currentmodule:: june.distributors.household_distributor

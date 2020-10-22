@@ -1,4 +1,4 @@
-june.simulator\_box.SimulatorError
+﻿june.simulator\_box.SimulatorError
 ==================================
 
 .. currentmodule:: june.simulator_box
