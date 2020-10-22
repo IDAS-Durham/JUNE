@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Classes" href="../classes.html" />
-    <link rel="prev" title="june.visualization" href="june.visualization.html" /> 
+    <link rel="prev" title="june.utils.numba_random" href="june.utils.numba_random.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
           <span>JUNE  documentation</span></a></h1>
@@ -25,7 +25,7 @@
       <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
-        «&#160;&#160;<a href="june.visualization.html">june.visualization</a>
+        «&#160;&#160;<a href="june.utils.numba_random.html">june.utils.numba_random</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -81,12 +81,12 @@ It is advise to keep it around 1e5</p>
 
 <dl class="py function">
 <dt id="june.world._populate_areas">
-<code class="sig-prename descclassname">june.world.</code><code class="sig-name descname">_populate_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n">june.geography.geography.Areas</span></em>, <em class="sig-param"><span class="n">demography</span></em>, <em class="sig-param"><span class="n">ethnicity</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">socioecon_index</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">comorbidity</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.world._populate_areas" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">june.world.</code><code class="sig-name descname">_populate_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Areas" title="june.geography.geography.Areas">june.geography.geography.Areas</a></span></em>, <em class="sig-param"><span class="n">demography</span></em>, <em class="sig-param"><span class="n">ethnicity</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">socioecon_index</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">comorbidity</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.world._populate_areas" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt id="june.world.generate_world_from_geography">
-<code class="sig-prename descclassname">june.world.</code><code class="sig-name descname">generate_world_from_geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geography</span><span class="p">:</span> <span class="n">june.geography.geography.Geography</span></em>, <em class="sig-param"><span class="n">demography</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Demography" title="june.demography.demography.Demography">june.demography.demography.Demography</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">box_mode</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">include_households</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">ethnicity</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">socioecon_index</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">comorbidity</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.world.generate_world_from_geography" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">june.world.</code><code class="sig-name descname">generate_world_from_geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geography</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Geography" title="june.geography.geography.Geography">june.geography.geography.Geography</a></span></em>, <em class="sig-param"><span class="n">demography</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Demography" title="june.demography.demography.Demography">june.demography.demography.Demography</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">box_mode</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">include_households</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">ethnicity</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">socioecon_index</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">comorbidity</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.world.generate_world_from_geography" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes the world given a geometry. The demography is calculated
 with the default settings for that geography.</p>
 </dd></dl>
@@ -98,7 +98,7 @@ with the default settings for that geography.</p>
       <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
-        «&#160;&#160;<a href="june.visualization.html">june.visualization</a>
+        «&#160;&#160;<a href="june.utils.numba_random.html">june.utils.numba_random</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;

@@ -1,4 +1,4 @@
-june.groups.boundary.BoundaryError
+﻿june.groups.boundary.BoundaryError
 ==================================
 
 .. currentmodule:: june.groups.boundary

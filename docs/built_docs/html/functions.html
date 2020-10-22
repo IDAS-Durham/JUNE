@@ -15,7 +15,7 @@
     <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="june.commute_rail_travel.distribute_passengers" href="_autosummary/june.commute_rail_travel.distribute_passengers.html" />
+    <link rel="next" title="june.distributors.load_sex_per_sector" href="_autosummary/june.distributors.load_sex_per_sector.html" />
     <link rel="prev" title="june.world.World" href="_autosummary/june.world.World.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="index.html">
@@ -29,7 +29,7 @@
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="_autosummary/june.commute_rail_travel.distribute_passengers.html">june.commute_rail_travel.distribute_passengers</a>&#160;&#160;»
+        <a href="_autosummary/june.distributors.load_sex_per_sector.html">june.distributors.load_sex_per_sector</a>&#160;&#160;»
         </p>
 
       </div>
@@ -42,25 +42,6 @@
 functions defined in classes) in <cite>june</cite>. To view methods, find them in
 the corresponding class. Note these functions can also be viewed in the
 API reference page for the module they are defined within.</p>
-<div class="section" id="commute-rail-travel">
-<h2><cite>commute_rail_travel</cite><a class="headerlink" href="#commute-rail-travel" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.commute_rail_travel.distribute_passengers.html#june.commute_rail_travel.distribute_passengers" title="june.commute_rail_travel.distribute_passengers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">commute_rail_travel.distribute_passengers</span></code></a>(…)</p></td>
-<td><p><dl class="field-list simple">
-<dt class="field-odd">param city_travel</dt>
-<dd class="field-odd"><p>pd.DataFrame with columns=[‘station’,’arrivals’,’departures’,’average’]</p>
-</dd>
-</dl>
-</p></td>
-</tr>
-</tbody>
-</table>
-</div>
 <div class="section" id="distributors">
 <h2>Distributors<a class="headerlink" href="#distributors" title="Permalink to this headline">¶</a></h2>
 <table class="longtable docutils align-default">
@@ -86,20 +67,32 @@ API reference page for the module they are defined within.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.generate_domain_from_hdf5.html#june.hdf5_savers.generate_domain_from_hdf5" title="june.hdf5_savers.generate_domain_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.generate_domain_from_hdf5</span></code></a>(…[, …])</p></td>
+<td><p>Loads the world from an hdf5 file. All id references are substituted by actual references to the relevant instances. Parameters ———- file_path     path of the hdf5 file chunk_size     how many units of supergroups to process at a time. It is advise to keep it around 1e6.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.generate_world_from_hdf5.html#june.hdf5_savers.generate_world_from_hdf5" title="june.hdf5_savers.generate_world_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.generate_world_from_hdf5</span></code></a>(file_path)</p></td>
+<td><p>Loads the world from an hdf5 file. All id references are substituted by actual references to the relevant instances. Parameters ———- file_path     path of the hdf5 file chunk_size     how many units of supergroups to process at a time. It is advise to keep it around 1e6.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_care_homes_from_hdf5.html#june.hdf5_savers.load_care_homes_from_hdf5" title="june.hdf5_savers.load_care_homes_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_care_homes_from_hdf5</span></code></a>(file_path)</p></td>
 <td><p>Loads carehomes from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_companies_from_hdf5.html#june.hdf5_savers.load_companies_from_hdf5" title="june.hdf5_savers.load_companies_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_companies_from_hdf5</span></code></a>(file_path)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_cities_from_hdf5.html#june.hdf5_savers.load_cities_from_hdf5" title="june.hdf5_savers.load_cities_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_cities_from_hdf5</span></code></a>(file_path)</p></td>
+<td><p>Loads cities from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_companies_from_hdf5.html#june.hdf5_savers.load_companies_from_hdf5" title="june.hdf5_savers.load_companies_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_companies_from_hdf5</span></code></a>(file_path)</p></td>
 <td><p>Loads companies from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_geography_from_hdf5.html#june.hdf5_savers.load_geography_from_hdf5" title="june.hdf5_savers.load_geography_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_geography_from_hdf5</span></code></a>(file_path)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_geography_from_hdf5.html#june.hdf5_savers.load_geography_from_hdf5" title="june.hdf5_savers.load_geography_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_geography_from_hdf5</span></code></a>(file_path)</p></td>
 <td><p>Loads geography from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_hospitals_from_hdf5.html#june.hdf5_savers.load_hospitals_from_hdf5" title="june.hdf5_savers.load_hospitals_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_hospitals_from_hdf5</span></code></a>(file_path)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_hospitals_from_hdf5.html#june.hdf5_savers.load_hospitals_from_hdf5" title="june.hdf5_savers.load_hospitals_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_hospitals_from_hdf5</span></code></a>(file_path)</p></td>
 <td><p>Loads companies from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_households_from_hdf5.html#june.hdf5_savers.load_households_from_hdf5" title="june.hdf5_savers.load_households_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_households_from_hdf5</span></code></a>(file_path)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_households_from_hdf5.html#june.hdf5_savers.load_households_from_hdf5" title="june.hdf5_savers.load_households_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_households_from_hdf5</span></code></a>(file_path)</p></td>
 <td><p>Loads households from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_infections_from_hdf5.html#june.hdf5_savers.load_infections_from_hdf5" title="june.hdf5_savers.load_infections_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_infections_from_hdf5</span></code></a>(…[, …])</p></td>
+<td><p>Loads infections data from hdf5.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_population_from_hdf5.html#june.hdf5_savers.load_population_from_hdf5" title="june.hdf5_savers.load_population_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_population_from_hdf5</span></code></a>(file_path)</p></td>
 <td><p>Loads the population from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
@@ -107,23 +100,71 @@ API reference page for the module they are defined within.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_schools_from_hdf5.html#june.hdf5_savers.load_schools_from_hdf5" title="june.hdf5_savers.load_schools_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_schools_from_hdf5</span></code></a>(file_path)</p></td>
 <td><p>Loads schools from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_social_venues_from_hdf5.html#june.hdf5_savers.load_social_venues_from_hdf5" title="june.hdf5_savers.load_social_venues_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_social_venues_from_hdf5</span></code></a>(…)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_stations_from_hdf5.html#june.hdf5_savers.load_stations_from_hdf5" title="june.hdf5_savers.load_stations_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_stations_from_hdf5</span></code></a>(file_path)</p></td>
+<td><p>Loads cities from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_symptoms_from_hdf5.html#june.hdf5_savers.load_symptoms_from_hdf5" title="june.hdf5_savers.load_symptoms_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_symptoms_from_hdf5</span></code></a>(…[, …])</p></td>
+<td><p>Loads symptoms data from hdf5.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_transmissions_from_hdf5.html#june.hdf5_savers.load_transmissions_from_hdf5" title="june.hdf5_savers.load_transmissions_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_transmissions_from_hdf5</span></code></a>(…)</p></td>
+<td><p>Loads transmissions data from hdf5.</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.load_universities_from_hdf5.html#june.hdf5_savers.load_universities_from_hdf5" title="june.hdf5_savers.load_universities_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.load_universities_from_hdf5</span></code></a>(…)</p></td>
 <td><p>Loads universities from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.restore_care_homes_properties_from_hdf5.html#june.hdf5_savers.restore_care_homes_properties_from_hdf5" title="june.hdf5_savers.restore_care_homes_properties_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.restore_care_homes_properties_from_hdf5</span></code></a>(…)</p></td>
+<td><p>Loads carehomes from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.restore_cities_and_stations_properties_from_hdf5.html#june.hdf5_savers.restore_cities_and_stations_properties_from_hdf5" title="june.hdf5_savers.restore_cities_and_stations_properties_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.restore_cities_and_stations_properties_from_hdf5</span></code></a>(…)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.restore_companies_properties_from_hdf5.html#june.hdf5_savers.restore_companies_properties_from_hdf5" title="june.hdf5_savers.restore_companies_properties_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.restore_companies_properties_from_hdf5</span></code></a>(…)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.restore_geography_properties_from_hdf5.html#june.hdf5_savers.restore_geography_properties_from_hdf5" title="june.hdf5_savers.restore_geography_properties_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.restore_geography_properties_from_hdf5</span></code></a>(…)</p></td>
+<td><p>Long function to restore geographic attributes to the world’s geography.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.restore_hospital_properties_from_hdf5.html#june.hdf5_savers.restore_hospital_properties_from_hdf5" title="june.hdf5_savers.restore_hospital_properties_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.restore_hospital_properties_from_hdf5</span></code></a>(…)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.restore_households_properties_from_hdf5.html#june.hdf5_savers.restore_households_properties_from_hdf5" title="june.hdf5_savers.restore_households_properties_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.restore_households_properties_from_hdf5</span></code></a>(…)</p></td>
+<td><p>Loads households from an hdf5 file located at <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.restore_population_properties_from_hdf5.html#june.hdf5_savers.restore_population_properties_from_hdf5" title="june.hdf5_savers.restore_population_properties_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.restore_population_properties_from_hdf5</span></code></a>(…)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.restore_school_properties_from_hdf5.html#june.hdf5_savers.restore_school_properties_from_hdf5" title="june.hdf5_savers.restore_school_properties_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.restore_school_properties_from_hdf5</span></code></a>(…)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.restore_social_venues_properties_from_hdf5.html#june.hdf5_savers.restore_social_venues_properties_from_hdf5" title="june.hdf5_savers.restore_social_venues_properties_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.restore_social_venues_properties_from_hdf5</span></code></a>(…)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.restore_universities_properties_from_hdf5.html#june.hdf5_savers.restore_universities_properties_from_hdf5" title="june.hdf5_savers.restore_universities_properties_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.restore_universities_properties_from_hdf5</span></code></a>(…)</p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_care_homes_to_hdf5.html#june.hdf5_savers.save_care_homes_to_hdf5" title="june.hdf5_savers.save_care_homes_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_care_homes_to_hdf5</span></code></a>(…[, …])</p></td>
 <td><p>Saves the care_homes object to hdf5 format file <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_companies_to_hdf5.html#june.hdf5_savers.save_companies_to_hdf5" title="june.hdf5_savers.save_companies_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_companies_to_hdf5</span></code></a>(…[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_cities_to_hdf5.html#june.hdf5_savers.save_cities_to_hdf5" title="june.hdf5_savers.save_cities_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_cities_to_hdf5</span></code></a>(cities, …)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_companies_to_hdf5.html#june.hdf5_savers.save_companies_to_hdf5" title="june.hdf5_savers.save_companies_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_companies_to_hdf5</span></code></a>(…[, …])</p></td>
 <td><p>Saves the Population object to hdf5 format file <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_geography_to_hdf5.html#june.hdf5_savers.save_geography_to_hdf5" title="june.hdf5_savers.save_geography_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_geography_to_hdf5</span></code></a>(…)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_geography_to_hdf5.html#june.hdf5_savers.save_geography_to_hdf5" title="june.hdf5_savers.save_geography_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_geography_to_hdf5</span></code></a>(…)</p></td>
 <td><p>Saves the households object to hdf5 format file <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_hospitals_to_hdf5.html#june.hdf5_savers.save_hospitals_to_hdf5" title="june.hdf5_savers.save_hospitals_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_hospitals_to_hdf5</span></code></a>(…[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_hospitals_to_hdf5.html#june.hdf5_savers.save_hospitals_to_hdf5" title="june.hdf5_savers.save_hospitals_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_hospitals_to_hdf5</span></code></a>(…[, …])</p></td>
 <td><p>Saves the Hospitals object to hdf5 format file <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_households_to_hdf5.html#june.hdf5_savers.save_households_to_hdf5" title="june.hdf5_savers.save_households_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_households_to_hdf5</span></code></a>(…[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_households_to_hdf5.html#june.hdf5_savers.save_households_to_hdf5" title="june.hdf5_savers.save_households_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_households_to_hdf5</span></code></a>(…[, …])</p></td>
 <td><p>Saves the households object to hdf5 format file <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_infections_to_hdf5.html#june.hdf5_savers.save_infections_to_hdf5" title="june.hdf5_savers.save_infections_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_infections_to_hdf5</span></code></a>(…[, …])</p></td>
+<td><p>Saves infections data to hdf5.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_population_to_hdf5.html#june.hdf5_savers.save_population_to_hdf5" title="june.hdf5_savers.save_population_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_population_to_hdf5</span></code></a>(…[, …])</p></td>
 <td><p>Saves the Population object to hdf5 format file <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
@@ -131,8 +172,23 @@ API reference page for the module they are defined within.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_schools_to_hdf5.html#june.hdf5_savers.save_schools_to_hdf5" title="june.hdf5_savers.save_schools_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_schools_to_hdf5</span></code></a>(schools, …)</p></td>
 <td><p>Saves the schools object to hdf5 format file <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_social_venues_to_hdf5.html#june.hdf5_savers.save_social_venues_to_hdf5" title="june.hdf5_savers.save_social_venues_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_social_venues_to_hdf5</span></code></a>(…)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_stations_to_hdf5.html#june.hdf5_savers.save_stations_to_hdf5" title="june.hdf5_savers.save_stations_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_stations_to_hdf5</span></code></a>(stations, …)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_symptoms_to_hdf5.html#june.hdf5_savers.save_symptoms_to_hdf5" title="june.hdf5_savers.save_symptoms_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_symptoms_to_hdf5</span></code></a>(…[, …])</p></td>
+<td><p>Saves symptoms data to hdf5.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_transmissions_to_hdf5.html#june.hdf5_savers.save_transmissions_to_hdf5" title="june.hdf5_savers.save_transmissions_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_transmissions_to_hdf5</span></code></a>(…)</p></td>
+<td><p>Saves transmissions data to hdf5.</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_universities_to_hdf5.html#june.hdf5_savers.save_universities_to_hdf5" title="june.hdf5_savers.save_universities_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_universities_to_hdf5</span></code></a>(…)</p></td>
 <td><p>Saves the universities object to hdf5 format file <code class="docutils literal notranslate"><span class="pre">file_path</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.hdf5_savers.save_world_to_hdf5.html#june.hdf5_savers.save_world_to_hdf5" title="june.hdf5_savers.save_world_to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hdf5_savers.save_world_to_hdf5</span></code></a>(world, file_path)</p></td>
+<td><p>Saves the world to an hdf5 file.</p></td>
 </tr>
 </tbody>
 </table>
@@ -179,8 +235,42 @@ API reference page for the module they are defined within.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.world._populate_areas.html#june.world._populate_areas" title="june.world._populate_areas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">world._populate_areas</span></code></a>(areas, demography[, …])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.world.generate_world_from_geography.html#june.world.generate_world_from_geography" title="june.world.generate_world_from_geography"><code class="xref py py-obj docutils literal notranslate"><span class="pre">world.generate_world_from_geography</span></code></a>(geography)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.world.generate_commuting_network.html#june.world.generate_commuting_network" title="june.world.generate_commuting_network"><code class="xref py py-obj docutils literal notranslate"><span class="pre">world.generate_commuting_network</span></code></a>(world[, …])</p></td>
+<td><p>Generates cities, super stations, and stations on the given world.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.world.generate_world_from_geography.html#june.world.generate_world_from_geography" title="june.world.generate_world_from_geography"><code class="xref py py-obj docutils literal notranslate"><span class="pre">world.generate_world_from_geography</span></code></a>(geography)</p></td>
 <td><p>Initializes the world given a geometry.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="other-miscellaneous">
+<h2>Other/miscellaneous<a class="headerlink" href="#other-miscellaneous" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.commute_rail_travel.distribute_passengers.html#june.commute_rail_travel.distribute_passengers" title="june.commute_rail_travel.distribute_passengers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">commute_rail_travel.distribute_passengers</span></code></a>(…)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param city_travel</dt>
+<dd class="field-odd"><p>pd.DataFrame with columns=[‘station’,’arrivals’,’departures’,’average’]</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.domain.generate_domain_from_hdf5.html#june.domain.generate_domain_from_hdf5" title="june.domain.generate_domain_from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">domain.generate_domain_from_hdf5</span></code></a>(domain_id, …)</p></td>
+<td><p>Loads the world from an hdf5 file. All id references are substituted by actual references to the relevant instances. Parameters ———- file_path     path of the hdf5 file chunk_size     how many units of supergroups to process at a time. It is advise to keep it around 1e6.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.mpi_setup.move_info.html#june.mpi_setup.move_info" title="june.mpi_setup.move_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi_setup.move_info</span></code></a>(info2move)</p></td>
+<td><p>Send a list of arrays of uint32 integers to all ranks, and receive arrays from all ranks.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/june.simulator.move_info.html#june.simulator.move_info" title="june.simulator.move_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">simulator.move_info</span></code></a>(info2move)</p></td>
+<td><p>Send a list of arrays of uint32 integers to all ranks, and receive arrays from all ranks.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/june.simulator.profile.html#june.simulator.profile" title="june.simulator.profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">simulator.profile</span></code></a>([filename, comm])</p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>
@@ -196,7 +286,7 @@ API reference page for the module they are defined within.</p>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="_autosummary/june.commute_rail_travel.distribute_passengers.html">june.commute_rail_travel.distribute_passengers</a>&#160;&#160;»
+        <a href="_autosummary/june.distributors.load_sex_per_sector.html">june.distributors.load_sex_per_sector</a>&#160;&#160;»
         </p>
 
       </div>
