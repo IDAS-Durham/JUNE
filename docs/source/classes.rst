@@ -132,6 +132,9 @@ Exceptions (Exception classes):
 Geography
 ^^^^^^^^^
 
+City
+""""
+
 .. autosummary::
    :toctree: _autosummary
    :template: class.rst
@@ -139,6 +142,15 @@ Geography
    geography.city.City
    geography.city.Cities
    geography.city.ExternalCity
+
+
+Geography
+"""""""""
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
    geography.geography.Area
    geography.geography.Areas
    geography.geography.SuperArea
@@ -147,9 +159,7 @@ Geography
    geography.geography.Region
    geography.geography.Regions
    geography.geography.Geography
-   geography.station.Station
-   geography.station.Stations
-   geography.station.ExternalStation
+
 
 Exceptions (Exception classes):
 
@@ -160,51 +170,20 @@ Exceptions (Exception classes):
    geography.geography.GeographyError
 
 
-Groups
-^^^^^^
+Station
+"""""""
 
 .. autosummary::
    :toctree: _autosummary
    :template: class.rst
 
-   groups.boundary.Boundary
-   groups.care_home.CareHome
-   groups.care_home.CareHome.SubgroupType
-   groups.care_home.CareHomes
-   groups.cemetery.Cemetery
-   groups.cemetery.Cemeteries
-   groups.company.Company
-   groups.company.Company.SubgroupType
-   groups.company.Companies
-   groups.hospital.AbstractHospital
-   groups.hospital.Hospital
-   groups.hospital.Hospital.SubgroupType
-   groups.hospital.Hospitals
-   groups.hospital.ExternalHospital
-   groups.household.Household
-   groups.household.Household.SubgroupType
-   groups.household.Households
-   groups.school.School
-   groups.school.School.SubgroupType
-   groups.school.Schools
-   groups.university.University
-   groups.university.Universities
+   geography.station.Station
+   geography.station.Stations
+   geography.station.ExternalStation
 
 
-Exceptions (Exception classes):
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: exceptions.rst
-
-   groups.boundary.BoundaryError
-   groups.care_home.CareHomeError
-   groups.company.CompanyError
-   groups.school.SchoolError
-
-
-See also the sub-sections grouping together related types of `Groups`.
-
+Groups
+^^^^^^
 
 Group Groups
 """"""""""""
@@ -253,21 +232,6 @@ Exceptions (Exception classes):
    :template: exceptions.rst
 
    groups.leisure.social_venue.SocialVenueError
-
-
-.. Commute Groups
-   """"""""""""""
-
-   .. groups.commute.commutecity.CommuteCity
-   .. groups.commute.commutecity.CommuteCities
-   .. groups.commute.commutehub.CommuteHub
-   .. groups.commute.commutehub.CommuteHubs
-   .. groups.commute.commutehub_distributor.CommuteHubDistributor
-
-
-   Exceptions (Exception classes):
-
-   .. groups.commute.commutecity.CommuteError
 
 
 Travel Groups
@@ -323,21 +287,65 @@ Travel Groups
    .. groups.travel_old.commute_old.commutecity.CommuteError
 
 
-Infection
-^^^^^^^^^
+.. Commute Groups
+   """"""""""""""
+
+   .. groups.commute.commutecity.CommuteCity
+   .. groups.commute.commutecity.CommuteCities
+   .. groups.commute.commutehub.CommuteHub
+   .. groups.commute.commutehub.CommuteHubs
+   .. groups.commute.commutehub_distributor.CommuteHubDistributor
+
+
+   Exceptions (Exception classes):
+
+   .. groups.commute.commutecity.CommuteError
+
+Other Groups
+""""""""""""
 
 .. autosummary::
    :toctree: _autosummary
    :template: class.rst
 
-   infection.infection.Infection
-   infection.infection_selector.InfectionSelector
-   infection.health_index.HealthIndexGenerator
-   infection_seed.infection_seed.InfectionSeed
-   infection_seed.observed_to_cases.Observed2Cases
-   infection.symptom_tag.SymptomTag
-   infection.symptoms.Symptoms
+   groups.boundary.Boundary
+   groups.care_home.CareHome
+   groups.care_home.CareHome.SubgroupType
+   groups.care_home.CareHomes
+   groups.cemetery.Cemetery
+   groups.cemetery.Cemeteries
+   groups.company.Company
+   groups.company.Company.SubgroupType
+   groups.company.Companies
+   groups.hospital.AbstractHospital
+   groups.hospital.Hospital
+   groups.hospital.Hospital.SubgroupType
+   groups.hospital.Hospitals
+   groups.hospital.ExternalHospital
+   groups.household.Household
+   groups.household.Household.SubgroupType
+   groups.household.Households
+   groups.school.School
+   groups.school.School.SubgroupType
+   groups.school.Schools
+   groups.university.University
+   groups.university.Universities
 
+
+Exceptions (Exception classes):
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: exceptions.rst
+
+   groups.boundary.BoundaryError
+   groups.care_home.CareHomeError
+   groups.company.CompanyError
+   groups.school.SchoolError
+
+
+Infection
+^^^^^^^^^
 
 Infection Trajectory Maker
 """"""""""""""""""""""""""
@@ -359,8 +367,8 @@ Infection Trajectory Maker
    infection.trajectory_maker.TrajectoryMakers
 
 
-Infection Transmission
-""""""""""""""""""""""
+Infection Transmission (including `XNExp`)
+""""""""""""""""""""""""""""""""""""""""""
 
 .. autosummary::
    :toctree: _autosummary
@@ -370,6 +378,20 @@ Infection Transmission
    infection.transmission.TransmissionConstant
    infection.transmission.TransmissionGamma
    infection.transmission_xnexp.TransmissionXNExp
+
+
+Other Infection
+"""""""""""""""
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
+   infection.infection.Infection
+   infection.infection_selector.InfectionSelector
+   infection.health_index.HealthIndexGenerator
+   infection.symptom_tag.SymptomTag
+   infection.symptoms.Symptoms
 
 
 Infection Seed
@@ -419,6 +441,9 @@ MPI Setup
 Policy
 ^^^^^^
 
+Individual Policies
+"""""""""""""""""""
+
 .. autosummary::
    :toctree: _autosummary
    :template: class.rst
@@ -433,17 +458,53 @@ Policy
    policy.individual_policies.CloseSchools
    policy.individual_policies.CloseUniversities
    policy.individual_policies.CloseCompanies
+
+
+Interaction Policies
+""""""""""""""""""""
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
    policy.interaction_policies.InteractionPolicy
    policy.interaction_policies.InteractionPolicies
    policy.interaction_policies.SocialDistancing
    policy.interaction_policies.MaskWearing
+
+
+Leisure Policies
+""""""""""""""""
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
    policy.leisure_policies.LeisurePolicy
    policy.leisure_policies.LeisurePolicies
    policy.leisure_policies.CloseLeisureVenue
    policy.leisure_policies.ChangeLeisureProbability
+
+
+Medical Care Policies
+"""""""""""""""""""""
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
    policy.medical_care_policies.MedicalCarePolicy
    policy.medical_care_policies.MedicalCarePolicies
    policy.medical_care_policies.Hospitalisation
+
+
+(Policy) Policy
+"""""""""""""""
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
    policy.policy.Policy
    policy.policy.Policies
    policy.policy.PolicyCollection
@@ -451,6 +512,9 @@ Policy
 
 Records
 ^^^^^^^
+
+Event Records Writer
+""""""""""""""""""""
 
 .. autosummary::
    :toctree: _autosummary
@@ -464,14 +528,33 @@ Records
    records.event_records_writer.DeathsRecord
    records.event_records_writer.RecoveriesRecord
    records.event_records_writer.SymptomsRecord
-   records.records_reader.RecordReader
-   records.records_writer.Record
+
+
+Static Records Writer
+"""""""""""""""""""""
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
    records.static_records_writer.StaticRecord
    records.static_records_writer.PeopleRecord
    records.static_records_writer.LocationRecord
    records.static_records_writer.AreaRecord
    records.static_records_writer.SuperAreaRecord
    records.static_records_writer.RegionRecord
+
+
+Other Records
+"""""""""""""
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: class.rst
+
+   records.records_reader.RecordReader
+   records.records_writer.Record
+
 
 Simulator Box
 ^^^^^^^^^^^^^
