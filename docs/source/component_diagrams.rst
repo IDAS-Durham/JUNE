@@ -129,23 +129,6 @@ See also the sub-sections below, showing sub-diagrams for the various
 types of `Groups`.
 
 
-Commute Groups
-""""""""""""""
-
-Classes
-"""""""
-
-.. uml:: june.groups.commute
-    :classes:
-
-
-Modules
-"""""""
-
-.. uml:: june.groups.commute
-    :packages:
-
-
 Group Groups
 """"""""""""
 
