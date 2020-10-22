@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="june.infection_seed.observed_to_cases.Observed2Cases" href="june.infection_seed.observed_to_cases.Observed2Cases.html" />
-    <link rel="prev" title="june.infection.health_index.HealthIndexGenerator" href="june.infection.health_index.HealthIndexGenerator.html" /> 
+    <link rel="prev" title="june.infection.symptoms.Symptoms" href="june.infection.symptoms.Symptoms.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
           <span>JUNE  documentation</span></a></h1>
@@ -25,7 +25,7 @@
       <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
-        «&#160;&#160;<a href="june.infection.health_index.HealthIndexGenerator.html">june.infection.health_index.HealthIndexGenerator</a>
+        «&#160;&#160;<a href="june.infection.symptoms.Symptoms.html">june.infection.symptoms.Symptoms</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -40,7 +40,7 @@
 <h1>june.infection_seed.infection_seed.InfectionSeed<a class="headerlink" href="#june-infection-seed-infection-seed-infectionseed" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">june.infection_seed.infection_seed.</code><code class="sig-name descname">InfectionSeed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n">World</span></em>, <em class="sig-param"><span class="n">infection_selector</span><span class="p">:</span> <span class="n">june.infection.infection_selector.InfectionSelector</span></em>, <em class="sig-param"><span class="n">seed_strength</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">age_profile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">daily_super_area_cases</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.infection_seed.infection_seed.</code><code class="sig-name descname">InfectionSeed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n">World</span></em>, <em class="sig-param"><span class="n">infection_selector</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.infection_selector.html#june.infection.infection_selector.InfectionSelector" title="june.infection.infection_selector.InfectionSelector">june.infection.infection_selector.InfectionSelector</a></span></em>, <em class="sig-param"><span class="n">seed_strength</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">age_profile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">daily_super_area_cases</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Class that generates the seed for the infection.</p>
 <dl class="simple">
 <dt>world:</dt><dd><p>world to infect</p>
@@ -56,7 +56,7 @@ would only infect people aged between 21 and 50</p>
 </dl>
 <dl class="py method">
 <dt>
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n">World</span></em>, <em class="sig-param"><span class="n">infection_selector</span><span class="p">:</span> <span class="n">june.infection.infection_selector.InfectionSelector</span></em>, <em class="sig-param"><span class="n">seed_strength</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">age_profile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">daily_super_area_cases</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n">World</span></em>, <em class="sig-param"><span class="n">infection_selector</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.infection_selector.html#june.infection.infection_selector.InfectionSelector" title="june.infection.infection_selector.InfectionSelector">june.infection.infection_selector.InfectionSelector</a></span></em>, <em class="sig-param"><span class="n">seed_strength</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">age_profile</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">daily_super_area_cases</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Class that generates the seed for the infection.</p>
 <dl class="simple">
 <dt>world:</dt><dd><p>world to infect</p>
@@ -153,7 +153,7 @@ different processes</p>
       <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
-        «&#160;&#160;<a href="june.infection.health_index.HealthIndexGenerator.html">june.infection.health_index.HealthIndexGenerator</a>
+        «&#160;&#160;<a href="june.infection.symptoms.Symptoms.html">june.infection.symptoms.Symptoms</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;

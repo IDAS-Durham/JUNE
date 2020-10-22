@@ -15,7 +15,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="june.groups.hospital.Hospital" href="june.groups.hospital.Hospital.html" />
+    <link rel="next" title="june.groups.hospital.AbstractHospital" href="june.groups.hospital.AbstractHospital.html" />
     <link rel="prev" title="june.groups.company.Company.SubgroupType" href="june.groups.company.Company.SubgroupType.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
@@ -29,7 +29,7 @@
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.groups.hospital.Hospital.html">june.groups.hospital.Hospital</a>&#160;&#160;»
+        <a href="june.groups.hospital.AbstractHospital.html">june.groups.hospital.AbstractHospital</a>&#160;&#160;»
         </p>
 
       </div>
@@ -78,7 +78,7 @@
 
 <dl class="py method">
 <dt>
-<em class="property">classmethod </em><code class="sig-name descname">create_companies_in_super_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n">june.geography.geography.SuperArea</span></em>, <em class="sig-param"><span class="n">company_sizes</span></em>, <em class="sig-param"><span class="n">company_sectors</span></em><span class="sig-paren">)</span> &#x2192; list</dt>
+<em class="property">classmethod </em><code class="sig-name descname">create_companies_in_super_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.SuperArea" title="june.geography.geography.SuperArea">june.geography.geography.SuperArea</a></span></em>, <em class="sig-param"><span class="n">company_sizes</span></em>, <em class="sig-param"><span class="n">company_sectors</span></em><span class="sig-paren">)</span> &#x2192; list</dt>
 <dd><p>Crates companies in super area using the sizes and sectors distributions.</p>
 </dd></dl>
 
@@ -94,7 +94,7 @@
 
 <dl class="py method">
 <dt>
-<em class="property">classmethod </em><code class="sig-name descname">for_geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geography</span><span class="p">:</span> <span class="n">june.geography.geography.Geography</span></em>, <em class="sig-param"><span class="n">size_nr_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/companies/company_size_2019.csv')</span></em>, <em class="sig-param"><span class="n">sector_nr_per_msoa_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/companies/company_sector_2011.csv')</span></em>, <em class="sig-param"><span class="n">default_config_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/groups/companies.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.groups.company.html#june.groups.company.Companies" title="june.groups.company.Companies">june.groups.company.Companies</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">for_geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geography</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Geography" title="june.geography.geography.Geography">june.geography.geography.Geography</a></span></em>, <em class="sig-param"><span class="n">size_nr_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/companies/company_size_2019.csv')</span></em>, <em class="sig-param"><span class="n">sector_nr_per_msoa_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/companies/company_sector_2011.csv')</span></em>, <em class="sig-param"><span class="n">default_config_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/groups/companies.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.groups.company.html#june.groups.company.Companies" title="june.groups.company.Companies">june.groups.company.Companies</a></dt>
 <dd><p>Creates companies for the specified geography, and saves them 
 to the super_aresa they belong to
 Parameters
@@ -113,7 +113,7 @@ geography</p>
 
 <dl class="py method">
 <dt>
-<em class="property">classmethod </em><code class="sig-name descname">for_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span>june.geography.geography.SuperArea<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">size_nr_per_super_area_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/companies/company_size_2019.csv')</span></em>, <em class="sig-param"><span class="n">sector_nr_per_super_area_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/companies/company_sector_2011.csv')</span></em>, <em class="sig-param"><span class="n">default_config_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/groups/companies.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.groups.company.html#june.groups.company.Companies" title="june.groups.company.Companies">june.groups.company.Companies</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">for_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.geography.geography.html#june.geography.geography.SuperArea" title="june.geography.geography.SuperArea">june.geography.geography.SuperArea</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">size_nr_per_super_area_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/companies/company_size_2019.csv')</span></em>, <em class="sig-param"><span class="n">sector_nr_per_super_area_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/companies/company_sector_2011.csv')</span></em>, <em class="sig-param"><span class="n">default_config_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/groups/companies.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.groups.company.html#june.groups.company.Companies" title="june.groups.company.Companies">june.groups.company.Companies</a></dt>
 <dd><p>Creates companies for the specified super_areas, and saves them 
 to the super_aresa they belong to
 Parameters
@@ -169,7 +169,7 @@ super_areas</p>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.groups.hospital.Hospital.html">june.groups.hospital.Hospital</a>&#160;&#160;»
+        <a href="june.groups.hospital.AbstractHospital.html">june.groups.hospital.AbstractHospital</a>&#160;&#160;»
         </p>
 
       </div>
