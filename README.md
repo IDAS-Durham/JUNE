@@ -22,43 +22,10 @@ pytest
 
 The ``docs`` directory contains the source files and HTML outputs to
 display all information auto-generated from the `june` codebase docstrings,
-including auto-generated class and module diagrams. It is configured and
-built using the
-[Sphinx documentation tool](https://www.sphinx-doc.org/en/master/) which
-uses the
-[reStructuredText format](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html) for writing the source files.
+including auto-generated class and module diagrams.
 
-**To view** the documentation as-is, open ``docs/built_docs/html/index.html``
-to display the index page (effective homepage) in a browser, for example
-by running from the root repository directory:
-
-```
-firefox docs/built_docs/html/index.html &
-```
-
-**To rebuild** the documentation to pick up on any local changes to the
-codebase, change into the `docs` directory and run these `make` commands:
-
-```
-cd docs
-make clean
-make html
-```
-
-which will wipe the built HTML pages under ``built_docs/`` and then
-re-build them based on the local repository state. Note that a working
-environment for running `june` is required (for parsing the codebase)
-and some dependencies are also needed, namely:
-
-* [Sphinx](https://www.sphinx-doc.org/en/master/usage/installation.html);
-* a Sphinx extension:
-  * [``sphinx-pyreverse``](https://pypi.org/project/sphinx-pyreverse/) (for
-    the auto-generation of the class and module diagrams).
-
-Once the build is complete (it will provide a lot of feedback to STDOUT to
-indicate progress) the pages can be viewed in the same way as above.
-
-Feel free to add content via new sections and pages!
+See [the README under the `docs` directory](docs/README.md) for detail on
+viewing and updating this documentation.
 
 
 ## Other resources
