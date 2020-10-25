@@ -9,7 +9,7 @@ from june.infection import HealthIndexGenerator, InfectionSelector, SymptomTag
 
 default_seroprev_filename = paths.data_path / "plotting/seroprev.dat"
 
-default_transmission = paths.configs_path / "defaults/transmission/XNExp.yaml"
+default_transmission = paths.configs_path / "defaults/transmission/nature.yaml"
 
 class HealthIndexPlots:
     """
