@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import yaml
 import matplotlib.pyplot as plt
 
 from june import paths
@@ -161,3 +162,66 @@ class HealthIndexPlots:
         f.subplots_adjust(top=0.80)
         
         return ax
+
+    def time_to_symptoms_onset(self,):
+        from june.infection.trajectory_maker import TrajectoryMaker
+        trajectories_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
+        with open(trajectories_path) as f:    
+            symptoms_trajectories = yaml.safe_load(f)["trajectories"]    
+            symptoms_trajectories = [    
+                TrajectoryMaker.from_dict(trajectory)    
+                for trajectory in symptoms_trajectories    
+            ]
+        time = np.linspace(0,15,60)
+        # incubation
+        median = symptoms_trajectories[3].stages[0].completion_time.distribution.median()
+        f, ax = plt.subplots()
+        ax.plot(time, 
+        symptoms_trajectories[3].stages[0].completion_time.distribution.pdf(time),
+                label=f'$\\bar{{t}}_{{incubation}} = {median:.2f}$'
+
+        )
+        ax.legend()
+        ax.set_xlabel('Time [days]')
+        ax.set_ylabel('PDF [1/days]')
+        return ax
+
+    def time_in_hospital(self,):
+        from june.infection.trajectory_maker import TrajectoryMaker
+        trajectories_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
+        with open(trajectories_path) as f:    
+            symptoms_trajectories = yaml.safe_load(f)["trajectories"]    
+            symptoms_trajectories = [    
+                TrajectoryMaker.from_dict(trajectory)    
+                for trajectory in symptoms_trajectories    
+            ]
+        f, ax = plt.subplots()
+        time = np.linspace(0,30,60)
+
+        median = symptoms_trajectories[3].stages[2].completion_time.distribution.median()
+        ax.plot(time, 
+        symptoms_trajectories[3].stages[2].completion_time.distribution.pdf(time),
+                 label=f'$\\bar{{t}}_{{hosp|\mathrm{{recovers}}}} = {median:.2f}$'
+        )
+        median = symptoms_trajectories[6].stages[2].completion_time.distribution.median()
+
+        ax.plot(time, 
+        symptoms_trajectories[6].stages[2].completion_time.distribution.pdf(time),
+                    label=f'$\\bar{{t}}_{{hosp|\mathrm{{dies}}}} = {median:.2f}$'
+        )
+        median = symptoms_trajectories[4].stages[3].completion_time.distribution.median()
+        ax.plot(time, 
+        symptoms_trajectories[4].stages[3].completion_time.distribution.pdf(time),
+                 label=f'$\\bar{{t}}_{{icu|\mathrm{{recovers}}}} = {median:.2f}$'
+        )
+        median = symptoms_trajectories[7].stages[3].completion_time.distribution.median()
+
+        ax.plot(time,
+        symptoms_trajectories[7].stages[3].completion_time.distribution.pdf(time),
+                 label=f'$\\bar{{t}}_{{icu|\mathrm{{dies}}}} = {median:.2f}$'
+        )
+        ax.legend()
+        ax.set_xlabel('Time [days]')
+        ax.set_ylabel('PDF [1/days]')
+        return ax
+

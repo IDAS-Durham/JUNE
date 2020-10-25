@@ -509,6 +509,16 @@ class Plotter:
         infectiousness_plot.plot()
         plt.savefig(save_dir / "infectiousness.png", dpi=150, bbox_inches="tight")
 
+        print("Plotting time to symptoms PDF")
+        time_symptoms = hi_plots.time_to_symptoms_onset()
+        time_symptoms.plot()
+        plt.savefig(save_dir / "time_to_symptoms.png", dpi=150, bbox_inches="tight")
+
+        print("Plotting time in hospital")
+        time_hospital = hi_plots.time_in_hospital()
+        time_hospital.plot()
+        plt.savefig(save_dir / "time_in_hospital.png", dpi=150, bbox_inches="tight")
+
     def plot_universities(
         self, save_dir: Path = default_output_plots_path / "universities"
     ):
@@ -598,6 +608,14 @@ if __name__ == "__main__":
         default=False,
         action="store_true",
     )
+    parser.add_argument(
+        "-hi",
+        "--health_index",
+        help="Plot health index only",
+        required=False,
+        default=False,
+        action="store_true",
+    )
 
     args = parser.parse_args()
     plotter = Plotter.from_file(args.world_filename)
@@ -611,5 +629,8 @@ if __name__ == "__main__":
         plotter.plot_contact_tracker()
     elif args.universities:
         plotter.plot_universities()
+    elif args.health_index:
+        plotter.plot_health_index()
+
     else:
         plotter.plot_all()
