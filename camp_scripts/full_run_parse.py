@@ -440,6 +440,18 @@ interaction = Interaction.from_file(
     population=world.people,
 )
 
+if args.child_susceptibility:
+    interaction = Interaction.from_file(
+        config_filename=camp_configs_path / "defaults/interaction/ContactInteraction_med_low_low_low_child.yaml",
+        population=world.people,
+    )
+else:
+    interaction = Interaction.from_file(
+        config_filename=camp_configs_path / "defaults/interaction/" / args.parameters,
+        population=world.people,
+    )
+
+
 if args.household_beta:
     interaction.beta["household"] = float(args.household_beta)
     interaction.beta["hospital"] = float(args.household_beta) * 0.1
@@ -482,9 +494,6 @@ if args.play_group_beta_ratio:
         args.play_group_beta_ratio
     )
 
-if args.child_susceptibility:
-    interaction.susceptibilities_by_age["0-13"] = float(args.child_susceptibility)
-    
 cases_detected = {
     "CXB-202": 3,
     "CXB-204": 6,
