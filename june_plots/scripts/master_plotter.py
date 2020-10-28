@@ -555,7 +555,7 @@ class Plotter:
         self.plot_contact_matrices()
         self.plot_life_expectancy()
         self.plot_health_index()
-        self.plot_universities()
+        #self.plot_universities()
 
 
 if __name__ == "__main__":
