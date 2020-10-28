@@ -46,7 +46,7 @@ from camps.groups import FemaleCommunals, FemaleCommunalDistributor
 from camps.groups import Religiouss, ReligiousDistributor
 from camps.groups import Shelter, Shelters, ShelterDistributor
 from camps.groups import IsolationUnit, IsolationUnits
-from camps.groups import LearningCenters
+from camps.groups import LearningCenter, LearningCenters
 from camps.distributors import LearningCenterDistributor
 from camps.groups import PlayGroups, PlayGroupDistributor
 from camps.groups import EVouchers, EVoucherDistributor
@@ -99,7 +99,7 @@ parser.add_argument(
 parser.add_argument(
     "-cs",
     "--child_susceptibility",
-    help="Reduce child susceptibility",
+    help="Reduce child susceptibility for under 12s",
     required=False,
     default=False,
 )
@@ -156,6 +156,20 @@ parser.add_argument(
     default=False,
 )
 parser.add_argument(
+    "-lcs",
+    "--learning_center_shifts",
+    help="Number of learning center shifts",
+    required=False,
+    default=4,
+)
+parser.add_argument(
+    "-lce",
+    "--extra_learning_centers",
+    help="Number of learning centers to add based on enrolment",
+    required=False,
+    default=False,
+)
+parser.add_argument(
     "-lch",
     "--learning_center_beta_ratio",
     help="Learning center/household beta ratio scaling",
@@ -203,6 +217,11 @@ if args.learning_centers == "True":
 else:
     args.learning_centers = False
 
+if args.extra_learning_centers == "True":
+    args.extra_learning_centers = True
+else:
+    args.extra_learning_centers = False
+
 if args.infectiousness_path == "nature":
     transmission_config_path = camp_configs_path / "defaults/transmission/nature.yaml"
 elif args.infectiousness_path == "correction_nature":
@@ -248,6 +267,12 @@ if args.learning_centers:
     print(
         "Learning center beta ratio set to: {}".format(args.learning_center_beta_ratio)
     )
+    print(
+        "Learning center shifts set to: {}".format(args.learning_center_shifts)
+    )
+    print(
+        "Extra learning centers is set to: {}".format(args.extra_learning_centers)
+    )
 
 print("Plag group beta ratio set to: {}".format(args.play_group_beta_ratio))
 print("Save path set to: {}".format(args.save_path))
@@ -257,7 +282,7 @@ CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
 #world = generate_empty_world({"super_area": ["CXB-219-C"]})
-#world = generate_empty_world({"region": ["CXB-219", "CXB-217"]})
+#world = generate_empty_world({"region": ["CXB-219", "CXB-217", "CXB-209"]})
 world = generate_empty_world()
 
 # populate empty world
@@ -284,12 +309,44 @@ world.isolation_units = IsolationUnits([IsolationUnit(area=world.areas[0])])
 hospital_distributor.distribute_medics_from_world(world.people)
 
 if args.learning_centers:
-    world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=4)
+    world.learning_centers = LearningCenters.for_areas(world.areas, n_shifts=int(args.learning_center_shifts))
     learning_center_distributor = LearningCenterDistributor.from_file(
         learning_centers=world.learning_centers
     )
     learning_center_distributor.distribute_kids_to_learning_centers(world.areas)
     learning_center_distributor.distribute_teachers_to_learning_centers(world.areas)
+
+    
+    if args.extra_learning_centers:
+        # add extra learning centers based on enrollment
+        enrolled = []
+        learning_centers = []
+        # find current enrollment rates
+        for learning_center in world.learning_centers:
+            total = 0
+            for i in range(4):
+                total += len(learning_center.ids_per_shift[i])
+            enrolled.append(total) 
+            learning_centers.append(learning_center)
+        learning_centers = np.array(learning_centers)
+        learning_centers_sorted = learning_centers[np.argsort(enrolled)]
+
+        # find top k most filled learning centers
+        top_k = learning_centers_sorted[-args.extra_learning_centers:]
+        for learning_center in top_k:
+            extra_lc = LearningCenter(coordinates=learning_center.super_area.coordinates)
+            world.learning_centers.members.append(extra_lc)
+        world.learning_centers = LearningCenters(world.learning_centers.members, n_shifts=4)
+
+        # clear and redistirbute kids to learning centers
+        for learning_center in world.learning_centers:
+            learning_center.ids_per_shift = defaultdict(list)
+        learning_center_distributor = LearningCenterDistributor.from_file(
+            learning_centers=world.learning_centers
+        )
+        learning_center_distributor.distribute_kids_to_learning_centers(world.areas)
+        learning_center_distributor.distribute_teachers_to_learning_centers(world.areas)
+
     CONFIG_PATH = camp_configs_path / "learning_center_config.yaml"
 
 
@@ -366,10 +423,7 @@ else:
         camp_configs_path / "defaults/policy/home_care_policy.yaml",
         base_policy_modules=("june.policy", "camps.policy"),
     )
-
-if args.child_susceptibility:
-    policies.policies[3].susceptibility = 0.5
-    policies.policies[4].susceptibility = 0.75
+    
 
 # ============================================================================#
 
@@ -383,17 +437,20 @@ selector = InfectionSelector.from_file(
 
 interaction = Interaction.from_file(
     config_filename=camp_configs_path / "defaults/interaction/" / args.parameters,
+    population=world.people,
 )
 
-if args.learning_centers and args.learning_center_beta_ratio:
-    interaction.beta["learning_center"] = interaction.beta["household"] * float(
-        args.learning_center_beta_ratio
+if args.child_susceptibility:
+    interaction = Interaction.from_file(
+        config_filename=camp_configs_path / "defaults/interaction/ContactInteraction_med_low_low_low_child.yaml",
+        population=world.people,
+    )
+else:
+    interaction = Interaction.from_file(
+        config_filename=camp_configs_path / "defaults/interaction/" / args.parameters,
+        population=world.people,
     )
 
-if args.play_group_beta_ratio:
-    interaction.beta["play_group"] = interaction.beta["household"] * float(
-        args.play_group_beta_ratio
-    )
 
 if args.household_beta:
     interaction.beta["household"] = float(args.household_beta)
@@ -425,6 +482,16 @@ if args.indoor_beta_ratio:
     )
     interaction.beta["learning_center"] = interaction.beta["household"] * float(
         args.indoor_beta_ratio
+    )
+
+if args.learning_centers and args.learning_center_beta_ratio:
+    interaction.beta["learning_center"] = interaction.beta["household"] * float(
+        args.learning_center_beta_ratio
+    )
+
+if args.play_group_beta_ratio:
+    interaction.beta["play_group"] = interaction.beta["household"] * float(
+        args.play_group_beta_ratio
     )
 
 cases_detected = {
@@ -535,4 +602,4 @@ infections_df = read.get_table_with_extras('infections',
 locations_df = infections_df.groupby(['location_specs', 
                                 'timestamp']).size()
 
-locations_df.to_csv(args.save_dir + '/locations.csv')
+locations_df.to_csv(args.save_path + '/locations.csv')
