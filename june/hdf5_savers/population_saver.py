@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 from collections import OrderedDict
 import logging
-logger = logging.getLogger(__name__)
+
 
 from .utils import read_dataset
 from june.groups import ExternalSubgroup, ExternalGroup
@@ -11,6 +11,10 @@ from june.demography import Population, Person
 from june.demography.person import Activities
 from june.geography import ExternalSuperArea
 from june.world import World
+from june.mpi_setup import mpi_rank
+logger = logging.getLogger(__name__)
+if mpi_rank > 0:
+    logger.propagate = False
 
 nan_integer = -999  # only used to store/load hdf5 integer arrays with inf/nan values
 spec_mapper = {
@@ -19,12 +23,10 @@ spec_mapper = {
     "school": "schools",
     "household": "households",
     "care_home": "care_homes",
-    "commute_hub": "commutehubs",
     "university": "universities",
     "pub": "pubs",
     "grocery": "groceries",
     "cinema": "cinemas",
-    "commute_city": "commutecities",
 }
 
 
