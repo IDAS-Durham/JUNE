@@ -15,6 +15,7 @@ from june.infection.symptom_tag import SymptomTag
 from june.interaction import Interaction
 
 default_config_filename = paths.configs_path / "defaults/policy/policy.yaml"
+default_regional_compliance_filename = paths.config_path / "defaults/policy/regional_compliance.yaml"
 
 
 def str_to_class(classname, base_policy_modules=("june.policy",)):
@@ -25,6 +26,19 @@ def str_to_class(classname, base_policy_modules=("june.policy",)):
         except AttributeError:
             continue
     raise ValueError("Cannot find policy in paths!")
+
+def regional_compliance_is_active(regional_compliance, date):
+    for compliance in regional_compliance:
+        if (
+                datetime.datetime.strptime(complaince["start_time"], "%Y-%m-%d")
+                <= date
+                < datetime.datetime.strptime(complaince["start_time"], "%Y-%m-%d")
+        ):
+            return compliance
+
+    return None
+
+                                                                                                            
 
 
 class Policy(ABC):
@@ -88,8 +102,9 @@ class Policy(ABC):
 
 
 class Policies:
-    def __init__(self, policies=None):
+    def __init__(self, policies=Nonem regional_compliance=None):
         self.policies = policies
+        self.regional_compliance = regional_compliance
         # Note (Arnau): This import here is ugly, but I couldn't
         # find a way to get around a redundant import loop.
         from june.policy import (
@@ -105,7 +120,10 @@ class Policies:
 
     @classmethod
     def from_file(
-        cls, config_file=default_config_filename, base_policy_modules=("june.policy",)
+            cls,
+            config_file=default_config_filename,
+            base_policy_modules=("june.policy",),
+            regional_compliance_file = default_regional_compliance_filename,
     ):
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -128,7 +146,22 @@ class Policies:
                 policies.append(
                     str_to_class(camel_case_key, base_policy_modules)(**policy_data)
                 )
-        return Policies(policies=policies)
+
+        with open(regional_compliance_file) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        regional_compliance = []
+        for compliance, compliance_data in config.items():
+            if "start_time" not in compliance_data:
+                for compliance_i, compliance_data_i in compliance_data.items():
+                    if(
+                        "start_time" not in compliance_data_i.keys()
+                        or "end_time" not in compliance_data_i.keys()
+                    ):
+                        raise ValueError("regional compliance config file not valid.")
+                    regional_compliance.append(
+                        compliance_data_i    
+                    )
+        return Policies(policies=policies, regional_compliance)
 
     def get_policies_for_type(self, policy_type):
         return [policy for policy in self.policies if policy.policy_type == policy_type]

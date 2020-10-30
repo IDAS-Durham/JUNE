@@ -3,6 +3,7 @@ from typing import List, Optional, Union
 import datetime
 from random import random
 import june.policy
+from june.policy import regional_compliance_is_active
 
 from june.infection.symptom_tag import SymptomTag
 from june.demography.person import Person
@@ -37,6 +38,7 @@ class IndividualPolicies(PolicyCollection):
         person: Person,
         days_from_start: float,
         activities: List[str],
+        regional_compliance = None
     ):
         """
         Applies all active individual policies to the person. Stay home policies are applied first,
@@ -50,6 +52,7 @@ class IndividualPolicies(PolicyCollection):
                         person=person,
                         days_from_start=days_from_start,
                         activities=activities,
+                        regional_compliance=regional_compliance,
                     )
                     # TODO: make it work with parallelisation
                     if mpi_rank == 0:
@@ -76,7 +79,7 @@ class IndividualPolicies(PolicyCollection):
                     return activities  # if it stays at home we don't need to check the rest
             elif policy.policy_subtype == "skip_activity":
                 if policy.check_skips_activity(person):
-                    activities = policy.apply(activities=activities)
+                    activities = policy.apply(activities=activities, regional_compliance=regional_compliance)
             else:
                 raise ValueError(f"policy type not expected")
         return activities
