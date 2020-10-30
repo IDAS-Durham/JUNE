@@ -1,0 +1,11 @@
+regional_compliance:
+  1:
+    start_time: 2020-07-04
+    end_time: 2021-12-01
+    London: 1.
+    South East: 1.
+    South West: 1.
+    Midlands: 1.
+    East of England: 1.
+    North West: 0.5
+    North East: 0.5
