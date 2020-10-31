@@ -102,7 +102,7 @@ class Policy(ABC):
 
 
 class Policies:
-    def __init__(self, policies=Nonem regional_compliance=None):
+    def __init__(self, policies=None, regional_compliance=None):
         self.policies = policies
         self.regional_compliance = regional_compliance
         # Note (Arnau): This import here is ugly, but I couldn't
