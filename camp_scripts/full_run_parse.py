@@ -113,7 +113,7 @@ parser.add_argument(
 parser.add_argument(
     "-t",
     "--isolation_testing",
-    help="Model weights in HDF5 format",
+    help="Mean testing time",
     required=False,
     default=3,
 )
@@ -282,8 +282,8 @@ CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
 #world = generate_empty_world({"super_area": ["CXB-219-C"]})
-#world = generate_empty_world({"region": ["CXB-219", "CXB-217", "CXB-209"]})
-world = generate_empty_world()
+world = generate_empty_world({"region": ["CXB-219", "CXB-217", "CXB-209"]})
+#world = generate_empty_world()
 
 # populate empty world
 populate_world(world)
@@ -405,9 +405,9 @@ if args.isolation_units:
         base_policy_modules=("june.policy", "camps.policy"),
     )
 
-    policies.policies[5].n_quarantine_days = args.isolation_time
-    policies.policies[5].testing_mean_time = args.isolation_testing
-    policies.policies[5].compliance = args.isolation_compliance
+    policies.policies[3].n_quarantine_days = int(args.isolation_time)
+    policies.policies[3].testing_mean_time = int(args.isolation_testing)
+    policies.policies[3].compliance = float(args.isolation_compliance)
 
 elif args.mask_wearing:
     policies = Policies.from_file(
@@ -415,8 +415,8 @@ elif args.mask_wearing:
         base_policy_modules=("june.policy", "camps.policy"),
     )
 
-    policies.policies[9].compliance = args.mask_compliance
-    policies.policies[9].beta_factor = args.mask_beta_factor
+    policies.policies[7].compliance = float(args.mask_compliance)
+    policies.policies[7].beta_factor = float(args.mask_beta_factor)
 
 else:
     policies = Policies.from_file(
