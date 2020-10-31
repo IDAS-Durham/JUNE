@@ -228,7 +228,7 @@ class SkipActivity(IndividualPolicy):
         self.activities_to_remove = activities_to_remove
         self.policy_subtype = "skip_activity"
 
-    def check_skips_activity(self, person: "Person") -> bool:
+    def check_skips_activity(self, person: "Person", regional_compliance=None) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
@@ -286,7 +286,7 @@ class CloseSchools(SkipActivity):
 
         return False
 
-    def check_skips_activity(self, person: "Person") -> bool:
+    def check_skips_activity(self, person: "Person", regional_compliance) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
@@ -313,7 +313,7 @@ class CloseUniversities(SkipActivity):
             start_time, end_time, activities_to_remove=["primary_activity"]
         )
 
-    def check_skips_activity(self, person: "Person") -> bool:
+    def check_skips_activity(self, person: "Person", regional_compliance) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
@@ -375,7 +375,7 @@ class CloseCompanies(SkipActivity):
 
     def check_skips_activity(
         self,
-        person: "Person",  # , furlough_ratio=None, key_ratio=None, random_ratio=None
+            person: "Person", regional_compliance,
     ) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
@@ -540,7 +540,7 @@ class LimitLongCommute(SkipActivity):
             return True
         return False
 
-    def check_skips_activity(self, person: Person):
+    def check_skips_activity(self, person: Person, regional_compliance):
         if person.id not in self.long_distance_commuter_ids:
             return False
         else:
