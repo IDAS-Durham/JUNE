@@ -170,7 +170,7 @@ class ActivityManager:
         if self.leisure is not None:
             if self.policies is not None:
                 # set active regional compliances with policies
-                self.regional_complince = regional_compliance_is_active(
+                regional_compliance = regional_compliance_is_active(
                     self.policies.regional_compliance, self.timer.date
                 )
                 self.policies.leisure_policies.apply(
@@ -213,6 +213,9 @@ class ActivityManager:
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
+            regional_compliance = regional_compliance_is_active(
+                    self.policies.regional_compliance, self.timer.date
+            )
             allowed_activities = self.policies.individual_policies.apply(
                 active_policies=active_individual_policies,
                 person=person,
