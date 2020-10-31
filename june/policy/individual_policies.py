@@ -178,7 +178,7 @@ class Quarantine(StayHome):
             housemates_quarantine = person.residence.group.quarantine(
                 time=days_from_start,
                 quarantine_days=self.n_days_household,
-                household_compliance=self.household_compliance*regional_complaince[person.area.region.name],
+                household_compliance=self.household_compliance*float(regional_complaince[person.area.region.name]),
             )
         else:
             housemates_quarantine = person.residence.group.quarantine(
@@ -204,7 +204,7 @@ class Shielding(StayHome):
     def check_stay_home_condition(self, person: Person, days_from_start: float, regional_compliance):
         if person.age >= self.min_age:
             if regional_compliance is not None:
-                if self.compliance is None or random() < self.compliance*regional_compliance[person.area.region.name]:
+                if self.compliance is None or random() < self.compliance*float(regional_compliance[person.area.region.name]):
                     return True
             else:
                 if self.compliance is None or random() < self.compliance:
