@@ -50,6 +50,9 @@ def read_date(date: Union[str, datetime.datetime]) -> datetime.datetime:
 
 def regional_compliance_is_active(regional_compliance, date):
 
+    if regional_compliance is None:
+        return None
+
     for compliance in regional_compliance:       
         if (
                 read_date(compliance["start_time"])

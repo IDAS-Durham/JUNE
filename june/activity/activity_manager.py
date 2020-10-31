@@ -19,6 +19,7 @@ from june.policy import (
     LeisurePolicies,
     MedicalCarePolicies,
     InteractionPolicies,
+    regional_compliance_is_active,
 )
 from june.mpi_setup import (
     mpi_comm,
@@ -168,6 +169,10 @@ class ActivityManager:
         activities = self.timer.activities
         if self.leisure is not None:
             if self.policies is not None:
+                # set active regional compliances with policies
+                self.regional_complince = regional_compliance_is_active(
+                    self.policies.regional_compliance, self.timer.date
+                )
                 self.policies.leisure_policies.apply(
                     date=self.timer.date, leisure=self.leisure,
                 )
@@ -213,6 +218,7 @@ class ActivityManager:
                 person=person,
                 activities=activities,
                 days_from_start=days_from_start,
+                regional_compliance=regional_compliance,
             )
             external_subgroup = self.move_to_active_subgroup(
                 allowed_activities, person, to_send_abroad
