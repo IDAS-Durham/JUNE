@@ -15,7 +15,7 @@ from june.infection.symptom_tag import SymptomTag
 from june.interaction import Interaction
 
 default_config_filename = paths.configs_path / "defaults/policy/policy.yaml"
-default_regional_compliance_filename = paths.config_path / "defaults/policy/regional_compliance.yaml"
+default_regional_compliance_filename = paths.configs_path / "defaults/policy/regional_compliance.yaml"
 
 
 def str_to_class(classname, base_policy_modules=("june.policy",)):
@@ -161,7 +161,7 @@ class Policies:
                     regional_compliance.append(
                         compliance_data_i    
                     )
-        return Policies(policies=policies, regional_compliance)
+        return Policies(policies=policies, regional_compliance=regional_compliance)
 
     def get_policies_for_type(self, policy_type):
         return [policy for policy in self.policies if policy.policy_type == policy_type]

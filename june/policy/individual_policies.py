@@ -3,7 +3,6 @@ from typing import List, Optional, Union
 import datetime
 from random import random
 import june.policy
-from june.policy import regional_compliance_is_active
 
 from june.infection.symptom_tag import SymptomTag
 from june.demography.person import Person
