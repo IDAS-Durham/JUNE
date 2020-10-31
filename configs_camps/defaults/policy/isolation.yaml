@@ -20,18 +20,6 @@ severe_symptoms_stay_home:
   start_time: 1000-01-01
   end_time: 9999-01-01
 
-susceptibility:
-    1:
-        start_time: 1000-01-01
-        end_time: 9999-01-01
-        age_group: 0-9
-        susceptibility: 1.0
-    2:
-        start_time: 1000-01-01
-        end_time: 9999-01-01
-        age_group: 10-18
-        susceptibility: 1.0
-
 isolation:
   start_time: 1000-01-01
   end_time: 9999-01-01
