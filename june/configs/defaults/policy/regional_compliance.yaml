@@ -5,7 +5,9 @@ regional_compliance:
     London: 1.
     South East: 1.
     South West: 1.
-    Midlands: 1.
+    West Midlands: 1.
+    East Midlands
     East of England: 1.
     North West: 0.5
     North East: 0.5
+    Yorkshire and The Humber: 0.5
