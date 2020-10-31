@@ -282,8 +282,8 @@ CONFIG_PATH = camp_configs_path / "config_example.yaml"
 
 # create empty world's geography
 #world = generate_empty_world({"super_area": ["CXB-219-C"]})
-world = generate_empty_world({"region": ["CXB-219", "CXB-217", "CXB-209"]})
-#world = generate_empty_world()
+#world = generate_empty_world({"region": ["CXB-219", "CXB-217", "CXB-209"]})
+world = generate_empty_world()
 
 # populate empty world
 populate_world(world)
