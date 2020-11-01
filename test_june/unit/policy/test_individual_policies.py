@@ -1190,7 +1190,6 @@ class TestQuarantine:
         regional_compliance = {
                 worker.region.name: 0.
         }
-        print(regional_compliance)
         super_area = world.super_areas[0]
         quarantine = Quarantine(
             start_time="2020-1-1",
