@@ -37,7 +37,7 @@ class IndividualPolicies(PolicyCollection):
         person: Person,
         days_from_start: float,
         activities: List[str],
-        regional_compliance = None,
+        regional_compliance=None,
     ):
         """
         Applies all active individual policies to the person. Stay home policies are applied first,
@@ -46,7 +46,9 @@ class IndividualPolicies(PolicyCollection):
         """
         for policy in active_policies:
             if policy.policy_subtype == "stay_home":
-                if policy.check_stay_home_condition(person, days_from_start, regional_compliance):
+                if policy.check_stay_home_condition(
+                    person, days_from_start, regional_compliance
+                ):
                     activities = policy.apply(
                         person=person,
                         days_from_start=days_from_start,
@@ -101,7 +103,9 @@ class StayHome(IndividualPolicy):
         else:
             return ["residence"]
 
-    def check_stay_home_condition(self, person: Person, days_from_start: float, regional_compliance=None):
+    def check_stay_home_condition(
+        self, person: Person, days_from_start: float, regional_compliance=None
+    ):
         """
         Returns true if a person must stay at home.
         Parameters
@@ -118,7 +122,9 @@ class StayHome(IndividualPolicy):
 
 
 class SevereSymptomsStayHome(StayHome):
-    def check_stay_home_condition(self, person: Person, days_from_start: float, regional_compliance=None) -> bool:
+    def check_stay_home_condition(
+        self, person: Person, days_from_start: float, regional_compliance=None
+    ) -> bool:
         return (
             person.infection is not None and person.infection.tag is SymptomTag.severe
         )
@@ -159,33 +165,29 @@ class Quarantine(StayHome):
         self.household_compliance = household_compliance
         self.compliance = compliance
 
-    def check_stay_home_condition(self, person: Person, days_from_start, regional_compliance=None):
+    def check_stay_home_condition(
+        self, person: Person, days_from_start, regional_compliance=None
+    ):
+        if regional_compliance is None:
+            regional_compliance = {}
         self_quarantine = False
         try:
             if person.symptoms.tag in (SymptomTag.mild, SymptomTag.severe):
                 time_of_symptoms_onset = person.infection.time_of_symptoms_onset
                 release_day = time_of_symptoms_onset + self.n_days
                 if release_day > days_from_start > time_of_symptoms_onset:
-                    if regional_compliance is not None:
-                        if random() < self.compliance*regional_compliance[person.super_area.region.name]:
-                            self_quarantine = True
-                    else:
-                        if random() < self.compliance:
-                            self_quarantine = True
+                    if random() < self.compliance * regional_compliance.get(
+                        person.region.name, 1.0
+                    ):
+                        self_quarantine = True
         except AttributeError:
             pass
-        if regional_compliance is not None:
-            housemates_quarantine = person.residence.group.quarantine(
-                time=days_from_start,
-                quarantine_days=self.n_days_household,
-                household_compliance=self.household_compliance*float(regional_complaince[person.super_area.region.name]),
-            )
-        else:
-            housemates_quarantine = person.residence.group.quarantine(
-                time=days_from_start,
-                quarantine_days=self.n_days_household,
-                household_compliance=self.household_compliance,
-            )
+        housemates_quarantine = person.residence.group.quarantine(
+            time=days_from_start,
+            quarantine_days=self.n_days_household,
+            household_compliance=self.household_compliance
+            * regional_compliance.get(person.region.name, 1.0),
+        )
         return self_quarantine or housemates_quarantine
 
 
@@ -201,10 +203,14 @@ class Shielding(StayHome):
         self.min_age = min_age
         self.compliance = compliance
 
-    def check_stay_home_condition(self, person: Person, days_from_start: float, regional_compliance=None):
+    def check_stay_home_condition(
+        self, person: Person, days_from_start: float, regional_compliance=None
+    ):
         if person.age >= self.min_age:
             if regional_compliance is not None:
-                if self.compliance is None or random() < self.compliance*float(regional_compliance[person.super_area.region.name]):
+                if self.compliance is None or random() < self.compliance * float(
+                    regional_compliance[person.super_area.region.name]
+                ):
                     return True
             else:
                 if self.compliance is None or random() < self.compliance:
@@ -372,10 +378,7 @@ class CloseCompanies(SkipActivity):
         cls.key_ratio = key_ratio
         cls.random_ratio = random_ratio
 
-    def check_skips_activity(
-        self,
-            person: "Person", regional_compliance=None,
-    ) -> bool:
+    def check_skips_activity(self, person: "Person", regional_compliance=None,) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
