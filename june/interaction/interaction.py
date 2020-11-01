@@ -171,6 +171,8 @@ class Interaction:
             self.set_population_susceptibilities(
                 susceptibilities_by_age=susceptibilities_by_age, population=population
             )
+        self.regional_compliance = None
+        self.distanced_groups = set()
 
     @classmethod
     def from_file(
@@ -278,9 +280,18 @@ class Interaction:
             )
         return contact_matrix
 
+    def get_beta_for_group(self, group: InteractiveGroup):
+        if self.regional_compliance is not None and group.spec in self.distanced_groups:
+            beta = self.beta[group.spec] * self.regional_compliance.get(
+                group.region.name, 1.0
+            )
+        else:
+            beta = self.beta[group.spec]
+        return beta
+
     def time_step_for_group(self, delta_time: float, group: InteractiveGroup):
         contact_matrix = self.contact_matrices[group.spec]
-        beta = self.beta[group.spec]
+        beta = self.get_beta_for_group(group=group)
         school_years = group.school_years
         infected_ids = []
         for i, subgroup_id in enumerate(group.subgroups_susceptible):

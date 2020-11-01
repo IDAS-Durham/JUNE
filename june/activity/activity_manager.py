@@ -19,7 +19,6 @@ from june.policy import (
     LeisurePolicies,
     MedicalCarePolicies,
     InteractionPolicies,
-    regional_compliance_is_active,
 )
 from june.mpi_setup import (
     mpi_comm,
@@ -165,14 +164,11 @@ class ActivityManager:
             "Attention! Some people do not have an activity in this timestep."
         )
 
-    def do_timestep(self):
+    def do_timestep(self, regional_compliance=None):
         activities = self.timer.activities
         if self.leisure is not None:
             if self.policies is not None:
                 # set active regional compliances with policies
-                regional_compliance = regional_compliance_is_active(
-                    self.policies.regional_compliance, self.timer.date
-                )
                 self.policies.leisure_policies.apply(
                     date=self.timer.date, leisure=self.leisure, regional_compliance=regional_compliance
                 )
@@ -182,7 +178,7 @@ class ActivityManager:
                 working_hours="primary_activity" in activities,
             )
         to_send_abroad = self.move_people_to_active_subgroups(
-            activities, self.timer.date, self.timer.now,
+            activities, self.timer.date, self.timer.now, regional_compliance=regional_compliance
         )
         (
             people_from_abroad,
@@ -196,6 +192,7 @@ class ActivityManager:
         activities: List[str],
         date: datetime = datetime(2020, 2, 2),
         days_from_start=0,
+        regional_compliance=None,
     ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
@@ -213,9 +210,6 @@ class ActivityManager:
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            regional_compliance = regional_compliance_is_active(
-                    self.policies.regional_compliance, self.timer.date
-            )
             allowed_activities = self.policies.individual_policies.apply(
                 active_policies=active_individual_policies,
                 person=person,

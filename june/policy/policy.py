@@ -15,7 +15,9 @@ from june.infection.symptom_tag import SymptomTag
 from june.interaction import Interaction
 
 default_config_filename = paths.configs_path / "defaults/policy/policy.yaml"
-default_regional_compliance_filename = paths.configs_path / "defaults/policy/regional_compliance.yaml"
+default_regional_compliance_filename = (
+    paths.configs_path / "defaults/policy/regional_compliance.yaml"
+)
 
 
 def str_to_class(classname, base_policy_modules=("june.policy",)):
@@ -27,8 +29,9 @@ def str_to_class(classname, base_policy_modules=("june.policy",)):
             continue
     raise ValueError("Cannot find policy in paths!")
 
+
 def read_date(date: Union[str, datetime.datetime]) -> datetime.datetime:
-        """
+    """
         Read date in two possible formats, either string or datetime.date, both
         are translated into datetime.datetime to be used by the simulator
 
@@ -41,29 +44,28 @@ def read_date(date: Union[str, datetime.datetime]) -> datetime.datetime:
         -------
             date in datetime format
         """
-        if type(date) is str:
-            return datetime.datetime.strptime(date, "%Y-%m-%d")
-        elif isinstance(date, datetime.date):
-            return datetime.datetime.combine(date, datetime.datetime.min.time())
-        else:
-            raise TypeError("date must be a string or a datetime.date object")
+    if type(date) is str:
+        return datetime.datetime.strptime(date, "%Y-%m-%d")
+    elif isinstance(date, datetime.date):
+        return datetime.datetime.combine(date, datetime.datetime.min.time())
+    else:
+        raise TypeError("date must be a string or a datetime.date object")
+
 
 def regional_compliance_is_active(regional_compliance, date):
 
     if regional_compliance is None:
         return None
 
-    for compliance in regional_compliance:       
+    for compliance in regional_compliance:
         if (
-                read_date(compliance["start_time"])
-                <= date
-                < read_date(compliance["end_time"])
+            read_date(compliance["start_time"])
+            <= date
+            < read_date(compliance["end_time"])
         ):
             return compliance
 
     return None
-
-                                                                                                            
 
 
 class Policy(ABC):
@@ -138,6 +140,7 @@ class Policies:
             MedicalCarePolicies,
             LeisurePolicies,
         )
+
         self.individual_policies = IndividualPolicies.from_policies(self)
         self.interaction_policies = InteractionPolicies.from_policies(self)
         self.medical_care_policies = MedicalCarePolicies.from_policies(self)
@@ -145,10 +148,10 @@ class Policies:
 
     @classmethod
     def from_file(
-            cls,
-            config_file=default_config_filename,
-            base_policy_modules=("june.policy",),
-            regional_compliance_file = default_regional_compliance_filename,
+        cls,
+        config_file=default_config_filename,
+        base_policy_modules=("june.policy",),
+        regional_compliance_file=default_regional_compliance_filename,
     ):
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -178,14 +181,12 @@ class Policies:
         for compliance, compliance_data in config.items():
             if "start_time" not in compliance_data:
                 for compliance_i, compliance_data_i in compliance_data.items():
-                    if(
+                    if (
                         "start_time" not in compliance_data_i.keys()
                         or "end_time" not in compliance_data_i.keys()
                     ):
                         raise ValueError("regional compliance config file not valid.")
-                    regional_compliance.append(
-                        compliance_data_i    
-                    )
+                    regional_compliance.append(compliance_data_i)
         return Policies(policies=policies, regional_compliance=regional_compliance)
 
     def get_policies_for_type(self, policy_type):
@@ -200,19 +201,20 @@ class Policies:
         like policies depending on workers' behaviours during lockdown.
         """
         from june.policy import CloseCompanies, LimitLongCommute
+
         CloseCompanies.set_ratios(world=world)
         LimitLongCommute.get_long_commuters(people=world.people)
 
 
-
 class PolicyCollection:
-
     def __init__(self, policies: List[Policy]):
         """
         A collection of like policies active on the same date
         """
         self.policies = policies
-        self.policies_by_name = {self._get_policy_name(policy) : policy for policy in policies}
+        self.policies_by_name = {
+            self._get_policy_name(policy): policy for policy in policies
+        }
 
     def _get_policy_name(self, policy):
         return re.sub(r"(?<!^)(?=[A-Z])", "_", policy.__class__.__name__).lower()
@@ -238,4 +240,3 @@ class PolicyCollection:
 
     def __contains__(self, policy_name):
         return policy_name in self.policies_by_name
-
