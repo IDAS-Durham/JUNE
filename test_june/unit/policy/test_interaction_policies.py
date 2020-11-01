@@ -97,6 +97,58 @@ class TestSocialDistancing:
             assert sim.interaction.beta == initial_betas
             next(sim.timer)
 
+    def test__social_distancing_regional_compliance(self, setup_policy_world):
+        world, pupil, student, worker, sim = setup_policy_world
+        regional_compliance = [{
+                'start_time': '2020-02-10',
+                'end_time': '2021-12-01',
+                worker.region.name: 0.
+        }]
+        world.cemeteries = Cemeteries()
+        start_date = datetime(2020, 3, 10)
+        end_date = datetime(2020, 3, 12)
+        beta_factors = {
+            "box": 0.7,
+            "pub": 0.7,
+            "grocery": 0.7,
+            "cinema": 0.7,
+            "inter_city_transport": 0.7,
+            "city_transport": 0.7,
+            "hospital": 0.7,
+            "care_home": 0.7,
+            "company": 0.7,
+            "school": 0.7,
+            "household": 1.0,
+            "university": 0.7,
+        }
+        social_distance = SocialDistancing(
+            start_time="2020-03-10", end_time="2020-03-12", beta_factors=beta_factors
+        )
+        policies = Policies([social_distance],
+                regional_compliance=regional_compliance)
+        leisure_instance = leisure.generate_leisure_for_config(
+            world=world, config_filename=test_config
+        )
+        leisure_instance.distribute_social_venues_to_areas(
+            world.areas, super_areas=world.super_areas
+        )
+        sim.activity_manager.policies = policies
+        sim.activity_manager.leisure = leisure_instance
+        sim.timer.reset()
+        initial_betas = copy.deepcopy(sim.interaction.beta)
+        sim.clear_world()
+        company = Company(super_area=world.super_areas[0])
+        household = Household(area=world.areas[0])
+        while sim.timer.date <= sim.timer.final_date:
+            sim.do_timestep()
+            if sim.timer.date >= start_date and sim.timer.date < end_date:
+                assert sim.interaction.get_beta_for_group(group=company) == initial_betas['company']*0.
+                assert sim.interaction.get_beta_for_group(group=household) == initial_betas['household']
+                next(sim.timer)
+                continue
+            assert sim.interaction.beta == initial_betas
+            next(sim.timer)
+
 
 class TestMaskWearing:
     def test__mask_wearing(self, setup_policy_world):

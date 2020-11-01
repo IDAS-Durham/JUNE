@@ -226,3 +226,5 @@ def test__infection_is_isolated(selector):
             assert person.dead
         elif not (person.residence.group in infected_households):
             assert not person.infected and person.susceptible
+
+
