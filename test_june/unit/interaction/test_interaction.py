@@ -247,8 +247,8 @@ def test__sector_beta(dummy_world):
     )
     
     if interactive_group.spec == "company" and interaction.sector_betas is not None:
-        beta = interaction.get_beta_for_group(group=group)*float(interaction.sector_betas[group.sector])
+        beta = interaction.get_beta_for_group(group=interactive_group)*float(interaction.sector_betas[interactive_group.sector])
     else:            
-        beta = interaction.get_beta_for_group(group=group)
+        beta = interaction.get_beta_for_group(group=interactive_group)
 
     assert beta == interaction.beta[interactive_group.spec]*float(interaction.sector_betas[company.sector])
