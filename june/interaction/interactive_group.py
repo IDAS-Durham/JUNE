@@ -26,6 +26,8 @@ class InteractiveGroup:
         self.has_susceptible = False
         self.has_infector = False
         self.n_foreign_people = 0
+        if group.spec == "company":
+            self.sector = group.sector
         for i, subgroup in enumerate(group.subgroups):
             if (
                 people_from_abroad is not None
