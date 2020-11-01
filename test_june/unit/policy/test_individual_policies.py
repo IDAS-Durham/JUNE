@@ -1185,6 +1185,56 @@ class TestQuarantine:
         worker.infection = None
         sim.clear_world()
 
+    def test__quarantine_zero_complacency_regional(self, setup_policy_world, selector):
+        world, pupil, student, worker, sim = setup_policy_world
+        regional_compliance = {
+                worker.region.name: 0.
+        }
+        print(regional_compliance)
+        super_area = world.super_areas[0]
+        quarantine = Quarantine(
+            start_time="2020-1-1",
+            end_time="2020-1-30",
+            n_days=7,
+            n_days_household=14,
+        )
+        policies = Policies([quarantine], regional_compliance=regional_compliance)
+        sim.activity_manager.policies = policies
+        infect_person(worker, selector, "mild")
+        sim.update_health_status(0.0, 0.0)
+        activities = ["primary_activity", "residence"]
+        sim.clear_world()
+        time_during_policy = datetime(2020, 1, 2)
+        active_individual_policies = policies.individual_policies.get_active(
+            date=time_during_policy
+        )
+        # before symptoms onset
+        assert "primary_activity" in policies.individual_policies.apply(
+            active_individual_policies,
+            regional_compliance=regional_compliance,
+            person=pupil,
+            activities=activities,
+            days_from_start=4.0,
+        )
+        # after symptoms onset
+        assert "primary_activity" in policies.individual_policies.apply(
+            active_individual_policies,
+            regional_compliance=regional_compliance,
+            person=pupil,
+            activities=activities,
+            days_from_start=8.0,
+        )
+        # more thatn two weeks after symptoms onset
+        assert "primary_activity" in policies.individual_policies.apply(
+            active_individual_policies,
+            regional_compliance=regional_compliance,
+            person=pupil,
+            activities=activities,
+            days_from_start=25,
+        )
+        worker.infection = None
+        sim.clear_world()
+
 
 def test__kid_at_home_is_supervised(setup_policy_world, selector):
     world, pupil, student, worker, sim = setup_policy_world
