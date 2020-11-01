@@ -206,15 +206,13 @@ class Shielding(StayHome):
     def check_stay_home_condition(
         self, person: Person, days_from_start: float, regional_compliance=None
     ):
+        if regional_compliance is None:
+            regional_compliance = {}
         if person.age >= self.min_age:
-            if regional_compliance is not None:
-                if self.compliance is None or random() < self.compliance * float(
-                    regional_compliance[person.super_area.region.name]
-                ):
-                    return True
-            else:
-                if self.compliance is None or random() < self.compliance:
-                    return True
+            if self.compliance is None or random() < self.compliance * regional_compliance.get(
+                person.region.name, 1.0
+            ):
+                return True
         return False
 
 
