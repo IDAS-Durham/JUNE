@@ -23,7 +23,7 @@ class LeisurePolicies(PolicyCollection):
     policy_type = "leisure"
     original_leisure_probabilities_per_venue = None
 
-    def apply(self, date: datetime, leisure: Leisure):
+    def apply(self, date: datetime, leisure: Leisure, regional_compliance: Dict=None):
         """
         Applies leisure policies. There are currently two types of leisure policies
         implemented: CloseLeisureVenue, and ChangeLeisureProbability. To ensure
@@ -58,7 +58,7 @@ class LeisurePolicies(PolicyCollection):
         leisure.closed_venues = set()
         active_policies = self.get_active(date=date)
         for policy in active_policies:
-            policy.apply(leisure=leisure)
+            policy.apply(leisure=leisure, regional_compliance=regional_compliance)
 
 
 class CloseLeisureVenue(LeisurePolicy):
@@ -84,7 +84,7 @@ class CloseLeisureVenue(LeisurePolicy):
         super().__init__(start_time, end_time)
         self.venues_to_close = venues_to_close
 
-    def apply(self, leisure: Leisure):
+    def apply(self, leisure: Leisure, regional_compliance = None):
         for venue in self.venues_to_close:
             leisure.closed_venues.add(venue)
 
@@ -118,12 +118,13 @@ class ChangeLeisureProbability(LeisurePolicy):
                 leisure_activities_probabilities[activity]["women"]
             )
 
-    def apply(self, leisure: Leisure):
+    def apply(self, leisure: Leisure, regional_compliance=None):
         """
         Changes probabilities of doing leisure activities according to the policies specified.
         The current probabilities are stored in the policies, and restored at the end of the policy 
         time span. Keep this in mind when trying to stack policies that modify the same social venue.
         """
+        leisure.regional_compliance = regional_compliance
         for activity in self.leisure_probabilities:
             activity_distributor = leisure.leisure_distributors[activity]
             activity_distributor.male_probabilities = self.leisure_probabilities[
