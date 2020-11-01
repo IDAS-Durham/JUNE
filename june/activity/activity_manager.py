@@ -174,7 +174,7 @@ class ActivityManager:
                     self.policies.regional_compliance, self.timer.date
                 )
                 self.policies.leisure_policies.apply(
-                    date=self.timer.date, leisure=self.leisure,
+                    date=self.timer.date, leisure=self.leisure, regional_compliance=regional_compliance
                 )
             self.leisure.generate_leisure_probabilities_for_timestep(
                 delta_time=self.timer.duration,

@@ -241,4 +241,63 @@ class TestReduceLeisureProbabilities:
                 "pubs"
             ].female_probabilities
             == original_female_pub_probabilities
+        )    
+
+    def test__reduce_household_visits_with_regional_compliance(self, setup_policy_world):
+        world, pupil, student, worker, sim = setup_policy_world
+        while str(sim.timer.date.date()) != "2020-03-02":
+            next(sim.timer)
+        super_area = world.super_areas[0]
+        region = worker.region.name
+        regional_compliance = {
+                region: 0.
+        }
+        leisure = generate_leisure_for_config(
+            world=world, config_filename=test_config
         )
+        reduce_leisure_probabilities = ChangeLeisureProbability(
+            start_time="2020-03-02",
+            end_time="2020-03-05",
+            leisure_activities_probabilities={
+                "pubs": {"men": {"0-50": 0.2, "50-100": 0.0}, "women": {"0-100": 0.2},},
+            },
+        )
+        policies = Policies([reduce_leisure_probabilities], 
+                regional_compliance=regional_compliance)
+        sim.activity_manager.policies = policies
+        sim.activity_manager.leisure = leisure
+        leisure.generate_leisure_probabilities_for_timestep(
+            0.1, False, False
+        )
+        original_personal_probabilities = leisure.get_probability_for_person(person=worker)
+        policies.leisure_policies.apply(
+            date=sim.timer.date, leisure=leisure, regional_compliance=regional_compliance
+        )
+        assert leisure.regional_compliance == regional_compliance
+
+        assert (
+            leisure.leisure_distributors[
+                "pubs"
+            ].male_probabilities[60]
+            == 0.0
+        )
+        assert (
+            leisure.leisure_distributors[
+                "pubs"
+            ].female_probabilities[40]
+            == 0.2
+        )
+        regional_probabilities = leisure.get_probability_for_person(person=worker)
+        assert regional_probabilities['does_activity'] == 0.
+        for key, value in regional_probabilities['drags_household'].items():
+            assert value == 0.
+        for key, value in regional_probabilities['activities'].items():
+            assert value == 0.
+
+        regional_compliance = None
+        policies.leisure_policies.apply(
+            date=sim.timer.date, leisure=leisure, regional_compliance=regional_compliance
+        )
+        assert leisure.regional_compliance is None
+        regional_probabilities = leisure.get_probability_for_person(person=worker)
+        assert regional_probabilities == original_personal_probabilities 

@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 import yaml
 import logging
-from random import random, randint 
+from random import random, randint
 from typing import List, Dict
 from june.demography import Person
 from june.geography import Geography, SuperAreas, Areas
@@ -124,6 +124,7 @@ class Leisure:
         self.leisure_distributors = leisure_distributors
         self.n_activities = len(self.leisure_distributors)
         self.closed_venues = set()
+        self.regional_compliance = None
 
     def distribute_social_venues_to_areas(self, areas: Areas, super_areas: SuperAreas):
         logger.info("Linking households for visits")
@@ -266,6 +267,27 @@ class Leisure:
                         subgroup  # person will be added later in the simulator.
                     )
 
+    def get_probability_for_person(self, person: Person):
+        prob_age_sex = self.probabilities_by_age_sex[person.sex][person.age]
+        if self.regional_compliance is not None:
+            regional_prob_age_sex = {}
+            regional_prob_age_sex["does_activity"] = prob_age_sex[
+                "does_activity"
+            ] * self.regional_compliance.get(person.region.name, 1.0)
+            regional_prob_age_sex["activities"] = {}
+            regional_prob_age_sex["drags_household"] = {}
+            for key, value in prob_age_sex["activities"].items():
+                regional_prob_age_sex["activities"][
+                    key
+                ] = value * self.regional_compliance.get(person.region.name, 1.0)
+            for key, value in prob_age_sex["drags_household"].items():
+                regional_prob_age_sex["drags_household"][
+                    key
+                ] = value * self.regional_compliance.get(person.region.name, 1.0)
+            return regional_prob_age_sex
+        else:
+            return prob_age_sex
+
     def get_subgroup_for_person_and_housemates(
         self, person: Person, to_send_abroad: dict = None
     ):
@@ -289,7 +311,7 @@ class Leisure:
         """
         if person.residence.group.spec == "care_home":
             return
-        prob_age_sex = self.probabilities_by_age_sex[person.sex][person.age]
+        prob_age_sex = self.get_probability_for_person(person=person)
         if random() < prob_age_sex["does_activity"]:
             activity_idx = random_choice_numba(
                 arr=np.arange(0, len(prob_age_sex["activities"])),
@@ -305,7 +327,9 @@ class Leisure:
                 if residence_type not in person.residence.group.residences_to_visit:
                     return
                 else:
-                    candidates = person.residence.group.residences_to_visit[residence_type]
+                    candidates = person.residence.group.residences_to_visit[
+                        residence_type
+                    ]
             else:
                 candidates = person.area.social_venues[activity]
             candidates_length = len(candidates)
@@ -314,7 +338,7 @@ class Leisure:
             elif candidates_length == 1:
                 group = candidates[0]
             else:
-                group = candidates[randint(0, candidates_length-1)]
+                group = candidates[randint(0, candidates_length - 1)]
             if group is None:
                 return
             elif group.external:
