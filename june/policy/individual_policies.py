@@ -545,7 +545,6 @@ class LimitLongCommute(SkipActivity):
             return False
         else:
             if random() < self.going_to_work_probability:
-                print("skip work")
                 return True
             else:
                 return False
