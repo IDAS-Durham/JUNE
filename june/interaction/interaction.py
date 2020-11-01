@@ -182,7 +182,7 @@ class Interaction:
         config_filename: str = default_config_filename,
         population: Population = None,
         sector_beta = False,
-        sector_beta_filename: str = default_sector_filename
+        sector_beta_filename: str = default_sector_beta_filename
     ) -> "Interaction":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
