@@ -140,6 +140,8 @@ class InteractiveGroup:
         if self.must_timestep is False:
             return
         self.spec = group.spec
+        if hasattr(group, 'region'):
+            self.region = group.region
         self.infector_ids = infector_ids
         self.transmission_probabilities = trans_prob
         self.susceptible_ids = susceptible_ids

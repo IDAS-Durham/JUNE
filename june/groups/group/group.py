@@ -77,6 +77,15 @@ class Group(AbstractGroup):
         """
         return f"{self.__class__.__name__}_{self.id:05d}"
 
+    @property
+    def region(self) -> "Region":
+        if hasattr(self,'area'):
+            return self.area.super_area.region
+        elif hasattr(self, 'super_area'):
+            return self.super_area.region
+        else:
+            return None
+
     def get_spec(self) -> str:
         """
         Returns the speciailization of the group.
