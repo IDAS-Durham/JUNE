@@ -13,6 +13,8 @@ from june import paths
 
 default_config_filename = paths.configs_path / "defaults/interaction/interaction.yaml"
 
+default_sector_beta_filename = paths.configs_path / "defaults/interaction/sector_beta.yaml"
+
 
 @nb.jit(nopython=True)
 def get_contact_matrix(alpha, contacts, physical):
@@ -155,6 +157,7 @@ class Interaction:
         contact_matrices: dict,
         susceptibilities_by_age: Dict[str, int] = None,
         population: Population = None,
+        sector_betas = None,
     ):
         self.alpha_physical = alpha_physical
         self.beta = beta or {}
@@ -171,6 +174,7 @@ class Interaction:
             self.set_population_susceptibilities(
                 susceptibilities_by_age=susceptibilities_by_age, population=population
             )
+        self.sector_betas = sector_betas
         self.regional_compliance = None
         self.distanced_groups = set()
 
@@ -179,6 +183,8 @@ class Interaction:
         cls,
         config_filename: str = default_config_filename,
         population: Population = None,
+        sector_beta = False,
+        sector_beta_filename: str = default_sector_beta_filename
     ) -> "Interaction":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -187,12 +193,19 @@ class Interaction:
             susceptibilities_by_age = config["susceptibilities"]
         else:
             susceptibilities_by_age = None
+        if sector_beta:
+            with open(sector_beta_filename) as f:
+                sector_beta_config = yaml.load(f, Loader=yaml.FullLoader)
+            sector_betas = sector_beta_config["sector_betas"]
+        else:
+            sector_betas = None
         return Interaction(
             alpha_physical=config["alpha_physical"],
             beta=config["beta"],
             contact_matrices=contact_matrices,
             susceptibilities_by_age=susceptibilities_by_age,
             population=population,
+            sector_betas=sector_betas
         )
 
     def set_population_susceptibilities(
@@ -291,7 +304,10 @@ class Interaction:
 
     def time_step_for_group(self, delta_time: float, group: InteractiveGroup):
         contact_matrix = self.contact_matrices[group.spec]
-        beta = self.get_beta_for_group(group=group)
+        if group.spec == "company" and self.sector_betas is not None:
+            beta = self.get_beta_for_group(group=group)*float(self.sector_betas[group.sector])
+        else:            
+            beta = self.get_beta_for_group(group=group)
         school_years = group.school_years
         infected_ids = []
         for i, subgroup_id in enumerate(group.subgroups_susceptible):

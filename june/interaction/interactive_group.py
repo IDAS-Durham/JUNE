@@ -26,6 +26,9 @@ class InteractiveGroup:
         self.has_susceptible = False
         self.has_infector = False
         self.n_foreign_people = 0
+        self.spec = group.spec
+        if self.spec == "company":
+            self.sector = group.sector
         for i, subgroup in enumerate(group.subgroups):
             if (
                 people_from_abroad is not None
@@ -137,7 +140,6 @@ class InteractiveGroup:
         self.size = group.size + self.n_foreign_people
         if self.must_timestep is False:
             return
-        self.spec = group.spec
         if hasattr(group, 'region'):
             self.region = group.region
         self.infector_ids = infector_ids
