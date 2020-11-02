@@ -142,7 +142,7 @@ class TestSocialDistancing:
         while sim.timer.date <= sim.timer.final_date:
             sim.do_timestep()
             if sim.timer.date >= start_date and sim.timer.date < end_date:
-                assert sim.interaction.get_beta_for_group(group=company) == initial_betas['company']*0.
+                assert sim.interaction.get_beta_for_group(group=company) == initial_betas['company']
                 assert sim.interaction.get_beta_for_group(group=household) == initial_betas['household']
                 next(sim.timer)
                 continue

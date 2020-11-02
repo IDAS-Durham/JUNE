@@ -250,7 +250,7 @@ class TestReduceLeisureProbabilities:
         super_area = world.super_areas[0]
         region = worker.region.name
         regional_compliance = {
-                region: 0.
+                region: 0.9
         }
         leisure = generate_leisure_for_config(
             world=world, config_filename=test_config
@@ -288,12 +288,7 @@ class TestReduceLeisureProbabilities:
             == 0.2
         )
         regional_probabilities = leisure.get_probability_for_person(person=worker)
-        assert regional_probabilities['does_activity'] == 0.
-        for key, value in regional_probabilities['drags_household'].items():
-            assert value == 0.
-        for key, value in regional_probabilities['activities'].items():
-            assert value == 0.
-
+        assert pytest.approx(regional_probabilities['does_activity']*0.9, 0.1006)
         regional_compliance = None
         policies.leisure_policies.apply(
             date=sim.timer.date, leisure=leisure, regional_compliance=regional_compliance

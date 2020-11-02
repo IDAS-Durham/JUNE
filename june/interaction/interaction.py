@@ -13,7 +13,9 @@ from june import paths
 
 default_config_filename = paths.configs_path / "defaults/interaction/interaction.yaml"
 
-default_sector_beta_filename = paths.configs_path / "defaults/interaction/sector_beta.yaml"
+default_sector_beta_filename = (
+    paths.configs_path / "defaults/interaction/sector_beta.yaml"
+)
 
 
 @nb.jit(nopython=True)
@@ -157,7 +159,7 @@ class Interaction:
         contact_matrices: dict,
         susceptibilities_by_age: Dict[str, int] = None,
         population: Population = None,
-        sector_betas = None,
+        sector_betas=None,
     ):
         self.alpha_physical = alpha_physical
         self.beta = beta or {}
@@ -177,14 +179,16 @@ class Interaction:
         self.sector_betas = sector_betas
         self.regional_compliance = None
         self.distanced_groups = set()
+        self.original_betas = None
+        self.beta_reductions = None
 
     @classmethod
     def from_file(
         cls,
         config_filename: str = default_config_filename,
         population: Population = None,
-        sector_beta = False,
-        sector_beta_filename: str = default_sector_beta_filename
+        sector_beta=False,
+        sector_beta_filename: str = default_sector_beta_filename,
     ) -> "Interaction":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -205,7 +209,7 @@ class Interaction:
             contact_matrices=contact_matrices,
             susceptibilities_by_age=susceptibilities_by_age,
             population=population,
-            sector_betas=sector_betas
+            sector_betas=sector_betas,
         )
 
     def set_population_susceptibilities(
@@ -295,8 +299,11 @@ class Interaction:
 
     def get_beta_for_group(self, group: InteractiveGroup):
         if self.regional_compliance is not None and group.spec in self.distanced_groups:
-            beta = self.beta[group.spec] * self.regional_compliance.get(
-                group.region.name, 1.0
+            beta = (
+                self.original_betas[group.spec]
+                * (self.beta_reductions[group.spec] - 1.0)
+                * self.regional_compliance.get(group.region.name, 1.0)
+                + self.original_betas[group.spec]
             )
         else:
             beta = self.beta[group.spec]
@@ -305,8 +312,10 @@ class Interaction:
     def time_step_for_group(self, delta_time: float, group: InteractiveGroup):
         contact_matrix = self.contact_matrices[group.spec]
         if group.spec == "company" and self.sector_betas is not None:
-            beta = self.get_beta_for_group(group=group)*float(self.sector_betas[group.sector])
-        else:            
+            beta = self.get_beta_for_group(group=group) * float(
+                self.sector_betas[group.sector]
+            )
+        else:
             beta = self.get_beta_for_group(group=group)
         school_years = group.school_years
         infected_ids = []
