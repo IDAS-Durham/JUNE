@@ -38,6 +38,8 @@ class InteractionPolicies(PolicyCollection):
                 beta_reductions[group] *= beta_reductions_dict[group]
         for group in beta_reductions:
             interaction.beta[group] = self.original_betas[group] * beta_reductions[group]
+        interaction.original_betas = self.original_betas
+        interaction.beta_reductions = beta_reductions
 
 
 class SocialDistancing(InteractionPolicy):
