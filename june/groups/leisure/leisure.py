@@ -268,22 +268,19 @@ class Leisure:
                     )
 
     def get_probability_for_person(self, person: Person):
+        #TODO: check with Arnau that this does what we want
         prob_age_sex = self.probabilities_by_age_sex[person.sex][person.age]
         if self.regional_compliance is not None:
             regional_prob_age_sex = {}
             regional_prob_age_sex["does_activity"] = prob_age_sex[
                 "does_activity"
-            ] * self.regional_compliance.get(person.region.name, 1.0)
-            regional_prob_age_sex["activities"] = {}
+            ] / self.regional_compliance.get(person.region.name, 1.0)
+            regional_prob_age_sex["activities"] = prob_age_sex['activities']
             regional_prob_age_sex["drags_household"] = {}
-            for key, value in prob_age_sex["activities"].items():
-                regional_prob_age_sex["activities"][
-                    key
-                ] = value * self.regional_compliance.get(person.region.name, 1.0)
             for key, value in prob_age_sex["drags_household"].items():
                 regional_prob_age_sex["drags_household"][
                     key
-                ] = value * self.regional_compliance.get(person.region.name, 1.0)
+                ] = value / self.regional_compliance.get(person.region.name, 1.0)
             return regional_prob_age_sex
         else:
             return prob_age_sex
