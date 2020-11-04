@@ -1,6 +1,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('Agg')
+import matplotlib.ticker as tick
 from bisect import bisect_right
 import yaml
 import numpy as np
