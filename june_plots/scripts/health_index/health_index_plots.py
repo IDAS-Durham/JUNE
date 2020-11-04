@@ -77,14 +77,14 @@ class HealthIndexPlots:
             label=" HR male",
         )
 
-        ax.plot(ages, female_icu_rate, color=self.colors['general_2'], linewidth=3, label="ICUR female")
+        ax.plot(ages, female_icu_rate, color=self.colors['general_2'], linewidth=3, label="ITUR female")
         ax.plot(
             ages,
             male_icu_rate,
             linestyle="--",
             linewidth=2,
             color=self.colors['general_2'],
-            label="ICUR male",
+            label="ITUR male",
         )
 
         ax.plot(ages, female_death_rate, color=self.colors['general_3'], linewidth=3, label="DR female")
