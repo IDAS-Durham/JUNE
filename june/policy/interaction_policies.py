@@ -19,8 +19,10 @@ class InteractionPolicies(PolicyCollection):
     policy_type = "interaction"
     original_betas = None
 
-    def apply(self, date: datetime, interaction: Interaction):
+    def apply(self, date: datetime, interaction: Interaction, regional_compliance=None):
         # order matters, first deactivate all policies that expire in this day.
+        interaction.regional_compliance = regional_compliance
+        interaction.distanced_groups = set()
         active_policies = self.get_active(date)
         if self.original_betas is None:
             self.original_betas = deepcopy(interaction.beta)
@@ -31,9 +33,13 @@ class InteractionPolicies(PolicyCollection):
         for policy in active_policies:
             beta_reductions_dict = policy.apply()
             for group in beta_reductions_dict:
+                if beta_reductions_dict[group] != 1.:
+                    interaction.distanced_groups.add(group)
                 beta_reductions[group] *= beta_reductions_dict[group]
         for group in beta_reductions:
             interaction.beta[group] = self.original_betas[group] * beta_reductions[group]
+        interaction.original_betas = self.original_betas
+        interaction.beta_reductions = beta_reductions
 
 
 class SocialDistancing(InteractionPolicy):
