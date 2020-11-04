@@ -315,6 +315,8 @@ class Interaction:
             beta = self.get_beta_for_group(group=group) * float(
                 self.sector_betas[group.sector]
             )
+        elif group.spec == "household" and group.household_visit:
+            beta = self.get_beta_for_group(group=group) * 0.5
         else:
             beta = self.get_beta_for_group(group=group)
         school_years = group.school_years

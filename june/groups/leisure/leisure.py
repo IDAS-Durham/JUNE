@@ -353,6 +353,7 @@ class Leisure:
             )
             if activity == "household_visits":
                 group.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
+                group.household_visit = True
             person.subgroups.leisure = subgroup
             return subgroup
 
