@@ -67,7 +67,12 @@ def test__household_home_visits_leisure_integration(leisure):
             counter += 1
             assert subgroup == person2.residence
             assert subgroup.group.household_visit == True
+            # small test to mimic clear_world() in Simulator
+            if subgroup.group.spec == "household":
+                subgroup.group.household_visit = False
+            assert subgroup.group.household_visit == False
     assert np.isclose(counter, np.random.poisson(1.0 * 0.1 * 200), rtol=5)
+
 
 
 def test__do_not_visit_dead_people(leisure):
