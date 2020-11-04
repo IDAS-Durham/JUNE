@@ -1,4 +1,4 @@
-from .policy import Policy, Policies, PolicyCollection
+from .policy import Policy, Policies, PolicyCollection, regional_compliance_is_active
 from .interaction_policies import (
     InteractionPolicy,
     InteractionPolicies,

@@ -37,6 +37,7 @@ class IndividualPolicies(PolicyCollection):
         person: Person,
         days_from_start: float,
         activities: List[str],
+        regional_compliance=None,
     ):
         """
         Applies all active individual policies to the person. Stay home policies are applied first,
@@ -45,7 +46,9 @@ class IndividualPolicies(PolicyCollection):
         """
         for policy in active_policies:
             if policy.policy_subtype == "stay_home":
-                if policy.check_stay_home_condition(person, days_from_start):
+                if policy.check_stay_home_condition(
+                    person, days_from_start, regional_compliance
+                ):
                     activities = policy.apply(
                         person=person,
                         days_from_start=days_from_start,
@@ -75,7 +78,7 @@ class IndividualPolicies(PolicyCollection):
                                     guardian.residence.append(guardian)
                     return activities  # if it stays at home we don't need to check the rest
             elif policy.policy_subtype == "skip_activity":
-                if policy.check_skips_activity(person):
+                if policy.check_skips_activity(person, regional_compliance):
                     activities = policy.apply(activities=activities)
             else:
                 raise ValueError(f"policy type not expected")
@@ -100,7 +103,9 @@ class StayHome(IndividualPolicy):
         else:
             return ["residence"]
 
-    def check_stay_home_condition(self, person: Person, days_from_start: float):
+    def check_stay_home_condition(
+        self, person: Person, days_from_start: float, regional_compliance=None
+    ):
         """
         Returns true if a person must stay at home.
         Parameters
@@ -117,7 +122,9 @@ class StayHome(IndividualPolicy):
 
 
 class SevereSymptomsStayHome(StayHome):
-    def check_stay_home_condition(self, person: Person, days_from_start: float) -> bool:
+    def check_stay_home_condition(
+        self, person: Person, days_from_start: float, regional_compliance=None
+    ) -> bool:
         return (
             person.infection is not None and person.infection.tag is SymptomTag.severe
         )
@@ -158,21 +165,28 @@ class Quarantine(StayHome):
         self.household_compliance = household_compliance
         self.compliance = compliance
 
-    def check_stay_home_condition(self, person: Person, days_from_start):
+    def check_stay_home_condition(
+        self, person: Person, days_from_start, regional_compliance=None
+    ):
+        if regional_compliance is None:
+            regional_compliance = {}
         self_quarantine = False
         try:
             if person.symptoms.tag in (SymptomTag.mild, SymptomTag.severe):
                 time_of_symptoms_onset = person.infection.time_of_symptoms_onset
                 release_day = time_of_symptoms_onset + self.n_days
                 if release_day > days_from_start > time_of_symptoms_onset:
-                    if random() < self.compliance:
+                    if random() < self.compliance * regional_compliance.get(
+                        person.region.name, 1.0
+                    ):
                         self_quarantine = True
         except AttributeError:
             pass
         housemates_quarantine = person.residence.group.quarantine(
             time=days_from_start,
             quarantine_days=self.n_days_household,
-            household_compliance=self.household_compliance,
+            household_compliance=self.household_compliance
+            * regional_compliance.get(person.region.name, 1.0),
         )
         return self_quarantine or housemates_quarantine
 
@@ -189,9 +203,15 @@ class Shielding(StayHome):
         self.min_age = min_age
         self.compliance = compliance
 
-    def check_stay_home_condition(self, person: Person, days_from_start: float):
+    def check_stay_home_condition(
+        self, person: Person, days_from_start: float, regional_compliance=None
+    ):
+        if regional_compliance is None:
+            regional_compliance = {}
         if person.age >= self.min_age:
-            if self.compliance is None or random() < self.compliance:
+            if self.compliance is None or random() < self.compliance * regional_compliance.get(
+                person.region.name, 1.0
+            ):
                 return True
         return False
 
@@ -211,7 +231,7 @@ class SkipActivity(IndividualPolicy):
         self.activities_to_remove = activities_to_remove
         self.policy_subtype = "skip_activity"
 
-    def check_skips_activity(self, person: "Person") -> bool:
+    def check_skips_activity(self, person: "Person", regional_compliance=None) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
@@ -269,7 +289,7 @@ class CloseSchools(SkipActivity):
 
         return False
 
-    def check_skips_activity(self, person: "Person") -> bool:
+    def check_skips_activity(self, person: "Person", regional_compliance=None) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
@@ -296,7 +316,7 @@ class CloseUniversities(SkipActivity):
             start_time, end_time, activities_to_remove=["primary_activity"]
         )
 
-    def check_skips_activity(self, person: "Person") -> bool:
+    def check_skips_activity(self, person: "Person", regional_compliance=None) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
@@ -356,10 +376,7 @@ class CloseCompanies(SkipActivity):
         cls.key_ratio = key_ratio
         cls.random_ratio = random_ratio
 
-    def check_skips_activity(
-        self,
-        person: "Person",  # , furlough_ratio=None, key_ratio=None, random_ratio=None
-    ) -> bool:
+    def check_skips_activity(self, person: "Person", regional_compliance=None,) -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
@@ -523,7 +540,7 @@ class LimitLongCommute(SkipActivity):
             return True
         return False
 
-    def check_skips_activity(self, person: Person):
+    def check_skips_activity(self, person: Person, regional_compliance=None):
         if person.id not in self.long_distance_commuter_ids:
             return False
         else:
