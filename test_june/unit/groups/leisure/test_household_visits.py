@@ -60,13 +60,15 @@ def test__household_home_visits_leisure_integration(leisure):
     person2.busy = False
     person1.residence.group.relatives_in_households = (person2,)
     counter = 0
-    for _ in range(200):
+    for _ in range(1000):
         subgroup = leisure.get_subgroup_for_person_and_housemates(person1)
         if subgroup is not None:
             counter += 1
             assert subgroup == person2.residence
+            print (subgroup.group.household_visit)
     print(counter, np.random.poisson(1.0 * 0.1 * 200))
-    assert np.isclose(counter, np.random.poisson(1.0 * 0.1 * 200), rtol=5)
+    assert np.isclose(counter, np.random.poisson(1.0 * 0.1 * 1000), rtol=5)
+    print (counter)
 
 
 def test__do_not_visit_dead_people(leisure):
@@ -107,6 +109,7 @@ def test__people_stay_home_when_receiving_visits(leisure):
             assert subgroup.group.spec == "household"
             assert visitor in resident_household.people
             assert resident.leisure == resident.residence
+            assert 0 == 1
         resident.subgroups.leisure = None
         resident.busy = False
         visitor.busy = False
