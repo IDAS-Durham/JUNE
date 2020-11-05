@@ -31,7 +31,6 @@ class InteractiveGroup:
             self.sector = group.sector
         if self.spec == "household":
             self.household_visit = group.household_visit
-            print (self.household_visit)
         for i, subgroup in enumerate(group.subgroups):
             if (
                 people_from_abroad is not None
