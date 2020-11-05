@@ -315,6 +315,8 @@ class Interaction:
             beta = self.get_beta_for_group(group=group) * float(
                 self.sector_betas[group.sector]
             )
+        elif group.spec == "household" and group.household_visit and self.beta_reductions is not None:
+            beta = self.get_beta_for_group(group=group) * float(self.beta_reductions.get("household_visits", 1.0))
         else:
             beta = self.get_beta_for_group(group=group)
         school_years = group.school_years
