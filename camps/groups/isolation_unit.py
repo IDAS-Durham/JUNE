@@ -25,3 +25,7 @@ class IsolationUnits(Supergroup, MedicalFacilities):
     def get_closest(self):
         return self[0]
 
+    def release_patient(self, person):
+        pass 
+
+

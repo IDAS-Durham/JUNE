@@ -67,13 +67,14 @@ class Hospitalisation(MedicalCarePolicy):
         )
 
     def apply(
-        self,
-        person: Person,
-        record: Optional[Record] = None,
+        self, person: Person, record: Optional[Record] = None,
     ):
         symptoms_tag = person.infection.tag
         if symptoms_tag in hospitalised_tags:
-            if person.medical_facility is not None:
+            if (
+                person.medical_facility is not None
+                and person.medical_facility.group.spec == "hospital"
+            ):
                 patient_hospital = person.medical_facility.group
             else:
                 patient_hospital = person.super_area.closest_hospitals[0]
@@ -100,6 +101,7 @@ class Hospitalisation(MedicalCarePolicy):
         else:
             if (
                 person.medical_facility is not None
+                and person.medical_facility.group.spec == "hospital"
                 and symptoms_tag not in dead_hospital_tags
             ):
                 if record is not None:
