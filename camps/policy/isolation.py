@@ -60,7 +60,7 @@ class Isolation(MedicalCarePolicy):
                 )
         else:
             return False
-        if not person.hospitalised and person.id not in isolation_units.refused_to_go_ids:
+        if not person.hospitalised and not person.intensive_care and person.id not in isolation_units.refused_to_go_ids:
             if person.symptoms.tag.value >= SymptomTag.mild.value:  # mild or more
                 if (
                     person.infection.time_of_testing

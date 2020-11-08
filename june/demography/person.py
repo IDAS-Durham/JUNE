@@ -125,13 +125,16 @@ class Person(dataobject):
 
     @property
     def intensive_care(self):
-        if (
-            self.hospital is not None
-            and self.hospital.subgroup_type
-            == self.hospital.group.SubgroupType.icu_patients
-        ):
-            return True
-        return False
+        try:
+            return all(
+                [
+                    self.medical_facility.group.spec == "hospital",
+                    self.medical_facility.subgroup_type
+                    == self.medical_facility.group.SubgroupType.icu_patients,
+                ]
+            )
+        except AttributeError:
+            return False
 
     @property
     def housemates(self):
