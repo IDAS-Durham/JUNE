@@ -15,12 +15,13 @@ class InteractiveGroup:
     - group : group that we want to prepare for interaction.
     """
 
-    def __init__(self, group: Group, people_from_abroad=None):
+    def __init__(self, group: Group, people_from_abroad=None, save_subgroup_ids=False):
         infector_ids = []
         trans_prob = []
         susceptible_ids = []
         susceptibilities = []
         infector_subgroup_sizes = []
+        subgroup_member_ids = []
         self.subgroups_infector = []
         self.subgroups_susceptible = []
         self.has_susceptible = False
@@ -35,6 +36,8 @@ class InteractiveGroup:
                 people_abroad_data = people_from_abroad[subgroup.subgroup_type]
                 people_abroad_ids = list(people_abroad_data.keys())
                 self.n_foreign_people += len(people_abroad_ids)
+                this_subgroup_ids = [p.id for p in subgroup.people] + people_abroad_ids
+                subgroup_member_ids.append(this_subgroup_ids)
                 people_abroad_infected_ids = [
                     id
                     for id in people_abroad_ids
@@ -102,6 +105,8 @@ class InteractiveGroup:
                 if subgroup_size == 0:
                     continue
                 # get susceptible people
+                this_subgroup_ids = [p.id for p in subgroup.people]
+                subgroup_member_ids.append(this_subgroup_ids)
                 subgroup_susceptible = [
                     person for person in subgroup if person.susceptible
                 ]
@@ -135,9 +140,16 @@ class InteractiveGroup:
 
         self.must_timestep = self.has_susceptible and self.has_infector
         self.size = group.size + self.n_foreign_people
+        if save_subgroup_ids:
+            self.subgroup_member_ids = subgroup_member_ids
+        self.spec = group.spec
+        if self.spec == "school":
+            self.school_years = group.years
+        else:
+            self.school_years = None
+
         if self.must_timestep is False:
             return
-        self.spec = group.spec
         self.infector_ids = infector_ids
         self.transmission_probabilities = trans_prob
         self.susceptible_ids = susceptible_ids
@@ -145,7 +157,4 @@ class InteractiveGroup:
         # self.subgroups_susceptible = self.subgroups_susceptible
         # self.subgroups_infector = self.subgroups_infector
         self.infector_subgroup_sizes = infector_subgroup_sizes
-        if self.spec == "school":
-            self.school_years = group.years
-        else:
-            self.school_years = None
+

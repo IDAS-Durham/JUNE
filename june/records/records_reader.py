@@ -10,12 +10,21 @@ logger = logging.getLogger(__name__)
 
 
 class RecordReader:
-    def __init__(self, results_path=Path("results")):
+    def __init__(self, results_path=Path("results"), record_name: str = None):
         self.results_path = Path(results_path)
-        self.regional_summary = self.get_regional_summary(
-            self.results_path / "summary.csv"
-        )
-        self.world_summary = self.get_world_summary()
+        try:
+            self.regional_summary = self.get_regional_summary(
+                self.results_path / "summary.csv"
+            )
+        except:
+            self.regional_summary = False
+            logger.warning("No summary available to read...")
+        if self.regional_summary:
+            self.world_summary = self.get_world_summary()
+        if record_name is None:
+            self.record_name = "june_record.h5"
+        else:
+            self.record_name = record_name
 
     def decode_bytes_columns(self, df):
         str_df = df.select_dtypes([np.object])
@@ -44,8 +53,9 @@ class RecordReader:
         self, table_name: str, index: str = "id", fields: Optional[Tuple] = None
     ) -> pd.DataFrame:
         # TODO: include fields to read only certain columns
-        with tables.open_file(self.results_path / "june_record.h5", mode="r") as f:
+        with tables.open_file(self.results_path / self.record_name, mode="r") as f:
             table = getattr(f.root, table_name)
+            print(table.colnames)
             df = pd.DataFrame.from_records(table.read(), index=index)
         df = self.decode_bytes_columns(df)
         return df
