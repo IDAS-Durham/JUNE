@@ -366,7 +366,7 @@ class Demography:
         age_structure_path = data_path / "age_structure_single_year.csv"
         female_fraction_path = data_path / "female_ratios_per_age_bin.csv"
         ethnicity_structure_path = data_path / "ethnicity_broad_structure.csv"
-        socioecon_structure_path = data_path / "index_of_multiple_deprivation.csv"
+        socioecon_structure_path = data_path / "socioeconomic_index.csv"
         m_comorbidity_path = data_path / "uk_male_comorbidities.csv"
         f_comorbidity_path = data_path / "uk_female_comorbidities.csv"
         age_sex_generators = _load_age_and_sex_generators(
@@ -432,7 +432,7 @@ def _load_age_and_sex_generators(
         age_structure_df.iterrows(),
         female_ratios_df.iterrows(),
         ethnicity_structure_df.groupby(level=0),
-        socioecon_structure_df["iomd_decile"],
+        socioecon_structure_df["iomd_centile"],
     ):
         ethnicity_structure = [ethnicity_df[col].values for col in ethnicity_df.columns]
         ret[index] = AgeSexGenerator(

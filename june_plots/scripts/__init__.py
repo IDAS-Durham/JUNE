@@ -11,3 +11,4 @@ from .life_expectancy import LifeExpectancyPlots
 from .demography import DemographyPlots
 from .health_index import HealthIndexPlots
 from .contact_tracker import ContactTracker
+from .simulation_record import SimulationRecord

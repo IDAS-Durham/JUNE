@@ -164,7 +164,7 @@ class ActivityManager:
             "Attention! Some people do not have an activity in this timestep."
         )
 
-    def do_timestep(self):
+    def do_timestep(self, return_to_send_abroad=False):
         activities = self.timer.activities
         if self.leisure is not None:
             if self.policies is not None:
@@ -184,7 +184,10 @@ class ActivityManager:
             n_people_from_abroad,
             n_people_going_abroad,
         ) = self.send_and_receive_people_from_abroad(to_send_abroad)
-        return people_from_abroad, n_people_from_abroad, n_people_going_abroad
+        if return_to_send_abroad:
+            return people_from_abroad, n_people_from_abroad, n_people_going_abroad, to_send_abroad
+        else:
+            return people_from_abroad, n_people_from_abroad, n_people_going_abroad
 
     def move_people_to_active_subgroups(
         self,
