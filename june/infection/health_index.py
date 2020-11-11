@@ -16,6 +16,9 @@ default_death_home_ch_filename=paths.configs_path /'defaults/infection/health_in
 default_hosp_cases_ch_filename=paths.configs_path /'defaults/infection/health_index/hosp_over_cases_care_home.dat'
 
 
+default_physiological_age_female = paths.configs_path / "defaults/infection/physiological_age_female_no_treshold.dat"
+default_physiological_age_male = paths.configs_path / "defaults/infection/physiological_age_male_no_treshold.dat"
+
 RKIdata = [
     [2.5, 4.0 / 100.0],
     [10, 4.0 / 100.0],
@@ -59,6 +62,10 @@ class HealthIndexGenerator:
         death_hosp: dict,
         death_home: dict,
         death_home_ch: dict,
+         
+        physio_age_female: dict,
+        physio_age_male: dict,
+
         asymptomatic_ratio=0.2,
         comorbidity_multipliers: Optional[dict] = None,
         prevalence_reference_population: Optional[dict] = None,
@@ -92,6 +99,10 @@ class HealthIndexGenerator:
         self.death_hosp = death_hosp
         self.death_home = death_home
         self.death_home_ch = death_home_ch
+        
+        self.physiological_age_female = physio_age_female
+        self.physiological_age_male  =  physio_age_male
+
         self.asymptomatic_ratio = asymptomatic_ratio
         self.female_care_home_ratios = female_care_home_ratios
         self.male_care_home_ratios = male_care_home_ratios
@@ -132,6 +143,8 @@ class HealthIndexGenerator:
         death_home_ch_filename: str =default_death_home_ch_filename,
         hosp_cases_ch_filename: str =default_hosp_cases_ch_filename,
         
+        physiological_age_female_filename: str = default_physiological_age_female,
+        physiological_age_male_filename: str =  default_physiological_age_male,
         
         asymptomatic_ratio=0.2,
         comorbidity_multipliers=None,
@@ -227,6 +240,12 @@ class HealthIndexGenerator:
         else:
             male_care_home_ratios = None
             female_care_home_ratios = None
+        
+        
+        physio_age_female=pd.read_csv(physiological_age_female_filename,delimiter=' ', header=0,usecols =[i for i in range(1,101)]).values        
+        physio_age_male=pd.read_csv(physiological_age_male_filename,delimiter=' ', header=0,usecols =[i for i in range(1,101)] ).values
+        
+        
         return cls(
             hosp_cases,
             hosp_cases_ch,
@@ -234,6 +253,9 @@ class HealthIndexGenerator:
             death_hosp,
             death_home,
             death_home_ch,
+            
+            physio_age_female,
+            physio_age_male,
             
             asymptomatic_ratio,
             comorbidity_multipliers=comorbidity_multipliers,
@@ -427,6 +449,21 @@ class HealthIndexGenerator:
         
         return prob_list
 
+
+
+
+    def physio_age(self,age,sex,depravation_index):
+        if age>=90:
+           physio_age=age
+        else:
+           dep_index=int(depravation_index*100)-1
+           if sex==0:
+
+              physio_age=self.physiological_age_female[age][dep_index]
+           if sex==1:
+              physio_age=self.physiological_age_male[age][dep_index]
+        return int(round(physio_age))
+
     def __call__(self, person):
         """
         Computes the probability of having all 8 posible outcomes for all ages between 0 and 120. 
@@ -449,7 +486,15 @@ class HealthIndexGenerator:
             probabilities = self.prob_lists_ch[sex][int(person.age)-65]
         
         else:
-            probabilities = self.prob_lists[sex][min(99, int(person.age))]
+            if person.socioecon_index!=None:
+                  physiological_age=self.physio_age(int(person.age),sex,person.socioecon_index)
+                  probabilities = self.prob_lists[sex][min(99, physiological_age)]
+            else:
+                  probabilities = self.prob_lists[sex][min(99, int(person.age))]
+ 
+
+
+            #probabilities = self.prob_lists[sex][min(99, int(person.age))]
         
         
         

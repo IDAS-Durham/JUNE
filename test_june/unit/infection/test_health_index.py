@@ -115,6 +115,69 @@ def test__growing_index_ch():
 
     assert increasing_count == 0
 
+
+def test__physiological_age():
+    index_list = HealthIndexGenerator.from_file()
+    count=0
+    index_old_male=0
+    index_old_female=0
+    prob_dying_m=np.zeros(99)
+    prob_dying_f=np.zeros(99)
+    phisio_age_m=np.zeros(99)
+    for i in range(99):
+        dep_index=(float(i)+1.0)/99.0
+        phisio_age_m[i]=index_list.physio_age(75,1,dep_index)
+        index_m = index_list(Person.from_attributes(age=75, sex="m",socioecon_index=dep_index))[5]
+        index_f = index_list(Person.from_attributes(age=75, sex="f",socioecon_index=dep_index))[5]
+        
+        prob_dying_m[i]=index_m
+        prob_dying_f[i]=index_f
+        if index_old_male>=index_m:
+            count+=1
+            
+        if index_old_female>=index_f:
+            count+=1
+        index_old_male=index_m
+        index_old_female=index_f  
+    print(prob_dying_m)
+    print(phisio_age_m)
+    print(prob_dying_f)
+    assert count>=150
+    
+
+def test__phisio__age():
+    index_list = HealthIndexGenerator.from_file()
+    phisio_age_m=np.zeros(99)
+    phisio_age_f=np.zeros(99)
+    count=0
+    index_old_male=0
+    index_old_female=0
+
+    for i in range(99):
+           dep_index=(float(i)+1.0)/99.0
+           index_m=index_list.physio_age(75,1,dep_index)
+           index_f=index_list.physio_age(75,0,dep_index)
+           phisio_age_m[i]=index_m
+           phisio_age_f[i]=index_f
+           if index_old_male>=index_m:
+              count+=1
+
+           if index_old_female>=index_f:
+              count+=1
+           index_old_male=index_m
+           index_old_female=index_f
+
+    print('male',phisio_age_m,len(phisio_age_m))
+    print('female',phisio_age_f,len(phisio_age_m))
+     
+    assert count>=150
+
+
+
+
+
+
+
 def test__parse_comorbidity_prevalence():
     male_filename = paths.data_path / 'input/demography/uk_male_comorbidities.csv'
     female_filename = paths.data_path / 'input/demography/uk_female_comorbidities.csv'
@@ -129,6 +192,17 @@ def test__parse_comorbidity_prevalence():
     assert prevalence_dict['sickle_cell']['m']['0-4'] == pytest.approx(3.92152E-05, rel=0.2)
     assert prevalence_dict['tuberculosis']['f']['4-9'] == pytest.approx(5.99818E-05, rel=0.2)
     assert prevalence_dict['tuberculosis']['f']['4-9'] == pytest.approx(5.99818E-05, rel=0.2)
+
+
+
+
+
+
+
+
+
+
+
 
 def test__mean_multiplier_reference():
     comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
