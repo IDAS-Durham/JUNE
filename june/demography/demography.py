@@ -421,7 +421,6 @@ def _load_age_and_sex_generators(
     socioecon_structure_df = pd.read_csv(socioecon_structure_path, index_col=0)
     socioecon_structure_df = socioecon_structure_df.loc[area_names]
     socioecon_structure_df.sort_index(inplace=True)
-    print("example indexes: " , socioecon_structure_df["iomd_centile"])
     ret = {}
     for (
         (_, age_structure),
