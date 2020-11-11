@@ -14,7 +14,7 @@ def test__university_for_super_areas():
     areas = Areas([area])
     super_area.areas = areas
     super_areas = SuperAreas([super_area])
-    unis  = Universities.for_super_areas(super_areas)
+    unis  = Universities.for_areas(areas)
     durham_uni = unis[0]
     assert durham_uni.n_students_max == 19025
 

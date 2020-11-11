@@ -41,6 +41,11 @@ shielding:
         compliance: 0.7
         start_time: 2020-03-24
         end_time: 2020-08-01
+    3:
+        min_age: 70
+        compliance: 0.7
+        start_time: 2020-11-05
+        end_time: 2020-12-02
 
 
 close_companies:
@@ -57,85 +62,98 @@ close_companies:
         full_closure: False 
         avoid_work_probability: 0.29
         furlough_probability: 0.04
-        key_probability: 0.22
+        key_probability: 0.19
     3:
         start_time: 2020-03-27
         end_time: 2020-04-17
         full_closure: False 
         avoid_work_probability: 0.38
         furlough_probability: 0.04
-        key_probability: 0.22
+        key_probability: 0.19
     4:
         start_time: 2020-04-17
         end_time: 2020-05-01
         full_closure: False 
         avoid_work_probability: 0.36
         furlough_probability: 0.1
-        key_probability: 0.22
+        key_probability: 0.19
     5:
         start_time: 2020-05-01
         end_time: 2020-05-15
         full_closure: False 
         avoid_work_probability: 0.35
         furlough_probability: 0.25
-        key_probability: 0.22
+        key_probability: 0.19
     6:
         start_time: 2020-05-15
         end_time: 2020-06-16
         full_closure: False 
         avoid_work_probability: 0.31
         furlough_probability: 0.30
-        key_probability: 0.22
+        key_probability: 0.19
     7:
         start_time: 2020-06-16
         end_time: 2020-07-12
         full_closure: False 
         avoid_work_probability: 0.25
         furlough_probability: 0.33
-        key_probability: 0.22
+        key_probability: 0.19
     8:
         start_time: 2020-07-12
         end_time: 2020-07-26
         full_closure: False 
         avoid_work_probability: 0.21
         furlough_probability: 0.34
-        key_probability: 0.22
+        key_probability: 0.19
     9:
         start_time: 2020-07-26
         end_time: 2020-08-07
         full_closure: False 
         avoid_work_probability: 0.20
         furlough_probability: 0.34
-        key_probability: 0.22
+        key_probability: 0.19
     10:
         start_time: 2020-08-07
         end_time: 2020-08-12
         full_closure: False 
         avoid_work_probability: 0.20
         furlough_probability: 0.34
-        key_probability: 0.22
+        key_probability: 0.19
     11:
         start_time: 2020-08-12
         end_time: 2020-08-25
         full_closure: False 
         avoid_work_probability: 0.18
         furlough_probability: 0.34
-        key_probability: 0.22
+        key_probability: 0.19
     12:
         start_time: 2020-08-25
         end_time: 2020-09-09
         full_closure: False 
         avoid_work_probability: 0.15
         furlough_probability: 0.34
-        key_probability: 0.22
+        key_probability: 0.19
     13:
         start_time: 2020-09-09
-        #end_time: 2020-09-17
+        end_time: 2020-11-05
+        full_closure: False 
+        avoid_work_probability: 0.135
+        furlough_probability: 0.34
+        key_probability: 0.19
+    14:
+        start_time: 2020-11-05
+        end_time: 2020-12-02
+        full_closure: False 
+        avoid_work_probability: 0.38
+        furlough_probability: 0.34
+        key_probability: 0.19
+    15:
+        start_time: 2020-11-05
         end_time: 2021-12-01
         full_closure: False 
         avoid_work_probability: 0.135
         furlough_probability: 0.34
-        key_probability: 0.22
+        key_probability: 0.19
 
 social_distancing:
     1: 
@@ -187,8 +205,43 @@ social_distancing:
             school: 0.786
             household: 1.0
             university: 0.786
+            household_visits: 0.5
     4:
         start_time: 2020-07-04 
+        end_time: 2021-11-05
+        beta_factors:
+            box: 0.875
+            pub: 0.875
+            grocery: 0.875
+            cinema: 0.875
+            city_transport: 0.875
+            inter_city_transport: 0.875
+            hospital: 0.875
+            care_home: 0.875
+            company: 0.875
+            school: 0.875
+            household: 1.0
+            university: 0.875
+            household_visits: 0.5
+    5:
+        start_time: 2020-11-05
+        end_time: 2021-12-02
+        beta_factors:
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            city_transport: 0.75
+            inter_city_transport: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
+
+    6:
+        start_time: 2020-12-02
         end_time: 2021-12-01
         beta_factors:
             box: 0.875
@@ -443,9 +496,14 @@ mask_wearing:
 
 
 close_leisure_venue:
-    start_time: 2020-03-21
-    end_time: 2020-07-04 
-    venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
+    1:
+        start_time: 2020-03-21
+        end_time: 2020-07-04 
+        venues_to_close: ['pub', 'cinema', 'care_home_visit']
+    2:
+        start_time: 2020-11-05
+        end_time: 2020-12-02 
+        venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
 
 change_leisure_probability:
     1:
@@ -675,6 +733,22 @@ change_leisure_probability:
                 women:
                     18-65: 1.38
                     65-100: 0.917
+    15:
+        start_time: 2020-11-05
+        end_time: 2020-12-02
+        leisure_activities_probabilities:
+            household_visits:
+                men: 
+                    0-64: 0.1
+                    65-100: 0.05
+                women: 
+                    0-64: 0.1
+                    65-100: 0.05
+            care_home_visits:
+                men:
+                    0-100: 0.05
+                women:
+                    0-100: 0.05
 
 
 close_schools:

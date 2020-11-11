@@ -21,7 +21,7 @@ from june.infection.symptom_tag import SymptomTag
 from june.infection import InfectionSelector
 from june.infection_seed import InfectionSeed
 from june.interaction import Interaction, InteractiveGroup
-from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
+from june.policy import Policies, MedicalCarePolicies, InteractionPolicies,regional_compliance_is_active
 from june.time import Timer
 from june.records import Record
 from june.world import World
@@ -217,6 +217,8 @@ class Simulator:
                 for group in grouptype.members:
                     if not group.external:
                         group.clear()
+                        if group.spec == "household": # resets all household visit attributes
+                            group.household_visit = False
 
         for person in self.world.people.members:
             person.busy = False
@@ -437,9 +439,12 @@ class Simulator:
         """
         output_logger.info("==================== timestep ====================")
         tick, tickw = perf_counter(), wall_clock()
+        regional_compliance = regional_compliance_is_active(
+                    self.activity_manager.policies.regional_compliance, self.timer.date
+        )
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
-                date=self.timer.date, interaction=self.interaction,
+                date=self.timer.date, interaction=self.interaction, regional_compliance=regional_compliance
             )
         activities = self.timer.activities
         if not activities or len(activities) == 0:
@@ -449,7 +454,7 @@ class Simulator:
             people_from_abroad_dict,
             n_people_from_abroad,
             n_people_going_abroad,
-        ) = self.activity_manager.do_timestep()
+        ) = self.activity_manager.do_timestep(regional_compliance=regional_compliance)
 
         # get the supergroup instances that are active in this time step:
         active_super_groups = self.activity_manager.active_super_groups
