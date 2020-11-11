@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from june import paths
 
 default_size_nr_file = (
-    paths.data_path / "input/companies/company_size_2019.csv"
+    paths.data_path / "input/companies/company_size_2011.csv"
 )
 default_sector_nr_per_msoa_file = (
     paths.data_path / "input/companies/company_sector_2011.csv"
