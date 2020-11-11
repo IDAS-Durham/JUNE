@@ -117,7 +117,7 @@ def test__growing_index_ch():
 
 
 def test__physiological_age():
-    index_list = HealthIndexGenerator.from_file()
+    index_list = HealthIndexGenerator.from_file(physiological_correction=True)
     count=0
     index_old_male=0
     index_old_female=0

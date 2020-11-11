@@ -67,6 +67,7 @@ class HealthIndexGenerator:
         physio_age_male: dict,
 
         asymptomatic_ratio=0.2,
+        physiological_correction: bool = False,
         comorbidity_multipliers: Optional[dict] = None,
         prevalence_reference_population: Optional[dict] = None,
         male_care_home_ratios: Optional[List] = None,
@@ -101,8 +102,9 @@ class HealthIndexGenerator:
         self.death_home_ch = death_home_ch
         
         self.physiological_age_female = physio_age_female
-        self.physiological_age_male  =  physio_age_male
+        self.physiological_age_male =  physio_age_male
 
+        self.physiological_correction = physiological_correction
         self.asymptomatic_ratio = asymptomatic_ratio
         self.female_care_home_ratios = female_care_home_ratios
         self.male_care_home_ratios = male_care_home_ratios
@@ -147,6 +149,7 @@ class HealthIndexGenerator:
         physiological_age_male_filename: str =  default_physiological_age_male,
         
         asymptomatic_ratio=0.2,
+        physiological_correction: bool = False,
         comorbidity_multipliers=None,
         prevalence_reference_population=None,
         care_home_ratios_filename: Optional[str] =None,
@@ -258,6 +261,7 @@ class HealthIndexGenerator:
             physio_age_male,
             
             asymptomatic_ratio,
+            physiological_correction=physiological_correction,
             comorbidity_multipliers=comorbidity_multipliers,
             prevalence_reference_population=prevalence_reference_population,
             male_care_home_ratios=male_care_home_ratios,
@@ -452,13 +456,12 @@ class HealthIndexGenerator:
 
 
 
-    def physio_age(self,age,sex,depravation_index):
+    def physio_age(self, age, sex, deprivation_index):
         if age>=90:
            physio_age=age
         else:
-           dep_index=int(depravation_index*100)-1
+           dep_index=int(deprivation_index*100)-1
            if sex==0:
-
               physio_age=self.physiological_age_female[age][dep_index]
            if sex==1:
               physio_age=self.physiological_age_male[age][dep_index]
@@ -486,8 +489,8 @@ class HealthIndexGenerator:
             probabilities = self.prob_lists_ch[sex][int(person.age)-65]
         
         else:
-            if person.socioecon_index!=None:
-                  physiological_age=self.physio_age(int(person.age),sex,person.socioecon_index)
+            if person.socioecon_index is not None and self.physiological_correction:
+                  physiological_age = self.physio_age(int(person.age), sex, person.socioecon_index)
                   probabilities = self.prob_lists[sex][min(99, physiological_age)]
             else:
                   probabilities = self.prob_lists[sex][min(99, int(person.age))]

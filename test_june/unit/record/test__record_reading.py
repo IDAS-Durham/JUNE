@@ -135,12 +135,12 @@ def make_dummy_world(geog):
     household1.add(student1, subgroup_type=household1.SubgroupType.adults)
     uni.add(student1)
 
-    pupil1 = Person.from_attributes(age=8, sex="m", ethnicity="C1", socioecon_index=5)
+    pupil1 = Person.from_attributes(age=8, sex="m", ethnicity="C1", socioecon_index=0.5)
     pupil1.area = super_area.areas[0]
     household1.add(pupil1, subgroup_type=household1.SubgroupType.kids)
     # school.add(pupil1)
 
-    pupil2 = Person.from_attributes(age=5, sex="f", ethnicity="A1", socioecon_index=5)
+    pupil2 = Person.from_attributes(age=5, sex="f", ethnicity="A1", socioecon_index=0.5)
     pupil2.area = super_area.areas[0]
     household1.add(pupil2, subgroup_type=household1.SubgroupType.kids)
     # school.add(pupil2)
