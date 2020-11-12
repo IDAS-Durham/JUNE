@@ -148,7 +148,7 @@ close_companies:
         furlough_probability: 0.34
         key_probability: 0.19
     15:
-        start_time: 2020-11-05
+        start_time: 2020-12-03
         end_time: 2021-12-01
         full_closure: False 
         avoid_work_probability: 0.135
@@ -225,7 +225,7 @@ social_distancing:
             household_visits: 0.5
     5:
         start_time: 2020-11-05
-        end_time: 2021-12-02
+        end_time: 2020-12-03
         beta_factors:
             box: 0.75
             pub: 0.75
