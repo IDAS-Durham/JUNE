@@ -54,6 +54,7 @@ class TestSocialDistancing:
             "school": 0.7,
             "household": 1.0,
             "university": 0.7,
+            "household_visits": 0.5,
         }
         social_distance = SocialDistancing(
             start_time="2020-03-10", end_time="2020-03-12", beta_factors=beta_factors
