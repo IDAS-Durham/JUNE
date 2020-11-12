@@ -239,6 +239,7 @@ social_distancing:
             school: 0.75
             household: 1.0
             university: 0.75
+	    household_visits: 0.5
 
     6:
         start_time: 2020-12-02
@@ -256,6 +257,7 @@ social_distancing:
             school: 0.875
             household: 1.0
             university: 0.875
+	    household_visits: 0.5
 
 mask_wearing:
     1: 
