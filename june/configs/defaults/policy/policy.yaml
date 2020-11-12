@@ -797,6 +797,11 @@ close_schools:
         end_time: 2020-10-31
         years_to_close: all
         full_closure: False
+    9:
+        start_time: 2020-12-19
+        end_time: 2021-01-03
+        years_to_close: all
+        full_closure: True
 
 close_universities:
     start_time: 2020-03-20
