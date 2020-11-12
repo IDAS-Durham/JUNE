@@ -45,7 +45,7 @@ shielding:
         min_age: 70
         compliance: 0.7
         start_time: 2020-11-05
-        end_time: 2020-12-02
+        end_time: 2020-12-03
 
 
 close_companies:
@@ -142,7 +142,7 @@ close_companies:
         key_probability: 0.19
     14:
         start_time: 2020-11-05
-        end_time: 2020-12-02
+        end_time: 2020-12-03
         full_closure: False 
         avoid_work_probability: 0.38
         furlough_probability: 0.34
@@ -242,7 +242,7 @@ social_distancing:
 	    household_visits: 0.5
 
     6:
-        start_time: 2020-12-02
+        start_time: 2020-12-03
         end_time: 2021-12-01
         beta_factors:
             box: 0.875
@@ -504,7 +504,7 @@ close_leisure_venue:
         venues_to_close: ['pub', 'cinema', 'care_home_visit']
     2:
         start_time: 2020-11-05
-        end_time: 2020-12-02 
+        end_time: 2020-12-03 
         venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
 
 change_leisure_probability:
@@ -737,7 +737,7 @@ change_leisure_probability:
                     65-100: 0.917
     15:
         start_time: 2020-11-05
-        end_time: 2020-12-02
+        end_time: 2020-12-03
         leisure_activities_probabilities:
             household_visits:
                 men: 
