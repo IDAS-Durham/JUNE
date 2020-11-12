@@ -39,8 +39,144 @@
   <div class="section" id="module-june.groups.hospital">
 <span id="june-groups-hospital"></span><h1>june.groups.hospital<a class="headerlink" href="#module-june.groups.hospital" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
+<dt id="june.groups.hospital.AbstractHospital">
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.hospital.</code><code class="sig-name descname">AbstractHospital</code><a class="headerlink" href="#june.groups.hospital.AbstractHospital" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hospital functionality common for all hospitals (internal to the domain and external).</p>
+<dl class="py method">
+<dt id="june.groups.hospital.AbstractHospital.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.AbstractHospital.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.AbstractHospital.add_to_icu">
+<code class="sig-name descname">add_to_icu</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.AbstractHospital.add_to_icu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.AbstractHospital.add_to_ward">
+<code class="sig-name descname">add_to_ward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.AbstractHospital.add_to_ward" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.AbstractHospital.allocate_patient">
+<code class="sig-name descname">allocate_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.AbstractHospital.allocate_patient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocate a patient inside the hospital, in the ward, in the ICU, or transfer.
+To correctly log if the person has been just admitted, transfered, or released,
+we return a few flags:
+- “ward_admitted” : this person has been admitted to the ward.
+- “icu_admitted” : this person has been directly admitted to icu.
+- “ward_transferred” : this person has been transferred  to ward (from icu)
+- “icu_transferred” : this person has been transferred to icu (from ward)
+- “no_change” : no change respect to last time step.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.AbstractHospital.release_patient">
+<code class="sig-name descname">release_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.AbstractHospital.release_patient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases patient from hospital.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.AbstractHospital.remove_from_icu">
+<code class="sig-name descname">remove_from_icu</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.AbstractHospital.remove_from_icu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.AbstractHospital.remove_from_ward">
+<code class="sig-name descname">remove_from_ward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.AbstractHospital.remove_from_ward" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="june.groups.hospital.ExternalHospital">
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.hospital.</code><code class="sig-name descname">ExternalHospital</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span></em>, <em class="sig-param"><span class="n">spec</span></em>, <em class="sig-param"><span class="n">domain_id</span></em>, <em class="sig-param"><span class="n">region_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.ExternalHospital" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="june.groups.hospital.ExternalHospital.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span></em>, <em class="sig-param"><span class="n">spec</span></em>, <em class="sig-param"><span class="n">domain_id</span></em>, <em class="sig-param"><span class="n">region_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.ExternalHospital.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.ExternalHospital.add_to_icu">
+<code class="sig-name descname">add_to_icu</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.ExternalHospital.add_to_icu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.ExternalHospital.add_to_ward">
+<code class="sig-name descname">add_to_ward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.ExternalHospital.add_to_ward" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.ExternalHospital.allocate_patient">
+<code class="sig-name descname">allocate_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.ExternalHospital.allocate_patient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocate a patient inside the hospital, in the ward, in the ICU, or transfer.
+To correctly log if the person has been just admitted, transfered, or released,
+we return a few flags:
+- “ward_admitted” : this person has been admitted to the ward.
+- “icu_admitted” : this person has been directly admitted to icu.
+- “ward_transferred” : this person has been transferred  to ward (from icu)
+- “icu_transferred” : this person has been transferred to icu (from ward)
+- “no_change” : no change respect to last time step.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.ExternalHospital.release_patient">
+<code class="sig-name descname">release_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.ExternalHospital.release_patient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases patient from hospital.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.ExternalHospital.remove_from_icu">
+<code class="sig-name descname">remove_from_icu</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.ExternalHospital.remove_from_icu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.ExternalHospital.remove_from_ward">
+<code class="sig-name descname">remove_from_ward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.ExternalHospital.remove_from_ward" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.hospital.ExternalHospital.domain_id">
+<code class="sig-name descname">domain_id</code><a class="headerlink" href="#june.groups.hospital.ExternalHospital.domain_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.hospital.ExternalHospital.external">
+<code class="sig-name descname">external</code><em class="property"> = True</em><a class="headerlink" href="#june.groups.hospital.ExternalHospital.external" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.hospital.ExternalHospital.icu_ids">
+<code class="sig-name descname">icu_ids</code><a class="headerlink" href="#june.groups.hospital.ExternalHospital.icu_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.hospital.ExternalHospital.id">
+<code class="sig-name descname">id</code><a class="headerlink" href="#june.groups.hospital.ExternalHospital.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.hospital.ExternalHospital.region_name">
+<code class="sig-name descname">region_name</code><a class="headerlink" href="#june.groups.hospital.ExternalHospital.region_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.hospital.ExternalHospital.spec">
+<code class="sig-name descname">spec</code><a class="headerlink" href="#june.groups.hospital.ExternalHospital.spec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.hospital.ExternalHospital.ward_ids">
+<code class="sig-name descname">ward_ids</code><a class="headerlink" href="#june.groups.hospital.ExternalHospital.ward_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="june.groups.hospital.Hospital">
-<em class="property">class </em><code class="sig-prename descclassname">june.groups.hospital.</code><code class="sig-name descname">Hospital</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">n_icu_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trust_code</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospital" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.hospital.</code><code class="sig-name descname">Hospital</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">n_icu_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trust_code</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospital" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Hospital class represents a hospital and contains information about
 its patients and workers - the latter being the usual “people”.</p>
 <p>We currently use three subgroups: 
@@ -53,7 +189,7 @@ its patients and workers - the latter being the usual “people”.</p>
 </dd>
 <dt>n_icu_beds:</dt><dd><p>total number of ICU beds in the hospital</p>
 </dd>
-<dt>super_area:</dt><dd><p>name of the super area the hospital belongs to</p>
+<dt>area:</dt><dd><p>name of the super area the hospital belongs to</p>
 </dd>
 <dt>coordinates:</dt><dd><p>latitude and longitude</p>
 </dd>
@@ -81,14 +217,14 @@ its patients and workers - the latter being the usual “people”.</p>
 
 <dl class="py method">
 <dt id="june.groups.hospital.Hospital.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">n_icu_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">super_area</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trust_code</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospital.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">n_icu_beds</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trust_code</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospital.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a Hospital given its description.</p>
 <dl class="simple">
 <dt>n_beds:</dt><dd><p>total number of regular beds in the hospital</p>
 </dd>
 <dt>n_icu_beds:</dt><dd><p>total number of ICU beds in the hospital</p>
 </dd>
-<dt>super_area:</dt><dd><p>name of the super area the hospital belongs to</p>
+<dt>area:</dt><dd><p>name of the super area the hospital belongs to</p>
 </dd>
 <dt>coordinates:</dt><dd><p>latitude and longitude</p>
 </dd>
@@ -126,14 +262,26 @@ a student is added to the subgroup matching their age.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.groups.hospital.Hospital.add_as_patient">
-<code class="sig-name descname">add_as_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospital.add_as_patient" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add patient to hospital, depending on their healty information tag
-they’ll go to intensive care or regular beds.</p>
-<dl class="simple">
-<dt>person:</dt><dd><p>person instance to add as patient</p>
-</dd>
-</dl>
+<dt id="june.groups.hospital.Hospital.add_to_icu">
+<code class="sig-name descname">add_to_icu</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospital.add_to_icu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.Hospital.add_to_ward">
+<code class="sig-name descname">add_to_ward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospital.add_to_ward" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.Hospital.allocate_patient">
+<code class="sig-name descname">allocate_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospital.allocate_patient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocate a patient inside the hospital, in the ward, in the ICU, or transfer.
+To correctly log if the person has been just admitted, transfered, or released,
+we return a few flags:
+- “ward_admitted” : this person has been admitted to the ward.
+- “icu_admitted” : this person has been directly admitted to icu.
+- “ward_transferred” : this person has been transferred  to ward (from icu)
+- “icu_transferred” : this person has been transferred to icu (from ward)
+- “no_change” : no change respect to last time step.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -148,8 +296,19 @@ they’ll go to intensive care or regular beds.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.groups.hospital.Hospital.release_as_patient">
-<code class="sig-name descname">release_as_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospital.release_as_patient" title="Permalink to this definition">¶</a></dt>
+<dt id="june.groups.hospital.Hospital.release_patient">
+<code class="sig-name descname">release_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospital.release_patient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases patient from hospital.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.Hospital.remove_from_icu">
+<code class="sig-name descname">remove_from_icu</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospital.remove_from_icu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.Hospital.remove_from_ward">
+<code class="sig-name descname">remove_from_ward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospital.remove_from_ward" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -168,6 +327,11 @@ from the subgroup to which they belong</p>
 <code class="sig-name descname">_abc_impl</code><em class="property"> = &lt;_abc_data object&gt;</em><a class="headerlink" href="#june.groups.hospital.Hospital._abc_impl" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt id="june.groups.hospital.Hospital.area">
+<code class="sig-name descname">area</code><a class="headerlink" href="#june.groups.hospital.Hospital.area" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt id="june.groups.hospital.Hospital.contains_people">
 <em class="property">property </em><code class="sig-name descname">contains_people</code><a class="headerlink" href="#june.groups.hospital.Hospital.contains_people" title="Permalink to this definition">¶</a></dt>
@@ -184,6 +348,11 @@ from the subgroup to which they belong</p>
 <em class="property">property </em><code class="sig-name descname">dead</code><a class="headerlink" href="#june.groups.hospital.Hospital.dead" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt id="june.groups.hospital.Hospital.external">
+<code class="sig-name descname">external</code><em class="property"> = False</em><a class="headerlink" href="#june.groups.hospital.Hospital.external" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt id="june.groups.hospital.Hospital.full">
 <em class="property">property </em><code class="sig-name descname">full</code><a class="headerlink" href="#june.groups.hospital.Hospital.full" title="Permalink to this definition">¶</a></dt>
@@ -197,8 +366,8 @@ from the subgroup to which they belong</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.groups.hospital.Hospital.icu_patients">
-<em class="property">property </em><code class="sig-name descname">icu_patients</code><a class="headerlink" href="#june.groups.hospital.Hospital.icu_patients" title="Permalink to this definition">¶</a></dt>
+<dt id="june.groups.hospital.Hospital.icu">
+<em class="property">property </em><code class="sig-name descname">icu</code><a class="headerlink" href="#june.groups.hospital.Hospital.icu" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -239,11 +408,6 @@ the name fo the class with the id of the instance.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.groups.hospital.Hospital.patients">
-<em class="property">property </em><code class="sig-name descname">patients</code><a class="headerlink" href="#june.groups.hospital.Hospital.patients" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt id="june.groups.hospital.Hospital.people">
 <em class="property">property </em><code class="sig-name descname">people</code><a class="headerlink" href="#june.groups.hospital.Hospital.people" title="Permalink to this definition">¶</a></dt>
 <dd><p>All the people in this group</p>
@@ -252,6 +416,16 @@ the name fo the class with the id of the instance.</p>
 <dl class="py method">
 <dt id="june.groups.hospital.Hospital.recovered">
 <em class="property">property </em><code class="sig-name descname">recovered</code><a class="headerlink" href="#june.groups.hospital.Hospital.recovered" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.Hospital.region">
+<em class="property">property </em><code class="sig-name descname">region</code><a class="headerlink" href="#june.groups.hospital.Hospital.region" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.Hospital.region_name">
+<em class="property">property </em><code class="sig-name descname">region_name</code><a class="headerlink" href="#june.groups.hospital.Hospital.region_name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -284,9 +458,9 @@ the name fo the class with the id of the instance.</p>
 <code class="sig-name descname">subgroups</code><a class="headerlink" href="#june.groups.hospital.Hospital.subgroups" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="py method">
 <dt id="june.groups.hospital.Hospital.super_area">
-<code class="sig-name descname">super_area</code><a class="headerlink" href="#june.groups.hospital.Hospital.super_area" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">super_area</code><a class="headerlink" href="#june.groups.hospital.Hospital.super_area" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -299,11 +473,16 @@ the name fo the class with the id of the instance.</p>
 <code class="sig-name descname">trust_code</code><a class="headerlink" href="#june.groups.hospital.Hospital.trust_code" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt id="june.groups.hospital.Hospital.ward">
+<em class="property">property </em><code class="sig-name descname">ward</code><a class="headerlink" href="#june.groups.hospital.Hospital.ward" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt id="june.groups.hospital.Hospitals">
-<em class="property">class </em><code class="sig-prename descclassname">june.groups.hospital.</code><code class="sig-name descname">Hospitals</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hospitals</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.groups.hospital.Hospital" title="june.groups.hospital.Hospital">Hospital</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">neighbour_hospitals</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em>, <em class="sig-param"><span class="n">box_mode</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospitals" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.hospital.</code><code class="sig-name descname">Hospitals</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hospitals</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.groups.hospital.Hospital" title="june.groups.hospital.Hospital">Hospital</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">neighbour_hospitals</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em>, <em class="sig-param"><span class="n">box_mode</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ball_tree</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospitals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a group of hospitals, and provide functionality to locate patients
 to a nearby hospital. It will check in order the first <code class="docutils literal notranslate"><span class="pre">`neighbour_hospitals`</span></code>,
 when one has space available the patient is allocated to it. If none of the closest
@@ -319,7 +498,7 @@ overflow</p>
 </dl>
 <dl class="py method">
 <dt id="june.groups.hospital.Hospitals.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hospitals</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.groups.hospital.Hospital" title="june.groups.hospital.Hospital">Hospital</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">neighbour_hospitals</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em>, <em class="sig-param"><span class="n">box_mode</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospitals.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hospitals</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.groups.hospital.Hospital" title="june.groups.hospital.Hospital">Hospital</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">neighbour_hospitals</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em>, <em class="sig-param"><span class="n">box_mode</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ball_tree</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospitals.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a group of hospitals, and provide functionality to locate patients
 to a nearby hospital. It will check in order the first <code class="docutils literal notranslate"><span class="pre">`neighbour_hospitals`</span></code>,
 when one has space available the patient is allocated to it. If none of the closest
@@ -336,21 +515,24 @@ overflow</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.groups.hospital.Hospitals.allocate_patient">
-<code class="sig-name descname">allocate_patient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n">Person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospitals.allocate_patient" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to allocate patients into close by hospitals with available beds.
-If there are no available beds within a maximum distance, the patient is
-not allocated.</p>
-<dl class="simple">
-<dt>person: </dt><dd><p>patient to allocate into a hospital</p>
-</dd>
-</dl>
-<p>hospital with availability</p>
+<dt id="june.groups.hospital.Hospitals._make_member_ids_dict">
+<code class="sig-name descname">_make_member_ids_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">members</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospitals._make_member_ids_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes a dictionary with the ids of the members.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="june.groups.hospital.Hospitals.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">group</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospitals.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.Hospitals.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospitals.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="june.groups.hospital.Hospitals.create_hospital_from_df_row">
-<em class="property">classmethod </em><code class="sig-name descname">create_hospital_from_df_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_area</span></em>, <em class="sig-param"><span class="n">row</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospitals.create_hospital_from_df_row" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">create_hospital_from_df_row</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">area</span></em>, <em class="sig-param"><span class="n">row</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospitals.create_hospital_from_df_row" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -390,6 +572,30 @@ not allocated.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="june.groups.hospital.Hospitals.get_closest_hospitals_idx">
+<code class="sig-name descname">get_closest_hospitals_idx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">k</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span><a class="headerlink" href="#june.groups.hospital.Hospitals.get_closest_hospitals_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the k-th closest hospital to a given coordinate</p>
+<dl class="simple">
+<dt>coordinates: </dt><dd><p>latitude and longitude</p>
+</dd>
+<dt>k:</dt><dd><p>k-th neighbour</p>
+</dd>
+</dl>
+<p>ID of the k-th closest hospital</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.Hospitals.get_from_id">
+<code class="sig-name descname">get_from_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.hospital.Hospitals.get_from_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.Hospitals.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.groups.hospital.Hospitals.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the super group.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="june.groups.hospital.Hospitals.init_hospitals">
 <code class="sig-name descname">init_hospitals</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hospital_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="#june.groups.hospital.Hospital" title="june.groups.hospital.Hospital">june.groups.hospital.Hospital</a><span class="p">]</span><a class="headerlink" href="#june.groups.hospital.Hospitals.init_hospitals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create Hospital objects with the right characteristics,
@@ -412,7 +618,22 @@ to query the closest hospital to a given location.</p>
 <p>Tree to query nearby schools</p>
 </dd></dl>
 
+<dl class="py method">
+<dt id="june.groups.hospital.Hospitals.group_spec">
+<em class="property">property </em><code class="sig-name descname">group_spec</code><a class="headerlink" href="#june.groups.hospital.Hospitals.group_spec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.hospital.Hospitals.member_ids">
+<em class="property">property </em><code class="sig-name descname">member_ids</code><a class="headerlink" href="#june.groups.hospital.Hospitals.member_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
+
+<dl class="py function">
+<dt id="june.groups.hospital.random">
+<code class="sig-prename descclassname">june.groups.hospital.</code><code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#june.groups.hospital.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 

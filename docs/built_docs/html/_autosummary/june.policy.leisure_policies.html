@@ -70,7 +70,7 @@
 
 <dl class="py method">
 <dt id="june.policy.leisure_policies.ChangeLeisureProbability.apply">
-<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em>, <em class="sig-param"><span class="n">leisure</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.leisure.leisure.html#june.groups.leisure.leisure.Leisure" title="june.groups.leisure.leisure.Leisure">june.groups.leisure.leisure.Leisure</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.leisure_policies.ChangeLeisureProbability.apply" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">leisure</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.leisure.leisure.html#june.groups.leisure.leisure.Leisure" title="june.groups.leisure.leisure.Leisure">june.groups.leisure.leisure.Leisure</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.leisure_policies.ChangeLeisureProbability.apply" title="Permalink to this definition">¶</a></dt>
 <dd><p>Changes probabilities of doing leisure activities according to the policies specified.
 The current probabilities are stored in the policies, and restored at the end of the policy 
 time span. Keep this in mind when trying to stack policies that modify the same social venue.</p>
@@ -141,7 +141,7 @@ are translated into datetime.datetime to be used by the simulator</p>
 
 <dl class="py method">
 <dt id="june.policy.leisure_policies.CloseLeisureVenue.apply">
-<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime.datetime</span></em>, <em class="sig-param"><span class="n">leisure</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.leisure.leisure.html#june.groups.leisure.leisure.Leisure" title="june.groups.leisure.leisure.Leisure">june.groups.leisure.leisure.Leisure</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.leisure_policies.CloseLeisureVenue.apply" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">leisure</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.leisure.leisure.html#june.groups.leisure.leisure.Leisure" title="june.groups.leisure.leisure.Leisure">june.groups.leisure.leisure.Leisure</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.leisure_policies.CloseLeisureVenue.apply" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -194,7 +194,13 @@ are translated into datetime.datetime to be used by the simulator</p>
 <dl class="py method">
 <dt id="june.policy.leisure_policies.LeisurePolicies.apply">
 <code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">date: &lt;module 'datetime' from '/home/sadie/anaconda3/envs/june/lib/python3.8/datetime.py'&gt;</em>, <em class="sig-param">leisure: june.groups.leisure.leisure.Leisure</em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.leisure_policies.LeisurePolicies.apply" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Applies leisure policies. There are currently two types of leisure policies
+implemented: CloseLeisureVenue, and ChangeLeisureProbability. To ensure
+compatibility when adding multiple policies of the same type, we “clear” the
+leisure module at the beginning of each application, ie, we set closed_venues = set(),
+and the original probabilities for each social venue distributor. We then apply 
+the policies currently active at the given date.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt id="june.policy.leisure_policies.LeisurePolicies.from_policies">
@@ -204,6 +210,11 @@ are translated into datetime.datetime to be used by the simulator</p>
 <dl class="py method">
 <dt id="june.policy.leisure_policies.LeisurePolicies.get_active">
 <code class="sig-name descname">get_active</code><span class="sig-paren">(</span><em class="sig-param">date: &lt;module 'datetime' from '/home/sadie/anaconda3/envs/june/lib/python3.8/datetime.py'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#june.policy.leisure_policies.LeisurePolicies.get_active" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.policy.leisure_policies.LeisurePolicies.original_leisure_probabilities_per_venue">
+<code class="sig-name descname">original_leisure_probabilities_per_venue</code><em class="property"> = None</em><a class="headerlink" href="#june.policy.leisure_policies.LeisurePolicies.original_leisure_probabilities_per_venue" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">

@@ -15,7 +15,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="june.groups.travel.travelcity_distributor" href="june.groups.travel.travelcity_distributor.html" />
+    <link rel="next" title="june.groups.travel.mode_of_transport" href="june.groups.travel.mode_of_transport.html" />
     <link rel="prev" title="june.groups.leisure.social_venue_distributor" href="june.groups.leisure.social_venue_distributor.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
@@ -29,7 +29,7 @@
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.groups.travel.travelcity_distributor.html">june.groups.travel.travelcity_distributor</a>&#160;&#160;»
+        <a href="june.groups.travel.mode_of_transport.html">june.groups.travel.mode_of_transport</a>&#160;&#160;»
         </p>
 
       </div>
@@ -63,7 +63,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py class">
 <dt id="june.groups.leisure.social_venue.SocialVenue">
-<em class="property">class </em><code class="sig-prename descclassname">june.groups.leisure.social_venue.</code><code class="sig-name descname">SocialVenue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_size</span><span class="o">=</span><span class="default_value">inf</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenue" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.leisure.social_venue.</code><code class="sig-name descname">SocialVenue</code><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenue" title="Permalink to this definition">¶</a></dt>
 <dd><p>A group of people such as in a hospital or a school.</p>
 <p>If a spec attribute is not defined in the child class then it is generated
 by converting the class name into snakecase.</p>
@@ -80,7 +80,7 @@ by converting the class name into snakecase.</p>
 
 <dl class="py method">
 <dt id="june.groups.leisure.social_venue.SocialVenue.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_size</span><span class="o">=</span><span class="default_value">inf</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenue.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenue.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>A group of people such as in a hospital or a school.</p>
 <p>If a spec attribute is not defined in the child class then it is generated
 by converting the class name into snakecase.</p>
@@ -122,11 +122,6 @@ a student is added to the subgroup matching their age.</p>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="june.groups.leisure.social_venue.SocialVenue.get_leisure_subgroup">
-<code class="sig-name descname">get_leisure_subgroup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenue.get_leisure_subgroup" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt id="june.groups.leisure.social_venue.SocialVenue.get_spec">
 <code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenue.get_spec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the speciailization of the group.</p>
@@ -160,6 +155,11 @@ from the subgroup to which they belong</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt id="june.groups.leisure.social_venue.SocialVenue.external">
+<code class="sig-name descname">external</code><em class="property"> = False</em><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenue.external" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt id="june.groups.leisure.social_venue.SocialVenue.id">
 <code class="sig-name descname">id</code><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenue.id" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -172,6 +172,11 @@ from the subgroup to which they belong</p>
 <dl class="py method">
 <dt id="june.groups.leisure.social_venue.SocialVenue.infected">
 <em class="property">property </em><code class="sig-name descname">infected</code><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenue.infected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.groups.leisure.social_venue.SocialVenue.max_size">
+<code class="sig-name descname">max_size</code><em class="property"> = inf</em><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenue.max_size" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -228,6 +233,11 @@ the name fo the class with the id of the instance.</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt id="june.groups.leisure.social_venue.SocialVenue.super_area">
+<em class="property">property </em><code class="sig-name descname">super_area</code><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenue.super_area" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="june.groups.leisure.social_venue.SocialVenue.susceptible">
 <em class="property">property </em><code class="sig-name descname">susceptible</code><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenue.susceptible" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -236,22 +246,44 @@ the name fo the class with the id of the instance.</p>
 
 <dl class="py class">
 <dt id="june.groups.leisure.social_venue.SocialVenues">
-<em class="property">class </em><code class="sig-prename descclassname">june.groups.leisure.social_venue.</code><code class="sig-name descname">SocialVenues</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">social_venues</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.groups.leisure.social_venue.SocialVenue" title="june.groups.leisure.social_venue.SocialVenue">june.groups.leisure.social_venue.SocialVenue</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.leisure.social_venue.</code><code class="sig-name descname">SocialVenues</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">social_venues</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.groups.leisure.social_venue.SocialVenue" title="june.groups.leisure.social_venue.SocialVenue">june.groups.leisure.social_venue.SocialVenue</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">make_tree</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt id="june.groups.leisure.social_venue.SocialVenues.social_venue_class">
+<code class="sig-name descname">social_venue_class</code><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.social_venue_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#june.groups.leisure.social_venue.SocialVenue" title="june.groups.leisure.social_venue.SocialVenue"><code class="xref py py-class docutils literal notranslate"><span class="pre">SocialVenue</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="june.groups.leisure.social_venue.SocialVenues.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">social_venues</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.groups.leisure.social_venue.SocialVenue" title="june.groups.leisure.social_venue.SocialVenue">june.groups.leisure.social_venue.SocialVenue</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">social_venues</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#june.groups.leisure.social_venue.SocialVenue" title="june.groups.leisure.social_venue.SocialVenue">june.groups.leisure.social_venue.SocialVenue</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">make_tree</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.groups.leisure.social_venue.SocialVenues.add_to_super_areas">
-<code class="sig-name descname">add_to_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas">june.demography.geography.SuperAreas</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.add_to_super_areas" title="Permalink to this definition">¶</a></dt>
+<dt id="june.groups.leisure.social_venue.SocialVenues._make_member_ids_dict">
+<code class="sig-name descname">_make_member_ids_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">members</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues._make_member_ids_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes a dictionary with the ids of the members.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.social_venue.SocialVenues.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">group</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.social_venue.SocialVenues.add_to_areas">
+<code class="sig-name descname">add_to_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Areas" title="june.geography.geography.Areas">june.geography.geography.Areas</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.add_to_areas" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds all venues to the closest super area</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.groups.leisure.social_venue.SocialVenues.for_areas">
-<em class="property">classmethod </em><code class="sig-name descname">for_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Area" title="june.demography.geography.Area">june.demography.geography.Area</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">venues_per_capita</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">venues_per_area</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.for_areas" title="Permalink to this definition">¶</a></dt>
+<dt id="june.groups.leisure.social_venue.SocialVenues.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.social_venue.SocialVenues.distribute_for_areas">
+<em class="property">classmethod </em><code class="sig-name descname">distribute_for_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Area" title="june.geography.geography.Area">june.geography.geography.Area</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">venues_per_capita</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">venues_per_area</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.distribute_for_areas" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates social venues in the given areas.</p>
 <dl class="simple">
 <dt>areas</dt><dd><p>list of areas to generate the venues in</p>
@@ -264,18 +296,8 @@ the name fo the class with the id of the instance.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.groups.leisure.social_venue.SocialVenues.for_box_mode">
-<em class="property">classmethod </em><code class="sig-name descname">for_box_mode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.for_box_mode" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.groups.leisure.social_venue.SocialVenues.for_geography">
-<em class="property">classmethod </em><code class="sig-name descname">for_geography</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.for_geography" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.groups.leisure.social_venue.SocialVenues.for_super_areas">
-<em class="property">classmethod </em><code class="sig-name descname">for_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperArea" title="june.demography.geography.SuperArea">june.demography.geography.SuperArea</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">venues_per_super_area</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">venues_per_capita</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.for_super_areas" title="Permalink to this definition">¶</a></dt>
+<dt id="june.groups.leisure.social_venue.SocialVenues.distribute_for_super_areas">
+<em class="property">classmethod </em><code class="sig-name descname">distribute_for_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.geography.geography.html#june.geography.geography.SuperArea" title="june.geography.geography.SuperArea">june.geography.geography.SuperArea</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">venues_per_super_area</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">venues_per_capita</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.distribute_for_super_areas" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates social venues in the given super areas.</p>
 <dl class="simple">
 <dt>super_areas</dt><dd><p>list of areas to generate the venues in</p>
@@ -286,8 +308,28 @@ the name fo the class with the id of the instance.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="june.groups.leisure.social_venue.SocialVenues.for_areas">
+<em class="property">classmethod </em><code class="sig-name descname">for_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Areas" title="june.geography.geography.Areas">june.geography.geography.Areas</a></span></em>, <em class="sig-param"><span class="n">coordinates_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.for_areas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.social_venue.SocialVenues.for_box_mode">
+<em class="property">classmethod </em><code class="sig-name descname">for_box_mode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.for_box_mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.social_venue.SocialVenues.for_geography">
+<em class="property">classmethod </em><code class="sig-name descname">for_geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geography</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Geography" title="june.geography.geography.Geography">june.geography.geography.Geography</a></span></em>, <em class="sig-param"><span class="n">coordinates_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.for_geography" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.social_venue.SocialVenues.for_super_areas">
+<em class="property">classmethod </em><code class="sig-name descname">for_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.geography.geography.html#june.geography.geography.SuperArea" title="june.geography.geography.SuperArea">june.geography.geography.SuperArea</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">coordinates_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.for_super_areas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="june.groups.leisure.social_venue.SocialVenues.from_coordinates">
-<em class="property">classmethod </em><code class="sig-name descname">from_coordinates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">List<span class="p">[</span>numpy.array<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Areas" title="june.demography.geography.Areas">june.demography.geography.Areas</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_distance_to_area</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.from_coordinates" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_coordinates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">List<span class="p">[</span>numpy.array<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Areas" title="june.geography.geography.Areas">june.geography.geography.Areas</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">max_distance_to_area</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.from_coordinates" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -308,6 +350,17 @@ the name fo the class with the id of the instance.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="june.groups.leisure.social_venue.SocialVenues.get_from_id">
+<code class="sig-name descname">get_from_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.get_from_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.social_venue.SocialVenues.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the super group.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="june.groups.leisure.social_venue.SocialVenues.get_venues_in_radius">
 <code class="sig-name descname">get_venues_in_radius</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">5</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.get_venues_in_radius" title="Permalink to this definition">¶</a></dt>
 <dd><p>Queries the ball tree for the closests venues.</p>
@@ -324,6 +377,16 @@ the name fo the class with the id of the instance.</p>
 <code class="sig-name descname">make_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.make_tree" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt id="june.groups.leisure.social_venue.SocialVenues.group_spec">
+<em class="property">property </em><code class="sig-name descname">group_spec</code><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.group_spec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.leisure.social_venue.SocialVenues.member_ids">
+<em class="property">property </em><code class="sig-name descname">member_ids</code><a class="headerlink" href="#june.groups.leisure.social_venue.SocialVenues.member_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </div>
@@ -337,7 +400,7 @@ the name fo the class with the id of the instance.</p>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.groups.travel.travelcity_distributor.html">june.groups.travel.travelcity_distributor</a>&#160;&#160;»
+        <a href="june.groups.travel.mode_of_transport.html">june.groups.travel.mode_of_transport</a>&#160;&#160;»
         </p>
 
       </div>
