@@ -14,8 +14,11 @@ class InteractiveGroup:
     ----------
     - group : group that we want to prepare for interaction.
     """
-
     def __init__(self, group: Group, people_from_abroad=None):
+        """
+        This function is very long to avoid function calls for performance reasons.
+        InteractiveGroups are created millions of times.
+        """
         infector_ids = []
         trans_prob = []
         susceptible_ids = []
@@ -148,10 +151,11 @@ class InteractiveGroup:
         self.transmission_probabilities = trans_prob
         self.susceptible_ids = susceptible_ids
         self.susceptibilities = susceptibilities
-        # self.subgroups_susceptible = self.subgroups_susceptible
-        # self.subgroups_infector = self.subgroups_infector
         self.infector_subgroup_sizes = infector_subgroup_sizes
         if self.spec == "school":
             self.school_years = group.years
         else:
             self.school_years = None
+
+class InteractiveSchool(InteractiveGroup):
+    pass

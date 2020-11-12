@@ -4,9 +4,11 @@ import numba as nb
 from random import random
 from typing import List, Dict
 from itertools import chain
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.demography import Population
+    from june.interaction.interactive_group import InteractiveGroup
 
-from june.interaction.interactive_group import InteractiveGroup
-from june.demography import Population
 from june.exc import InteractionError
 from june.utils import parse_age_probabilities
 from june import paths
@@ -158,7 +160,7 @@ class Interaction:
         beta: Dict[str, float],
         contact_matrices: dict,
         susceptibilities_by_age: Dict[str, int] = None,
-        population: Population = None,
+        population: "Population" = None,
         sector_betas=None,
     ):
         self.alpha_physical = alpha_physical
@@ -186,7 +188,7 @@ class Interaction:
     def from_file(
         cls,
         config_filename: str = default_config_filename,
-        population: Population = None,
+        population: "Population" = None,
         sector_beta=False,
         sector_beta_filename: str = default_sector_beta_filename,
     ) -> "Interaction":
@@ -213,7 +215,7 @@ class Interaction:
         )
 
     def set_population_susceptibilities(
-        self, susceptibilities_by_age: dict, population: Population
+        self, susceptibilities_by_age: dict, population: "Population"
     ):
         """
         Changes the population susceptibility to the disease.
@@ -297,7 +299,7 @@ class Interaction:
             )
         return contact_matrix
 
-    def get_beta_for_group(self, group: InteractiveGroup):
+    def get_beta_for_group(self, group: "InteractiveGroup"):
         if self.regional_compliance is not None and group.spec in self.distanced_groups:
             beta = (
                 self.original_betas[group.spec]
@@ -309,7 +311,7 @@ class Interaction:
             beta = self.beta[group.spec]
         return beta
 
-    def time_step_for_group(self, delta_time: float, group: InteractiveGroup):
+    def time_step_for_group(self, delta_time: float, group: "InteractiveGroup"):
         contact_matrix = self.contact_matrices[group.spec]
         if group.spec == "company" and self.sector_betas is not None:
             beta = self.get_beta_for_group(group=group) * float(
