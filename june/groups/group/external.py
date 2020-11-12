@@ -24,9 +24,9 @@ class ExternalSubgroup:
         return self.group.id
 
     @property
-    def group_spec(self):
-        return self.group.spec
-
-    @property
     def domain_id(self):
         return self.group.domain_id
+    
+    @property
+    def spec(self):
+        return self.group.spec
