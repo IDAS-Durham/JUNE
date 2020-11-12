@@ -24,6 +24,23 @@ class MedicalCarePolicy(Policy):
 class MedicalCarePolicies(PolicyCollection):
     policy_type = "medical_care"
 
+    def __init__(self, policies: List[Policy]):
+        """
+        A collection of like policies active on the same date
+        """
+        self.policies = policies
+        self.policies_by_name = {
+            self._get_policy_name(policy): policy for policy in policies
+        }
+        self.hospitalisation_policies = [
+            policy for policy in self.policies if isinstance(policy, Hospitalisation)
+        ]
+        self.non_hospitalisation_policies = [
+            policy
+            for policy in self.policies
+            if policy not in self.hospitalisation_policies
+        ]
+
     def apply(
         self,
         person: Person,
@@ -34,16 +51,11 @@ class MedicalCarePolicies(PolicyCollection):
         """
         Applies medical care policies. Hospitalisation takes preference over all.
         """
-        hospitalisation_policies = [
-            policy for policy in self.policies if isinstance(policy, Hospitalisation)
-        ]
-        for policy in hospitalisation_policies:
+        for policy in self.hospitalisation_policies:
             activates = policy.apply(person=person, record=record)
             if activates:
                 return
-        for policy in [
-            policy for policy in self.policies if policy not in hospitalisation_policies
-        ]:
+        for policy in self.non_hospitalisation_policies:
             activates = policy.apply(person, medical_facilities, days_from_start)
             if activates:
                 return
@@ -67,20 +79,19 @@ class Hospitalisation(MedicalCarePolicy):
         )
 
     def apply(
-        self,
-        person: Person,
-        record: Optional[Record] = None,
+        self, person: Person, record: Optional[Record] = None,
     ):
         symptoms_tag = person.infection.tag
         if symptoms_tag in hospitalised_tags:
-            if person.medical_facility is not None:
+            if (
+                person.medical_facility is not None
+                and person.medical_facility.group.spec == "hospital"
+            ):
                 patient_hospital = person.medical_facility.group
             else:
                 patient_hospital = person.super_area.closest_hospitals[0]
             # note, we dont model hospital capacity here.
-            status = patient_hospital.allocate_patient(
-                person,
-            )
+            status = patient_hospital.allocate_patient(person,)
             if record is not None:
                 if status in [
                     "ward_admitted"
@@ -96,9 +107,11 @@ class Hospitalisation(MedicalCarePolicy):
                         hospital_id=patient_hospital.id,
                         patient_id=person.id,
                     )
+            return True
         else:
             if (
                 person.medical_facility is not None
+                and person.medical_facility.group.spec == "hospital"
                 and symptoms_tag not in dead_hospital_tags
             ):
                 if record is not None:
@@ -108,4 +121,4 @@ class Hospitalisation(MedicalCarePolicy):
                         patient_id=person.id,
                     )
                 person.medical_facility.group.release_patient(person)
-            return
+        return False
