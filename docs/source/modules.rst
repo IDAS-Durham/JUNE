@@ -32,9 +32,9 @@ Package `__init__`-based modules
 
    activity
    box
-   commute
    demography
    distributors
+   geography
    groups
    groups.commute
    groups.group
@@ -42,11 +42,14 @@ Package `__init__`-based modules
    groups.travel
    hdf5_savers
    infection
+   infection_seed
    interaction
    logger
    policy
+   records
    utils
-   
+   visualization
+
 
 Activity
 ^^^^^^^^
@@ -69,16 +72,6 @@ Box
    box.box_mode
 
 
-Commute
-^^^^^^^
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: module.rst
-
-   commute_rail_travel
-
-
 Demography
 ^^^^^^^^^^
 
@@ -87,7 +80,6 @@ Demography
    :template: module.rst
 
    demography.demography
-   demography.geography
    demography.person
 
 
@@ -98,7 +90,7 @@ Distributors
    :toctree: _autosummary
    :template: module.rst
 
-   distributors.carehome_distributor
+   distributors.care_home_distributor
    distributors.company_distributor
    distributors.hospital_distributor
    distributors.household_distributor
@@ -117,6 +109,18 @@ Exceptions (`exc`)
    exc
 
 
+Geography
+^^^^^^^^^
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: module.rst
+
+   geography.city
+   geography.geography
+   geography.station
+
+
 Groups
 ^^^^^^
 
@@ -125,7 +129,7 @@ Groups
    :template: module.rst
 
    groups.boundary
-   groups.carehome
+   groups.care_home
    groups.cemetery
    groups.company
    groups.hospital
@@ -136,22 +140,6 @@ Groups
 See also the sub-sections grouping together related types of `Groups`.
 
 
-Commute Groups
-""""""""""""""
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: module.rst
-
-   groups.commute.commutecity_distributor
-   groups.commute.commutecity
-   groups.commute.commutecityunit_distributor
-   groups.commute.commutecityunit
-   groups.commute.commutehub_distributor
-   groups.commute.commutehub
-   groups.commute.commuteunit_distributor
-   groups.commute.commuteunit
-
 Group Groups
 """"""""""""
 
@@ -160,6 +148,7 @@ Group Groups
    :template: module.rst
 
    groups.group.abstract
+   groups.group.external
    groups.group.group
    groups.group.subgroup
    groups.group.supergroup
@@ -189,10 +178,10 @@ Travel Groups
    :toctree: _autosummary
    :template: module.rst
 
-   groups.travel.travelcity_distributor
-   groups.travel.travelcity
-   groups.travel.travelunit_distributor
-   groups.travel.travelunit
+   groups.travel
+   groups.travel.mode_of_transport
+   groups.travel.transport
+   groups.travel.travel
 
 
 HDF5 Savers
@@ -222,17 +211,24 @@ Infection
    :template: module.rst
 
    infection.health_index
-   infection.health_information
    infection.infection
-   infection_seed.infection_seed
-   infection_seed.observed_to_cases
-   infection_seed
+   infection.infection_selector
    infection.symptoms
-   infection.symptoms_trajectory
    infection.symptom_tag
    infection.trajectory_maker
    infection.transmission
    infection.transmission_xnexp
+
+
+Infection Seed
+^^^^^^^^^^^^^^
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: module.rst
+
+   infection_seed.infection_seed
+   infection_seed.observed_to_cases
 
 
 Interaction
@@ -242,10 +238,8 @@ Interaction
    :toctree: _autosummary
    :template: module.rst
 
-   interaction.contact_sampling
    interaction.interaction
    interaction.interactive_group
-   interaction.matrix_interaction
 
 
 Logger
@@ -257,6 +251,17 @@ Logger
 
    logger.logger
    logger.read_logger
+   logger.read_logger_legacy
+
+
+MPI Setup
+^^^^^^^^^
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: module.rst
+
+    mpi_setup
 
 
 Paths
@@ -281,6 +286,19 @@ Policy
    policy.leisure_policies
    policy.medical_care_policies
    policy.policy
+
+
+Records
+^^^^^^^
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: module.rst
+
+   records.event_records_writer
+   records.records_reader
+   records.records_writer
+   records.static_records_writer
 
 
 Simulator Box
@@ -326,16 +344,8 @@ Utilities (`utils`)
    :template: module.rst
 
    utils.parse_probabilities
-
-
-Visualization
-^^^^^^^^^^^^^
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: module.rst
-
-   visualization
+   utils.profiler
+   utils.numba_random
 
 
 World
