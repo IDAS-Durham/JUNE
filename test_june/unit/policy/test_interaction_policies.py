@@ -100,11 +100,13 @@ class TestSocialDistancing:
 
     def test__social_distancing_regional_compliance(self, setup_policy_world):
         world, pupil, student, worker, sim = setup_policy_world
-        regional_compliance = [{
-                'start_time': '2020-02-10',
-                'end_time': '2021-12-01',
-                worker.region.name: 0.
-        }]
+        regional_compliance = [
+            {
+                "start_time": "2020-02-10",
+                "end_time": "2021-12-01",
+                worker.region.name: 0.0,
+            }
+        ]
         world.cemeteries = Cemeteries()
         start_date = datetime(2020, 3, 10)
         end_date = datetime(2020, 3, 12)
@@ -125,8 +127,7 @@ class TestSocialDistancing:
         social_distance = SocialDistancing(
             start_time="2020-03-10", end_time="2020-03-12", beta_factors=beta_factors
         )
-        policies = Policies([social_distance],
-                regional_compliance=regional_compliance)
+        policies = Policies([social_distance], regional_compliance=regional_compliance)
         leisure_instance = leisure.generate_leisure_for_config(
             world=world, config_filename=test_config
         )
@@ -143,8 +144,14 @@ class TestSocialDistancing:
         while sim.timer.date <= sim.timer.final_date:
             sim.do_timestep()
             if sim.timer.date >= start_date and sim.timer.date < end_date:
-                assert sim.interaction.get_beta_for_group(group=company) == initial_betas['company']
-                assert sim.interaction.get_beta_for_group(group=household) == initial_betas['household']
+                assert (
+                    sim.interaction.get_beta_for_group(group=company)
+                    == initial_betas["company"]
+                )
+                assert (
+                    sim.interaction.get_beta_for_group(group=household)
+                    == initial_betas["household"]
+                )
                 next(sim.timer)
                 continue
             assert sim.interaction.beta == initial_betas

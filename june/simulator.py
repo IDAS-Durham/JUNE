@@ -17,11 +17,17 @@ from june.exc import SimulatorError
 from june.groups.leisure import Leisure
 from june.groups import MedicalFacilities
 from june.groups.travel import Travel
+from june.groups.group.interactive import InteractiveGroup
 from june.infection.symptom_tag import SymptomTag
 from june.infection import InfectionSelector
 from june.infection_seed import InfectionSeed
-from june.interaction import Interaction, InteractiveGroup
-from june.policy import Policies, MedicalCarePolicies, InteractionPolicies,regional_compliance_is_active
+from june.interaction import Interaction
+from june.policy import (
+    Policies,
+    MedicalCarePolicies,
+    InteractionPolicies,
+    regional_compliance_is_active,
+)
 from june.time import Timer
 from june.records import Record
 from june.world import World
@@ -217,7 +223,9 @@ class Simulator:
                 for group in grouptype.members:
                     if not group.external:
                         group.clear()
-                        if group.spec == "household": # resets all household visit attributes
+                        if (
+                            group.spec == "household"
+                        ):  # resets all household visit attributes
                             group.household_visit = False
 
         for person in self.world.people.members:
@@ -440,11 +448,13 @@ class Simulator:
         output_logger.info("==================== timestep ====================")
         tick, tickw = perf_counter(), wall_clock()
         regional_compliance = regional_compliance_is_active(
-                    self.activity_manager.policies.regional_compliance, self.timer.date
+            self.activity_manager.policies.regional_compliance, self.timer.date
         )
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
-                date=self.timer.date, interaction=self.interaction, regional_compliance=regional_compliance
+                date=self.timer.date,
+                interaction=self.interaction,
+                regional_compliance=regional_compliance,
             )
         activities = self.timer.activities
         if not activities or len(activities) == 0:

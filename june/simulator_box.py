@@ -3,7 +3,8 @@ from typing import Optional, List
 from itertools import chain
 import datetime
 
-from june.interaction import Interaction, InteractiveGroup
+from june.interaction import Interaction
+from june.groups.group.interactive import InteractiveGroup
 from june import paths
 from june.activity import ActivityManagerBox
 from june.interaction import Interaction

@@ -4,7 +4,7 @@ import numpy as np
 from random import random
 import h5py
 
-from june.groups.group import Group, Supergroup
+from june.groups import Group, Supergroup
 
 from enum import IntEnum
 from typing import List
