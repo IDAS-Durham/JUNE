@@ -8,12 +8,12 @@ from typing import List, Tuple
 
 from june.demography.person import Person
 from june.exc import GroupException
+from june.interaction.interactive_group import InteractiveGroup
 from .abstract import AbstractGroup
 from .subgroup import Subgroup
 
 logger = logging.getLogger(__name__)
 
-    
 
 class Group(AbstractGroup):
     """
@@ -36,6 +36,7 @@ class Group(AbstractGroup):
     a list of group specifiers - we could promote it to a dicitonary with
     default intensities (maybe mean+width with a pre-described range?).
     """
+
     external = False
 
     class SubgroupType(IntEnum):
@@ -79,9 +80,9 @@ class Group(AbstractGroup):
 
     @property
     def region(self) -> "Region":
-        if hasattr(self,'area'):
+        if hasattr(self, "area"):
             return self.area.super_area.region
-        elif hasattr(self, 'super_area'):
+        elif hasattr(self, "super_area"):
             return self.super_area.region
         else:
             return None
@@ -113,7 +114,10 @@ class Group(AbstractGroup):
         return self.subgroups[item]
 
     def add(
-        self, person: Person, activity: str, subgroup_type: SubgroupType#, dynamic=False
+        self,
+        person: Person,
+        activity: str,
+        subgroup_type: SubgroupType,  # , dynamic=False
     ):
         """
         Add a person to a given subgroup. For example, in a school
@@ -126,7 +130,7 @@ class Group(AbstractGroup):
         group_type
             
         """
-        #if not dynamic:
+        # if not dynamic:
         self[subgroup_type].append(person)
         if activity is not None:
             setattr(person.subgroups, activity, self[subgroup_type])
@@ -136,7 +140,9 @@ class Group(AbstractGroup):
         """
         All the people in this group
         """
-        return tuple(person for subgroup in self.subgroups for person in subgroup.people)
+        return tuple(
+            person for subgroup in self.subgroups for person in subgroup.people
+        )
 
     @property
     def contains_people(self) -> bool:
@@ -209,3 +215,6 @@ class Group(AbstractGroup):
     def clear(self):
         for subgroup in self.subgroups:
             subgroup.clear()
+
+    def get_interactive_group(self, people_from_abroad=None):
+        return InteractiveGroup(self, people_from_abroad=people_from_abroad)

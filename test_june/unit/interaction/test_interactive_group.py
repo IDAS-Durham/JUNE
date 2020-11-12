@@ -4,8 +4,8 @@ import numpy as np
 from june.groups import Group
 from june.demography.person import Person
 from june.infection.infection_selector import InfectionSelector
-from june.groups.hospital import Hospital
-from june.interaction.interactive_group import InteractiveGroup
+from june.groups import Hospital, School, Pub
+from june.interaction.interactive_group import InteractiveGroup, InteractiveSchool
 
 
 def test__substract_information_from_group():
@@ -38,3 +38,20 @@ def test__substract_information_from_group():
     assert interactive_group.susceptible_ids[1][0] == person4.id
     assert interactive_group.susceptibilities[0][0] == 2
     assert interactive_group.susceptibilities[1][0] == 4
+
+
+class TestDispatchOnGroupSpec:
+    def test__dispatch(self):
+        pub = Pub() 
+        interactive_pub = InteractiveGroup(pub)
+        assert interactive_pub.__class__ == InteractiveGroup
+        school = School()
+        interactive_school = InteractiveGroup(school)
+        assert interactive_school == InteractiveSchool
+
+class TestSchoolInteractiveGroup:
+    def test__school_contacts(self):
+
+        pass
+
+
