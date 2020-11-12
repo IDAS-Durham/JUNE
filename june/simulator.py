@@ -217,6 +217,8 @@ class Simulator:
                 for group in grouptype.members:
                     if not group.external:
                         group.clear()
+                        if group.spec == "household": # resets all household visit attributes
+                            group.household_visit = False
 
         for person in self.world.people.members:
             person.busy = False
