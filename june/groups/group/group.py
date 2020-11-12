@@ -8,9 +8,9 @@ from typing import List, Tuple
 
 from june.demography.person import Person
 from june.exc import GroupException
-from june.interaction.interactive_group import InteractiveGroup
-from .abstract import AbstractGroup
-from .subgroup import Subgroup
+from .interactive import InteractiveGroup
+from . import AbstractGroup
+from . import Subgroup
 
 logger = logging.getLogger(__name__)
 

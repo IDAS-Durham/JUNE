@@ -5,9 +5,10 @@ from random import random
 from typing import List, Dict
 from itertools import chain
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.demography import Population
-    from june.interaction.interactive_group import InteractiveGroup
+    from june.groups.group.interactive import InteractiveGroup
 
 from june.exc import InteractionError
 from june.utils import parse_age_probabilities
@@ -157,14 +158,14 @@ class Interaction:
     def __init__(
         self,
         alpha_physical: float,
-        beta: Dict[str, float],
+        betas: Dict[str, float],
         contact_matrices: dict,
         susceptibilities_by_age: Dict[str, int] = None,
         population: "Population" = None,
         sector_betas=None,
     ):
         self.alpha_physical = alpha_physical
-        self.beta = beta or {}
+        self.betas = betas or {}
         contact_matrices = contact_matrices or {}
         self.contact_matrices = self.process_contact_matrices(
             groups=self.beta.keys(), input_contact_matrices=contact_matrices
@@ -313,12 +314,19 @@ class Interaction:
 
     def time_step_for_group(self, delta_time: float, group: "InteractiveGroup"):
         contact_matrix = self.contact_matrices[group.spec]
+        beta = group.get_processed_beta(beta=self.betas[group.spec])
         if group.spec == "company" and self.sector_betas is not None:
             beta = self.get_beta_for_group(group=group) * float(
                 self.sector_betas[group.sector]
             )
-        elif group.spec == "household" and group.household_visit and self.beta_reductions is not None:
-            beta = self.get_beta_for_group(group=group) * float(self.beta_reductions.get("household_visits", 1.0))
+        elif (
+            group.spec == "household"
+            and group.household_visit
+            and self.beta_reductions is not None
+        ):
+            beta = self.get_beta_for_group(group=group) * float(
+                self.beta_reductions.get("household_visits", 1.0)
+            )
         else:
             beta = self.get_beta_for_group(group=group)
         school_years = group.school_years

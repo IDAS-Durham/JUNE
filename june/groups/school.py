@@ -12,8 +12,8 @@ import pandas as pd
 from sklearn.neighbors import BallTree
 
 from june.geography import Geography, Areas, Area
-from june.groups.group import Group, Subgroup, Supergroup
-from june.interaction.interactive_group import InteractiveSchool
+from june.groups import Group, Subgroup, Supergroup
+from june.groups.group.interactive import InteractiveGroup
 
 
 default_data_filename = paths.data_path / "input/schools/england_schools.csv"
@@ -103,8 +103,8 @@ class School(Group):
         else:
             self.years = tuple(years)
 
-    def get_interactive_group(self, people_from_abroad = None):
-        return InteractiveSchool(self, people_from_abroad = people_from_abroad)
+    def get_interactive_group(self, people_from_abroad=None):
+        return InteractiveSchool(self, people_from_abroad=people_from_abroad)
 
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:
@@ -400,3 +400,7 @@ class Schools(Supergroup):
             coordinates_rad, k=k, sort_results=True,
         )
         return neighbours[0]
+
+
+class InteractiveSchool(InteractiveGroup):
+    pass
