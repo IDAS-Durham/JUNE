@@ -74,7 +74,7 @@ class AbstractHospital:
                 raise HospitalError(
                     f"Person with symptoms {person.infection.tag} trying to enter hospital."
                 )
-        elif person.medical_facility.group.spec == 'hospital':
+        else:
             # this person has already been allocated in a hospital (this one)
             if person.infection.tag.name == "hospitalised":
                 if person.id in self.ward_ids:
