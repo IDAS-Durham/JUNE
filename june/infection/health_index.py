@@ -458,13 +458,13 @@ class HealthIndexGenerator:
 
     def physio_age(self, age, sex, deprivation_index):
         if age>=90:
-           physio_age=age
+            physio_age=age
         else:
-           dep_index=int(deprivation_index*100)-1
-           if sex==0:
-              physio_age=self.physiological_age_female[age][dep_index]
-           if sex==1:
-              physio_age=self.physiological_age_male[age][dep_index]
+            dep_index=int(deprivation_index*100)-1
+            if sex==0:
+                physio_age=self.physiological_age_female[age][dep_index]
+            if sex==1:
+                physio_age=self.physiological_age_male[age][dep_index]
         return int(round(physio_age))
 
     def __call__(self, person):
@@ -490,10 +490,10 @@ class HealthIndexGenerator:
         
         else:
             if person.socioecon_index is not None and self.physiological_correction:
-                  physiological_age = self.physio_age(int(person.age), sex, person.socioecon_index)
-                  probabilities = self.prob_lists[sex][min(99, physiological_age)]
+                physiological_age = self.physio_age(int(person.age), sex, person.socioecon_index)
+                probabilities = self.prob_lists[sex][min(99, physiological_age)]
             else:
-                  probabilities = self.prob_lists[sex][min(99, int(person.age))]
+                probabilities = self.prob_lists[sex][min(99, int(person.age))]
  
 
 
