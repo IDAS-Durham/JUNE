@@ -489,14 +489,9 @@ class HealthIndexGenerator:
             probabilities = self.prob_lists_ch[sex][int(person.age)-65]
         
         else:
-<<<<<<< HEAD
             if person.area is not None and self.physiological_correction:
                 socioeconomic_index = person.area.socioeconomic_index
                 physiological_age = self.physio_age(int(person.age), sex, socioeconomic_index)
-=======
-            if person.socioecon_index is not None and self.physiological_correction:
-                physiological_age = self.physio_age(int(person.age), sex, person.socioecon_index)
->>>>>>> 148957afe0cb792b45a865488579a0050ea0f7e2
                 probabilities = self.prob_lists[sex][min(99, physiological_age)]
             else:
                 probabilities = self.prob_lists[sex][min(99, int(person.age))]
