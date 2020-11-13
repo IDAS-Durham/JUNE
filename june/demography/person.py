@@ -28,7 +28,7 @@ class Person(dataobject):
     sex: str = "f"
     age: int = 27
     ethnicity: str = None
-    socioecon_index: str = None
+    #socioecon_index: str = None
     area: "Area" = None
     # work info
     work_super_area: "SuperArea" = None
@@ -52,7 +52,7 @@ class Person(dataobject):
         sex="f",
         age=27,
         ethnicity=None,
-        socioecon_index=None,
+        #socioecon_index=None,
         id=None,
         comorbidity=None,
     ):
@@ -63,7 +63,7 @@ class Person(dataobject):
             sex=sex,
             age=age,
             ethnicity=ethnicity,
-            socioecon_index=socioecon_index,
+            #socioecon_index=socioecon_index,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
             comorbidity=comorbidity,

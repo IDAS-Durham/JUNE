@@ -127,8 +127,8 @@ def test__physiological_age():
     for i in range(99):
         dep_index=(float(i)+1.0)/99.0
         phisio_age_m[i]=index_list.physio_age(75,1,dep_index)
-        index_m = index_list(Person.from_attributes(age=75, sex="m",socioecon_index=dep_index))[5]
-        index_f = index_list(Person.from_attributes(age=75, sex="f",socioecon_index=dep_index))[5]
+        index_m = index_list(Person.from_attributes(age=75, sex="m"))[5]
+        index_f = index_list(Person.from_attributes(age=75, sex="f"))[5]
         
         prob_dying_m[i]=index_m
         prob_dying_f[i]=index_f

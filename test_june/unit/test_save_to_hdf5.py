@@ -353,6 +353,7 @@ class TestSaveWorld:
         assert len(full_world.areas) == len(full_world_loaded.areas)
         for area1, area2 in zip(full_world.areas, full_world_loaded.areas):
             assert area1.id == area2.id
+            assert area1.socioeconomic_index == area2.socioeconomic_index
             assert area1.super_area.id == area2.super_area.id
             assert area1.super_area.name == area2.super_area.name
             assert area1.name == area2.name
@@ -371,6 +372,7 @@ class TestSaveWorld:
             sa2_areas = [super_area2.areas[idx] for idx in np.argsort(area2_ids)]
             for area1, area2 in zip(sa1_areas, sa2_areas):
                 assert area1.id == area2.id
+                assert area1.socioeconomic_index == area2.socioeconomic_index
                 assert area1.super_area.id == area2.super_area.id
                 assert area1.super_area.name == area2.super_area.name
                 assert area1.name == area2.name

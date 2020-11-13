@@ -41,10 +41,18 @@ def test__create_geographical_hierarchy():
         }
     )
     super_area_coordinates_df.set_index("super_area", inplace=True)
+    area_socioeconomic_indices_df = pd.DataFrame(
+        {
+            "area": ["area_1", "area_2", "area_3", "area_4"],
+            "test_column_name": [0.01, 0.02, 0.75, 0.90]
+        }
+    )
+    area_socioeconomic_indices_df.set_index("area", inplace=True)
     areas, super_areas, regions = g.Geography.create_geographical_units(
         hierarchy=hierarchy_df,
         area_coordinates=area_coordinates_df,
         super_area_coordinates=super_area_coordinates_df,
+        area_socioeconomic_indices=area_socioeconomic_indices_df
     )
 
     assert len(areas) == 4
@@ -73,6 +81,7 @@ def test__area_attributes(geography_example):
         area.coordinates, [51.395954503652504, 0.10846483370388499], decimal=3,
     )
     assert area.super_area.name == "E02000140"
+    assert area.socioeconomic_index == 0.12
 
 
 def test__super_area_attributes(geography_example):
