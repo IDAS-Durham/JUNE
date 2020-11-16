@@ -406,7 +406,7 @@ class Schools(Supergroup):
 # interactive group of schools
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def _get_contacts_in_school(
     contact_matrix, school_years, susceptibles_idx, infecters_idx
 ):
@@ -425,7 +425,7 @@ def _get_contacts_in_school(
     return n_contacts
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def _translate_school_subgroup(idx, school_years):
     if idx > 0:
         idx = school_years[idx - 1] + 1
@@ -456,12 +456,16 @@ class InteractiveSchool(InteractiveGroup):
             range(age_min, age_max + 1), range(age_min, age_max + 1)
         )
         processed_contact_matrix = np.zeros((n_subgroups_max, n_subgroups_max)) 
-        processed_contact_matrix[0:2, 0:2] = contact_matrix[0:2][0:2]
+        processed_contact_matrix[0, 0] = contact_matrix[0][0]
+        processed_contact_matrix[0, 1:] = contact_matrix[0][1]
+        processed_contact_matrix[1:, 0] = contact_matrix[1][0]
         processed_contact_matrix[1:, 1:] = (
             xi ** abs(age_differences) * contact_matrix[1][1]
         )
         physical_ratios = np.zeros((n_subgroups_max, n_subgroups_max)) 
-        physical_ratios[0:2, 0:2] =proportion_physical[0:2][0:2] 
+        physical_ratios[0, 0] = proportion_physical[0][0]
+        physical_ratios[0, 1:] = proportion_physical[0][1]
+        physical_ratios[1:, 0] = proportion_physical[1][0]
         physical_ratios[1:, 1:] = proportion_physical[1][1]
         # add physical contacts
         processed_contact_matrix = processed_contact_matrix * (
