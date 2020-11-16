@@ -26,7 +26,7 @@ class MovablePeople:
     def add_person(self, person, external_subgroup):
         """ Add or update a person to the outward facing group """
         domain_id = external_subgroup.domain_id
-        group_spec = external_subgroup.group_spec
+        group_spec = external_subgroup.spec
         group_id = external_subgroup.group_id
         subgroup_type = external_subgroup.subgroup_type
 
@@ -58,7 +58,7 @@ class MovablePeople:
         """ Remove a person from the external subgroup. For now we actually do it. Later
         we may flag them. """
         domain_id = external_subgroup.domain_id
-        group_spec = external_subgroup.group_spec
+        group_spec = external_subgroup.spec
         group_id = external_subgroup.group_id
         subgroup_type = external_subgroup.subgroup_type
         try:
