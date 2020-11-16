@@ -4,6 +4,7 @@ from june.groups import CareHome
 from june import paths
 from june.groups import CareHome, Household
 from june.demography import Person
+from june.geography import Geography
 from june.infection.health_index import HealthIndexGenerator, convert_comorbidities_prevalence_to_dict, read_comorbidity_csv
 
 
@@ -125,13 +126,13 @@ def test__physiological_age_from_LE():
         male_average_life_expectancy=80,
     )
 
-    person1 = Person.from_attributes(age=54)
-    person2 = Person.from_attributes(age=60)
-    person3 = Person.from_attributes(age=25)
-
     physio_age_test = health_index_generator_A.physiological_age(60, "m", None, individual_LE=70)
     
     assert type(physio_age_test) is int
+
+    person1 = Person.from_attributes(age=54)#, sex="f")
+    person2 = Person.from_attributes(age=60)#, sex="m")
+    person3 = Person.from_attributes(age=25)#, sex="m")
 
     physio_age1A = health_index_generator_A.physiological_age(
         person1.age, person1.sex, None, individual_LE=70
@@ -147,92 +148,120 @@ def test__physiological_age_from_LE():
     assert physio_age2A == 65
     assert physio_age3A == 25
 
-
 def test__physiological_age_from_socioeconomic_index():
-    health_index_generator = HealthIndexGenerator.from_file(
+    health_index_generator_A = HealthIndexGenerator.from_file(
         physiological_correction=True,
         female_physiological_threshold=50, 
         male_physiological_threshold=50,
     )
+    health_index_generator_B = HealthIndexGenerator.from_file(
+        physiological_correction=False,
+    )
 
-    physio_age = health_index_generator.physiological_age(80, "f", 0.01)
+    physio_age = health_index_generator_A.physiological_age(80, "f", 0.01)
 
     count = 0
     for x in np.arange(0.02,1.01,0.01):
-        new_physio_age = health_index_generator.physiological_age(80, "f", x)
+        new_physio_age = health_index_generator_A.physiological_age(80, "f", x)
         if new_physio_age >= physio_age:
             count += 1
         physio_age = new_physio_age
     assert count > 70
 
-    physio_age = health_index_generator.physiological_age(80, "m", 0.01)
+    physio_age = health_index_generator_A.physiological_age(80, "m", 0.01)
     for x in np.arange(0.02,1.01,0.01):
-        new_physio_age = health_index_generator.physiological_age(80, "m", x)
+        new_physio_age = health_index_generator_A.physiological_age(80, "m", x)
         if new_physio_age >= physio_age:
             count += 1
         physio_age = new_physio_age
     assert count > 70
 
+    g = Geography.from_file(filter_key={"super_area": ["E02004721", "E02002175"]})
+    area1 = g.areas.get_from_name("E00168061") # SEI = 1.00
+    area2 = g.areas.get_from_name("E00167332") # SEI = 0.02
+
+    person1 = Person.from_attributes(age=80, sex="f")
+    person2 = Person.from_attributes(age=60, sex="m")
+    person3 = Person.from_attributes(age=25, sex="f")
+
+    person1.area = area1
+    person2.area = area2
+    person3.area = area1
+
+    HI_1A = health_index_generator_A(person1)
+    HI_2A = health_index_generator_A(person2)
+    HI_3A = health_index_generator_A(person3)
+
+    HI_1B = health_index_generator_B(person1)
+    HI_2B = health_index_generator_B(person2)
+    HI_3B = health_index_generator_B(person3)
+
+    # Check if the actual probabilities are different.
+    assert all(~np.isclose(HI_1A[1:], HI_1B[1:]))
+    assert all(~np.isclose(HI_2A[1:], HI_2B[1:]))
+    assert all(np.isclose(HI_3A[1:], HI_3B[1:]))
 
 
-"""
-def test__physiological_age():
-    index_list = HealthIndexGenerator.from_file(physiological_correction=True)
-    count=0
-    index_old_male=0
-    index_old_female=0
-    prob_dying_m=np.zeros(99)
-    prob_dying_f=np.zeros(99)
-    phisio_age_m=np.zeros(99)
-    for i in range(99):
-        dep_index=(float(i)+1.0)/99.0
-        phisio_age_m[i]=index_list.physio_age(75,1,dep_index)
-        index_m = index_list(Person.from_attributes(age=75, sex="m"))[5]
-        index_f = index_list(Person.from_attributes(age=75, sex="f"))[5]
+
+
+
+# def test__physiological_age():
+#     index_list = HealthIndexGenerator.from_file(physiological_correction=True)
+#     count=0
+#     index_old_male=0
+#     index_old_female=0
+#     prob_dying_m=np.zeros(99)
+#     prob_dying_f=np.zeros(99)
+#     phisio_age_m=np.zeros(99)
+#     for i in range(99):
+#         dep_index=(float(i)+1.0)/99.0
+#         phisio_age_m[i]=index_list.physio_age(75,1,dep_index)
+#         index_m = index_list(Person.from_attributes(age=75, sex="m"))[5]
+#         index_f = index_list(Person.from_attributes(age=75, sex="f"))[5]
         
-        prob_dying_m[i]=index_m
-        prob_dying_f[i]=index_f
-        if index_old_male>=index_m:
-            count+=1
+#         prob_dying_m[i]=index_m
+#         prob_dying_f[i]=index_f
+#         if index_old_male>=index_m:
+#             count+=1
             
-        if index_old_female>=index_f:
-            count+=1
-        index_old_male=index_m
-        index_old_female=index_f  
-    print(prob_dying_m)
-    print(phisio_age_m)
-    print(prob_dying_f)
-    assert count>=150
+#         if index_old_female>=index_f:
+#             count+=1
+#         index_old_male=index_m
+#         index_old_female=index_f  
+#     print(prob_dying_m)
+#     print(phisio_age_m)
+#     print(prob_dying_f)
+#     assert count>=150
     
 
-def test__phisio__age():
-    index_list = HealthIndexGenerator.from_file()
-    phisio_age_m=np.zeros(99)
-    phisio_age_f=np.zeros(99)
-    count=0
-    index_old_male=0
-    index_old_female=0
+# def test__phisio__age():
+#     index_list = HealthIndexGenerator.from_file()
+#     phisio_age_m=np.zeros(99)
+#     phisio_age_f=np.zeros(99)
+#     count=0
+#     index_old_male=0
+#     index_old_female=0
 
-    for i in range(99):
-           dep_index=(float(i)+1.0)/99.0
-           index_m=index_list.physio_age(75,1,dep_index)
-           index_f=index_list.physio_age(75,0,dep_index)
-           phisio_age_m[i]=index_m
-           phisio_age_f[i]=index_f
-           if index_old_male>=index_m:
-              count+=1
+#     for i in range(99):
+#            dep_index=(float(i)+1.0)/99.0
+#            index_m=index_list.physio_age(75,"m",dep_index)
+#            index_f=index_list.physio_age(75,"f",dep_index)
+#            phisio_age_m[i]=index_m
+#            phisio_age_f[i]=index_f
+#            if index_old_male>=index_m:
+#               count+=1
 
-           if index_old_female>=index_f:
-              count+=1
-           index_old_male=index_m
-           index_old_female=index_f
+#            if index_old_female>=index_f:
+#               count+=1
+#            index_old_male=index_m
+#            index_old_female=index_f
 
-    print('male',phisio_age_m,len(phisio_age_m))
-    print('female',phisio_age_f,len(phisio_age_m))
+#     print('male',phisio_age_m,len(phisio_age_m))
+#     print('female',phisio_age_f,len(phisio_age_m))
      
-    assert count>=150
+#     assert count>=150
 
-"""
+
 
 
 def test__parse_comorbidity_prevalence():

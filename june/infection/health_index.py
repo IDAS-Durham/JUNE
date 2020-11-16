@@ -130,9 +130,10 @@ class HealthIndexGenerator:
         }
 
         # nasty HACK
-        socioeconomic_index_df = pd.read_csv(socioeconomic_index_path, index_col=0)
+        socioeconomic_index_df = pd.read_csv(socioeconomic_index_path)
+        socioeconomic_index_df.set_index("area", inplace=True)
         self.socioeconomic_index_lookup = {
-            k:v for k,v in socioeconomic_index_df["iomd_centile"].iteritems()
+            k:v for k,v in socioeconomic_index_df["socioeconomic_centile"].iteritems()
         }
 
         self.asymptomatic_ratio = asymptomatic_ratio
@@ -503,7 +504,7 @@ class HealthIndexGenerator:
         self, age, sex, socioeconomic_index, individual_LE: int = None,
     ):
         if age < self.physiological_thresholds[sex]: # sex is an integer 0, 1
-            return age
+            return int(age)
         if individual_LE is None:
             socioeconomic_int_index=int(socioeconomic_index*100)-1
             individual_LE = self.socioeconomic_LE_lookup.iloc[socioeconomic_int_index][sex]
@@ -534,7 +535,11 @@ class HealthIndexGenerator:
         Retruns:
              3D matrix of dimensions 2 X 100 X 7. With all the probabilities of all 8 
              outcomes for 100 ages and the 2 sex (last outcome inferred from 1-sum(probabilities)).
-        """
+        """ 
+        if person.sex == "m":
+            sex = 1
+        else:
+            sex = 0
 
         if (
             person.age >= 65
@@ -542,20 +547,19 @@ class HealthIndexGenerator:
             and person.residence.group.spec == "care_home"
         ):
             probabilities = self.prob_lists_ch[sex][int(person.age)-65]
-        
         else:
             if person.area is not None and self.physiological_correction:
                 ## when the new world is created...
-                # socioeconomic_index = person.area.socioeconomic_index
+                socioeconomic_index = person.area.socioeconomic_index
                 ## for now use NASTY HACK.
-                socioeconomic_index = self.socioeconomic_index_lookup[person.area.name]
+                #socioeconomic_index = self.socioeconomic_index_lookup[person.area.name]
                 physiological_age = self.physiological_age(
                     int(person.age), 
                     person.sex, 
                     socioeconomic_index,
                 )
                 probabilities = self.prob_lists[sex][min(99, physiological_age)]
-            else:
+            else:                
                 probabilities = self.prob_lists[sex][min(99, int(person.age))]
  
 
