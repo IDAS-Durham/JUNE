@@ -252,13 +252,22 @@ class Leisure:
         Checks whether the person drags the household to the activity.
         """
         try:
-            prob = self.probabilities_by_region_sex_age[person.region][person.sex][
+            prob = self.probabilities_by_region_sex_age[person.region.name][person.sex][
                 person.age
             ]["drags_household"][activity]
-        except (KeyError, AttributeError):
+        except KeyError:
             prob = self.probabilities_by_region_sex_age[person.sex][person.age][
                 "drags_household"
             ][activity]
+        except AttributeError:
+            if person.sex in self.probabilities_by_region_sex_age:
+                prob = self.probabilities_by_region_sex_age[person.sex][person.age][
+                    "drags_household"
+                ][activity]
+            else:
+                prob = self.probabilities_by_region_sex_age[
+                    list(self.probabilities_by_region_sex_age.keys())[0]
+                ][person.sex][person.age]["drags_household"][activity]
         return random() < prob
 
     def send_household_with_person_if_necessary(
@@ -312,8 +321,8 @@ class Leisure:
                 return self.probabilities_by_region_sex_age[person.sex][person.age]
             else:
                 return self.probabilities_by_region_sex_age[
-                list(self.probabilities_by_region_sex_age.keys())[0]
-            ][person.sex][person.age]
+                    list(self.probabilities_by_region_sex_age.keys())[0]
+                ][person.sex][person.age]
 
     def get_subgroup_for_person_and_housemates(
         self, person: Person, to_send_abroad: dict = None
