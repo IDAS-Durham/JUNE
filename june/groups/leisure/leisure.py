@@ -5,7 +5,7 @@ import logging
 from random import random, randint
 from typing import List, Dict
 from june.demography import Person
-from june.geography import Geography, SuperAreas, Areas
+from june.geography import Geography, SuperAreas, Areas, Regions, Region
 from june.groups.leisure import (
     SocialVenueDistributor,
     PubDistributor,
@@ -86,7 +86,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         leisure_distributors[
             "household_visits"
         ] = HouseholdVisitsDistributor.from_config()
-    leisure = Leisure(leisure_distributors)
+    leisure = Leisure(leisure_distributors=leisure_distributors, regions=world.regions)
     return leisure
 
 
@@ -113,18 +113,23 @@ class Leisure:
     Class to manage all possible activites that happen during leisure time.
     """
 
-    def __init__(self, leisure_distributors: Dict[str, SocialVenueDistributor]):
+    def __init__(
+        self,
+        leisure_distributors: Dict[str, SocialVenueDistributor],
+        regions: Regions = None,
+    ):
         """
         Parameters
         ----------
         leisure_distributors
             List of social venue distributors.
         """
-        self.probabilities_by_age_sex = None
+        self.probabilities_by_region_sex_age = None
         self.leisure_distributors = leisure_distributors
         self.n_activities = len(self.leisure_distributors)
+        self.policy_poisson_parameters = {}
+        self.regions = regions  # needed for regional compliances
         self.closed_venues = set()
-        self.regional_compliance = None
 
     def distribute_social_venues_to_areas(self, areas: Areas, super_areas: SuperAreas):
         logger.info("Linking households for visits")
@@ -151,55 +156,47 @@ class Leisure:
                     area.social_venues[activity] = social_venues
         logger.info(f"Distributed in {len(areas)} of {len(areas)} areas.")
 
-    def update_household_and_care_home_visits_targets(self, people: List[Person]):
-        """
-        Updates the candidates to go for visiting households and care homes.
-        This is necessary in case the relatives have died.
-        """
-        for person in people:
-            if person.residence is None or person.residence.group.spec != "household":
-                continue
-            if "household_visits" in person.residence.group.social_venues:
-                person.residence.group.social_venues[
-                    "household_visits"
-                ] = self.leisure_distributors[
-                    "household_visits"
-                ].get_possible_venues_for_household(
-                    person.residence.group
-                )
-            if "care_home_visits" in person.residence.group.social_venues:
-                person.residence.group.social_venues[
-                    "care_home_visits"
-                ] = self.leisure_distributors[
-                    "care_home_visits"
-                ].get_possible_venues_for_household(
-                    person.residence.group
-                )
-
     def get_leisure_probability_for_age_and_sex(
-        self, age, sex, delta_time, is_weekend, working_hours
+        self,
+        age: int,
+        sex: str,
+        delta_time: float,
+        is_weekend: bool,
+        working_hours: bool,
+        regional_compliance: float,
     ):
         """
         Computes the probabilities of going to different leisure activities,
         and dragging the household with the person that does the activity.
+        When policies are present, then the regional leisure poisson parameters are
+        changed according to the present policy poisson parameter (lambda_2) and the local
+        regional compliance like so:
+        $ lambda = lambda_1 + regional_compliance * (lambda_2 - lambda_1) $
+        where lambda_1 is the original poisson parameter.
         """
         poisson_parameters = []
         drags_household_probabilities = []
         activities = []
         for activity, distributor in self.leisure_distributors.items():
             if (
-                activity == "household_visits" and working_hours
-            ) or distributor.spec in self.closed_venues:
+                activity == "household_visits"
+                and working_hours
+                or distributor.spec in self.closed_venues
+            ):
                 # we do not have household visits during working hours as most households by then.
                 continue
             drags_household_probabilities.append(
                 distributor.drags_household_probability
             )
-            poisson_parameters.append(
-                distributor.get_poisson_parameter(
-                    sex=sex, age=age, is_weekend=is_weekend
-                )
+            activity_poisson_parameter = self._get_activity_poisson_parameter(
+                activity=activity,
+                distributor=distributor,
+                age=age,
+                sex=sex,
+                is_weekend=is_weekend,
+                regional_compliance=regional_compliance,
             )
+            poisson_parameters.append(activity_poisson_parameter)
             activities.append(activity)
         total_poisson_parameter = sum(poisson_parameters)
         does_activity_probability = 1.0 - np.exp(-delta_time * total_poisson_parameter)
@@ -221,10 +218,47 @@ class Leisure:
             "activities": activities_probabilities,
         }
 
+    def _get_activity_poisson_parameter(
+        self,
+        activity: str,
+        distributor: SocialVenueDistributor,
+        age: int,
+        sex: str,
+        is_weekend: bool,
+        regional_compliance: float,
+    ):
+        """
+        Computes an activity poisson parameter taking into account active policies
+        and regional compliances.
+        """
+        original_activity_poisson_parameter = distributor.get_poisson_parameter(
+            sex=sex, age=age, is_weekend=is_weekend
+        )
+        if activity in self.policy_poisson_parameters:
+            policy_activity_poisson_parameter = self.policy_poisson_parameters[
+                activity
+            ][sex][age]
+        else:
+            policy_activity_poisson_parameter = original_activity_poisson_parameter
+        activity_poisson_parameter = (
+            original_activity_poisson_parameter
+            + regional_compliance
+            * (policy_activity_poisson_parameter - original_activity_poisson_parameter)
+        )
+        return activity_poisson_parameter
+
     def drags_household_to_activity(self, person, activity):
-        prob = self.probabilities_by_age_sex[person.sex][person.age]["drags_household"][
-            activity
-        ]
+        """
+        Checks whether the person drags the household to the activity.
+        """
+        try:
+            prob = self.probabilities_by_region_sex_age[person.region][person.sex][
+                person.age
+            ]["drags_household"][activity]
+        except KeyError:
+            prob = self.probabilities_by_region_sex_age[person.sex][person.age][
+                "drags_household"
+            ][activity]
         return random() < prob
 
     def send_household_with_person_if_necessary(
@@ -235,7 +269,6 @@ class Leisure:
         then we ask X whether the person needs to drag the household with
         him or her.
         """
-        # this produces a recursive import...
         if (
             person.residence.group.spec == "care_home"
             or person.residence.group.type in ["communal", "other", "student"]
@@ -267,23 +300,13 @@ class Leisure:
                         subgroup  # person will be added later in the simulator.
                     )
 
-    def get_probability_for_person(self, person: Person):
-        #TODO: check with Arnau that this does what we want
-        prob_age_sex = self.probabilities_by_age_sex[person.sex][person.age]
-        if self.regional_compliance is not None:
-            regional_prob_age_sex = {}
-            regional_prob_age_sex["does_activity"] = prob_age_sex[
-                "does_activity"
-            ] / self.regional_compliance.get(person.region.name, 1.0)
-            regional_prob_age_sex["activities"] = prob_age_sex['activities']
-            regional_prob_age_sex["drags_household"] = {}
-            for key, value in prob_age_sex["drags_household"].items():
-                regional_prob_age_sex["drags_household"][
-                    key
-                ] = value / self.regional_compliance.get(person.region.name, 1.0)
-            return regional_prob_age_sex
-        else:
-            return prob_age_sex
+    def get_activity_probabilities_for_person(self, person: Person):
+        try:
+            return self.probabilities_by_region_sex_age[person.region.name][person.sex][
+                person.age
+            ]
+        except KeyError:
+            return self.probabilities_by_region_sex_age[person.sex][person.age]
 
     def get_subgroup_for_person_and_housemates(
         self, person: Person, to_send_abroad: dict = None
@@ -308,7 +331,7 @@ class Leisure:
         """
         if person.residence.group.spec == "care_home":
             return
-        prob_age_sex = self.get_probability_for_person(person=person)
+        prob_age_sex = self.get_activity_probabilities_for_person(person=person)
         if random() < prob_age_sex["does_activity"]:
             activity_idx = random_choice_numba(
                 arr=np.arange(0, len(prob_age_sex["activities"])),
@@ -360,26 +383,44 @@ class Leisure:
     def generate_leisure_probabilities_for_timestep(
         self, delta_time: float, working_hours: bool, is_weekend: bool
     ):
-        men_probs = [
-            self.get_leisure_probability_for_age_and_sex(
-                age=age,
-                sex="m",
+        self.probabilities_by_region_sex_age = {}
+        if self.regions:
+            for region in self.regions:
+                self.probabilities_by_region_sex_age[
+                    region.name
+                ] = self._generate_leisure_probabilities_for_age_and_sex(
+                    delta_time=delta_time,
+                    working_hours=working_hours,
+                    is_weekend=is_weekend,
+                    regional_compliance=region.regional_compliance,
+                )
+        else:
+            self.probabilities_by_region_sex_age = self._generate_leisure_probabilities_for_age_and_sex(
                 delta_time=delta_time,
-                is_weekend=is_weekend,
                 working_hours=working_hours,
-            )
-            for age in range(0, 100)
-        ]
-        women_probs = [
-            self.get_leisure_probability_for_age_and_sex(
-                age=age,
-                sex="f",
-                delta_time=delta_time,
                 is_weekend=is_weekend,
-                working_hours=working_hours,
+                regional_compliance=1.0,
             )
-            for age in range(0, 100)
-        ]
-        self.probabilities_by_age_sex = {}
-        self.probabilities_by_age_sex["m"] = men_probs
-        self.probabilities_by_age_sex["f"] = women_probs
+
+    def _generate_leisure_probabilities_for_age_and_sex(
+        self,
+        delta_time: float,
+        working_hours: bool,
+        is_weekend: bool,
+        regional_compliance: float,
+    ):
+        ret = {}
+        for sex in ["m", "f"]:
+            probs = [
+                self.get_leisure_probability_for_age_and_sex(
+                    age=age,
+                    sex=sex,
+                    delta_time=delta_time,
+                    is_weekend=is_weekend,
+                    working_hours=working_hours,
+                    regional_compliance=regional_compliance,
+                )
+                for age in range(0, 100)
+            ]
+            ret[sex] = probs
+        return ret

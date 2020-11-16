@@ -41,9 +41,7 @@ class TestCloseLeisure:
             start_time="2020-3-1", end_time="2020-3-30", venues_to_close=["pub"],
         )
         policies = Policies([close_venues])
-        leisure = generate_leisure_for_config(
-            world=world, config_filename=test_config
-        )
+        leisure = generate_leisure_for_config(world=world, config_filename=test_config)
         leisure.distribute_social_venues_to_areas(
             world.areas, super_areas=world.super_areas
         )
@@ -53,22 +51,16 @@ class TestCloseLeisure:
         sim.clear_world()
         time_before_policy = datetime(2019, 2, 1)
         activities = ["leisure", "residence"]
-        leisure.generate_leisure_probabilities_for_timestep(
-            10000, False, False
-        )
+        leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_before_policy, 0.0
         )
         assert worker in worker.leisure.people
         sim.clear_world()
         time_during_policy = datetime(2020, 3, 14)
-        policies.leisure_policies.apply(
-            date=time_during_policy, leisure=leisure
-        )
+        policies.leisure_policies.apply(date=time_during_policy, leisure=leisure)
         assert list(leisure.closed_venues) == ["pub"]
-        leisure.generate_leisure_probabilities_for_timestep(
-            10000, False, False
-        )
+        leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy, 0.0
         )
@@ -76,18 +68,14 @@ class TestCloseLeisure:
             worker in worker.leisure.people and worker.leisure.group.spec == "cinema"
         ) or worker in worker.residence.people
         sim.clear_world()
-        
+
         sim.clear_world()
-        time_after_policy = datetime(2020, 3,30)
-        policies.leisure_policies.apply(
-            date=time_after_policy, leisure=leisure
-        )
+        time_after_policy = datetime(2020, 3, 30)
+        policies.leisure_policies.apply(date=time_after_policy, leisure=leisure)
         assert list(leisure.closed_venues) == []
-        leisure.generate_leisure_probabilities_for_timestep(
-            10000, False, False
-        )
+        leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
         sim.activity_manager.move_people_to_active_subgroups(
-            activities, time_after_policy , 0.0
+            activities, time_after_policy, 0.0
         )
         assert worker in worker.leisure.people
 
@@ -96,13 +84,11 @@ class TestReduceLeisureProbabilities:
     def test__reduce_household_visits(self, setup_policy_world):
         world, pupil, student, worker, sim = setup_policy_world
         super_area = world.super_areas[0]
-        leisure = generate_leisure_for_config(
-            world=world, config_filename=test_config
-        )
+        leisure = generate_leisure_for_config(world=world, config_filename=test_config)
         reduce_leisure_probabilities = ChangeLeisureProbability(
             start_time="2020-03-02",
             end_time="2020-03-05",
-            leisure_activities_probabilities={
+            leisure_poisson_parameters={
                 "pubs": {"men": {"0-50": 0.2, "50-100": 0.0}, "women": {"0-100": 0.2},},
             },
         )
@@ -121,7 +107,7 @@ class TestReduceLeisureProbabilities:
         original_male_pub_probabilities = leisure.leisure_distributors[
             "pubs"
         ].male_probabilities
-        original_female_pub_probabilities =leisure.leisure_distributors[
+        original_female_pub_probabilities = leisure.leisure_distributors[
             "pubs"
         ].female_probabilities
         assert str(sim.timer.date.date()) == "2020-03-01"
@@ -142,15 +128,11 @@ class TestReduceLeisureProbabilities:
         pubs1_visits_before = 0
         pubs2_visits_before = 0
         for _ in range(5000):
-            subgroup = leisure.get_subgroup_for_person_and_housemates(
-                person1
-            )
+            subgroup = leisure.get_subgroup_for_person_and_housemates(person1)
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs1_visits_before += 1
             person1.subgroups.leisure = None
-            subgroup = leisure.get_subgroup_for_person_and_housemates(
-                person2
-            )
+            subgroup = leisure.get_subgroup_for_person_and_housemates(person2)
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs2_visits_before += 1
             person2.subgroups.leisure = None
@@ -159,36 +141,18 @@ class TestReduceLeisureProbabilities:
         # next day leisure policies are
         while str(sim.timer.date.date()) != "2020-03-02":
             next(sim.timer)
-        policies.leisure_policies.apply(
-            date=sim.timer.date, leisure=leisure
-        )
-        leisure.generate_leisure_probabilities_for_timestep(
-            0.1, False, False
-        )
-        assert (
-            leisure.leisure_distributors[
-                "pubs"
-            ].male_probabilities[60]
-            == 0.0
-        )
-        assert (
-            leisure.leisure_distributors[
-                "pubs"
-            ].female_probabilities[60]
-            == 0.2
-        )
+        policies.leisure_policies.apply(date=sim.timer.date, leisure=leisure)
+        leisure.generate_leisure_probabilities_for_timestep(0.1, False, False)
+        assert leisure.policy_poisson_parameters["pubs"]["m"][60] == 0.0
+        assert leisure.policy_poisson_parameters["pubs"]["f"][60] == 0.2
         pubs1_visits_after = 0
         pubs2_visits_after = 0
         for _ in range(5000):
-            subgroup = leisure.get_subgroup_for_person_and_housemates(
-                person1
-            )
+            subgroup = leisure.get_subgroup_for_person_and_housemates(person1)
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs1_visits_after += 1
             person1.subgroups.leisure = None
-            subgroup = leisure.get_subgroup_for_person_and_housemates(
-                person2
-            )
+            subgroup = leisure.get_subgroup_for_person_and_housemates(person2)
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs2_visits_after += 1
             person2.subgroups.leisure = None
@@ -203,96 +167,88 @@ class TestReduceLeisureProbabilities:
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
             0.1, False, False
         )
-        assert (
-            leisure.leisure_distributors[
-                "pubs"
-            ].male_probabilities[25]
-            == original_prob_1
-        )
-        assert (
-            leisure.leisure_distributors[
-                "pubs"
-            ].male_probabilities[60]
-            == original_prob_2
-        )
+        assert leisure.policy_poisson_parameters == {}
+        assert leisure.policy_poisson_parameters == {}
         pubs1_visits_restored = 0
         pubs2_visits_restored = 0
         for _ in range(5000):
-            subgroup = leisure.get_subgroup_for_person_and_housemates(
-                person1
-            )
+            subgroup = leisure.get_subgroup_for_person_and_housemates(person1)
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs1_visits_restored += 1
             person1.subgroups.leisure = None
-            subgroup = leisure.get_subgroup_for_person_and_housemates(
-                person2
-            )
+            subgroup = leisure.get_subgroup_for_person_and_housemates(person2)
             if subgroup is not None and subgroup.group.spec == "pub":
                 pubs2_visits_restored += 1
             person2.subgroups.leisure = None
         assert np.isclose(pubs1_visits_restored, pubs1_visits_before, rtol=0.1)
         assert np.isclose(pubs2_visits_restored, pubs2_visits_before, rtol=0.1)
-        assert (
-            leisure.leisure_distributors["pubs"].male_probabilities
-            == original_male_pub_probabilities
-        )
-        assert (
-            leisure.leisure_distributors[
-                "pubs"
-            ].female_probabilities
-            == original_female_pub_probabilities
-        )    
+        assert leisure.policy_poisson_parameters == {}
 
-    def test__reduce_household_visits_with_regional_compliance(self, setup_policy_world):
+    def test__reduce_household_visits_with_regional_compliance(
+        self, setup_policy_world
+    ):
         world, pupil, student, worker, sim = setup_policy_world
         while str(sim.timer.date.date()) != "2020-03-02":
             next(sim.timer)
         super_area = world.super_areas[0]
-        region = worker.region.name
-        regional_compliance = {
-                region: 0.9
-        }
-        leisure = generate_leisure_for_config(
-            world=world, config_filename=test_config
-        )
+        region = worker.region
+        leisure = generate_leisure_for_config(world=world, config_filename=test_config)
+        assert leisure.regions[0] == region
         reduce_leisure_probabilities = ChangeLeisureProbability(
             start_time="2020-03-02",
             end_time="2020-03-05",
-            leisure_activities_probabilities={
+            leisure_poisson_parameters={
                 "pubs": {"men": {"0-50": 0.2, "50-100": 0.0}, "women": {"0-100": 0.2},},
             },
         )
-        policies = Policies([reduce_leisure_probabilities], 
-                regional_compliance=regional_compliance)
+        policies = Policies([reduce_leisure_probabilities])
         sim.activity_manager.policies = policies
         sim.activity_manager.leisure = leisure
-        leisure.generate_leisure_probabilities_for_timestep(
-            0.1, False, False
-        )
-        original_personal_probabilities = leisure.get_probability_for_person(person=worker)
-        policies.leisure_policies.apply(
-            date=sim.timer.date, leisure=leisure, regional_compliance=regional_compliance
-        )
-        assert leisure.regional_compliance == regional_compliance
 
+        # compliance to 1
+        policies.leisure_policies.apply(date=sim.timer.date, leisure=leisure)
+        assert leisure.policy_poisson_parameters["pubs"]["m"][60] == 0.0
+        assert leisure.policy_poisson_parameters["pubs"]["f"][40] == 0.2
+        original_poisson_parameter = leisure.leisure_distributors[
+            "pubs"
+        ].get_poisson_parameter(sex="m", age=25, is_weekend=False)
+        full_comp_poisson_parameter = leisure._get_activity_poisson_parameter(
+            activity="pubs",
+            distributor=leisure.leisure_distributors["pubs"],
+            sex="m",
+            age=25,
+            is_weekend=False,
+            regional_compliance=1.0,
+        )
+        half_comp_poisson_parameter = leisure._get_activity_poisson_parameter(
+            activity="pubs",
+            distributor=leisure.leisure_distributors["pubs"],
+            sex="m",
+            age=25,
+            is_weekend=False,
+            regional_compliance=0.5,
+        )
+        assert np.isclose(full_comp_poisson_parameter, 0.2)
+        assert np.isclose(
+            half_comp_poisson_parameter,
+            original_poisson_parameter
+            + 0.5 * (full_comp_poisson_parameter - original_poisson_parameter),
+        )
+
+        # check integration with region object
+        region.regional_compliance = 1.0
+        leisure.generate_leisure_probabilities_for_timestep(0.1, False, False)
+        full_comp_probs = leisure.get_activity_probabilities_for_person(person=worker)
+        region.regional_compliance = 0.5
+        leisure.generate_leisure_probabilities_for_timestep(0.1, False, False)
+        half_comp_probs = leisure.get_activity_probabilities_for_person(person=worker)
+        # this is  a reduction, so being less compliant means you go more often
+        assert half_comp_probs["does_activity"] > full_comp_probs["does_activity"]
         assert (
-            leisure.leisure_distributors[
-                "pubs"
-            ].male_probabilities[60]
-            == 0.0
+            half_comp_probs["activities"]["pubs"]
+            > full_comp_probs["activities"]["pubs"]
         )
         assert (
-            leisure.leisure_distributors[
-                "pubs"
-            ].female_probabilities[40]
-            == 0.2
+            half_comp_probs["drags_household"]["pubs"]
+            == full_comp_probs["drags_household"]["pubs"]
         )
-        regional_probabilities = leisure.get_probability_for_person(person=worker)
-        assert pytest.approx(regional_probabilities['does_activity']*0.9, 0.1006)
-        regional_compliance = None
-        policies.leisure_policies.apply(
-            date=sim.timer.date, leisure=leisure, regional_compliance=regional_compliance
-        )
-        assert leisure.regional_compliance is None
-        regional_probabilities = leisure.get_probability_for_person(person=worker)
-        assert regional_probabilities == original_personal_probabilities 

@@ -5,6 +5,7 @@ from random import random
 import h5py
 
 from june.groups import Group, Supergroup
+from june.groups.group.interactive import InteractiveGroup
 
 from enum import IntEnum
 from typing import List
@@ -66,6 +67,7 @@ class Household(Group):
                 subgroup = self.SubgroupType.old_adults
             person.subgroups.leisure = self[subgroup]
             self[subgroup].append(person)
+            self.household_visit = True
         elif activity == "residence":
             self[subgroup_type].append(person)
             self.residents = tuple((*self.residents, person))
@@ -143,6 +145,11 @@ class Household(Group):
         else:
             return self.area.super_area
 
+    def clear(self):
+        super().clear()
+        self.household_visit = False
+
+
 
 class Households(Supergroup):
     """
@@ -151,3 +158,8 @@ class Households(Supergroup):
 
     def __init__(self, households: List[Household]):
         super().__init__(members=households)
+
+
+class InteractiveHousehold(InteractiveGroup):
+    def get_processed_beta(self, beta):
+        pass
