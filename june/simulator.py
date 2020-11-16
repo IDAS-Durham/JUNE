@@ -26,7 +26,6 @@ from june.policy import (
     Policies,
     MedicalCarePolicies,
     InteractionPolicies,
-    # regional_compliance_is_active,
 )
 from june.time import Timer
 from june.records import Record
@@ -442,14 +441,10 @@ class Simulator:
         """
         output_logger.info("==================== timestep ====================")
         tick, tickw = perf_counter(), wall_clock()
-        # regional_compliance = regional_compliance_is_active(
-        #    self.activity_manager.policies.regional_compliance, self.timer.date
-        # )
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
                 date=self.timer.date,
                 interaction=self.interaction,
-                # regional_compliance=regional_compliance,
             )
             self.activity_manager.policies.regional_compliance.apply(
                 date=self.timer.date, regions=self.world.regions
@@ -500,6 +495,7 @@ class Simulator:
                     new_infected_ids, group_size = self.interaction.time_step_for_group(
                         group=group,
                         people_from_abroad=people_from_abroad,
+                        delta_time=self.timer.duration,
                         record=self.record,
                     )
                     infected_ids += new_infected_ids

@@ -71,7 +71,8 @@ class Interaction:
             self.set_population_susceptibilities(
                 susceptibilities_by_age=susceptibilities_by_age, population=population
             )
-        self.beta_reductions = None # This dict is to keep track of beta reductions introduced by policies.
+        # This dict is to keep track of beta reductions introduced by policies:
+        self.beta_reductions = {}
 
     @classmethod
     def from_file(
@@ -131,36 +132,31 @@ class Interaction:
             # school is a special case.
             contact_data = input_contact_matrices.get(group, {})
             contact_matrix = np.array(contact_data.get("contacts", [[1]]))
-            proportion_physical = np.array(contact_data.get("proportion_physical", [[0]]))
+            proportion_physical = np.array(
+                contact_data.get("proportion_physical", [[0]])
+            )
             characteristic_time = contact_data.get("characteristic_time", 8)
             if group == "school":
                 contact_matrix = InteractiveSchool.get_processed_contact_matrix(
                     contact_matrix=contact_matrix,
                     proportion_physical=proportion_physical,
                     alpha_physical=alpha_physical,
-                    characteristic_time=characteristic_time
+                    characteristic_time=characteristic_time,
                 )
             else:
                 contact_matrix = InteractiveGroup.get_processed_contact_matrix(
                     contact_matrix=contact_matrix,
                     proportion_physical=proportion_physical,
                     alpha_physical=alpha_physical,
-                    characteristic_time=characteristic_time
+                    characteristic_time=characteristic_time,
                 )
             contact_matrices[group] = contact_matrix
         return contact_matrices
 
-    #def get_beta_for_group(self, group: "InteractiveGroup"):
-    #    if self.regional_compliance is not None and group.spec in self.distanced_groups:
-    #        beta = (
-    #            self.original_betas[group.spec]
-    #            * (self.beta_reductions[group.spec] - 1.0)
-    #            * self.regional_compliance.get(group.region.name, 1.0)
-    #            + self.original_betas[group.spec]
-    #        )
-    #    else:
-    #        beta = self.beta[group.spec]
-    #    return beta
+    def _get_interactive_group_beta(self, interactive_group):
+        return interactive_group.get_processed_beta(
+            betas=self.betas, beta_reductions=self.beta_reductions
+        )
 
     def time_step_for_group(
         self,
@@ -191,13 +187,17 @@ class Interaction:
         if not interactive_group.must_timestep:
             return [], interactive_group.size
         infected_ids = []
-        beta = group.get_processed_beta(beta=self.betas[group.spec])
+        beta = self._get_interactive_group_beta(
+            interactive_group
+        )
         contact_matrix = self.contact_matrices[group.spec]
         for susceptible_subgroup_index, susceptible_subgroup_global_index in enumerate(
             group.subgroups_susceptible
         ):
-            # the susceptible_subgroup_index tracks the particular subgroup inside the list of susceptible subgroups
-            # the susceptible_subgroup_global_index tracks the particular subgroup inside the list of all subgroups
+            # the susceptible_subgroup_index tracks the particular subgroup
+            # inside the list of susceptible subgroups.
+            # the susceptible_subgroup_global_index tracks the particular
+            # subgroup inside the list of all subgroups
             infected_ids += self._time_step_for_subgroup(
                 susceptible_subgroup_index=susceptible_subgroup_index,
                 susceptible_subgroup_global_index=susceptible_subgroup_global_index,

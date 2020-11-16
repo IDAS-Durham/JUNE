@@ -79,15 +79,6 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
                                 )
                             )
 
-    def get_possible_venues_for_household(self, household: Household):
-        if household.relatives_in_care_homes is None:
-            return ()
-        return tuple(
-            relative.residence.group
-            for relative in household.relatives_in_care_homes
-            if relative.dead is False
-        )
-
     def get_social_venue_for_person(self, person):
         care_homes_to_visit = person.residence.group.residences_to_visit["care_home"]
         if care_homes_to_visit is None:
