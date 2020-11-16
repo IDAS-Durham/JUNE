@@ -69,7 +69,7 @@ class Universities(Supergroup):
     @classmethod
     def for_areas(
         cls,
-        areas: SuperAreas,
+        areas: Areas,
         universities_filename: str = default_universities_filename,
         max_distance_to_area=5,
     ):
@@ -80,8 +80,8 @@ class Universities(Supergroup):
 
         Parameters
         ----------
-        super_areas:
-            an instance of SuperAreas
+        areas:
+            an instance of Areas
         universities_filename:
             path to the university data
         """

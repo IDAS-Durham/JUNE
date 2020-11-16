@@ -298,6 +298,12 @@ class SchoolPlots:
         primary_distances_binned, primary_distances_bins = np.histogram(primary_distances, bins=bins)
         secondary_distances_binned, secondary_distances_bins = np.histogram(secondary_distances, bins=bins)
         mixed_distances_binned, mixed_distances_bins = np.histogram(mixed_distances, bins=bins)
+
+        mean_primary_distance = np.average(primary_distances)
+        mean_secondary_distance = np.average(secondary_distances)
+
+        print(mean_primary_distance)
+        print(mean_secondary_distance)
             
         f, ax = plt.subplots()
         #ax.hist(
@@ -318,7 +324,7 @@ class SchoolPlots:
         #         label="mixed", alpha=0.7,
         #     )
 
-
+        
         ax.scatter(primary_distances_bins[1:], primary_distances_binned, label="primary", s=30)
         ax.scatter(secondary_distances_bins[1:], secondary_distances_binned, label="secondary", s=30)
         if len(mixed_distances) > 0:

@@ -171,7 +171,6 @@ class HouseholdPlots:
             ratios.values(),
             color=self.colors['JUNE'],
         )
-        ax.set_title("Household size simulated world / England ratios..")
         ax.set_xlabel("Household size")
         ax.set_ylabel("Ratio")
         ax.legend()

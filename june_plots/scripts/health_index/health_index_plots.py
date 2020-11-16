@@ -77,14 +77,14 @@ class HealthIndexPlots:
             label=" HR male",
         )
 
-        ax.plot(ages, female_icu_rate, color=self.colors['general_2'], linewidth=3, label="ICUR female")
+        ax.plot(ages, female_icu_rate, color=self.colors['general_2'], linewidth=3, label="ITUR female")
         ax.plot(
             ages,
             male_icu_rate,
             linestyle="--",
             linewidth=2,
             color=self.colors['general_2'],
-            label="ICUR male",
+            label="ITUR male",
         )
 
         ax.plot(ages, female_death_rate, color=self.colors['general_3'], linewidth=3, label="DR female")
@@ -178,7 +178,9 @@ class HealthIndexPlots:
         f, ax = plt.subplots()
         ax.plot(time, 
         symptoms_trajectories[3].stages[0].completion_time.distribution.pdf(time),
-                label=f'$\\bar{{t}}_{{incubation}} = {median:.2f}$'
+                label=f'$\\bar{{t}}_{{incubation}} = {median:.2f}$',
+                linewidth=2,
+                color=self.colors["general_4"]
 
         )
         ax.legend()
@@ -201,24 +203,32 @@ class HealthIndexPlots:
         median = symptoms_trajectories[3].stages[2].completion_time.distribution.median()
         ax.plot(time, 
         symptoms_trajectories[3].stages[2].completion_time.distribution.pdf(time),
-                 label=f'$\\bar{{t}}_{{hosp|\mathrm{{recovers}}}} = {median:.2f}$'
+                 label=f'$\\bar{{t}}_{{hosp|\mathrm{{recovers}}}} = {median:.2f}$',
+                 linewidth=2,
+                 color=self.colors["general_1"]
         )
         median = symptoms_trajectories[6].stages[2].completion_time.distribution.median()
 
         ax.plot(time, 
         symptoms_trajectories[6].stages[2].completion_time.distribution.pdf(time),
-                    label=f'$\\bar{{t}}_{{hosp|\mathrm{{dies}}}} = {median:.2f}$'
+                    label=f'$\\bar{{t}}_{{hosp|\mathrm{{dies}}}} = {median:.2f}$',
+                    linewidth=2,
+                    color=self.colors["general_2"]
         )
         median = symptoms_trajectories[4].stages[3].completion_time.distribution.median()
         ax.plot(time, 
         symptoms_trajectories[4].stages[3].completion_time.distribution.pdf(time),
-                 label=f'$\\bar{{t}}_{{icu|\mathrm{{recovers}}}} = {median:.2f}$'
+                 label=f'$\\bar{{t}}_{{icu|\mathrm{{recovers}}}} = {median:.2f}$',
+                 linewidth=2,
+                 color=self.colors["general_3"]
         )
         median = symptoms_trajectories[7].stages[3].completion_time.distribution.median()
 
         ax.plot(time,
         symptoms_trajectories[7].stages[3].completion_time.distribution.pdf(time),
-                 label=f'$\\bar{{t}}_{{icu|\mathrm{{dies}}}} = {median:.2f}$'
+                 label=f'$\\bar{{t}}_{{icu|\mathrm{{dies}}}} = {median:.2f}$',
+                 linewidth=2,
+                 color=self.colors["general_4"]
         )
         ax.legend()
         ax.set_xlabel('Time [days]')

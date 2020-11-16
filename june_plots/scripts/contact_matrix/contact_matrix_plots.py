@@ -1,6 +1,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('Agg')
+import matplotlib.ticker as tick
 from bisect import bisect_right
 import yaml
 import numpy as np
@@ -221,8 +222,8 @@ class ContactMatrixPlots():
         fig, ax = plt.subplots()
 
         if location == 'household':
-            vmax = 0.6
-            ticks = np.linspace(0, vmax, 4+1, endpoint=True)
+            vmax = 0.8
+            ticks = np.linspace(0, vmax, 4+1)
         else:
             vmax = 4
             ticks = range(0, vmax+1, 1)
@@ -248,6 +249,8 @@ class ContactMatrixPlots():
                      boundaries=np.linspace(0, vmax, 100),
                      ticks=ticks
                      )
+        # ensure all plots are the same size
+        cbar.ax.yaxis.set_major_formatter(tick.FormatStrFormatter('%.1f'))
         ax.set_xlabel("Participant age group")
         ax.set_ylabel("Contact age group")
         return fig

@@ -153,11 +153,13 @@ class SimulationPlotter:
     def __init__(
         self,
         world,
+        world_name=None,
         contact_simulator=True,
         occupancy_simulator=False,
-        simulation_outputs_path=default_simulation_outputs_path
+        simulation_outputs_path=default_simulation_outputs_path,
     ):
         self.world = world
+        self.world_name = world_name
         self.contact_simulator = contact_simulator
         self.occupancy_simulator = occupancy_simulator
         
@@ -177,7 +179,7 @@ class SimulationPlotter:
                 world_filename, simulation_outputs_path=simulation_outputs_path
             )
         print(f"world {mpi_rank} has {len(world.people)} people")
-        return SimulationPlotter(world)
+        return SimulationPlotter(world, world_name=Path(world_filename).stem)
   
     def generate_simulator(
         self,
@@ -226,7 +228,8 @@ class SimulationPlotter:
             simulation_record=simulation_record,
             simulation_outputs_path=self.simulation_outputs_path,
             age_bins={"bbc": bbc_bins, "five_yr": np.arange(0,105,5)},
-            simulation_days=simulation_days             
+            simulation_days=simulation_days,
+            world_name=self.world_name  
         )
         """self.contact_simulator = OccupancySimulator(
             simulator=self.simulator,
@@ -282,14 +285,12 @@ class SimulationPlotter:
         if save_all:
             self.contact_simulator.save_auxilliary_data()
         #    #### SAVE OUT OTHERS HERE ####W
-        
+        """
 
         mpi_comm.Barrier()
-        """
+        
         if mpi_rank == 0:
-            #combine_hdf5s(
-            #    record_path=self.simulation_outputs_path
-            #)
+            #combine_hdf5s(record_path=self.simulation_outputs_path)
             self.contact_simulator.process_contacts()
 
     def make_plots(self):

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import argparse
 import os
 import mpu
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
@@ -142,6 +143,8 @@ class CompanyPlots:
         ax.set_xlabel('Company sector')
         ax.set_xticks(x)
         ax.set_xticklabels(sector_brackets)
+        ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter(useMathText=True))
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(0,100000000))
         ax.legend()
 
         return ax
@@ -205,10 +208,12 @@ class CompanyPlots:
         f, ax = plt.subplots()
         ax.bar(x+width/2, JUNE_female_sector, width, label='Female', color=self.colors['female'])
         ax.bar(x-width/2, JUNE_male_sector, width, label='Male', color=self.colors['male'])
-        ax.set_ylabel('Frequency [\%]')
+        ax.set_ylabel('Frequency')
         ax.set_xlabel('Company sector')
         ax.set_xticks(x)
         ax.set_xticklabels(sectors)
+        ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter(useMathText=True))
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(0,100000000))
         ax.legend()
 
         return ax
