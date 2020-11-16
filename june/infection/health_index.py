@@ -21,10 +21,10 @@ default_physiological_age_male = paths.configs_path / "defaults/infection/physio
 #default_physiological_age_female = paths.configs_path / "defaults/infection/physiological_age_female_no_threshold50years.dat"
 #default_physiological_age_male = paths.configs_path / "defaults/infection/physiological_age_male_no_threshold50years.dat"
 
-default_socioeconomic_LE_lookup_path = paths.data_path / "input/infection/socioeconomic_index_LE_lookup.csv"
+default_socioeconomic_LE_lookup_path = paths.configs_path / "defaults/infection/socioeconomic_index_LE_lookup.csv"
 
 ### use this for nasty HACK.
-default_socioeconomic_index_path = paths.data_path / "input/demography/socioeconomic_index.csv"
+default_socioeconomic_index_path = paths.data_path / "input/geography/socioeconomic_index.csv"
 
 
 RKIdata = [
