@@ -80,11 +80,9 @@ class Group(AbstractGroup):
 
     @property
     def region(self) -> "Region":
-        if hasattr(self, "area"):
-            return self.area.super_area.region
-        elif hasattr(self, "super_area"):
+        try:
             return self.super_area.region
-        else:
+        except:
             return None
 
     def get_spec(self) -> str:

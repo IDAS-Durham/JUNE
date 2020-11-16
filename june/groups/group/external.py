@@ -30,3 +30,7 @@ class ExternalSubgroup:
     @property
     def domain_id(self):
         return self.group.domain_id
+
+    @property
+    def clear(self):
+        pass
