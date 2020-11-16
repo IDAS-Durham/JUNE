@@ -255,7 +255,7 @@ class Leisure:
             prob = self.probabilities_by_region_sex_age[person.region][person.sex][
                 person.age
             ]["drags_household"][activity]
-        except KeyError:
+        except (KeyError, AttributeError):
             prob = self.probabilities_by_region_sex_age[person.sex][person.age][
                 "drags_household"
             ][activity]
@@ -307,6 +307,13 @@ class Leisure:
             ]
         except KeyError:
             return self.probabilities_by_region_sex_age[person.sex][person.age]
+        except AttributeError:
+            if person.sex in self.probabilities_by_region_sex_age:
+                return self.probabilities_by_region_sex_age[person.sex][person.age]
+            else:
+                return self.probabilities_by_region_sex_age[
+                list(self.probabilities_by_region_sex_age.keys())[0]
+            ][person.sex][person.age]
 
     def get_subgroup_for_person_and_housemates(
         self, person: Person, to_send_abroad: dict = None

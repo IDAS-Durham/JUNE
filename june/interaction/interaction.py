@@ -209,6 +209,7 @@ class Interaction:
                 infected_ids=infected_ids,
                 interactive_group=interactive_group,
                 record=record,
+                group=group,
             )
         return infected_ids, interactive_group.size
 
@@ -351,7 +352,6 @@ class Interaction:
         TODO: assign infection blame proportionally to transmission probability.
         """
         n_infected = len(infected_ids)
-        tprob_norm = sum(interactive_group.transmission_probabilities)
         infector_ids = list(chain.from_iterable(interactive_group.infector_ids))
         infector_ids = np.random.choice(
             infector_ids,

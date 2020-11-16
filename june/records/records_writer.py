@@ -221,7 +221,7 @@ class Record:
     ):
         if interaction is not None:
             interaction_dict = {}
-            interaction_dict["beta"] = interaction.betas
+            interaction_dict["betas"] = interaction.betas
             interaction_dict["alpha_physical"] = interaction.alpha_physical
             interaction_dict["contact_matrices"] = {}
             for key, values in interaction.contact_matrices.items():

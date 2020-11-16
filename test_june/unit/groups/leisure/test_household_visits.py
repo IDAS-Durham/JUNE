@@ -21,6 +21,7 @@ def make_dist(world_visits):
 def test__every_household_has_up_to_3_links(world_visits, visits_distributor):
     super_areas = world_visits.super_areas
     visits_distributor.link_households_to_households(super_areas)
+    has_visits = False
     for super_area in super_areas:
         for area in super_area.areas:
             for household in area.households:
@@ -28,15 +29,13 @@ def test__every_household_has_up_to_3_links(world_visits, visits_distributor):
                     "other",
                     "communal",
                 ]:
-                    assert household.relatives_in_households is None
+                    assert "household" not in household.residences_to_visit
                 else:
-                    assert (
-                        household.relatives_in_households is None
-                        or len(household.relatives_in_households) <= 3
-                    )
-                    if household.relatives_in_households is not None:
-                        for link in household.relatives_in_households:
-                            assert link.residence.group.spec == "household"
+                    has_visits = True
+                    assert len(household.residences_to_visit["household"]) in range(1, 4)
+                    for household_to_visit in household.residences_to_visit["household"]:
+                        assert household_to_visit.spec == "household"
+    assert has_visits
 
 
 @fixture(name="leisure")
@@ -72,23 +71,6 @@ def test__household_home_visits_leisure_integration(leisure):
                 subgroup.group.household_visit = False
             assert subgroup.group.household_visit == False
     assert np.isclose(counter, np.random.poisson(1.0 * 0.1 * 200), rtol=5)
-
-
-
-def test__do_not_visit_dead_people(leisure):
-    person = Person.from_attributes()
-    person2 = Person.from_attributes()
-    household = Household(type="family")
-    household.add(person)
-    household2 = Household(type="family")
-    household2.add(person2)
-    person.residence.group.social_venues = {"household_visits": [household2]}
-    household.relatives_in_care_homes = [person2]
-    person2.dead = True
-    leisure.update_household_and_care_home_visits_targets([person])
-    for _ in range(0, 100):
-        household = leisure.get_subgroup_for_person_and_housemates(person)
-        assert household is None
 
 
 def test__people_stay_home_when_receiving_visits(leisure):

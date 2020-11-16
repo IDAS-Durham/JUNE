@@ -17,9 +17,8 @@ class RegionalCompliance(Policy):
     def apply(self, date: datetime, regions: Regions):
         date = read_date(date)
         if self.is_active(date):
-            for region_name, regional_compliance in self.compliances_per_region.items():
-                region = regions.get_from_name(region_name)
-                region.regional_compliance = regional_compliance
+            for region in regions:
+                region.regional_compliance = self.compliances_per_region[region.name]
 
 
 class RegionalCompliances(PolicyCollection):
