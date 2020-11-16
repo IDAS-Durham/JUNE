@@ -97,7 +97,7 @@ class InteractiveGroup:
                     if people_abroad_data[id]["susc"] > 0.0
                 ]
                 self.susceptible_ids.append(subgroup_susceptible_ids)
-                self.susceptibilities.append(subgroup_susceptibilities)
+                self.susceptible_susceptibilities.append(subgroup_susceptibilities)
 
             # get infectious people in subgroup
             local_subgroup_infectors = [
@@ -149,12 +149,16 @@ class InteractiveGroup:
         processed_contact_matrix *= 24 / characteristic_time
         return processed_contact_matrix
 
-    def get_processed_beta(self, beta):
+    def get_processed_beta(self, betas, beta_reductions):
         """
-        Returns the processed contact intensity, by default it returns the input,
-        but children of this class will interact differently.
+        Returns the processed contact intensity, by taking into account the policies
+        beta reductions and regional compliance. This is a group method as different interactive
+        groups may choose to treat this differently.
         """
-        return beta
+        beta = betas[self.spec]
+        beta_reduction = beta_reductions.get(self.spec, 1.0)
+        regional_compliance = self.super_area.region.regional_compliance
+        return beta * (1 + regional_compliance * (beta_reduction - 1))
 
     def get_contacts_between_subgroups(
         self, contact_matrix, subgroup_1_idx, subgroup_2_idx
@@ -174,3 +178,7 @@ class InteractiveGroup:
     @property
     def super_area(self):
         return self.group.super_area
+
+    @property
+    def regional_compliance(self):
+        return self.group.super_area.region.regional_compliance

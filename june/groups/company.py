@@ -22,6 +22,7 @@ default_config_filename = paths.configs_path / "defaults/groups/companies.yaml"
 
 logger = logging.getLogger(__name__)
 
+
 def _get_size_brackets(sizegroup: str):
     """
     Given company size group calculates mean
@@ -36,6 +37,7 @@ def _get_size_brackets(sizegroup: str):
         size_min = int(size_min)
         size_max = int(size_max)
     return size_min, size_max
+
 
 class CompanyError(BaseException):
     pass
@@ -89,6 +91,10 @@ class Company(Group):
     @property
     def area(self):
         return self.super_area.areas[0]
+
+    def get_interactive_group(self, people_from_abroad=None):
+        return InteractiveCompany(self, people_from_abroad=people_from_abroad)
+
 
 class Companies(Supergroup):
     def __init__(self, companies: List["Companies"]):
@@ -222,17 +228,23 @@ class Companies(Supergroup):
         company = Company(super_area, company_size, company_sector)
         return company
 
+
 def _read_sector_betas():
     with open(default_config_filename) as f:
         sector_betas = yaml.load(f, Loader=yaml.FullLoader)["sector_betas"]
     return sector_betas
 
+
 class InteractiveCompany(InteractiveGroup):
     sector_betas = _read_sector_betas()
+
     def __init__(self, group: "Group", people_from_abroad=None):
         super().__init__(group=group, people_from_abroad=people_from_abroad)
         self.sector = group.sector
 
-    def get_processed_beta(self, beta):
-        return beta * self.sector_betas[self.sector]
-
+    def get_processed_beta(self, betas, beta_reductions):
+        beta_processed = super().get_processed_beta(
+            betas=betas,
+            beta_reductions=beta_reductions,
+        )
+        return beta_processed * self.sector_betas[self.sector]

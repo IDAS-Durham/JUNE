@@ -27,7 +27,8 @@ class RegionalCompliances(PolicyCollection):
 
     def apply(self, date: datetime, regions: Regions):
         # before applying compliances, reset all of them to 1.0
-        for region in regions:
-            region.regional_compliance = 1.0
+        if self.policies:
+            for region in regions:
+                region.regional_compliance = 1.0
         for policy in self.policies:
             policy.apply(date=date, regions=regions)
