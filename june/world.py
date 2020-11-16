@@ -69,6 +69,7 @@ class World:
         """
         self.areas = None
         self.super_areas = None
+        self.regions = None
         self.people = None
         self.households = None
         self.care_homes = None

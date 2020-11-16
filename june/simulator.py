@@ -26,7 +26,7 @@ from june.policy import (
     Policies,
     MedicalCarePolicies,
     InteractionPolicies,
-    regional_compliance_is_active,
+    # regional_compliance_is_active,
 )
 from june.time import Timer
 from june.records import Record
@@ -221,12 +221,7 @@ class Simulator:
             grouptype = getattr(self.world, super_group_name)
             if grouptype is not None:
                 for group in grouptype.members:
-                    if not group.external:
-                        group.clear()
-                        if (
-                            group.spec == "household"
-                        ):  # resets all household visit attributes
-                            group.household_visit = False
+                    group.clear()
 
         for person in self.world.people.members:
             person.busy = False
@@ -447,14 +442,17 @@ class Simulator:
         """
         output_logger.info("==================== timestep ====================")
         tick, tickw = perf_counter(), wall_clock()
-        regional_compliance = regional_compliance_is_active(
-            self.activity_manager.policies.regional_compliance, self.timer.date
-        )
+        # regional_compliance = regional_compliance_is_active(
+        #    self.activity_manager.policies.regional_compliance, self.timer.date
+        # )
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
                 date=self.timer.date,
                 interaction=self.interaction,
-                regional_compliance=regional_compliance,
+                # regional_compliance=regional_compliance,
+            )
+            self.activity_manager.policies.regional_compliance.apply(
+                date=self.timer.date, regions=self.world.regions
             )
         activities = self.timer.activities
         if not activities or len(activities) == 0:
@@ -464,7 +462,8 @@ class Simulator:
             people_from_abroad_dict,
             n_people_from_abroad,
             n_people_going_abroad,
-        ) = self.activity_manager.do_timestep(regional_compliance=regional_compliance)
+            # ) = self.activity_manager.do_timestep(regional_compliance=regional_compliance)
+        ) = self.activity_manager.do_timestep()
 
         # get the supergroup instances that are active in this time step:
         active_super_groups = self.activity_manager.active_super_groups
@@ -494,38 +493,18 @@ class Simulator:
             for group in super_group:
                 if group.external:
                     continue
-                if (
-                    group.spec in people_from_abroad_dict
-                    and group.id in people_from_abroad_dict[group.spec]
-                ):
-                    foreign_people = people_from_abroad_dict[group.spec][group.id]
                 else:
-                    foreign_people = None
-                int_group = InteractiveGroup(group, foreign_people)
-                n_people += int_group.size
-                if int_group.must_timestep:
-                    new_infected_ids = self.interaction.time_step_for_group(
-                        self.timer.duration, int_group
+                    people_from_abroad = people_from_abroad_dict.get(
+                        group.spec, {}
+                    ).get(group.id, None)
+                    new_infected_ids, group_size = self.interaction.time_step_for_group(
+                        group=group,
+                        people_from_abroad=people_from_abroad,
+                        record=self.record,
                     )
-                    if new_infected_ids and self.record is not None:
-                        n_infected = len(new_infected_ids)
-                        tprob_norm = sum(int_group.transmission_probabilities)
-                        infector_ids = list(chain.from_iterable(int_group.infector_ids))
-                        infector_ids = np.random.choice(
-                            infector_ids,
-                            n_infected,
-                            # TODO: p=np.array(transmission_probabilities) / tprob_norm,
-                        )
-                        self.record.accumulate(
-                            table_name="infections",
-                            location_spec=group.spec,
-                            location_id=group.id,
-                            region_name=group.super_area.region.name,
-                            infected_ids=new_infected_ids,
-                            infector_ids=infector_ids,
-                        )
-
                     infected_ids += new_infected_ids
+                    n_people += group_size
+
         # infect the people that got exposed
         if self.infection_selector:
             infect_in_domains = self.infect_people(
@@ -533,6 +512,7 @@ class Simulator:
                 people_from_abroad_dict=people_from_abroad_dict,
             )
             to_infect = self.tell_domains_to_infect(infect_in_domains)
+
         # recount people active to check people conservation
         people_active = (
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
@@ -546,11 +526,13 @@ class Simulator:
                 f"People coming from abroad {n_people_from_abroad}\n"
                 f"Current rank {mpi_rank}\n"
             )
+
         # update the health status of the population
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.record is not None:
             self.record.summarise_time_step(timestamp=self.timer.date, world=self.world)
             self.record.time_step(timestamp=self.timer.date)
+
         # remove everyone from their active groups
         self.clear_world()
         tock, tockw = perf_counter(), wall_clock()
