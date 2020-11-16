@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 
 from june.groups import Group
+from june.geography import Area, SuperArea, Region
 from june.demography.person import Person
 from june.infection.infection_selector import InfectionSelector
 from june.groups import (
@@ -11,6 +12,7 @@ from june.groups import (
     InteractiveSchool,
     Company,
     InteractiveCompany,
+    Household
 )
 from june.interaction import Interaction
 from june.groups.school import _translate_school_subgroup, _get_contacts_in_school
@@ -154,3 +156,26 @@ class TestInteractiveCompany:
             betas=betas, beta_reductions=beta_reductions
         )
         assert beta_processed == 2 * 0.7
+
+class TestInteractiveHousehold:
+    def test__household_visits_social_distancing(self):
+        region = Region()
+        region.regional_compliance = 1.0
+        super_area = SuperArea(region=region)
+        area = Area(super_area = super_area)
+        household = Household(area=area)
+        person = Person.from_attributes()
+        household.add(person)
+        betas = {"household" : 1}
+        beta_reductions = {"household" : 0.5, "household_visits" : 0.1}
+        household.add(person)
+        int_household = household.get_interactive_group()
+        assert household.being_visited is False
+        beta = int_household.get_processed_beta(betas, beta_reductions)
+        assert beta == 0.5
+        household = Household(area=area)
+        household.add(person, activity="leisure")
+        assert household.being_visited is True
+        int_household = household.get_interactive_group()
+        beta = int_household.get_processed_beta(betas, beta_reductions)
+        assert np.isclose(beta, 0.1)

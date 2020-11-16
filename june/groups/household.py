@@ -169,7 +169,7 @@ class InteractiveHousehold(InteractiveGroup):
         """
         beta = betas[self.spec]
         if self.group.being_visited:
-            beta_reduction = beta_reductions.get("household_visit", 1.0)
+            beta_reduction = beta_reductions.get("household_visits", 1.0)
         else:
             beta_reduction = beta_reductions.get(self.spec, 1.0)
         regional_compliance = self.super_area.region.regional_compliance
