@@ -187,12 +187,10 @@ class Interaction:
         if not interactive_group.must_timestep:
             return [], interactive_group.size
         infected_ids = []
-        beta = self._get_interactive_group_beta(
-            interactive_group
-        )
+        beta = self._get_interactive_group_beta(interactive_group)
         contact_matrix = self.contact_matrices[group.spec]
         for susceptible_subgroup_index, susceptible_subgroup_global_index in enumerate(
-            group.subgroups_susceptible
+            interactive_group.subgroups_with_susceptible
         ):
             # the susceptible_subgroup_index tracks the particular subgroup
             # inside the list of susceptible subgroups.
@@ -201,7 +199,7 @@ class Interaction:
             infected_ids += self._time_step_for_subgroup(
                 susceptible_subgroup_index=susceptible_subgroup_index,
                 susceptible_subgroup_global_index=susceptible_subgroup_global_index,
-                group=group,
+                interactive_group=interactive_group,
                 beta=beta,
                 contact_matrix=contact_matrix,
                 delta_time=delta_time,
@@ -218,7 +216,7 @@ class Interaction:
         self,
         susceptible_subgroup_index: int,
         susceptible_subgroup_global_index: int,
-        group: InteractiveGroup,
+        interactive_group: InteractiveGroup,
         beta: float,
         contact_matrix: float,
         delta_time: float,
@@ -242,24 +240,28 @@ class Interaction:
         delta_time
             time interval
         """
-        effective_transmission = self.compute_effective_transmission(
+        effective_transmission_exponent = self._compute_effective_transmission_exponent(
             susceptible_subgroup_global_index=susceptible_subgroup_global_index,
-            group=group,
+            interactive_group=interactive_group,
             beta=beta,
             contact_matrix=contact_matrix,
             delta_time=delta_time,
         )
         subgroup_infected_ids = self._sample_new_infected_people(
-            effective_transmission=effective_transmission,
-            subgroup_susceptible_ids=group.susceptible_ids[susceptible_subgroup_index],
-            subgroup_suscetibilities=group.susceptibilities[susceptible_subgroup_index],
+            effective_transmission_exponent=effective_transmission_exponent,
+            subgroup_susceptible_ids=interactive_group.susceptible_ids[
+                susceptible_subgroup_index
+            ],
+            subgroup_suscetibilities=interactive_group.susceptible_susceptibilities[
+                susceptible_subgroup_index
+            ],
         )
         return subgroup_infected_ids
 
     def _compute_effective_transmission_exponent(
         self,
         susceptible_subgroup_global_index: int,
-        group: InteractiveGroup,
+        interactive_group: InteractiveGroup,
         beta: float,
         contact_matrix: np.array,
         delta_time: float,
@@ -272,15 +274,14 @@ class Interaction:
         ----------
         - subgroup_transmission_probabilities : transmission probabilities per subgroup.
         - susceptibles_group_idx : indices of suceptible people
-        - infector_subgroup_sizes : subgroup sizes where the infected people are.
+        - subgroups_with_infector_sizes: subgroup sizes where the infected people are.
         - contact_matrix : contact matrix of the group
         """
         transmission_exponent = 0.0
-        infector_subgroup_sizes = group.infector_subgroup_sizes
         for infector_subgroup_index, infector_subgroup_global_index in enumerate(
-            infector_subgroup_sizes
+            interactive_group.subgroups_with_infectors
         ):
-            infector_subgroup_size = group.infector_subgroup_sizes[
+            infector_subgroup_size = interactive_group.subgroups_with_infectors_sizes[
                 infector_subgroup_index
             ]
             # same logic in this loop as in the previous susceptible subgroups loop
@@ -289,13 +290,17 @@ class Interaction:
                 infector_subgroup_size -= 1
                 if infector_subgroup_size == 0:
                     continue
-            n_contacts_between_subgroups = group.get_contacts_between_subgroups(
+            n_contacts_between_subgroups = interactive_group.get_contacts_between_subgroups(
                 contact_matrix=contact_matrix,
                 subgroup_1_idx=susceptible_subgroup_global_index,
                 subgroup_2_idx=infector_subgroup_global_index,
             )
             infector_subgroup_mean_transmission_probability = (
-                sum(group.transmission_probabilities[infector_subgroup_index])
+                sum(
+                    interactive_group.infector_transmission_probabilities[
+                        infector_subgroup_index
+                    ]
+                )
                 / infector_subgroup_size
             )
             transmission_exponent += (

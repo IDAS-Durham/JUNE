@@ -157,7 +157,10 @@ class InteractiveGroup:
         """
         beta = betas[self.spec]
         beta_reduction = beta_reductions.get(self.spec, 1.0)
-        regional_compliance = self.super_area.region.regional_compliance
+        try:
+            regional_compliance = self.super_area.region.regional_compliance
+        except AttributeError:
+            regional_compliance = 1
         return beta * (1 + regional_compliance * (beta_reduction - 1))
 
     def get_contacts_between_subgroups(
