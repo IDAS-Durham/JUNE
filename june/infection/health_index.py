@@ -21,7 +21,7 @@ default_physiological_age_male = paths.configs_path / "defaults/infection/physio
 #default_physiological_age_female = paths.configs_path / "defaults/infection/physiological_age_female_no_threshold50years.dat"
 #default_physiological_age_male = paths.configs_path / "defaults/infection/physiological_age_male_no_threshold50years.dat"
 
-default_socioeconomic_LE_lookup_path = paths.configs_path / "defaults/infection/socioeconomic_index_LE_lookup.csv"
+default_socioeconomic_LE_lookup_path = paths.configs_path / "defaults/infection/socioeconomic_index_LE_lookup.dat"
 
 ### use this for nasty HACK.
 default_socioeconomic_index_path = paths.data_path / "input/geography/socioeconomic_index.csv"
@@ -550,9 +550,9 @@ class HealthIndexGenerator:
         else:
             if person.area is not None and self.physiological_correction:
                 ## when the new world is created...
-                socioeconomic_index = person.area.socioeconomic_index
+                #socioeconomic_index = person.area.socioeconomic_index
                 ## for now use NASTY HACK.
-                #socioeconomic_index = self.socioeconomic_index_lookup[person.area.name]
+                socioeconomic_index = self.socioeconomic_index_lookup[person.area.name]
                 physiological_age = self.physiological_age(
                     int(person.age), 
                     person.sex, 
