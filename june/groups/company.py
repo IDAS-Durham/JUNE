@@ -247,4 +247,4 @@ class InteractiveCompany(InteractiveGroup):
             betas=betas,
             beta_reductions=beta_reductions,
         )
-        return beta_processed * self.sector_betas[self.sector]
+        return beta_processed * self.sector_betas.get(self.sector, 1.0)
