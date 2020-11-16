@@ -166,6 +166,13 @@ class Person(dataobject):
             return None
 
     @property
+    def region(self):
+        try:
+            return self.super_area.region
+        except:
+            return None
+
+    @property
     def home_city(self):
         return self.area.super_area.city
 

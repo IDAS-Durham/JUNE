@@ -14,13 +14,12 @@ from june_plots.scripts.companies import CompanyPlots
 from june_plots.scripts.households import HouseholdPlots
 from june_plots.scripts.care_homes import CareHomePlots
 from june_plots.scripts.schools import SchoolPlots
-from june_plots.scripts.commute import CommutePlots
+#from june_plots.scripts.commute import CommutePlots
 from june_plots.scripts.contact_matrix import ContactMatrixPlots
 from june_plots.scripts.life_expectancy import LifeExpectancyPlots
-from june_plots.scripts.demography import DemographyPlots
+#from june_plots.scripts.demography import DemographyPlots
 from june_plots.scripts.health_index import HealthIndexPlots
-from june_plots.scripts.contact_tracker import ContactTracker
-from june_plots.scripts.university import UniversityPlots
+#from june_plots.scripts.university import UniversityPlots
 
 
 plt.style.use(["science"])
@@ -555,7 +554,7 @@ class Plotter:
         self.plot_contact_matrices()
         self.plot_life_expectancy()
         self.plot_health_index()
-        self.plot_universities()
+        #self.plot_universities()
 
 
 if __name__ == "__main__":
@@ -593,17 +592,17 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.add_argument(
-        "-u",
-        "--universities",
-        help="Plot only universities",
+        "-s",
+        "--schools",
+        help="Plot only schools",
         required=False,
         default=False,
         action="store_true",
     )
     parser.add_argument(
-        "-t",
-        "--tracker",
-        help="Plot contact tracker only",
+        "-u",
+        "--universities",
+        help="Plot only universities",
         required=False,
         default=False,
         action="store_true",
@@ -625,8 +624,8 @@ if __name__ == "__main__":
         plotter.plot_contact_matrices()
     elif args.demography:
         plotter.plot_demography()
-    elif args.tracker:
-        plotter.plot_contact_tracker()
+    elif args.schools:
+        plotter.plot_schools()
     elif args.universities:
         plotter.plot_universities()
     elif args.health_index:

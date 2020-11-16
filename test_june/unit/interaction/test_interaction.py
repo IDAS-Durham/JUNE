@@ -17,6 +17,7 @@ import os
 import pathlib
 
 test_config = paths.configs_path / "tests/interaction.yaml"
+default_sector_beta_filename = paths.configs_path / "defaults/interaction/sector_beta.yaml"
 
 
 def test__contact_matrices_from_default():
@@ -226,3 +227,28 @@ def test__infection_is_isolated(selector):
             assert person.dead
         elif not (person.residence.group in infected_households):
             assert not person.infected and person.susceptible
+
+def test__sector_beta(dummy_world):
+    world = dummy_world
+    company = world.companies[0]
+    person1 = Person.from_attributes()
+    person1.susceptibility = 1
+    company.add(person1)
+
+    selector = InfectionSelector.from_file()
+    selector.infect_person_at_time(person1, 1)
+    person1.infection.update_health_status(5, 5)
+    interactive_group = InteractiveGroup(company)
+
+    interaction = Interaction.from_file(
+        config_filename=test_config,
+        sector_beta = True,
+        sector_beta_filename=default_sector_beta_filename,
+    )
+    
+    if interactive_group.spec == "company" and interaction.sector_betas is not None:
+        beta = interaction.get_beta_for_group(group=interactive_group)*float(interaction.sector_betas[interactive_group.sector])
+    else:            
+        beta = interaction.get_beta_for_group(group=interactive_group)
+
+    assert beta == interaction.beta[interactive_group.spec]*float(interaction.sector_betas[company.sector])

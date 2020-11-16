@@ -58,7 +58,7 @@ class CommutePlots:
         ax.bar(x, internal_commuters, width/2, label = 'Internal commuters', color=self.colors['general_1'])
         ax.bar(x - width/2, external_commuters, width/2, label = 'External commuters', color=self.colors['general_2'])
         ax.bar(x + width/2, external_commuters+internal_commuters, width/2, label = 'Total commuters', color=self.colors['general_3'])
-        ax.set_ylabel('Number of people')
+        ax.set_ylabel('Frequency')
         ax.set_xticks(x)
         ax.set_xticklabels(names)
         ax.set_yscale('log')
