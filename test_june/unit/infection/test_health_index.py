@@ -116,6 +116,66 @@ def test__growing_index_ch():
     assert increasing_count == 0
 
 
+def test__physiological_age_from_LE():
+    health_index_generator_A = HealthIndexGenerator.from_file(
+        physiological_correction=True,
+        female_physiological_threshold=50, 
+        male_physiological_threshold=50,
+        female_average_life_expectancy=80,
+        male_average_life_expectancy=80,
+    )
+
+    person1 = Person.from_attributes(age=54)
+    person2 = Person.from_attributes(age=60)
+    person3 = Person.from_attributes(age=25)
+
+    physio_age_test = health_index_generator_A.physiological_age(60, "m", None, individual_LE=70)
+    
+    assert type(physio_age_test) is int
+
+    physio_age1A = health_index_generator_A.physiological_age(
+        person1.age, person1.sex, None, individual_LE=70
+    )
+    physio_age2A = health_index_generator_A.physiological_age(
+        person2.age, person2.sex, None, individual_LE=70
+    )
+    physio_age3A = health_index_generator_A.physiological_age(
+        person3.age, person3.sex, None, individual_LE=70
+    )
+
+    assert physio_age1A == 56
+    assert physio_age2A == 65
+    assert physio_age3A == 25
+
+
+def test__physiological_age_from_socioeconomic_index():
+    health_index_generator = HealthIndexGenerator.from_file(
+        physiological_correction=True,
+        female_physiological_threshold=50, 
+        male_physiological_threshold=50,
+    )
+
+    physio_age = health_index_generator.physiological_age(80, "f", 0.01)
+
+    count = 0
+    for x in np.arange(0.02,1.01,0.01):
+        new_physio_age = health_index_generator.physiological_age(80, "f", x)
+        if new_physio_age >= physio_age:
+            count += 1
+        physio_age = new_physio_age
+    assert count > 70
+
+    physio_age = health_index_generator.physiological_age(80, "m", 0.01)
+    for x in np.arange(0.02,1.01,0.01):
+        new_physio_age = health_index_generator.physiological_age(80, "m", x)
+        if new_physio_age >= physio_age:
+            count += 1
+        physio_age = new_physio_age
+    assert count > 70
+
+
+
+"""
 def test__physiological_age():
     index_list = HealthIndexGenerator.from_file(physiological_correction=True)
     count=0
@@ -172,10 +232,7 @@ def test__phisio__age():
      
     assert count>=150
 
-
-
-
-
+"""
 
 
 def test__parse_comorbidity_prevalence():

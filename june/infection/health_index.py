@@ -15,9 +15,17 @@ default_death_home_filename = paths.configs_path / "defaults/infection/health_in
 default_death_home_ch_filename=paths.configs_path /'defaults/infection/health_index/frac_deaths_home_smoothed.dat'
 default_hosp_cases_ch_filename=paths.configs_path /'defaults/infection/health_index/hosp_over_cases_care_home.dat'
 
-
 default_physiological_age_female = paths.configs_path / "defaults/infection/physiological_age_female_no_treshold.dat"
 default_physiological_age_male = paths.configs_path / "defaults/infection/physiological_age_male_no_treshold.dat"
+
+#default_physiological_age_female = paths.configs_path / "defaults/infection/physiological_age_female_no_threshold50years.dat"
+#default_physiological_age_male = paths.configs_path / "defaults/infection/physiological_age_male_no_threshold50years.dat"
+
+default_socioeconomic_LE_lookup_path = paths.data_path / "input/infection/socioeconomic_index_LE_lookup.csv"
+
+### use this for nasty HACK.
+default_socioeconomic_index_path = paths.data_path / "input/demography/socioeconomic_index.csv"
+
 
 RKIdata = [
     [2.5, 4.0 / 100.0],
@@ -40,8 +48,6 @@ survival_rate_icu = [
 ]
 
 
-
-
 class HealthIndexGenerator:
     """
     Computes probabilities for (asymptomatic, mild symptoms, severe symptoms, 
@@ -62,12 +68,20 @@ class HealthIndexGenerator:
         death_hosp: dict,
         death_home: dict,
         death_home_ch: dict,
-         
+
         physio_age_female: dict,
         physio_age_male: dict,
 
-        asymptomatic_ratio=0.2,
+        asymptomatic_ratio: float = 0.2,
+
         physiological_correction: bool = False,
+        socioeconomic_LE_lookup: Optional[dict] = None,
+        socioeconomic_index_path: str = default_socioeconomic_index_path,                
+        female_physiological_threshold: int = 50,
+        male_physiological_threshold: int = 50,
+        female_average_life_expectancy: int = 84,
+        male_average_life_expectancy: int = 80,
+
         comorbidity_multipliers: Optional[dict] = None,
         prevalence_reference_population: Optional[dict] = None,
         male_care_home_ratios: Optional[List] = None,
@@ -105,6 +119,22 @@ class HealthIndexGenerator:
         self.physiological_age_male =  physio_age_male
 
         self.physiological_correction = physiological_correction
+        self.socioeconomic_LE_lookup = socioeconomic_LE_lookup
+        self.physiological_thresholds = {
+            "f": female_physiological_threshold,
+            "m": male_physiological_threshold
+        }
+        self.average_LE_values = {
+            "f": female_average_life_expectancy, 
+            "m": male_average_life_expectancy
+        }
+
+        # nasty HACK
+        socioeconomic_index_df = pd.read_csv(socioeconomic_index_path, index_col=0)
+        self.socioeconomic_index_lookup = {
+            k:v for k,v in socioeconomic_index_df["iomd_centile"].iteritems()
+        }
+
         self.asymptomatic_ratio = asymptomatic_ratio
         self.female_care_home_ratios = female_care_home_ratios
         self.male_care_home_ratios = male_care_home_ratios
@@ -149,7 +179,14 @@ class HealthIndexGenerator:
         physiological_age_male_filename: str =  default_physiological_age_male,
         
         asymptomatic_ratio=0.2,
+
         physiological_correction: bool = False,
+        socioeconomic_LE_lookup_path: str = default_socioeconomic_LE_lookup_path,
+        female_physiological_threshold: int = 0,
+        male_physiological_threshold: int = 0,
+        female_average_life_expectancy: int = 84,
+        male_average_life_expectancy: int = 80,
+
         comorbidity_multipliers=None,
         prevalence_reference_population=None,
         care_home_ratios_filename: Optional[str] =None,
@@ -248,7 +285,8 @@ class HealthIndexGenerator:
         physio_age_female=pd.read_csv(physiological_age_female_filename,delimiter=' ', header=0,usecols =[i for i in range(1,101)]).values        
         physio_age_male=pd.read_csv(physiological_age_male_filename,delimiter=' ', header=0,usecols =[i for i in range(1,101)] ).values
         
-        
+        socioeconomic_LE_lookup = pd.read_csv(socioeconomic_LE_lookup_path)
+
         return cls(
             hosp_cases,
             hosp_cases_ch,
@@ -261,7 +299,14 @@ class HealthIndexGenerator:
             physio_age_male,
             
             asymptomatic_ratio,
+
             physiological_correction=physiological_correction,
+            socioeconomic_LE_lookup=socioeconomic_LE_lookup,
+            female_physiological_threshold = female_physiological_threshold,
+            male_physiological_threshold = male_physiological_threshold,
+            female_average_life_expectancy = female_average_life_expectancy,
+            male_average_life_expectancy = male_average_life_expectancy,
+
             comorbidity_multipliers=comorbidity_multipliers,
             prevalence_reference_population=prevalence_reference_population,
             male_care_home_ratios=male_care_home_ratios,
@@ -454,17 +499,31 @@ class HealthIndexGenerator:
         return prob_list
 
 
+    def physiological_age(
+        self, age, sex, socioeconomic_index, individual_LE: int = None,
+    ):
+        if age < self.physiological_thresholds[sex]: # sex is an integer 0, 1
+            return age
+        if individual_LE is None:
+            socioeconomic_int_index=int(socioeconomic_index*100)-1
+            individual_LE = self.socioeconomic_LE_lookup.iloc[socioeconomic_int_index][sex]
+        average_LE_diff = (self.average_LE_values[sex] - self.physiological_thresholds[sex])
+        individual_LE_diff = (individual_LE - self.physiological_thresholds[sex])
+        physiological_age = (
+            self.physiological_thresholds[sex] + 
+            (age - self.physiological_thresholds[sex]) *  average_LE_diff / individual_LE_diff
+        )
+        return int(round(physiological_age))
 
+    def old_physio_age(self, age, sex, deprivation_index):
+        dep_index=int(deprivation_index*100)-1
+        if sex==0:
+            physio_age=self.physiological_age_female[age][dep_index]
+        if sex==1:
+            physio_age=self.physiological_age_male[age][dep_index]
 
-    def physio_age(self, age, sex, deprivation_index):
-        if age>=90:
-            physio_age=age
-        else:
-            dep_index=int(deprivation_index*100)-1
-            if sex==0:
-                physio_age=self.physiological_age_female[age][dep_index]
-            if sex==1:
-                physio_age=self.physiological_age_male[age][dep_index]
+        if physio_age>99.0:
+            physio_age=99.0    
         return int(round(physio_age))
 
     def __call__(self, person):
@@ -476,11 +535,7 @@ class HealthIndexGenerator:
              3D matrix of dimensions 2 X 100 X 7. With all the probabilities of all 8 
              outcomes for 100 ages and the 2 sex (last outcome inferred from 1-sum(probabilities)).
         """
-        if person.sex == "m":
-            sex = 1
-        else:
-            sex = 0
-        
+
         if (
             person.age >= 65
             and person.residence is not None
@@ -490,8 +545,15 @@ class HealthIndexGenerator:
         
         else:
             if person.area is not None and self.physiological_correction:
-                socioeconomic_index = person.area.socioeconomic_index
-                physiological_age = self.physio_age(int(person.age), sex, socioeconomic_index)
+                ## when the new world is created...
+                # socioeconomic_index = person.area.socioeconomic_index
+                ## for now use NASTY HACK.
+                socioeconomic_index = self.socioeconomic_index_lookup[person.area.name]
+                physiological_age = self.physiological_age(
+                    int(person.age), 
+                    person.sex, 
+                    socioeconomic_index,
+                )
                 probabilities = self.prob_lists[sex][min(99, physiological_age)]
             else:
                 probabilities = self.prob_lists[sex][min(99, int(person.age))]
