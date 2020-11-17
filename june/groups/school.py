@@ -405,8 +405,7 @@ class Schools(Supergroup):
 
 # interactive group of schools
 
-
-#@nb.jit(nopython=True)
+@nb.jit(nopython=True)
 def _get_contacts_in_school(
     contact_matrix, school_years, susceptibles_idx, infecters_idx
 ):
@@ -425,7 +424,7 @@ def _get_contacts_in_school(
     return n_contacts
 
 
-#@nb.jit(nopython=True)
+@nb.jit(nopython=True)
 def _translate_school_subgroup(idx, school_years):
     if idx > 0:
         idx = school_years[idx - 1] + 1
