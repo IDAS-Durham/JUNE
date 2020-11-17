@@ -56,6 +56,7 @@ def test__household_home_visits_leisure_integration(leisure):
     household1.add(person1)
     household2.add(person2, subgroup_type=household1.SubgroupType.young_adults)
     person1.residence.group.social_venues = {"household_visits": [household2]}
+    person1.residence.group.residences_to_visit = {"household": [household2]}
     person1.busy = False
     person2.busy = False
     person1.residence.group.relatives_in_households = (person2,)
@@ -65,8 +66,13 @@ def test__household_home_visits_leisure_integration(leisure):
         if subgroup is not None:
             counter += 1
             assert subgroup == person2.residence
-    print(counter, np.random.poisson(1.0 * 0.1 * 200))
+            assert subgroup.group.household_visit == True
+            # small test to mimic clear_world() in Simulator
+            if subgroup.group.spec == "household":
+                subgroup.group.household_visit = False
+            assert subgroup.group.household_visit == False
     assert np.isclose(counter, np.random.poisson(1.0 * 0.1 * 200), rtol=5)
+
 
 
 def test__do_not_visit_dead_people(leisure):
@@ -74,7 +80,9 @@ def test__do_not_visit_dead_people(leisure):
     person2 = Person.from_attributes()
     household = Household(type="family")
     household.add(person)
-    person.residence.group.social_venues = {"household_visits": [household]}
+    household2 = Household(type="family")
+    household2.add(person2)
+    person.residence.group.social_venues = {"household_visits": [household2]}
     household.relatives_in_care_homes = [person2]
     person2.dead = True
     leisure.update_household_and_care_home_visits_targets([person])
@@ -94,6 +102,7 @@ def test__people_stay_home_when_receiving_visits(leisure):
     visitor_household = Household()
     visitor_household.add(visitor)
     visitor_household.social_venues = {"household_visits": [resident_household]}
+    visitor_household.residences_to_visit = {"household": [resident_household]}
     resident_household.clear()
     visitor_household.clear()
     resident.busy = False
@@ -143,6 +152,7 @@ def test__no_visits_during_working_hours(leisure):
     visitor_household = Household()
     visitor_household.add(visitor)
     visitor_household.social_venues = {"household_visits": [resident_household]}
+    visitor_household.residences_to_visit = {"household": [resident_household]}
     resident_household.clear()
     visitor_household.clear()
     for _ in range(500):
