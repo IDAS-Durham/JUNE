@@ -52,7 +52,7 @@ class IndividualPolicies(PolicyCollection):
                         activities=activities,
                     )
                     # TODO: make it work with parallelisation
-                    if mpi_size == 0:
+                    if mpi_size == 1:
                         if (
                             person.age < self.min_age_home_alone
                         ):  # can't stay home alone
