@@ -27,7 +27,7 @@ def str_to_class(classname, base_policy_modules=("june.policy",)):
             return getattr(module, classname)
         except AttributeError:
             continue
-    raise ValueError("Cannot find policy in paths!")
+    raise ValueError(f"Cannot find policy {classname} in paths!")
 
 
 def read_date(date: Union[str, datetime.datetime]) -> datetime.datetime:
