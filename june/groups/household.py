@@ -52,6 +52,7 @@ class Household(Group):
         self.max_size = max_size
         self.residents = ()
         self.residences_to_visit = {}
+        self.household_visit = False # this is True when people from other households have been added to the group
 
     def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
         if activity == "leisure":

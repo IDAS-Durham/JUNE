@@ -37,11 +37,11 @@ class InteractionPolicies(PolicyCollection):
                     interaction.distanced_groups.add(group)
                 beta_reductions[group] *= beta_reductions_dict[group]
         for group in beta_reductions:
-            interaction.beta[group] = self.original_betas[group] * beta_reductions[group]
+            if group != "household_visits":
+                interaction.beta[group] = self.original_betas[group] * beta_reductions[group]
         interaction.original_betas = self.original_betas
         interaction.beta_reductions = beta_reductions
-
-
+        
 class SocialDistancing(InteractionPolicy):
     def __init__(
         self,
@@ -50,6 +50,7 @@ class SocialDistancing(InteractionPolicy):
         beta_factors: dict = None,
     ):
         super().__init__(start_time, end_time)
+        self.policy_subtype = "beta_factor"
         self.original_betas = None
         self.beta_factors = beta_factors
 
@@ -81,6 +82,7 @@ class MaskWearing(InteractionPolicy):
         mask_probabilities: dict = None,
     ):
         super().__init__(start_time, end_time)
+        self.policy_subtype = "beta_factor"
         self.original_betas = None
         self.compliance = compliance
         self.beta_factor = beta_factor
@@ -97,11 +99,7 @@ class MaskWearing(InteractionPolicy):
         Assumptions:
         - Currently we assume that mask wearing is implemented in a similar way to social distanding
           but with a mean field effect in beta reduction
-        - Currently we assume that the changes are not group dependent
-        TODO:
-        - Implement structure for people to adhere to mask wearing with a certain compliance
-          - Note: this would require a change in the mean field effect set up
-        - Check per group in config file
+        - Currently we assume that the changes are group dependent
         """
         ret = {}
         for key, value in self.mask_probabilities.items():

@@ -12,7 +12,7 @@ import pandas as pd
 from june.geography import Geography, SuperArea
 from june.groups.group import Group, Supergroup
 
-default_size_nr_file = paths.data_path / "input/companies/company_size_2019.csv"
+default_size_nr_file = paths.data_path / "input/companies/company_size_2011.csv"
 default_sector_nr_per_msoa_file = (
     paths.data_path / "input/companies/company_sector_2011.csv"
 )
