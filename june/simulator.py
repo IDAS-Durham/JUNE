@@ -500,6 +500,12 @@ class Simulator:
                     )
                     infected_ids += new_infected_ids
                     n_people += group_size
+                    if new_infected_ids:
+                        print("group spec ", group.spec)
+                        print("group id ", group.id)
+                        print(" new infected ids ", new_infected_ids)
+                        import sys
+                        sys.exit()
 
         # infect the people that got exposed
         if self.infection_selector:
