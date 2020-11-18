@@ -147,7 +147,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     super_area_n_people = np.array(super_area_n_people, dtype=np.int)
     super_area_n_workers = np.array(super_area_n_workers, dtype=np.int)
     region_ids = np.array(region_ids, dtype=np.int)
-    region_names = np.array(region_names, dtype='S20')
+    region_names = np.array(region_names, dtype='S50')
     if len(np.unique(hospital_lengths)) == 1:
         closest_hospitals_ids = np.array(closest_hospitals_ids, dtype=np.int)
         closest_hospitals_super_areas = np.array(
