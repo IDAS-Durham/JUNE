@@ -365,7 +365,7 @@ class Demography:
         area_names = area_names
         age_structure_path = data_path / "age_structure_single_year.csv"
         female_fraction_path = data_path / "female_ratios_per_age_bin.csv"
-        ethnicity_structure_path = data_path / "ethnicity_broad_structure.csv"
+        ethnicity_structure_path = data_path / "ethnicity_structure.csv"
         #socioecon_structure_path = data_path / "socioeconomic_index.csv"
         m_comorbidity_path = data_path / "uk_male_comorbidities.csv"
         f_comorbidity_path = data_path / "uk_female_comorbidities.csv"
@@ -392,8 +392,7 @@ def _load_age_and_sex_generators(
     area_names: List[str],
 ) -> Dict[str, AgeSexGenerator]:
     """
-    A dictionary mapping area identifiers to a generator of age, sex, ethnicity,
-    and socio-economic index.
+    A dictionary mapping area identifiers to a generator of age, sex, ethnicity.
 
     Returns
     -------

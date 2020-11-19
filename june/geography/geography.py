@@ -411,7 +411,12 @@ class Geography:
         # and we cannot do iterrows()
         if isinstance(area_coords, pd.Series):
             areas = [
-                Area(area_coords.name, super_area, area_coords.values, socioeconomic_indices.values)
+                Area(
+                    area_coords.name, 
+                    super_area, 
+                    area_coords.values, 
+                    socioeconomic_indices.loc[area_coords.name]
+                )
             ]
         else:
             areas = []
@@ -540,8 +545,6 @@ class Geography:
         area_coordinates_filename: str = default_area_coord_filename,
         super_area_coordinates_filename: str = default_superarea_coord_filename,
         area_socioeconomic_index_filename: str = default_area_socioeconomic_index_filename,
-        socioeconomic_index=True,
-        socioeconomic_column="socioeconomic_centile",
         sort_identifiers=True,
     ) -> "Geography":
         """
@@ -574,27 +577,29 @@ class Geography:
         geo_hierarchy = pd.read_csv(hierarchy_filename)
         areas_coord = pd.read_csv(area_coordinates_filename)
         super_areas_coord = pd.read_csv(super_area_coordinates_filename)
-        if socioeconomic_index:
-            area_socioeconomic_df = pd.read_csv(area_socioeconomic_index_filename)
         if filter_key is not None:
             geo_hierarchy = _filtering(geo_hierarchy, filter_key)
         areas_coord = areas_coord.loc[areas_coord.area.isin(geo_hierarchy.area)]
         super_areas_coord = super_areas_coord.loc[
             super_areas_coord.super_area.isin(geo_hierarchy.super_area)
         ].drop_duplicates()
-        area_socioeconomic_df = area_socioeconomic_df.loc[
-            area_socioeconomic_df.area.isin(geo_hierarchy.area)
-        ]
         areas_coord.set_index("area", inplace=True)
         super_areas_coord.set_index("super_area", inplace=True)
         geo_hierarchy.set_index("super_area", inplace=True)
-        if socioeconomic_index:
+        if area_socioeconomic_index_filename:
+            area_socioeconomic_df = pd.read_csv(area_socioeconomic_index_filename)
+            area_socioeconomic_df = area_socioeconomic_df.loc[
+                area_socioeconomic_df.area.isin(geo_hierarchy.area)
+            ]
             area_socioeconomic_df.set_index("area", inplace=True)
-            area_socioeconomic_index = area_socioeconomic_df[socioeconomic_column]
-        #else:
-        #    area_socioeconomic_index = pd.Series(
-        #        data=np.full(len(areas_coord), None), index=areas_coord.index, 
-        #    )
+            area_socioeconomic_index = area_socioeconomic_df["socioeconomic_centile"]
+        else:
+            area_socioeconomic_index = pd.Series(
+                data=np.full(len(areas_coord), None), 
+                index=areas_coord.index, 
+                name="socioeconomic_centile",
+            )
+        #print(area_socioeconomic_index)
         areas, super_areas, regions = cls.create_geographical_units(
             geo_hierarchy,
             areas_coord,

@@ -262,7 +262,7 @@ def test__static_geography(dummy_world):
             area.super_area.name
             == super_area_df.loc[area_df.loc[area.id].super_area_id, "name"].decode()
         )
-        assert(np.float32(area.socioeconomic_index) == area_df.loc[area.id]["socioeconomic_index"])
+        assert np.isclose(area.socioeconomic_index, area_df.loc[area.id]["socioeconomic_index"])
 
     for super_area in dummy_world.super_areas:
         assert (
