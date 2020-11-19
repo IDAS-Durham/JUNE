@@ -13,7 +13,7 @@ default_hosp_cases_filename = paths.configs_path / "defaults/infection/health_in
 default_death_home_filename = paths.configs_path / "defaults/infection/health_index/percent_deaths_home.dat"
 
 default_death_home_ch_filename=paths.configs_path /'defaults/infection/health_index/frac_deaths_home_smoothed.dat'
-default_hosp_cases_ch_filename=paths.configs_path /'defaults/infection/health_index/hosp_over_cases_care_home.dat'
+default_ch_phisio_age_filename=paths.configs_path /'defaults/infection/health_index/phisioage_ch.dat'
 
 
 RKIdata = [
@@ -56,9 +56,12 @@ class HealthIndexGenerator:
         hosp_cases: dict,
         hosp_cases_ch: dict,
         icu_hosp: dict,
+        icu_hosp_ch: dict,
         death_hosp: dict,
+        death_hosp_ch: dict,
         death_home: dict,
         death_home_ch: dict,
+        
         asymptomatic_ratio=0.2,
         comorbidity_multipliers: Optional[dict] = None,
         prevalence_reference_population: Optional[dict] = None,
@@ -83,15 +86,21 @@ class HealthIndexGenerator:
           
         """
 
-        self.age=np.arange(0,100,1)
-        self.age_ch=np.arange(65,100,1)
+        self.age=np.arange(0,105,1)
+        self.age_ch=np.arange(65,105,1)
 
         self.hosp_cases = hosp_cases
         self.hosp_cases_ch = hosp_cases_ch
+        
         self.icu_hosp = icu_hosp
+        self.icu_hosp_ch = icu_hosp_ch
+
         self.death_hosp = death_hosp
+        self.death_hosp_ch = death_hosp_ch
+
         self.death_home = death_home
         self.death_home_ch = death_home_ch
+    
         self.asymptomatic_ratio = asymptomatic_ratio
         self.female_care_home_ratios = female_care_home_ratios
         self.male_care_home_ratios = male_care_home_ratios
@@ -100,8 +109,8 @@ class HealthIndexGenerator:
         
        
         self.prob_lists_ch=self.make_list(age=self.age_ch,death_home=self.death_home_ch,hosp_cases=self.hosp_cases_ch,
-                                          icu_hosp=[self.icu_hosp[0][65:100],self.icu_hosp[1][65:100]] ,
-                                          death_hosp=[self.death_hosp[0][65:100],self.death_hosp[1][65:100]])
+                                          icu_hosp=self.icu_hosp_ch,death_hosp=self.death_hosp_ch)
+
         if comorbidity_multipliers is not None:
             self.max_mild_symptom_tag = [
                 tag.value for tag in SymptomTag if tag.name == "severe"
@@ -130,7 +139,7 @@ class HealthIndexGenerator:
         death_filename: str = default_death_hosp_filename,
         death_home_filename: str = default_death_home_filename,
         death_home_ch_filename: str =default_death_home_ch_filename,
-        hosp_cases_ch_filename: str =default_hosp_cases_ch_filename,
+        phisio_age_ch_filename: str =default_ch_phisio_age_filename,
         
         
         asymptomatic_ratio=0.2,
@@ -148,7 +157,7 @@ class HealthIndexGenerator:
           Interaction instance
         """
 
-        age = np.arange(0,100,1)
+        age = np.arange(0,105,1)
 
         hosp_data = np.loadtxt(hosp_filename, skiprows=1)
         age_hosp = hosp_data[:, 0]
@@ -205,17 +214,39 @@ class HealthIndexGenerator:
         
         death_home_data_ch=np.loadtxt(death_home_ch_filename,skiprows=1)
         age_death_home=death_home_data_ch[:,0]
-        
         death_home_ch=death_home_data_ch[:,1]
-        death_home_res=death_home_data_ch[:,2]
+        death_home_gp=death_home_data_ch[:,2]
+        
+        interp_death_home_ch = interpolate.interp1d(
+            age_death_home, death_home_ch, bounds_error=False, fill_value=death_home_ch[-1]
+        )
+
+
+        interp_death_home_gp = interpolate.interp1d(
+            age_death_home, death_home_gp, bounds_error=False, fill_value=death_home_gp[-1]
+        )
+
+
+        death_home_gp = interp_death_home_gp(age[65:105])
+
+        death_home_ch= interp_death_home_ch(age[65:105])
+        
 
         
-        death_home[65:100]=death_home_res
+        death_home[65:105]=death_home_gp
 
          
-        hosp_cases_ch_data=np.loadtxt(hosp_cases_ch_filename,skiprows=1)
-        age_hosp_cases= hosp_cases_ch_data[:,0]
-        hosp_cases_ch= [hosp_cases_ch_data[:,1],hosp_cases_ch_data[:,2]]#This will change when done for male and female
+        phisio_age_ch_data=np.loadtxt(phisio_age_ch_filename,skiprows=1)
+        age_phisioage_ch= phisio_age_ch_data[:,0]
+        phisio_age_ch_female= phisio_age_ch_data[:,1]
+        phisio_age_ch_male=phisio_age_ch_data[:,2]
+        
+        hosp_cases_ch = [interp_female_hosp(phisio_age_ch_female), interp_male_hosp(phisio_age_ch_male)]
+        death_hosp_ch = [interp_female_death(phisio_age_ch_female), interp_male_death(phisio_age_ch_male)]
+        icu_hosp_ch = [interp_female_icu(phisio_age_ch_female), interp_male_icu(phisio_age_ch_female)]
+
+
+
        
 
 
@@ -231,7 +262,9 @@ class HealthIndexGenerator:
             hosp_cases,
             hosp_cases_ch,
             icu_hosp,
+            icu_hosp_ch,
             death_hosp,
+            death_hosp_ch,
             death_home,
             death_home_ch,
             
