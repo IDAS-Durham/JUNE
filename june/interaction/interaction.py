@@ -93,7 +93,7 @@ class Interaction:
             contact_matrices=contact_matrices,
             susceptibilities_by_age=susceptibilities_by_age,
             population=population,
-            interactive_groups_config=config["interactive_groups"],
+            interactive_groups_config=config.get("interactive_groups", None),
         )
 
     def set_population_susceptibilities(
