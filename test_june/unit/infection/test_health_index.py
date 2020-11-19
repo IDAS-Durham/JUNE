@@ -19,7 +19,7 @@ def test__smaller_than_one():
             increasing_count += 1
         else:
             increasing_count == increasing_count
-    assert increasing_count == 105
+    assert increasing_count == 100
 
 
 def test__smaller_than_one_ch():
@@ -44,7 +44,7 @@ def test__smaller_than_one_ch():
             increasing_count += 1
         else:
             increasing_count == increasing_count
-    assert increasing_count == 40
+    assert increasing_count == 35
 
 
 def test__non_negative_probability():
