@@ -23,10 +23,6 @@ default_physiological_age_male = paths.configs_path / "defaults/infection/physio
 
 default_socioeconomic_LE_lookup_path = paths.configs_path / "defaults/infection/socioeconomic_index_LE_lookup.dat"
 
-### use this for nasty HACK.
-default_socioeconomic_index_path = paths.data_path / "input/geography/socioeconomic_index.csv"
-
-
 RKIdata = [
     [2.5, 4.0 / 100.0],
     [10, 4.0 / 100.0],
@@ -76,7 +72,6 @@ class HealthIndexGenerator:
 
         physiological_correction: bool = False,
         socioeconomic_LE_lookup: Optional[dict] = None,
-        socioeconomic_index_path: str = default_socioeconomic_index_path,                
         female_physiological_threshold: int = 50,
         male_physiological_threshold: int = 50,
         female_average_life_expectancy: int = 84,
@@ -127,13 +122,6 @@ class HealthIndexGenerator:
         self.average_LE_values = {
             "f": female_average_life_expectancy, 
             "m": male_average_life_expectancy
-        }
-
-        # nasty HACK
-        socioeconomic_index_df = pd.read_csv(socioeconomic_index_path)
-        socioeconomic_index_df.set_index("area", inplace=True)
-        self.socioeconomic_index_lookup = {
-            k:v for k,v in socioeconomic_index_df["socioeconomic_centile"].iteritems()
         }
 
         self.asymptomatic_ratio = asymptomatic_ratio
@@ -514,18 +502,9 @@ class HealthIndexGenerator:
             self.physiological_thresholds[sex] + 
             (age - self.physiological_thresholds[sex]) *  average_LE_diff / individual_LE_diff
         )
+        if physiological_age > 99.0:
+            physiological_age = 99.0
         return int(round(physiological_age))
-
-    def old_physio_age(self, age, sex, deprivation_index):
-        dep_index=int(deprivation_index*100)-1
-        if sex==0:
-            physio_age=self.physiological_age_female[age][dep_index]
-        if sex==1:
-            physio_age=self.physiological_age_male[age][dep_index]
-
-        if physio_age>99.0:
-            physio_age=99.0    
-        return int(round(physio_age))
 
     def __call__(self, person):
         """
@@ -550,9 +529,8 @@ class HealthIndexGenerator:
         else:
             if person.area is not None and self.physiological_correction:
                 ## when the new world is created...
-                #socioeconomic_index = person.area.socioeconomic_index
-                ## for now use NASTY HACK.
-                socioeconomic_index = self.socioeconomic_index_lookup[person.area.name]
+                socioeconomic_index = person.area.socioeconomic_index
+
                 physiological_age = self.physiological_age(
                     int(person.age), 
                     person.sex, 
