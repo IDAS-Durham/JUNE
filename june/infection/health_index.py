@@ -10,7 +10,7 @@ from typing import Optional, List
 default_icu_hosp_filename = paths.configs_path / "defaults/infection/health_index/ICU_hosp.dat"
 default_death_hosp_filename = paths.configs_path / "defaults/infection/health_index/Death_hosp.dat"
 default_hosp_cases_filename = paths.configs_path / "defaults/infection/health_index/cases_hosp.dat"
-default_death_home_filename = paths.configs_path / "defaults/infection/health_index/percent_deaths_home.dat"
+#default_death_home_filename = paths.configs_path / "defaults/infection/health_index/percent_deaths_home.dat"
 
 default_death_home_ch_filename=paths.configs_path /'defaults/infection/health_index/frac_deaths_home_smoothed.dat'
 default_hosp_cases_ch_filename=paths.configs_path /'defaults/infection/health_index/hosp_over_cases_care_home.dat'
@@ -99,7 +99,7 @@ class HealthIndexGenerator:
                                        hosp_cases=self.hosp_cases,icu_hosp=self.icu_hosp ,death_hosp=self.death_hosp)
         
        
-        self.prob_lists_ch=self.make_list(age=self.age_ch,death_home=self.death_home_ch,hosp_cases=self.hosp_cases_ch,
+        self.prob_lists_ch=self.make_list(age=self.age_ch,death_home=self.death_home_ch[65:100],hosp_cases=self.hosp_cases_ch,
                                           icu_hosp=[self.icu_hosp[0][65:100],self.icu_hosp[1][65:100]] ,
                                           death_hosp=[self.death_hosp[0][65:100],self.death_hosp[1][65:100]])
         if comorbidity_multipliers is not None:
@@ -128,7 +128,7 @@ class HealthIndexGenerator:
         hosp_filename: str = default_hosp_cases_filename,
         icu_filename: str = default_icu_hosp_filename,
         death_filename: str = default_death_hosp_filename,
-        death_home_filename: str = default_death_home_filename,
+        #death_home_filename: str = default_death_home_filename,
         death_home_ch_filename: str =default_death_home_ch_filename,
         hosp_cases_ch_filename: str =default_hosp_cases_ch_filename,
         
@@ -190,32 +190,32 @@ class HealthIndexGenerator:
         )
         death_hosp = [interp_female_death(age), interp_male_death(age)]
 
-        death_home_data=np.loadtxt(default_death_home_filename,skiprows=1)
-        age_death_home=death_home_data[:,0]
-        death_home=death_home_data[:,1]
+        #death_home_data=np.loadtxt(default_death_home_filename,skiprows=1)
+        #age_death_home=death_home_data[:,0]
+        #death_home=death_home_data[:,1]
         
        
-        interp_death_home = interpolate.interp1d(
-            age_death_home, death_home, bounds_error=False, fill_value=death_home[-1]
-        )
+        #interp_death_home = interpolate.interp1d(
+        #    age_death_home, death_home, bounds_error=False, fill_value=death_home[-1]
+        #)
         
 
-        death_home = interp_death_home(age)
+        #death_home = interp_death_home(age)
         
         
         death_home_data_ch=np.loadtxt(death_home_ch_filename,skiprows=1)
         age_death_home=death_home_data_ch[:,0]
         
         death_home_ch=death_home_data_ch[:,1]
-        death_home_res=death_home_data_ch[:,2]
+        death_home=death_home_data_ch[:,2]
 
         
-        death_home[65:100]=death_home_res
+        #death_home=death_home_res
 
          
         hosp_cases_ch_data=np.loadtxt(hosp_cases_ch_filename,skiprows=1)
         age_hosp_cases= hosp_cases_ch_data[:,0]
-        hosp_cases_ch= [hosp_cases_ch_data[:,1],hosp_cases_ch_data[:,2]]#This will change when done for male and female
+        hosp_cases_ch= [hosp_cases_ch_data[:,1],hosp_cases_ch_data[:,2]]
        
 
 
