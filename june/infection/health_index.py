@@ -99,7 +99,8 @@ class HealthIndexGenerator:
                                        hosp_cases=self.hosp_cases,icu_hosp=self.icu_hosp ,death_hosp=self.death_hosp)
         
        
-        self.prob_lists_ch=self.make_list(age=self.age_ch,death_home=self.death_home_ch[65:100],hosp_cases=self.hosp_cases_ch,
+        self.prob_lists_ch=self.make_list(age=self.age_ch,death_home=[self.death_home_ch[0][65:100],self.death_home_ch[1][65:100]],
+                                          hosp_cases=[self.hosp_cases_ch[0],self.hosp_cases_ch[0]],
                                           icu_hosp=[self.icu_hosp[0][65:100],self.icu_hosp[1][65:100]] ,
                                           death_hosp=[self.death_hosp[0][65:100],self.death_hosp[1][65:100]])
         if comorbidity_multipliers is not None:
@@ -206,11 +207,9 @@ class HealthIndexGenerator:
         death_home_data_ch=np.loadtxt(death_home_ch_filename,skiprows=1)
         age_death_home=death_home_data_ch[:,0]
         
-        death_home_ch=death_home_data_ch[:,1]
-        death_home=death_home_data_ch[:,2]
+        death_home_ch=[death_home_data_ch[:,1],death_home_data_ch[:,2]]
 
-        
-        #death_home=death_home_res
+        death_home=[death_home_data_ch[:,3],death_home_data_ch[:,4]]
 
          
         hosp_cases_ch_data=np.loadtxt(hosp_cases_ch_filename,skiprows=1)
@@ -308,20 +307,20 @@ class HealthIndexGenerator:
         ratio_hosp_cases_female = np.array([min(1-self.asymptomatic_ratio,hosp_cases[0][i]) for i in range(len(hosp_cases[0]))]) # hospital/cases rate
         ratio_icu_hosp_female = icu_hosp[0]  # ICU/hosp rate
         ratio_death_hosp_female = death_hosp[0]  # deaths in hosp/hosp rate
-        
+        percent_death_home_female=death_home[0] # deaths_home/deaths_total
+
         ratio_hosp_cases_male = np.array([min(1-self.asymptomatic_ratio,hosp_cases[1][i]) for i in range(len(hosp_cases[1]))])  # hospital/cases rate
         ratio_icu_hosp_male = icu_hosp[1]  # ICU/hosp rate
         ratio_death_hosp_male = death_hosp[1]  # deaths in hosp/hosp rate
-        
-        percent_death_home=death_home # deaths_home/deaths_total
+        percent_death_home_male=death_home[1] # deaths_home/deaths_total
        
-        
-        percent_death_hosp=1-percent_death_home
+        percent_death_hosp_female=1-percent_death_home_female
+        percent_death_hosp_male=1-percent_death_home_male
         
         
        
-        deaths_at_home_female=(ratio_death_hosp_female*percent_death_home/percent_death_hosp)*ratio_hosp_cases_female
-        deaths_at_home_male=(ratio_death_hosp_male*percent_death_home/percent_death_hosp)*ratio_hosp_cases_male
+        deaths_at_home_female=(ratio_death_hosp_female*percent_death_home_female/percent_death_hosp_female)*ratio_hosp_cases_female
+        deaths_at_home_male=(ratio_death_hosp_male*percent_death_home_male/percent_death_hosp_male)*ratio_hosp_cases_male
         
         
        
