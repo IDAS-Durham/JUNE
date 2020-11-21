@@ -120,8 +120,7 @@ class Data2Rates:
             sero_prevalence = self.seroprevalence_df.loc[age,'seroprevalence_weighted']
             n_people = self.population_by_age_sex_df.loc[age, sex]
             if self.care_home_ratios_by_age_sex_df is not None:
-                n_people -= n_people*self.care_home_ratios_by_age_sex_df.loc[:,sex]
-            # TODO: remove care home residents
+                n_people -= n_people*self.care_home_ratios_by_age_sex_df.loc[age,sex]
             return n_people * sero_prevalence
 
     def get_n_deaths(self, age: int, sex: str, is_care_home: bool = False) -> int:
