@@ -1,5 +1,6 @@
 import logging
 import pandas as pd
+import numpy as np
 from typing import List
 from june import paths
 
@@ -55,6 +56,11 @@ def check_age_intervals(df: pd.DataFrame):
     return df
 
 
+def weighted_interpolation(value, weights):
+    weights = np.array(weights)
+    return weights * value / weights.sum()
+
+
 class Data2Rates:
     def __init__(
         self,
@@ -63,10 +69,14 @@ class Data2Rates:
         all_deaths_by_age_sex_df: pd.DataFrame,
         care_home_deaths_by_age_sex_df: pd.DataFrame = None,
     ):
-        self.seroprevalence_df = seroprevalence_df
-        self.population_by_age_sex_df = population_by_age_sex_df
-        self.all_deaths_by_age_sex = all_deaths_by_age_sex_df
-        self.care_home_deaths_by_age_sex_df = care_home_deaths_by_age_sex_df
+        self.seroprevalence_df = self._process_df(seroprevalence_df)
+        self.population_by_age_sex_df = self._process_df(population_by_age_sex_df)
+        self.all_deaths_by_age_sex = self._process_df(
+            all_deaths_by_age_sex_df, interpolate_bins=True
+        )
+        self.care_home_deaths_by_age_sex_df = self._process_df(
+            care_home_deaths_by_age_sex_df, interpolate_bins=True
+        )
 
     @classmethod
     def from_files(
@@ -77,13 +87,13 @@ class Data2Rates:
         care_home_deaths_file: str = default_care_home_deaths_file,
     ) -> "Data2Rates":
 
-        seroprevalence_df = cls.read_csv(seroprevalence_file)
-        population_df = cls.read_csv(population_file, converters=False)
-        all_deaths_df = cls.read_csv(all_deaths_file, converters=True)
+        seroprevalence_df = cls._read_csv(seroprevalence_file)
+        population_df = cls._read_csv(population_file, converters=False)
+        all_deaths_df = cls._read_csv(all_deaths_file, converters=True)
         if care_home_deaths_file is None:
             care_home_deaths_df = None
         else:
-            care_home_deaths_df = cls.read_csv(care_home_deaths_file, converters=True)
+            care_home_deaths_df = cls._read_csv(care_home_deaths_file, converters=True)
         return cls(
             seroprevalence_df=seroprevalence_df,
             population_by_age_sex_df=population_df,
@@ -91,14 +101,32 @@ class Data2Rates:
         )
 
     @classmethod
-    def read_csv(cls, filename, converters=True):
+    def _read_csv(cls, filename):
         df = pd.read_csv(filename)
         df.set_index("age", inplace=True)
+        return df
+
+    def _process_df(self, df, converters=True, interpolate_bins=False):
         if converters:
             new_index = convert_to_intervals(df.index)
             df.index = new_index
             df = check_age_intervals(df=df)
+        if interpolate_bins:
+            df = self._interpolate_bins(df=df)
         return df
+
+    def _interpolate_bins(self, df):
+        ret = pd.DataFrame(index=np.arange(0, 100), columns=df.columns)
+        for age_bin, row in df.iterrows():
+            age_min = age_bin.left
+            age_max = age_bin.right
+            males = self.population_by_age_sex_df.loc[age_min:age_max, "male"]
+            females = self.population_by_age_sex_df.loc[age_min:age_max, "female"]
+            male_values = weighted_interpolation(value=row["male"], weights=males)
+            female_values = weighted_interpolation(value=row["female"], weights=females)
+            ret.loc[age_min:age_max, "male"] = male_values
+            ret.loc[age_min:age_max, "female"] = female_values
+        return ret
 
     def get_n_cases(self, age: int, sex: str, is_care_home: bool = False) -> float:
         if is_care_home:
@@ -118,12 +146,15 @@ class Data2Rates:
             if self.care_home_deaths_by_age_sex_df is None:
                 return deaths_total
             else:
-                return (
-                    deaths_total - self.care_home_deaths_by_age_sex_df.loc[age, sex]
-                )
-    def get_death_rate(self, age_bin: int, sex:str, is_care_home: bool = False) -> float:
+                return deaths_total - self.care_home_deaths_by_age_sex_df.loc[age, sex]
+
+    def get_death_rate(
+        self, age_bin: int, sex: str, is_care_home: bool = False
+    ) -> float:
         n_cases = self.get_n_cases(age_bin=age_bin, sex=sex, is_care_home=is_care_home)
-        n_deaths = self.get_n_deaths(age_bin=age_bin, sex=sex, is_care_home=is_care_home)
+        n_deaths = self.get_n_deaths(
+            age_bin=age_bin, sex=sex, is_care_home=is_care_home
+        )
         return n_deaths / n_cases
 
 
