@@ -29,8 +29,7 @@ class SocialVenueDistributor:
     def __init__(
         self,
         social_venues: SocialVenues,
-        male_age_probabilities: dict = None,
-        female_age_probabilities: dict = None,
+        poisson_parameters: dict = None,
         drags_household_probability=0.5,
         neighbours_to_consider=5,
         maximum_distance=5,
@@ -44,21 +43,18 @@ class SocialVenueDistributor:
         ----------
         social_venues
             A SocialVenues object
-        male_age_probabilities
-            a dictionary containg age as keys and the probabilty per day (think of it as
-            the Poisson parameter lambda) of a male person of that age going to the social
-            venue as value. This probability value is per day. So the
-            chance of going to the social venue in a time delta_t is
-            1 - exp(- probabilty * delta_t)
-        female_age_probabilities
-            a dictionary containg age as keys and the probabilty of a female person of that age
-            going to the social venue as value
+        poisson_parameters
+            A dictionary with sex as keys, and as values another dictionary specifying the 
+            poisson parameters by age for the activity. Example:
+            poisson_parameters = {"m" : {"0-50":0.5, "50-100" : 0.2, "f" : {"0-100" : 0.5}}
+            Note that the upper limit of the age bracket is not inclusive.
+            The probability of going into a social venue will then be determined by
+            1 - exp(-poisson_parameter(age,sex) * delta_t * weekend_boost)
         weekend_boost
             boosting factor for the weekend probability
         """
         self.social_venues = social_venues
-        self.male_probabilities = parse_age_probabilities(male_age_probabilities)
-        self.female_probabilities = parse_age_probabilities(female_age_probabilities)
+        self.poisson_parameters = self._parse_poisson_parameters(poisson_parameters)
         self.weekend_boost = weekend_boost
         self.neighbours_to_consider = neighbours_to_consider
         self.maximum_distance = maximum_distance
@@ -74,6 +70,13 @@ class SocialVenueDistributor:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(social_venues, **config)
 
+    def _parse_poisson_parameters(self, poisson_parameters):
+        ret = {}
+        ret["m"] = parse_age_probabilities(poisson_parameters["male"])
+        ret["f"] = parse_age_probabilities(poisson_parameters["female"])
+        return ret
+
+
     def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
@@ -88,14 +91,9 @@ class SocialVenueDistributor:
         is_weekend
             whether it is a weekend or not
         """
-        if not self.social_venues:
-            return 0
-        if sex == "m":
-            probability = self.male_probabilities[age]
-        else:
-            probability = self.female_probabilities[age]
-        probability = probability * self.get_weekend_boost(is_weekend)
-        return probability
+        poisson_parameter = self.poisson_parameters[sex][age]
+        poisson_parameter = poisson_parameter * self.get_weekend_boost(is_weekend)
+        return poisson_parameter
 
     def get_weekend_boost(self, is_weekend):
         if is_weekend:
@@ -123,26 +121,6 @@ class SocialVenueDistributor:
             person.sex, person.age, is_weekend
         )
         return 1 - np.exp(-poisson_parameter * delta_time)
-
-    def get_possible_venues_for_household(self, household: Household):
-        """
-        Given a household location, searches for the social venues inside
-        ``self.maximum_distance``. It then returns ``self.neighbours_to_consider``
-        of them randomly. If there are no social venues inside the maximum distance,
-        it returns the closest one.
-        """
-        house_location = household.area.coordinates
-        potential_venues = self.social_venues.get_venues_in_radius(
-            house_location, self.maximum_distance
-        )
-        if potential_venues is None:
-            closest_venue = self.social_venues.get_closest_venues(house_location, k=1)
-            if closest_venue is None:
-                return
-            return (closest_venue[0], )
-        indices_len = min(len(potential_venues), self.neighbours_to_consider)
-        random_idx_choice = sample(range(len(potential_venues)), indices_len)
-        return tuple([potential_venues[idx] for idx in random_idx_choice])
 
     def get_possible_venues_for_area(self, area: Area):
         """
@@ -192,10 +170,7 @@ class SocialVenueDistributor:
         """
         Check whether person drags household or not.
         """
-        if self.drags_household_probability == 0.0:
-            return False
-        else:
-            return random() < self.drags_household_probability
+        return random() < self.drags_household_probability
 
     def get_leisure_subgroup_type(self, person):
         return 0
