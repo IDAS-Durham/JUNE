@@ -173,14 +173,29 @@ class Data2Rates:
         n_deaths = self.get_n_deaths(age=age, sex=sex, is_care_home=is_care_home)
         return n_deaths / n_cases
 
-
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     rates = Data2Rates.from_files()
-    ifr_by_sex = pd.DataFrame.from_dict({'male': 1.07, 'female': 0.71},
+    ifr_by_sex_ward = pd.DataFrame.from_dict({'male': 1.07, 'female': 0.71},
             orient='index')
-    ifr_by_sex.plot.bar() 
+    all_male_deaths, all_male_cases = 0, 0 
+    all_female_deaths, all_female_cases = 0, 0 
+    for age in np.arange(0,100):
+        all_male_deaths += rates.get_n_deaths(age=age, sex='male')
+        all_male_cases += rates.get_n_cases(age=age, sex='male')
+        all_female_deaths += rates.get_n_deaths(age=age, sex='female')
+        all_female_cases += rates.get_n_cases(age=age, sex='female')
+    overall_male_dr = all_male_deaths/all_male_cases*100
+    overall_female_dr = all_female_deaths/all_female_cases*100
+    ifr_by_sex = pd.DataFrame.from_dict(
+            {'male': overall_male_dr, 'female': overall_female_dr},
+            orient='index')
+    fig, ax = plt.subplots()
+    ifr_by_sex_ward[0].plot.bar(ax=ax, label='Ward et al', alpha=0.3, color='blue') 
+    ifr_by_sex[0].plot.bar(ax=ax,label='JUNE', alpha=0.3, color='orange')
+    plt.ylabel('Death rate by sex')
+    plt.legend()
     plt.show()
     # ***************** Ward et al IFR
     ifr_age = [0.03, 0.52, 3.13, 11.64]
