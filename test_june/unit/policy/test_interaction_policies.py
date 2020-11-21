@@ -94,7 +94,6 @@ class TestSocialDistancing:
         end_date2 = datetime(2020, 3, 9)
         sim = social_distancing_sim
         something_is_checked = False
-        checks_company = False
         while sim.timer.date <= sim.timer.final_date:
             sim.do_timestep()
             if sim.timer.date >= start_date and sim.timer.date < end_date:
@@ -109,10 +108,6 @@ class TestSocialDistancing:
                         )
                         if group.spec == "household":
                             assert beta == sim.interaction.betas["household"]
-                        elif group.spec == "company":
-                            assert (
-                                beta == sim.interaction.betas["company"] * 0.7 * 0.8
-                            )  # from sector and social distancing
                         else:
                             something_is_checked = True
                             assert (
@@ -134,16 +129,12 @@ class TestSocialDistancing:
                         )
                         if group.spec == "cinema":
                             assert beta == 4 * sim.interaction.betas["cinema"]
-                        elif group.spec == "company":
-                            checks_company = True
-                            assert beta == sim.interaction.betas["company"] * 0.8
                         else:
                             assert beta == sim.interaction.betas[group.spec]
                 next(sim.timer)
                 continue
             next(sim.timer)
         assert something_is_checked
-        assert checks_company
 
     def test__social_distancing_regional_compliance(self, social_distancing_sim):
         start_date = datetime(2020, 3, 2)
@@ -154,7 +145,6 @@ class TestSocialDistancing:
         something_is_checked = False
         sim.world.regions[0].regional_compliance = 0.5
         something_is_checked = False
-        checks_company = False
         while sim.timer.date <= sim.timer.final_date:
             sim.do_timestep()
             if sim.timer.date >= start_date and sim.timer.date < end_date:
@@ -172,11 +162,6 @@ class TestSocialDistancing:
                         )
                         if group.spec == "household":
                             assert beta == sim.interaction.betas["household"]
-                        elif group.spec == "company":
-                            something_is_checked = True
-                            assert (
-                                beta == beta_with_compliance * 0.8
-                            )  # from sector and social distancing
                         else:
                             something_is_checked = True
                             assert beta == beta_with_compliance
@@ -194,16 +179,12 @@ class TestSocialDistancing:
                         )
                         if group.spec == "cinema":
                             assert beta == sim.interaction.betas["cinema"] * (1 + 0.5 * (4-1))
-                        elif group.spec == "company":
-                            checks_company = True
-                            assert beta == sim.interaction.betas["company"] * 0.8
                         else:
                             assert beta == sim.interaction.betas[group.spec]
                 next(sim.timer)
                 continue
             next(sim.timer)
         assert something_is_checked
-        assert checks_company
 
 
 class TestMaskWearing:
@@ -246,7 +227,6 @@ class TestMaskWearing:
         sim.activity_manager.leisure = leisure_instance
         sim.timer.reset()
         sim.clear_world()
-        checks_company = False
         while sim.timer.date <= sim.timer.final_date:
             sim.do_timestep()
             if sim.timer.date >= start_date and sim.timer.date < end_date:
@@ -263,9 +243,6 @@ class TestMaskWearing:
                             1 - (0.5 * 1.0 * (1 - 0.5))                        )
                         if group.spec == "household":
                             assert beta == sim.interaction.betas["household"]
-                        elif group.spec == "company":
-                            checks_company = True
-                            assert beta == beta_with_mask * 0.8
                         else:
                             assert beta == beta_with_mask
                 next(sim.timer)
@@ -280,9 +257,5 @@ class TestMaskWearing:
                             betas=sim.interaction.betas,
                             beta_reductions=sim.interaction.beta_reductions,
                         )
-                        if group.spec == "company":
-                            assert beta == sim.interaction.betas[group.spec] * 0.8
-                        else:
-                            assert beta == sim.interaction.betas[group.spec]
+                        assert beta == sim.interaction.betas[group.spec]
             next(sim.timer)
-        assert checks_company

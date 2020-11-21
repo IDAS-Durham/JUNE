@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+from copy import deepcopy
 
 from june.groups import Group
 from june.geography import Area, SuperArea, Region
@@ -148,6 +149,8 @@ class TestInteractiveSchool:
 
 class TestInteractiveCompany:
     def test__sector_beta(self):
+        bkp = deepcopy(InteractiveCompany.sector_betas)
+        InteractiveCompany.sector_betas["R"] = 0.7
         company = Company(sector="R")
         interactive_company = company.get_interactive_group()
         betas = {"company": 2}
@@ -156,6 +159,15 @@ class TestInteractiveCompany:
             betas=betas, beta_reductions=beta_reductions
         )
         assert beta_processed == 2 * 0.7
+        company = Company(sector="Q")
+        interactive_company = company.get_interactive_group()
+        betas = {"company": 2}
+        beta_reductions = {}
+        beta_processed = interactive_company.get_processed_beta(
+            betas=betas, beta_reductions=beta_reductions
+        )
+        assert beta_processed == 2
+        InteractiveCompany.sector_betas = bkp
 
 class TestInteractiveHousehold:
     def test__household_visits_social_distancing(self):

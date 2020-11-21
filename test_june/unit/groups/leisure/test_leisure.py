@@ -19,6 +19,7 @@ from june.geography import Geography
 from june.demography import Person, Demography
 from june import World
 
+
 class MockArea:
     def __init__(self):
         pass
@@ -35,8 +36,7 @@ def make_leisure():
     pubs = Pubs([Pub()], make_tree=False)
     pub_distributor = PubDistributor(
         pubs,
-        male_age_probabilities={"18-50": 0.5},
-        female_age_probabilities={"10-40": 0.2},
+        poisson_parameters={"male": {"18-50": 0.5}, "female": {"10-40": 0.2}},
         drags_household_probability=0.0,
     )
     pubs[0].coordinates = [1, 2]
@@ -44,8 +44,7 @@ def make_leisure():
     cinemas[0].coordinates = [1, 2]
     cinema_distributor = CinemaDistributor(
         cinemas,
-        male_age_probabilities={"10-40": 0.2},
-        female_age_probabilities={"10-40": 0.2},
+        poisson_parameters={"male": {"10-40": 0.2}, "female": {"10-40": 0.2}},
         drags_household_probability=1.0,
     )
     leisure = Leisure(
@@ -109,9 +108,7 @@ def test__person_drags_household(leisure):
 
 def test__generate_leisure_from_world():
     geography = Geography.from_file({"super_area": ["E02002135"]})
-    world = generate_world_from_geography(
-        geography, include_households=True
-    )
+    world = generate_world_from_geography(geography, include_households=True)
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
     world.groceries = Groceries.for_geography(geography)
@@ -123,7 +120,9 @@ def test__generate_leisure_from_world():
     leisure = generate_leisure_for_world(
         list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world
     )
-    leisure.distribute_social_venues_to_areas(world.areas, super_areas=world.super_areas)
+    leisure.distribute_social_venues_to_areas(
+        world.areas, super_areas=world.super_areas
+    )
     leisure.generate_leisure_probabilities_for_timestep(0.1, False, False)
     n_pubs = 0
     n_cinemas = 0
