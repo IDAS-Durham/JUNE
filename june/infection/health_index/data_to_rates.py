@@ -73,15 +73,15 @@ class Data2Rates:
             pass
         else:
             sero_prevalence = self.seroprevalence_df.loc[age,'seroprevalence_weighted']
+
             n_people = self.population_by_age_sex_df.loc[age, sex]
+            #TODO: remove care home residents
             return n_people*sero_prevalence
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     rates = Data2Rates.from_files()
-    print(rates.n_cases(age=20, sex='female'))
-    '''
     # ***************** Ward et al IFR
     ifr_age = [0.03, 0.52, 3.13, 11.64]
     ages = [
@@ -137,4 +137,3 @@ if __name__ == "__main__":
     plt.ylabel("Death rate")
     plt.xlabel("Age")
     plt.show()
-    '''
