@@ -94,9 +94,14 @@ class SocialVenueDistributor:
             probability = self.male_probabilities[age]
         else:
             probability = self.female_probabilities[age]
-        if is_weekend:
-            probability = probability * self.weekend_boost
+        probability = probability * self.get_weekend_boost(is_weekend)
         return probability
+
+    def get_weekend_boost(self, is_weekend):
+        if is_weekend:
+            return self.weekend_boost
+        else:
+            return 1.0
 
     def probability_to_go_to_social_venue(
         self, person, delta_time, is_weekend: bool = False

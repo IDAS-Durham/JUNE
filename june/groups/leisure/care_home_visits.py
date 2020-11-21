@@ -103,8 +103,7 @@ class CareHomeVisitsDistributor(SocialVenueDistributor):
             probability = self.male_probabilities[age]
         else:
             probability = self.female_probabilities[age]
-        if is_weekend:
-            probability = probability * self.weekend_boost
+        probability = probability * self.get_weekend_boost(is_weekend=is_weekend)
         return probability
 
     def get_leisure_subgroup_type(self, person):

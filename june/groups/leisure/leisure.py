@@ -231,13 +231,14 @@ class Leisure:
         Computes an activity poisson parameter taking into account active policies
         and regional compliances.
         """
+        weekend_boost = distributor.get_weekend_boost(is_weekend=is_weekend)
         original_activity_poisson_parameter = distributor.get_poisson_parameter(
             sex=sex, age=age, is_weekend=is_weekend
         )
         if activity in self.policy_poisson_parameters:
             policy_activity_poisson_parameter = self.policy_poisson_parameters[
                 activity
-            ][sex][age]
+            ][sex][age] * weekend_boost # we boost the policy parameter as well
         else:
             policy_activity_poisson_parameter = original_activity_poisson_parameter
         activity_poisson_parameter = (
