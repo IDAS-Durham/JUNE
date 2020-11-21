@@ -231,7 +231,7 @@ class Companies(Supergroup):
 
 def _read_sector_betas():
     with open(default_config_filename) as f:
-        sector_betas = yaml.load(f, Loader=yaml.FullLoader)["sector_betas"]
+        sector_betas = yaml.load(f, Loader=yaml.FullLoader) or {}
     return sector_betas
 
 
