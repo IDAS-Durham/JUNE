@@ -4,7 +4,7 @@ import numpy as np
 import yaml
 
 from june import paths
-from june.infection.health_index import HealthIndexGenerator
+from june.infection.health_index.health_index import HealthIndexGenerator
 from june.infection import Infection
 from june.infection.symptoms import Symptoms, SymptomTag
 from june.infection.trajectory_maker import TrajectoryMakers

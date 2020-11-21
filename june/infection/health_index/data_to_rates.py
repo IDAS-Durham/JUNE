@@ -1,18 +1,40 @@
+import logging
 import pandas as pd
+from typing import List
 from june import paths
 
 default_seroprevalence_file = (
     paths.data_path / "input/health_index/seroprevalence_by_age_imperial.csv"
 )
 default_population_file = (
-    paths.data_path / "input/health_index/population_by_age_2020_ew.csv"
+    paths.data_path / "input/health_index/corrected_population_by_age_sex_2020_england.csv"
 )
 
+logger = logging.getLogger("rates")
 
-def convert_to_intervals(age: str) -> pd.Interval:
-    return pd.Interval(
+def convert_to_intervals(ages: List[str]) -> pd.IntervalIndex:
+    idx = []
+    for age in ages:
+        idx.append(pd.Interval(
         left=int(age.split("-")[0]), right=int(age.split("-")[1]), closed="both"
-    )
+    ))
+    return pd.IntervalIndex(idx)
+
+def check_age_intervals(df: pd.DataFrame):
+    age_intervals = list(df.index)
+    lower_age = age_intervals[0].left
+    upper_age = age_intervals[-1].right
+    if lower_age != 0:
+        logger.warning(f'Your age intervals do not contain values smaller than {lower_age}. We will presume ages from 0 to {lower_age} all have the same value.')
+        age_intervals[0] = pd.Interval(left=0, right=age_intervals[0].right,
+                closed='both')
+    if upper_age < 100:
+        logger.warning(f'Your age intervals do not contain values larger than {upper_age}. We will presume ages {upper_age} all have the same value.')
+        age_intervals[-1] = pd.Interval(left=age_intervals[-1].left, 
+                right=100,
+                closed='both')
+    df.index = age_intervals
+    return df
 
 
 class Data2Rates:
@@ -29,24 +51,37 @@ class Data2Rates:
         population_file: str = default_population_file,
     ) -> "Data2Rates":
 
-        seroprevalence_df = pd.read_csv(
-            default_seroprevalence_file, converters={"age": convert_to_intervals}
+        seroprevalence_df = cls.read_csv(
+            cls,default_seroprevalence_file
         )
-        seroprevalence_df.set_index("age", inplace=True)
-        population_df = pd.read_csv(population_file)
-        population_df.set_index("age", inplace=True)
+        population_df = cls.read_csv(cls, population_file, converters=False)
         return cls(
             seroprevalence_df=seroprevalence_df, population_by_age_sex_df=population_df
         )
 
-    def n_cases(self, age):
-        pass
-
+    def read_csv(self, filename, converters=True):
+        df = pd.read_csv(filename)
+        df.set_index("age", inplace=True)
+        if converters:
+            new_index = convert_to_intervals(df.index)
+            df.index = new_index
+            df = check_age_intervals(df=df)
+        return df
+         
+    def n_cases(self, age: int, sex: str, is_care_home: bool=False)->float:
+        if is_care_home:
+            pass
+        else:
+            sero_prevalence = self.seroprevalence_df.loc[age,'seroprevalence_weighted']
+            n_people = self.population_by_age_sex_df.loc[age, sex]
+            return n_people*sero_prevalence
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     rates = Data2Rates.from_files()
+    print(rates.n_cases(age=20, sex='female'))
+    '''
     # ***************** Ward et al IFR
     ifr_age = [0.03, 0.52, 3.13, 11.64]
     ages = [
@@ -85,14 +120,14 @@ if __name__ == "__main__":
     ifr_imperial = pd.DataFrame(ifr_age, index=index)
     # ******************* IFR comparison
     plt.bar(
-        x=[(index.left + index.right) / 2 for index in ifr_ward.index],
+        x=[index.mid for index in ifr_ward.index],
         height=ifr_ward[0].values,
         width=[index.right - index.left for index in ifr_ward.index],
         alpha=0.4,
         label="Ward",
     )
     plt.bar(
-        x=[(index.left + index.right) / 2 for index in ifr_imperial.index],
+        x=[index.mid for index in ifr_imperial.index],
         height=ifr_imperial[0].values,
         width=[index.right - index.left for index in ifr_imperial.index],
         alpha=0.4,
@@ -102,3 +137,4 @@ if __name__ == "__main__":
     plt.ylabel("Death rate")
     plt.xlabel("Age")
     plt.show()
+    '''
