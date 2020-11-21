@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 from june.exc import InteractionError
 from june.utils import parse_age_probabilities
 from june.groups.group.interactive import InteractiveGroup
-from june.groups import InteractiveSchool
+from june.groups import InteractiveSchool, InteractiveCompany, InteractiveHousehold
 from june.records import Record
 from june import paths
 
@@ -51,11 +51,9 @@ class Interaction:
         contact_matrices: dict,
         susceptibilities_by_age: Dict[str, int] = None,
         population: "Population" = None,
-        interactive_groups_config: dict = None,
     ):
         self.alpha_physical = alpha_physical
         self.betas = betas or {}
-        self.interactive_groups_config = interactive_groups_config or {}
         contact_matrices = contact_matrices or {}
         self.contact_matrices = self.process_contact_matrices(
             input_contact_matrices=contact_matrices,
@@ -93,7 +91,6 @@ class Interaction:
             contact_matrices=contact_matrices,
             susceptibilities_by_age=susceptibilities_by_age,
             population=population,
-            interactive_groups_config=config.get("interactive_groups", None),
         )
 
     def set_population_susceptibilities(
