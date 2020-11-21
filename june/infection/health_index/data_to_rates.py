@@ -73,16 +73,18 @@ class Data2Rates:
         care_home_deaths_by_age_sex_df: pd.DataFrame = None,
         care_home_ratios_by_age_sex_df: pd.DataFrame = None,
     ):
-        self.seroprevalence_df = self._process_df(seroprevalence_df)
-        self.population_by_age_sex_df = self._process_df(population_by_age_sex_df)
-        self.all_deaths_by_age_sex = self._process_df(
+        self.seroprevalence_df = self._process_df(seroprevalence_df, converters=True)
+        self.population_by_age_sex_df = self._process_df(
+            population_by_age_sex_df, converters=False
+        )
+        self.all_deaths_by_age_sex_df = self._process_df(
             all_deaths_by_age_sex_df, converters=True, interpolate_bins=True
         )
         self.care_home_deaths_by_age_sex_df = self._process_df(
             care_home_deaths_by_age_sex_df, converters=True, interpolate_bins=True
         )
         self.care_home_ratios_by_age_sex_df = self._process_df(
-            care_home_ratios_by_age_sex_df
+            care_home_ratios_by_age_sex_df, converters=False
         )
 
     @classmethod
@@ -132,12 +134,14 @@ class Data2Rates:
         return df
 
     def _interpolate_bins(self, df):
-        ret = pd.DataFrame(index=np.arange(0, 100), columns=df.columns)
+        ret = pd.DataFrame(index=np.arange(df.index[0].left, 100), columns=df.columns)
         for age_bin, row in df.iterrows():
             age_min = age_bin.left
-            age_max = age_bin.right
-            males = self.population_by_age_sex_df.loc[age_min:age_max, "male"]
-            females = self.population_by_age_sex_df.loc[age_min:age_max, "female"]
+            age_max = min(age_bin.right, 99)
+            males = self.population_by_age_sex_df.loc[age_min:age_max, "male"].values
+            females = self.population_by_age_sex_df.loc[
+                age_min:age_max, "female"
+            ].values
             male_values = weighted_interpolation(value=row["male"], weights=males)
             female_values = weighted_interpolation(value=row["female"], weights=females)
             ret.loc[age_min:age_max, "male"] = male_values
@@ -151,8 +155,7 @@ class Data2Rates:
             sero_prevalence = self.seroprevalence_df.loc[age, "seroprevalence_weighted"]
             n_people = self.population_by_age_sex_df.loc[age, sex]
             if self.care_home_ratios_by_age_sex_df is not None:
-                n_people -= n_people * self.care_home_ratios_by_age_sex_df.loc[:, sex]
-            # TODO: remove care home residents
+                n_people -= n_people * self.care_home_ratios_by_age_sex_df.loc[age, sex]
             return n_people * sero_prevalence
 
     def get_n_deaths(self, age: int, sex: str, is_care_home: bool = False) -> int:
@@ -165,13 +168,9 @@ class Data2Rates:
             else:
                 return deaths_total - self.care_home_deaths_by_age_sex_df.loc[age, sex]
 
-    def get_death_rate(
-        self, age_bin: int, sex: str, is_care_home: bool = False
-    ) -> float:
-        n_cases = self.get_n_cases(age_bin=age_bin, sex=sex, is_care_home=is_care_home)
-        n_deaths = self.get_n_deaths(
-            age_bin=age_bin, sex=sex, is_care_home=is_care_home
-        )
+    def get_death_rate(self, age: int, sex: str, is_care_home: bool = False) -> float:
+        n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
+        n_deaths = self.get_n_deaths(age=age, sex=sex, is_care_home=is_care_home)
         return n_deaths / n_cases
 
 
@@ -215,6 +214,13 @@ if __name__ == "__main__":
     ages += [pd.Interval(90, 100, closed="left")]
     index = pd.IntervalIndex(ages)
     ifr_imperial = pd.DataFrame(ifr_age, index=index)
+    ages = np.arange(0, 100)
+    male_drs = 100 * np.array(
+        [rates.get_death_rate(age=age, sex="male") for age in ages]
+    )
+    female_drs = 100 * np.array(
+        [rates.get_death_rate(age=age, sex="female") for age in ages]
+    )
     # ******************* IFR comparison
     plt.bar(
         x=[index.mid for index in ifr_ward.index],
@@ -230,6 +236,8 @@ if __name__ == "__main__":
         alpha=0.4,
         label="Imperial",
     )
+    plt.plot(ages, male_drs, label="male death rate")
+    plt.plot(ages, female_drs, label="female death rate")
     plt.legend()
     plt.ylabel("Death rate")
     plt.xlabel("Age")
