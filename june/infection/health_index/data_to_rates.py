@@ -73,7 +73,6 @@ class Data2Rates:
             pass
         else:
             sero_prevalence = self.seroprevalence_df.loc[age,'seroprevalence_weighted']
-
             n_people = self.population_by_age_sex_df.loc[age, sex]
             #TODO: remove care home residents
             return n_people*sero_prevalence
