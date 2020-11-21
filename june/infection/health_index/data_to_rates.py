@@ -178,6 +178,10 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     rates = Data2Rates.from_files()
+    ifr_by_sex = pd.DataFrame.from_dict({'male': 1.07, 'female': 0.71},
+            orient='index')
+    ifr_by_sex.plot.bar() 
+    plt.show()
     # ***************** Ward et al IFR
     ifr_age = [0.03, 0.52, 3.13, 11.64]
     ages = [
