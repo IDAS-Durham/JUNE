@@ -28,8 +28,7 @@ def make_distributor(social_venues):
     weekend_boost = 2
     return SocialVenueDistributor(
         social_venues,
-        male_dict,
-        female_dict,
+        poisson_parameters={"male" : male_dict, "female" : female_dict},
         weekend_boost=weekend_boost,
         maximum_distance=30,
     )

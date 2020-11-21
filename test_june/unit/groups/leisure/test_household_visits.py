@@ -12,7 +12,7 @@ from june.groups.leisure import Pub
 @fixture(name="visits_distributor")
 def make_dist(world_visits):
     visits_distributor = HouseholdVisitsDistributor(
-        male_age_probabilities={"0-100": 0.5}, female_age_probabilities={"0-100": 0.5},
+        poisson_parameters={"male": {"0-100": 0.5}, "female": {"0-100": 0.5}}
     )
     visits_distributor.link_households_to_households(world_visits.super_areas)
     return visits_distributor
@@ -32,8 +32,12 @@ def test__every_household_has_up_to_3_links(world_visits, visits_distributor):
                     assert "household" not in household.residences_to_visit
                 else:
                     has_visits = True
-                    assert len(household.residences_to_visit["household"]) in range(1, 4)
-                    for household_to_visit in household.residences_to_visit["household"]:
+                    assert len(household.residences_to_visit["household"]) in range(
+                        1, 4
+                    )
+                    for household_to_visit in household.residences_to_visit[
+                        "household"
+                    ]:
                         assert household_to_visit.spec == "household"
     assert has_visits
 
@@ -122,6 +126,7 @@ def test__people_stay_home_when_receiving_visits(leisure):
         visitor.subgroups.leisure = None
         resident_household.clear()
         visitor_household.clear()
+
 
 def test__no_visits_during_working_hours(leisure):
     leisure.generate_leisure_probabilities_for_timestep(

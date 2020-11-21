@@ -96,20 +96,12 @@ class TestReduceLeisureProbabilities:
         sim.activity_manager.policies = policies
         sim.activity_manager.leisure = leisure
         sim.clear_world()
-        original_prob_1 = leisure.leisure_distributors["pubs"].male_probabilities[25]
-        original_prob_2 = leisure.leisure_distributors["pubs"].male_probabilities[60]
         policies.leisure_policies.apply(
             date=sim.timer.date, leisure=sim.activity_manager.leisure
         )
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
             0.1, False, False
         )
-        original_male_pub_probabilities = leisure.leisure_distributors[
-            "pubs"
-        ].male_probabilities
-        original_female_pub_probabilities = leisure.leisure_distributors[
-            "pubs"
-        ].female_probabilities
         assert str(sim.timer.date.date()) == "2020-03-01"
         household = Household()
         household.area = super_area.areas[0]
