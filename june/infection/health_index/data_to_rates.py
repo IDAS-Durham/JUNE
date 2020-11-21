@@ -17,6 +17,9 @@ default_all_deaths_file = (
 default_care_home_deaths_file = (
     paths.data_path / "input/health_index/care_home_deaths_by_age_sex_17_july.csv"
 )
+default_care_home_ratios_by_age_sex_file = (
+    paths.data_path / "input/health_index/care_home_ratios_by_age_sex_england.csv"
+)
 
 logger = logging.getLogger("rates")
 
@@ -39,7 +42,7 @@ def check_age_intervals(df: pd.DataFrame):
     if lower_age != 0:
         logger.warning(
             f"Your age intervals do not contain values smaller than {lower_age}."
-            "We will presume ages from 0 to {lower_age} all have the same value."
+            f"We will presume ages from 0 to {lower_age} all have the same value."
         )
         age_intervals[0] = pd.Interval(
             left=0, right=age_intervals[0].right, closed="both"
@@ -47,7 +50,7 @@ def check_age_intervals(df: pd.DataFrame):
     if upper_age < 100:
         logger.warning(
             f"Your age intervals do not contain values larger than {upper_age}."
-            "We will presume ages {upper_age} all have the same value."
+            f"We will presume ages {upper_age} all have the same value."
         )
         age_intervals[-1] = pd.Interval(
             left=age_intervals[-1].left, right=100, closed="both"
@@ -68,14 +71,18 @@ class Data2Rates:
         population_by_age_sex_df: pd.DataFrame,
         all_deaths_by_age_sex_df: pd.DataFrame,
         care_home_deaths_by_age_sex_df: pd.DataFrame = None,
+        care_home_ratios_by_age_sex_df: pd.DataFrame = None,
     ):
         self.seroprevalence_df = self._process_df(seroprevalence_df)
         self.population_by_age_sex_df = self._process_df(population_by_age_sex_df)
         self.all_deaths_by_age_sex = self._process_df(
-            all_deaths_by_age_sex_df, interpolate_bins=True
+            all_deaths_by_age_sex_df, converters=True, interpolate_bins=True
         )
         self.care_home_deaths_by_age_sex_df = self._process_df(
-            care_home_deaths_by_age_sex_df, interpolate_bins=True
+            care_home_deaths_by_age_sex_df, converters=True, interpolate_bins=True
+        )
+        self.care_home_ratios_by_age_sex_df = self._process_df(
+            care_home_ratios_by_age_sex_df
         )
 
     @classmethod
@@ -85,19 +92,28 @@ class Data2Rates:
         population_file: str = default_population_file,
         all_deaths_file: str = default_all_deaths_file,
         care_home_deaths_file: str = default_care_home_deaths_file,
+        care_home_ratios_by_age_sex_file: str = default_care_home_ratios_by_age_sex_file,
     ) -> "Data2Rates":
 
         seroprevalence_df = cls._read_csv(seroprevalence_file)
-        population_df = cls._read_csv(population_file, converters=False)
-        all_deaths_df = cls._read_csv(all_deaths_file, converters=True)
+        population_df = cls._read_csv(population_file)
+        all_deaths_df = cls._read_csv(all_deaths_file)
         if care_home_deaths_file is None:
             care_home_deaths_df = None
         else:
-            care_home_deaths_df = cls._read_csv(care_home_deaths_file, converters=True)
+            care_home_deaths_df = cls._read_csv(care_home_deaths_file)
+        if care_home_ratios_by_age_sex_file is None:
+            care_home_ratios_by_age_sex_df = None
+        else:
+            care_home_ratios_by_age_sex_df = cls._read_csv(
+                care_home_ratios_by_age_sex_file
+            )
         return cls(
             seroprevalence_df=seroprevalence_df,
             population_by_age_sex_df=population_df,
             all_deaths_by_age_sex_df=all_deaths_df,
+            care_home_deaths_by_age_sex_df=care_home_deaths_df,
+            care_home_ratios_by_age_sex_df=care_home_ratios_by_age_sex_df,
         )
 
     @classmethod
@@ -133,8 +149,9 @@ class Data2Rates:
             pass
         else:
             sero_prevalence = self.seroprevalence_df.loc[age, "seroprevalence_weighted"]
-
             n_people = self.population_by_age_sex_df.loc[age, sex]
+            if self.care_home_ratios_by_age_sex_df is not None:
+                n_people -= n_people * self.care_home_ratios_by_age_sex_df.loc[:, sex]
             # TODO: remove care home residents
             return n_people * sero_prevalence
 
