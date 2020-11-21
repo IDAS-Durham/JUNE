@@ -215,12 +215,17 @@ if __name__ == "__main__":
     index = pd.IntervalIndex(ages)
     ifr_imperial = pd.DataFrame(ifr_age, index=index)
     ages = np.arange(0, 100)
-    male_drs = 100 * np.array(
-        [rates.get_death_rate(age=age, sex="male") for age in ages]
-    )
-    female_drs = 100 * np.array(
-        [rates.get_death_rate(age=age, sex="female") for age in ages]
-    )
+    male_drs = []
+    female_drs = []
+    all_drs = []
+    for age in ages:
+        male_dr = rates.get_death_rate(age=age, sex="male")
+        female_dr = rates.get_death_rate(age=age, sex="female")
+        male_drs.append(male_dr)
+        female_drs.append(female_dr)
+        male_pop = rates.population_by_age_sex_df.loc[age, "male"]
+        female_pop = rates.population_by_age_sex_df.loc[age, "female"]
+        all_drs.append((male_pop * male_dr + female_pop * female_dr)/ (male_pop + female_pop))
     # ******************* IFR comparison
     plt.bar(
         x=[index.mid for index in ifr_ward.index],
@@ -236,8 +241,9 @@ if __name__ == "__main__":
         alpha=0.4,
         label="Imperial",
     )
-    plt.plot(ages, male_drs, label="male death rate")
-    plt.plot(ages, female_drs, label="female death rate")
+    plt.plot(ages, 100 * np.array(male_drs), label="male death rate")
+    plt.plot(ages, 100 * np.array(female_drs), label="female death rate")
+    plt.plot(ages, 100 * np.array(all_drs), label="average death rate")
     plt.legend()
     plt.ylabel("Death rate")
     plt.xlabel("Age")
