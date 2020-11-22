@@ -20,6 +20,12 @@ default_care_home_deaths_file = (
 default_care_home_ratios_by_age_sex_file = (
     paths.data_path / "input/health_index/care_home_ratios_by_age_sex_england.csv"
 )
+default_hospital_deaths_by_age_sex_file = (
+    paths.data_path / "input/health_index/cocin_hospital_deaths_by_age_sex_8july.csv"
+)
+default_hospital_admissions_by_age_sex_file = (
+    paths.data_path / "input/health_index/cocin_hospital_admissions_by_age_sex_8july.csv"
+)
 
 logger = logging.getLogger("rates")
 
@@ -70,6 +76,8 @@ class Data2Rates:
         seroprevalence_df: pd.DataFrame,
         population_by_age_sex_df: pd.DataFrame,
         all_deaths_by_age_sex_df: pd.DataFrame,
+        hospital_deaths_by_age_sex_df: pd.DataFrame,
+        hospital_admissions_by_age_sex_df: pd.DataFrame,
         care_home_deaths_by_age_sex_df: pd.DataFrame = None,
         care_home_ratios_by_age_sex_df: pd.DataFrame = None,
     ):
@@ -86,6 +94,12 @@ class Data2Rates:
         self.care_home_ratios_by_age_sex_df = self._process_df(
             care_home_ratios_by_age_sex_df, converters=False
         )
+        self.hospital_deaths_by_age_sex_df = self._process_df(
+            hospital_deaths_by_age_sex_df, converters=True, interpolate_bins=True
+        )
+        self.hospital_admissions_by_age_sex_df = self._process_df(
+            hospital_admissions_by_age_sex_df, converters=True, interpolate_bins=True
+        )
 
     @classmethod
     def from_files(
@@ -93,6 +107,8 @@ class Data2Rates:
         seroprevalence_file: str = default_seroprevalence_file,
         population_file: str = default_population_file,
         all_deaths_file: str = default_all_deaths_file,
+        hospital_deaths_file: str = default_hospital_deaths_by_age_sex_file,
+        hospital_admissions_file: str = default_hospital_admissions_by_age_sex_file,
         care_home_deaths_file: str = default_care_home_deaths_file,
         care_home_ratios_by_age_sex_file: str = default_care_home_ratios_by_age_sex_file,
     ) -> "Data2Rates":
@@ -100,6 +116,8 @@ class Data2Rates:
         seroprevalence_df = cls._read_csv(seroprevalence_file)
         population_df = cls._read_csv(population_file)
         all_deaths_df = cls._read_csv(all_deaths_file)
+        hospital_deaths_df = cls._read_csv(hospital_deaths_file)
+        hospital_admissions_df = cls._read_csv(hospital_admissions_file)
         if care_home_deaths_file is None:
             care_home_deaths_df = None
         else:
@@ -114,6 +132,8 @@ class Data2Rates:
             seroprevalence_df=seroprevalence_df,
             population_by_age_sex_df=population_df,
             all_deaths_by_age_sex_df=all_deaths_df,
+            hospital_deaths_by_age_sex_df=hospital_deaths_df,
+            hospital_admissions_by_age_sex_df=hospital_admissions_df,
             care_home_deaths_by_age_sex_df=care_home_deaths_df,
             care_home_ratios_by_age_sex_df=care_home_ratios_by_age_sex_df,
         )
@@ -156,7 +176,10 @@ class Data2Rates:
             n_people = self.population_by_age_sex_df.loc[age, sex]
             if self.care_home_ratios_by_age_sex_df is not None:
                 n_people -= n_people * self.care_home_ratios_by_age_sex_df.loc[age, sex]
-            return n_people * sero_prevalence
+            n_cases = n_people * sero_prevalence
+        # correct for deaths
+        n_cases += self.get_n_deaths(age=age, sex=sex, is_care_home=is_care_home)
+        return n_cases
 
     def get_n_deaths(self, age: int, sex: str, is_care_home: bool = False) -> int:
         if is_care_home:
@@ -168,33 +191,53 @@ class Data2Rates:
             else:
                 return deaths_total - self.care_home_deaths_by_age_sex_df.loc[age, sex]
 
-    def get_death_rate(self, age: int, sex: str, is_care_home: bool = False) -> float:
+    def get_infection_fatality_rate(
+        self, age: int, sex: str, is_care_home: bool = False
+    ) -> float:
         n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
         n_deaths = self.get_n_deaths(age=age, sex=sex, is_care_home=is_care_home)
         return n_deaths / n_cases
+
+    def get_n_hospital_deaths(self, age: int, sex: str) -> int:
+        return self.hospital_deaths_by_age_sex_df.loc[age, sex]
+
+    def get_n_hospital_admissions(self, age: int, sex: str) -> int:
+        return self.hospital_deaths_by_age_sex_df.loc[age, sex]
+
+    def get_hospital_death_rate(self, age: int, sex: str) -> int:
+        return self.get_n_hospital_deaths(
+            age=age, sex=sex
+        ) / self.get_n_hospital_admissions(age=age, sex=sex)
+
+    def get_hospital_infection_fatality_rate(self, age: int, sex: str) -> int:
+        n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=False)
+        n_hospital_deaths = self.get_n_hospital_deaths(age=age, sex=sex)
+        return n_hospital_deaths / n_cases
+
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     rates = Data2Rates.from_files()
-    ifr_by_sex_ward = pd.DataFrame.from_dict({'male': 1.07, 'female': 0.71},
-            orient='index')
-    all_male_deaths, all_male_cases = 0, 0 
-    all_female_deaths, all_female_cases = 0, 0 
-    for age in np.arange(0,100):
-        all_male_deaths += rates.get_n_deaths(age=age, sex='male')
-        all_male_cases += rates.get_n_cases(age=age, sex='male')
-        all_female_deaths += rates.get_n_deaths(age=age, sex='female')
-        all_female_cases += rates.get_n_cases(age=age, sex='female')
-    overall_male_dr = all_male_deaths/all_male_cases*100
-    overall_female_dr = all_female_deaths/all_female_cases*100
+    ifr_by_sex_ward = pd.DataFrame.from_dict(
+        {"male": 1.07, "female": 0.71}, orient="index"
+    )
+    all_male_deaths, all_male_cases = 0, 0
+    all_female_deaths, all_female_cases = 0, 0
+    for age in np.arange(0, 100):
+        all_male_deaths += rates.get_n_deaths(age=age, sex="male")
+        all_male_cases += rates.get_n_cases(age=age, sex="male")
+        all_female_deaths += rates.get_n_deaths(age=age, sex="female")
+        all_female_cases += rates.get_n_cases(age=age, sex="female")
+    overall_male_dr = all_male_deaths / all_male_cases * 100
+    overall_female_dr = all_female_deaths / all_female_cases * 100
     ifr_by_sex = pd.DataFrame.from_dict(
-            {'male': overall_male_dr, 'female': overall_female_dr},
-            orient='index')
+        {"male": overall_male_dr, "female": overall_female_dr}, orient="index"
+    )
     fig, ax = plt.subplots()
-    ifr_by_sex_ward[0].plot.bar(ax=ax, label='Ward et al', alpha=0.3, color='blue') 
-    ifr_by_sex[0].plot.bar(ax=ax,label='JUNE', alpha=0.3, color='orange')
-    plt.ylabel('Death rate by sex')
+    ifr_by_sex_ward[0].plot.bar(ax=ax, label="Ward et al", alpha=0.3, color="blue")
+    ifr_by_sex[0].plot.bar(ax=ax, label="JUNE", alpha=0.3, color="orange")
+    plt.ylabel("IFR by sex")
     plt.legend()
     plt.show()
     # ***************** Ward et al IFR
@@ -237,14 +280,24 @@ if __name__ == "__main__":
     male_drs = []
     female_drs = []
     all_drs = []
+    hospital_male_drs = []
+    hospital_female_drs = []
+    hospital_all_drs = []
     for age in ages:
-        male_dr = rates.get_death_rate(age=age, sex="male")
-        female_dr = rates.get_death_rate(age=age, sex="female")
+        male_dr = rates.get_infection_fatality_rate(age=age, sex="male")
+        female_dr = rates.get_infection_fatality_rate(age=age, sex="female")
         male_drs.append(male_dr)
         female_drs.append(female_dr)
         male_pop = rates.population_by_age_sex_df.loc[age, "male"]
         female_pop = rates.population_by_age_sex_df.loc[age, "female"]
-        all_drs.append((male_pop * male_dr + female_pop * female_dr)/ (male_pop + female_pop))
+        all_drs.append(
+            (male_pop * male_dr + female_pop * female_dr) / (male_pop + female_pop)
+        )
+        hospital_male_dr = rates.get_hospital_infection_fatality_rate(age=age, sex="male")
+        hospital_female_dr = rates.get_hospital_infection_fatality_rate(age=age, sex="female")
+        hospital_male_drs.append(hospital_male_dr)
+        hospital_female_drs.append(hospital_female_dr)
+        hospital_all_drs.append((male_pop * hospital_male_dr + female_pop * hospital_female_dr) / (male_pop + female_pop))
     # ******************* IFR comparison
     plt.bar(
         x=[index.mid for index in ifr_ward.index],
@@ -260,10 +313,14 @@ if __name__ == "__main__":
         alpha=0.4,
         label="Imperial",
     )
-    plt.plot(ages, 100 * np.array(male_drs), label="male death rate")
-    plt.plot(ages, 100 * np.array(female_drs), label="female death rate")
-    plt.plot(ages, 100 * np.array(all_drs), label="average death rate")
+    plt.plot(ages, 100 * np.array(male_drs), label="male IFR", color = "C0")
+    plt.plot(ages, 100 * np.array(female_drs), label="female IFR", color = "C1")
+    plt.plot(ages, 100 * np.array(all_drs), label="average IFR", color = "C2")
+    plt.plot(ages, 100 * np.array(hospital_male_drs), label="hospital male IFR", linestyle="--", color = "C0")
+    plt.plot(ages, 100 * np.array(hospital_female_drs), label="hospital female IFR", linestyle="--", color = "C1")
+    plt.plot(ages, 100 * np.array(hospital_all_drs), label="hospital average IFR", linestyle="--", color = "C2")
     plt.legend()
-    plt.ylabel("Death rate")
+    plt.ylabel("IFR")
     plt.xlabel("Age")
     plt.show()
+
