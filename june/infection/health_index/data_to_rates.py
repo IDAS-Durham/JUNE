@@ -186,7 +186,14 @@ if __name__ == "__main__":
         all_male_cases += rates.get_n_cases(age=age, sex='male')
         all_female_deaths += rates.get_n_deaths(age=age, sex='female')
         all_female_cases += rates.get_n_cases(age=age, sex='female')
+    overall_dr = (all_male_deaths + all_female_deaths)/(all_male_cases+all_female_cases)*100
+    print(overall_dr)
     overall_male_dr = all_male_deaths/all_male_cases*100
+    print('Numerator male = ', all_male_deaths)
+    print('Denumerator female = ', all_male_cases)
+
+    print('Numerator female = ', all_female_deaths)
+    print('Denumerator female = ', all_female_cases)
     overall_female_dr = all_female_deaths/all_female_cases*100
     ifr_by_sex = pd.DataFrame.from_dict(
             {'male': overall_male_dr, 'female': overall_female_dr},
