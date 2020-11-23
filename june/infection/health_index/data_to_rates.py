@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from typing import List
 from june import paths
-from scipy import interpolate, curve_fit
 
 default_seroprevalence_file = (
     paths.data_path / "input/health_index/seroprevalence_by_age_imperial.csv"
@@ -22,7 +21,7 @@ default_care_home_deaths_file = (
     paths.data_path / "input/health_index/care_home_deaths_by_age_sex_17_july.csv"
 )
 default_care_home_ratios_by_age_sex_file = (
-    paths.data_path / "input/health_index/care_home_ratios_by_age_sex_england.csv"
+    paths.data_path / "input/health_index/care_home_ratios_by_age_sex_england_new.csv"
 )
 default_hospital_deaths_by_age_sex_file = (
     paths.data_path / "input/health_index/cocin_hospital_deaths_by_age_sex_8july.csv"
@@ -31,18 +30,26 @@ default_hospital_admissions_by_age_sex_file = (
     paths.data_path
     / "input/health_index/cocin_hospital_admissions_by_age_sex_8july.csv"
 )
+ifr_imperial_file = paths.data_path / "plotting/health_index/ifr_imperial.csv"
+ifr_ward_file = paths.data_path / "plotting/health_index/ifr_ward.csv"
 
 logger = logging.getLogger("rates")
 
 
-def convert_to_intervals(ages: List[str]) -> pd.IntervalIndex:
+def convert_to_intervals(ages: List[str], is_interval=False) -> pd.IntervalIndex:
     idx = []
     for age in ages:
-        idx.append(
-            pd.Interval(
-                left=int(age.split("-")[0]), right=int(age.split("-")[1]), closed="both"
+        if is_interval:
+            age = age.strip("[]").split(",")
+            idx.append(pd.Interval(left=int(age[0]), right=int(age[1]), closed="both"))
+        else:
+            idx.append(
+                pd.Interval(
+                    left=int(age.split("-")[0]),
+                    right=int(age.split("-")[1]),
+                    closed="both",
+                )
             )
-        )
     return pd.IntervalIndex(idx)
 
 
@@ -120,6 +127,12 @@ class Data2Rates:
         self.hospital_admissions_by_age_sex_df = self._process_df(
             hospital_admissions_by_age_sex_df, converters=True
         )
+        self.gp_mapper = (
+            lambda age, sex: 1  # self.population_by_age_sex_df.loc[age, sex]
+        )
+        self.ch_mapper = lambda age, sex: self.care_home_ratios_by_age_sex_df.loc[
+            age, sex
+        ] * self.gp_mapper(age, sex)
 
     @classmethod
     def from_files(
@@ -198,7 +211,7 @@ class Data2Rates:
             if not provided uses population weight.
         """
         if weight_mapper is None:
-            weight_mapper = lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
+            weight_mapper = lambda age, sex: 1
         age_bin = df.loc[age].name
         data_bin = df.loc[age, sex]
         bin_weight = sum(
@@ -210,9 +223,7 @@ class Data2Rates:
         value_weight = weight_mapper(age, sex)
         return value_weight * data_bin / bin_weight
 
-    def get_n_cases(
-        self, age: int, sex: str, is_care_home: bool = False, weight_mapper=None
-    ) -> float:
+    def get_n_cases(self, age: int, sex: str, is_care_home: bool = False) -> float:
         if is_care_home:
             sero_prevalence = self.care_home_seroprevalence_by_age_df.loc[
                 age, "seroprevalence"
@@ -227,351 +238,233 @@ class Data2Rates:
                 n_people -= n_people * self.care_home_ratios_by_age_sex_df.loc[age, sex]
         n_cases = n_people * sero_prevalence
         # correct for deaths
-        n_cases += self.get_n_deaths(
-            age=age, sex=sex, is_care_home=is_care_home, weight_mapper=weight_mapper
-        )
+        n_cases += self.get_n_deaths(age=age, sex=sex, is_care_home=is_care_home)
         return n_cases
 
-    def get_care_home_deaths(self, age: int, sex: str, weight_mapper=None):
-        pop_mapper = (
-            lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
-             * self.care_home_ratios_by_age_sex_df.loc[age, sex]
-        )
-        if weight_mapper is None:
-            mapper = pop_mapper
-        else:
-            mapper = lambda age, sex: weight_mapper(age, sex) * pop_mapper(age, sex)
+    def get_care_home_deaths(self, age: int, sex: str):
         return self._get_interpolated_value(
             df=self.care_home_deaths_by_age_sex_df,
             age=age,
             sex=sex,
-            weight_mapper=mapper,
+            weight_mapper=self.ch_mapper,
         )
 
-    def get_all_deaths(self, age: int, sex: str, weight_mapper=None):
-        pop_mapper = lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
-        if weight_mapper is None:
-            mapper = pop_mapper
-        else:
-            mapper = lambda age, sex: weight_mapper(age, sex) * pop_mapper(age, sex)
+    def get_all_deaths(self, age: int, sex: str):
         return self._get_interpolated_value(
-            df=self.all_deaths_by_age_sex_df, age=age, sex=sex, weight_mapper=mapper
+            df=self.all_deaths_by_age_sex_df,
+            age=age,
+            sex=sex,
+            weight_mapper=self.gp_mapper,
         )
 
-    def get_n_deaths(
-        self, age: int, sex: str, is_care_home: bool = False, weight_mapper=None
-    ) -> int:
+    def get_n_deaths(self, age: int, sex: str, is_care_home: bool = False) -> int:
         if is_care_home:
-            return self.get_care_home_deaths(
-                age=age, sex=sex, weight_mapper=weight_mapper
-            )
+            return self.get_care_home_deaths(age=age, sex=sex)
         else:
-            deaths_total = self.get_all_deaths(
-                age=age, sex=sex, weight_mapper=weight_mapper
-            )
+            deaths_total = self.get_all_deaths(age=age, sex=sex)
             if self.care_home_deaths_by_age_sex_df is None:
                 return deaths_total
             else:
-                deaths_care_home = self.get_care_home_deaths(
-                    age=age, sex=sex, weight_mapper=weight_mapper
-                )
+                deaths_care_home = self.get_care_home_deaths(age=age, sex=sex)
                 return deaths_total - deaths_care_home
 
     def get_infection_fatality_rate(
-        self, age: int, sex: str, is_care_home: bool = False, weight_mapper=None
+        self, age: int, sex: str, is_care_home: bool = False
     ) -> float:
-        n_cases = self.get_n_cases(
-            age=age, sex=sex, is_care_home=is_care_home, weight_mapper=weight_mapper
-        )
-        n_deaths = self.get_n_deaths(
-            age=age, sex=sex, is_care_home=is_care_home, weight_mapper=weight_mapper
-        )
+        n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
+        n_deaths = self.get_n_deaths(age=age, sex=sex, is_care_home=is_care_home)
         if n_cases == n_deaths:
             return 0
         else:
             return n_deaths / n_cases
 
-    def get_n_hospital_deaths(self, age: int, sex: str, weight_mapper=None) -> int:
-        pop_mapper = lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
-        if weight_mapper is None:
-            mapper = pop_mapper
-        else:
-            mapper = lambda age, sex: weight_mapper(age, sex) * pop_mapper(age, sex)
+    def get_n_hospital_deaths(self, age: int, sex: str) -> int:
         return self._get_interpolated_value(
-            df=self.hospital_deaths_by_age_sex_df,
-            age=age,
-            sex=sex,
-            weight_mapper=mapper,
+            df=self.hospital_deaths_by_age_sex_df, age=age, sex=sex,
         )
 
-    def get_n_hospital_admissions(self, age: int, sex: str, weight_mapper=None) -> int:
-        pop_mapper = lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
-        if weight_mapper is None:
-            mapper = pop_mapper
-        else:
-            mapper = lambda age, sex: weight_mapper(age, sex) * pop_mapper(age, sex)
+    def get_n_hospital_admissions(self, age: int, sex: str) -> int:
         return self._get_interpolated_value(
-            df=self.hospital_admissions_by_age_sex_df,
-            age=age,
-            sex=sex,
-            weight_mapper=mapper,
+            df=self.hospital_admissions_by_age_sex_df, age=age, sex=sex,
         )
 
-    def get_hospital_death_rate(self, age: int, sex: str, weight_mapper=None) -> int:
+    def get_hospital_death_rate(self, age: int, sex: str) -> int:
         return self.get_n_hospital_deaths(
-            age=age, sex=sex, weight_mapper=weight_mapper
-        ) / self.get_n_hospital_admissions(
-            age=age, sex=sex, weight_mapper=weight_mapper
-        )
+            age=age, sex=sex
+        ) / self.get_n_hospital_admissions(age=age, sex=sex)
 
-    def get_hospital_infection_fatality_rate(
-        self, age: int, sex: str, weight_mapper=None
-    ) -> int:
-        n_cases = self.get_n_cases(
-            age=age, sex=sex, is_care_home=False, weight_mapper=weight_mapper
-        )
-        n_hospital_deaths = self.get_n_hospital_deaths(
-            age=age, sex=sex, weight_mapper=weight_mapper
-        )
+    def get_hospital_infection_fatality_rate(self, age: int, sex: str) -> int:
+        n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=False)
+        n_hospital_deaths = self.get_n_hospital_deaths(age=age, sex=sex)
         return n_hospital_deaths / n_cases
 
-    def get_functional_infection_fataility_rate(self, death_rate_df, bin_size=5):
-        age_lows = np.arange(0, 100, bin_size)
-        age_highs = np.arange(bin_size - 1, 100, bin_size)
-        age_mids = (age_highs - age_lows) / 2
-        male_drs = []
-        female_drs = []
-        for age_low, age_high in zip(age_lows, age_highs):
-            death_rate_males = [
-                death_rate_df.loc[age, "male"] for age in range(age_low, age_high + 1)
-            ]
-            death_rate_females = [
-                death_rate_df.loc[age, "female"] for age in range(age_low, age_high + 1)
-            ]
-            death_rate_avg_males = np.average(
-                death_rate_males,
-                weights=self.population_by_age_sex_df.loc[
-                    age_low:age_high, "male"
-                ].values,
+    def get_value_at_bin(
+        self,
+        f,
+        age_bin: pd.Interval,
+        sex: str,
+        is_care_home: bool = False,
+        weight_mapper=None,
+    ):
+        age_range = range(age_bin.left, age_bin.right + 1)
+        if sex == "both":
+            male_values = []
+            female_values = []
+            male_bin_weight = sum(weight_mapper(age, "male") for age in age_range)
+            female_bin_weight = sum(weight_mapper(age, "female") for age in age_range)
+            for age in age_range:
+                male_value = f(age=age, sex="male", is_care_home=is_care_home)
+                female_value = f(age=age, sex="female", is_care_home=is_care_home)
+                male_values.append(male_value * weight_mapper(age, "male"))
+                female_values.append(female_value * weight_mapper(age, "female"))
+            male_avg = sum(male_values) / male_bin_weight
+            female_avg = sum(female_values) / female_bin_weight
+            return (male_bin_weight * male_avg + female_bin_weight * female_avg) / (
+                male_bin_weight + female_bin_weight
             )
-            death_rate_avg_females = np.average(
-                death_rate_females,
-                weights=self.population_by_age_sex_df.loc[
-                    age_low:age_high, "female"
-                ].values,
+        else:
+            values = []
+            bin_total_weight = sum(weight_mapper(age, sex) for age in age_range)
+            for age in age_range:
+                value = f(age=age, sex=sex, is_care_home=is_care_home)
+                values.append(value * weight_mapper(age, sex))
+            return sum(values) / bin_total_weight
+
+
+def get_IFR_dataframe(rates, age_bins):
+    june_ifrs = pd.DataFrame(
+        index=age_bins, columns=["gp_male", "gp_female", "ch_male", "ch_female"]
+    )
+    gp_mapper = rates.gp_mapper
+    ch_mapper = rates.ch_mapper
+    for age_bin in age_bins:
+        gp_male = (
+            rates.get_value_at_bin(
+                f=rates.get_infection_fatality_rate,
+                age_bin=age_bin,
+                sex="male",
+                is_care_home=False,
+                weight_mapper=gp_mapper,
             )
-            male_drs.append(death_rate_avg_males)
-            female_drs.append(death_rate_avg_females)
-        deg = len(age_mids)
-        male_fit = np.polyfit(x=age_mids, y=np.log(male_drs), deg=deg)
-        female_fit = np.polyfit(x=age_mids, y=np.log(female_drs), deg=deg)
-        male_func = lambda age: np.exp(
-            sum(coef * age ** (deg - i) for i, coef in enumerate(male_fit))
+            * 100
         )
-        female_func = lambda age: np.exp(
-            sum(coef * age ** (deg - i) for i, coef in enumerate(female_fit))
+        gp_female = (
+            rates.get_value_at_bin(
+                f=rates.get_infection_fatality_rate,
+                age_bin=age_bin,
+                sex="female",
+                is_care_home=False,
+                weight_mapper=gp_mapper,
+            )
+            * 100
         )
-        return male_func, female_func
+        gp_all = (
+            rates.get_value_at_bin(
+                f=rates.get_infection_fatality_rate,
+                age_bin=age_bin,
+                sex="both",
+                is_care_home=False,
+                weight_mapper=gp_mapper,
+            )
+            * 100
+        )
+        ch_male = (
+            rates.get_value_at_bin(
+                f=rates.get_infection_fatality_rate,
+                age_bin=age_bin,
+                sex="male",
+                is_care_home=True,
+                weight_mapper=ch_mapper,
+            )
+            * 100
+        )
+        ch_female = (
+            rates.get_value_at_bin(
+                f=rates.get_infection_fatality_rate,
+                age_bin=age_bin,
+                sex="female",
+                is_care_home=True,
+                weight_mapper=ch_mapper,
+            )
+            * 100
+        )
+        ch_all = (
+            rates.get_value_at_bin(
+                f=rates.get_infection_fatality_rate,
+                age_bin=age_bin,
+                sex="both",
+                is_care_home=True,
+                weight_mapper=gp_mapper,
+            )
+            * 100
+        )
+        june_ifrs.loc[age_bin, "gp_male"] = gp_male
+        june_ifrs.loc[age_bin, "gp_female"] = gp_female
+        june_ifrs.loc[age_bin, "gp_all"] = gp_all
+        june_ifrs.loc[age_bin, "ch_male"] = ch_male
+        june_ifrs.loc[age_bin, "ch_female"] = ch_female
+        june_ifrs.loc[age_bin, "ch_all"] = ch_all
+    return june_ifrs
 
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     rates = Data2Rates.from_files()
-    # iteration loop
-    # age_range = range(0, 100)
-    # age_range_bins = np.arange(0,100,5)
-    # death_rate_df = pd.DataFrame(index=age_range)
-    # death_rate_df["male"] = [
-    #    rates.get_infection_fatality_rate(age=age, sex="male") for age in age_range
-    # ]
-    # death_rate_df["female"] = [
-    #    rates.get_infection_fatality_rate(age=age, sex="female") for age in age_range
-    # ]
-    # male_func, female_func = rates.get_functional_infection_fataility_rate(
-    #    death_rate_df=death_rate_df
-    # )
-    # fig, ax = plt.subplots()
-    # death_rate_df.plot(ax=ax)
-    # plt.plot(age_range, [male_func(age) for age in age_range], label="fit male")
-    # plt.plot(age_range, [female_func(age) for age in age_range], label="fit female")
-    # plt.legend()
-    # plt.show()
-    # death_rate_df.plot()
-    # plt.show()
-    # n_iterations = 5
-    # for i in range(n_iterations):
-    #    death_rate_df_refined = pd.DataFrame(index=age_range)
-    #    weight_mapper = lambda age, sex: death_rate_df.loc[age, sex]
-    #    death_rate_df_refined["male"] = [
-    #        rates.get_infection_fatality_rate(
-    #            age=age, sex="male", weight_mapper=weight_mapper
-    #        )
-    #        for age in age_range
-    #    ]
-    #    death_rate_df_refined["female"] = [
-    #        rates.get_infection_fatality_rate(
-    #            age=age, sex="female", weight_mapper=weight_mapper
-    #        )
-    #        for age in age_range
-    #    ]
-    #    death_rate_df_refined.plot()
-    #    plt.show()
-    #    death_rate_df = death_rate_df_refined
-
-    ifr_by_sex_ward = pd.DataFrame.from_dict(
-        {"male": 1.07, "female": 0.71}, orient="index"
-    )
-    all_male_deaths, all_male_cases = 0, 0
-    all_female_deaths, all_female_cases = 0, 0
-    for age in np.arange(0, 100):
-        all_male_deaths += rates.get_n_deaths(age=age, sex="male")
-        all_male_cases += rates.get_n_cases(age=age, sex="male")
-        all_female_deaths += rates.get_n_deaths(age=age, sex="female")
-        all_female_cases += rates.get_n_cases(age=age, sex="female")
-    overall_male_dr = all_male_deaths / all_male_cases * 100
-    overall_female_dr = all_female_deaths / all_female_cases * 100
-    ifr_by_sex = pd.DataFrame.from_dict(
-        {"male": overall_male_dr, "female": overall_female_dr}, orient="index"
-    )
+    ##### June results vs Imperial #####
+    ifr_imperial = pd.read_csv(ifr_imperial_file, index_col=0)
+    ifr_imperial.index = convert_to_intervals(ifr_imperial.index, is_interval=True)
     fig, ax = plt.subplots()
-    ifr_by_sex_ward[0].plot.bar(ax=ax, label="Ward et al", alpha=0.3, color="blue")
-    ifr_by_sex[0].plot.bar(ax=ax, label="JUNE", alpha=0.3, color="orange")
-    plt.ylabel("IFR by sex")
-    plt.legend()
-    plt.show()
-    # ***************** Ward et al IFR
-    ifr_age = [0.03, 0.52, 3.13, 11.64]
-    ages = [
-        pd.Interval(15, 44, closed="left"),
-        pd.Interval(45, 64, closed="left"),
-        pd.Interval(65, 74, closed="left"),
-        pd.Interval(75, 100, closed="left"),
-    ]
-    index = pd.IntervalIndex(ages)
-    ifr_ward = pd.DataFrame(ifr_age, index=index)
-    # ***************** Imperial IFR
-    ifr_age = [
-        0.0,
-        0.01,
-        0.01,
-        0.02,
-        0.03,
-        0.04,
-        0.06,
-        0.1,
-        0.16,
-        0.24,
-        0.38,
-        0.6,
-        0.94,
-        1.47,
-        2.31,
-        3.61,
-        5.66,
-        8.86,
-        17.37,
-    ]
-    ages = [pd.Interval(i, i + 5, closed="left") for i in range(0, 90, 5)]
-    ages += [pd.Interval(90, 100, closed="left")]
-    index = pd.IntervalIndex(ages)
-    ifr_imperial = pd.DataFrame(ifr_age, index=index)
-    ages = np.arange(0, 100)
-    male_drs = []
-    female_drs = []
-    care_home_male_drs = []
-    care_home_female_drs = []
-    all_drs = []
-    hospital_male_drs = []
-    hospital_female_drs = []
-    hospital_all_drs = []
-    for age in ages:
-        male_dr = rates.get_infection_fatality_rate(age=age, sex="male")
-        care_home_male_dr = rates.get_infection_fatality_rate(
-            age=age, sex="male", is_care_home=True
-        )
-
-        female_dr = rates.get_infection_fatality_rate(age=age, sex="female")
-        care_home_female_dr = rates.get_infection_fatality_rate(
-            age=age, sex="female", is_care_home=True
-        )
-        male_drs.append(male_dr)
-        care_home_male_drs.append(care_home_male_dr)
-        female_drs.append(female_dr)
-        care_home_female_drs.append(care_home_female_dr)
-        male_pop = rates.population_by_age_sex_df.loc[age, "male"]
-        female_pop = rates.population_by_age_sex_df.loc[age, "female"]
-        all_drs.append(
-            (male_pop * male_dr + female_pop * female_dr) / (male_pop + female_pop)
-        )
-        hospital_male_dr = rates.get_hospital_infection_fatality_rate(
-            age=age, sex="male"
-        )
-        hospital_female_dr = rates.get_hospital_infection_fatality_rate(
-            age=age, sex="female"
-        )
-        hospital_male_drs.append(hospital_male_dr)
-        hospital_female_drs.append(hospital_female_dr)
-        hospital_all_drs.append(
-            (male_pop * hospital_male_dr + female_pop * hospital_female_dr)
-            / (male_pop + female_pop)
-        )
-    # ******************* IFR comparison
-    plt.bar(
-        x=[index.mid for index in ifr_ward.index],
-        height=ifr_ward[0].values,
-        width=[index.right - index.left for index in ifr_ward.index],
-        alpha=0.4,
-        label="Ward",
+    june_ifrs = get_IFR_dataframe(rates=rates, age_bins=ifr_imperial.index)
+    june_ifrs.loc[:, ["gp_male", "gp_female", "gp_all"]].plot.bar(
+        ax=ax,
+        color=["C0", "C1", "C2"],
+        alpha=0.5,
+        width=0.8,
+        label="June",
+        legend=False,
     )
-    plt.bar(
-        x=[index.mid for index in ifr_imperial.index],
-        height=ifr_imperial[0].values,
-        width=[index.right - index.left for index in ifr_imperial.index],
-        alpha=0.4,
+    errors = np.array([ifr_imperial.error_low, ifr_imperial.error_high]).reshape(2, -1)
+    ifr_imperial.plot.bar(
+        y="ifr",
+        ax=ax,
         label="Imperial",
+        color="C3",
+        alpha=0.7,
+        legend=False,
+        yerr=errors,
+        capsize=4,
     )
-    plt.plot(ages, 100 * np.array(male_drs), label="male IFR (Community)", color="C0")
-    plt.plot(
-        ages,
-        100 * np.array(care_home_male_drs),
-        label="male IFR (Care home)",
-        color="C0",
-        linestyle="--",
-    )
-    plt.plot(
-        ages, 100 * np.array(female_drs), label="female IFR (Community)", color="C1"
-    )
-    plt.plot(
-        ages,
-        100 * np.array(care_home_female_drs),
-        label="female IFR (Care Home)",
-        color="C1",
-        linestyle="--",
-    )
-    plt.plot(ages, 100 * np.array(all_drs), label="average IFR", color="C2")
-    plt.plot(
-        ages,
-        100 * np.array(hospital_male_drs),
-        label="hospital male IFR",
-        linestyle="--",
-        color="C0",
-    )
-    plt.plot(
-        ages,
-        100 * np.array(hospital_female_drs),
-        label="hospital female IFR",
-        linestyle="--",
-        color="C1",
-    )
-    plt.plot(
-        ages,
-        100 * np.array(hospital_all_drs),
-        label="hospital average IFR",
-        linestyle="--",
-        color="C2",
-    )
-    plt.legend()
+    ax.legend()
     plt.ylabel("IFR")
-    plt.xlabel("Age")
+    plt.savefig("ifr_imperial_vs_june.png", dpi=150, bbox_inches="tight")
+    plt.show()
+
+    ## June comparison vs Ward ##
+    ifr_ward = pd.read_csv(ifr_ward_file, index_col=0)
+    ifr_ward.index = convert_to_intervals(ifr_ward.index, is_interval=True)
+    fig, ax = plt.subplots()
+    june_ifrs = get_IFR_dataframe(rates=rates, age_bins=ifr_ward.index)
+    june_ifrs.loc[:, ["gp_male", "gp_female", "gp_all"]].plot.bar(
+        ax=ax,
+        color=["C0", "C1", "C2"],
+        alpha=0.5,
+        width=0.8,
+        label="June",
+        legend=False,
+    )
+    errors = np.array([ifr_ward.error_low, ifr_ward.error_high]).reshape(2, -1)
+    ifr_ward.plot.bar(
+        ax=ax,
+        y="ifr",
+        label="Ward",
+        color="C3",
+        alpha=0.7,
+        legend=False,
+        yerr=errors,
+        capsize=4,
+    )
+    ax.legend()
+    plt.ylabel("IFR")
+    plt.savefig("ifr_ward_vs_june.png", dpi=150, bbox_inches="tight")
     plt.show()
