@@ -4,36 +4,28 @@ import numpy as np
 from typing import List
 from june import paths
 
-default_seroprevalence_file = (
-    paths.data_path / "input/health_index/seroprevalence_by_age_imperial.csv"
-)
-default_care_home_seroprevalence_file = (
-    paths.data_path / "input/health_index/care_home_seroprevalence_by_age.csv"
-)
-default_population_file = (
-    paths.data_path
-    / "input/health_index/corrected_population_by_age_sex_2020_england.csv"
-)
-default_all_deaths_file = (
-    paths.data_path / "input/health_index/deaths_by_age_sex_17_july.csv"
-)
-default_care_home_deaths_file = (
-    paths.data_path / "input/health_index/care_home_deaths_by_age_sex_17_july.csv"
-)
+hi_data = paths.data_path / "input/health_index"
+default_seroprevalence_file = hi_data / "seroprevalence_by_age_imperial.csv"
+default_care_home_seroprevalence_file = hi_data / "care_home_seroprevalence_by_age.csv"
+default_population_file = hi_data / "corrected_population_by_age_sex_2020_england.csv"
+default_all_deaths_file = hi_data / "deaths_by_age_sex_17_july.csv"
+default_care_home_deaths_file = hi_data / "care_home_deaths_by_age_sex_17_july.csv"
 default_care_home_ratios_by_age_sex_file = (
-    paths.data_path / "input/health_index/care_home_ratios_by_age_sex_england_new.csv"
+    hi_data / "care_home_ratios_by_age_sex_england.csv"
+)
+default_hospital_death_rate_file = hi_data / "cocin_hospital_death_rate.csv"
+default_hospital_admissions_by_age_sex_file = (
+    hi_data / "cocin_sitrep_hospital_admissions_by_age_sex_17july.csv"
 )
 default_hospital_deaths_by_age_sex_file = (
-    paths.data_path / "input/health_index/cocin_hospital_deaths_by_age_sex_8july.csv"
-)
-default_hospital_admissions_by_age_sex_file = (
-    paths.data_path
-    / "input/health_index/cocin_hospital_admissions_by_age_sex_8july.csv"
+    hi_data / "cocin_ons_hospital_deaths_by_age_sex_17july.csv"
 )
 ifr_imperial_file = paths.data_path / "plotting/health_index/ifr_imperial.csv"
 ifr_ward_file = paths.data_path / "plotting/health_index/ifr_ward.csv"
 
 logger = logging.getLogger("rates")
+
+total_sitrep_admissions = 104339
 
 
 def convert_to_intervals(ages: List[str], is_interval=False) -> pd.IntervalIndex:
@@ -96,11 +88,14 @@ class Data2Rates:
         seroprevalence_df: pd.DataFrame,
         population_by_age_sex_df: pd.DataFrame,
         all_deaths_by_age_sex_df: pd.DataFrame,
+        hospital_death_rate_by_age_sex_df: pd.DataFrame,
         hospital_deaths_by_age_sex_df: pd.DataFrame,
         hospital_admissions_by_age_sex_df: pd.DataFrame,
+        # hospital_admissions_by_age_df: pd.DataFrame,
         care_home_deaths_by_age_sex_df: pd.DataFrame = None,
         care_home_ratios_by_age_sex_df: pd.DataFrame = None,
         care_home_seroprevalence_by_age_df: pd.DataFrame = None,
+        care_home_deaths_at_hospital_ratio=0.2,
     ):
         # seroprev
         self.seroprevalence_df = self._process_df(seroprevalence_df, converters=True)
@@ -115,6 +110,8 @@ class Data2Rates:
         self.care_home_ratios_by_age_sex_df = self._process_df(
             care_home_ratios_by_age_sex_df, converters=False
         )
+        self.care_home_ratios_by_age_sex_df.loc[:50, "male"] = 0
+        self.care_home_ratios_by_age_sex_df.loc[:50, "female"] = 0
         self.all_deaths_by_age_sex_df = self._process_df(
             all_deaths_by_age_sex_df, converters=True
         )
@@ -127,19 +124,24 @@ class Data2Rates:
         self.hospital_admissions_by_age_sex_df = self._process_df(
             hospital_admissions_by_age_sex_df, converters=True
         )
+        self.hospital_death_rate_by_age_sex_df = self._process_df(
+            hospital_death_rate_by_age_sex_df, converters=True
+        )
+        self.care_home_deaths_at_hospital_ratio = care_home_deaths_at_hospital_ratio
         self.gp_mapper = (
-            lambda age, sex: 1  # self.population_by_age_sex_df.loc[age, sex]
+            lambda age, sex:  1#self.population_by_age_sex_df.loc[age, sex]
         )
         self.ch_mapper = lambda age, sex: self.care_home_ratios_by_age_sex_df.loc[
             age, sex
         ] * self.gp_mapper(age, sex)
 
     @classmethod
-    def from_files(
+    def from_file(
         cls,
         seroprevalence_file: str = default_seroprevalence_file,
         population_file: str = default_population_file,
         all_deaths_file: str = default_all_deaths_file,
+        hospital_death_rate_file: str = default_hospital_death_rate_file,
         hospital_deaths_file: str = default_hospital_deaths_by_age_sex_file,
         hospital_admissions_file: str = default_hospital_admissions_by_age_sex_file,
         care_home_deaths_file: str = default_care_home_deaths_file,
@@ -152,6 +154,7 @@ class Data2Rates:
         all_deaths_df = cls._read_csv(all_deaths_file)
         hospital_deaths_df = cls._read_csv(hospital_deaths_file)
         hospital_admissions_df = cls._read_csv(hospital_admissions_file)
+        hospital_death_rate_df = cls._read_csv(hospital_death_rate_file)
         if care_home_deaths_file is None:
             care_home_deaths_df = None
         else:
@@ -174,6 +177,7 @@ class Data2Rates:
             all_deaths_by_age_sex_df=all_deaths_df,
             hospital_deaths_by_age_sex_df=hospital_deaths_df,
             hospital_admissions_by_age_sex_df=hospital_admissions_df,
+            hospital_death_rate_by_age_sex_df=hospital_death_rate_df,
             care_home_deaths_by_age_sex_df=care_home_deaths_df,
             care_home_ratios_by_age_sex_df=care_home_ratios_by_age_sex_df,
             care_home_seroprevalence_by_age_df=care_home_seroprevalence_by_age_df,
@@ -220,6 +224,8 @@ class Data2Rates:
                 for age_i in range(age_bin.left, age_bin.right + 1)
             ]
         )
+        if bin_weight == 0:
+            return 0
         value_weight = weight_mapper(age, sex)
         return value_weight * data_bin / bin_weight
 
@@ -273,31 +279,125 @@ class Data2Rates:
     ) -> float:
         n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
         n_deaths = self.get_n_deaths(age=age, sex=sex, is_care_home=is_care_home)
-        if n_cases == n_deaths:
+        if n_cases * n_deaths == 0:
             return 0
         else:
             return n_deaths / n_cases
 
-    def get_n_hospital_deaths(self, age: int, sex: str) -> int:
+    #### hospital ####
+    def get_all_hospital_deaths(self, age: int, sex: str):
         return self._get_interpolated_value(
-            df=self.hospital_deaths_by_age_sex_df, age=age, sex=sex,
+            df=self.hospital_deaths_by_age_sex_df,
+            age=age,
+            sex=sex,
+            weight_mapper=self.gp_mapper,
         )
 
-    def get_n_hospital_admissions(self, age: int, sex: str) -> int:
-        return self._get_interpolated_value(
-            df=self.hospital_admissions_by_age_sex_df, age=age, sex=sex,
+    def get_care_home_hospital_deaths(self, age: int, sex: str):
+        return (
+            self._get_interpolated_value(
+                df=self.hospital_deaths_by_age_sex_df,
+                age=age,
+                sex=sex,
+                weight_mapper=self.ch_mapper,
+            )
+            * self.care_home_deaths_at_hospital_ratio
         )
 
-    def get_hospital_death_rate(self, age: int, sex: str) -> int:
+    def get_n_hospital_deaths(
+        self, age: int, sex: str, is_care_home: bool = False
+    ) -> int:
+        care_home_deaths = self.get_care_home_hospital_deaths(age=age, sex=sex)
+        if is_care_home:
+            return care_home_deaths
+        else:
+            all_deaths = self.get_all_hospital_deaths(age=age, sex=sex)
+            return all_deaths - care_home_deaths
+
+    def get_all_hospital_admissions(self, age: int, sex: str):
+        return self._get_interpolated_value(
+            df=self.hospital_admissions_by_age_sex_df,
+            age=age,
+            sex=sex,
+            weight_mapper=self.gp_mapper,
+        )
+
+    def get_care_home_hospital_admissions(self, age: int, sex: str):
+        return (
+            self._get_interpolated_value(
+                df=self.hospital_admissions_by_age_sex_df,
+                age=age,
+                sex=sex,
+                weight_mapper=self.ch_mapper,
+            )
+            * self.care_home_deaths_at_hospital_ratio
+        )
+
+    def get_n_hospital_admissions(
+        self, age: int, sex: str, is_care_home: bool = False
+    ) -> int:
+        care_home_admissions = self.get_care_home_hospital_admissions(age=age, sex=sex)
+        if is_care_home:
+            return care_home_admissions
+        else:
+            all_admissions = self.get_all_hospital_admissions(age=age, sex=sex)
+            return all_admissions - care_home_admissions
+
+    def get_hospital_death_rate(
+        self, age: int, sex: str, is_care_home: bool = False
+    ) -> int:
         return self.get_n_hospital_deaths(
-            age=age, sex=sex
-        ) / self.get_n_hospital_admissions(age=age, sex=sex)
+            age=age, sex=sex, is_care_home=is_care_home
+        ) / self.get_n_hospital_admissions(age=age, sex=sex, is_care_home=is_care_home)
 
-    def get_hospital_infection_fatality_rate(self, age: int, sex: str) -> int:
-        n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=False)
-        n_hospital_deaths = self.get_n_hospital_deaths(age=age, sex=sex)
+    def get_hospital_infection_fatality_rate(
+        self, age: int, sex: str, is_care_home: bool = False
+    ) -> int:
+        n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
+        n_hospital_deaths = self.get_n_hospital_deaths(
+            age=age, sex=sex, is_care_home=is_care_home
+        )
+        if n_cases * n_hospital_deaths == 0:
+            return 0
         return n_hospital_deaths / n_cases
 
+    def get_hospital_infection_admission_rate(
+        self, age: int, sex: str, is_care_home: bool = False
+    ) -> int:
+        n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
+        n_hospital_admissions = self.get_n_hospital_admissions(
+            age=age, sex=sex, is_care_home=is_care_home
+        )
+        return n_hospital_admissions / n_cases
+
+    #### home ####
+    def get_all_home_deaths(self, age: int, sex: str):
+        return self.get_all_deaths(age=age, sex=sex) - self.get_all_hospital_deaths(
+            age=age, sex=sex
+        )
+
+    def get_care_home_home_deaths(self, age: int, sex: str):
+        return self.get_care_home_home_deaths(
+            age=age, sex=sex
+        ) - self.get_care_home_hospital_deaths(age=age, sex=sex)
+
+    def get_n_home_deaths(self, age: int, sex: str, is_care_home: bool = False):
+        return self.get_n_deaths(
+            age=age, sex=sex, is_care_home=is_care_home
+        ) - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=is_care_home)
+
+    def get_home_infection_fatality_rate(
+        self, age: int, sex: str, is_care_home: bool = False
+    ):
+        n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
+        n_home_deaths = self.get_n_home_deaths(
+            age=age, sex=sex, is_care_home=is_care_home
+        )
+        if n_cases * n_home_deaths == 0:
+            return 0
+        return n_home_deaths / n_cases
+
+    ##### utils #####
     def get_value_at_bin(
         self,
         f,
@@ -307,7 +407,7 @@ class Data2Rates:
         weight_mapper=None,
     ):
         age_range = range(age_bin.left, age_bin.right + 1)
-        if sex == "both":
+        if sex == "all":
             male_values = []
             female_values = []
             male_bin_weight = sum(weight_mapper(age, "male") for age in age_range)
@@ -317,154 +417,162 @@ class Data2Rates:
                 female_value = f(age=age, sex="female", is_care_home=is_care_home)
                 male_values.append(male_value * weight_mapper(age, "male"))
                 female_values.append(female_value * weight_mapper(age, "female"))
-            male_avg = sum(male_values) / male_bin_weight
-            female_avg = sum(female_values) / female_bin_weight
+            if male_bin_weight == 0:
+                male_avg = 0
+            else:
+                male_avg = sum(male_values) / male_bin_weight
+            if female_bin_weight:
+                female_avg = 0
+            else:
+                female_avg = sum(female_values) / female_bin_weight
+            if male_avg + female_avg == 0:
+                return 0
             return (male_bin_weight * male_avg + female_bin_weight * female_avg) / (
                 male_bin_weight + female_bin_weight
             )
         else:
             values = []
             bin_total_weight = sum(weight_mapper(age, sex) for age in age_range)
+            if bin_total_weight == 0:
+                return 0
             for age in age_range:
                 value = f(age=age, sex=sex, is_care_home=is_care_home)
                 values.append(value * weight_mapper(age, sex))
             return sum(values) / bin_total_weight
 
 
-def get_IFR_dataframe(rates, age_bins):
-    june_ifrs = pd.DataFrame(
-        index=age_bins, columns=["gp_male", "gp_female", "ch_male", "ch_female"]
-    )
+def get_outputs_df(rates, age_bins):
+    outputs = pd.DataFrame(index=age_bins,)
     gp_mapper = rates.gp_mapper
     ch_mapper = rates.ch_mapper
-    for age_bin in age_bins:
-        gp_male = (
-            rates.get_value_at_bin(
-                f=rates.get_infection_fatality_rate,
-                age_bin=age_bin,
-                sex="male",
-                is_care_home=False,
-                weight_mapper=gp_mapper,
-            )
-            * 100
-        )
-        gp_female = (
-            rates.get_value_at_bin(
-                f=rates.get_infection_fatality_rate,
-                age_bin=age_bin,
-                sex="female",
-                is_care_home=False,
-                weight_mapper=gp_mapper,
-            )
-            * 100
-        )
-        gp_all = (
-            rates.get_value_at_bin(
-                f=rates.get_infection_fatality_rate,
-                age_bin=age_bin,
-                sex="both",
-                is_care_home=False,
-                weight_mapper=gp_mapper,
-            )
-            * 100
-        )
-        ch_male = (
-            rates.get_value_at_bin(
-                f=rates.get_infection_fatality_rate,
-                age_bin=age_bin,
-                sex="male",
-                is_care_home=True,
-                weight_mapper=ch_mapper,
-            )
-            * 100
-        )
-        ch_female = (
-            rates.get_value_at_bin(
-                f=rates.get_infection_fatality_rate,
-                age_bin=age_bin,
-                sex="female",
-                is_care_home=True,
-                weight_mapper=ch_mapper,
-            )
-            * 100
-        )
-        ch_all = (
-            rates.get_value_at_bin(
-                f=rates.get_infection_fatality_rate,
-                age_bin=age_bin,
-                sex="both",
-                is_care_home=True,
-                weight_mapper=gp_mapper,
-            )
-            * 100
-        )
-        june_ifrs.loc[age_bin, "gp_male"] = gp_male
-        june_ifrs.loc[age_bin, "gp_female"] = gp_female
-        june_ifrs.loc[age_bin, "gp_all"] = gp_all
-        june_ifrs.loc[age_bin, "ch_male"] = ch_male
-        june_ifrs.loc[age_bin, "ch_female"] = ch_female
-        june_ifrs.loc[age_bin, "ch_all"] = ch_all
-    return june_ifrs
+    for pop in ["gp", "ch"]:
+        if pop == "ch":
+            mapper = ch_mapper
+            ch = True
+        else:
+            mapper = gp_mapper
+            ch = False
+        for sex in ["male", "female", "all"]:
+            for fname, function in zip(
+                ["ifr", "hospital_ifr", "admissions", "home_ifr"],
+                [
+                    rates.get_infection_fatality_rate,
+                    rates.get_hospital_infection_fatality_rate,
+                    rates.get_hospital_infection_admission_rate,
+                    rates.get_home_infection_fatality_rate,
+                ],
+            ):
+                colname = f"{pop}_{fname}_{sex}"
+                for age_bin in age_bins:
+                    outputs.loc[age_bin, colname] = (
+                        rates.get_value_at_bin(
+                            f=function,
+                            age_bin=age_bin,
+                            sex=sex,
+                            is_care_home=ch,
+                            weight_mapper=mapper,
+                        )
+                        * 100
+                    )
+    return outputs
 
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
-    rates = Data2Rates.from_files()
+    rates = Data2Rates.from_file()
+    ### OVERALL IFR ###
     ##### June results vs Imperial #####
     ifr_imperial = pd.read_csv(ifr_imperial_file, index_col=0)
     ifr_imperial.index = convert_to_intervals(ifr_imperial.index, is_interval=True)
     fig, ax = plt.subplots()
-    june_ifrs = get_IFR_dataframe(rates=rates, age_bins=ifr_imperial.index)
-    june_ifrs.loc[:, ["gp_male", "gp_female", "gp_all"]].plot.bar(
-        ax=ax,
-        color=["C0", "C1", "C2"],
-        alpha=0.5,
-        width=0.8,
-        label="June",
-        legend=False,
-    )
-    errors = np.array([ifr_imperial.error_low, ifr_imperial.error_high]).reshape(2, -1)
-    ifr_imperial.plot.bar(
-        y="ifr",
-        ax=ax,
-        label="Imperial",
-        color="C3",
-        alpha=0.7,
-        legend=False,
-        yerr=errors,
-        capsize=4,
-    )
-    ax.legend()
-    plt.ylabel("IFR")
-    plt.savefig("ifr_imperial_vs_june.png", dpi=150, bbox_inches="tight")
-    plt.show()
+    outputs = get_outputs_df(rates=rates, age_bins=ifr_imperial.index)
+    outputs.to_csv("hi_outputs.csv")
+    # june_ifrs.loc[:, ["ch_male", "ch_female", "ch_all"]].plot.bar(
+    #    ax=ax, color=["C0", "C1", "C2"], alpha=0.5, width=0.8, label="June",
+    # )
+    # plt.show()
+    # errors = np.array([ifr_imperial.error_low, ifr_imperial.error_high]).reshape(2, -1)
+    # ifr_imperial.plot.bar(
+    #    y="ifr",
+    #    ax=ax,
+    #    label="Imperial",
+    #    color="C3",
+    #    alpha=0.7,
+    #    legend=False,
+    #    yerr=errors,
+    #    capsize=4,
+    # )
+    # ax.legend()
+    # plt.ylabel("IFR")
+    # plt.savefig("ifr_imperial_vs_june.png", dpi=150, bbox_inches="tight")
+    # plt.show()
 
     ## June comparison vs Ward ##
-    ifr_ward = pd.read_csv(ifr_ward_file, index_col=0)
-    ifr_ward.index = convert_to_intervals(ifr_ward.index, is_interval=True)
-    fig, ax = plt.subplots()
-    june_ifrs = get_IFR_dataframe(rates=rates, age_bins=ifr_ward.index)
-    june_ifrs.loc[:, ["gp_male", "gp_female", "gp_all"]].plot.bar(
-        ax=ax,
-        color=["C0", "C1", "C2"],
-        alpha=0.5,
-        width=0.8,
-        label="June",
-        legend=False,
-    )
-    errors = np.array([ifr_ward.error_low, ifr_ward.error_high]).reshape(2, -1)
-    ifr_ward.plot.bar(
-        ax=ax,
-        y="ifr",
-        label="Ward",
-        color="C3",
-        alpha=0.7,
-        legend=False,
-        yerr=errors,
-        capsize=4,
-    )
-    ax.legend()
-    plt.ylabel("IFR")
-    plt.savefig("ifr_ward_vs_june.png", dpi=150, bbox_inches="tight")
-    plt.show()
+    # ifr_ward = pd.read_csv(ifr_ward_file, index_col=0)
+    # ifr_ward.index = convert_to_intervals(ifr_ward.index, is_interval=True)
+    # fig, ax = plt.subplots()
+    # june_ifrs.loc[:, ["gp_male", "gp_female", "gp_all"]].plot.bar(
+    #    ax=ax,
+    #    color=["C0", "C1", "C2"],
+    #    alpha=0.5,
+    #    width=0.8,
+    #    label="June",
+    #    legend=False,
+    # )
+    # errors = np.array([ifr_ward.error_low, ifr_ward.error_high]).reshape(2, -1)
+    # ifr_ward.plot.bar(
+    #    ax=ax,
+    #    y="ifr",
+    #    label="Ward",
+    #    color="C3",
+    #    alpha=0.7,
+    #    legend=False,
+    #    yerr=errors,
+    #    capsize=4,
+    # )
+    # ax.legend()
+    # plt.ylabel("IFR")
+    # plt.savefig("ifr_ward_vs_june.png", dpi=150, bbox_inches="tight")
+    # plt.show()
+
+    # age_bins = [
+    #    pd.Interval(left=i, right=i + 4, closed="both") for i in range(0, 90, 5)
+    # ]
+    # age_bins.append(pd.Interval(left=90, right=99, closed="both"))
+    ## deaths vs hospital deaths
+    # fig, ax = plt.subplots()
+    # deaths_df = pd.DataFrame(index=age_bins)
+    # deaths_df["gp_male"] = [
+    #    rates.get_value_at_bin(
+    #        age_bin=age_bin,
+    #        sex="male",
+    #        f=rates.get_n_deaths,
+    #        weight_mapper=rates.gp_mapper,
+    #        is_care_home=False,
+    #    )
+    #    for age_bin in age_bins
+    # ]
+    # deaths_df["gp_hospital_male"] = [
+    #    rates.get_value_at_bin(
+    #        age_bin=age_bin,
+    #        f=rates.get_n_hospital_deaths,
+    #        sex="male",
+    #        weight_mapper=rates.gp_mapper,
+    #        is_care_home=False,
+    #    )
+    #    for age_bin in age_bins
+    # ]
+    # deaths_df["gp_hospital_male"] *= 1.65  # ons / cocin ratio
+    # deaths_df.plot.bar(ax=ax)
+    # plt.show()
+
+    ## Hospital vs non-hospital IFRS
+    # june_ifrs = get_IFR_dataframe(rates=rates, age_bins=age_bins)
+    # toplot = june_ifrs.loc[
+    #    :, ["gp_male", "gp_female", "gp_hospital_male", "gp_hospital_female"]
+    # ]
+    # fig, ax = plt.subplots()
+    # toplot.plot.bar(ax=ax)
+    # plt.show()
+    # asd = rates.population_by_age_sex_df * rates.care_home_ratios_by_age_sex_df
