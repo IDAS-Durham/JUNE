@@ -6,6 +6,7 @@ import datetime as dt
 import json
 import yaml
 import argparse
+import optparse
 import logging
 from itertools import combinations
 from pathlib import Path
@@ -39,6 +40,7 @@ from june.domain import Domain, DomainSplitter
 from june.mpi_setup import mpi_rank, mpi_size, mpi_comm
 
 from contact_simulator import ContactSimulator
+from occupancy_simulator import OccupancySimulator
 from simulation_record import SimulationRecord, combine_hdf5s
 
 #from leisure_simulator import LeisureSimulator
@@ -56,7 +58,7 @@ plt.style.reload_library()
 plt_latex_logger = logging.getLogger("matplotlib.texmanager")
 plt_latex_logger.setLevel(logging.WARNING)
 
-colors = {
+default_color_palette = {
     'ONS': '#0c5da5',
     'JUNE': '#00b945',
     'general_1': '#ff9500',
@@ -123,7 +125,7 @@ def generate_domain(
         domain_splitter = DomainSplitter(
             number_of_domains=mpi_size, world_path=world_filename
         )
-        super_areas_per_domain = domain_splitter.generate_domain_split(niter=60)
+        super_areas_per_domain = domain_splitter.generate_domain_split(niter=20)
         super_area_names_to_domain_dict = {}
         super_area_ids_to_domain_dict = {}
         for domain, super_areas in super_areas_per_domain.items():
@@ -154,23 +156,34 @@ class SimulationPlotter:
         self,
         world,
         world_name=None,
-        contact_simulator=True,
-        occupancy_simulator=False,
+        contact_counter=False,
+        contact_tracker=False,
+        occupancy_tracker=False,
         simulation_outputs_path=default_simulation_outputs_path,
     ):
         self.world = world
         self.world_name = world_name
-        self.contact_simulator = contact_simulator
-        self.occupancy_simulator = occupancy_simulator
-        
-        self.simulation_outputs_path = simulation_outputs_path
-        simulation_outputs_path.mkdir(exist_ok=True, parents=True)
+        self.contact_counter = contact_counter
+        self.contact_tracker = contact_tracker
+        self.occupancy_tracker = occupancy_tracker
+
+        self.simulation_outputs_path = Path(simulation_outputs_path)
+        # this bit is veeery broken in mpi. stick with overwriting for now...
+        """simulation_outputs_path = Path(simulation_outputs_path)
+        ii=1
+        while self.simulation_outputs_path.exists():
+            self.simulation_outputs_path = (
+                simulation_outputs_path.parent / f"{simulation_outputs_path.stem}_{ii}"
+            )
+            ii+=1"""
+        self.simulation_outputs_path.mkdir(exist_ok=True, parents=True)
 
     @classmethod
     def from_file(
         cls,
         world_filename: str = default_world_filename,
-        simulation_outputs_path=default_simulation_outputs_path
+        simulation_outputs_path=default_simulation_outputs_path,
+        operation_args={}
     ):
         if mpi_size == 1:
             world = generate_world_from_hdf5(world_filename)
@@ -179,7 +192,20 @@ class SimulationPlotter:
                 world_filename, simulation_outputs_path=simulation_outputs_path
             )
         print(f"world {mpi_rank} has {len(world.people)} people")
-        return SimulationPlotter(world, world_name=Path(world_filename).stem)
+        return SimulationPlotter(
+            world, 
+            world_name=Path(world_filename).stem,
+            simulation_outputs_path=simulation_outputs_path,
+            **operation_args
+        )
+
+    @classmethod
+    def without_world(
+        cls, operation_args={}
+    ):
+        simulation_plotter = SimulationPlotter(None, **operation_args)
+        simulation_plotter.simulator = None
+        return simulation_plotter
   
     def generate_simulator(
         self,
@@ -209,35 +235,40 @@ class SimulationPlotter:
     def load_operations(
         self, 
         simulation_days=7,
-        contact_counter=True,
-        contact_tracker=True,
+        generate_simulation_record=True,
     ):
         "Loads classes with functions to be called during the simuation timesteps"
 
         #if contact_tracker_pickle_path is None:
-        simulation_record = SimulationRecord(
-            self.simulation_outputs_path, 
-            contact_counter=contact_counter, 
-            contact_tracker=contact_tracker,
-            mpi_rank=mpi_rank,
-            record_static_data=True,
-        )
-        simulation_record.static_data(world=self.world)
-        self.contact_simulator = ContactSimulator(
-            simulator=self.simulator,
-            simulation_record=simulation_record,
-            simulation_outputs_path=self.simulation_outputs_path,
-            age_bins={"bbc": bbc_bins, "five_yr": np.arange(0,105,5)},
-            simulation_days=simulation_days,
-            world_name=self.world_name  
-        )
-        """self.contact_simulator = OccupancySimulator(
-            simulator=self.simulator,
-            simulation_record=simulation_record,
-            simulation_outputs_path=self.simulation_outputs_path,
-            age_bins={"bbc": bbc_bins, "five_yr": np.arange(0,105,5)},
-            simulation_days=simulation_days             
-        )"""
+        if generate_simulation_record:
+            simulation_record = SimulationRecord(
+                self.simulation_outputs_path, 
+                contact_counter=self.contact_counter, 
+                contact_tracker=self.contact_tracker,
+                occupancy_tracker=self.occupancy_tracker,
+                mpi_rank=mpi_rank,
+                record_static_data=True,
+            )
+            simulation_record.static_data(world=self.world)
+        else:
+            simulation_record=None
+        if self.contact_counter or self.contact_tracker:
+            self.contact_simulator = ContactSimulator(
+                simulator=self.simulator,
+                simulation_record=simulation_record,
+                contact_tracker=self.contact_tracker,
+                simulation_outputs_path=self.simulation_outputs_path,
+                age_bins={"bbc": bbc_bins, "five_yr": np.arange(0,105,5)},
+                simulation_days=simulation_days,
+                world_name=self.world_name  
+            )
+        if self.occupancy_tracker:
+            self.occupancy_simulator = OccupancySimulator(
+                simulator=self.simulator,
+                simulation_record=simulation_record,
+                simulation_outputs_path=self.simulation_outputs_path,
+                simulation_days=simulation_days
+            )
 
     def advance_step(self, record_time_step=False):
         "Advance a simulation time step and carry out operations"
@@ -249,14 +280,14 @@ class SimulationPlotter:
             n_people_going_abroad,
             people_to_send_abroad
         ) = self.simulator.activity_manager.do_timestep(return_to_send_abroad=True)
-        
-        self.contact_simulator.operations(
-            people_from_abroad_dict, people_to_send_abroad, record_time_step=record_time_step
-        )
-        #self.occupancy_simulator.operations(
-        #    people_from_abroad_dict, # record this EVERY timestep... record_time_step=record_time_step
-        #)
-        #self.leisure_simulator_operations() # this should be a function in the LeisureSimulator class
+        if self.contact_counter or self.contact_tracker:
+            self.contact_simulator.operations(
+                people_from_abroad_dict, people_to_send_abroad, record_time_step=record_time_step
+            )
+        if self.occupancy_tracker:
+            self.occupancy_simulator.operations(
+                people_from_abroad_dict, people_to_send_abroad, record_time_step=True
+            )
         next(self.simulator.timer)
         
     def run_simulation(
@@ -266,7 +297,7 @@ class SimulationPlotter:
         save_all = True
     ):
         "Run simulation with pre-built simualtor"
-        """
+        
         start_time = self.simulator.timer.date
         end_time = start_time + dt.timedelta(days=simulation_days)
         
@@ -283,23 +314,33 @@ class SimulationPlotter:
                 record_time_step = False
             self.advance_step(record_time_step=record_time_step)
         if save_all:
-            self.contact_simulator.save_auxilliary_data()
+            if self.contact_counter or self.contact_tracker:
+                self.contact_simulator.save_auxilliary_data()
         #    #### SAVE OUT OTHERS HERE ####W
-        """
-
         mpi_comm.Barrier()
-        
+
         if mpi_rank == 0:
-            #combine_hdf5s(record_path=self.simulation_outputs_path)
-            self.contact_simulator.process_contacts()
+            combine_hdf5s(record_path=self.simulation_outputs_path)
+            if self.contact_counter or self.contact_tracker:
+                self.contact_simulator.process_results()
+            if self.occupancy_tracker:
+                self.occupancy_simulator.process_results()
 
     def make_plots(self):
-        "Call class functions to create plots"
-        
-        self.contact_simulator.make_plots(
-            save_dir = default_output_plots_path / "contact_tracker"
-        )
-        ### CALL class functions which make plots ###
+        """Call class functions to create plots"""
+        print(mpi_rank, "MPI")
+        if self.contact_counter or self.contact_tracker:
+            self.contact_simulator.load_results()
+            self.contact_simulator.make_plots(
+                save_dir = default_output_plots_path / "contact_tracker",
+                color_palette=default_color_palette
+            )
+        if self.occupancy_tracker:
+            self.occupancy_simulator.load_results()
+            self.occupancy_simulator.make_plots(
+                save_dir = default_output_plots_path / "occupancy",
+                color_palette=default_color_palette
+            )
 
     def run_all(self, simulation_days=7, make_plots = True):
         """
@@ -320,46 +361,93 @@ class SimulationPlotter:
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Plotter for mini-simulations.")
+    parser = argparse.ArgumentParser(
+        description="Plotter for mini-simulations.", 
+        formatter_class=argparse.RawTextHelpFormatter
+    )
 
+    ## try to keep these lower case.
     parser.add_argument(
         "-w",
         "--world_filename",
         help="Relative directory to world file",
         required=False,
-        default = default_world_filename
+        default=default_world_filename
     )
-
     parser.add_argument(
         "-c",
         "--simulation_config",
         help="Relative directory to simulation config",
         required=False,
-        default = default_simulation_config_path
+        default=default_simulation_config_path
     )
     parser.add_argument(
         "-o",
         "--outputs_dir",
         help="Directory to store records, etc.",
         required=False,
-        default = default_simulation_outputs_path
+        default=default_simulation_outputs_path
     )
     parser.add_argument(
-        "-C", "--contact_counter", help="switch on counter", required=False, default=False
+        "-p",
+        "--only_plots",
+        help="don't load the world; only make plots",
+        action="store_true",
+        required=False,
+        default=False,
     )
     parser.add_argument(
-        "-T", "--contact_tracker", help="switch on contact tracker (WARNING: v. large output)",
-        required=False, default=False
+        "-d",
+        "--simulation_days",
+        help="how many days to run the simulation for",
+        type=int,
+        required=False,
+        default=7,
     )
-    parser.add_argument(
-        "-O", "--occupancy", help="switch on occupancy tracker", required=False, default=False
-    )
-    parser.add_argument(
-        "-D", "--distance", help="switch on distance tracker", required=False, default=False
-    )
-    args = parser.parse_args()
-    simulation_plotter = SimulationPlotter.from_file(args.world_filename)
-    simulation_plotter.generate_simulator()
 
-    simulation_plotter.run_all(simulation_days=7)
+
+    operations_help = (
+        "choose which operations to switch on." 
+        + "\ndefault is contact_counter, occupancy;\n    equivalent to '--operations CO'"
+        + "\nchoose any number from"
+        + "\n    C: contact_counter"
+        + "\n    T: contact_tracker (warning **VERY** large output)"
+        + "\n    O: occupancy_tracker"
+        + "\n    [D: distance_tracker coming soon...]"
+    )  
+    parser.add_argument(
+        "--operations",
+        help=operations_help,
+        required=False,
+        default="CO",
+    )
+        
+    args = parser.parse_args()
+    operations_dict = {
+        "C": "contact_counter", 
+        "T": "contact_tracker", 
+        "O": "occupancy_tracker",
+        "D": "distance_tracker",
+    }
+    operation_args = {}
+    for op in args.operations:
+        if op not in operations_dict:
+            raise ValueError(f"{op} not a recognised argument. Choose from {operations_dict}")
+        operation_args[operations_dict[op]] = True
+
+    if not args.only_plots:
+        simulation_plotter = SimulationPlotter.from_file(
+            args.world_filename, 
+            simulation_outputs_path=args.outputs_dir,
+            operation_args=operation_args
+        )
+        simulation_plotter.generate_simulator()
+        simulation_plotter.run_all(simulation_days=args.simulation_days)
+    else:
+        simulation_plotter = SimulationPlotter.without_world(operation_args=operation_args)
+        simulation_plotter.load_operations(generate_simulation_record=False)
+        if mpi_rank == 0:
+            simulation_plotter.make_plots()
+
+
 
