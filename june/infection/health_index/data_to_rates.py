@@ -5,27 +5,20 @@ from typing import List
 from june import paths
 
 hi_data = paths.data_path / "input/health_index"
-default_seroprevalence_file = hi_data / "seroprevalence_by_age_imperial.csv"
+default_seroprevalence_file = hi_data / "seroprevalence_by_age.csv"
 default_care_home_seroprevalence_file = hi_data / "care_home_seroprevalence_by_age.csv"
-default_population_file = hi_data / "corrected_population_by_age_sex_2020_england.csv"
-default_all_deaths_file = hi_data / "deaths_by_age_sex_17_july.csv"
-default_care_home_deaths_file = hi_data / "care_home_deaths_by_age_sex_17_july.csv"
-default_care_home_ratios_by_age_sex_file = (
-    hi_data / "care_home_ratios_by_age_sex_england.csv"
-)
-default_hospital_death_rate_file = hi_data / "cocin_hospital_death_rate.csv"
-default_hospital_admissions_by_age_sex_file = (
-    hi_data / "cocin_sitrep_hospital_admissions_by_age_sex_17july.csv"
-)
-default_hospital_deaths_by_age_sex_file = (
-    hi_data / "cocin_ons_hospital_deaths_by_age_sex_17july.csv"
-)
+
+default_population_file = hi_data / "population_by_age_sex_2020_england.csv"
+default_care_home_population_file = hi_data / "care_home_residents_by_age_sex.csv"
+
+default_all_deaths_file = hi_data / "all_deaths_by_age_sex.csv"
+default_care_home_deaths_file = hi_data / "care_home_deaths_by_age_sex.csv"
+default_hospital_admissions_file = hi_data / "hospital_admissions_by_age_sex.csv"
+default_hospital_deaths_file = hi_data / "hospital_deaths_by_age_sex.csv"
 ifr_imperial_file = paths.data_path / "plotting/health_index/ifr_imperial.csv"
 ifr_ward_file = paths.data_path / "plotting/health_index/ifr_ward.csv"
 
 logger = logging.getLogger("rates")
-
-total_sitrep_admissions = 104339
 
 
 def convert_to_intervals(ages: List[str], is_interval=False) -> pd.IntervalIndex:
@@ -87,15 +80,14 @@ class Data2Rates:
         self,
         seroprevalence_df: pd.DataFrame,
         population_by_age_sex_df: pd.DataFrame,
+        care_home_population_by_age_sex_df: pd.DataFrame,
         all_deaths_by_age_sex_df: pd.DataFrame,
-        hospital_death_rate_by_age_sex_df: pd.DataFrame,
         hospital_deaths_by_age_sex_df: pd.DataFrame,
         hospital_admissions_by_age_sex_df: pd.DataFrame,
-        # hospital_admissions_by_age_df: pd.DataFrame,
         care_home_deaths_by_age_sex_df: pd.DataFrame = None,
-        care_home_ratios_by_age_sex_df: pd.DataFrame = None,
         care_home_seroprevalence_by_age_df: pd.DataFrame = None,
-        care_home_deaths_at_hospital_ratio=0.2,
+        probability_dying_at_home=0.05,
+        probability_dying_at_home_care_home=0.7,
     ):
         # seroprev
         self.seroprevalence_df = self._process_df(seroprevalence_df, converters=True)
@@ -107,14 +99,18 @@ class Data2Rates:
         self.population_by_age_sex_df = self._process_df(
             population_by_age_sex_df, converters=False
         )
-        self.care_home_ratios_by_age_sex_df = self._process_df(
-            care_home_ratios_by_age_sex_df, converters=False
+        self.gp_mapper = (
+            lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
         )
-        self.care_home_ratios_by_age_sex_df.loc[:50, "male"] = 0
-        self.care_home_ratios_by_age_sex_df.loc[:50, "female"] = 0
+        self.care_home_population_by_age_sex_df = self._process_care_home_df(
+            care_home_population_by_age_sex_df
+        )
+        self.ch_mapper = lambda age, sex: self.care_home_population_by_age_sex_df.loc[age, sex] 
         self.all_deaths_by_age_sex_df = self._process_df(
             all_deaths_by_age_sex_df, converters=True
         )
+        self.all_deaths_by_age_sex_df.loc[:34, "male"] = 0
+        self.all_deaths_by_age_sex_df.loc[:34, "female"] = 0
         self.care_home_deaths_by_age_sex_df = self._process_df(
             care_home_deaths_by_age_sex_df, converters=True
         )
@@ -124,29 +120,22 @@ class Data2Rates:
         self.hospital_admissions_by_age_sex_df = self._process_df(
             hospital_admissions_by_age_sex_df, converters=True
         )
-        self.hospital_death_rate_by_age_sex_df = self._process_df(
-            hospital_death_rate_by_age_sex_df, converters=True
-        )
-        self.care_home_deaths_at_hospital_ratio = care_home_deaths_at_hospital_ratio
-        self.gp_mapper = (
-            lambda age, sex:  1#self.population_by_age_sex_df.loc[age, sex]
-        )
-        self.ch_mapper = lambda age, sex: self.care_home_ratios_by_age_sex_df.loc[
-            age, sex
-        ] * self.gp_mapper(age, sex)
+        self.probability_dying_at_home = probability_dying_at_home
+        self.probability_dying_at_home_care_home = probability_dying_at_home_care_home
 
     @classmethod
     def from_file(
         cls,
         seroprevalence_file: str = default_seroprevalence_file,
-        population_file: str = default_population_file,
-        all_deaths_file: str = default_all_deaths_file,
-        hospital_death_rate_file: str = default_hospital_death_rate_file,
-        hospital_deaths_file: str = default_hospital_deaths_by_age_sex_file,
-        hospital_admissions_file: str = default_hospital_admissions_by_age_sex_file,
-        care_home_deaths_file: str = default_care_home_deaths_file,
-        care_home_ratios_by_age_sex_file: str = default_care_home_ratios_by_age_sex_file,
         care_home_seroprevalence_by_age_file: str = default_care_home_seroprevalence_file,
+        population_file: str = default_population_file,
+        care_home_population_file: str = default_care_home_population_file,
+        all_deaths_file: str = default_all_deaths_file,
+        hospital_deaths_file: str = default_hospital_deaths_file,
+        hospital_admissions_file: str = default_hospital_admissions_file,
+        care_home_deaths_file: str = default_care_home_deaths_file,
+        probability_dying_at_home=0.05,
+        probability_dying_at_home_care_home=0.7,
     ) -> "Data2Rates":
 
         seroprevalence_df = cls._read_csv(seroprevalence_file)
@@ -154,17 +143,14 @@ class Data2Rates:
         all_deaths_df = cls._read_csv(all_deaths_file)
         hospital_deaths_df = cls._read_csv(hospital_deaths_file)
         hospital_admissions_df = cls._read_csv(hospital_admissions_file)
-        hospital_death_rate_df = cls._read_csv(hospital_death_rate_file)
         if care_home_deaths_file is None:
             care_home_deaths_df = None
         else:
             care_home_deaths_df = cls._read_csv(care_home_deaths_file)
-        if care_home_ratios_by_age_sex_file is None:
-            care_home_ratios_by_age_sex_df = None
+        if care_home_population_file is None:
+            care_home_population_df = None
         else:
-            care_home_ratios_by_age_sex_df = cls._read_csv(
-                care_home_ratios_by_age_sex_file
-            )
+            care_home_population_df = cls._read_csv(care_home_population_file)
         if care_home_seroprevalence_by_age_file is None:
             care_home_seroprevalence_by_age_df = None
         else:
@@ -174,13 +160,14 @@ class Data2Rates:
         return cls(
             seroprevalence_df=seroprevalence_df,
             population_by_age_sex_df=population_df,
+            care_home_population_by_age_sex_df=care_home_population_df,
             all_deaths_by_age_sex_df=all_deaths_df,
             hospital_deaths_by_age_sex_df=hospital_deaths_df,
             hospital_admissions_by_age_sex_df=hospital_admissions_df,
-            hospital_death_rate_by_age_sex_df=hospital_death_rate_df,
             care_home_deaths_by_age_sex_df=care_home_deaths_df,
-            care_home_ratios_by_age_sex_df=care_home_ratios_by_age_sex_df,
             care_home_seroprevalence_by_age_df=care_home_seroprevalence_by_age_df,
+            probability_dying_at_home_care_home=probability_dying_at_home_care_home,
+            probability_dying_at_home=probability_dying_at_home,
         )
 
     @classmethod
@@ -189,14 +176,36 @@ class Data2Rates:
         df.set_index("age", inplace=True)
         return df
 
-    def _process_df(self, df, converters=True, interpolate_bins=False):
+    def _process_df(self, df, converters=True):
         if converters:
             new_index = convert_to_intervals(df.index)
             df.index = new_index
             df = check_age_intervals(df=df)
-        if interpolate_bins:
-            df = self._interpolate_bins(df=df)
+        df = df.sort_index()
         return df
+
+    def _process_care_home_df(self, df):
+        df = self._process_df(df, converters=True)
+        ages = range(0, 100)
+        ret = pd.DataFrame(index=ages)
+        mapper = lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
+        ret["male"] = np.array(
+            [
+                self._get_interpolated_value(
+                    df=df, age=age, weight_mapper=mapper, sex="male"
+                )
+                for age in ages
+            ]
+        )
+        ret["female"] = np.array(
+            [
+                self._get_interpolated_value(
+                    df=df, age=age, weight_mapper=mapper, sex="female"
+                )
+                for age in ages
+            ]
+        )
+        return ret
 
     def _get_interpolated_value(self, df, age, sex, weight_mapper=None):
         """
@@ -229,19 +238,26 @@ class Data2Rates:
         value_weight = weight_mapper(age, sex)
         return value_weight * data_bin / bin_weight
 
+    def get_n_care_home(self, age: int, sex: str):
+        return self.care_home_population_by_age_sex_df.loc[age, sex]
+        # return self._get_interpolated_value(
+        #    self.care_home_population_by_age_sex_df,
+        #    age=age,
+        #    sex=sex,
+        #    weight_mapper=self.gp_mapper,
+        # )
+
     def get_n_cases(self, age: int, sex: str, is_care_home: bool = False) -> float:
         if is_care_home:
             sero_prevalence = self.care_home_seroprevalence_by_age_df.loc[
                 age, "seroprevalence"
             ]
-            n_people = self.population_by_age_sex_df.loc[age, sex]
-            n_people *= self.care_home_ratios_by_age_sex_df.loc[age, sex]
-
+            n_people = self.get_n_care_home(age, sex)
         else:
             sero_prevalence = self.seroprevalence_df.loc[age, "seroprevalence"]
             n_people = self.population_by_age_sex_df.loc[age, sex]
-            if self.care_home_ratios_by_age_sex_df is not None:
-                n_people -= n_people * self.care_home_ratios_by_age_sex_df.loc[age, sex]
+            if self.care_home_population_by_age_sex_df is not None:
+                n_people -= self.get_n_care_home(age=age, sex=sex)
         n_cases = n_people * sero_prevalence
         # correct for deaths
         n_cases += self.get_n_deaths(age=age, sex=sex, is_care_home=is_care_home)
@@ -294,15 +310,12 @@ class Data2Rates:
         )
 
     def get_care_home_hospital_deaths(self, age: int, sex: str):
-        return (
-            self._get_interpolated_value(
-                df=self.hospital_deaths_by_age_sex_df,
-                age=age,
-                sex=sex,
-                weight_mapper=self.ch_mapper,
-            )
-            * self.care_home_deaths_at_hospital_ratio
-        )
+        return self._get_interpolated_value(
+            df=self.care_home_deaths_by_age_sex_df,
+            age=age,
+            sex=sex,
+            weight_mapper=self.ch_mapper,
+        ) * (1 - self.probability_dying_at_home_care_home)
 
     def get_n_hospital_deaths(
         self, age: int, sex: str, is_care_home: bool = False
@@ -323,6 +336,11 @@ class Data2Rates:
         )
 
     def get_care_home_hospital_admissions(self, age: int, sex: str):
+        # this is the most uncertain part
+        care_home_ratio = (
+            self.get_n_care_home(age=age, sex=sex)
+            / self.population_by_age_sex_df.loc[age, sex]
+        )
         return (
             self._get_interpolated_value(
                 df=self.hospital_admissions_by_age_sex_df,
@@ -330,7 +348,8 @@ class Data2Rates:
                 sex=sex,
                 weight_mapper=self.ch_mapper,
             )
-            * self.care_home_deaths_at_hospital_ratio
+            * (1 - self.probability_dying_at_home_care_home)
+            * care_home_ratio
         )
 
     def get_n_hospital_admissions(
@@ -368,6 +387,8 @@ class Data2Rates:
         n_hospital_admissions = self.get_n_hospital_admissions(
             age=age, sex=sex, is_care_home=is_care_home
         )
+        if n_hospital_admissions * n_cases == 0:
+            return 0
         return n_hospital_admissions / n_cases
 
     #### home ####
@@ -377,14 +398,25 @@ class Data2Rates:
         )
 
     def get_care_home_home_deaths(self, age: int, sex: str):
-        return self.get_care_home_home_deaths(
-            age=age, sex=sex
-        ) - self.get_care_home_hospital_deaths(age=age, sex=sex)
+        # return self.get_n_deaths(
+        #    age=age, sex=sex, is_care_home=True
+        # ) - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=True)
+        return (
+            self.get_care_home_deaths(age=age, sex=sex)
+            * self.probability_dying_at_home_care_home
+        )
 
     def get_n_home_deaths(self, age: int, sex: str, is_care_home: bool = False):
-        return self.get_n_deaths(
-            age=age, sex=sex, is_care_home=is_care_home
-        ) - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=is_care_home)
+        if is_care_home:
+            return self.get_care_home_home_deaths(age=age, sex=sex)
+        else:
+            return self.get_n_deaths(age=age, sex=sex) - self.get_n_hospital_deaths(
+                age=age, sex=sex
+            )
+            # return (
+            #    self.get_n_deaths(age=age, sex=sex, is_care_home=False)
+            #    * self.probability_dying_at_home
+            # )
 
     def get_home_infection_fatality_rate(
         self, age: int, sex: str, is_care_home: bool = False
@@ -421,11 +453,11 @@ class Data2Rates:
                 male_avg = 0
             else:
                 male_avg = sum(male_values) / male_bin_weight
-            if female_bin_weight:
+            if female_bin_weight == 0:
                 female_avg = 0
             else:
                 female_avg = sum(female_values) / female_bin_weight
-            if male_avg + female_avg == 0:
+            if ((male_avg + female_avg) * (male_bin_weight + female_bin_weight)) == 0:
                 return 0
             return (male_bin_weight * male_avg + female_bin_weight * female_avg) / (
                 male_bin_weight + female_bin_weight
