@@ -17,9 +17,9 @@ class RecordReader:
                 self.results_path / "summary.csv"
             )
         except:
-            self.regional_summary = False
+            self.regional_summary = None
             logger.warning("No summary available to read...")
-        if self.regional_summary:
+        if self.regional_summary is not None:
             self.world_summary = self.get_world_summary()
         if record_name is None:
             self.record_name = "june_record.h5"
