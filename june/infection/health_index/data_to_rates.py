@@ -9,7 +9,7 @@ default_seroprevalence_file = hi_data / "seroprevalence_by_age.csv"
 default_care_home_seroprevalence_file = hi_data / "care_home_seroprevalence_by_age.csv"
 
 default_population_file = hi_data / "population_by_age_sex_2020_england.csv"
-default_care_home_population_file = hi_data / "care_home_residents_by_age_sex.csv"
+default_care_home_population_file = hi_data / "care_home_residents_by_age_sex_june.csv"
 
 default_all_deaths_file = hi_data / "all_deaths_by_age_sex.csv"
 default_care_home_deaths_file = hi_data / "care_home_deaths_by_age_sex.csv"
@@ -99,13 +99,16 @@ class Data2Rates:
         self.population_by_age_sex_df = self._process_df(
             population_by_age_sex_df, converters=False
         )
-        self.gp_mapper = (
-            lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
+        self.gp_mapper = lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
+        self.care_home_population_by_age_sex_df = self._process_df(
+            care_home_population_by_age_sex_df, converters=False
         )
-        self.care_home_population_by_age_sex_df = self._process_care_home_df(
-            care_home_population_by_age_sex_df
-        )
-        self.ch_mapper = lambda age, sex: self.care_home_population_by_age_sex_df.loc[age, sex] 
+        # self._process_care_home_df(
+        #    care_home_population_by_age_sex_df
+        # )
+        self.ch_mapper = lambda age, sex: self.care_home_population_by_age_sex_df.loc[
+            age, sex
+        ]
         self.all_deaths_by_age_sex_df = self._process_df(
             all_deaths_by_age_sex_df, converters=True
         )
@@ -337,20 +340,10 @@ class Data2Rates:
 
     def get_care_home_hospital_admissions(self, age: int, sex: str):
         # this is the most uncertain part
-        care_home_ratio = (
-            self.get_n_care_home(age=age, sex=sex)
-            / self.population_by_age_sex_df.loc[age, sex]
-        )
-        return (
-            self._get_interpolated_value(
-                df=self.hospital_admissions_by_age_sex_df,
-                age=age,
-                sex=sex,
-                weight_mapper=self.ch_mapper,
-            )
-            * (1 - self.probability_dying_at_home_care_home)
-            * care_home_ratio
-        )
+        care_home_ratio = self.get_n_hospital_deaths(
+            age=age, sex=sex, is_care_home=True
+        ) / self.get_all_hospital_deaths(age=age, sex=sex)
+        return care_home_ratio * self.get_all_hospital_admissions(age=age, sex=sex)
 
     def get_n_hospital_admissions(
         self, age: int, sex: str, is_care_home: bool = False
