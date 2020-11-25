@@ -269,10 +269,7 @@ class ContactSimulator:
                 matrix[subgroup_type][ii]*factors[ii] for 
                 ii, _ in enumerate(group.subgroup_member_ids) # this is a list of lists.
             ]
-        #elif spec == "company":
-        #    contacts_per_subgroup = matrix[subgroup_type]
         else:
-            #contacts_per_subgroup = matrix[subgroup_type]
             contacts_per_subgroup = [
                 matrix[subgroup_type][ii]*factor
                 for ii, _ in enumerate(group.subgroup_member_ids) # this is a list of lists.
@@ -304,16 +301,6 @@ class ContactSimulator:
                 potential_contacts = [
                     c if len(m) > 0 else 0 for c,m in zip(int_contacts, subgroup_members)
                 ]
-                #t1 = time.time()
-                #contact_ids = [
-                #    random_choice_numba(
-                #        members, probs[ii]
-                #    )
-                #    for ii, (members, x) in enumerate(
-                #        zip(subgroup_members, potential_contacts)
-                #    )
-                #    for _ in range(x) if x > 0
-                #]
                 contact_ids = [
                     cid
                     for members, x in zip(subgroup_members, potential_contacts)
@@ -343,8 +330,6 @@ class ContactSimulator:
                     self.contact_pairs.extend([
                         (pid, cid) for cid in contact_ids
                     ])
-                #t2 = time.time()
-                #print(mpi_rank, group.spec, f"{(t2-t1):.6f}")
 
     def operations(
         self, people_from_abroad_dict, to_send_abroad, record_time_step=False
