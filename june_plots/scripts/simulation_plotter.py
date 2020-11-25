@@ -41,6 +41,7 @@ from june.mpi_setup import mpi_rank, mpi_size, mpi_comm
 
 from contact_simulator import ContactSimulator
 from occupancy_simulator import OccupancySimulator
+from time_spent_simulator import TimeSpentSimulator
 from simulation_record import SimulationRecord, combine_hdf5s
 
 #from leisure_simulator import LeisureSimulator
@@ -159,6 +160,7 @@ class SimulationPlotter:
         contact_counter=False,
         contact_tracker=False,
         occupancy_tracker=False,
+        time_spent_tracker=False,
         simulation_outputs_path=default_simulation_outputs_path,
     ):
         self.world = world
@@ -166,6 +168,7 @@ class SimulationPlotter:
         self.contact_counter = contact_counter
         self.contact_tracker = contact_tracker
         self.occupancy_tracker = occupancy_tracker
+        self.time_spent_tracker = time_spent_tracker
 
         self.simulation_outputs_path = Path(simulation_outputs_path)
         # this bit is veeery broken in mpi. stick with overwriting for now...
@@ -269,8 +272,15 @@ class SimulationPlotter:
                 simulation_outputs_path=self.simulation_outputs_path,
                 simulation_days=simulation_days
             )
+        if self.time_spent_tracker:
+            self.time_spent_simulator = TimeSpentSimulator(  
+                simulator=self.simulator,
+                simulation_record=simulation_record,
+                simulation_outputs_path=self.simulation_outputs_path,
+                simulation_days=simulation_days
+            )
 
-    def advance_step(self, record_time_step=False):
+    def advance_step(self):
         "Advance a simulation time step and carry out operations"
         self.simulator.clear_world()
         delta_t = self.simulator.timer.delta_time.seconds / 3600.
@@ -281,12 +291,24 @@ class SimulationPlotter:
             people_to_send_abroad
         ) = self.simulator.activity_manager.do_timestep(return_to_send_abroad=True)
         if self.contact_counter or self.contact_tracker:
+            record_contact_counter = (self.simulator.timer.date in self.save_points)
             self.contact_simulator.operations(
-                people_from_abroad_dict, people_to_send_abroad, record_time_step=record_time_step
+                people_from_abroad_dict, 
+                people_to_send_abroad, 
+                record_time_step=record_contact_counter,
             )
         if self.occupancy_tracker:
             self.occupancy_simulator.operations(
-                people_from_abroad_dict, people_to_send_abroad, record_time_step=True
+                people_from_abroad_dict, 
+                people_to_send_abroad, 
+                record_time_step=True,
+            )
+        if self.time_spent_tracker:
+            record_time_spent = (self.simulator.timer.date == self.end_time)
+            self.time_spent_simulator.operations(
+                people_from_abroad_dict, 
+                people_to_send_abroad, 
+                record_time_step=record_time_spent, # Only do this at the end.
             )
         next(self.simulator.timer)
         
@@ -298,25 +320,22 @@ class SimulationPlotter:
     ):
         "Run simulation with pre-built simualtor"
         
-        start_time = self.simulator.timer.date
-        end_time = start_time + dt.timedelta(days=simulation_days)
+        self.start_time = self.simulator.timer.date
+        self.end_time = self.start_time + dt.timedelta(days=simulation_days)
         
         self.save_points = [ 
             self.simulator.timer.date + dt.timedelta(days=n*save_interval) 
             for n in range(1,simulation_days//save_interval+1)
         ]
-        if self.save_points[-1] != end_time:
-            self.save_points.append(end_time)
-        while self.simulator.timer.date <= end_time:
-            if self.simulator.timer.date in self.save_points:
-                record_time_step = True
-            else:
-                record_time_step = False
-            self.advance_step(record_time_step=record_time_step)
+        if self.save_points[-1] != self.end_time:
+            self.save_points.append(self.end_time)
+        ### THE MAIN EVENT ###
+        while self.simulator.timer.date <= self.end_time:
+            self.advance_step()
+        ### ============== ###
         if save_all:
             if self.contact_counter or self.contact_tracker:
                 self.contact_simulator.save_auxilliary_data()
-        #    #### SAVE OUT OTHERS HERE ####W
         mpi_comm.Barrier()
 
         if mpi_rank == 0:
@@ -325,10 +344,11 @@ class SimulationPlotter:
                 self.contact_simulator.process_results()
             if self.occupancy_tracker:
                 self.occupancy_simulator.process_results()
+            if self.time_spent_simulator:
+                self.time_spent_simulator.process_results()
 
     def make_plots(self):
         """Call class functions to create plots"""
-        print(mpi_rank, "MPI")
         if self.contact_counter or self.contact_tracker:
             self.contact_simulator.load_results()
             self.contact_simulator.make_plots(
@@ -338,7 +358,13 @@ class SimulationPlotter:
         if self.occupancy_tracker:
             self.occupancy_simulator.load_results()
             self.occupancy_simulator.make_plots(
-                save_dir = default_output_plots_path / "occupancy",
+                save_dir=default_output_plots_path / "occupancy",
+                color_palette=default_color_palette
+            )
+        if self.time_spent_tracker:
+            self.time_spent_simulator.load_results()
+            self.time_spent_simulator.make_plots(
+                save_dir=default_output_plots_path / "time_spent",
                 color_palette=default_color_palette
             )
 
@@ -405,30 +431,34 @@ if __name__ == "__main__":
         default=7,
     )
 
-
+    ## set up the operations switches.
+    operations_dict = {
+        "C": "contact_counter", 
+        "T": "contact_tracker", 
+        "O": "occupancy_tracker",
+        "D": "distance_tracker",
+        "S": "time_spent_tracker",
+    }
+    operations_notes = {"T":"(warning: *VERY* large output)", "D":"(coming soon...)"}
+    padding = "\n    "
+    operations_str = padding.join(
+        f"{k}: {v} {operations_notes.get(k,'')}" for k, v in operations_dict.items()
+    )
     operations_help = (
-        "choose which operations to switch on." 
-        + "\ndefault is contact_counter, occupancy;\n    equivalent to '--operations CO'"
-        + "\nchoose any number from"
-        + "\n    C: contact_counter"
-        + "\n    T: contact_tracker (warning **VERY** large output)"
-        + "\n    O: occupancy_tracker"
-        + "\n    [D: distance_tracker coming soon...]"
-    )  
+        "choose which operations to switch on\ndefault is contact_counter, occupancy;"
+        + "\n    equivalent to '--operations CO'"
+        + "\nchoose any number from:"
+        + f"{padding}{operations_str}"
+    )
     parser.add_argument(
-        "--operations",
+        "--operations","--ops",
         help=operations_help,
         required=False,
         default="CO",
     )
         
     args = parser.parse_args()
-    operations_dict = {
-        "C": "contact_counter", 
-        "T": "contact_tracker", 
-        "O": "occupancy_tracker",
-        "D": "distance_tracker",
-    }
+
     operation_args = {}
     for op in args.operations:
         if op not in operations_dict:

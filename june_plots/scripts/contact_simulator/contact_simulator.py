@@ -7,6 +7,7 @@ import datetime as dt
 import yaml
 from collections import Counter, defaultdict, ChainMap
 from pathlib import Path
+import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -108,10 +109,6 @@ class ContactSimulator:
             self.initialise_contact_matrices()
             self.hash_ages() # store all ages/ index to age bins in python dict for quick lookup.
                         
-            #self.export_traveller_age_data()
-            #mpi_comm.Barrier()
-            #self.collate_traveller_age_data()
-
     def load_interactions(self, interaction_path=default_interaction_path):
         with open(interaction_path) as f:
             interaction_config = yaml.load(f, Loader=yaml.FullLoader)
@@ -161,31 +158,6 @@ class ContactSimulator:
                 for bin_type, bins in self.age_bins.items()
             }
             self.age_data[person.id]["age"] = person.age
-
-    def collate_traveller_age_data(self, dump_collated=False):
-        #if mpi_rank == 0:
-        traveller_dicts = []   
-        for rank in range(mpi_size):
-            if rank == mpi_rank:
-                continue
-            traveller_ages_path_rank = (
-                self.simulation_outputs_path / f"traveller_ages.from{rank:03d}.to{mpi_rank:03d}.pkl"
-            )
-            with open(traveller_ages_path_rank, "rb") as pkl:
-                data = pickle.load(pkl)
-                traveller_dicts.append(data)
-        ## collate...
-        collated_traveller_age_data = {
-            k:v for d in traveller_dicts for k,v in d.items()
-        }
-        #print(f"{mpi_rank} has imported {len(collated_traveller_age_data)} travellers")
-        self.traveller_age_data = collated_traveller_age_data
-        if dump_collated:
-            traveller_ages_path = (
-                self.simulation_outputs_path / f"collated_incoming_traveller_ages.{mpi_rank:03d}.pkl"
-            )
-            with open(traveller_ages_path, "wb+") as pkl:
-                pickle.dump(collated_traveller_age_data, pkl)
 
     def export_import_traveller_age_data(self, travellers: MovablePeople):
         """The new parallel bit"""
@@ -312,17 +284,7 @@ class ContactSimulator:
             Estimate contact matrices by choosing the the allotted number of people
             per subgroup.
         """
-
-        
-
         for subgroup_type, subgroup_ids in enumerate(group.subgroup_member_ids):
-            subgroup_sizes = [len(members) for members in group.subgroup_member_ids]
-            subgroup_sizes[subgroup_type] -= 1
-            probs = [
-                np.full(size, 1./size) if size > 0 else None 
-                for size in subgroup_sizes
-            ]
-            
             for pid in subgroup_ids:
                 t1 = time.time()
                 subgroup_members = [ 
@@ -352,16 +314,11 @@ class ContactSimulator:
                 #    )
                 #    for _ in range(x) if x > 0
                 #]
-                #t2 = time.time()
-                #print(mpi_rank, group.spec, "NUMBA:", f"{(t2-t1):.7f}")
-                #t1 = time.time()
                 contact_ids = [
                     cid
                     for members, x in zip(subgroup_members, potential_contacts)
                     for cid in np.random.choice(members, x)
                 ]
-                #t2 = time.time()
-                #print(mpi_rank, group.spec, "NP:", f"{(t2-t1):.7f}")
                 for bin_type in self.age_bins.keys():
                     if pid in self.age_data:
                         age_idx = self.age_data[pid][bin_type]
@@ -386,7 +343,7 @@ class ContactSimulator:
                     self.contact_pairs.extend([
                         (pid, cid) for cid in contact_ids
                     ])
-                t2 = time.time()
+                #t2 = time.time()
                 #print(mpi_rank, group.spec, f"{(t2-t1):.6f}")
 
     def operations(
@@ -432,7 +389,8 @@ class ContactSimulator:
     def record_output(self):
 
         if mpi_rank == 0:
-            print(f"save output at {self.timer.date}")
+            logger = logging.getLogger(__name__)
+            logger.info(f"record output at {self.timer.date}")
         for contact_type in self.contact_types:
             if len(self.counter[contact_type]) > 0: # ie. no one in pub in sleep timestep.
                 counter_person_ids = list(self.counter[contact_type].keys())
@@ -798,7 +756,7 @@ class ContactSimulator:
         plot_kwargs["cmap"] = cmap
 
         f, ax = plt.subplots()
-        im = ax.imshow(mat.T,origin='lower', **plot_kwargs)
+        im = ax.imshow(mat.T, origin='lower', **plot_kwargs)
         if labels is not None:
             ax.set_xticks(np.arange(len(mat)))
             ax.set_xticklabels(labels,rotation=90)
