@@ -55,7 +55,6 @@ class RecordReader:
         # TODO: include fields to read only certain columns
         with tables.open_file(self.results_path / self.record_name, mode="r") as f:
             table = getattr(f.root, table_name)
-            print(table.colnames)
             df = pd.DataFrame.from_records(table.read(), index=index)
         df = self.decode_bytes_columns(df)
         return df

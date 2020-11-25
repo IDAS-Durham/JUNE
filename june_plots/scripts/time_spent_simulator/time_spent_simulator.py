@@ -88,7 +88,7 @@ class TimeSpentSimulator:
             venue_type = group.spec
         for subgroup_type, subgroup_ids in enumerate(group.subgroup_member_ids):
             if group.spec == "care_home" and subgroup_type == 2: # sg_type 2 is visitors...
-                venue_type == "care_home_visits"
+                venue_type = "care_home_visits"
                 # shouldn't need to reset this as visitors should always be the last group.
             for pid in subgroup_ids:
                 self.time_spent_tracker[venue_type][pid] += delta_t
@@ -147,10 +147,9 @@ class TimeSpentSimulator:
     def process_results(self, combined_venues=None):
         if combined_venues is None:
             combined_venues = {
-            "visits": ["household_visits"], 
-            "total_leisure": ["pub", "grocery", "cinema", "visits"]
-        }
-        print("processing results!")
+                "visits": ["household_visits", "care_home_visits"], 
+                "total_leisure": ["pub", "grocery", "cinema", "visits"]
+            }
         self.read = RecordReader(
             self.simulation_outputs_path, 
             record_name="simulation_record.h5"
@@ -166,16 +165,10 @@ class TimeSpentSimulator:
         ]
         population.drop(drop_cols, axis=1, inplace=True)
         time_spent = self.read.table_to_df("time_spent", index="id")
-        #time_spent = pd.merge(
-        #    time_spent, population, how="inner", left_index=True, right_index=True, validate="many_to_one"
-        #)
-        #self.time_spent.drop(drop_cols, axis=1, inplace=True)
         pd.set_option('display.max_columns', 20)
-        print(time_spent)
         time_spent.reset_index(inplace=True)
         unique_venue_types = list(time_spent["venue_type"].unique())
         time_spent.set_index(["id","venue_type"], inplace=True)
-        print(time_spent)
         
         ### !!!=============NOTE HERE!=============!!! ###
         # Need to do this step as some people have time recorded in two/three domains,
@@ -184,7 +177,6 @@ class TimeSpentSimulator:
             {"time_spent": sum}
         )
         unstack = time_spent["time_spent"].unstack(level=1,fill_value=0.)
-        print(len(population), len(unstack))
         time_spent = pd.merge(
             unstack, population, how="inner", left_index=True, right_index=True, validate="one_to_one"
         )
@@ -202,6 +194,8 @@ class TimeSpentSimulator:
     def load_results(self):
         average_time_spent_path = self.simulation_outputs_path / "average_time_spent.csv"
         self.time_spent = pd.read_csv(average_time_spent_path, index_col=0)
+        simulation_weeks = self.simulation_days / 7.
+        self.time_spent = self.time_spent / simulation_weeks
 
     def plot_time_spent(
         self, venue_types, std=False, color_palette=None,
@@ -225,7 +219,7 @@ class TimeSpentSimulator:
                 self.time_spent.index, data, 
                 color=color_palette[f"general_{i+1}"], label=label
             )
-        ax.legend()
+        ax.legend(bbox_to_anchor = (0.5,1.02), loc='lower center', ncol=3)
         return ax
 
     def make_plots(
@@ -239,7 +233,6 @@ class TimeSpentSimulator:
             }
 
         for name, venue_type_list in venue_types.items():
-            print(venue_type_list)
             venue_plot = self.plot_time_spent(
                 venue_type_list, std=std, color_palette=color_palette
             )
