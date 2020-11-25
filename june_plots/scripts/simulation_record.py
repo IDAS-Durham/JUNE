@@ -85,6 +85,7 @@ class SimulationRecord:
                 "counter": CounterRecord(hdf5_file=self.file),
                 "tracker": TrackerRecord(hdf5_file=self.file),
                 "occupancy": OccupancyRecord(hdf5_file=self.file),
+                "time_spent": TimeSpentRecord(hdf5_file=self.file),
             }
             if record_static_data:
                 self.statics = {
@@ -178,6 +179,28 @@ class OccupancyRecord(EventRecord):
         #self.region_names.extend(region_names)
         #self.super_area_names.extend(super_area_names)
 
+class TimeSpentRecord(EventRecord):
+    """track specific ids of contacts"""
+    def __init__(
+        self, hdf5_file,
+    ):
+        super().__init__(
+            hdf5_file=hdf5_file,
+            table_name="time_spent",
+            int_names=["id"],
+            float_names=["time_spent"],
+            str_names=["venue_type"],
+        )
+
+    def accumulate(
+        self, venue_type, person_ids, time_spent, 
+    ):
+        self.venue_type.extend([venue_type] * len(person_ids))
+        self.id.extend(person_ids)
+        self.time_spent.extend(time_spent)
+        #self.region_names.extend(region_names)
+        #self.super_area_names.extend(super_area_names)
+
 def combine_hdf5s(
     record_path,
     table_names=("counter", "tracker", "occupancy"),
@@ -192,7 +215,6 @@ def combine_hdf5s(
     full_record_save_path = save_path / "simulation_record.h5"
     with tables.open_file(full_record_save_path, "w") as merged_record:
         for i, record_file in enumerate(record_files):
-            print(f"record {i}")
             with tables.open_file(str(record_file), "r") as record:
                 datasets = record.root._f_list_nodes()
                 for dataset in datasets:
