@@ -5,6 +5,7 @@ import yaml
 
 from june import paths
 from june.infection.health_index.health_index import HealthIndexGenerator
+from june.infection.health_index import Data2Rates 
 from june.infection import Infection
 from june.infection.symptoms import Symptoms, SymptomTag
 from june.infection.trajectory_maker import TrajectoryMakers
@@ -25,7 +26,8 @@ class InfectionSelector:
         self,
         transmission_config_path: str,
         trajectory_maker=TrajectoryMakers.from_file(default_trajectories_config_path),
-        health_index_generator=HealthIndexGenerator.from_file(asymptomatic_ratio=0.3),
+        data_to_rates=Data2Rates.from_file(),
+        asymptomatic_ratio=0.3
     ):
         """
         Selects the type of infection a person is given
@@ -39,7 +41,7 @@ class InfectionSelector:
         """
         self.transmission_config_path = transmission_config_path
         self.trajectory_maker = trajectory_maker
-        self.health_index_generator = health_index_generator
+        self.health_index_generator = HealthIndexGenerator(asymptomatic_ratio=asymptomatic_ratio)
         self._load_transmission()
 
     @classmethod
