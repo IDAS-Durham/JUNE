@@ -118,8 +118,6 @@ class Data2Rates:
         self.all_deaths_by_age_sex_df = self._process_df(
             all_deaths_by_age_sex_df, converters=True
         )
-        # self.all_deaths_by_age_sex_df.loc[:40, "male"] = 0
-        # self.all_deaths_by_age_sex_df.loc[:40, "female"] = 0
         self.care_home_deaths_by_age_sex_df = self._process_df(
             care_home_deaths_by_age_sex_df, converters=True
         )
@@ -469,50 +467,6 @@ class Data2Rates:
         return self._get_ifr(
             function=self.get_n_home_deaths, age=age, sex=sex, is_care_home=is_care_home
         )
-
-    ##### utils #####
-    # def get_value_at_bin(
-    #    self,
-    #    f,
-    #    age_bin: pd.Interval,
-    #    sex: str,
-    #    is_care_home: bool = False,
-    #    weight_mapper=None,
-    # ):
-    #    age_range = range(age_bin.left, age_bin.right + 1)
-    #    if sex == "all":
-    #        male_values = []
-    #        female_values = []
-    #        male_bin_weight = sum(weight_mapper(age, "male") for age in age_range)
-    #        female_bin_weight = sum(weight_mapper(age, "female") for age in age_range)
-    #        for age in age_range:
-    #            male_value = f(age=age, sex="male", is_care_home=is_care_home)
-    #            female_value = f(age=age, sex="female", is_care_home=is_care_home)
-    #            male_values.append(male_value * weight_mapper(age, "male"))
-    #            female_values.append(female_value * weight_mapper(age, "female"))
-    #        if male_bin_weight == 0:
-    #            male_avg = 0
-    #        else:
-    #            male_avg = sum(male_values) / male_bin_weight
-    #        if female_bin_weight == 0:
-    #            female_avg = 0
-    #        else:
-    #            female_avg = sum(female_values) / female_bin_weight
-    #        if ((male_avg + female_avg) * (male_bin_weight + female_bin_weight)) == 0:
-    #            return 0
-    #        return (male_bin_weight * male_avg + female_bin_weight * female_avg) / (
-    #            male_bin_weight + female_bin_weight
-    #        )
-    #    else:
-    #        values = []
-    #        bin_total_weight = sum(weight_mapper(age, sex) for age in age_range)
-    #        if bin_total_weight == 0:
-    #            return 0
-    #        for age in age_range:
-    #            value = f(age=age, sex=sex, is_care_home=is_care_home)
-    #            values.append(value * weight_mapper(age, sex))
-    #        return sum(values) / bin_total_weight
-
 
 def get_outputs_df(rates, age_bins):
     outputs = pd.DataFrame(index=age_bins,)
