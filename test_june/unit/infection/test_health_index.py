@@ -79,7 +79,7 @@ class TestComorbidities():
             )
             == mean_multiplier_uk
         )
-
+    '''
 
     def test__comorbidities_effect(self):
         comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
@@ -141,3 +141,4 @@ class TestComorbidities():
             guapo_probabilities[2:].sum(),
             comorbidity_multipliers['guapo']/mean_multiplier_uk * dummy_probabilities[2:].sum()
         )
+    '''
