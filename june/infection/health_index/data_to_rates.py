@@ -1,7 +1,7 @@
 import logging
 import pandas as pd
 import numpy as np
-from typing import List
+from typing import List, Union
 from june import paths
 
 # ch = care home, gp = general population (so everyone not in a care home)
@@ -15,9 +15,9 @@ default_care_home_population_file = hi_data / "care_home_residents_by_age_sex_ju
 
 default_all_deaths_file = hi_data / "all_deaths_by_age_sex.csv"
 default_care_home_deaths_file = hi_data / "care_home_deaths_by_age_sex.csv"
-default_gp_admissions_file = hi_data / "chess_gp_hospital_admissions_by_age_sex.csv"
+default_gp_admissions_file = hi_data / "cocin_gp_hospital_admissions_by_age_sex.csv"
 default_ch_admissions_file = hi_data / "chess_ch_hospital_admissions_by_age_sex.csv"
-default_gp_hospital_deaths_file = hi_data / "chess_gp_hospital_deaths_by_age_sex.csv"
+default_gp_hospital_deaths_file = hi_data / "cocin_gp_hospital_deaths_by_age_sex.csv"
 default_ch_hospital_deaths_file = hi_data / "chess_ch_hospital_deaths_by_age_sex.csv"
 ifr_imperial_file = paths.data_path / "plotting/health_index/ifr_imperial.csv"
 ifr_ward_file = paths.data_path / "plotting/health_index/ifr_ward.csv"
@@ -74,7 +74,6 @@ def check_age_intervals(df: pd.DataFrame):
     return df
 
 
-
 def weighted_interpolation(value, weights):
     weights = np.array(weights)
     return weights * value / weights.sum()
@@ -106,7 +105,10 @@ class Data2Rates:
         self.population_by_age_sex_df = self._process_df(
             population_by_age_sex_df, converters=False
         )
-        self.gp_mapper = lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
+        self.gp_mapper = (
+            lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
+            - self.care_home_population_by_age_sex_df.loc[age, sex]
+        )
         self.care_home_population_by_age_sex_df = self._process_df(
             care_home_population_by_age_sex_df, converters=False
         )
@@ -303,16 +305,6 @@ class Data2Rates:
                 deaths_care_home = self.get_care_home_deaths(age=age, sex=sex)
                 return deaths_total - deaths_care_home
 
-    def get_infection_fatality_rate(
-        self, age: int, sex: str, is_care_home: bool = False
-    ) -> float:
-        n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
-        n_deaths = self.get_n_deaths(age=age, sex=sex, is_care_home=is_care_home)
-        if n_cases * n_deaths == 0:
-            return 0
-        else:
-            return n_deaths / n_cases
-
     #### hospital ####
     def get_all_hospital_deaths(self, age: int, sex: str):
         return self.get_care_home_hospital_deaths(
@@ -379,28 +371,6 @@ class Data2Rates:
             age=age, sex=sex, is_care_home=is_care_home
         ) / self.get_n_hospital_admissions(age=age, sex=sex, is_care_home=is_care_home)
 
-    def get_hospital_infection_fatality_rate(
-        self, age: int, sex: str, is_care_home: bool = False
-    ) -> int:
-        n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
-        n_hospital_deaths = self.get_n_hospital_deaths(
-            age=age, sex=sex, is_care_home=is_care_home
-        )
-        if n_cases * n_hospital_deaths == 0:
-            return 0
-        return n_hospital_deaths / n_cases
-
-    def get_hospital_infection_admission_rate(
-        self, age: int, sex: str, is_care_home: bool = False
-    ) -> int:
-        n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
-        n_hospital_admissions = self.get_n_hospital_admissions(
-            age=age, sex=sex, is_care_home=is_care_home
-        )
-        if n_hospital_admissions * n_cases == 0:
-            return 0
-        return n_hospital_admissions / n_cases
-
     #### home ####
     def get_all_home_deaths(self, age: int, sex: str):
         return self.get_all_deaths(age=age, sex=sex) - self.get_all_hospital_deaths(
@@ -420,59 +390,128 @@ class Data2Rates:
                 age=age, sex=sex, is_care_home=False
             ) - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=False)
 
-    def get_home_infection_fatality_rate(
-        self, age: int, sex: str, is_care_home: bool = False
-    ):
-        n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
-        n_home_deaths = self.get_n_home_deaths(
-            age=age, sex=sex, is_care_home=is_care_home
-        )
-        if n_cases * n_home_deaths == 0:
-            return 0
-        return n_home_deaths / n_cases
-
-    ##### utils #####
-    def get_value_at_bin(
+    #### IFRS #####
+    def _get_ifr(
         self,
-        f,
-        age_bin: pd.Interval,
+        function,
+        age: Union[int, pd.Interval],
         sex: str,
         is_care_home: bool = False,
-        weight_mapper=None,
     ):
-        age_range = range(age_bin.left, age_bin.right + 1)
-        if sex == "all":
-            male_values = []
-            female_values = []
-            male_bin_weight = sum(weight_mapper(age, "male") for age in age_range)
-            female_bin_weight = sum(weight_mapper(age, "female") for age in age_range)
-            for age in age_range:
-                male_value = f(age=age, sex="male", is_care_home=is_care_home)
-                female_value = f(age=age, sex="female", is_care_home=is_care_home)
-                male_values.append(male_value * weight_mapper(age, "male"))
-                female_values.append(female_value * weight_mapper(age, "female"))
-            if male_bin_weight == 0:
-                male_avg = 0
+        if isinstance(age, pd.Interval):
+            if sex == "all":
+                function_values = sum(
+                    function(age=agep, sex="male", is_care_home=is_care_home)
+                    + function(age=agep, sex="female", is_care_home=is_care_home)
+                    for agep in range(age.left, age.right + 1)
+                )
+                n_cases = sum(
+                    self.get_n_cases(age=agep, sex="male", is_care_home=is_care_home)
+                    + self.get_n_cases(
+                        age=agep, sex="female", is_care_home=is_care_home
+                    )
+                    for agep in range(age.left, age.right + 1)
+                )
             else:
-                male_avg = sum(male_values) / male_bin_weight
-            if female_bin_weight == 0:
-                female_avg = 0
-            else:
-                female_avg = sum(female_values) / female_bin_weight
-            if ((male_avg + female_avg) * (male_bin_weight + female_bin_weight)) == 0:
-                return 0
-            return (male_bin_weight * male_avg + female_bin_weight * female_avg) / (
-                male_bin_weight + female_bin_weight
-            )
+                function_values = sum(
+                    function(age=agep, sex=sex, is_care_home=is_care_home)
+                    for agep in range(age.left, age.right + 1)
+                )
+                n_cases = sum(
+                    self.get_n_cases(age=agep, sex=sex, is_care_home=is_care_home)
+                    for agep in range(age.left, age.right + 1)
+                )
         else:
-            values = []
-            bin_total_weight = sum(weight_mapper(age, sex) for age in age_range)
-            if bin_total_weight == 0:
-                return 0
-            for age in age_range:
-                value = f(age=age, sex=sex, is_care_home=is_care_home)
-                values.append(value * weight_mapper(age, sex))
-            return sum(values) / bin_total_weight
+            if sex == "all":
+                function_values = function(
+                    age=age, sex="male", is_care_home=is_care_home
+                ) + function(age=age, sex="female", is_care_home=is_care_home)
+                n_cases = self.get_n_cases(
+                    age=age, sex="male", is_care_home=is_care_home
+                ) + self.get_n_cases(age=age, sex="female", is_care_home=is_care_home)
+            else:
+                function_values = function(age=age, sex=sex, is_care_home=is_care_home)
+                n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
+        if n_cases * function_values == 0:
+            return 0
+        return function_values / n_cases
+
+    def get_infection_fatality_rate(
+        self, age: Union[int, pd.Interval], sex: str, is_care_home: bool = False
+    ) -> float:
+        return self._get_ifr(
+            function=self.get_n_deaths, age=age, sex=sex, is_care_home=is_care_home
+        )
+
+    def get_hospital_infection_fatality_rate(
+        self, age: Union[int, pd.Interval], sex: str, is_care_home: bool = False
+    ) -> int:
+        return self._get_ifr(
+            function=self.get_n_hospital_deaths,
+            age=age,
+            sex=sex,
+            is_care_home=is_care_home,
+        )
+
+    def get_hospital_infection_admission_rate(
+        self, age: Union[int, pd.Interval], sex: str, is_care_home: bool = False
+    ) -> int:
+        return self._get_ifr(
+            function=self.get_n_hospital_admissions,
+            age=age,
+            sex=sex,
+            is_care_home=is_care_home,
+        )
+
+    def get_home_infection_fatality_rate(
+        self, age: Union[int, pd.Interval], sex: str, is_care_home: bool = False
+    ):
+        return self._get_ifr(
+            function=self.get_n_home_deaths, age=age, sex=sex, is_care_home=is_care_home
+        )
+
+    ##### utils #####
+    # def get_value_at_bin(
+    #    self,
+    #    f,
+    #    age_bin: pd.Interval,
+    #    sex: str,
+    #    is_care_home: bool = False,
+    #    weight_mapper=None,
+    # ):
+    #    age_range = range(age_bin.left, age_bin.right + 1)
+    #    if sex == "all":
+    #        male_values = []
+    #        female_values = []
+    #        male_bin_weight = sum(weight_mapper(age, "male") for age in age_range)
+    #        female_bin_weight = sum(weight_mapper(age, "female") for age in age_range)
+    #        for age in age_range:
+    #            male_value = f(age=age, sex="male", is_care_home=is_care_home)
+    #            female_value = f(age=age, sex="female", is_care_home=is_care_home)
+    #            male_values.append(male_value * weight_mapper(age, "male"))
+    #            female_values.append(female_value * weight_mapper(age, "female"))
+    #        if male_bin_weight == 0:
+    #            male_avg = 0
+    #        else:
+    #            male_avg = sum(male_values) / male_bin_weight
+    #        if female_bin_weight == 0:
+    #            female_avg = 0
+    #        else:
+    #            female_avg = sum(female_values) / female_bin_weight
+    #        if ((male_avg + female_avg) * (male_bin_weight + female_bin_weight)) == 0:
+    #            return 0
+    #        return (male_bin_weight * male_avg + female_bin_weight * female_avg) / (
+    #            male_bin_weight + female_bin_weight
+    #        )
+    #    else:
+    #        values = []
+    #        bin_total_weight = sum(weight_mapper(age, sex) for age in age_range)
+    #        if bin_total_weight == 0:
+    #            return 0
+    #        for age in age_range:
+    #            value = f(age=age, sex=sex, is_care_home=is_care_home)
+    #            values.append(value * weight_mapper(age, sex))
+    #        return sum(values) / bin_total_weight
 
 
 def get_outputs_df(rates, age_bins):
@@ -499,14 +538,7 @@ def get_outputs_df(rates, age_bins):
                 colname = f"{pop}_{fname}_{sex}"
                 for age_bin in age_bins:
                     outputs.loc[age_bin, colname] = (
-                        rates.get_value_at_bin(
-                            f=function,
-                            age_bin=age_bin,
-                            sex=sex,
-                            is_care_home=ch,
-                            weight_mapper=mapper,
-                        )
-                        * 100
+                        function(age=age_bin, sex=sex, is_care_home=ch,) * 100
                     )
     return outputs
 
