@@ -1,8 +1,10 @@
 import logging
 import pandas as pd
 import numpy as np
-from typing import List, Union
+from typing import List, Union, Optional
 from june import paths
+
+# TODO: Add: get_severe_proportion + get_icu_ifr + get_icu_admissions_rate
 
 # ch = care home, gp = general population (so everyone not in a care home)
 
@@ -79,6 +81,33 @@ def weighted_interpolation(value, weights):
     return weights * value / weights.sum()
 
 
+def read_comorbidity_csv(filename: str):
+    comorbidity_df = pd.read_csv(filename, index_col=0)
+    column_names = [f"0-{comorbidity_df.columns[0]}"]
+    for i in range(len(comorbidity_df.columns) - 1):
+        column_names.append(
+            f"{comorbidity_df.columns[i]}-{comorbidity_df.columns[i+1]}"
+        )
+    comorbidity_df.columns = column_names
+    for column in comorbidity_df.columns:
+        no_comorbidity = comorbidity_df[column].loc["no_condition"]
+        should_have_comorbidity = 1 - no_comorbidity
+        has_comorbidity = np.sum(comorbidity_df[column]) - no_comorbidity
+        comorbidity_df[column].iloc[:-1] *= should_have_comorbidity / has_comorbidity
+
+    return comorbidity_df.T
+
+
+def convert_comorbidities_prevalence_to_dict(prevalence_female, prevalence_male):
+    prevalence_reference_population = {}
+    for comorbidity in prevalence_female.columns:
+        prevalence_reference_population[comorbidity] = {
+            "f": prevalence_female[comorbidity].to_dict(),
+            "m": prevalence_male[comorbidity].to_dict(),
+        }
+    return prevalence_reference_population
+
+
 class Data2Rates:
     def __init__(
         self,
@@ -94,6 +123,8 @@ class Data2Rates:
         care_home_seroprevalence_by_age_df: pd.DataFrame = None,
         probability_dying_at_home=0.05,
         probability_dying_at_home_care_home=0.7,
+        comorbidity_multipliers: Optional[dict] = None,
+        comorbidity_prevalence_reference_population: Optional[dict] = None,
     ):
         # seroprev
         self.seroprevalence_df = self._process_df(seroprevalence_df, converters=True)
@@ -135,6 +166,10 @@ class Data2Rates:
         )
         self.probability_dying_at_home = probability_dying_at_home
         self.probability_dying_at_home_care_home = probability_dying_at_home_care_home
+        self.comorbidity_multipliers = comorbidity_multipliers
+        self.comorbidity_prevalence_reference_population = (
+            comorbidity_prevalence_reference_population
+        )
 
     @classmethod
     def from_file(
@@ -149,6 +184,9 @@ class Data2Rates:
         hospital_gp_admissions_file: str = default_gp_admissions_file,
         hospital_ch_admissions_file: str = default_ch_admissions_file,
         care_home_deaths_file: str = default_care_home_deaths_file,
+        comorbidity_multipliers_file: Optional[str] = None,
+        comorbidity_prevalence_female_file: Optional[str] = None,
+        comorbidity_prevalence_male_file: Optional[str] = None,
         probability_dying_at_home=0.05,
         probability_dying_at_home_care_home=0.7,
     ) -> "Data2Rates":
@@ -174,6 +212,26 @@ class Data2Rates:
             care_home_seroprevalence_by_age_df = cls._read_csv(
                 care_home_seroprevalence_by_age_file
             )
+        if comorbidity_multipliers_file is not None:
+            with open(multipliers_path) as f:
+                comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
+        else:
+            comorbidity_multipliers = None
+        if (
+            comorbidity_prevalence_female_file is not None
+            and comorbidity_prevalence_male_file is not None
+        ):
+            comorbidity_female_prevalence = read_comorbidity_csv(
+                comorbidity_prevalence_female_file
+            )
+            comorbidity_male_prevalence = read_comorbidity_csv(
+                comorbidity_prevalence_male_file
+            )
+            prevalence_reference_population = convert_comorbidities_prevalence_to_dict(
+                comorbidity_female_prevalence, comorbidity_male_prevalence
+            )
+        else:
+            prevalence_reference_population = None
         return cls(
             seroprevalence_df=seroprevalence_df,
             population_by_age_sex_df=population_df,
@@ -187,6 +245,8 @@ class Data2Rates:
             care_home_seroprevalence_by_age_df=care_home_seroprevalence_by_age_df,
             probability_dying_at_home_care_home=probability_dying_at_home_care_home,
             probability_dying_at_home=probability_dying_at_home,
+            comorbidity_multipliers=comorbidity_multipliers,
+            comorbidity_prevalence_reference_population=prevalence_reference_population,
         )
 
     @classmethod
@@ -467,6 +527,7 @@ class Data2Rates:
         return self._get_ifr(
             function=self.get_n_home_deaths, age=age, sex=sex, is_care_home=is_care_home
         )
+
 
 def get_outputs_df(rates, age_bins):
     outputs = pd.DataFrame(index=age_bins,)
