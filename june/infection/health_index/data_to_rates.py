@@ -362,9 +362,10 @@ class Data2Rates:
         )
 
     def get_gp_hospital_deaths(self, age: int, sex: str):
-        return self.get_all_hospital_deaths(
-            age=age, sex=sex
-        ) - self.get_care_home_hospital_deaths(age=age, sex=sex)
+        return self._get_interpolated_value(df=self.hospital_gp_deaths_by_age_sex_df, age=age, sex=sex, weight_mapper=self.gp_deaths_mapper)
+        #return self.get_all_hospital_deaths(
+        #    age=age, sex=sex
+        #) - self.get_care_home_hospital_deaths(age=age, sex=sex)
 
     def get_care_home_hospital_deaths(self, age: int, sex: str):
         return self._get_interpolated_value(
