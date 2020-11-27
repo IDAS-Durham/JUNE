@@ -137,18 +137,8 @@ class Data2Rates:
         self.population_by_age_sex_df = self._process_df(
             population_by_age_sex_df, converters=False
         )
-        self.gp_mapper = (
-            lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
-            - self.care_home_population_by_age_sex_df.loc[age, sex]
-        )
         self.care_home_population_by_age_sex_df = self._process_df(
             care_home_population_by_age_sex_df, converters=False
-        )
-        self.ch_mapper = lambda age, sex: self.care_home_population_by_age_sex_df.loc[
-            age, sex
-        ]
-        self.all_mapper = lambda age, sex: self.gp_mapper(age, sex) + self.ch_mapper(
-            age, sex
         )
         self.all_deaths_by_age_sex_df = self._process_df(
             all_deaths_by_age_sex_df, converters=True
@@ -175,6 +165,7 @@ class Data2Rates:
         self.comorbidity_prevalence_reference_population = (
             comorbidity_prevalence_reference_population
         )
+        self._init_mappers()
 
     @classmethod
     def from_file(
@@ -267,28 +258,22 @@ class Data2Rates:
         df = df.sort_index()
         return df
 
-    def _process_care_home_df(self, df):
-        df = self._process_df(df, converters=True)
-        ages = range(0, 100)
-        ret = pd.DataFrame(index=ages)
-        mapper = lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
-        ret["male"] = np.array(
-            [
-                self._get_interpolated_value(
-                    df=df, age=age, weight_mapper=mapper, sex="male"
-                )
-                for age in ages
-            ]
+    def _init_mappers(self):
+        """
+        These mappers (age, sex) -> float are used to weight bins.
+        """
+        self.gp_mapper = (
+            lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
+            - self.care_home_population_by_age_sex_df.loc[age, sex]
         )
-        ret["female"] = np.array(
-            [
-                self._get_interpolated_value(
-                    df=df, age=age, weight_mapper=mapper, sex="female"
-                )
-                for age in ages
-            ]
-        )
-        return ret
+        self.ch_mapper = lambda age, sex: self.care_home_population_by_age_sex_df.loc[
+            age, sex
+        ]
+        self.all_mapper = lambda age, sex: self.population_by_age_sex_df.loc[age,sex]
+        self.gp_deaths_mapper = lambda age, sex: self.get_n_deaths(age=age, sex=sex, is_care_home=False)
+        self.ch_deaths_mapper = lambda age, sex: self.get_n_deaths(age=age, sex=sex, is_care_home=True)
+        self.all_deaths_mapper = lambda age, sex: self.gp_deaths_mapper(age, sex) + self.ch_deaths_mapper(age, sex)
+
 
     def _get_interpolated_value(self, df, age, sex, weight_mapper=None):
         """
@@ -373,7 +358,7 @@ class Data2Rates:
             df=self.all_hospital_deaths_by_age_sex,
             age=age,
             sex=sex,
-            weight_mapper=self.all_mapper,
+            weight_mapper=self.all_deaths_mapper,
         )
 
     def get_gp_hospital_deaths(self, age: int, sex: str):
@@ -386,7 +371,7 @@ class Data2Rates:
             df=self.hospital_ch_deaths_by_age_sex_df,
             age=age,
             sex=sex,
-            weight_mapper=self.ch_mapper,
+            weight_mapper=self.ch_deaths_mapper,
         )
 
     def get_n_hospital_deaths(
@@ -407,7 +392,7 @@ class Data2Rates:
             df=self.hospital_gp_admissions_by_age_sex_df,
             age=age,
             sex=sex,
-            weight_mapper=self.gp_mapper,
+            weight_mapper=self.gp_deaths_mapper,
         )
 
     def get_care_home_hospital_admissions(self, age: int, sex: str):
@@ -415,7 +400,7 @@ class Data2Rates:
             df=self.hospital_ch_admissions_by_age_sex_df,
             age=age,
             sex=sex,
-            weight_mapper=self.ch_mapper,
+            weight_mapper=self.ch_deaths_mapper,
         )
 
     def get_n_hospital_admissions(
@@ -535,15 +520,7 @@ class Data2Rates:
 
 def get_outputs_df(rates, age_bins):
     outputs = pd.DataFrame(index=age_bins,)
-    gp_mapper = rates.gp_mapper
-    ch_mapper = rates.ch_mapper
     for pop in ["gp", "ch"]:
-        if pop == "ch":
-            mapper = ch_mapper
-            ch = True
-        else:
-            mapper = gp_mapper
-            ch = False
         for sex in ["male", "female", "all"]:
             for fname, function in zip(
                 ["ifr", "hospital_ifr", "admissions", "home_ifr"],
@@ -557,6 +534,6 @@ def get_outputs_df(rates, age_bins):
                 colname = f"{pop}_{fname}_{sex}"
                 for age_bin in age_bins:
                     outputs.loc[age_bin, colname] = (
-                        function(age=age_bin, sex=sex, is_care_home=ch,) * 100
+                        function(age=age_bin, sex=sex, is_care_home = pop=="ch") * 100
                     )
     return outputs
