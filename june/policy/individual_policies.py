@@ -371,9 +371,11 @@ class CloseCompanies(SkipActivity):
         Returns True if the activity is to be skipped, otherwise False
         """
 
-        # stop people going to work in Tier 3 regions subject to regional complaince
+        # stop people going to work in Tier 3 regions if they don't work in the same region
+        # subject to regional complaince
         if (
                 person.lockdown_status == "random"
+                and person.work_super_area.region != person.area.super_area.region
                 and person.work_super_area.region.lockdown_tier is not None
                 and int(person.work_super_area.region.lockdown_tier) == 3
         ):

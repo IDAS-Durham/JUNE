@@ -164,6 +164,7 @@ class Leisure:
         is_weekend: bool,
         working_hours: bool,
         regional_compliance: float,
+        lockdown_tier
     ):
         """
         Computes the probabilities of going to different leisure activities,
@@ -173,6 +174,12 @@ class Leisure:
         regional compliance like so:
         $ lambda = lambda_1 + regional_compliance * (lambda_2 - lambda_1) $
         where lambda_1 is the original poisson parameter.
+        lockdown tier: 1,2,3 - has different implications for leisure:
+            1: do nothing
+            2: stop household-to-household probability with regional compliance and 
+               reduce pub probability by 20% - conservative to account for the serving of meals
+            3: stop household-to-household probability with regional compliance and
+               reduce pub and cinema probability to 0 to simulate closure
         """
         poisson_parameters = []
         drags_household_probabilities = []
@@ -195,6 +202,7 @@ class Leisure:
                 sex=sex,
                 is_weekend=is_weekend,
                 regional_compliance=regional_compliance,
+                lockdown_tier=lockdown_tier,
             )
             poisson_parameters.append(activity_poisson_parameter)
             activities.append(activity)
@@ -226,10 +234,11 @@ class Leisure:
         sex: str,
         is_weekend: bool,
         regional_compliance: float,
+        lockdown_tier
     ):
         """
-        Computes an activity poisson parameter taking into account active policies
-        and regional compliances.
+        Computes an activity poisson parameter taking into account active policies,
+        regional compliances and lockdown tiers.
         """
         weekend_boost = distributor.get_weekend_boost(is_weekend=is_weekend)
         original_activity_poisson_parameter = distributor.get_poisson_parameter(
@@ -241,6 +250,20 @@ class Leisure:
             ][sex][age] * weekend_boost # we boost the policy parameter as well
         else:
             policy_activity_poisson_parameter = original_activity_poisson_parameter
+        if lockdown_tier == 2. or lockdown_tier == 3.:
+            if activity == "household_visits":
+                if random() < regional_compliance:
+                    activity_poisson_parameter = (
+                        original_activity_poisson_parameter*0.)
+                    )
+                    return activity_poisson_parameter
+        if lockdown_tier == 3.:
+            if activity == "pubs" or activity == "cinemas":
+                activity_poisson_parameter = (
+                        original_activity_poisson_parameter*0.)
+                    )
+                return activity_poisson_parameter
+
         activity_poisson_parameter = (
             original_activity_poisson_parameter
             + regional_compliance
@@ -410,6 +433,7 @@ class Leisure:
                     working_hours=working_hours,
                     is_weekend=is_weekend,
                     regional_compliance=region.regional_compliance,
+                    lockdown_tier = region.lockdown_tier,
                 )
         else:
             self.probabilities_by_region_sex_age = self._generate_leisure_probabilities_for_age_and_sex(
@@ -417,6 +441,7 @@ class Leisure:
                 working_hours=working_hours,
                 is_weekend=is_weekend,
                 regional_compliance=1.0,
+                lockdown_tier = None,
             )
 
     def _generate_leisure_probabilities_for_age_and_sex(
@@ -425,6 +450,7 @@ class Leisure:
         working_hours: bool,
         is_weekend: bool,
         regional_compliance: float,
+        lockdown_tier,
     ):
         ret = {}
         for sex in ["m", "f"]:
@@ -436,6 +462,7 @@ class Leisure:
                     is_weekend=is_weekend,
                     working_hours=working_hours,
                     regional_compliance=regional_compliance,
+                    lockdown_tier = lockdown_tier,
                 )
                 for age in range(0, 100)
             ]
