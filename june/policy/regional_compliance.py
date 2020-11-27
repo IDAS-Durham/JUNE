@@ -49,9 +49,9 @@ class TieredLockdown(Policy):
                 lockdown_tier = self.tiers_per_region[region.name]
                 region.policy["lockdown_tier"] = lockdown_tier
                 if lockdown_tier == 2:
-                    region.policy["closed_venues"].update("household_visits")
+                    region.policy["local_closed_venues"].update("household_visits")
                 elif lockdown_tier == 3:
-                    region.policy["closed_venues"].update(set(("pub", "cinema")))
+                    region.policy["local_closed_venues"].update(set(("pub", "cinema")))
 
 class TieredLockdowns(PolicyCollection):
     policy_type = "tiered_lockdown"
@@ -61,5 +61,6 @@ class TieredLockdowns(PolicyCollection):
         if self.policies:
             for region in regions:
                 region.policy["lockdown_tier"] = None
+                region.policy["local_closed_venues"] = set()
         for policy in self.policies:
             policy.apply(date=date, regions=regions)
