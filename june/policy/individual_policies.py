@@ -372,23 +372,18 @@ class CloseCompanies(SkipActivity):
         """
 
         # stop people going to work in Tier 3 regions if they don't work in the same region
-        # subject to regional complaince
-        if (
-                person.lockdown_status == "random"
-                and person.work_super_area is not None
-                and person.area is not None
-                and person.work_super_area.region != person.area.super_area.region
-                and person.work_super_area.region.lockdown_tier is not None
-                and int(person.work_super_area.region.lockdown_tier) == 3
-        ):
+        # subject to regional compliance
+        if person.lockdown_status == "random":
             try:
-                regional_compliance = person.region.regional_compliance
-            except:
-                regional_compliance = 1
-            if random() < regional_compliance:
-                return True
-            
-        
+                if person.work_super_area.region != person.region and person.work_super_area.region.policy["lockdown_tier"] == 3:
+                    try:
+                        regional_compliance = person.region.regional_compliance
+                    except:
+                        regional_compliance = 1
+                    if random() < regional_compliance:
+                        return True
+            except AttributeError:
+                pass
         if (
             person.primary_activity is not None
             and person.primary_activity.group.spec == "company"
