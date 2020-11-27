@@ -1,6 +1,6 @@
 alpha_physical: 2.
 
-beta:
+betas:
  box: 1
  pub: 0.42941 
  grocery: 0.04137
@@ -73,5 +73,3 @@ contact_matrices:
     contacts: [[4]]
     proportion_physical: [[0.05]]
     characteristic_time: 2
-
-

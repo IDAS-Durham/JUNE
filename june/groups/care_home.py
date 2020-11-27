@@ -9,7 +9,7 @@ import pandas as pd
 
 from june import paths
 from june.geography import Geography, Area
-from june.groups.group import Group, Supergroup
+from june.groups import Group, Supergroup
 
 default_data_filename = paths.data_path / "input/care_homes/care_homes_ew.csv"
 default_areas_map_path = paths.data_path / "input/geography/area_super_area_region.csv"

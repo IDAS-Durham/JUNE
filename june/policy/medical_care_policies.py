@@ -71,12 +71,8 @@ class Hospitalisation(MedicalCarePolicy):
         self,
         start_time="1900-01-01",
         end_time="2500-01-01",
-        probability_of_care_home_resident_admission=0.3,
     ):
         super().__init__(start_time, end_time)
-        self.probability_of_care_home_resident_admission = (
-            probability_of_care_home_resident_admission
-        )
 
     def apply(
         self, person: Person, record: Optional[Record] = None,
@@ -95,7 +91,7 @@ class Hospitalisation(MedicalCarePolicy):
             if record is not None:
                 if status in [
                     "ward_admitted"
-                ]:  # TODO: think if we want to count transfers as admissions.
+                ]:  
                     record.accumulate(
                         table_name="hospital_admissions",
                         hospital_id=patient_hospital.id,
