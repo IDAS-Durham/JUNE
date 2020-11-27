@@ -325,9 +325,11 @@ class Region:
         self.id = next(self._id)
         self.name = name
         self.super_areas = super_areas or []
-        self.policy = defaultdict(lambda : None)
-        self.policy["regional_compliance"] = 1.0
-        self.policy["closed_venues"] = set()
+        self.policy = {
+            "regional_compliance": 1,
+            "local_closed_venues": set(),
+            "global_closed_venues": set(),
+        }
 
     @property
     def people(self):
@@ -341,7 +343,7 @@ class Region:
 
     @property
     def closed_venues(self):
-        return self.policy["closed_venues"]
+        return self.policy["local_closed_venues"] | self.policy["global_closed_venues"]
 
 
 class Regions:
