@@ -234,7 +234,7 @@ class Leisure:
         sex: str,
         is_weekend: bool,
         regional_compliance: float,
-        lockdown_tier
+        lockdown_tier = None,
     ):
         """
         Computes an activity poisson parameter taking into account active policies,
@@ -254,14 +254,14 @@ class Leisure:
             if activity == "household_visits":
                 if random() < regional_compliance:
                     activity_poisson_parameter = (
-                        original_activity_poisson_parameter*0.)
+                        original_activity_poisson_parameter*0.
                     )
                     return activity_poisson_parameter
         if lockdown_tier == 3.:
             if activity == "pubs" or activity == "cinemas":
                 activity_poisson_parameter = (
-                        original_activity_poisson_parameter*0.)
-                    )
+                        original_activity_poisson_parameter*0.
+                )
                 return activity_poisson_parameter
 
         activity_poisson_parameter = (

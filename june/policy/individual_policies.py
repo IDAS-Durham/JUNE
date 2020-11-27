@@ -375,6 +375,8 @@ class CloseCompanies(SkipActivity):
         # subject to regional complaince
         if (
                 person.lockdown_status == "random"
+                and person.work_super_area is not None
+                and person.area is not None
                 and person.work_super_area.region != person.area.super_area.region
                 and person.work_super_area.region.lockdown_tier is not None
                 and int(person.work_super_area.region.lockdown_tier) == 3
