@@ -25,7 +25,7 @@ tiered_lockdown:
   1:
     start_time: 2020-12-03
     end_time: 9999-12-01
-    compliances_per_region:
+    tiers_per_region:
       London: 1.
       South East: 1.
       South West: 1.
