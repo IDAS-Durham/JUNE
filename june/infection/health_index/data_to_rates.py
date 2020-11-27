@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from typing import List, Union, Optional
 from june import paths
+import yaml
 
 # TODO: Add: get_severe_proportion + get_icu_ifr + get_icu_admissions_rate
 

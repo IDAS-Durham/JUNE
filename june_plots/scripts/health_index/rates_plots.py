@@ -68,7 +68,7 @@ class RatesPlotter:
         self.outputs_dict = {}
         for key, output_raw in outputs_dict.items():
             output_proc = output_raw.copy()
-            output_proc.loc[output_proc < 0] = 0
+            output_proc = output_proc.clip(lower=0)
             self.outputs_dict[key] = output_proc / 100
 
     def _process_data_dfs(self):
@@ -193,23 +193,34 @@ class RatesPlotter:
         ).sum()
         return infected_population
 
-    def compute_total_deaths_by_age_sex(self, output_rates):
-        dmales_ch = self.infected_ch_population["male"] * output_rates["ch_ifr_male"]
-        dfemales_ch = (
-            self.infected_ch_population["female"] * output_rates["ch_ifr_female"]
-        )
+    def compute_total_gp_deaths_by_age_sex(self, output_rates):
         dmales_gp = self.infected_gp_population["male"] * output_rates["gp_ifr_male"]
         dfemales_gp = (
             self.infected_gp_population["female"] * output_rates["gp_ifr_female"]
         )
-        dmales = dmales_ch + dmales_gp
-        dfemales = dfemales_ch + dfemales_gp
         ret = pd.DataFrame(index=self.age_bins)
-        ret["male_prediction"] = dmales
-        ret["female_prediction"] = dfemales
-        ret["male_data"] = self.all_deaths["male"]
-        ret["female_data"] = self.all_deaths["female"]
+        ret["male_prediction"] = dmales_gp
+        ret["female_prediction"] = dfemales_gp
+        ret["male_data"] = self.all_deaths["male"] - self.ch_deaths["male"]
+        ret["female_data"] = self.all_deaths["female"] - self.ch_deaths["female"]
         return ret
+
+    def compute_total_ch_deaths_by_age_sex(self, output_rates):
+        dmales_ch = self.infected_ch_population["male"] * output_rates["ch_ifr_male"]
+        dfemales_ch = (
+            self.infected_ch_population["female"] * output_rates["ch_ifr_female"]
+        )
+        ret = pd.DataFrame(index=self.age_bins)
+        ret["male_prediction"] = dmales_ch
+        ret["female_prediction"] = dfemales_ch
+        ret["male_data"] = self.ch_deaths["male"]
+        ret["female_data"] = self.ch_deaths["female"]
+        return ret
+
+    def compute_total_deaths_by_age_sex(self, output_rates):
+        return self.compute_total_gp_deaths_by_age_sex(
+            output_rates
+        ) + self.compute_total_ch_deaths_by_age_sex(output_rates)
 
     def compute_gp_hospital_deaths_by_age_sex(self, output_rates):
         dmales_gp = (
@@ -219,11 +230,9 @@ class RatesPlotter:
             self.infected_gp_population["female"]
             * output_rates["gp_hospital_ifr_female"]
         )
-        dmales = dmales_gp
-        dfemales = dfemales_gp
         ret = pd.DataFrame(index=self.age_bins)
-        ret["male_prediction"] = dmales
-        ret["female_prediction"] = dfemales
+        ret["male_prediction"] = dmales_gp
+        ret["female_prediction"] = dfemales_gp
         ret["male_data"] = self.hospital_gp_deaths["male"]
         ret["female_data"] = self.hospital_gp_deaths["female"]
         return ret
@@ -236,26 +245,37 @@ class RatesPlotter:
             self.infected_ch_population["female"]
             * output_rates["ch_hospital_ifr_female"]
         )
+        ret = pd.DataFrame(index=self.age_bins)
+        ret["male_prediction"] = dmales_ch
+        ret["female_prediction"] = dfemales_ch
+        ret["male_data"] = self.hospital_ch_deaths["male"]
+        ret["female_data"] = self.hospital_ch_deaths["female"]
+        return ret
+
+    def compute_total_hospital_deaths_by_age_sex(self, output_rates):
+        return self.compute_gp_hospital_deaths_by_age_sex(
+            output_rates
+        ) + self.compute_ch_hospital_deaths_by_age_sex(output_rates)
+
+    def compute_ch_home_deaths_by_age_sex(self, output_rates):
+        dmales_ch = (
+            self.infected_ch_population["male"] * output_rates["ch_home_ifr_male"]
+        )
+        dfemales_ch = (
+            self.infected_ch_population["female"] * output_rates["ch_home_ifr_female"]
+        )
         dmales = dmales_ch
         dfemales = dfemales_ch
         ret = pd.DataFrame(index=self.age_bins)
         ret["male_prediction"] = dmales
         ret["female_prediction"] = dfemales
-        ret["male_data"] = self.hospital_ch_deaths["male"]
-        ret["female_data"] = self.hospital_ch_deaths["female"]
+        ret["male_data"] = self.ch_deaths["male"] - self.hospital_ch_deaths["male"]
+        ret["female_data"] = (
+            self.ch_deaths["female"] - self.hospital_ch_deaths["female"]
+        )
         return ret
 
-    def compute_total_care_home_deaths_by_age_sex(self, output_rates):
-        dmales = self.infected_ch_population["male"] * output_rates["ch_ifr_male"]
-        dfemales = self.infected_ch_population["female"] * output_rates["ch_ifr_female"]
-        ret = pd.DataFrame(index=self.age_bins)
-        ret["male_prediction"] = dmales
-        ret["female_prediction"] = dfemales
-        ret["male_data"] = self.ch_deaths["male"]
-        ret["female_data"] = self.ch_deaths["female"]
-        return ret
-
-    def compute_total_gp_home_deaths_by_age_sex(self, output_rates):
+    def compute_gp_home_deaths_by_age_sex(self, output_rates):
         dmales_gp = (
             self.infected_gp_population["male"] * output_rates["gp_home_ifr_male"]
         )
@@ -267,9 +287,22 @@ class RatesPlotter:
         ret = pd.DataFrame(index=self.age_bins)
         ret["male_prediction"] = dmales
         ret["female_prediction"] = dfemales
-        ret["male_data"] = np.zeros(len(ret))
-        ret["female_data"] = np.zeros(len(ret))
+        ret["male_data"] = (
+            self.all_deaths["male"]
+            - self.ch_deaths["male"]
+            - self.hospital_gp_deaths["male"]
+        )
+        ret["female_data"] = (
+            self.all_deaths["female"]
+            - self.ch_deaths["female"]
+            - self.hospital_gp_deaths["female"]
+        )
         return ret
+
+    def compute_total_home_deaths_by_age_sex(self, output_rates):
+        return self.compute_gp_home_deaths_by_age_sex(
+            output_rates
+        ) + self.compute_ch_home_deaths_by_age_sex(output_rates)
 
     def compute_gp_admissions_by_age_sex(self, output_rates):
         dmales = (
@@ -298,6 +331,11 @@ class RatesPlotter:
         ret["male_data"] = self.hospital_ch_admissions["male"]
         ret["female_data"] = self.hospital_ch_admissions["female"]
         return ret
+
+    def compute_total_admissions_by_age_sex(self, output_rates):
+        return self.compute_gp_admissions_by_age_sex(
+            output_rates
+        ) + self.compute_ch_admissions_by_age_sex(output_rates)
 
     def compute_cocin_hospital_deaths_by_age_sex(self, output_rates):
         dmales = (
@@ -341,139 +379,58 @@ class RatesPlotter:
         ret["female_data"] = self.hospital_cocin_admissions["female"]
         return ret
 
-    ########################################################################
-
-    def compute_total_deaths_at_home(self, output_rates):
-        dmales = (
-            self.infected_gp_population["male"] * output_rates["gp_home_ifr_male"]
-        ).sum()
-        dfemales = (
-            self.infected_gp_population["female"] * output_rates["gp_home_ifr_female"]
-        ).sum()
-        return dmales + dfemales
-
-    def compute_total_deaths_at_care_home(self, output_rates):
-        dmales = (
-            self.infected_ch_population["male"] * output_rates["ch_home_ifr_male"]
-        ).sum()
-        dfemales = (
-            self.infected_ch_population["female"] * output_rates["ch_home_ifr_female"]
-        ).sum()
-        return dmales + dfemales
-
-    def compute_total_deaths_at_hospital(self, output_rates):
-        dmales_gp = (
-            self.infected_gp_population["male"] * output_rates["gp_hospital_ifr_male"]
-        ).sum()
-        dfemales_gp = (
-            self.infected_gp_population["female"]
-            * output_rates["gp_hospital_ifr_female"]
-        ).sum()
-        dmales_ch = (
-            self.infected_ch_population["male"] * output_rates["ch_hospital_ifr_male"]
-        ).sum()
-        dfemales_ch = (
-            self.infected_ch_population["female"]
-            * output_rates["ch_hospital_ifr_female"]
-        ).sum()
-        return dmales_gp + dfemales_gp + dmales_ch + dfemales_ch
-
-    def compute_total_deaths(self, output_rates):
-        dmales_gp = (
-            self.infected_gp_population["male"] * output_rates["gp_ifr_male"]
-        ).sum()
-        dfemales_gp = (
-            self.infected_gp_population["female"] * output_rates["gp_ifr_female"]
-        ).sum()
-        dmales_ch = (
-            self.infected_ch_population["male"] * output_rates["ch_ifr_male"]
-        ).sum()
-        dfemales_ch = (
-            self.infected_ch_population["female"] * output_rates["ch_ifr_female"]
-        ).sum()
-        return dmales_gp + dfemales_gp + dmales_ch + dfemales_ch
-
-    def compute_total_gp_admissions(self, output_rates):
-        dmales_gp = (
-            self.infected_gp_population["male"] * output_rates["gp_admissions_male"]
-        ).sum()
-        dfemales_gp = (
-            self.infected_gp_population["female"] * output_rates["gp_admissions_female"]
-        ).sum()
-        return dmales_gp + dfemales_gp
-
-    def compute_total_ch_admissions(self, output_rates):
-        dmales_ch = (
-            self.infected_ch_population["male"] * output_rates["ch_admissions_male"]
-        ).sum()
-        dfemales_ch = (
-            self.infected_ch_population["female"] * output_rates["ch_admissions_female"]
-        ).sum()
-        return dmales_ch + dfemales_ch
-
-    def compute_total_admissions(self, output_rates):
-        return self.compute_total_gp_admissions(
-            self.infected_gp_population, self.infected_ch_population, output_rates
-        ) + self.compute_total_ch_admissions(
-            self.infected_gp_population, self.infected_ch_population, output_rates
-        )
+    def _get_total_sum_of_df(self, df):
+        return df.sum().sum()
 
     def make_numbers_table(self):
         functions = {
-            "home deaths": self.compute_total_deaths_at_home,
-            "hospital deaths": self.compute_total_deaths_at_hospital,
-            "care home deaths": self.compute_total_deaths_at_care_home,
-            "total deaths": self.compute_total_deaths,
-            "gp admissions": self.compute_total_gp_admissions,
-            "ch admissions": self.compute_total_ch_admissions,
-            "total admissions": self.compute_total_admissions,
-        }
-        data = {
-            "home deaths": (
-                self.rates.all_deaths_by_age_sex_df.sum().sum()
-                - self.rates.hospital_gp_deaths_by_age_sex_df.sum().sum()
-                - self.rates.care_home_deaths_by_age_sex_df.sum().sum()
-            ),
-            "hospital deaths": (self.rates.hospital_gp_deaths_by_age_sex_df.sum().sum())
-            + (self.rates.hospital_ch_deaths_by_age_sex_df.sum().sum()),
-            "care home deaths": self._care_home_deaths_hospital_ratio
-            * self.rates.care_home_deaths_by_age_sex_df.sum().sum(),
-            "total deaths": self.rates.all_deaths_by_age_sex_df.sum().sum(),
-            "gp admissions": self.rates.hospital_gp_admissions_by_age_sex_df.sum().sum(),
-            "ch admissions": self.rates.hospital_ch_admissions_by_age_sex_df.sum().sum(),
+            "total deaths": self.compute_total_deaths_by_age_sex,
+            "gp total deaths": self.compute_total_gp_deaths_by_age_sex,
+            "ch total deaths": self.compute_total_ch_deaths_by_age_sex,
+            "total hospital deaths": self.compute_total_hospital_deaths_by_age_sex,
+            "gp hospital deaths": self.compute_gp_hospital_deaths_by_age_sex,
+            "ch hospital deaths": self.compute_ch_hospital_deaths_by_age_sex,
+            "total home deaths": self.compute_total_home_deaths_by_age_sex,
+            "gp home deaths": self.compute_gp_home_deaths_by_age_sex,
+            "ch home deaths": self.compute_ch_home_deaths_by_age_sex,
+            "total admissions": self.compute_total_admissions_by_age_sex,
+            "gp admissions": self.compute_gp_admissions_by_age_sex,
+            "ch admissions": self.compute_ch_admissions_by_age_sex,
         }
         results = pd.DataFrame(
             index=list(functions.keys()),
-            columns=list(self.outputs_dict.keys()) + ["data"],
+            columns=["data"] + list(self.outputs_dict.keys()),
         )
         for quantity_name in results.index:
             for name, output in self.outputs_dict.items():
-                results.loc[quantity_name, name] = functions[quantity_name](output)
-            results.loc[quantity_name, "data"] = data[quantity_name]
-
-        results["total admissions", "data"] = (
-            results.loc["gp admissions", "data"] + results.loc["ch admissions", "data"]
-        )
+                results.loc[quantity_name, name] = (
+                    functions[quantity_name](output)
+                    .loc[:, ["male_prediction", "female_prediction"]]
+                    .sum()
+                    .sum()
+                )
+            results.loc[quantity_name, "data"] = (
+                functions[quantity_name](output)
+                .loc[:, ["male_data", "female_data"]]
+                .sum()
+                .sum()
+            )
         return results
 
     def get_prediction_df(self, function):
         ret = None
         for name, output in self.outputs_dict.items():
-            prediction = function(
-                infected_population=self.infected_gp_population,
-                infected_care_home_population=self.infected_ch_population,
-                outputs=output,
-            )
+            prediction = function(output_rates=output,)
             if ret is None:
                 ret = pd.DataFrame(index=prediction.index)
-                ret["data_male"] = prediction["male_data"]
-                ret["data_female"] = prediction["female_data"]
-            ret[f"{name}_male"] = prediction["male_prediction"]
-            ret[f"{name}_female"] = prediction["female_prediction"]
+                ret["data male"] = prediction["male_data"]
+                ret["data female"] = prediction["female_data"]
+            ret[f"{name} male"] = prediction["male_prediction"]
+            ret[f"{name} female"] = prediction["female_prediction"]
         ret.index.name = "Age"
         return ret
 
-    def comparison_plots(self, pdf_name="health_index_comparison.pdf", dpi=80):
+    def plot_comparison_with_data(self, pdf_name="health_index_comparison.pdf", dpi=80):
         total_deaths = self.get_prediction_df(self.compute_total_deaths_by_age_sex)
         total_gp_hospital_deaths = self.get_prediction_df(
             self.compute_gp_hospital_deaths_by_age_sex
@@ -482,7 +439,7 @@ class RatesPlotter:
             self.compute_ch_hospital_deaths_by_age_sex
         )
         total_ch_deaths = self.get_prediction_df(
-            self.compute_total_care_home_deaths_by_age_sex
+            self.compute_total_ch_deaths_by_age_sex
         )
         total_gp_admissions = self.get_prediction_df(
             self.compute_gp_admissions_by_age_sex
@@ -491,7 +448,7 @@ class RatesPlotter:
             self.compute_ch_admissions_by_age_sex
         )
         total_home_deaths = self.get_prediction_df(
-            self.compute_total_gp_home_deaths_by_age_sex
+            self.compute_gp_home_deaths_by_age_sex
         )
         cocin_hospital_deaths = self.get_prediction_df(
             self.compute_cocin_hospital_deaths_by_age_sex
@@ -503,13 +460,13 @@ class RatesPlotter:
         male_model_columns = [
             column
             for column in total_deaths.columns
-            if "data" not in column and "_male" in column
-        ] + ["data_male"]
+            if "data" not in column and " male" in column
+        ] + ["data male"]
         female_model_columns = [
             column
             for column in total_deaths.columns
             if "data" not in column and "female" in column
-        ] + ["data_female"]
+        ] + ["data female"]
         colors = [f"C{i}" for i in range(len(male_model_columns) - 1)] + ["black"]
 
         fig, ax = plt.subplots()
@@ -633,3 +590,4 @@ class RatesPlotter:
         pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
 
         pdf.close()
+        plt.show()
