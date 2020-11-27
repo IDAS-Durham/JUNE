@@ -77,7 +77,7 @@ class SocialVenueDistributor:
         return ret
 
 
-    def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
+    def get_poisson_parameter(self, sex, age, is_weekend: bool = False, policy_poisson_parameter=None, region=None):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
         age and sex and the distribution of visitors in the venue.
@@ -91,8 +91,19 @@ class SocialVenueDistributor:
         is_weekend
             whether it is a weekend or not
         """
-        poisson_parameter = self.poisson_parameters[sex][age]
-        poisson_parameter = poisson_parameter * self.get_weekend_boost(is_weekend)
+        if region is None:
+            regional_compliance = 1
+        else:
+            if self.spec in region.closed_venues:
+                return 0
+            regional_compliance = region.regional_compliance
+        original_poisson_parameter = self.poisson_parameters[sex][age]
+        original_poisson_parameter = original_poisson_parameter * self.get_weekend_boost(is_weekend)
+        poisson_parameter = (
+            original_poisson_parameter
+            + regional_compliance
+            * (policy_poisson_parameter - original_poisson_parameter)
+        )
         return poisson_parameter
 
     def get_weekend_boost(self, is_weekend):
