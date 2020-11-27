@@ -315,7 +315,7 @@ class Region:
     Coarsest geographical resolution
     """
 
-    __slots__ = ("id", "name", "super_areas", "regional_compliance")
+    __slots__ = ("id", "name", "super_areas", "regional_compliance", "lockdown_tier")
     _id = count()
 
     def __init__(
@@ -325,6 +325,7 @@ class Region:
         self.name = name
         self.super_areas = super_areas or []
         self.regional_compliance = 1.0
+        self.lockdown_tier = None
 
     @property
     def people(self):
