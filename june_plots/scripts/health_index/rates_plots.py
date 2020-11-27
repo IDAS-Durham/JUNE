@@ -14,6 +14,8 @@ from june.infection.health_index.data_to_rates import (
 from june.paths import data_path
 
 health_index_data_path = data_path / "input/health_index"
+ifr_imperial_file = data_path / "plotting/health_index/ifr_imperial.csv"
+ifr_ward_file = data_path / "plotting/health_index/ifr_ward.csv"
 
 
 def read_sitrep(file):
@@ -591,3 +593,51 @@ class RatesPlotter:
 
         pdf.close()
         plt.show()
+
+    def plot_ifr_comparison(self, data_file, data_name, output_file):
+        data = pd.read_csv(data_file, index_col=0)
+        data.index = convert_to_intervals(data.index, is_interval=True)
+        age_bins = data.index
+        rates = Data2Rates.from_file()
+        june_ifrs_all = np.array(
+            [rates.get_infection_fatality_rate(age=age, sex="all") for age in age_bins]
+        )
+        june_ifrs_male = np.array(
+            [rates.get_infection_fatality_rate(age=age, sex="male") for age in age_bins]
+        )
+        june_ifrs_female = np.array(
+            [
+                rates.get_infection_fatality_rate(age=age, sex="female")
+                for age in age_bins
+            ]
+        )
+        toplot = pd.DataFrame(index=data.index)
+        toplot.loc[:, "JUNE male"] = june_ifrs_male * 100
+        toplot.loc[:, "JUNE female"] = june_ifrs_female * 100
+        toplot.loc[:, "JUNE"] = june_ifrs_all * 100
+        toplot.loc[:, data_name] = data.values
+        colors = [f"C{i}" for i in range(3)] + ["black"]
+        toplot = toplot.rename(mapper=revert_to_string)
+        errors = np.array([data.error_low, data.error_high]).reshape(2, -1)
+        june_errors = np.zeros_like(errors)
+        errors_to_plot = np.array([errors, june_errors, june_errors, june_errors])
+        # ax = toplot.plot.bar(yerr = , capsize=4, ylabel="IFR [%]", xlabel="Age bin")
+        ax = toplot.loc[:, ["JUNE male", "JUNE female", "JUNE"]].plot.bar(
+            capsize=4, ylabel="IFR [\%]", xlabel="Age bin", width=0.8, alpha=0.7, title = "Infection Fatality Rates (IFR)"
+        )
+        ax = toplot.loc[:, [data_name]].plot.bar(
+            ax=ax, capsize=4, width=0.8, color="black", yerr=errors, alpha=0.6, linewidth=1
+        )
+        fig = ax.get_figure()
+        fig.savefig(output_file, dpi=300, bbox_inches="tight")
+        return fig, ax
+
+    def plot_comparison_with_imperial(self, output_file="imperial_vs_june.png"):
+        return self.plot_ifr_comparison(
+            data_file=ifr_imperial_file, output_file=output_file, data_name="Imperial"
+        )
+
+    def plot_comparison_with_ward(self, output_file="ward_vs_june.png"):
+        return self.plot_ifr_comparison(
+            data_file=ifr_ward_file, output_file=output_file, data_name="Ward"
+        )

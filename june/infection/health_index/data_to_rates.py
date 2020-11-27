@@ -122,8 +122,6 @@ class Data2Rates:
         hospital_ch_admissions_by_age_sex_df: pd.DataFrame,
         care_home_deaths_by_age_sex_df: pd.DataFrame = None,
         care_home_seroprevalence_by_age_df: pd.DataFrame = None,
-        probability_dying_at_home=0.05,
-        probability_dying_at_home_care_home=0.7,
         comorbidity_multipliers: Optional[dict] = None,
         comorbidity_prevalence_reference_population: Optional[dict] = None,
     ):
@@ -165,8 +163,6 @@ class Data2Rates:
         self.hospital_ch_admissions_by_age_sex_df = self._process_df(
             hospital_ch_admissions_by_age_sex_df, converters=True
         )
-        self.probability_dying_at_home = probability_dying_at_home
-        self.probability_dying_at_home_care_home = probability_dying_at_home_care_home
         self.comorbidity_multipliers = comorbidity_multipliers
         self.comorbidity_prevalence_reference_population = (
             comorbidity_prevalence_reference_population
@@ -188,8 +184,6 @@ class Data2Rates:
         comorbidity_multipliers_file: Optional[str] = None,
         comorbidity_prevalence_female_file: Optional[str] = None,
         comorbidity_prevalence_male_file: Optional[str] = None,
-        probability_dying_at_home=0.05,
-        probability_dying_at_home_care_home=0.7,
     ) -> "Data2Rates":
 
         seroprevalence_df = cls._read_csv(seroprevalence_file)
@@ -244,8 +238,6 @@ class Data2Rates:
             hospital_ch_admissions_by_age_sex_df=hospital_ch_admissions_df,
             care_home_deaths_by_age_sex_df=care_home_deaths_df,
             care_home_seroprevalence_by_age_df=care_home_seroprevalence_by_age_df,
-            probability_dying_at_home_care_home=probability_dying_at_home_care_home,
-            probability_dying_at_home=probability_dying_at_home,
             comorbidity_multipliers=comorbidity_multipliers,
             comorbidity_prevalence_reference_population=prevalence_reference_population,
         )
@@ -565,8 +557,6 @@ if __name__ == "__main__":
     rates = Data2Rates.from_file()
     ### OVERALL IFR ###
     ##### June results vs Imperial #####
-    ifr_imperial = pd.read_csv(ifr_imperial_file, index_col=0)
-    ifr_imperial.index = convert_to_intervals(ifr_imperial.index, is_interval=True)
     fig, ax = plt.subplots()
     outputs = get_outputs_df(rates=rates, age_bins=ifr_imperial.index)
     outputs.to_csv("hi_outputs.csv")
