@@ -31,3 +31,30 @@ class RegionalCompliances(PolicyCollection):
                 region.regional_compliance = 1.0
         for policy in self.policies:
             policy.apply(date=date, regions=regions)
+
+
+class TieredLockdown(Policy):
+    policy_type = "tiered_lockdown"
+
+    def __init__(
+        self, start_time: str, end_time: str, tiers_per_region: dict,
+    ):
+        super().__init__(start_time=start_time, end_time=end_time)
+        self.tiers_per_region = tiers_per_region
+
+    def apply(self, date: datetime, regions: Regions):
+        date = read_date(date)
+        if self.is_active(date):
+            for region in regions:
+                region.lockdown_tier = self.tiers_per_region[region.name]
+
+class TieredLockdowns(PolicyCollection):
+    policy_type = "tiered_lockdown"
+
+    def apply(self, date: datetime, regions: Regions):
+        # before applying compliances, reset all of them to None
+        if self.policies:
+            for region in regions:
+                region.lockdown_tier = None
+        for policy in self.policies:
+            policy.apply(date=date, regions=regions)
