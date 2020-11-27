@@ -83,9 +83,11 @@ class RatesPlotter:
         self.hospital_ch_deaths = bin_deaths_dataframe(
             self.rates.hospital_ch_deaths_by_age_sex_df, self.age_bins
         )
-        self.hospital_gp_deaths = bin_deaths_dataframe(
-            self.rates.hospital_gp_deaths_by_age_sex_df, self.age_bins
+        self.hospital_all_deaths = bin_deaths_dataframe(
+            self.rates.all_hospital_deaths_by_age_sex, self.age_bins
         )
+        self.hospital_gp_deaths = self.hospital_all_deaths - self.hospital_ch_deaths
+
         self.hospital_ch_admissions = bin_deaths_dataframe(
             self.rates.hospital_ch_admissions_by_age_sex_df, self.age_bins
         )
@@ -555,40 +557,40 @@ class RatesPlotter:
         )
         pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
 
-        fig, ax = plt.subplots()
-        cocin_hospital_deaths.loc[:, male_model_columns].plot.bar(
-            ax=ax,
-            ylabel="Hospital Deaths",
-            title="Comparison CO-CIN Hospital Deaths Males",
-            color=colors,
-        )
-        pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
+        #fig, ax = plt.subplots()
+        #cocin_hospital_deaths.loc[:, male_model_columns].plot.bar(
+        #    ax=ax,
+        #    ylabel="Hospital Deaths",
+        #    title="Comparison CO-CIN Hospital Deaths Males",
+        #    color=colors,
+        #)
+        #pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
 
-        fig, ax = plt.subplots()
-        cocin_hospital_deaths.loc[:, female_model_columns].plot.bar(
-            ax=ax,
-            ylabel="Hospital Deaths",
-            title="Comparison CO-CIN Hospital Deaths Females",
-            color=colors,
-        )
-        pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
+        #fig, ax = plt.subplots()
+        #cocin_hospital_deaths.loc[:, female_model_columns].plot.bar(
+        #    ax=ax,
+        #    ylabel="Hospital Deaths",
+        #    title="Comparison CO-CIN Hospital Deaths Females",
+        #    color=colors,
+        #)
+        #pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
 
-        fig, ax = plt.subplots()
-        cocin_hospital_admissions.loc[:, male_model_columns].plot.bar(
-            ax=ax,
-            ylabel="Hospital Admissions",
-            title="Comparison CO-CIN Hospital Admissions Males",
-            color=colors,
-        )
-        pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
+        #fig, ax = plt.subplots()
+        #cocin_hospital_admissions.loc[:, male_model_columns].plot.bar(
+        #    ax=ax,
+        #    ylabel="Hospital Admissions",
+        #    title="Comparison CO-CIN Hospital Admissions Males",
+        #    color=colors,
+        #)
+        #pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
 
-        fig, ax = plt.subplots()
-        cocin_hospital_admissions.loc[:, female_model_columns].plot.bar(
-            ax=ax,
-            ylabel="Hospital Admissions",
-            title="Comparison CO-CIN Hospital Admissions Females",
-            color=colors,
-        )
+        #fig, ax = plt.subplots()
+        #cocin_hospital_admissions.loc[:, female_model_columns].plot.bar(
+        #    ax=ax,
+        #    ylabel="Hospital Admissions",
+        #    title="Comparison CO-CIN Hospital Admissions Females",
+        #    color=colors,
+        #)
         pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
 
         pdf.close()
@@ -623,10 +625,21 @@ class RatesPlotter:
         errors_to_plot = np.array([errors, june_errors, june_errors, june_errors])
         # ax = toplot.plot.bar(yerr = , capsize=4, ylabel="IFR [%]", xlabel="Age bin")
         ax = toplot.loc[:, ["JUNE male", "JUNE female", "JUNE"]].plot.bar(
-            capsize=4, ylabel="IFR [\%]", xlabel="Age bin", width=0.8, alpha=0.7, title = "Infection Fatality Rates (IFR)"
+            capsize=4,
+            ylabel="IFR [\%]",
+            xlabel="Age bin",
+            width=0.8,
+            alpha=0.7,
+            title="Infection Fatality Rates (IFR)",
         )
         ax = toplot.loc[:, [data_name]].plot.bar(
-            ax=ax, capsize=4, width=0.8, color="black", yerr=errors, alpha=0.6, linewidth=1
+            ax=ax,
+            capsize=4,
+            width=0.8,
+            color="black",
+            yerr=errors,
+            alpha=0.6,
+            linewidth=1,
         )
         fig = ax.get_figure()
         fig.savefig(output_file, dpi=300, bbox_inches="tight")
