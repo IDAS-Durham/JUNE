@@ -1187,9 +1187,7 @@ class TestQuarantine:
 
     def test__quarantine_zero_complacency_regional(self, setup_policy_world, selector):
         world, pupil, student, worker, sim = setup_policy_world
-        regional_compliance = {
-                worker.region.name: 0.
-        }
+        world.regions[0].regional_compliance = 0
         super_area = world.super_areas[0]
         quarantine = Quarantine(
             start_time="2020-1-1",
@@ -1197,7 +1195,7 @@ class TestQuarantine:
             n_days=7,
             n_days_household=14,
         )
-        policies = Policies([quarantine], regional_compliance=regional_compliance)
+        policies = Policies([quarantine])
         sim.activity_manager.policies = policies
         infect_person(worker, selector, "mild")
         sim.update_health_status(0.0, 0.0)
@@ -1210,7 +1208,6 @@ class TestQuarantine:
         # before symptoms onset
         assert "primary_activity" in policies.individual_policies.apply(
             active_individual_policies,
-            regional_compliance=regional_compliance,
             person=pupil,
             activities=activities,
             days_from_start=4.0,
@@ -1218,7 +1215,6 @@ class TestQuarantine:
         # after symptoms onset
         assert "primary_activity" in policies.individual_policies.apply(
             active_individual_policies,
-            regional_compliance=regional_compliance,
             person=pupil,
             activities=activities,
             days_from_start=8.0,
@@ -1226,7 +1222,6 @@ class TestQuarantine:
         # more thatn two weeks after symptoms onset
         assert "primary_activity" in policies.individual_policies.apply(
             active_individual_policies,
-            regional_compliance=regional_compliance,
             person=pupil,
             activities=activities,
             days_from_start=25,
