@@ -267,6 +267,7 @@ class Interaction:
             infector_weights=infector_weights,
             infector_ids=infector_ids,
         )
+        assert len(subgroup_infected_ids) == len(to_blame_ids)
         return subgroup_infected_ids, to_blame_ids
 
     def _compute_effective_transmission_exponent(
@@ -367,11 +368,15 @@ class Interaction:
         infector_ids
             ids of the infectors
         """
-        if not n_infections:
+        if n_infections == 0:
             return []
         infector_weights = np.array(infector_weights)
-        return choice(
-            infector_ids, size=n_infections, p=infector_weights / infector_weights.sum()
+        return list(
+            choice(
+                infector_ids,
+                size=n_infections,
+                p=infector_weights / infector_weights.sum(),
+            )
         )
 
     def _log_infections_to_record(
@@ -380,7 +385,6 @@ class Interaction:
         """
         Logs new infected people to record, and their infectors.
         """
-        n_infected = len(infected_ids)
         record.accumulate(
             table_name="infections",
             location_spec=group.spec,
