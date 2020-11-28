@@ -9,7 +9,8 @@ import logging
 
 from june.paths import data_path
 from june.geography import SuperArea, Geography
-from june.groups import Supergroup, ExternalSubgroup, ExternalGroup
+from june.groups.group import Supergroup
+from june.groups.group.external import ExternalSubgroup, ExternalGroup
 
 default_cities_filename = data_path / "input/geography/cities_per_super_area_ew.csv"
 

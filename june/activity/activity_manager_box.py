@@ -68,3 +68,4 @@ class ActivityManagerBox(ActivityManager):
                 self.timer.date, self.leisure
             )
         self.move_people_to_active_subgroups(activities, )
+        return {}, 0, 0

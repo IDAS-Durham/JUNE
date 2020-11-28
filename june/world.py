@@ -4,7 +4,6 @@ from collections import defaultdict
 from tqdm import tqdm
 import numpy as np
 from typing import Optional
-from june.groups import Group
 from june.box.box_mode import Boxes, Box
 from june.demography import Demography, Population
 from june.demography.person import Activities, Person
@@ -18,7 +17,7 @@ from june.distributors import (
     UniversityDistributor,
 )
 from june.geography import Geography, Areas
-from june.groups import *
+from june.groups import Supergroup, Hospitals, Cemeteries
 
 logger = logging.getLogger("world")
 
@@ -69,6 +68,7 @@ class World:
         """
         self.areas = None
         self.super_areas = None
+        self.regions = None
         self.people = None
         self.households = None
         self.care_homes = None
@@ -83,6 +83,14 @@ class World:
         self.box_mode = False
         self.cities = None
         self.stations = None
+
+    def __iter__(self):
+        ret = []
+        for attr_name, attr_value in self.__dict__.items():
+            if isinstance(attr_value, Supergroup):
+                ret.append(attr_value)
+        return iter(ret)
+
 
     def distribute_people(self, include_households=True):
         """
@@ -105,9 +113,6 @@ class World:
             carehome_distr.populate_care_homes_in_super_areas(
                 super_areas=self.super_areas
             )
-            carehome_distr.distribute_workers_to_care_homes(
-                super_areas=self.super_areas
-            )
 
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
@@ -125,7 +130,14 @@ class World:
 
         if self.universities is not None:
             uni_distributor = UniversityDistributor(self.universities)
-            uni_distributor.distribute_students_to_universities(self.super_areas)
+            uni_distributor.distribute_students_to_universities(
+                areas=self.areas, people=self.people
+            )
+        if self.care_homes is not None:
+            # this goes after unis to ensure students go to uni
+            carehome_distr.distribute_workers_to_care_homes(
+                super_areas=self.super_areas
+            )
 
         if self.hospitals is not None:
             hospital_distributor = HospitalDistributor.from_file(self.hospitals)

@@ -7,7 +7,7 @@ import june.policy
 from june.infection.symptom_tag import SymptomTag
 from june.demography.person import Person
 from june.policy import Policy, PolicyCollection
-from june.mpi_setup import mpi_rank
+from june.mpi_setup import mpi_rank, mpi_size
 from june.utils.distances import haversine_distance
 
 
@@ -52,7 +52,7 @@ class IndividualPolicies(PolicyCollection):
                         activities=activities,
                     )
                     # TODO: make it work with parallelisation
-                    if mpi_rank == 0:
+                    if mpi_size == 1:
                         if (
                             person.age < self.min_age_home_alone
                         ):  # can't stay home alone
@@ -159,20 +159,24 @@ class Quarantine(StayHome):
         self.compliance = compliance
 
     def check_stay_home_condition(self, person: Person, days_from_start):
+        try:
+            regional_compliance = person.region.regional_compliance
+        except:
+            regional_compliance = 1
         self_quarantine = False
         try:
             if person.symptoms.tag in (SymptomTag.mild, SymptomTag.severe):
                 time_of_symptoms_onset = person.infection.time_of_symptoms_onset
                 release_day = time_of_symptoms_onset + self.n_days
                 if release_day > days_from_start > time_of_symptoms_onset:
-                    if random() < self.compliance:
+                    if random() < self.compliance * regional_compliance:
                         self_quarantine = True
         except AttributeError:
             pass
         housemates_quarantine = person.residence.group.quarantine(
             time=days_from_start,
             quarantine_days=self.n_days_household,
-            household_compliance=self.household_compliance,
+            household_compliance=self.household_compliance * regional_compliance,
         )
         return self_quarantine or housemates_quarantine
 
@@ -189,9 +193,15 @@ class Shielding(StayHome):
         self.min_age = min_age
         self.compliance = compliance
 
-    def check_stay_home_condition(self, person: Person, days_from_start: float):
+    def check_stay_home_condition(
+        self, person: Person, days_from_start: float
+    ):
+        try:
+            regional_compliance = person.region.regional_compliance
+        except:
+            regional_compliance = 1
         if person.age >= self.min_age:
-            if self.compliance is None or random() < self.compliance:
+            if self.compliance is None or random() < self.compliance * regional_compliance:
                 return True
         return False
 
@@ -356,10 +366,7 @@ class CloseCompanies(SkipActivity):
         cls.key_ratio = key_ratio
         cls.random_ratio = random_ratio
 
-    def check_skips_activity(
-        self,
-        person: "Person",  # , furlough_ratio=None, key_ratio=None, random_ratio=None
-    ) -> bool:
+    def check_skips_activity(self, person: "Person") -> bool:
         """
         Returns True if the activity is to be skipped, otherwise False
         """
