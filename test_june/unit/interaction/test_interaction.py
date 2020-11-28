@@ -15,6 +15,7 @@ import pytest
 import numpy as np
 import os
 import pathlib
+from itertools import chain
 
 test_config = paths.configs_path / "tests/interaction.yaml"
 default_sector_beta_filename = (
@@ -153,3 +154,61 @@ def test__infection_is_isolated(selector):
             assert person.dead
         elif not (person.residence.group in infected_households):
             assert not person.infected and person.susceptible
+
+
+def test__assign_blame():
+    interaction = Interaction.from_file(config_filename=test_config)
+    transmission_weights = [1, 10, 2, 3, 4]
+    transmission_ids = [0, 1, 4, 5, 6]
+    total_wegiht = sum(transmission_weights)
+    n_infections = 5000
+    culpables = interaction._assign_blame_for_infections(
+        n_infections, transmission_weights, transmission_ids
+    )
+    culpable_ids, culpable_counts = np.unique(culpables, return_counts=True)
+    culpable_counts = {key: value for key, value in zip(culpable_ids, culpable_counts)}
+    for trans_id, trans_weight in zip(transmission_ids, transmission_weights):
+        assert np.isclose(
+            culpable_counts[trans_id],
+            n_infections * trans_weight / total_wegiht,
+            rtol=0.05,
+        )
+
+
+def test__super_spreaders(selector):
+    people, school = create_school(n_students=5, n_teachers=1000)
+    student_ids = [student.id for student in school.students]
+    teacher_ids = [teacher.id for teacher in school.teachers]
+    transmission_probabilities = np.linspace(0, 30, len(student_ids))
+    total = sum(transmission_probabilities)
+    id_to_trans = {}
+    for i, student in enumerate(school.students):
+        selector.infect_person_at_time(student, time=0)
+        student.infection.transmission.probability = transmission_probabilities[i]
+        id_to_trans[student.id] = transmission_probabilities[i]
+    interactive_school = school.get_interactive_group()
+    interaction = Interaction.from_file(config_filename=test_config)
+    beta = interaction._get_interactive_group_beta(interactive_school)
+    contact_matrix = interaction.contact_matrices["school"]
+    subgroup_infected_ids, to_blame_ids = interaction._time_step_for_subgroup(
+        susceptible_subgroup_index=0,
+        susceptible_subgroup_global_index=0,
+        interactive_group=interactive_school,
+        beta=beta,
+        contact_matrix=contact_matrix,
+        delta_time=1,
+    )
+    for id in subgroup_infected_ids:
+        assert id in teacher_ids
+    for id in to_blame_ids:
+        assert id in student_ids
+    n_infections = len(subgroup_infected_ids)
+    assert n_infections > 0
+    culpable_ids, culpable_counts = np.unique(to_blame_ids, return_counts=True)
+    for culpable_id, culpable_count in zip(culpable_ids, culpable_counts):
+        expected = id_to_trans[culpable_id] / total * n_infections,
+        assert np.isclose(
+            culpable_count,
+            expected,
+            rtol=0.1,
+        )
