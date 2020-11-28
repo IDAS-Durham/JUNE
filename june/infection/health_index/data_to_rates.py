@@ -269,11 +269,16 @@ class Data2Rates:
         self.ch_mapper = lambda age, sex: self.care_home_population_by_age_sex_df.loc[
             age, sex
         ]
-        self.all_mapper = lambda age, sex: self.population_by_age_sex_df.loc[age,sex]
-        self.gp_deaths_mapper = lambda age, sex: self.get_n_deaths(age=age, sex=sex, is_care_home=False)
-        self.ch_deaths_mapper = lambda age, sex: self.get_n_deaths(age=age, sex=sex, is_care_home=True)
-        self.all_deaths_mapper = lambda age, sex: self.gp_deaths_mapper(age, sex) + self.ch_deaths_mapper(age, sex)
-
+        self.all_mapper = lambda age, sex: self.population_by_age_sex_df.loc[age, sex]
+        self.gp_deaths_mapper = lambda age, sex: self.get_n_deaths(
+            age=age, sex=sex, is_care_home=False
+        )
+        self.ch_deaths_mapper = lambda age, sex: self.get_n_deaths(
+            age=age, sex=sex, is_care_home=True
+        )
+        self.all_deaths_mapper = lambda age, sex: self.gp_deaths_mapper(
+            age, sex
+        ) + self.ch_deaths_mapper(age, sex)
 
     def _get_interpolated_value(self, df, age, sex, weight_mapper=None):
         """
@@ -362,10 +367,15 @@ class Data2Rates:
         )
 
     def get_gp_hospital_deaths(self, age: int, sex: str):
-        return self._get_interpolated_value(df=self.hospital_gp_deaths_by_age_sex_df, age=age, sex=sex, weight_mapper=self.gp_deaths_mapper)
-        #return self.get_all_hospital_deaths(
+        return self._get_interpolated_value(
+            df=self.hospital_gp_deaths_by_age_sex_df,
+            age=age,
+            sex=sex,
+            weight_mapper=self.gp_deaths_mapper,
+        )
+        # return self.get_all_hospital_deaths(
         #    age=age, sex=sex
-        #) - self.get_care_home_hospital_deaths(age=age, sex=sex)
+        # ) - self.get_care_home_hospital_deaths(age=age, sex=sex)
 
     def get_care_home_hospital_deaths(self, age: int, sex: str):
         return self._get_interpolated_value(
@@ -421,22 +431,28 @@ class Data2Rates:
 
     #### home ####
     def get_all_home_deaths(self, age: int, sex: str):
-        return self.get_all_deaths(age=age, sex=sex) - self.get_all_hospital_deaths(
-            age=age, sex=sex
+        return max(
+            self.get_all_deaths(age=age, sex=sex)
+            - self.get_all_hospital_deaths(age=age, sex=sex),
+            0,
         )
 
     def get_care_home_home_deaths(self, age: int, sex: str):
-        return self.get_n_deaths(
-            age=age, sex=sex, is_care_home=True
-        ) - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=True)
+        return max(
+            self.get_n_deaths(age=age, sex=sex, is_care_home=True)
+            - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=True),
+            0,
+        )
 
     def get_n_home_deaths(self, age: int, sex: str, is_care_home: bool = False):
         if is_care_home:
-            return self.get_care_home_home_deaths(age=age, sex=sex)
+            return max(self.get_care_home_home_deaths(age=age, sex=sex), 0)
         else:
-            return self.get_n_deaths(
-                age=age, sex=sex, is_care_home=False
-            ) - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=False)
+            return max(
+                self.get_n_deaths(age=age, sex=sex, is_care_home=False)
+                - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=False),
+                0,
+            )
 
     #### IFRS #####
     def _get_ifr(
@@ -535,6 +551,6 @@ def get_outputs_df(rates, age_bins):
                 colname = f"{pop}_{fname}_{sex}"
                 for age_bin in age_bins:
                     outputs.loc[age_bin, colname] = (
-                        function(age=age_bin, sex=sex, is_care_home = pop=="ch") * 100
+                        function(age=age_bin, sex=sex, is_care_home=pop == "ch") * 100
                     )
     return outputs

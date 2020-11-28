@@ -557,42 +557,6 @@ class RatesPlotter:
         )
         pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
 
-        #fig, ax = plt.subplots()
-        #cocin_hospital_deaths.loc[:, male_model_columns].plot.bar(
-        #    ax=ax,
-        #    ylabel="Hospital Deaths",
-        #    title="Comparison CO-CIN Hospital Deaths Males",
-        #    color=colors,
-        #)
-        #pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
-
-        #fig, ax = plt.subplots()
-        #cocin_hospital_deaths.loc[:, female_model_columns].plot.bar(
-        #    ax=ax,
-        #    ylabel="Hospital Deaths",
-        #    title="Comparison CO-CIN Hospital Deaths Females",
-        #    color=colors,
-        #)
-        #pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
-
-        #fig, ax = plt.subplots()
-        #cocin_hospital_admissions.loc[:, male_model_columns].plot.bar(
-        #    ax=ax,
-        #    ylabel="Hospital Admissions",
-        #    title="Comparison CO-CIN Hospital Admissions Males",
-        #    color=colors,
-        #)
-        #pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
-
-        #fig, ax = plt.subplots()
-        #cocin_hospital_admissions.loc[:, female_model_columns].plot.bar(
-        #    ax=ax,
-        #    ylabel="Hospital Admissions",
-        #    title="Comparison CO-CIN Hospital Admissions Females",
-        #    color=colors,
-        #)
-        pdf.savefig(ax.get_figure(), bbox_inches="tight", dpi=dpi)
-
         pdf.close()
         plt.show()
 
