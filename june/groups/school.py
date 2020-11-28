@@ -1,7 +1,8 @@
 import logging
 import yaml
-from enum import IntEnum
+import numba as nb
 import math
+from enum import IntEnum
 from itertools import count
 from copy import deepcopy
 from june import paths
@@ -12,7 +13,8 @@ import pandas as pd
 from sklearn.neighbors import BallTree
 
 from june.geography import Geography, Areas, Area
-from june.groups.group import Group, Subgroup, Supergroup
+from june.groups import Group, Subgroup, Supergroup
+from june.groups.group.interactive import InteractiveGroup
 
 
 default_data_filename = paths.data_path / "input/schools/england_schools.csv"
@@ -101,6 +103,9 @@ class School(Group):
             self.years = tuple(range(age_min, age_max + 1))
         else:
             self.years = tuple(years)
+
+    def get_interactive_group(self, people_from_abroad=None):
+        return InteractiveSchool(self, people_from_abroad=people_from_abroad)
 
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:
@@ -396,3 +401,84 @@ class Schools(Supergroup):
             coordinates_rad, k=k, sort_results=True,
         )
         return neighbours[0]
+
+
+# interactive group of schools
+
+@nb.jit(nopython=True)
+def _get_contacts_in_school(
+    contact_matrix, school_years, susceptibles_idx, infecters_idx
+):
+    n_contacts = contact_matrix[
+        _translate_school_subgroup(susceptibles_idx, school_years)
+    ][_translate_school_subgroup(infecters_idx, school_years)]
+    if susceptibles_idx == 0 and infecters_idx > 0:
+        n_contacts /= len(school_years)
+    if (
+        _translate_school_subgroup(susceptibles_idx, school_years)
+        == _translate_school_subgroup(infecters_idx, school_years)
+        and susceptibles_idx != infecters_idx
+    ):
+        # If same age but different class room, no contacts
+        n_contacts = 0
+    return n_contacts
+
+
+@nb.jit(nopython=True)
+def _translate_school_subgroup(idx, school_years):
+    if idx > 0:
+        idx = school_years[idx - 1] + 1
+    return idx
+
+
+class InteractiveSchool(InteractiveGroup):
+    def __init__(self, group: "Group", people_from_abroad=None):
+        super().__init__(group=group, people_from_abroad=people_from_abroad)
+        self.school_years = group.years
+
+    @classmethod
+    def get_processed_contact_matrix(
+        cls, contact_matrix, alpha_physical, proportion_physical, characteristic_time
+    ):
+        """
+        Creates a global contact matrix for school, which is by default 20x20, to take into account
+        all possible school years combinations. Each school will then use a slice of this matrix.
+        We assume that the number of contacts between two different school years goes as
+        $ xi**abs(age_difference_between_school_years) * contacts_between_students$
+        Teacher contacts are left as specified in the config file.
+        """
+        xi = 0.3
+        age_min = 0
+        age_max = 20
+        n_subgroups_max = (age_max - age_min) + 2  # adding teachers
+        age_differences = np.subtract.outer(
+            range(age_min, age_max + 1), range(age_min, age_max + 1)
+        )
+        processed_contact_matrix = np.zeros((n_subgroups_max, n_subgroups_max)) 
+        processed_contact_matrix[0, 0] = contact_matrix[0][0]
+        processed_contact_matrix[0, 1:] = contact_matrix[0][1]
+        processed_contact_matrix[1:, 0] = contact_matrix[1][0]
+        processed_contact_matrix[1:, 1:] = (
+            xi ** abs(age_differences) * contact_matrix[1][1]
+        )
+        physical_ratios = np.zeros((n_subgroups_max, n_subgroups_max)) 
+        physical_ratios[0, 0] = proportion_physical[0][0]
+        physical_ratios[0, 1:] = proportion_physical[0][1]
+        physical_ratios[1:, 0] = proportion_physical[1][0]
+        physical_ratios[1:, 1:] = proportion_physical[1][1]
+        # add physical contacts
+        processed_contact_matrix = processed_contact_matrix * (
+            1.0 + (alpha_physical - 1.0) * physical_ratios
+        )
+        processed_contact_matrix *= 24 / characteristic_time
+        return processed_contact_matrix
+
+    def get_contacts_between_subgroups(
+        self, contact_matrix, subgroup_1_idx, subgroup_2_idx
+    ):
+        return _get_contacts_in_school(
+            contact_matrix=contact_matrix,
+            school_years=self.school_years,
+            susceptibles_idx=subgroup_1_idx,
+            infecters_idx=subgroup_2_idx,
+        )
