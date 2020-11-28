@@ -12,7 +12,7 @@ from june.groups.leisure import Pub
 @fixture(name="visits_distributor")
 def make_dist(world_visits):
     visits_distributor = HouseholdVisitsDistributor(
-        male_age_probabilities={"0-100": 0.5}, female_age_probabilities={"0-100": 0.5},
+        poisson_parameters={"male": {"0-100": 0.5}, "female": {"0-100": 0.5}}
     )
     visits_distributor.link_households_to_households(world_visits.super_areas)
     return visits_distributor
@@ -21,6 +21,7 @@ def make_dist(world_visits):
 def test__every_household_has_up_to_3_links(world_visits, visits_distributor):
     super_areas = world_visits.super_areas
     visits_distributor.link_households_to_households(super_areas)
+    has_visits = False
     for super_area in super_areas:
         for area in super_area.areas:
             for household in area.households:
@@ -28,15 +29,17 @@ def test__every_household_has_up_to_3_links(world_visits, visits_distributor):
                     "other",
                     "communal",
                 ]:
-                    assert household.relatives_in_households is None
+                    assert "household" not in household.residences_to_visit
                 else:
-                    assert (
-                        household.relatives_in_households is None
-                        or len(household.relatives_in_households) <= 3
+                    has_visits = True
+                    assert len(household.residences_to_visit["household"]) in range(
+                        1, 4
                     )
-                    if household.relatives_in_households is not None:
-                        for link in household.relatives_in_households:
-                            assert link.residence.group.spec == "household"
+                    for household_to_visit in household.residences_to_visit[
+                        "household"
+                    ]:
+                        assert household_to_visit.spec == "household"
+    assert has_visits
 
 
 @fixture(name="leisure")
@@ -56,6 +59,7 @@ def test__household_home_visits_leisure_integration(leisure):
     household1.add(person1)
     household2.add(person2, subgroup_type=household1.SubgroupType.young_adults)
     person1.residence.group.social_venues = {"household_visits": [household2]}
+    person1.residence.group.residences_to_visit = {"household": [household2]}
     person1.busy = False
     person2.busy = False
     person1.residence.group.relatives_in_households = (person2,)
@@ -65,22 +69,12 @@ def test__household_home_visits_leisure_integration(leisure):
         if subgroup is not None:
             counter += 1
             assert subgroup == person2.residence
-    print(counter, np.random.poisson(1.0 * 0.1 * 200))
+            assert subgroup.group.household_visit == True
+            # small test to mimic clear_world() in Simulator
+            if subgroup.group.spec == "household":
+                subgroup.group.household_visit = False
+            assert subgroup.group.household_visit == False
     assert np.isclose(counter, np.random.poisson(1.0 * 0.1 * 200), rtol=5)
-
-
-def test__do_not_visit_dead_people(leisure):
-    person = Person.from_attributes()
-    person2 = Person.from_attributes()
-    household = Household(type="family")
-    household.add(person)
-    person.residence.group.social_venues = {"household_visits": [household]}
-    household.relatives_in_care_homes = [person2]
-    person2.dead = True
-    leisure.update_household_and_care_home_visits_targets([person])
-    for _ in range(0, 100):
-        household = leisure.get_subgroup_for_person_and_housemates(person)
-        assert household is None
 
 
 def test__people_stay_home_when_receiving_visits(leisure):
@@ -94,6 +88,7 @@ def test__people_stay_home_when_receiving_visits(leisure):
     visitor_household = Household()
     visitor_household.add(visitor)
     visitor_household.social_venues = {"household_visits": [resident_household]}
+    visitor_household.residences_to_visit = {"household": [resident_household]}
     resident_household.clear()
     visitor_household.clear()
     resident.busy = False
@@ -132,6 +127,7 @@ def test__people_stay_home_when_receiving_visits(leisure):
         resident_household.clear()
         visitor_household.clear()
 
+
 def test__no_visits_during_working_hours(leisure):
     leisure.generate_leisure_probabilities_for_timestep(
         1, is_weekend=True, working_hours=True
@@ -143,6 +139,7 @@ def test__no_visits_during_working_hours(leisure):
     visitor_household = Household()
     visitor_household.add(visitor)
     visitor_household.social_venues = {"household_visits": [resident_household]}
+    visitor_household.residences_to_visit = {"household": [resident_household]}
     resident_household.clear()
     visitor_household.clear()
     for _ in range(500):

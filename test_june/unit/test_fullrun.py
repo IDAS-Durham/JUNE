@@ -92,3 +92,4 @@ def test__full_run(dummy_world, selector, test_results):
     seed = InfectionSeed(world=sim.world, infection_selector=selector)
     seed.unleash_virus(Population(sim.world.people), n_cases=1)
     sim.run()
+
