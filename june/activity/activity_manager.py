@@ -169,7 +169,7 @@ class ActivityManager:
         if self.leisure is not None:
             if self.policies is not None:
                 self.policies.leisure_policies.apply(
-                    date=self.timer.date, leisure=self.leisure,
+                    date=self.timer.date, leisure=self.leisure
                 )
             self.leisure.generate_leisure_probabilities_for_timestep(
                 delta_time=self.timer.duration,
@@ -177,7 +177,7 @@ class ActivityManager:
                 working_hours="primary_activity" in activities,
             )
         to_send_abroad = self.move_people_to_active_subgroups(
-            activities, self.timer.date, self.timer.now,
+            activities, self.timer.date, self.timer.now
         )
         (
             people_from_abroad,

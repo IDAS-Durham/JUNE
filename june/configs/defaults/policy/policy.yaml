@@ -6,6 +6,21 @@ severe_symptoms_stay_home:
   start_time: 1000-01-01
   end_time: 9999-01-01
 
+regional_compliance:
+  1:
+    start_time: 1000-07-04
+    end_time: 9999-12-01
+    compliances_per_region:
+      London: 1.15
+      South East: 0.99
+      South West: 0.99
+      West Midlands: 1.
+      East Midlands: 1.
+      East of England: 1.
+      North West: 0.95
+      North East: 0.95
+      Yorkshire and The Humber: 0.95
+
 limit_long_commute:
   # prevents people that have their workplace
   # far away from their homes of commuting daily.
@@ -41,6 +56,11 @@ shielding:
         compliance: 0.7
         start_time: 2020-03-24
         end_time: 2020-08-01
+    3:
+        min_age: 70
+        compliance: 0.7
+        start_time: 2020-11-05
+        end_time: 2020-12-03
 
 
 close_companies:
@@ -57,85 +77,98 @@ close_companies:
         full_closure: False 
         avoid_work_probability: 0.29
         furlough_probability: 0.04
-        key_probability: 0.22
+        key_probability: 0.19
     3:
         start_time: 2020-03-27
         end_time: 2020-04-17
         full_closure: False 
         avoid_work_probability: 0.38
         furlough_probability: 0.04
-        key_probability: 0.22
+        key_probability: 0.19
     4:
         start_time: 2020-04-17
         end_time: 2020-05-01
         full_closure: False 
         avoid_work_probability: 0.36
         furlough_probability: 0.1
-        key_probability: 0.22
+        key_probability: 0.19
     5:
         start_time: 2020-05-01
         end_time: 2020-05-15
         full_closure: False 
         avoid_work_probability: 0.35
         furlough_probability: 0.25
-        key_probability: 0.22
+        key_probability: 0.19
     6:
         start_time: 2020-05-15
         end_time: 2020-06-16
         full_closure: False 
         avoid_work_probability: 0.31
         furlough_probability: 0.30
-        key_probability: 0.22
+        key_probability: 0.19
     7:
         start_time: 2020-06-16
         end_time: 2020-07-12
         full_closure: False 
         avoid_work_probability: 0.25
         furlough_probability: 0.33
-        key_probability: 0.22
+        key_probability: 0.19
     8:
         start_time: 2020-07-12
         end_time: 2020-07-26
         full_closure: False 
         avoid_work_probability: 0.21
         furlough_probability: 0.34
-        key_probability: 0.22
+        key_probability: 0.19
     9:
         start_time: 2020-07-26
         end_time: 2020-08-07
         full_closure: False 
         avoid_work_probability: 0.20
         furlough_probability: 0.34
-        key_probability: 0.22
+        key_probability: 0.19
     10:
         start_time: 2020-08-07
         end_time: 2020-08-12
         full_closure: False 
         avoid_work_probability: 0.20
         furlough_probability: 0.34
-        key_probability: 0.22
+        key_probability: 0.19
     11:
         start_time: 2020-08-12
         end_time: 2020-08-25
         full_closure: False 
         avoid_work_probability: 0.18
         furlough_probability: 0.34
-        key_probability: 0.22
+        key_probability: 0.19
     12:
         start_time: 2020-08-25
         end_time: 2020-09-09
         full_closure: False 
         avoid_work_probability: 0.15
         furlough_probability: 0.34
-        key_probability: 0.22
+        key_probability: 0.19
     13:
         start_time: 2020-09-09
-        #end_time: 2020-09-17
+        end_time: 2020-11-05
+        full_closure: False 
+        avoid_work_probability: 0.135
+        furlough_probability: 0.34
+        key_probability: 0.19
+    14:
+        start_time: 2020-11-05
+        end_time: 2020-12-03
+        full_closure: False 
+        avoid_work_probability: 0.38
+        furlough_probability: 0.34
+        key_probability: 0.19
+    15:
+        start_time: 2020-12-03
         end_time: 2021-12-01
         full_closure: False 
         avoid_work_probability: 0.135
         furlough_probability: 0.34
-        key_probability: 0.22
+        key_probability: 0.19
 
 social_distancing:
     1: 
@@ -187,8 +220,44 @@ social_distancing:
             school: 0.786
             household: 1.0
             university: 0.786
+            household_visits: 0.5
     4:
         start_time: 2020-07-04 
+        end_time: 2021-11-05
+        beta_factors:
+            box: 0.875
+            pub: 0.875
+            grocery: 0.875
+            cinema: 0.875
+            city_transport: 0.875
+            inter_city_transport: 0.875
+            hospital: 0.875
+            care_home: 0.875
+            company: 0.875
+            school: 0.875
+            household: 1.0
+            university: 0.875
+            household_visits: 0.5
+    5:
+        start_time: 2020-11-05
+        end_time: 2020-12-03
+        beta_factors:
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            city_transport: 0.75
+            inter_city_transport: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
+            household_visits: 0.5
+
+    6:
+        start_time: 2020-12-03
         end_time: 2021-12-01
         beta_factors:
             box: 0.875
@@ -203,6 +272,7 @@ social_distancing:
             school: 0.875
             household: 1.0
             university: 0.875
+            household_visits: 0.5
 
 mask_wearing:
     1: 
@@ -443,15 +513,20 @@ mask_wearing:
 
 
 close_leisure_venue:
-    start_time: 2020-03-21
-    end_time: 2020-07-04 
-    venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
+    1:
+        start_time: 2020-03-21
+        end_time: 2020-07-04 
+        venues_to_close: ['pub', 'cinema', 'care_home_visit']
+    2:
+        start_time: 2020-11-05
+        end_time: 2020-12-03 
+        venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
 
 change_leisure_probability:
     1:
         start_time: 2020-03-24
         end_time: 2020-05-21
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             household_visits:
                 men: 
                     0-64: 0.1
@@ -467,7 +542,7 @@ change_leisure_probability:
     2:
         start_time: 2020-05-21
         end_time: 2020-05-31
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             household_visits:
                 men: 
                     0-64: 0.25
@@ -483,7 +558,7 @@ change_leisure_probability:
     3:
         start_time: 2020-05-31
         end_time: 2020-06-04
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             household_visits:
                 men: 
                     0-64: 0.50
@@ -499,7 +574,7 @@ change_leisure_probability:
     4:
         start_time: 2020-06-04
         end_time: 2020-06-14
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             household_visits:
                 men: 
                     0-64: 0.7
@@ -515,7 +590,7 @@ change_leisure_probability:
     5:
         start_time: 2020-06-14
         end_time: 2020-07-04
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             household_visits:
                 men: 
                     0-64: 1.25
@@ -532,7 +607,7 @@ change_leisure_probability:
     6:
         start_time: 2020-07-04
         end_time: 2020-07-11
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             pubs:
                 men:
                     18-65: 0.256
@@ -551,7 +626,7 @@ change_leisure_probability:
     7:
         start_time: 2020-07-11
         end_time: 2020-07-18
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             pubs:
                 men:
                     18-65: 0.402
@@ -571,7 +646,7 @@ change_leisure_probability:
     8:
         start_time: 2020-07-18
         end_time: 2020-07-25
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             pubs:
                 men:
                     18-65: 0.548
@@ -591,7 +666,7 @@ change_leisure_probability:
     9:
         start_time: 2020-07-25
         end_time: 2020-08-01
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             pubs:
                 men:
                     18-65: 0.695
@@ -611,7 +686,7 @@ change_leisure_probability:
     10:
         start_time: 2020-08-01
         end_time: 2020-08-08
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             pubs:
                 men:
                     18-65: 0.841
@@ -631,7 +706,7 @@ change_leisure_probability:
     11:
         start_time: 2020-08-08
         end_time: 2020-08-15
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             pubs:
                 men:
                     18-65: 0.988
@@ -643,7 +718,7 @@ change_leisure_probability:
     12:
         start_time: 2020-08-15
         end_time: 2020-08-22
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             pubs:
                 men:
                     18-65: 1.13
@@ -655,7 +730,7 @@ change_leisure_probability:
     13:
         start_time: 2020-08-22
         end_time: 2020-08-29
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             pubs:
                 men:
                     18-65: 1.28
@@ -667,7 +742,7 @@ change_leisure_probability:
     14:
         start_time: 2020-08-29
         end_time: 2020-08-31
-        leisure_activities_probabilities:
+        leisure_poisson_parameters:
             pubs:
                 men:
                     18-65: 1.38
@@ -675,6 +750,22 @@ change_leisure_probability:
                 women:
                     18-65: 1.38
                     65-100: 0.917
+    15:
+        start_time: 2020-11-05
+        end_time: 2020-12-03
+        leisure_poisson_parameters:
+            household_visits:
+                men: 
+                    0-64: 0.1
+                    65-100: 0.05
+                women: 
+                    0-64: 0.1
+                    65-100: 0.05
+            care_home_visits:
+                men:
+                    0-100: 0.05
+                women:
+                    0-100: 0.05
 
 
 close_schools:
@@ -723,6 +814,11 @@ close_schools:
         end_time: 2020-10-31
         years_to_close: all
         full_closure: False
+    9:
+        start_time: 2020-12-19
+        end_time: 2021-01-03
+        years_to_close: all
+        full_closure: True
 
 close_universities:
     start_time: 2020-03-20

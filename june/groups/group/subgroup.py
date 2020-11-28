@@ -24,6 +24,10 @@ class Subgroup(AbstractGroup):
         return [person for person in self.people if getattr(person, attribute)]
 
     @property
+    def spec(self):
+        return self.group.spec
+
+    @property
     def infected(self):
         return self._collate("infected")
 
