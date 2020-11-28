@@ -267,7 +267,6 @@ class Interaction:
             infector_weights=infector_weights,
             infector_ids=infector_ids,
         )
-        assert len(subgroup_infected_ids) == len(to_blame_ids)
         return subgroup_infected_ids, to_blame_ids
 
     def _compute_effective_transmission_exponent(
