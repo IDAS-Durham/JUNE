@@ -96,10 +96,10 @@ def create_selector():
 @pytest.fixture(name="interaction", scope="module")
 def create_interaction():
     interaction = Interaction.from_file(config_filename=interaction_config)
-    interaction.beta["school"] = 0.8
-    interaction.beta["cinema"] = 0.0
-    interaction.beta["pub"] = 0.0
-    interaction.beta["household"] = 10.0
+    interaction.betas["school"] = 0.8
+    interaction.betas["cinema"] = 0.0
+    interaction.betas["pub"] = 0.0
+    interaction.betas["household"] = 10.0
     interaction.alpha_physical = 2.7
     return interaction
 
