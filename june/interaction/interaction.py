@@ -1,6 +1,7 @@
 import numpy as np
 import yaml
 import numba as nb
+from numpy.random import choice
 from random import random
 from typing import List, Dict
 from itertools import chain
@@ -184,6 +185,7 @@ class Interaction:
         if not interactive_group.must_timestep:
             return [], interactive_group.size
         infected_ids = []
+        to_blame_ids = []
         beta = self._get_interactive_group_beta(interactive_group)
         contact_matrix = self.contact_matrices[group.spec]
         for susceptible_subgroup_index, susceptible_subgroup_global_index in enumerate(
@@ -193,7 +195,7 @@ class Interaction:
             # inside the list of susceptible subgroups.
             # the susceptible_subgroup_global_index tracks the particular
             # subgroup inside the list of all subgroups
-            infected_ids += self._time_step_for_subgroup(
+            new_infected_ids, new_to_blame_ids = self._time_step_for_subgroup(
                 susceptible_subgroup_index=susceptible_subgroup_index,
                 susceptible_subgroup_global_index=susceptible_subgroup_global_index,
                 interactive_group=interactive_group,
@@ -201,10 +203,12 @@ class Interaction:
                 contact_matrix=contact_matrix,
                 delta_time=delta_time,
             )
+            infected_ids += new_infected_ids
+            to_blame_ids += new_to_blame_ids
         if record:
             self._log_infections_to_record(
                 infected_ids=infected_ids,
-                interactive_group=interactive_group,
+                to_blame_ids=to_blame_ids,
                 record=record,
                 group=group,
             )
@@ -238,7 +242,11 @@ class Interaction:
         delta_time
             time interval
         """
-        effective_transmission_exponent = self._compute_effective_transmission_exponent(
+        (
+            effective_transmission_exponent,
+            infector_weights,
+            infector_ids,
+        ) = self._compute_effective_transmission_exponent(
             susceptible_subgroup_global_index=susceptible_subgroup_global_index,
             interactive_group=interactive_group,
             beta=beta,
@@ -254,7 +262,12 @@ class Interaction:
                 susceptible_subgroup_index
             ],
         )
-        return subgroup_infected_ids
+        to_blame_ids = self._assign_blame_for_infections(
+            n_infections=len(subgroup_infected_ids),
+            infector_weights=infector_weights,
+            infector_ids=infector_ids,
+        )
+        return subgroup_infected_ids, to_blame_ids
 
     def _compute_effective_transmission_exponent(
         self,
@@ -276,6 +289,8 @@ class Interaction:
         - contact_matrix : contact matrix of the group
         """
         transmission_exponent = 0.0
+        infector_weights = []
+        infector_ids = []
         for infector_subgroup_index, infector_subgroup_global_index in enumerate(
             interactive_group.subgroups_with_infectors
         ):
@@ -293,19 +308,20 @@ class Interaction:
                 subgroup_1_idx=susceptible_subgroup_global_index,
                 subgroup_2_idx=infector_subgroup_global_index,
             )
-            infector_subgroup_mean_transmission_probability = (
-                sum(
-                    interactive_group.infector_transmission_probabilities[
-                        infector_subgroup_index
-                    ]
-                )
-                / infector_subgroup_size
-            )
-            transmission_exponent += (
-                infector_subgroup_mean_transmission_probability
+            infector_ids += interactive_group.infector_ids[
+                infector_subgroup_index
+            ]
+            subgroup_transmission_exponent_list = [
+                infector_transmission_probability
                 * n_contacts_between_subgroups
-            )
-        return transmission_exponent * delta_time * beta
+                / infector_subgroup_size
+                for infector_transmission_probability in interactive_group.infector_transmission_probabilities[
+                    infector_subgroup_index
+                ]
+            ]
+            infector_weights += subgroup_transmission_exponent_list
+            transmission_exponent += sum(subgroup_transmission_exponent_list)
+        return transmission_exponent * delta_time * beta, infector_weights, infector_ids
 
     def _sample_new_infected_people(
         self,
@@ -337,29 +353,39 @@ class Interaction:
                 infected_ids.append(susceptible_id)
         return infected_ids
 
+    def _assign_blame_for_infections(
+        self, n_infections, infector_weights, infector_ids
+    ):
+        """
+        Given a number of infections, ```n_infections```, assigns blame to infectors based on their
+        relative contribution to the overall transmission probability.
+
+        Parameters
+        ----------
+        n_infections
+            Number of infections that have been produced
+        infector_weights
+            weights of each infector in the transmission prob.
+        infector_ids
+            ids of the infectors
+        """
+        infector_weights = np.array(infector_weights)
+        return choice(
+            infector_ids, size=n_infections, p=infector_weights / infector_weights.sum()
+        )
+
     def _log_infections_to_record(
-        self,
-        infected_ids: list,
-        interactive_group: InteractiveGroup,
-        group: "Group",
-        record: Record,
+        self, infected_ids: list, to_blame_ids: list, group: "Group", record: Record,
     ):
         """
         Logs new infected people to record, and their infectors.
-        TODO: assign infection blame proportionally to transmission probability.
         """
         n_infected = len(infected_ids)
-        infector_ids = list(chain.from_iterable(interactive_group.infector_ids))
-        infector_ids = np.random.choice(
-            infector_ids,
-            n_infected,
-            # TODO: p=np.array(transmission_probabilities) / tprob_norm,
-        )
         record.accumulate(
             table_name="infections",
             location_spec=group.spec,
             location_id=group.id,
             region_name=group.super_area.region.name,
             infected_ids=infected_ids,
-            infector_ids=infector_ids,
+            infector_ids=to_blame_ids,
         )
