@@ -3,7 +3,7 @@ import numpy as np
 from random import randint
 
 from june.utils import parse_age_probabilities
-from june.interaction import Interaction, InteractiveGroup
+from june.interaction import Interaction
 from june.demography import Population, Person
 from june.groups import Company
 from june.infection import Infection, TransmissionConstant
@@ -30,7 +30,7 @@ class TestInteractionChangesSusceptibility:
         for person in population:
             assert person.susceptibility == 1.0
         interaction = Interaction(
-            beta=None,
+            betas=None,
             alpha_physical=None,
             contact_matrices=None,
             susceptibilities_by_age=susceptibility_dict,
@@ -74,12 +74,11 @@ class TestSusceptibilityHasAnEffect:
         With uniform susc. number of infected adults and kids should be the same.
         """
         group, population = simulation_setup
-        interactive_group = InteractiveGroup(group=group)
         n_infected_adults_list = []
         n_infected_kids_list = []
         for _ in range(1000):
-            infected_ids = interaction.time_step_for_group(
-                group=interactive_group, delta_time=10
+            infected_ids, group_size = interaction.time_step_for_group(
+                group=group, delta_time=10
             )
             n_infected_adults = len(
                 [
@@ -108,7 +107,7 @@ class TestSusceptibilityHasAnEffect:
             }
         }
         interaction = Interaction(
-            beta={"company": 1}, alpha_physical=1.0, contact_matrices=None#contact_matrices
+            betas={"company": 1}, alpha_physical=1.0, contact_matrices=contact_matrices
         )
         n_kids_inf, n_adults_inf = self.run_interaction(
             interaction=interaction, simulation_setup=simulation_setup
@@ -120,7 +119,7 @@ class TestSusceptibilityHasAnEffect:
     def test__run_different_susceptibility(self, simulation_setup, susceptibility_dict):
         group, population = simulation_setup
         interaction = Interaction(
-            beta={"company": 1},
+            betas={"company": 1},
             alpha_physical=1.0,
             contact_matrices=None,
             susceptibilities_by_age=susceptibility_dict,

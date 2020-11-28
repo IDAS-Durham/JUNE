@@ -4,11 +4,16 @@ import numba as nb
 from random import random
 from typing import List, Dict
 from itertools import chain
+from typing import TYPE_CHECKING
 
-from june.interaction.interactive_group import InteractiveGroup
-from june.demography import Population
+if TYPE_CHECKING:
+    from june.demography import Population
+
 from june.exc import InteractionError
 from june.utils import parse_age_probabilities
+from june.groups.group.interactive import InteractiveGroup
+from june.groups import InteractiveSchool, InteractiveCompany, InteractiveHousehold
+from june.records import Record
 from june import paths
 
 default_config_filename = paths.configs_path / "defaults/interaction/interaction.yaml"
@@ -16,119 +21,6 @@ default_config_filename = paths.configs_path / "defaults/interaction/interaction
 default_sector_beta_filename = (
     paths.configs_path / "defaults/interaction/sector_beta.yaml"
 )
-
-
-@nb.jit(nopython=True)
-def get_contact_matrix(alpha, contacts, physical):
-    """
-    Computes the contact matrix used in the interaction,
-    which boosts the physical contacts by a factor.
-
-    Parameters
-    ----------
-    - alpha : relative weight of physical contacts respect to the normal ones.
-    (1 = same as normal).
-    - contacts : contact matrix
-    - physical : proportion of physical contacts.
-    """
-    return contacts * (1.0 + (alpha - 1.0) * physical)
-
-
-# @nb.jit(nopython=True)
-def compute_effective_transmission(
-    subgroup_transmission_probabilities: np.array,
-    susceptibles_group_idx: np.array,
-    infector_subgroups: tuple,
-    infector_subgroup_sizes: np.array,
-    contact_matrix: np.array,
-    delta_time: float,
-    beta: float,
-    school_years: np.array,
-):
-    """
-    Computes the effective transmission probability of all the infected people in the group,
-    that is, the sum of all infection probabilities divided by the number of infected people.
-
-    Parameters
-    ----------
-    - subgroup_transmission_probabilities : transmission probabilities per subgroup.
-    - susceptibles_group_idx : indices of suceptible people
-    - infector_subgroup_sizes : subgroup sizes where the infected people are.
-    - contact_matrix : contact matrix of the group
-    """
-    transmission_exponent = 0.0
-    for i in range(len(infector_subgroup_sizes)):
-        subgroup_trans_prob = subgroup_transmission_probabilities[i]
-        subgroup_size = infector_subgroup_sizes[i]
-        transmission_exponent += _subgroup_to_subgroup_transmission(
-            contact_matrix=contact_matrix,
-            subgroup_transmission_probabilities=subgroup_trans_prob,
-            subgroup_size=subgroup_size,
-            susceptibles_idx=susceptibles_group_idx,
-            infecters_idx=infector_subgroups[i],
-            school_years=school_years,
-        )
-    return transmission_exponent * delta_time * beta
-
-
-# @nb.jit(nopython=True)
-def infect_susceptibles(effective_transmission, susceptible_ids, suscetibilities):
-    infected_ids = []
-    for id, susceptibility in zip(susceptible_ids, suscetibilities):
-        transmission_probability = 1.0 - np.exp(
-            -effective_transmission * susceptibility
-        )
-        if random() < transmission_probability:
-            infected_ids.append(id)
-    return infected_ids
-
-
-@nb.jit(nopython=True)
-def _get_contacts_in_school(
-    contact_matrix, school_years, susceptibles_idx, infecters_idx
-):
-    n_contacts = contact_matrix[
-        _translate_school_subgroup(susceptibles_idx, school_years)
-    ][_translate_school_subgroup(infecters_idx, school_years)]
-    if susceptibles_idx == 0 and infecters_idx > 0:
-        n_contacts /= len(school_years)
-    if (
-        _translate_school_subgroup(susceptibles_idx, school_years)
-        == _translate_school_subgroup(infecters_idx, school_years)
-        and susceptibles_idx != infecters_idx
-    ):
-        # If same age but different class room, no contacts
-        n_contacts = 0
-    return n_contacts
-
-
-# @nb.jit(nopython=True)
-def _subgroup_to_subgroup_transmission(
-    contact_matrix,
-    subgroup_transmission_probabilities,
-    subgroup_size,
-    susceptibles_idx,
-    infecters_idx,
-    school_years=None,
-) -> float:
-    if school_years is not None:
-        n_contacts = _get_contacts_in_school(
-            contact_matrix, school_years, susceptibles_idx, infecters_idx
-        )
-    else:
-        n_contacts = contact_matrix[susceptibles_idx][infecters_idx]
-    if susceptibles_idx == infecters_idx:
-        subgroup_size -= 1
-        if subgroup_size == 0:
-            return 0.0
-    return n_contacts / subgroup_size * subgroup_transmission_probabilities
-
-
-@nb.jit(nopython=True)
-def _translate_school_subgroup(idx, school_years):
-    if idx > 0:
-        idx = school_years[idx - 1] + 1
-    return idx
 
 
 class Interaction:
@@ -155,17 +47,18 @@ class Interaction:
     def __init__(
         self,
         alpha_physical: float,
-        beta: Dict[str, float],
+        betas: Dict[str, float],
         contact_matrices: dict,
         susceptibilities_by_age: Dict[str, int] = None,
-        population: Population = None,
-        sector_betas=None,
+        population: "Population" = None,
     ):
         self.alpha_physical = alpha_physical
-        self.beta = beta or {}
+        self.betas = betas or {}
         contact_matrices = contact_matrices or {}
         self.contact_matrices = self.process_contact_matrices(
-            groups=self.beta.keys(), input_contact_matrices=contact_matrices
+            input_contact_matrices=contact_matrices,
+            groups=self.betas.keys(),
+            alpha_physical=alpha_physical,
         )
         self.susceptibilities_by_age = susceptibilities_by_age
         if self.susceptibilities_by_age is not None:
@@ -176,19 +69,14 @@ class Interaction:
             self.set_population_susceptibilities(
                 susceptibilities_by_age=susceptibilities_by_age, population=population
             )
-        self.sector_betas = sector_betas
-        self.regional_compliance = None
-        self.distanced_groups = set()
-        self.original_betas = None
-        self.beta_reductions = None
+        # This dict is to keep track of beta reductions introduced by policies:
+        self.beta_reductions = {}
 
     @classmethod
     def from_file(
         cls,
         config_filename: str = default_config_filename,
-        population: Population = None,
-        sector_beta=False,
-        sector_beta_filename: str = default_sector_beta_filename,
+        population: "Population" = None,
     ) -> "Interaction":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -197,23 +85,16 @@ class Interaction:
             susceptibilities_by_age = config["susceptibilities"]
         else:
             susceptibilities_by_age = None
-        if sector_beta:
-            with open(sector_beta_filename) as f:
-                sector_beta_config = yaml.load(f, Loader=yaml.FullLoader)
-            sector_betas = sector_beta_config["sector_betas"]
-        else:
-            sector_betas = None
         return Interaction(
             alpha_physical=config["alpha_physical"],
-            beta=config["beta"],
+            betas=config["betas"],
             contact_matrices=contact_matrices,
             susceptibilities_by_age=susceptibilities_by_age,
             population=population,
-            sector_betas=sector_betas,
         )
 
     def set_population_susceptibilities(
-        self, susceptibilities_by_age: dict, population: Population
+        self, susceptibilities_by_age: dict, population: "Population"
     ):
         """
         Changes the population susceptibility to the disease.
@@ -225,145 +106,260 @@ class Interaction:
             else:
                 person.susceptibility = susceptibilities_array[person.age]
 
-    def process_contact_matrices(self, groups: List[str], input_contact_matrices: dict):
+    def process_contact_matrices(
+        self, groups: List[str], input_contact_matrices: dict, alpha_physical: float
+    ):
+        """
+        Processes the input data regarding to contacts to construct the contact matrix used in the interaction.
+        In particular, given a contact matrix, a matrix of physical contact ratios, and the physical contact weighting
+        (alpha_physical) constructs the contact matrix via:
+        $ contact_matrix = contact_matrix * (1 + (alpha_physical - 1) * physical_ratios) $
+
+        Parameters
+        ----------
+        groups
+            a list of group names that will be handled by the interaction
+        input_contact_data
+            configuration regarding contact matrices and physical contacts
+        alpha_physical
+            The relative weight of physical conctacts respect o non-physical ones.
+        """
         contact_matrices = {}
-        default_contacts = np.array([[1]])
-        default_characteristic_time = 8
-        default_proportion_physical = np.array([[0]])
         for group in groups:
-            if group not in input_contact_matrices.keys():
-                contacts = default_contacts
-                proportion_physical = default_proportion_physical
-                characteristic_time = default_characteristic_time
-            else:
-                if group == "school":
-                    (
-                        contacts,
-                        proportion_physical,
-                        characteristic_time,
-                    ) = self.process_school_matrices(input_contact_matrices[group])
-                else:
-                    contacts = np.array(input_contact_matrices[group]["contacts"])
-                    proportion_physical = np.array(
-                        input_contact_matrices[group]["proportion_physical"]
-                    )
-                    characteristic_time = input_contact_matrices[group][
-                        "characteristic_time"
-                    ]
-            contact_matrices[group] = get_contact_matrix(
-                self.alpha_physical, contacts, proportion_physical,
+            # school is a special case.
+            contact_data = input_contact_matrices.get(group, {})
+            contact_matrix = np.array(contact_data.get("contacts", [[1]]))
+            proportion_physical = np.array(
+                contact_data.get("proportion_physical", [[0]])
             )
-            contact_matrices[group] *= 24 / characteristic_time
+            characteristic_time = contact_data.get("characteristic_time", 8)
+            if group == "school":
+                contact_matrix = InteractiveSchool.get_processed_contact_matrix(
+                    contact_matrix=contact_matrix,
+                    proportion_physical=proportion_physical,
+                    alpha_physical=alpha_physical,
+                    characteristic_time=characteristic_time,
+                )
+            else:
+                contact_matrix = InteractiveGroup.get_processed_contact_matrix(
+                    contact_matrix=contact_matrix,
+                    proportion_physical=proportion_physical,
+                    alpha_physical=alpha_physical,
+                    characteristic_time=characteristic_time,
+                )
+            contact_matrices[group] = contact_matrix
         return contact_matrices
 
-    def process_school_matrices(self, input_contact_matrices, age_min=0, age_max=20):
-        contact_matrices = {}
-        contact_matrices["contacts"] = self.adapt_contacts_to_schools(
-            input_contact_matrices["contacts"],
-            input_contact_matrices["xi"],
-            age_min=age_min,
-            age_max=age_max,
-            physical=False,
-        )
-        contact_matrices["proportion_physical"] = self.adapt_contacts_to_schools(
-            input_contact_matrices["proportion_physical"],
-            input_contact_matrices["xi"],
-            age_min=age_min,
-            age_max=age_max,
-            physical=True,
-        )
-        return (
-            contact_matrices["contacts"],
-            contact_matrices["proportion_physical"],
-            input_contact_matrices["characteristic_time"],
+    def _get_interactive_group_beta(self, interactive_group):
+        return interactive_group.get_processed_beta(
+            betas=self.betas, beta_reductions=self.beta_reductions
         )
 
-    def adapt_contacts_to_schools(
-        self, input_contact_matrix, xi, age_min, age_max, physical=False
-    ):
-        n_subgroups_max = (age_max - age_min) + 2  # adding teachers
-        contact_matrix = np.zeros((n_subgroups_max, n_subgroups_max))
-        contact_matrix[0, 0] = input_contact_matrix[0][0]
-        contact_matrix[0, 1:] = input_contact_matrix[0][1]
-        contact_matrix[1:, 0] = input_contact_matrix[1][0]
-        age_differences = np.subtract.outer(
-            range(age_min, age_max + 1), range(age_min, age_max + 1)
-        )
-        if physical:
-            contact_matrix[1:, 1:] = input_contact_matrix[1][1]
-        else:
-            contact_matrix[1:, 1:] = (
-                xi ** abs(age_differences) * input_contact_matrix[1][1]
-            )
-        return contact_matrix
-
-    def get_beta_for_group(self, group: InteractiveGroup):
-        if self.regional_compliance is not None and group.spec in self.distanced_groups:
-            beta = (
-                self.original_betas[group.spec]
-                * (self.beta_reductions[group.spec] - 1.0)
-                * self.regional_compliance.get(group.region.name, 1.0)
-                + self.original_betas[group.spec]
-            )
-        else:
-            beta = self.beta[group.spec]
-        return beta
-
-    def time_step_for_group(self, delta_time: float, group: InteractiveGroup):
-        contact_matrix = self.contact_matrices[group.spec]
-        if group.spec == "company" and self.sector_betas is not None:
-            beta = self.get_beta_for_group(group=group) * float(
-                self.sector_betas[group.sector]
-            )
-        elif group.spec == "household" and group.household_visit and self.beta_reductions is not None:
-            beta = self.get_beta_for_group(group=group) * float(self.beta_reductions.get("household_visits", 1.0))
-        else:
-            beta = self.get_beta_for_group(group=group)
-        school_years = group.school_years
-        infected_ids = []
-        for i, subgroup_id in enumerate(group.subgroups_susceptible):
-            susceptible_ids = group.susceptible_ids[i]
-            susceptibilities = group.susceptibilities[i]
-            infected_ids += self.time_step_for_subgroup(
-                contact_matrix=contact_matrix,
-                subgroup_transmission_probabilities=group.transmission_probabilities,
-                susceptible_ids=susceptible_ids,
-                susceptibilities=susceptibilities,
-                infector_subgroups=group.subgroups_infector,
-                infector_subgroup_sizes=group.infector_subgroup_sizes,
-                beta=beta,
-                delta_time=delta_time,
-                subgroup_idx=subgroup_id,
-                school_years=school_years,
-            )
-        return infected_ids
-
-    def time_step_for_subgroup(
+    def time_step_for_group(
         self,
-        subgroup_transmission_probabilities,
-        susceptible_ids,
-        susceptibilities,
-        infector_subgroups,
-        infector_subgroup_sizes,
-        contact_matrix,
-        beta,
-        delta_time,
-        subgroup_idx,
-        school_years,
+        group: "Group",
+        delta_time: float,
+        people_from_abroad: dict = None,
+        record: Record = None,
+    ):
+        """
+        Runs an interaction time step for the given interactive group. First, we
+        give the beta and contact matrix to the group to process it. There may be groups
+        that change the betas depending on the situation, ie, a school interactive group,
+        has to treat the contact matrix on a special way, or the company beta may change
+        due to the company's sector. Second, we iterate over all subgroups that contain
+        susceptible people, and compute the interaction between them and the subgroups that
+        contain infected people.
+
+        Parameters
+        ----------
+        group:
+            An instance of InteractiveGroup
+        delta_time:
+            Time interval of the interaction
+        """
+        interactive_group = group.get_interactive_group(
+            people_from_abroad=people_from_abroad
+        )
+        if not interactive_group.must_timestep:
+            return [], interactive_group.size
+        infected_ids = []
+        beta = self._get_interactive_group_beta(interactive_group)
+        contact_matrix = self.contact_matrices[group.spec]
+        for susceptible_subgroup_index, susceptible_subgroup_global_index in enumerate(
+            interactive_group.subgroups_with_susceptible
+        ):
+            # the susceptible_subgroup_index tracks the particular subgroup
+            # inside the list of susceptible subgroups.
+            # the susceptible_subgroup_global_index tracks the particular
+            # subgroup inside the list of all subgroups
+            infected_ids += self._time_step_for_subgroup(
+                susceptible_subgroup_index=susceptible_subgroup_index,
+                susceptible_subgroup_global_index=susceptible_subgroup_global_index,
+                interactive_group=interactive_group,
+                beta=beta,
+                contact_matrix=contact_matrix,
+                delta_time=delta_time,
+            )
+        if record:
+            self._log_infections_to_record(
+                infected_ids=infected_ids,
+                interactive_group=interactive_group,
+                record=record,
+                group=group,
+            )
+        return infected_ids, interactive_group.size
+
+    def _time_step_for_subgroup(
+        self,
+        susceptible_subgroup_index: int,
+        susceptible_subgroup_global_index: int,
+        interactive_group: InteractiveGroup,
+        beta: float,
+        contact_matrix: float,
+        delta_time: float,
     ) -> List[int]:
-        effective_transmission = compute_effective_transmission(
-            subgroup_transmission_probabilities=subgroup_transmission_probabilities,
-            susceptibles_group_idx=subgroup_idx,
-            infector_subgroups=infector_subgroups,
-            infector_subgroup_sizes=infector_subgroup_sizes,
-            contact_matrix=contact_matrix,
+        """
+        Time step for one susceptible subgroup. We first compute the combined
+        effective transmission probability of all the subgroups that contain infected
+        people, and then run this effective transmission over the susceptible subgroup,
+        to check who got infected.
+
+        Parameters
+        ----------
+        susceptible_subgroup_index:
+            index of the susceptible subgroup that is interacting with the infected subgroups.
+        group
+            The InteractiveGroup of the time step.
+        beta
+            Interaction intensity for this particular interactive group
+        contact matrix
+            contact matrix of this interactive group
+        delta_time
+            time interval
+        """
+        effective_transmission_exponent = self._compute_effective_transmission_exponent(
+            susceptible_subgroup_global_index=susceptible_subgroup_global_index,
+            interactive_group=interactive_group,
             beta=beta,
+            contact_matrix=contact_matrix,
             delta_time=delta_time,
-            school_years=school_years,
         )
-        infected_ids = infect_susceptibles(
-            effective_transmission=effective_transmission,
-            susceptible_ids=susceptible_ids,
-            suscetibilities=susceptibilities,
+        subgroup_infected_ids = self._sample_new_infected_people(
+            effective_transmission_exponent=effective_transmission_exponent,
+            subgroup_susceptible_ids=interactive_group.susceptible_ids[
+                susceptible_subgroup_index
+            ],
+            subgroup_suscetibilities=interactive_group.susceptible_susceptibilities[
+                susceptible_subgroup_index
+            ],
         )
+        return subgroup_infected_ids
+
+    def _compute_effective_transmission_exponent(
+        self,
+        susceptible_subgroup_global_index: int,
+        interactive_group: InteractiveGroup,
+        beta: float,
+        contact_matrix: np.array,
+        delta_time: float,
+    ):
+        """
+        Computes the effective transmission probability of all the infected people in the group,
+        that is, the sum of all infection probabilities divided by the number of infected people.
+    
+        Parameters
+        ----------
+        - subgroup_transmission_probabilities : transmission probabilities per subgroup.
+        - susceptibles_group_idx : indices of suceptible people
+        - subgroups_with_infector_sizes: subgroup sizes where the infected people are.
+        - contact_matrix : contact matrix of the group
+        """
+        transmission_exponent = 0.0
+        for infector_subgroup_index, infector_subgroup_global_index in enumerate(
+            interactive_group.subgroups_with_infectors
+        ):
+            infector_subgroup_size = interactive_group.subgroups_with_infectors_sizes[
+                infector_subgroup_index
+            ]
+            # same logic in this loop as in the previous susceptible subgroups loop
+            if infector_subgroup_global_index == susceptible_subgroup_global_index:
+                # subgroup interacting with itself, must discount the own person.
+                infector_subgroup_size -= 1
+                if infector_subgroup_size == 0:
+                    continue
+            n_contacts_between_subgroups = interactive_group.get_contacts_between_subgroups(
+                contact_matrix=contact_matrix,
+                subgroup_1_idx=susceptible_subgroup_global_index,
+                subgroup_2_idx=infector_subgroup_global_index,
+            )
+            infector_subgroup_mean_transmission_probability = (
+                sum(
+                    interactive_group.infector_transmission_probabilities[
+                        infector_subgroup_index
+                    ]
+                )
+                / infector_subgroup_size
+            )
+            transmission_exponent += (
+                infector_subgroup_mean_transmission_probability
+                * n_contacts_between_subgroups
+            )
+        return transmission_exponent * delta_time * beta
+
+    def _sample_new_infected_people(
+        self,
+        effective_transmission_exponent,
+        subgroup_susceptible_ids,
+        subgroup_suscetibilities,
+    ):
+        """
+        Samples for new infections in the interaction of a susceptible subgroup with all the infector subgroups.
+
+        Parameters
+        ----------
+        effective_transmission_exponent
+            Part of the exponent of the transmission probability. The complete formula is
+            Ptrans = 1 - np.exp(- effective_transmission_exponent * susceptibility)
+        susceptible_ids
+            list of ids of susceptible people to check for new infections
+        suscetibilities
+            susceptibilities of the susceptible people
+        """
+        infected_ids = []
+        for susceptible_id, susceptibility in zip(
+            subgroup_susceptible_ids, subgroup_suscetibilities
+        ):
+            transmission_probability = 1.0 - np.exp(
+                -effective_transmission_exponent * susceptibility
+            )
+            if random() < transmission_probability:
+                infected_ids.append(susceptible_id)
         return infected_ids
+
+    def _log_infections_to_record(
+        self,
+        infected_ids: list,
+        interactive_group: InteractiveGroup,
+        group: "Group",
+        record: Record,
+    ):
+        """
+        Logs new infected people to record, and their infectors.
+        TODO: assign infection blame proportionally to transmission probability.
+        """
+        n_infected = len(infected_ids)
+        infector_ids = list(chain.from_iterable(interactive_group.infector_ids))
+        infector_ids = np.random.choice(
+            infector_ids,
+            n_infected,
+            # TODO: p=np.array(transmission_probabilities) / tprob_norm,
+        )
+        record.accumulate(
+            table_name="infections",
+            location_spec=group.spec,
+            location_id=group.id,
+            region_name=group.super_area.region.name,
+            infected_ids=infected_ids,
+            infector_ids=infector_ids,
+        )

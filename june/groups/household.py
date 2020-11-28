@@ -4,7 +4,8 @@ import numpy as np
 from random import random
 import h5py
 
-from june.groups.group import Group, Supergroup
+from june.groups import Group, Supergroup
+from june.groups.group.interactive import InteractiveGroup
 
 from enum import IntEnum
 from typing import List
@@ -30,6 +31,7 @@ class Household(Group):
         "quarantine_starting_date",
         "residences_to_visit",
         "ids_checked",
+        "being_visited",
     )
 
     class SubgroupType(IntEnum):
@@ -47,12 +49,10 @@ class Household(Group):
         self.area = area
         self.type = type
         self.quarantine_starting_date = None
-        self.relatives_in_care_homes = None
-        self.relatives_in_households = None
         self.max_size = max_size
         self.residents = ()
         self.residences_to_visit = {}
-        self.household_visit = False # this is True when people from other households have been added to the group
+        self.being_visited = False  # this is True when people from other households have been added to the group
 
     def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
         if activity == "leisure":
@@ -66,6 +66,7 @@ class Household(Group):
                 subgroup = self.SubgroupType.old_adults
             person.subgroups.leisure = self[subgroup]
             self[subgroup].append(person)
+            self.being_visited = True
         elif activity == "residence":
             self[subgroup_type].append(person)
             self.residents = tuple((*self.residents, person))
@@ -138,10 +139,17 @@ class Household(Group):
 
     @property
     def super_area(self):
-        if self.area is None:
-            return None
-        else:
+        try:
             return self.area.super_area
+        except AttributeError:
+            return None
+
+    def clear(self):
+        super().clear()
+        self.being_visited = False
+
+    def get_interactive_group(self, people_from_abroad=None):
+        return InteractiveHousehold(self, people_from_abroad=people_from_abroad)
 
 
 class Households(Supergroup):
@@ -151,3 +159,18 @@ class Households(Supergroup):
 
     def __init__(self, households: List[Household]):
         super().__init__(members=households)
+
+
+class InteractiveHousehold(InteractiveGroup):
+    def get_processed_beta(self, betas, beta_reductions):
+        """
+        In the case of households, we need to apply the beta reduction of household visits
+        if the household has a visit, otherwise we apply the beta reduction for a normal household.
+        """
+        beta = betas[self.spec]
+        if self.group.being_visited:
+            beta_reduction = beta_reductions.get("household_visits", 1.0)
+        else:
+            beta_reduction = beta_reductions.get(self.spec, 1.0)
+        regional_compliance = self.super_area.region.regional_compliance
+        return beta * (1 + regional_compliance * (beta_reduction - 1))

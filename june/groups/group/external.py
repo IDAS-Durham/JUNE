@@ -7,6 +7,9 @@ class ExternalGroup:
         self.id = id
         self.domain_id = domain_id
 
+    def clear(self):
+        pass
+
 
 class ExternalSubgroup:
     external = True
@@ -26,6 +29,9 @@ class ExternalSubgroup:
     @property
     def domain_id(self):
         return self.group.domain_id
+
+    def clear(self):
+        pass
     
     @property
     def spec(self):

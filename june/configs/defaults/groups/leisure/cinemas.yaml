@@ -1,9 +1,10 @@
-male_age_probabilities:
-  3-75: 0.05
-  75-80: 0.02
-female_age_probabilities:
-  3-75: 0.05
-  75-80: 0.02
+poisson_parameters:
+  male:
+    3-75: 0.05
+    75-80: 0.02
+  female:
+    3-75: 0.05
+    75-80: 0.02
 neighbours_to_consider: 5
 maximum_distance: 15
 weekend_boost: 1
