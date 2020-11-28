@@ -9,7 +9,16 @@ from pathlib import Path
 import june.infection.symptoms
 from june.interaction import Interaction
 from june import paths
-from june.geography import Geography, Areas, SuperAreas, Regions,Cities, City, Station, Stations
+from june.geography import (
+    Geography,
+    Areas,
+    SuperAreas,
+    Regions,
+    Cities,
+    City,
+    Station,
+    Stations,
+)
 from june.geography.station import CityStation, InterCityStation
 from june.groups.travel import (
     ModeOfTransport,
@@ -37,6 +46,7 @@ import logging
 
 # disable logging for testing
 logging.disable(logging.CRITICAL)
+
 
 @pytest.fixture(autouse=True, name="test_results", scope="session")
 def make_test_output():
@@ -169,21 +179,19 @@ def make_dummy_world():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     super_area = g.super_areas.members[0]
     area = g.areas.members[0]
-    company = Company(super_area=super_area, n_workers_max=100, sector="Q")
+    company = Company(super_area=super_area, n_workers_max=100, sector="S")
     school = School(
         coordinates=super_area.coordinates,
         n_pupils_max=100,
         age_min=4,
         age_max=10,
         sector="primary",
+        area=area,
     )
     household = Household()
     household.area = super_area.areas[0]
     hospital = Hospital(
-        n_beds=40,
-        n_icu_beds=5,
-        area=area,
-        coordinates=super_area.coordinates,
+        n_beds=40, n_icu_beds=5, area=area, coordinates=super_area.coordinates,
     )
     super_area.closest_hospitals = [hospital]
     worker = Person.from_attributes(age=40)
@@ -201,7 +209,9 @@ def make_dummy_world():
     student = Person.from_attributes(age=21)
     student.area = super_area.areas[0]
     household.add(student, subgroup_type=household.SubgroupType.adults)
-    university = University(coordinates=super_area.coordinates, n_students_max=100,)
+    university = University(
+        coordinates=super_area.coordinates, n_students_max=100, area=area
+    )
     university.add(student)
 
     commuter = Person.from_attributes(sex="m", age=30)
@@ -217,39 +227,37 @@ def make_dummy_world():
     world.universities = Universities([])
     world.companies = Companies([company])
     world.universities = Universities([university])
-    world.care_homes = CareHomes([CareHome()])
+    world.care_homes = CareHomes([CareHome(area=area)])
     world.people = Population([worker, pupil, student, commuter])
     world.areas = Areas([super_area.areas[0]])
     world.areas[0].people = world.people
     world.super_areas = SuperAreas([super_area])
     world.regions = Regions([super_area.region])
-    cinema = Cinema()
+    cinema = Cinema(area=area)
     cinema.coordinates = super_area.coordinates
     cinema.area = area
     world.cinemas = Cinemas([cinema])
-    pub = Pub()
+    pub = Pub(area=area)
     pub.coordinates = super_area.coordinates
     pub.area = area
     world.pubs = Pubs([pub])
-    grocery = Grocery()
+    grocery = Grocery(area=area)
     grocery.coordinates = super_area.coordinates
     grocery.area = area
     world.groceries = Groceries([grocery])
     city = City(name="test", coordinates=[1, 2])
     world.cities = Cities([city])
     city.internal_commuter_ids.add(commuter.id)
-    city.city_stations = [
-        CityStation(super_area=world.super_areas[0], city=city)
-    ]
+    city.city_stations = [CityStation(super_area=world.super_areas[0], city=city)]
     world.stations = city.city_stations
     station = city.city_stations[0]
     super_area.city = city
-    #world.super_areas[0].closest_inter_city_station_for_city[city.name] = station
+    # world.super_areas[0].closest_inter_city_station_for_city[city.name] = station
     city_transports = CityTransports([CityTransport(station=station)])
     world.city_transports = city_transports
     inter_city_transports = InterCityTransports([InterCityTransport(station=station)])
     world.inter_city_transports = inter_city_transports
-    station.city_transports = city_transports 
+    station.city_transports = city_transports
     station.inter_city_transports = inter_city_transports
     world.cemeteries = Cemeteries()
     return world
@@ -265,7 +273,7 @@ def make_policy_simulator(dummy_world, interaction, selector):
         infection_selector=selector,
         config_filename=config_name,
         record=None,
-        travel = travel,
+        travel=travel,
         policies=None,
         leisure=None,
     )
@@ -275,6 +283,7 @@ def make_policy_simulator(dummy_world, interaction, selector):
 @pytest.fixture(name="setup_policy_world")
 def setup_world(dummy_world, policy_simulator):
     world = dummy_world
+    world.regions[0].regional_compliance = 1
     worker = world.people[0]
     pupil = world.people[1]
     student = world.people[2]
@@ -294,9 +303,7 @@ def setup_world(dummy_world, policy_simulator):
 
 @pytest.fixture(name="full_world_geography", scope="session")
 def make_full_world_geography():
-    geography = Geography.from_file(
-        {"super_area": ["E02001731", "E02002566"]}
-    )
+    geography = Geography.from_file({"super_area": ["E02001731", "E02002566"]})
     return geography
 
 
@@ -310,10 +317,8 @@ def create_full_world(full_world_geography):
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
-    geography.universities = Universities.for_super_areas(geography.super_areas)
-    world = generate_world_from_geography(
-        geography=geography, include_households=True
-    )
+    geography.universities = Universities.for_geography(geography)
+    world = generate_world_from_geography(geography=geography, include_households=True)
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
     world.groceries = Groceries.for_geography(geography)
@@ -337,10 +342,8 @@ def create_domains_world():
     geography.schools = Schools.for_geography(geography)
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
-    geography.universities = Universities.for_super_areas(geography.super_areas)
-    world = generate_world_from_geography(
-        geography=geography, include_households=True
-    )
+    geography.universities = Universities.for_geography(geography)
+    world = generate_world_from_geography(geography=geography, include_households=True)
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
     world.groceries = Groceries.for_geography(geography)
@@ -353,4 +356,3 @@ def create_domains_world():
     travel = Travel()
     travel.initialise_commute(world)
     return world
-
