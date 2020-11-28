@@ -308,9 +308,7 @@ class Interaction:
                 subgroup_1_idx=susceptible_subgroup_global_index,
                 subgroup_2_idx=infector_subgroup_global_index,
             )
-            infector_ids += interactive_group.infector_ids[
-                infector_subgroup_index
-            ]
+            infector_ids += interactive_group.infector_ids[infector_subgroup_index]
             subgroup_transmission_exponent_list = [
                 infector_transmission_probability
                 * n_contacts_between_subgroups
@@ -369,6 +367,8 @@ class Interaction:
         infector_ids
             ids of the infectors
         """
+        if not n_infections:
+            return []
         infector_weights = np.array(infector_weights)
         return choice(
             infector_ids, size=n_infections, p=infector_weights / infector_weights.sum()
