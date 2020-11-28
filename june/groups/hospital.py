@@ -63,7 +63,7 @@ class AbstractHospital:
         - "icu_transferred" : this person has been transferred to icu (from ward)
         - "no_change" : no change respect to last time step.
         """
-        if person.medical_facility is None:
+        if person.medical_facility is None or person.medical_facility.spec != "hospital":
             if person.infection.tag.name == "hospitalised":
                 self.add_to_ward(person)
                 return "ward_admitted"

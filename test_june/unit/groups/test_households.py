@@ -25,3 +25,13 @@ def test__household_mates():
     assert person1 in person1.housemates
     assert person2 in person1.housemates
     assert person3 in person1.housemates
+
+def test__being_visited_flag():
+    house = Household()
+    person = Person.from_attributes()
+    assert not house.being_visited
+    house.add(person, activity="leisure")
+    assert house.being_visited
+    house.being_visited = False
+    house.add(person)
+    assert not house.being_visited
