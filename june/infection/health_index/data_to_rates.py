@@ -23,7 +23,7 @@ default_ch_admissions_file = hi_data / "chess_ch_hospital_admissions_by_age_sex.
 default_gp_hospital_deaths_file = hi_data / "cocin_gp_hospital_deaths_by_age_sex.csv"
 default_ch_hospital_deaths_file = hi_data / "chess_ch_hospital_deaths_by_age_sex.csv"
 default_icu_hosp_rate_file = hi_data / "icu_hosp_rate.csv"
-default_icu_survival_rate_file = hi_data / "icu_survival_rate.csv"
+default_deathsicu_deathshosp_rate_file = hi_data / "dicu_dhosp_rate.csv"
 default_asymptomatic_rate_file = hi_data / "asymptomatic_rates_by_age_sex.csv"
 default_mild_rate_file = hi_data / "mild_rates_by_age_sex.csv"
 
@@ -126,7 +126,7 @@ class Data2Rates:
         care_home_deaths_by_age_sex_df: pd.DataFrame = None,
         care_home_seroprevalence_by_age_df: pd.DataFrame = None,
         icu_hosp_rate_by_age_sex_df: pd.DataFrame = None,
-        icu_survival_rate_by_age_df: pd.DataFrame = None,
+        deathsicu_deathshosp_rate_by_age_df: pd.DataFrame = None,
         comorbidity_multipliers: Optional[dict] = None,
         comorbidity_prevalence_reference_population: Optional[dict] = None,
         asymptomatic_rates_by_age_sex_df: pd.DataFrame=None,
@@ -173,8 +173,8 @@ class Data2Rates:
         self.icu_hosp_rate_by_age_sex_df = self._process_df(
             icu_hosp_rate_by_age_sex_df, converters=False
         )
-        self.icu_survival_rate_by_age_df = self._process_df(
-            icu_survival_rate_by_age_df, converters=False
+        self.deathsicu_deathshosp_rate_by_age_df = self._process_df(
+            deathsicu_deathshosp_rate_by_age_df, converters=False
         )
         self.comorbidity_multipliers = comorbidity_multipliers
         self.comorbidity_prevalence_reference_population = (
@@ -198,7 +198,7 @@ class Data2Rates:
         hospital_gp_admissions_file: str = default_gp_admissions_file,
         hospital_ch_admissions_file: str = default_ch_admissions_file,
         icu_hosp_rate_file: str = default_icu_hosp_rate_file,
-        icu_survival_rate_file: str = default_icu_survival_rate_file,
+        deathsicu_deathshosp_rate_file: str = default_deathsicu_deathshosp_rate_file,
         care_home_deaths_file: str = default_care_home_deaths_file,
         asymptomatic_rates_file: str = default_asymptomatic_rate_file,
         mild_rates_file: str = default_mild_rate_file,
@@ -218,7 +218,7 @@ class Data2Rates:
         mild_rates_df = cls._read_csv(mild_rates_file)
         asymptomatic_rates_df = cls._read_csv(asymptomatic_rates_file)
         icu_hosp_rate_df = cls._read_csv(icu_hosp_rate_file)
-        icu_survival_rate_df = cls._read_csv(icu_survival_rate_file)
+        deathsicu_deathshosp_rate_df = cls._read_csv(deathsicu_deathshosp_rate_file)
 
         if care_home_deaths_file is None:
             care_home_deaths_df = None
@@ -265,7 +265,7 @@ class Data2Rates:
             hospital_gp_admissions_by_age_sex_df=hospital_gp_admissions_df,
             hospital_ch_admissions_by_age_sex_df=hospital_ch_admissions_df,
             icu_hosp_rate_by_age_sex_df=icu_hosp_rate_df,
-            icu_survival_rate_by_age_df=icu_survival_rate_df,
+            deathsicu_deathshosp_rate_by_age_df=deathsicu_deathshosp_rate_df,
             care_home_deaths_by_age_sex_df=care_home_deaths_df,
             care_home_seroprevalence_by_age_df=care_home_seroprevalence_by_age_df,
             asymptomatic_rates_by_age_sex_df=asymptomatic_rates_df,
@@ -407,8 +407,8 @@ class Data2Rates:
             weight_mapper=self.gp_deaths_mapper,
         )
 
-    def get_icu_survival_rate(self, age: int, sex: str):
-        return self.icu_survival_rate_by_age_df.loc[age, sex]
+    def get_deathsicu_deathshosp_rate(self, age: int, sex: str):
+        return self.deathsicu_deathshosp_rate_by_age_df.loc[age, sex]
 
     def get_gp_hospital_deaths(self, age: int, sex: str):
         return self._get_interpolated_value(
@@ -481,9 +481,9 @@ class Data2Rates:
 
     def get_n_icu_deaths(self, age: int, sex: str, is_care_home: bool = False) -> int:
 
-        return self.get_n_icu_admissions(
+        return self.get_n_hospital_deaths(
             age=age, sex=sex, is_care_home=is_care_home
-        ) * (1 - self.get_icu_survival_rate(age=age, sex=sex))
+        ) *self.get_deathsicu_deathshosp_rate(age=age, sex=sex)
 
     def get_hospital_death_rate(
         self, age: int, sex: str, is_care_home: bool = False
