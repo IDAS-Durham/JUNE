@@ -24,10 +24,9 @@ default_trajectories_config_path = (
 class InfectionSelector:
     def __init__(
         self,
-        transmission_config_path: str,
+        transmission_config_path: str = default_transmission_config_path,
         trajectory_maker=TrajectoryMakers.from_file(default_trajectories_config_path),
-        data_to_rates=Data2Rates.from_file(),
-        asymptomatic_ratio=0.3
+        health_index_generator: HealthIndexGenerator = None,
     ):
         """
         Selects the type of infection a person is given
@@ -41,8 +40,7 @@ class InfectionSelector:
         """
         self.transmission_config_path = transmission_config_path
         self.trajectory_maker = trajectory_maker
-        self.health_index_generator = HealthIndexGenerator(data_to_rates=data_to_rates,
-                asymptomatic_ratio=asymptomatic_ratio)
+        self.health_index_generator = health_index_generator
         self._load_transmission()
 
     @classmethod
@@ -50,8 +48,7 @@ class InfectionSelector:
         cls,
         transmission_config_path: str = default_transmission_config_path,
         trajectories_config_path: str = default_trajectories_config_path,
-        data_to_rates=Data2Rates.from_file(),
-        asymptomatic_ratio=0.3
+        data_to_rates=None,
     ) -> "InfectionSelector":
         """
         Generate infection selector from default config file
@@ -65,12 +62,14 @@ class InfectionSelector:
         health_index_generator:
             health index generator
         """
+        if not data_to_rates:
+            data_to_rates = Data2Rates.from_file()
+        health_index_generator = HealthIndexGenerator(data_to_rates=data_to_rates)
         trajectory_maker = TrajectoryMakers.from_file(trajectories_config_path)
         return InfectionSelector(
             transmission_config_path=transmission_config_path,
             trajectory_maker=trajectory_maker,
-            data_to_rates=data_to_rates,
-            asymptomatic_ratio=asymptomatic_ratio
+            health_index_generator=health_index_generator
         )
 
     def infect_person_at_time(self, person: "Person", time: float):

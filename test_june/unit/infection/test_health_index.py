@@ -4,51 +4,67 @@ from june.groups import CareHome
 from june import paths
 from june.groups import CareHome, Household
 from june.demography import Person
-from june.infection.health_index import Data2Rates 
-from june.infection.health_index.health_index import HealthIndexGenerator 
- 
+from june.infection.health_index import Data2Rates
+from june.infection.health_index.health_index import HealthIndexGenerator
 
-class TestHealthIndex():
-    def test__probabilities_positive_sum_to_one(self,):
-        data_to_rates = Data2Rates.from_file()
+
+@pytest.fixture(name="data_to_rates", scope="module")
+def make_rates():
+    return Data2Rates.from_file()
+
+
+class TestHealthIndex:
+    def test__probabilities_positive_sum_to_one(self, data_to_rates):
         health_index = HealthIndexGenerator(data_to_rates=data_to_rates)
 
-        for population in ('care_home', 'general_population'):
-            for sex in ('m', 'f'):
+        for population in ("care_home", "general_population"):
+            for sex in ("m", "f"):
                 for age in np.arange(99):
-                    probabilities = health_index.outcome_probabilities[population][sex][age]
+                    probabilities = health_index.outcome_probabilities[population][sex][
+                        age
+                    ]
                     assert all(probabilities > 0)
                     assert sum(probabilities) == 1
-    
-    def test__right_probabilities(self,):
-        data_to_rates = Data2Rates.from_file()
+
+    def test__right_probabilities(self, data_to_rates):
         health_index = HealthIndexGenerator(data_to_rates=data_to_rates)
 
-        for population in ('care_home', 'general_population'):
-            if population == 'care_home':
+        for population in ("care_home", "general_population"):
+            if population == "care_home":
                 is_care_home = True
             else:
                 is_care_home = False
-            for sex in ('m', 'f'):
+            for sex in ("m", "f"):
                 for age in np.arange(99):
-                    probabilities = health_index.outcome_probabilities[population][sex][age]
+                    probabilities = health_index.outcome_probabilities[population][sex][
+                        age
+                    ]
                     assert probabilities[0] == health_index.asymptomatic_ratio
-                    assert probabilities[2] == data_to_rates.get_hospital_infection_admission_rate(
-                            age=age,sex=sex, is_care_home=is_care_home
+                    assert probabilities[
+                        2
+                    ] == data_to_rates.get_hospital_infection_admission_rate(
+                        age=age, sex=sex, is_care_home=is_care_home
                     )
-                    assert probabilities[3] == data_to_rates.get_home_infection_fatality_rate(
-                            age=age,sex=sex, is_care_home=is_care_home
+                    assert probabilities[
+                        3
+                    ] == data_to_rates.get_home_infection_fatality_rate(
+                        age=age, sex=sex, is_care_home=is_care_home
                     )
-                    assert probabilities[4] == data_to_rates.get_hospital_infection_fatality_rate(
-                            age=age,sex=sex, is_care_home=is_care_home
+                    assert probabilities[
+                        4
+                    ] == data_to_rates.get_hospital_infection_fatality_rate(
+                        age=age, sex=sex, is_care_home=is_care_home
                     )
 
 
-class TestComorbidities():
-    def test__mean_multiplier_reference(self):
+class TestComorbidities:
+    def test__mean_multiplier_reference(self, data_to_rates):
         comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
         prevalence_reference_population = {
-            "feo": {"f": {"0-10": 0.2, "10-100": 0.4}, "m": {"0-10": 0.6, "10-100": 0.5},},
+            "feo": {
+                "f": {"0-10": 0.2, "10-100": 0.4},
+                "m": {"0-10": 0.6, "10-100": 0.5},
+            },
             "guapo": {
                 "f": {"0-10": 0.1, "10-100": 0.1},
                 "m": {"0-10": 0.05, "10-100": 0.2},
@@ -58,9 +74,10 @@ class TestComorbidities():
                 "m": {"0-10": 0.35, "10-100": 0.3},
             },
         }
-        data_to_rates = Data2Rates.from_file()
         data_to_rates.comorbidity_multipliers = comorbidity_multipliers
-        data_to_rates.comorbidity_prevalence_reference_population = prevalence_reference_population
+        data_to_rates.comorbidity_prevalence_reference_population = (
+            prevalence_reference_population
+        )
         health_index = HealthIndexGenerator(data_to_rates)
 
         dummy = Person.from_attributes(sex="f", age=40,)
@@ -74,12 +91,11 @@ class TestComorbidities():
             * comorbidity_multipliers["no_condition"]
         )
         assert (
-            health_index.get_multiplier_from_reference_prevalence(
-                dummy.age, dummy.sex
-            )
+            health_index.get_multiplier_from_reference_prevalence(dummy.age, dummy.sex)
             == mean_multiplier_uk
         )
-    '''
+
+    """
 
     def test__comorbidities_effect(self):
         comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
@@ -141,4 +157,4 @@ class TestComorbidities():
             guapo_probabilities[2:].sum(),
             comorbidity_multipliers['guapo']/mean_multiplier_uk * dummy_probabilities[2:].sum()
         )
-    '''
+    """

@@ -9,7 +9,16 @@ from pathlib import Path
 import june.infection.symptoms
 from june.interaction import Interaction
 from june import paths
-from june.geography import Geography, Areas, SuperAreas, Regions,Cities, City, Station, Stations
+from june.geography import (
+    Geography,
+    Areas,
+    SuperAreas,
+    Regions,
+    Cities,
+    City,
+    Station,
+    Stations,
+)
 from june.geography.station import CityStation, InterCityStation
 from june.groups.travel import (
     ModeOfTransport,
@@ -22,9 +31,8 @@ from june.groups import *
 from june.groups.leisure import *
 from june.groups.travel import Travel
 from june.demography import Person, Population
-from june.infection import Infection
+from june.infection import Infection, Symptoms, TrajectoryMakers
 from june.infection.infection_selector import InfectionSelector
-from june.infection import trajectory_maker as tmaker
 from june.infection import transmission as trans
 from june.simulator import Simulator
 from june.simulator_box import SimulatorBox
@@ -37,6 +45,7 @@ import logging
 
 # disable logging for testing
 logging.disable(logging.CRITICAL)
+
 
 @pytest.fixture(autouse=True, name="test_results", scope="session")
 def make_test_output():
@@ -74,7 +83,7 @@ def configs(pytestconfig):
 
 @pytest.fixture(name="trajectories", scope="session")
 def create_trajectories():
-    return tmaker.TrajectoryMakers.from_file()
+    return TrajectoryMakers.from_file()
 
 
 @pytest.fixture(name="symptoms", scope="session")
@@ -82,9 +91,14 @@ def create_symptoms(symptoms_trajectories):
     return symptoms_trajectories
 
 
+@pytest.fixture(name="health_index_generator", scope="session")
+def make_hi():
+    return lambda person: [0.4, 0.5, 0.7, 0.74, 0.85, 0.90, 0.95]
+
+
 @pytest.fixture(name="symptoms_trajectories", scope="session")
 def create_symptoms_trajectories():
-    return june.infection.symptoms.Symptoms(
+    return Symptoms(
         health_index=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
     )
 
@@ -105,10 +119,11 @@ def create_infection_constant(transmission, symptoms_constant):
 
 
 @pytest.fixture(name="interaction", scope="session")
-def create_interaction():
+def create_interaction(health_index_generator):
     interaction = Interaction.from_file(config_filename=interaction_config)
-    interaction.selector = InfectionSelector.from_file(
-        transmission_config_path=constant_config
+    interaction.selector = InfectionSelector(
+        transmission_config_path=constant_config,
+        health_index_generator=health_index_generator,
     )
     return interaction
 
@@ -140,8 +155,11 @@ def create_box_world():
 
 
 @pytest.fixture(name="selector", scope="session")
-def make_selector():
-    return InfectionSelector.from_file(transmission_config_path=constant_config)
+def make_selector(health_index_generator):
+    return InfectionSelector(
+        transmission_config_path=constant_config,
+        health_index_generator=health_index_generator,
+    )
 
 
 @pytest.fixture(name="simulator_box", scope="session")
@@ -180,10 +198,7 @@ def make_dummy_world():
     household = Household()
     household.area = super_area.areas[0]
     hospital = Hospital(
-        n_beds=40,
-        n_icu_beds=5,
-        area=area,
-        coordinates=super_area.coordinates,
+        n_beds=40, n_icu_beds=5, area=area, coordinates=super_area.coordinates,
     )
     super_area.closest_hospitals = [hospital]
     worker = Person.from_attributes(age=40)
@@ -238,18 +253,16 @@ def make_dummy_world():
     city = City(name="test", coordinates=[1, 2])
     world.cities = Cities([city])
     city.internal_commuter_ids.add(commuter.id)
-    city.city_stations = [
-        CityStation(super_area=world.super_areas[0], city=city)
-    ]
+    city.city_stations = [CityStation(super_area=world.super_areas[0], city=city)]
     world.stations = city.city_stations
     station = city.city_stations[0]
     super_area.city = city
-    #world.super_areas[0].closest_inter_city_station_for_city[city.name] = station
+    # world.super_areas[0].closest_inter_city_station_for_city[city.name] = station
     city_transports = CityTransports([CityTransport(station=station)])
     world.city_transports = city_transports
     inter_city_transports = InterCityTransports([InterCityTransport(station=station)])
     world.inter_city_transports = inter_city_transports
-    station.city_transports = city_transports 
+    station.city_transports = city_transports
     station.inter_city_transports = inter_city_transports
     world.cemeteries = Cemeteries()
     return world
@@ -265,7 +278,7 @@ def make_policy_simulator(dummy_world, interaction, selector):
         infection_selector=selector,
         config_filename=config_name,
         record=None,
-        travel = travel,
+        travel=travel,
         policies=None,
         leisure=None,
     )
@@ -294,9 +307,7 @@ def setup_world(dummy_world, policy_simulator):
 
 @pytest.fixture(name="full_world_geography", scope="session")
 def make_full_world_geography():
-    geography = Geography.from_file(
-        {"super_area": ["E02001731", "E02002566"]}
-    )
+    geography = Geography.from_file({"super_area": ["E02001731", "E02002566"]})
     return geography
 
 
@@ -311,9 +322,7 @@ def create_full_world(full_world_geography):
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
     geography.universities = Universities.for_geography(geography)
-    world = generate_world_from_geography(
-        geography=geography, include_households=True
-    )
+    world = generate_world_from_geography(geography=geography, include_households=True)
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
     world.groceries = Groceries.for_geography(geography)
@@ -338,9 +347,7 @@ def create_domains_world():
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
     geography.universities = Universities.for_geography(geography)
-    world = generate_world_from_geography(
-        geography=geography, include_households=True
-    )
+    world = generate_world_from_geography(geography=geography, include_households=True)
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
     world.groceries = Groceries.for_geography(geography)
@@ -353,4 +360,3 @@ def create_domains_world():
     travel = Travel()
     travel.initialise_commute(world)
     return world
-
