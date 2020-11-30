@@ -73,10 +73,11 @@ class HealthIndexGenerator:
                         outcome_probabilities[population][sex][age][
                             0
                         ] = self.asymptomatic_ratio
+                        outcome_probabilities[population][sex][age][0] = self.asymptomatic_ratio
                         outcome_probabilities[population][sex][age][1] = mild_cases
-                        outcome_probabilities[population][sex][age][2] = hosp_admissions
-                        outcome_probabilities[population][sex][age][3] = home_ifr
-                        outcome_probabilities[population][sex][age][4] = hosp_ifr
+                        outcome_probabilities[population][sex][age][3] = hosp_admissions
+                        outcome_probabilities[population][sex][age][4] = home_ifr
+                        outcome_probabilities[population][sex][age][5] = hosp_ifr
         return outcome_probabilities
 
     def get_multiplier_from_reference_prevalence(self, age, sex):
