@@ -25,8 +25,8 @@ class InfectionSelector:
     def __init__(
         self,
         transmission_config_path: str,
+        data_to_rates,
         trajectory_maker=TrajectoryMakers.from_file(default_trajectories_config_path),
-        data_to_rates=Data2Rates.from_file(),
         asymptomatic_ratio=0.3
     ):
         """
@@ -36,13 +36,10 @@ class InfectionSelector:
         ----------
         transmission_config_path:
             path to transmission config file
-        asymptomatic_ratio:
-            proportion of infected people that are asymptomatic
         """
         self.transmission_config_path = transmission_config_path
         self.trajectory_maker = trajectory_maker
-        self.health_index_generator = HealthIndexGenerator(data_to_rates=data_to_rates,
-                asymptomatic_ratio=asymptomatic_ratio)
+        self.health_index_generator = HealthIndexGenerator(data_to_rates=data_to_rates)
         self._load_transmission()
 
     @classmethod
@@ -51,7 +48,6 @@ class InfectionSelector:
         transmission_config_path: str = default_transmission_config_path,
         trajectories_config_path: str = default_trajectories_config_path,
         data_to_rates=Data2Rates.from_file(),
-        asymptomatic_ratio=0.3
     ) -> "InfectionSelector":
         """
         Generate infection selector from default config file
@@ -70,7 +66,6 @@ class InfectionSelector:
             transmission_config_path=transmission_config_path,
             trajectory_maker=trajectory_maker,
             data_to_rates=data_to_rates,
-            asymptomatic_ratio=asymptomatic_ratio
         )
 
     def infect_person_at_time(self, person: "Person", time: float):

@@ -252,9 +252,6 @@ class Record:
     ):
         if infection_selector is not None:
             infection_dict = {}
-            infection_dict[
-                "asymptomatic_ratio"
-            ] = infection_selector.health_index_generator.asymptomatic_ratio
             infection_dict["transmission_type"] = infection_selector.transmission_type
             self.append_dict_to_configs(config_dict={"infection": infection_dict})
 
