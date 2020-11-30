@@ -5,7 +5,7 @@ import yaml
 
 from june import paths
 from june.infection.health_index.health_index import HealthIndexGenerator
-from june.infection.health_index import Data2Rates 
+from june.infection.health_index import Data2Rates
 from june.infection import Infection
 from june.infection.symptoms import Symptoms, SymptomTag
 from june.infection.trajectory_maker import TrajectoryMakers
@@ -67,7 +67,7 @@ class InfectionSelector:
         return InfectionSelector(
             transmission_config_path=transmission_config_path,
             trajectory_maker=trajectory_maker,
-            health_index_generator=health_index_generator
+            health_index_generator=health_index_generator,
         )
 
     def infect_person_at_time(self, person: "Person", time: float):
@@ -183,9 +183,7 @@ class InfectionSelector:
         self.probability = CompletionTime.from_dict(transmission_config["probability"])
 
     def _select_transmission(
-        self,
-        time_to_symptoms_onset: float,
-        max_symptoms_tag: "SymptomsTag",
+        self, time_to_symptoms_onset: float, max_symptoms_tag: "SymptomsTag",
     ) -> "Transmission":
         """
         Selects the transmission type specified by the user in the init, 
@@ -245,4 +243,3 @@ class InfectionSelector:
         """
         health_index = self.health_index_generator(person)
         return Symptoms(health_index=health_index)
-
