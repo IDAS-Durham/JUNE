@@ -61,23 +61,32 @@ class HealthIndexGenerator:
                     hosp_admissions = self.data_to_rates.get_hospital_infection_admission_rate(
                         age=age_bin, sex=_sex, is_care_home=is_care_home
                     )
+                    icu_admissions = self.data_to_rates.get_icu_infection_admission_rate(
+                        age=age, sex=_sex, is_care_home=is_care_home
+                    )
+
                     home_ifr = self.data_to_rates.get_home_infection_fatality_rate(
                         age=age_bin, sex=_sex, is_care_home=is_care_home
                     )
                     hosp_ifr = self.data_to_rates.get_hospital_infection_fatality_rate(
                         age=age_bin, sex=_sex, is_care_home=is_care_home
                     )
-                    mild_cases = 1 - hosp_admissions - home_ifr 
+                    icu_ifr = self.data_to_rates.get_icu_infection_fatality_rate(
+                        age=age_bin, sex=_sex, is_care_home=is_care_home
+                    )
+
                     # fill each age in bin
                     for age in range(age_bin.left, age_bin.right+1):
                         outcome_probabilities[population][sex][age][
                             0
                         ] = self.asymptomatic_ratio
-                        outcome_probabilities[population][sex][age][0] = self.asymptomatic_ratio
-                        outcome_probabilities[population][sex][age][1] = mild_cases
-                        outcome_probabilities[population][sex][age][3] = hosp_admissions
-                        outcome_probabilities[population][sex][age][4] = home_ifr
-                        outcome_probabilities[population][sex][age][5] = hosp_ifr
+                        #outcome_probabilities[population][sex][age][0] = self.asymptomatic_ratio
+                        #outcome_probabilities[population][sex][age][3] = hosp_admissions
+                        #outcome_probabilities[population][sex][age][4] = home_ifr
+                        #outcome_probabilities[population][sex][age][5] = hosp_ifr
+                        #outcome_probabilities[population][sex][age][2] = hosp_admissions
+                        #outcome_probabilities[population][sex][age][3] = home_ifr
+                        #outcome_probabilities[population][sex][age][4] = hosp_ifr
         return outcome_probabilities
 
     def get_multiplier_from_reference_prevalence(self, age, sex):
