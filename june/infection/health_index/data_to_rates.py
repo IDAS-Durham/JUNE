@@ -155,12 +155,16 @@ class Data2Rates:
         self.hospital_ch_deaths_by_age_sex_df = self._process_df(
             hospital_ch_deaths_by_age_sex_df, converters=True
         )
+        self.hospital_ch_deaths_by_age_sex_df.loc[:50, "male"] = 0
+        self.hospital_ch_deaths_by_age_sex_df.loc[:50, "female"] = 0
         self.hospital_gp_admissions_by_age_sex_df = self._process_df(
             hospital_gp_admissions_by_age_sex_df, converters=True
         )
         self.hospital_ch_admissions_by_age_sex_df = self._process_df(
             hospital_ch_admissions_by_age_sex_df, converters=True
         )
+        self.hospital_ch_admissions_by_age_sex_df.loc[:20, "male"] = 0
+        self.hospital_ch_admissions_by_age_sex_df.loc[:20, "female"] = 0
         self.comorbidity_multipliers = comorbidity_multipliers
         self.comorbidity_prevalence_reference_population = (
             comorbidity_prevalence_reference_population
