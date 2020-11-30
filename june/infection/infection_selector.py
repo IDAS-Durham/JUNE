@@ -35,8 +35,6 @@ class InfectionSelector:
         ----------
         transmission_config_path:
             path to transmission config file
-        asymptomatic_ratio:
-            proportion of infected people that are asymptomatic
         """
         self.transmission_config_path = transmission_config_path
         self.trajectory_maker = trajectory_maker
