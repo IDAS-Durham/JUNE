@@ -53,20 +53,30 @@ class HealthIndexGenerator:
                     hosp_admissions = self.data_to_rates.get_hospital_infection_admission_rate(
                         age=age, sex=_sex, is_care_home=is_care_home
                     )
+                    icu_admissions = self.data_to_rates.get_icu_infection_admission_rate(
+                        age=age, sex=_sex, is_care_home=is_care_home
+                    )
+
                     home_ifr = self.data_to_rates.get_home_infection_fatality_rate(
                         age=age, sex=_sex, is_care_home=is_care_home
                     )
                     hosp_ifr = self.data_to_rates.get_hospital_infection_fatality_rate(
                         age=age, sex=_sex, is_care_home=is_care_home
                     )
-                    mild_cases = 1 - hosp_admissions - home_ifr - hosp_ifr
+                    icu_ifr = self.data_to_rates.get_icu_infection_fatality_rate(
+                        age=age, sex=_sex, is_care_home=is_care_home
+                    )
+
+                    mild_cases = 1 - hosp_admissions - home_ifr #I deleated hosp_ifr from this line as i think it is inclouded in hosp_admissions
                     outcome_probabilities[population][sex][age][
                         0
                     ] = self.asymptomatic_ratio
                     outcome_probabilities[population][sex][age][1] = mild_cases
                     outcome_probabilities[population][sex][age][2] = hosp_admissions
+                    outcome_probabilities[population][sex][age][3] = icu_admissions
                     outcome_probabilities[population][sex][age][3] = home_ifr
                     outcome_probabilities[population][sex][age][4] = hosp_ifr
+                    outcome_probabilities[population][sex][age][5] = icu_ifr
         return outcome_probabilities
 
     def get_multiplier_from_reference_prevalence(self, age, sex):
