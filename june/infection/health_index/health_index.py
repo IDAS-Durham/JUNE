@@ -22,9 +22,12 @@ index_to_maximum_symptoms_tag = {
 
 
 class HealthIndexGenerator:
-    def __init__(self, data_to_rates: Data2Rates, max_age=99, age_bins=None):
+    def __init__(
+        self, data_to_rates: Data2Rates, max_age=99, age_bins=None, care_home_min_age=0
+    ):
         self.data_to_rates = data_to_rates
         self.age_bins = self._init_age_bins(age_bins, max_age)
+        self.care_home_min_age = care_home_min_age
         self.cumulative_probabilities = self._get_cumulative_probabilities(
             max_age=max_age
         )
@@ -51,7 +54,11 @@ class HealthIndexGenerator:
         Computes the probability of having all 8 posible outcomes for all ages between 0 and 100,
         for male and female 
         """
-        if person.residence is not None and person.residence.group.spec == "care_home":
+        if (
+            person.residence is not None
+            and person.residence.group.spec == "care_home"
+            and person.age >= self.care_home_min_age
+        ):
             population = "care_home"
         else:
             population = "general_population"
@@ -100,8 +107,6 @@ class HealthIndexGenerator:
             cp[population][sex][age][6] = hosp_ifr - icu_ifr  # dies in the ward
             # cp[population][sex][age][7] = icu_ifr  # dies in the icu
             total = np.sum(cp[population][sex][age]) + icu_ifr
-            print(f"Age {age}, sex {sex} population {population}")
-            print(cp[population][sex][age])
             cp[population][sex][age] = np.cumsum(cp[population][sex][age]) / total
 
     def _get_cumulative_probabilities(self, max_age=99):
