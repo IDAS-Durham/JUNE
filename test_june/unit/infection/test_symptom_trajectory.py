@@ -179,8 +179,9 @@ class TestSymptoms:
         )
         assert symptoms_trajectories.time_of_symptoms_onset is None
 
-    def test__symptoms_progression(self):
-        selector = InfectionSelector.from_file(
+    def test__symptoms_progression(self, health_index_generator):
+        selector = InfectionSelector(
+            health_index_generator=health_index_generator, 
             transmission_config_path=paths.configs_path
             / "defaults/transmission/TransmissionConstant.yaml"
         )

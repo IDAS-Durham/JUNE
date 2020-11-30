@@ -101,10 +101,10 @@ class HealthIndexGenerator:
                 hosp_admission_rate - hosp_ifr
             )  # recovers in the ward
             cp[population][sex][age][4] = (
-                icu_admission_rate - icu_ifr
+                max(icu_admission_rate - icu_ifr, 0)
             )  # recovers in the icu
-            cp[population][sex][age][5] = home_ifr  # dies at home
-            cp[population][sex][age][6] = hosp_ifr - icu_ifr  # dies in the ward
+            cp[population][sex][age][5] = max(home_ifr,0)  # dies at home
+            cp[population][sex][age][6] = max(hosp_ifr - icu_ifr, 0) # dies in the ward
             # cp[population][sex][age][7] = icu_ifr  # dies in the icu
             total = np.sum(cp[population][sex][age]) + icu_ifr
             cp[population][sex][age] = np.cumsum(cp[population][sex][age]) / total

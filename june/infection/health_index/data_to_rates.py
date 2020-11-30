@@ -129,8 +129,8 @@ class Data2Rates:
         deathsicu_deathshosp_rate_by_age_df: pd.DataFrame = None,
         comorbidity_multipliers: Optional[dict] = None,
         comorbidity_prevalence_reference_population: Optional[dict] = None,
-        asymptomatic_rates_by_age_sex_df: pd.DataFrame=None,
-        mild_rates_by_age_sex_df: pd.DataFrame=None,
+        asymptomatic_rates_by_age_sex_df: pd.DataFrame = None,
+        mild_rates_by_age_sex_df: pd.DataFrame = None,
     ):
         # seroprev
         self.seroprevalence_df = self._process_df(seroprevalence_df, converters=True)
@@ -180,8 +180,12 @@ class Data2Rates:
         self.comorbidity_prevalence_reference_population = (
             comorbidity_prevalence_reference_population
         )
-        self.mild_rates_by_age_sex_df = self._process_df(mild_rates_by_age_sex_df, converters=True)
-        self.asymptomatic_rates_by_age_sex_df = self._process_df(asymptomatic_rates_by_age_sex_df, converters=True)
+        self.mild_rates_by_age_sex_df = self._process_df(
+            mild_rates_by_age_sex_df, converters=True
+        )
+        self.asymptomatic_rates_by_age_sex_df = self._process_df(
+            asymptomatic_rates_by_age_sex_df, converters=True
+        )
         self._init_mappers()
 
     @classmethod
@@ -483,7 +487,7 @@ class Data2Rates:
 
         return self.get_n_hospital_deaths(
             age=age, sex=sex, is_care_home=is_care_home
-        ) *self.get_deathsicu_deathshosp_rate(age=age, sex=sex)
+        ) * self.get_deathsicu_deathshosp_rate(age=age, sex=sex)
 
     def get_hospital_death_rate(
         self, age: int, sex: str, is_care_home: bool = False
@@ -619,15 +623,17 @@ class Data2Rates:
             function=self.get_n_home_deaths, age=age, sex=sex, is_care_home=is_care_home
         )
 
-    def get_mild_rate(self, age: Union[int, pd.Interval], sex:str):
+    def get_mild_rate(self, age: Union[int, pd.Interval], sex: str):
         if isinstance(age, pd.Interval):
-            return self.mild_rates_by_age_sex_df.loc[age.left:age.right, sex].mean()
+            return self.mild_rates_by_age_sex_df.loc[age.left : age.right, sex].mean()
         else:
             return self.mild_rates_by_age_sex_df.loc[age, sex]
 
-    def get_asymptomatic_rate(self, age: Union[int, pd.Interval], sex:str):
+    def get_asymptomatic_rate(self, age: Union[int, pd.Interval], sex: str):
         if isinstance(age, pd.Interval):
-            return self.asymptomatic_rates_by_age_sex_df.loc[age.left:age.right, sex].mean()
+            return self.asymptomatic_rates_by_age_sex_df.loc[
+                age.left : age.right, sex
+            ].mean()
         else:
             return self.mild_rates_by_age_sex_df.loc[age, sex]
 

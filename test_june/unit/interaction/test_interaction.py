@@ -17,7 +17,9 @@ import os
 import pathlib
 
 test_config = paths.configs_path / "tests/interaction.yaml"
-default_sector_beta_filename = paths.configs_path / "defaults/interaction/sector_beta.yaml"
+default_sector_beta_filename = (
+    paths.configs_path / "defaults/interaction/sector_beta.yaml"
+)
 
 
 def test__contact_matrices_from_default():
@@ -92,17 +94,18 @@ def test__school_contact_matrices():
     )
     assert n_contacts_student_teacher == 0.81 * 3
 
+
 def test__school_contact_matrices_different_classroom():
     interaction_instance = Interaction.from_file(config_filename=test_config)
     xi = 0.3
     age_min = 3
     age_max = 7
-    school_years = (3,4,4,5)
+    school_years = (3, 4, 4, 5)
     contact_matrix = interaction_instance.contact_matrices["school"]
     n_contacts_same_year = interaction._get_contacts_in_school(
         contact_matrix, school_years, 2, 3
     )
-    assert n_contacts_same_year == 0.
+    assert n_contacts_same_year == 0.0
 
 
 def days_to_infection(interaction, susceptible_person, group, people, n_students):
@@ -153,10 +156,11 @@ def create_school(n_students, n_teachers):
 @pytest.mark.parametrize(
     "n_teachers,mode", [[2, "average"], [4, "average"], [6, "average"],],
 )
-def test__average_time_to_infect(n_teachers, mode):
-    selector_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+def test__average_time_to_infect(n_teachers, mode, selector):
+    selector_config = (
+        paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+    )
     transmission_probability = 0.1
-    selector = InfectionSelector.from_file(transmission_config_path=selector_config)
     n_students = 1
     contact_matrices = {
         "contacts": [[n_teachers - 1, 1], [1, 0]],
@@ -195,8 +199,7 @@ def test__infection_is_isolated(selector):
     infection_seed = InfectionSeed(world, selector)
     n_cases = 5
     infection_seed.unleash_virus(
-        world.people,
-        n_cases=n_cases
+        world.people, n_cases=n_cases
     )  # play around with the initial number of cases
     policies = Policies([])
     simulator = Simulator.from_file(
@@ -207,7 +210,7 @@ def test__infection_is_isolated(selector):
         / "interaction_test_config.yaml",
         leisure=None,
         policies=policies,
-        #save_path=None,
+        # save_path=None,
     )
     infected_people = [person for person in world.people if person.infected]
     assert len(infected_people) == 5
@@ -228,27 +231,31 @@ def test__infection_is_isolated(selector):
         elif not (person.residence.group in infected_households):
             assert not person.infected and person.susceptible
 
-def test__sector_beta(dummy_world):
+
+def test__sector_beta(dummy_world, selector):
     world = dummy_world
     company = world.companies[0]
     person1 = Person.from_attributes()
     person1.susceptibility = 1
     company.add(person1)
 
-    selector = InfectionSelector.from_file()
     selector.infect_person_at_time(person1, 1)
     person1.infection.update_health_status(5, 5)
     interactive_group = InteractiveGroup(company)
 
     interaction = Interaction.from_file(
         config_filename=test_config,
-        sector_beta = True,
+        sector_beta=True,
         sector_beta_filename=default_sector_beta_filename,
     )
-    
+
     if interactive_group.spec == "company" and interaction.sector_betas is not None:
-        beta = interaction.get_beta_for_group(group=interactive_group)*float(interaction.sector_betas[interactive_group.sector])
-    else:            
+        beta = interaction.get_beta_for_group(group=interactive_group) * float(
+            interaction.sector_betas[interactive_group.sector]
+        )
+    else:
         beta = interaction.get_beta_for_group(group=interactive_group)
 
-    assert beta == interaction.beta[interactive_group.spec]*float(interaction.sector_betas[company.sector])
+    assert beta == interaction.beta[interactive_group.spec] * float(
+        interaction.sector_betas[company.sector]
+    )
