@@ -18,7 +18,7 @@ def save_hospitals_to_hdf5(
 
     Parameters
     ----------
-    companies 
+    companies
         population object
     file_path
         path of the saved hdf5 file
@@ -129,34 +129,14 @@ def load_hospitals_from_hdf5(
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_hospitals)
             length = idx2 - idx1
-            ids = np.empty(length, dtype=int)
-            hospitals["id"].read_direct(ids, np.s_[idx1:idx2], np.s_[0:length])
-            n_beds_list = np.empty(length, dtype=int)
-            hospitals["n_beds"].read_direct(
-                n_beds_list, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            n_icu_beds_list = np.empty(length, dtype=int)
-            hospitals["n_icu_beds"].read_direct(
-                n_icu_beds_list, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            trust_codes = np.empty(length, dtype="S10")
-            hospitals["trust_code"].read_direct(
-                trust_codes, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            coordinates = np.empty((length, 2), dtype=float)
-            hospitals["coordinates"].read_direct(
-                coordinates, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            areas = np.empty(length, dtype=int)
-            hospitals["area"].read_direct(areas, np.s_[idx1:idx2], np.s_[0:length])
-            super_areas = np.empty(length, dtype=int)
-            hospitals["super_area"].read_direct(
-                super_areas, np.s_[idx1:idx2], np.s_[0:length]
-            )
-            region_name = np.empty(length, dtype="S20")
-            hospitals["region_name"].read_direct(
-                region_name, np.s_[idx1:idx2], np.s_[0:length]
-            )
+            ids = read_dataset(hospitals["id"], idx1, idx2)
+            n_beds_list = read_dataset(hospitals["n_beds"], idx1, idx2)
+            n_icu_beds_list = read_dataset(hospitals["n_icu_beds"], idx1, idx2)
+            trust_codes = read_dataset(hospitals["trust_code"], idx1, idx2)
+            coordinates = read_dataset(hospitals["coordinates"], idx1, idx2)
+            areas = read_dataset(hospitals["area"], idx1, idx2)
+            super_areas = read_dataset(hospitals["super_area"], idx1, idx2)
+            region_name = read_dataset(hospitals["region_name"], idx1, idx2)
             for k in range(idx2 - idx1):
                 super_area = super_areas[k]
                 if super_area == nan_integer:
