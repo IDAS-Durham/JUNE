@@ -43,7 +43,6 @@ def _populate_areas(
         area.populate(
             demography,
             ethnicity=ethnicity,
-            #socioecon_index=socioecon_index,
             comorbidity=comorbidity,
         )
         people.extend(area.people)
@@ -195,7 +194,6 @@ def generate_world_from_geography(
             geography.areas,
             demography,
             ethnicity=ethnicity,
-            #socioecon_index=socioecon_index,
             comorbidity=comorbidity,
         )
         world.boxes = Boxes([Box()])

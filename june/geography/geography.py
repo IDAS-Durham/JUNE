@@ -78,12 +78,11 @@ class Area:
         person.area = self
 
     def populate(
-        self, demography, ethnicity=True, comorbidity=True, #socioecon_index=True,
+        self, demography, ethnicity=True, comorbidity=True,
     ):
         for person in demography.populate(
             self.name,
             ethnicity=ethnicity,
-            #socioecon_index=socioecon_index,
             comorbidity=comorbidity,
         ):
             self.add(person)
@@ -607,7 +606,6 @@ class Geography:
                 index=areas_coord.index, 
                 name="socioeconomic_centile",
             )
-        #print(area_socioeconomic_index)
         areas, super_areas, regions = cls.create_geographical_units(
             geo_hierarchy,
             areas_coord,

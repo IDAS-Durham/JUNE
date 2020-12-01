@@ -195,9 +195,6 @@ def test__static_people(dummy_world):
     assert df.loc[0, "age"] == 0
     assert df.loc[1, "age"] == 1
     assert df.loc[2, "age"] == 2
-    #assert df.loc[0, "socioeconomic_index"] == 0
-    #assert df.loc[1, "socioeconomic_index"] == 1
-    #assert df.loc[2, "socioeconomic_index"] == 2
     assert df.loc[0, "primary_activity_type"] == "hospital"
     assert df.loc[0, "primary_activity_id"] == dummy_world.hospitals[0].id
     assert df.loc[1, "primary_activity_type"] == "None"

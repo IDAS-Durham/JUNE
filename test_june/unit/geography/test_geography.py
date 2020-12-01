@@ -45,8 +45,7 @@ def test__create_geographical_hierarchy():
         index=area_coordinates_df.index,
         data= [0.01, 0.02, 0.75, 0.90]
     )
-    print(area_socioeconomic_indices_df)
-   # area_socioeconomic_indices_df.set_index("area", inplace=True)
+    # area_socioeconomic_indices_df.set_index("area", inplace=True)
     areas, super_areas, regions = g.Geography.create_geographical_units(
         hierarchy=hierarchy_df,
         area_coordinates=area_coordinates_df,
@@ -66,9 +65,6 @@ def test__create_geographical_hierarchy():
 
     assert super_areas[0].areas == [areas[0], areas[1], areas[2]]
     assert super_areas[1].areas == [areas[3]]
-
-    for area in areas:
-        print(area.socioeconomic_index)
 
     assert areas[0].socioeconomic_index == 0.01
     assert areas[1].socioeconomic_index == 0.02
@@ -109,9 +105,7 @@ def test__geography_no_socioeconomic_index():
         filter_key={"area": ["E00003598","E00120481"]},
         area_socioeconomic_index_filename=None,
     )
-
     for area in geog_no_sei.areas:
-        print(area.socioeconomic_index)
         assert area.socioeconomic_index is None
 
 

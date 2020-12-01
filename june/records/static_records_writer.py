@@ -61,7 +61,6 @@ class PeopleRecord(StaticRecord):
             int_names=[
                 "id",
                 "age",
-                #"socioeconomic_index",
                 "primary_activity_id",
                 "residence_id",
                 "area_id",
@@ -75,7 +74,6 @@ class PeopleRecord(StaticRecord):
         (
             ids,
             age,
-            #socioeconomic_index,
             primary_activity_type,
             primary_activity_id,
             residence_type,
@@ -87,9 +85,6 @@ class PeopleRecord(StaticRecord):
         for person in world.people:
             ids.append(person.id)
             age.append(person.age)
-            #socioeconomic_index.append(
-            #    person.socioecon_index if person.socioecon_index is not None else 0
-            #)
             primary_activity_type.append(
                 person.primary_activity.group.spec
                 if person.primary_activity is not None
@@ -112,7 +107,6 @@ class PeopleRecord(StaticRecord):
         int_data = [
             ids,
             age,
-            #socioeconomic_index,
             primary_activity_id,
             residence_id,
             area_id,
