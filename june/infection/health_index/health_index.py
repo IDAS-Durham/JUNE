@@ -23,7 +23,7 @@ index_to_maximum_symptoms_tag = {
 
 class HealthIndexGenerator:
     def __init__(
-        self, data_to_rates: Data2Rates, max_age=99, age_bins=None, care_home_min_age=0
+        self, data_to_rates: Data2Rates, max_age=99, age_bins=None, care_home_min_age=50
     ):
         self.data_to_rates = data_to_rates
         self.age_bins = self._init_age_bins(age_bins, max_age)
@@ -100,11 +100,11 @@ class HealthIndexGenerator:
             cp[population][sex][age][3] = (
                 hosp_admission_rate - hosp_ifr
             )  # recovers in the ward
-            cp[population][sex][age][4] = (
-                max(icu_admission_rate - icu_ifr, 0)
+            cp[population][sex][age][4] = max(
+                icu_admission_rate - icu_ifr, 0
             )  # recovers in the icu
-            cp[population][sex][age][5] = max(home_ifr,0)  # dies at home
-            cp[population][sex][age][6] = max(hosp_ifr - icu_ifr, 0) # dies in the ward
+            cp[population][sex][age][5] = max(home_ifr, 0)  # dies at home
+            cp[population][sex][age][6] = max(hosp_ifr - icu_ifr, 0)  # dies in the ward
             # cp[population][sex][age][7] = icu_ifr  # dies in the icu
             total = np.sum(cp[population][sex][age]) + icu_ifr
             cp[population][sex][age] = np.cumsum(cp[population][sex][age]) / total
