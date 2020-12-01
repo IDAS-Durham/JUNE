@@ -1,11 +1,12 @@
-male_age_probabilities:
-  0-65 : 0.6
-  65-80 : 0.4
-  80-100: 0.0
-female_age_probabilities:
-  0-65 : 0.6
-  65-80 : 0.4
-  80-100: 0.0
+poisson_parameters:
+  male:
+    0-65 : 0.6
+    65-80 : 0.4
+    80-100: 0.0
+  female:
+    0-65 : 0.6
+    65-80 : 0.4
+    80-100: 0.0
 weekend_boost: 0.5
 drags_household_probability: 1.0
 # source
