@@ -197,7 +197,11 @@ class Record:
                 ]
                 if sum(data) > 0:
                     summary_writer.writerow(
-                        [timestamp.strftime("%Y-%m-%d"), region,] + data
+                        [
+                            timestamp.strftime("%Y-%m-%d"),
+                            region,
+                        ]
+                        + data
                     )
 
     def combine_outputs(self, remove_left_overs=True):
@@ -217,7 +221,8 @@ class Record:
             )
 
     def parameters_interaction(
-        self, interaction: "Interaction" = None,
+        self,
+        interaction: "Interaction" = None,
     ):
         if interaction is not None:
             interaction_dict = {}
@@ -232,7 +237,8 @@ class Record:
             self.append_dict_to_configs(config_dict={"interaction": interaction_dict})
 
     def parameters_seed(
-        self, infection_seed: "InfectionSeed" = None,
+        self,
+        infection_seed: "InfectionSeed" = None,
     ):
         if infection_seed is not None:
             infection_seed_dict = {}
@@ -248,7 +254,8 @@ class Record:
             )
 
     def parameters_infection(
-        self, infection_selector: "InfectionSelector" = None,
+        self,
+        infection_selector: "InfectionSelector" = None,
     ):
         if infection_selector is not None:
             infection_dict = {}
@@ -256,7 +263,8 @@ class Record:
             self.append_dict_to_configs(config_dict={"infection": infection_dict})
 
     def parameters_policies(
-        self, activity_manager: "ActivityManager" = None,
+        self,
+        activity_manager: "ActivityManager" = None,
     ):
         if activity_manager is not None:
             policy_dicts = []
@@ -375,7 +383,9 @@ def combine_hdf5s(
                     if i == 0:
                         description = getattr(record.root, dataset.name).description
                         merged_record.create_table(
-                            merged_record.root, dataset.name, description=description,
+                            merged_record.root,
+                            dataset.name,
+                            description=description,
                         )
                     if len(arr_data) > 0:
                         table = getattr(merged_record.root, dataset.name)
