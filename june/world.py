@@ -35,7 +35,7 @@ possible_groups = [
 
 
 def _populate_areas(
-    areas: Areas, demography, ethnicity=True, socioecon_index=True, comorbidity=True
+    areas: Areas, demography, ethnicity=True, comorbidity=True
 ):
     logger.info(f"Populating areas")
     people = Population()
@@ -43,7 +43,7 @@ def _populate_areas(
         area.populate(
             demography,
             ethnicity=ethnicity,
-            socioecon_index=socioecon_index,
+            #socioecon_index=socioecon_index,
             comorbidity=comorbidity,
         )
         people.extend(area.people)
@@ -179,7 +179,6 @@ def generate_world_from_geography(
     box_mode=False,
     include_households=True,
     ethnicity=True,
-    socioecon_index=True,
     comorbidity=True,
 ):
     """
@@ -196,7 +195,7 @@ def generate_world_from_geography(
             geography.areas,
             demography,
             ethnicity=ethnicity,
-            socioecon_index=socioecon_index,
+            #socioecon_index=socioecon_index,
             comorbidity=comorbidity,
         )
         world.boxes = Boxes([Box()])

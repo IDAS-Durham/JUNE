@@ -22,9 +22,9 @@ def test__age_sex_generator():
     age_bins = [0, 3]
     female_fractions = [0, 1]
     ethnicity_age_bins = [0, 2, 4]
-    ethnicity_groups = ["A", "B", "C"]
+    ethnicity_groups = ["A1", "B2", "C3"]
     ethnicity_structure = [[2, 0, 0], [0, 0, 2], [0, 4, 0]]
-    socioecon_index_value = 4
+    #socioecon_index_value = 4
     age_sex_generator = d.demography.AgeSexGenerator(
         age_counts,
         age_bins,
@@ -32,7 +32,7 @@ def test__age_sex_generator():
         ethnicity_age_bins,
         ethnicity_groups,
         ethnicity_structure,
-        socioecon_index_value,
+        #socioecon_index_value,
     )
     assert list(age_sex_generator.age_iterator) == [1, 1, 3, 3, 4, 4, 4, 4]
     assert list(age_sex_generator.sex_iterator) == [
@@ -45,7 +45,9 @@ def test__age_sex_generator():
         "f",
         "f",
     ]
-    assert list(age_sex_generator.ethnicity_iterator) == list("AACCBBBB")
+    assert list(age_sex_generator.ethnicity_iterator) == [
+                "A1", "A1", "C3", "C3", "B2", "B2", "B2", "B2"
+            ]
     age_sex_generator = d.demography.AgeSexGenerator(
         age_counts,
         age_bins,
@@ -53,33 +55,33 @@ def test__age_sex_generator():
         ethnicity_age_bins,
         ethnicity_groups,
         ethnicity_structure,
-        socioecon_index_value,
+        #socioecon_index_value,
     )
-    assert age_sex_generator.socioecon_index() == socioecon_index_value
+    #assert age_sex_generator.socioecon_index() == socioecon_index_value
     ages = []
     sexes = []
     ethnicities = []
-    socioecon_indices = []
+    #socioecon_indices = []
     for _ in range(0, sum(age_counts)):
         age = age_sex_generator.age()
         sex = age_sex_generator.sex()
         ethnicity = age_sex_generator.ethnicity()
-        socioecon_index = age_sex_generator.socioecon_index()
+        #socioecon_index = age_sex_generator.socioecon_index()
         ages.append(age)
         sexes.append(sex)
         ethnicities.append(ethnicity)
-        socioecon_indices.append(socioecon_index)
+        #socioecon_indices.append(socioecon_index)
 
     assert sorted(ages) == [1, 1, 3, 3, 4, 4, 4, 4]
     assert collections.Counter(sexes) == collections.Counter(
         ["m", "m", "f", "f", "f", "f", "f", "f"]
     )
     assert collections.Counter(ethnicities) == collections.Counter(
-        ["A", "A", "C", "C", "B", "B", "B", "B"]
+        ["A1", "A1", "C3", "C3", "B2", "B2", "B2", "B2"]
     )
-    assert collections.Counter(socioecon_indices) == collections.Counter(
-        [4, 4, 4, 4, 4, 4, 4, 4]
-    )
+    #assert collections.Counter(socioecon_indices) == collections.Counter(
+    #    [4, 4, 4, 4, 4, 4, 4, 4]
+    #)
 
 
 class TestDemography:
@@ -101,8 +103,9 @@ class TestDemography:
                 assert person.sex == "m"
             if person.age in range(55, 69):
                 assert person.ethnicity.startswith("A")
+                assert person.ethnicity in ["A1", "A2", "A4"]
             assert person.ethnicity.startswith("D") is False
-            assert person.socioecon_index == 6
+            assert person.area.socioeconomic_index == 0.59 # checked in new socioecon_index file.
             if person.age not in people_ages_dict:
                 people_ages_dict[person.age] = 1
             else:

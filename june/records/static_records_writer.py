@@ -61,7 +61,7 @@ class PeopleRecord(StaticRecord):
             int_names=[
                 "id",
                 "age",
-                "socioeconomic_index",
+                #"socioeconomic_index",
                 "primary_activity_id",
                 "residence_id",
                 "area_id",
@@ -75,7 +75,7 @@ class PeopleRecord(StaticRecord):
         (
             ids,
             age,
-            socioeconomic_index,
+            #socioeconomic_index,
             primary_activity_type,
             primary_activity_id,
             residence_type,
@@ -83,13 +83,13 @@ class PeopleRecord(StaticRecord):
             area_id,
             sex,
             ethnicity,
-        ) = ([], [], [], [], [], [], [], [], [], [])
+        ) = ([], [], [], [], [], [], [], [], [])
         for person in world.people:
             ids.append(person.id)
             age.append(person.age)
-            socioeconomic_index.append(
-                person.socioecon_index if person.socioecon_index is not None else 0
-            )
+            #socioeconomic_index.append(
+            #    person.socioecon_index if person.socioecon_index is not None else 0
+            #)
             primary_activity_type.append(
                 person.primary_activity.group.spec
                 if person.primary_activity is not None
@@ -112,7 +112,7 @@ class PeopleRecord(StaticRecord):
         int_data = [
             ids,
             age,
-            socioeconomic_index,
+            #socioeconomic_index,
             primary_activity_id,
             residence_id,
             area_id,
@@ -172,21 +172,29 @@ class AreaRecord(StaticRecord):
             hdf5_file=hdf5_file,
             table_name="areas",
             int_names=["id", "super_area_id",],
-            float_names=["latitude", "longitude"],
+            float_names=["latitude", "longitude", "socioeconomic_index"],
             str_names=["name"],
             expectedrows=10_000,
         )
 
     def get_data(self, world):
-        area_id, super_area_id, latitude, longitude, area_name = [], [], [], [], []
+        (
+            area_id, 
+            super_area_id, 
+            latitude, 
+            longitude, 
+            socioeconomic_index, 
+            area_name
+        ) = ([], [], [], [], [], [])
         for area in world.areas:
             area_id.append(area.id)
             super_area_id.append(area.super_area.id)
             latitude.append(area.coordinates[0])
             longitude.append(area.coordinates[1])
+            socioeconomic_index.append(area.socioeconomic_index)
             area_name.append(area.name)
         int_data = [area_id, super_area_id]
-        float_data = [latitude, longitude]
+        float_data = [latitude, longitude, socioeconomic_index]
         str_data = [area_name]
         return int_data, float_data, str_data
 
