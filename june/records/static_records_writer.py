@@ -34,7 +34,7 @@ class StaticRecord:
         data = np.rec.fromarrays(
             [np.array(data, dtype=np.uint32) for data in int_data]
             + [np.array(data, dtype=np.float32) for data in float_data]
-            + [np.array(data, dtype="S30") for data in str_data]
+            + [np.array(data, dtype="S20") for data in str_data]
         )
         table = getattr(hdf5_file.root, self.table_name)
         table.append(data)

@@ -48,7 +48,7 @@ class EventRecord:
                 np.array(getattr(self, name), dtype=np.float32)
                 for name in self.float_names
             ]
-            + [np.array(getattr(self, name), dtype="S30") for name in self.str_names]
+            + [np.array(getattr(self, name), dtype="S20") for name in self.str_names]
         )
 
         table = getattr(hdf5_file.root, self.table_name)
