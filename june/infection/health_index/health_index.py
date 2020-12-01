@@ -52,7 +52,7 @@ class HealthIndexGenerator:
     def __call__(self, person):
         """
         Computes the probability of having all 8 posible outcomes for all ages between 0 and 100,
-        for male and female 
+        for male and female
         """
         if (
             person.residence is not None
@@ -90,7 +90,8 @@ class HealthIndexGenerator:
         )
         mild_rate = self.data_to_rates.get_mild_rate(age=age_bin, sex=_sex)
         severe_rate = max(
-            0, 1 - (hosp_admission_rate + home_ifr + asymptomatic_rate + mild_rate),
+            0,
+            1 - (hosp_admission_rate + home_ifr + asymptomatic_rate + mild_rate),
         )
         # fill each age in bin
         for age in range(age_bin.left, age_bin.right + 1):
