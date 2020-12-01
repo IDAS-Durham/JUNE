@@ -59,7 +59,7 @@ class RatesPlotter:
         if age_bins is None:
             self.age_bins = self.rates.care_home_deaths_by_age_sex_df.index
         else:
-            self.age_bins = age_bins
+            self.age_bins = pd.Index(age_bins)
         self.infected_ch_population = self.compute_ch_infections()
         self.infected_gp_population = self.compute_gp_infections()
         self._process_data_dfs()

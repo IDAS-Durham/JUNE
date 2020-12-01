@@ -160,16 +160,12 @@ class Data2Rates:
         self.hospital_ch_deaths_by_age_sex_df = self._process_df(
             hospital_ch_deaths_by_age_sex_df, converters=True
         )
-        self.hospital_ch_deaths_by_age_sex_df.loc[:50, "male"] = 0
-        self.hospital_ch_deaths_by_age_sex_df.loc[:50, "female"] = 0
         self.hospital_gp_admissions_by_age_sex_df = self._process_df(
             hospital_gp_admissions_by_age_sex_df, converters=True
         )
         self.hospital_ch_admissions_by_age_sex_df = self._process_df(
             hospital_ch_admissions_by_age_sex_df, converters=True
         )
-        self.hospital_ch_admissions_by_age_sex_df.loc[:20, "male"] = 0
-        self.hospital_ch_admissions_by_age_sex_df.loc[:20, "female"] = 0
         self.icu_hosp_rate_by_age_sex_df = self._process_df(
             icu_hosp_rate_by_age_sex_df, converters=False
         )
@@ -239,7 +235,7 @@ class Data2Rates:
                 care_home_seroprevalence_by_age_file
             )
         if comorbidity_multipliers_file is not None:
-            with open(multipliers_path) as f:
+            with open(comorbidity_multipliers_file) as f:
                 comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
         else:
             comorbidity_multipliers = None
@@ -657,3 +653,4 @@ def get_outputs_df(rates, age_bins):
                         function(age=age_bin, sex=sex, is_care_home=pop == "ch") * 100
                     )
     return outputs
+
