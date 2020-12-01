@@ -60,7 +60,7 @@ def save_hospitals_to_hdf5(
             ids = np.array(ids, dtype=np.int)
             areas = np.array(areas, dtype=np.int)
             super_areas = np.array(super_areas, dtype=np.int)
-            region_names = np.array(region_names, dtype="S20")
+            region_names = np.array(region_names, dtype="S50")
             trust_code = np.array(trust_code, dtype="S10")
             n_beds = np.array(n_beds, dtype=np.int)
             n_icu_beds = np.array(n_icu_beds, dtype=np.int)
