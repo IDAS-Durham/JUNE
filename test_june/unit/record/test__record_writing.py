@@ -392,7 +392,7 @@ def test__parameters(dummy_world, selector):
         policies = file.read()
         policies = policies.replace("array", "np.array")
         policies = eval(policies)
-    interaction_attributes = ["beta", "alpha_physical", "susceptibilities_by_age"]
+    interaction_attributes = ["betas", "alpha_physical", "susceptibilities_by_age"]
     for attribute in interaction_attributes:
         assert parameters["interaction"][attribute] == getattr(interaction, attribute)
     for key, value in interaction.contact_matrices.items():

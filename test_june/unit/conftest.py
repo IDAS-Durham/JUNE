@@ -187,13 +187,14 @@ def make_dummy_world():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     super_area = g.super_areas.members[0]
     area = g.areas.members[0]
-    company = Company(super_area=super_area, n_workers_max=100, sector="Q")
+    company = Company(super_area=super_area, n_workers_max=100, sector="S")
     school = School(
         coordinates=super_area.coordinates,
         n_pupils_max=100,
         age_min=4,
         age_max=10,
         sector="primary",
+        area=area,
     )
     household = Household()
     household.area = super_area.areas[0]
@@ -216,7 +217,9 @@ def make_dummy_world():
     student = Person.from_attributes(age=21)
     student.area = super_area.areas[0]
     household.add(student, subgroup_type=household.SubgroupType.adults)
-    university = University(coordinates=super_area.coordinates, n_students_max=100,)
+    university = University(
+        coordinates=super_area.coordinates, n_students_max=100, area=area
+    )
     university.add(student)
 
     commuter = Person.from_attributes(sex="m", age=30)
@@ -232,21 +235,21 @@ def make_dummy_world():
     world.universities = Universities([])
     world.companies = Companies([company])
     world.universities = Universities([university])
-    world.care_homes = CareHomes([CareHome()])
+    world.care_homes = CareHomes([CareHome(area=area)])
     world.people = Population([worker, pupil, student, commuter])
     world.areas = Areas([super_area.areas[0]])
     world.areas[0].people = world.people
     world.super_areas = SuperAreas([super_area])
     world.regions = Regions([super_area.region])
-    cinema = Cinema()
+    cinema = Cinema(area=area)
     cinema.coordinates = super_area.coordinates
     cinema.area = area
     world.cinemas = Cinemas([cinema])
-    pub = Pub()
+    pub = Pub(area=area)
     pub.coordinates = super_area.coordinates
     pub.area = area
     world.pubs = Pubs([pub])
-    grocery = Grocery()
+    grocery = Grocery(area=area)
     grocery.coordinates = super_area.coordinates
     grocery.area = area
     world.groceries = Groceries([grocery])
@@ -288,6 +291,7 @@ def make_policy_simulator(dummy_world, interaction, selector):
 @pytest.fixture(name="setup_policy_world")
 def setup_world(dummy_world, policy_simulator):
     world = dummy_world
+    world.regions[0].regional_compliance = 1
     worker = world.people[0]
     pupil = world.people[1]
     student = world.people[2]

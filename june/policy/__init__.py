@@ -1,4 +1,8 @@
-from .policy import Policy, Policies, PolicyCollection, regional_compliance_is_active
+from .policy import (
+    Policy,
+    Policies,
+    PolicyCollection,
+)  # , regional_compliance_is_active
 from .interaction_policies import (
     InteractionPolicy,
     InteractionPolicies,
@@ -21,7 +25,7 @@ from .individual_policies import (
     CloseCompanies,
     CloseSchools,
     CloseUniversities,
-    LimitLongCommute
+    LimitLongCommute,
 )
 
 from .medical_care_policies import (
@@ -29,3 +33,5 @@ from .medical_care_policies import (
     MedicalCarePolicies,
     Hospitalisation,
 )
+
+from .regional_compliance import RegionalCompliance, RegionalCompliances
