@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.stats import rv_discrete
 
 from june.demography.person import Person
-from june.groups.group import Group
+from june.groups import Group
 
 logger = logging.getLogger(__name__)
 

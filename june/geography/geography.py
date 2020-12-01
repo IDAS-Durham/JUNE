@@ -82,6 +82,10 @@ class Area:
         ):
             self.add(person)
 
+    @property
+    def region(self):
+        return self.super_area.region
+
 
 class Areas:
     __slots__ = "members_by_id", "super_area", "ball_tree", "members_by_name"
@@ -311,7 +315,7 @@ class Region:
     Coarsest geographical resolution
     """
 
-    __slots__ = ("id", "name", "super_areas")
+    __slots__ = ("id", "name", "super_areas", "regional_compliance")
     _id = count()
 
     def __init__(
@@ -320,6 +324,7 @@ class Region:
         self.id = next(self._id)
         self.name = name
         self.super_areas = super_areas or []
+        self.regional_compliance = 1.0
 
     @property
     def people(self):
@@ -349,6 +354,9 @@ class Regions:
 
     def get_from_id(self, id):
         return self.members_by_id[id]
+
+    def get_from_name(self, name):
+        return self.members_by_name[name]
 
     @property
     def members(self):

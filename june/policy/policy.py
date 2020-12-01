@@ -15,9 +15,6 @@ from june.infection.symptom_tag import SymptomTag
 from june.interaction import Interaction
 
 default_config_filename = paths.configs_path / "defaults/policy/policy.yaml"
-default_regional_compliance_filename = (
-    paths.configs_path / "defaults/policy/regional_compliance.yaml"
-)
 
 
 def str_to_class(classname, base_policy_modules=("june.policy",)):
@@ -27,7 +24,7 @@ def str_to_class(classname, base_policy_modules=("june.policy",)):
             return getattr(module, classname)
         except AttributeError:
             continue
-    raise ValueError("Cannot find policy in paths!")
+    raise ValueError(f"Cannot find policy {classname} in paths!")
 
 
 def read_date(date: Union[str, datetime.datetime]) -> datetime.datetime:
@@ -50,22 +47,6 @@ def read_date(date: Union[str, datetime.datetime]) -> datetime.datetime:
         return datetime.datetime.combine(date, datetime.datetime.min.time())
     else:
         raise TypeError("date must be a string or a datetime.date object")
-
-
-def regional_compliance_is_active(regional_compliance, date):
-
-    if regional_compliance is None:
-        return None
-
-    for compliance in regional_compliance:
-        if (
-            read_date(compliance["start_time"])
-            <= date
-            < read_date(compliance["end_time"])
-        ):
-            return compliance
-
-    return None
 
 
 class Policy(ABC):
@@ -129,9 +110,8 @@ class Policy(ABC):
 
 
 class Policies:
-    def __init__(self, policies=None, regional_compliance=None):
+    def __init__(self, policies=None):
         self.policies = policies
-        self.regional_compliance = regional_compliance
         # Note (Arnau): This import here is ugly, but I couldn't
         # find a way to get around a redundant import loop.
         from june.policy import (
@@ -139,19 +119,20 @@ class Policies:
             InteractionPolicies,
             MedicalCarePolicies,
             LeisurePolicies,
+            RegionalCompliances
         )
 
         self.individual_policies = IndividualPolicies.from_policies(self)
         self.interaction_policies = InteractionPolicies.from_policies(self)
         self.medical_care_policies = MedicalCarePolicies.from_policies(self)
         self.leisure_policies = LeisurePolicies.from_policies(self)
+        self.regional_compliance = RegionalCompliances.from_policies(self)
 
     @classmethod
     def from_file(
         cls,
         config_file=default_config_filename,
         base_policy_modules=("june.policy",),
-        regional_compliance_file=default_regional_compliance_filename,
     ):
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -175,19 +156,7 @@ class Policies:
                     str_to_class(camel_case_key, base_policy_modules)(**policy_data)
                 )
 
-        with open(regional_compliance_file) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
-        regional_compliance = []
-        for compliance, compliance_data in config.items():
-            if "start_time" not in compliance_data:
-                for compliance_i, compliance_data_i in compliance_data.items():
-                    if (
-                        "start_time" not in compliance_data_i.keys()
-                        or "end_time" not in compliance_data_i.keys()
-                    ):
-                        raise ValueError("regional compliance config file not valid.")
-                    regional_compliance.append(compliance_data_i)
-        return Policies(policies=policies, regional_compliance=regional_compliance)
+        return Policies(policies=policies)
 
     def get_policies_for_type(self, policy_type):
         return [policy for policy in self.policies if policy.policy_type == policy_type]

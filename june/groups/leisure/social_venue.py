@@ -26,9 +26,9 @@ class SocialVenue(Group):
     class SubgroupType(IntEnum):
         default = 0
 
-    def __init__(self):
+    def __init__(self, area = None):
         super().__init__()
-        self.area = None
+        self.area = area
 
     def add(self, person, activity="leisure"):
         self.subgroups[0].append(person)
