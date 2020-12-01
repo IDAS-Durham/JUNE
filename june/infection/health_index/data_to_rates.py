@@ -18,6 +18,7 @@ default_care_home_population_file = hi_data / "care_home_residents_by_age_sex_ju
 default_all_deaths_file = hi_data / "all_deaths_by_age_sex.csv"
 default_care_home_deaths_file = hi_data / "care_home_deaths_by_age_sex.csv"
 default_all_hospital_deaths_file = hi_data / "hospital_deaths_by_age_sex.csv"
+default_all_hospital_admissions_file = hi_data / "hospital_admissions_by_age_sex.csv"
 default_gp_admissions_file = hi_data / "cocin_gp_hospital_admissions_by_age_sex.csv"
 default_ch_admissions_file = hi_data / "chess_ch_hospital_admissions_by_age_sex.csv"
 default_gp_hospital_deaths_file = hi_data / "cocin_gp_hospital_deaths_by_age_sex.csv"
@@ -119,6 +120,7 @@ class Data2Rates:
         care_home_population_by_age_sex_df: pd.DataFrame,
         all_deaths_by_age_sex_df: pd.DataFrame,
         hospital_all_deaths_by_age_sex_df: pd.DataFrame,
+        hospital_all_admissions_by_age_sex_df: pd.DataFrame,
         hospital_gp_deaths_by_age_sex_df: pd.DataFrame,
         hospital_ch_deaths_by_age_sex_df: pd.DataFrame,
         hospital_gp_admissions_by_age_sex_df: pd.DataFrame,
@@ -153,6 +155,9 @@ class Data2Rates:
         )
         self.all_hospital_deaths_by_age_sex = self._process_df(
             hospital_all_deaths_by_age_sex_df, converters=True
+        )
+        self.all_hospital_admissions_by_age_sex = self._process_df(
+            hospital_all_admissions_by_age_sex_df, converters=True
         )
         self.hospital_gp_deaths_by_age_sex_df = self._process_df(
             hospital_gp_deaths_by_age_sex_df, converters=True
@@ -193,6 +198,7 @@ class Data2Rates:
         care_home_population_file: str = default_care_home_population_file,
         all_deaths_file: str = default_all_deaths_file,
         all_hospital_deaths_file: str = default_all_hospital_deaths_file,
+        all_hospital_admissions_file: str = default_all_hospital_admissions_file,
         hospital_gp_deaths_file: str = default_gp_hospital_deaths_file,
         hospital_ch_deaths_file: str = default_ch_hospital_deaths_file,
         hospital_gp_admissions_file: str = default_gp_admissions_file,
@@ -213,6 +219,7 @@ class Data2Rates:
         hospital_gp_deaths_df = cls._read_csv(hospital_gp_deaths_file)
         hospital_ch_deaths_df = cls._read_csv(hospital_ch_deaths_file)
         hospital_all_deaths_df = cls._read_csv(all_hospital_deaths_file)
+        hospital_all_admissions_df = cls._read_csv(all_hospital_admissions_file)
         hospital_gp_admissions_df = cls._read_csv(hospital_gp_admissions_file)
         hospital_ch_admissions_df = cls._read_csv(hospital_ch_admissions_file)
         mild_rates_df = cls._read_csv(mild_rates_file)
@@ -260,6 +267,7 @@ class Data2Rates:
             care_home_population_by_age_sex_df=care_home_population_df,
             all_deaths_by_age_sex_df=all_deaths_df,
             hospital_all_deaths_by_age_sex_df=hospital_all_deaths_df,
+            hospital_all_admissions_by_age_sex_df=hospital_all_admissions_df,
             hospital_gp_deaths_by_age_sex_df=hospital_gp_deaths_df,
             hospital_ch_deaths_by_age_sex_df=hospital_ch_deaths_df,
             hospital_gp_admissions_by_age_sex_df=hospital_gp_admissions_df,
@@ -312,19 +320,19 @@ class Data2Rates:
 
     def _get_interpolated_value(self, df, age, sex, weight_mapper=None):
         """
-        Interpolates bins to single years by weighting each year by its population times
-        the death rate
+         Interpolates bins to single years by weighting each year by its population times
+         the death rate
 
-        Parameters
-        ----------
-        df
-            dataframe with the structure
-            age | male | female
-            0-5 | 2    | 3
-            etc.
-       weight_mapper 
-            function mapping (age,sex) -> weight
-            if not provided uses population weight.
+         Parameters
+         ----------
+         df
+             dataframe with the structure
+             age | male | female
+             0-5 | 2    | 3
+             etc.
+        weight_mapper
+             function mapping (age,sex) -> weight
+             if not provided uses population weight.
         """
         if weight_mapper is None:
             weight_mapper = lambda age, sex: 1
@@ -399,27 +407,13 @@ class Data2Rates:
     def get_icu_hospital_rate(self, age: int, sex: str):
         return self.icu_hosp_rate_by_age_sex_df.loc[age, sex]
 
-    def get_gp_hospital_deaths(self, age: int, sex: str):
-        return self._get_interpolated_value(
-            df=self.hospital_gp_deaths_by_age_sex_df,
-            age=age,
-            sex=sex,
-            weight_mapper=self.gp_deaths_mapper,
-        )
-
     def get_deathsicu_deathshosp_rate(self, age: int, sex: str):
         return self.deathsicu_deathshosp_rate_by_age_df.loc[age, sex]
 
     def get_gp_hospital_deaths(self, age: int, sex: str):
-        return self._get_interpolated_value(
-            df=self.hospital_gp_deaths_by_age_sex_df,
-            age=age,
-            sex=sex,
-            weight_mapper=self.gp_deaths_mapper,
-        )
-        # return self.get_all_hospital_deaths(
-        #    age=age, sex=sex
-        # ) - self.get_care_home_hospital_deaths(age=age, sex=sex)
+        return self.get_all_hospital_deaths(
+            age=age, sex=sex
+        ) - self.get_care_home_hospital_deaths(age=age, sex=sex)
 
     def get_care_home_hospital_deaths(self, age: int, sex: str):
         return self._get_interpolated_value(
@@ -438,17 +432,17 @@ class Data2Rates:
             return self.get_gp_hospital_deaths(age=age, sex=sex)
 
     def get_all_hospital_admissions(self, age: int, sex: str):
-        return self.get_care_home_hospital_admissions(
-            age=age, sex=sex
-        ) + self.get_gp_hospital_admissions(age=age, sex=sex)
-
-    def get_gp_hospital_admissions(self, age: int, sex: str):
         return self._get_interpolated_value(
-            df=self.hospital_gp_admissions_by_age_sex_df,
+            df=self.all_hospital_admissions_by_age_sex,
             age=age,
             sex=sex,
-            weight_mapper=self.gp_deaths_mapper,
+            weight_mapper=self.all_deaths_mapper,
         )
+
+    def get_gp_hospital_admissions(self, age: int, sex: str):
+        return self.get_all_hospital_admissions(
+            age=age, sex=sex
+        ) - self.get_care_home_hospital_admissions(age=age, sex=sex)
 
     def get_care_home_hospital_admissions(self, age: int, sex: str):
         return self._get_interpolated_value(
@@ -498,29 +492,18 @@ class Data2Rates:
         ) / self.get_n_icu_admissions(age=age, sex=sex, is_care_home=is_care_home)
 
     #### home ####
-    def get_all_home_deaths(self, age: int, sex: str):
-        return max(
-            self.get_all_deaths(age=age, sex=sex)
-            - self.get_all_hospital_deaths(age=age, sex=sex),
-            0,
-        )
-
     def get_care_home_home_deaths(self, age: int, sex: str):
-        return max(
-            self.get_n_deaths(age=age, sex=sex, is_care_home=True)
-            - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=True),
-            0,
-        )
+        return self.get_n_deaths(
+            age=age, sex=sex, is_care_home=True
+        ) - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=True)
 
     def get_n_home_deaths(self, age: int, sex: str, is_care_home: bool = False):
         if is_care_home:
-            return max(self.get_care_home_home_deaths(age=age, sex=sex), 0)
+            return self.get_care_home_home_deaths(age=age, sex=sex)
         else:
-            return max(
-                self.get_n_deaths(age=age, sex=sex, is_care_home=False)
-                - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=False),
-                0,
-            )
+            return self.get_n_deaths(
+                age=age, sex=sex, is_care_home=False
+            ) - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=False)
 
     #### IFRS #####
     def _get_ifr(
@@ -566,7 +549,7 @@ class Data2Rates:
                 n_cases = self.get_n_cases(age=age, sex=sex, is_care_home=is_care_home)
         if n_cases * function_values == 0:
             return 0
-        return function_values / n_cases
+        return max(function_values / n_cases, 0)
 
     def get_infection_fatality_rate(
         self, age: Union[int, pd.Interval], sex: str, is_care_home: bool = False
@@ -589,7 +572,10 @@ class Data2Rates:
         self, age: Union[int, pd.Interval], sex: str, is_care_home: bool = False
     ) -> int:
         return self._get_ifr(
-            function=self.get_n_icu_deaths, age=age, sex=sex, is_care_home=is_care_home,
+            function=self.get_n_icu_deaths,
+            age=age,
+            sex=sex,
+            is_care_home=is_care_home,
         )
 
     def get_hospital_infection_admission_rate(
@@ -635,7 +621,9 @@ class Data2Rates:
 
 
 def get_outputs_df(rates, age_bins):
-    outputs = pd.DataFrame(index=age_bins,)
+    outputs = pd.DataFrame(
+        index=age_bins,
+    )
     for pop in ["gp", "ch"]:
         for sex in ["male", "female", "all"]:
             for fname, function in zip(
@@ -653,4 +641,3 @@ def get_outputs_df(rates, age_bins):
                         function(age=age_bin, sex=sex, is_care_home=pop == "ch") * 100
                     )
     return outputs
-
