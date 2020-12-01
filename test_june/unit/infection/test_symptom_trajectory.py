@@ -187,7 +187,7 @@ class TestSymptoms:
         )
         dummy = Person(sex="f", age=65)
         health_index = selector.health_index_generator(dummy)
-        fixed_severity = 0.97
+        fixed_severity = 0.72
         infection = selector._make_infection(person=dummy, time=0.1)
         infection.symptoms.max_severity = fixed_severity
         infection.symptoms.trajectory = infection.symptoms._make_symptom_trajectory(
