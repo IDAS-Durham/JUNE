@@ -4,7 +4,7 @@ from june.groups import School
 from june.demography import Person
 from june import paths
 from june.geography import Geography
-from june.interaction.interactive_group import InteractiveGroup
+from june.groups.group.interactive import InteractiveGroup
 from june.world import generate_world_from_geography
 from june.groups import Hospital, Hospitals
 from june.infection_seed import InfectionSeed
@@ -15,9 +15,12 @@ import pytest
 import numpy as np
 import os
 import pathlib
+from itertools import chain
 
 test_config = paths.configs_path / "tests/interaction.yaml"
-default_sector_beta_filename = paths.configs_path / "defaults/interaction/sector_beta.yaml"
+default_sector_beta_filename = (
+    paths.configs_path / "defaults/interaction/sector_beta.yaml"
+)
 
 
 def test__contact_matrices_from_default():
@@ -27,82 +30,6 @@ def test__contact_matrices_from_default():
         np.array([[3 * (1 + 0.12) * 24 / 3]]),
         rtol=0.05,
     )
-    xi = 0.3
-    contacts_school = interaction.contact_matrices["school"]
-    for i in range(len(contacts_school)):
-        for j in range(len(contacts_school)):
-            if i == j:
-                if i == 0:
-                    assert contacts_school[i][j] == 5.25 * 3  # 24 / 8
-                else:
-                    assert contacts_school[i][j] == 2.875 * 3
-            else:
-                if i == 0:
-                    assert np.isclose(contacts_school[i][j], 16.2 * 3, rtol=1e-6)
-                elif j == 0:
-                    assert np.isclose(
-                        contacts_school[i][j], 0.81 * 3, atol=0, rtol=1e-6
-                    )
-                else:
-                    assert np.isclose(
-                        contacts_school[i][j],
-                        xi ** abs(i - j) * 2.875 * 3,
-                        atol=0,
-                        rtol=1e-6,
-                    )
-
-
-def test__school_index_translation():
-    age_min = 3
-    age_max = 7
-    school_years = tuple(range(age_min, age_max + 1))
-    interaction._translate_school_subgroup(1, school_years) == 4
-    interaction._translate_school_subgroup(5, school_years) == 8
-
-
-def test__school_contact_matrices():
-    interaction_instance = Interaction.from_file(config_filename=test_config)
-    xi = 0.3
-    age_min = 3
-    age_max = 7
-    school_years = tuple(range(age_min, age_max + 1))
-    contact_matrix = interaction_instance.contact_matrices["school"]
-    n_contacts_same_year = interaction._get_contacts_in_school(
-        contact_matrix, school_years, 4, 4
-    )
-    assert n_contacts_same_year == 2.875 * 3
-
-    n_contacts_year_above = interaction._get_contacts_in_school(
-        contact_matrix, school_years, 4, 5
-    )
-    assert n_contacts_year_above == xi * 2.875 * 3
-
-    n_contacts_teacher_teacher = interaction._get_contacts_in_school(
-        contact_matrix, school_years, 0, 0
-    )
-    assert n_contacts_teacher_teacher == 5.25 * 3
-
-    n_contacts_teacher_student = interaction._get_contacts_in_school(
-        contact_matrix, school_years, 0, 4
-    )
-    np.isclose(n_contacts_teacher_student, (16.2 * 3 / len(school_years)), rtol=1e-6)
-
-    n_contacts_student_teacher = interaction._get_contacts_in_school(
-        contact_matrix, school_years, 4, 0
-    )
-    assert n_contacts_student_teacher == 0.81 * 3
-
-def test__school_contact_matrices_different_classroom():
-    interaction_instance = Interaction.from_file(config_filename=test_config)
-    xi = 0.3
-    age_min = 3
-    age_max = 7
-    school_years = (3,4,4,5)
-    contact_matrix = interaction_instance.contact_matrices["school"]
-    n_contacts_same_year = interaction._get_contacts_in_school(
-        contact_matrix, school_years, 2, 3
-    )
-    assert n_contacts_same_year == 0.
 
 
 def days_to_infection(interaction, susceptible_person, group, people, n_students):
@@ -113,9 +40,8 @@ def days_to_infection(interaction, susceptible_person, group, people, n_students
             group.subgroups[1].append(person)
         for person in people[n_students:]:
             group.subgroups[0].append(person)
-        interactive_group = InteractiveGroup(group)
-        infected_ids = interaction.time_step_for_group(
-            group=interactive_group, delta_time=delta_time
+        infected_ids, group_size = interaction.time_step_for_group(
+            group=group, delta_time=delta_time
         )
         if infected_ids:
             break
@@ -154,7 +80,9 @@ def create_school(n_students, n_teachers):
     "n_teachers,mode", [[2, "average"], [4, "average"], [6, "average"],],
 )
 def test__average_time_to_infect(n_teachers, mode):
-    selector_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+    selector_config = (
+        paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+    )
     transmission_probability = 0.1
     selector = InfectionSelector.from_file(transmission_config_path=selector_config)
     n_students = 1
@@ -165,7 +93,7 @@ def test__average_time_to_infect(n_teachers, mode):
         "characteristic_time": 24,
     }
     interaction = Interaction(
-        beta={"school": 1,},
+        betas={"school": 1,},
         alpha_physical=1,
         contact_matrices={"school": contact_matrices},
     )
@@ -195,8 +123,7 @@ def test__infection_is_isolated(selector):
     infection_seed = InfectionSeed(world, selector)
     n_cases = 5
     infection_seed.unleash_virus(
-        world.people,
-        n_cases=n_cases
+        world.people, n_cases=n_cases
     )  # play around with the initial number of cases
     policies = Policies([])
     simulator = Simulator.from_file(
@@ -207,7 +134,7 @@ def test__infection_is_isolated(selector):
         / "interaction_test_config.yaml",
         leisure=None,
         policies=policies,
-        #save_path=None,
+        # save_path=None,
     )
     infected_people = [person for person in world.people if person.infected]
     assert len(infected_people) == 5
@@ -228,27 +155,60 @@ def test__infection_is_isolated(selector):
         elif not (person.residence.group in infected_households):
             assert not person.infected and person.susceptible
 
-def test__sector_beta(dummy_world):
-    world = dummy_world
-    company = world.companies[0]
-    person1 = Person.from_attributes()
-    person1.susceptibility = 1
-    company.add(person1)
 
-    selector = InfectionSelector.from_file()
-    selector.infect_person_at_time(person1, 1)
-    person1.infection.update_health_status(5, 5)
-    interactive_group = InteractiveGroup(company)
-
-    interaction = Interaction.from_file(
-        config_filename=test_config,
-        sector_beta = True,
-        sector_beta_filename=default_sector_beta_filename,
+def test__assign_blame():
+    interaction = Interaction.from_file(config_filename=test_config)
+    transmission_weights = [1, 10, 2, 3, 4]
+    transmission_ids = [0, 1, 4, 5, 6]
+    total_wegiht = sum(transmission_weights)
+    n_infections = 5000
+    culpables = interaction._assign_blame_for_infections(
+        n_infections, transmission_weights, transmission_ids
     )
-    
-    if interactive_group.spec == "company" and interaction.sector_betas is not None:
-        beta = interaction.get_beta_for_group(group=interactive_group)*float(interaction.sector_betas[interactive_group.sector])
-    else:            
-        beta = interaction.get_beta_for_group(group=interactive_group)
+    culpable_ids, culpable_counts = np.unique(culpables, return_counts=True)
+    culpable_counts = {key: value for key, value in zip(culpable_ids, culpable_counts)}
+    for trans_id, trans_weight in zip(transmission_ids, transmission_weights):
+        assert np.isclose(
+            culpable_counts[trans_id],
+            n_infections * trans_weight / total_wegiht,
+            rtol=0.05,
+        )
 
-    assert beta == interaction.beta[interactive_group.spec]*float(interaction.sector_betas[company.sector])
+
+def test__super_spreaders(selector):
+    people, school = create_school(n_students=5, n_teachers=1000)
+    student_ids = [student.id for student in school.students]
+    teacher_ids = [teacher.id for teacher in school.teachers]
+    transmission_probabilities = np.linspace(0, 30, len(student_ids))
+    total = sum(transmission_probabilities)
+    id_to_trans = {}
+    for i, student in enumerate(school.students):
+        selector.infect_person_at_time(student, time=0)
+        student.infection.transmission.probability = transmission_probabilities[i]
+        id_to_trans[student.id] = transmission_probabilities[i]
+    interactive_school = school.get_interactive_group()
+    interaction = Interaction.from_file(config_filename=test_config)
+    beta = interaction._get_interactive_group_beta(interactive_school)
+    contact_matrix = interaction.contact_matrices["school"]
+    subgroup_infected_ids, to_blame_ids = interaction._time_step_for_subgroup(
+        susceptible_subgroup_index=0,
+        susceptible_subgroup_global_index=0,
+        interactive_group=interactive_school,
+        beta=beta,
+        contact_matrix=contact_matrix,
+        delta_time=1,
+    )
+    for id in subgroup_infected_ids:
+        assert id in teacher_ids
+    for id in to_blame_ids:
+        assert id in student_ids
+    n_infections = len(subgroup_infected_ids)
+    assert n_infections > 0
+    culpable_ids, culpable_counts = np.unique(to_blame_ids, return_counts=True)
+    for culpable_id, culpable_count in zip(culpable_ids, culpable_counts):
+        expected = id_to_trans[culpable_id] / total * n_infections,
+        assert np.isclose(
+            culpable_count,
+            expected,
+            rtol=0.1,
+        )
