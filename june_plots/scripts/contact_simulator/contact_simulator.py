@@ -54,6 +54,8 @@ default_bbc_data_path = (
     paths.data_path / "plotting/contact_tracking/bbc_cm.xls"
 )
 
+logger = logging.getLogger(__name__)
+
 class ContactSimulator:
 
     def __init__(
@@ -84,17 +86,17 @@ class ContactSimulator:
             self.timer = self.simulator.timer
 
             self.group_types = [
-                self.world.care_homes,
-                self.world.cinemas, 
-                self.world.city_transports, 
-                self.world.inter_city_transports, 
-                self.world.companies, 
-                self.world.groceries, 
-                self.world.hospitals, 
-                self.world.households, 
-                self.world.pubs, 
+                #self.world.care_homes,
+                #self.world.cinemas, 
+                #self.world.city_transports, 
+                #self.world.inter_city_transports, 
+                #self.world.companies, 
+                #self.world.groceries, 
+                #self.world.hospitals, 
+                #self.world.households, 
+                #self.world.pubs, 
                 self.world.schools, 
-                self.world.universities
+                #self.world.universities
             ]
             self.contact_types = (
                 [groups[0].spec for groups in self.group_types if len(groups) > 0]
@@ -141,13 +143,6 @@ class ContactSimulator:
 
     def initalise_tracker(self):
         self.tracker = {spec: Counter() for spec in self.contact_types}
-
-    def intitalise_contact_counters(self):
-        self.contact_counts = {
-            person.id: {
-                spec: 0 for spec in self.contact_types
-            } for person in self.world.people
-        }
 
     def hash_ages(self):
         """store all ages and age_bin indexes in python dict for quick lookup"""
@@ -199,11 +194,13 @@ class ContactSimulator:
         """round float to integer randomly with probability x%1.
             eg. round 3.7 to 4 with probability 70%, else round to 3.
         """
+        return int(np.floor(x+np.random.random()))
+        """
         f = x % 1
         if np.random.uniform(0,1,1) < f:
             return int(x)+1
         else:
-            return int(x)
+            return int(x)"""
 
     def get_active_subgroup(self, person: Person):
         """maybe not so useful here, but could be for others"""
@@ -281,30 +278,68 @@ class ContactSimulator:
             Estimate contact matrices by choosing the the allotted number of people
             per subgroup.
         """
-        for subgroup_type, subgroup_ids in enumerate(group.subgroup_member_ids):
+        
+        all_members = [ 
+            np.array([x for x in subgroup]) 
+            for subgroup in group.subgroup_member_ids
+        ]
+
+        for subgroup_type, subgroup_ids in enumerate(group.subgroup_member_ids):    
+            prob_lists = []
+            for ii, m in enumerate(group.subgroup_member_ids):
+                len_subgroup = len(m) - (subgroup_type == ii)
+                if len_subgroup > 0:
+                    prob_lists.append(np.full(len_subgroup, 1./len_subgroup))
+                else:
+                    prob_lists.append(np.array([]))           
             for pid in subgroup_ids:
                 t1 = time.time()
-                subgroup_members = [ 
-                    [x for x in subgroup] for subgroup in group.subgroup_member_ids
-                ]
-                subgroup_members[subgroup_type].remove(pid)
+                subgroup_members = [x for x in all_members]
+                subgroup_members[subgroup_type] = np.setdiff1d(
+                    all_members[subgroup_type], np.array([pid]), assume_unique=True
+                )
+                t2 = time.time()
+                print(group.spec, id(group), "do copy", f"{(t2-t1)*1000:.4f}")
+                #t1 = time.time()
+                #subgroup_members[subgroup_type].remove(pid)
+                #t2 = time.time()
+                #print(group.spec, id(group), "pop", f"{(t2-t1)*1000:.4f}")
+                t1 = time.time()
                 contacts_per_subgroup = self.get_contacts_per_subgroup(
                     subgroup_type, group
                 )
+                t2 = time.time() 
+                print(group.spec, id(group), "get_contacts", f"{(t2-t1)*1000:.4f}")
+                #t1 = time.time()
                 total_contacts = sum([
                     c for c,m in zip(contacts_per_subgroup, subgroup_members) if len(m) > 0
                 ])
+                t2 = time.time()
+                print(group.spec, id(group), "total_contacts", f"{(t2-t1)*1000:.4f}")
+                #t1 = time.time()
                 self.counter[group.spec][pid] += total_contacts
                 int_contacts = [
                     self._random_round( x ) for x in contacts_per_subgroup
                 ]
+                #t2 = time.time()
+                #print(group.spec, id(group), "random_round", f"{(t2-t1)*1000:.4f}")
+                #t1 = time.time()
                 potential_contacts = [
                     c if len(m) > 0 else 0 for c,m in zip(int_contacts, subgroup_members)
                 ]
+                #t2 = time.time()
+                #print(group.spec, id(group), "potential contacts", f"{(t2-t1)*1000:.4f}")
+                #t1 = time.time()
+                #contact_ids = [ # I think this version is much slower?
+                #    cid
+                #    for members, x in zip(subgroup_members, potential_contacts)
+                #    for cid in np.random.choice(members, x)
+                #]
                 contact_ids = [
-                    cid
-                    for members, x in zip(subgroup_members, potential_contacts)
-                    for cid in np.random.choice(members, x)
+                    #members[np.random.randint(0, len(members), c)] 
+                    random_choice_numba(members, probs)
+                    for members, probs, c in zip(subgroup_members, prob_lists, potential_contacts)
+                    for _ in range(c)
                 ]
                 for bin_type in self.age_bins.keys():
                     if pid in self.age_data:
@@ -325,7 +360,7 @@ class ContactSimulator:
                         contact_age_idxes, minlength=len(self.age_bins[bin_type])-1
                     )
                     #self.contact_matrices[bin_type]["global"][age_idx,:] += bincount
-                    self.contact_matrices[bin_type][group.spec][age_idx,:] += bincount                            
+                    self.contact_matrices[bin_type][group.spec][age_idx,:] += bincount 
                 if self.contact_tracker:
                     self.contact_pairs.extend([
                         (pid, cid) for cid in contact_ids
@@ -374,7 +409,6 @@ class ContactSimulator:
     def record_output(self):
 
         if mpi_rank == 0:
-            logger = logging.getLogger(__name__)
             logger.info(f"record output at {self.timer.date}")
         for contact_type in self.contact_types:
             if len(self.counter[contact_type]) > 0: # ie. no one in pub in sleep timestep.
@@ -419,7 +453,9 @@ class ContactSimulator:
         aux_out_path = self.simulation_outputs_path / f"output.{mpi_rank:03d}.pkl"
         with open(aux_out_path,"wb+") as pkl:
             pickle.dump(output, pkl)
-        
+
+    ### some functions for processing.
+
     def collate_results(self):
         """ This should be called for mpi_rank==0 only...  """
         matrix_types = [
@@ -499,27 +535,9 @@ class ContactSimulator:
         with open(combined_ave_contacts_path, "wb+") as pkl:
             pickle.dump(self.average_contacts, pkl)
 
-    def process_results(self):
-        """convenience method. calls convert_dict_to_df(), calc_age_profiles(), 
-        calc_average_contacts(), normalise_contact_matrices()"""
-        self.collate_results()
-        self.get_age_profiles(self.population["age"])
-        self.convert_contacts()
-        self.calc_average_contacts()
-
-    def load_results(self):
-        combined_age_profiles_path = self.simulation_outputs_path / "age_profiles.pkl"
-        with open(combined_age_profiles_path, "rb") as pkl:
-            self.age_profiles = pickle.load(pkl)
-        combined_cm_path = self.simulation_outputs_path / "contact_matrices.pkl"
-        with open(combined_cm_path, "rb") as pkl:
-            self.contact_matrices = pickle.load(pkl)  
-        self.normalise_contact_matrices()
-        combined_ave_contacts_path = self.simulation_outputs_path / "average_contacts.pkl"
-        with open(combined_ave_contacts_path, "rb") as pkl:
-            self.average_contacts = pickle.load(pkl)       
-
-    def normalise_contact_matrices(self):        
+    def normalise_contact_matrices(self, set_on_copy=True):
+        if set_on_copy:
+            self.normalised_contact_matrices = copy.deepcopy(self.contact_matrices)        
         for bin_type in self.age_bins.keys():
             matrices = self.contact_matrices[bin_type]
             age_profile = self.age_profiles[bin_type]
@@ -536,7 +554,45 @@ class ContactSimulator:
                             0.5*(mat[i,j] + mat[j,i]*norm_factor)
                         )
                 norm_mat[ norm_mat == 0. ] = np.nan
-                self.contact_matrices[bin_type][contact_type] = norm_mat
+                if set_on_copy:
+                    self.normalised_contact_matrices[bin_type][contact_type] = norm_mat
+                else:
+                    self.contact_matrices[bin_type][contact_type] = norm_mat
+
+    def save_collated_results(self, collated_results_name="collated_results.pkl"):
+        collated_results = {
+            "raw_contact_matrices": self.contact_matrices,
+            "normalised_contact_matrices": self.normalised_contact_matrices,
+            "age_profiles": self.age_profiles,
+            "average_contacts": self.average_contacts,
+            "age_bins": self.age_bins,
+            "simulation_days": self.simulation_days,
+        }
+        collated_results_path = self.simulation_outputs_path / collated_results_name
+        with open(collated_results_path, "wb+") as pkl:
+            pickle.dump(collated_results, pkl)
+
+    def process_results(self):
+        """convenience method. calls convert_dict_to_df(), calc_age_profiles(), 
+        calc_average_contacts(), normalise_contact_matrices()"""
+        self.collate_results()
+        self.get_age_profiles(self.population["age"])
+        self.convert_contacts()
+        self.calc_average_contacts()
+        self.normalise_contact_matrices(set_on_copy=True)
+        self.save_collated_results()
+
+    def load_results(self):
+        combined_age_profiles_path = self.simulation_outputs_path / "age_profiles.pkl"
+        with open(combined_age_profiles_path, "rb") as pkl:
+            self.age_profiles = pickle.load(pkl)
+        combined_cm_path = self.simulation_outputs_path / "contact_matrices.pkl"
+        with open(combined_cm_path, "rb") as pkl:
+            self.contact_matrices = pickle.load(pkl)  
+        self.normalise_contact_matrices()
+        combined_ave_contacts_path = self.simulation_outputs_path / "average_contacts.pkl"
+        with open(combined_ave_contacts_path, "rb") as pkl:
+            self.average_contacts = pickle.load(pkl)       
 
     @staticmethod
     def _read_contact_data(contact_data_path):
@@ -721,7 +777,7 @@ class ContactSimulator:
 
         plot_kwargs = {}
         if ratio_with_real:
-            model_mat = self.contact_matrices[bin_type][contact_type]
+            model_mat = self.normalised_contact_matrices[bin_type][contact_type]
             real_mat = self.real_contact_matrices[bin_type][contact_type]
             mat = model_mat / real_mat
             vmin, vmax= 0.2, 3.0
@@ -730,7 +786,7 @@ class ContactSimulator:
             plot_kwargs["norm"]=colors.LogNorm(vmin=vmin, vmax=vmax)
             
         else:
-            mat = self.contact_matrices[bin_type][contact_type]
+            mat = self.normalised_contact_matrices[bin_type][contact_type]
             plot_kwargs["vmin"]=0.0
             plot_kwargs["vmax"]=4.0
 
@@ -755,7 +811,7 @@ class ContactSimulator:
         else:
             title = f"{contact_type} contacts ({bin_type} bins)"
         ax.set_title(title)
-        ax.set_xlabel("Age group")
+        ax.set_xlabel("Participant age group")
         ax.set_ylabel("Contact age group")
         return ax
 
