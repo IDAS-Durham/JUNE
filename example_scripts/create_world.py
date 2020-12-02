@@ -47,7 +47,7 @@ geography = Geography.from_file({"super_area": london_areas})
 geography.hospitals = Hospitals.for_geography(geography)
 geography.companies = Companies.for_geography(geography)
 geography.schools = Schools.for_geography(geography)
-geography.universities = Universities.for_super_areas(geography.super_areas)
+geography.universities = Universities.for_geography(geography)
 geography.care_homes = CareHomes.for_geography(geography)
 ## generate world
 world = generate_world_from_geography(geography, include_households=True)

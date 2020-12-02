@@ -1,4 +1,4 @@
-from june.groups.group import Group, Supergroup
+from june.groups import Group, Supergroup
 from typing import List
 from june.demography import Population
 

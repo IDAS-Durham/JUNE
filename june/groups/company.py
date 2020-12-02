@@ -10,7 +10,8 @@ import numpy as np
 import pandas as pd
 
 from june.geography import Geography, SuperArea
-from june.groups.group import Group, Supergroup
+from june.groups import Group, Supergroup
+from june.groups.group.interactive import InteractiveGroup
 
 default_size_nr_file = paths.data_path / "input/companies/company_size_2011.csv"
 default_sector_nr_per_msoa_file = (
@@ -20,6 +21,22 @@ default_areas_map_path = paths.data_path / "input/geography/area_super_area_regi
 default_config_filename = paths.configs_path / "defaults/groups/companies.yaml"
 
 logger = logging.getLogger(__name__)
+
+
+def _get_size_brackets(sizegroup: str):
+    """
+    Given company size group calculates mean
+    """
+    # ensure that read_companysize_census() also returns number of companies
+    # in each size category
+    size_min, size_max = sizegroup.split("-")
+    if size_max == "XXX" or size_max == "xxx":
+        size_min = int(size_min)
+        size_max = 1500
+    else:
+        size_min = int(size_min)
+        size_max = int(size_max)
+    return size_min, size_max
 
 
 class CompanyError(BaseException):
@@ -74,6 +91,10 @@ class Company(Group):
     @property
     def area(self):
         return self.super_area.areas[0]
+
+    def get_interactive_group(self, people_from_abroad=None):
+        return InteractiveCompany(self, people_from_abroad=people_from_abroad)
+
 
 class Companies(Supergroup):
     def __init__(self, companies: List["Companies"]):
@@ -208,17 +229,22 @@ class Companies(Supergroup):
         return company
 
 
-def _get_size_brackets(sizegroup: str):
-    """
-    Given company size group calculates mean
-    """
-    # ensure that read_companysize_census() also returns number of companies
-    # in each size category
-    size_min, size_max = sizegroup.split("-")
-    if size_max == "XXX" or size_max == "xxx":
-        size_min = int(size_min)
-        size_max = 1500
-    else:
-        size_min = int(size_min)
-        size_max = int(size_max)
-    return size_min, size_max
+def _read_sector_betas():
+    with open(default_config_filename) as f:
+        sector_betas = yaml.load(f, Loader=yaml.FullLoader) or {}
+    return sector_betas
+
+
+class InteractiveCompany(InteractiveGroup):
+    sector_betas = _read_sector_betas()
+
+    def __init__(self, group: "Group", people_from_abroad=None):
+        super().__init__(group=group, people_from_abroad=people_from_abroad)
+        self.sector = group.sector
+
+    def get_processed_beta(self, betas, beta_reductions):
+        beta_processed = super().get_processed_beta(
+            betas=betas,
+            beta_reductions=beta_reductions,
+        )
+        return beta_processed * self.sector_betas.get(self.sector, 1.0)

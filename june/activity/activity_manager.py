@@ -164,13 +164,12 @@ class ActivityManager:
             "Attention! Some people do not have an activity in this timestep."
         )
 
-    def do_timestep(self, regional_compliance=None, return_to_send_abroad=False):
+    def do_timestep(self, return_to_send_abroad=False):
         activities = self.timer.activities
         if self.leisure is not None:
             if self.policies is not None:
-                # set active regional compliances with policies
                 self.policies.leisure_policies.apply(
-                    date=self.timer.date, leisure=self.leisure, regional_compliance=regional_compliance
+                    date=self.timer.date, leisure=self.leisure
                 )
             self.leisure.generate_leisure_probabilities_for_timestep(
                 delta_time=self.timer.duration,
@@ -178,7 +177,7 @@ class ActivityManager:
                 working_hours="primary_activity" in activities,
             )
         to_send_abroad = self.move_people_to_active_subgroups(
-            activities, self.timer.date, self.timer.now, regional_compliance=regional_compliance
+            activities, self.timer.date, self.timer.now
         )
         (
             people_from_abroad,
@@ -195,7 +194,6 @@ class ActivityManager:
         activities: List[str],
         date: datetime = datetime(2020, 2, 2),
         days_from_start=0,
-        regional_compliance=None,
     ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
@@ -218,7 +216,6 @@ class ActivityManager:
                 person=person,
                 activities=activities,
                 days_from_start=days_from_start,
-                regional_compliance=regional_compliance,
             )
             external_subgroup = self.move_to_active_subgroup(
                 allowed_activities, person, to_send_abroad

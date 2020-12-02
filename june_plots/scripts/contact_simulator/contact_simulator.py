@@ -27,8 +27,10 @@ import networkx as nx
 from june.hdf5_savers import generate_world_from_hdf5
 from june.groups.leisure import generate_leisure_for_config
 from june.groups.group import Group, Subgroup
-from june.interaction import Interaction, InteractiveGroup
-from june.interaction.interaction import _get_contacts_in_school
+from june.groups.interactive import InteractiveGroup
+from june.groups import InteractiveSchool, InteractiveCompany, InteractiveHousehold
+from june.groups.school import _get_contacts_in_school
+#from june.interaction.interaction import _get_contacts_in_school
 from june.infection import HealthIndexGenerator
 from june.infection_seed import InfectionSeed, Observed2Cases
 from june.infection import InfectionSelector, HealthIndexGenerator
@@ -117,11 +119,11 @@ class ContactSimulator:
             self.interaction_matrices = interaction_config["contact_matrices"]
 
             self.interaction_matrices["school"]["contacts"] = (
-                Interaction.adapt_contacts_to_schools(
+                InteractiveSchool.get_processed_contact_matrix(
                     self.interaction_matrices["school"]["contacts"],
-                    self.interaction_matrices["school"]["xi"],
-                    age_min=0,
-                    age_max=20,
+                    alpha_physical=1.0 # Cheat it so we just the the total number, NOT adjusted for physical contacts
+                    phyiscal_ratios=0. # None of them are physical.
+                    characteristic_time=self.interaction_matrices["school"]["characteristic_time"]
                 )
             )
 
@@ -231,7 +233,7 @@ class ContactSimulator:
 
         return active_subgroup
 
-    def get_contacts_per_subgroup(self, subgroup_type, group: InteractiveGroup):
+    def get_contacts_per_subgroup(self, subgroup_type, int_group: InteractiveGroup):
         """
         Get contacts that a person of subgroup type `subgroup_type` will have with each of the other subgroups,
         in a given group.
@@ -239,7 +241,7 @@ class ContactSimulator:
         subgroup_type is the integer representing the type of person you're wanting to look at.
         
         """ 
-        spec = group.spec
+        spec = int_group.group.spec
         matrix = self.interaction_matrices[spec]["contacts"]
         delta_t = self.timer.delta_time.seconds / 3600.
         characteristic_time = self.interaction_matrices[spec]["characteristic_time"]
@@ -279,8 +281,10 @@ class ContactSimulator:
             per subgroup.
         """
         
+                
+
         all_members = [ 
-            np.array([x for x in subgroup]) 
+            np.array([x for x in subgroup]) # it's better to use arrays for np choice later on.
             for subgroup in group.subgroup_member_ids
         ]
 
@@ -291,13 +295,17 @@ class ContactSimulator:
                 if len_subgroup > 0:
                     prob_lists.append(np.full(len_subgroup, 1./len_subgroup))
                 else:
-                    prob_lists.append(np.array([]))           
+                    prob_lists.append(np.array([]))
+            contacts_per_subgroup = self.get_contacts_per_subgroup(
+                subgroup_type, group
+            )       
             for pid in subgroup_ids:
                 t1 = time.time()
+
                 subgroup_members = [x for x in all_members]
                 subgroup_members[subgroup_type] = np.setdiff1d(
                     all_members[subgroup_type], np.array([pid]), assume_unique=True
-                )
+                ) # this is faster than "x for x in subgroup if x != pid" ??
                 t2 = time.time()
                 print(group.spec, id(group), "do copy", f"{(t2-t1)*1000:.4f}")
                 #t1 = time.time()
@@ -305,9 +313,7 @@ class ContactSimulator:
                 #t2 = time.time()
                 #print(group.spec, id(group), "pop", f"{(t2-t1)*1000:.4f}")
                 t1 = time.time()
-                contacts_per_subgroup = self.get_contacts_per_subgroup(
-                    subgroup_type, group
-                )
+
                 t2 = time.time() 
                 print(group.spec, id(group), "get_contacts", f"{(t2-t1)*1000:.4f}")
                 #t1 = time.time()
@@ -318,14 +324,15 @@ class ContactSimulator:
                 print(group.spec, id(group), "total_contacts", f"{(t2-t1)*1000:.4f}")
                 #t1 = time.time()
                 self.counter[group.spec][pid] += total_contacts
-                int_contacts = [
-                    self._random_round( x ) for x in contacts_per_subgroup
-                ]
+                #int_contacts = [
+                #    self._random_round( x ) for x in contacts_per_subgroup
+                #]
                 #t2 = time.time()
                 #print(group.spec, id(group), "random_round", f"{(t2-t1)*1000:.4f}")
                 #t1 = time.time()
                 potential_contacts = [
-                    c if len(m) > 0 else 0 for c,m in zip(int_contacts, subgroup_members)
+                    self._random_round(c) if len(m) > 0 else 0 
+                    for c,m in zip(contacts_per_subgroup, subgroup_members)
                 ]
                 #t2 = time.time()
                 #print(group.spec, id(group), "potential contacts", f"{(t2-t1)*1000:.4f}")
@@ -386,19 +393,20 @@ class ContactSimulator:
                     group.spec in people_from_abroad_dict
                     and group.id in people_from_abroad_dict[group.spec]
                 ):
-                    foreign_people = people_from_abroad_dict[group.spec][group.id]
+                    people_from_abroad = people_from_abroad_dict[group.spec][group.id]
                 else:
-                    foreign_people = None
+                    people_from_abroad = None
 
                 int_group = InteractiveGroup(
-                    group, foreign_people, save_subgroup_ids=True
+                    group, people_from_abroad, save_all_subgroup_ids=True
                 )
                 if int_group.size == 0:
                     continue
                 if self.interaction_type == "1d":
                     self.simulate_1d_contacts(int_group)
                 elif self.interaction_type == "network":
-                    self.simulate_network_contacts(int_group)
+                    raise NotImplementedError
+                    #self.simulate_network_contacts(int_group)
             self.tracker[group_spec] = self.tracker[group_spec] + Counter(self.contact_pairs)
         tock = time.time()
         print(f"{mpi_rank} {self.timer.date} done in {(tock-tick)/60.} min")
