@@ -218,6 +218,11 @@ class SchoolPlots:
        
         bins = np.arange( int(min(st_ratio))-2, int(max(st_ratio))+2, 1)
 
+        print(f"mean all ST ratio: {np.mean(st_ratio):.2f}")
+        print(f"mean primary ST ratio: {np.mean(primary_st_ratio):.2f}")
+        print(f"mean secondary ST ratio: {np.mean(secondary_st_ratio):.2f}")
+        print(f"mean mixed ST ratio: {np.mean(mixed_st_ratio):.2f}")
+
         primary_mean = np.mean(primary_st_ratio)
         primary_data_mean = 22.0
 
@@ -302,8 +307,8 @@ class SchoolPlots:
         mean_primary_distance = np.average(primary_distances)
         mean_secondary_distance = np.average(secondary_distances)
 
-        print(mean_primary_distance)
-        print(mean_secondary_distance)
+        print(f"mean dist to secondary [km] {mean_primary_distance:.2f}")
+        print(f"mean dist to secondary [km] {mean_secondary_distance:.2f}")
             
         f, ax = plt.subplots()
         #ax.hist(

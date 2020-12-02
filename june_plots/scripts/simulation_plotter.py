@@ -56,6 +56,8 @@ default_interaction_path = (
 plt.style.use(['science'])
 plt.style.reload_library()
 
+logger = logging.getLogger(__file__)
+
 plt_latex_logger = logging.getLogger("matplotlib.texmanager")
 plt_latex_logger.setLevel(logging.WARNING)
 
@@ -126,7 +128,7 @@ def generate_domain(
         domain_splitter = DomainSplitter(
             number_of_domains=mpi_size, world_path=world_filename
         )
-        super_areas_per_domain = domain_splitter.generate_domain_split(niter=20)
+        super_areas_per_domain = domain_splitter.generate_domain_split(niter=60)
         super_area_names_to_domain_dict = {}
         super_area_ids_to_domain_dict = {}
         for domain, super_areas in super_areas_per_domain.items():
@@ -185,7 +187,7 @@ class SimulationPlotter:
     def from_file(
         cls,
         world_filename: str = default_world_filename,
-        simulation_outputs_path=default_simulation_outputs_path,
+        simulation_outputs_path=default_simulation_outputs_path,         
         operation_args={}
     ):
         if mpi_size == 1:
@@ -204,9 +206,13 @@ class SimulationPlotter:
 
     @classmethod
     def without_world(
-        cls, operation_args={}
+        cls, simulation_outputs_path=default_simulation_outputs_path, operation_args={}
     ):
-        simulation_plotter = SimulationPlotter(None, **operation_args)
+        simulation_plotter = SimulationPlotter(
+            None,
+            simulation_outputs_path=simulation_outputs_path,
+            **operation_args
+        )
         simulation_plotter.simulator = None
         return simulation_plotter
   
@@ -329,14 +335,16 @@ class SimulationPlotter:
         ]
         if self.save_points[-1] != self.end_time:
             self.save_points.append(self.end_time)
+
         ### THE MAIN EVENT ###
         while self.simulator.timer.date <= self.end_time:
             self.advance_step()
         ### ============== ###
+
         if save_all:
             if self.contact_counter or self.contact_tracker:
                 self.contact_simulator.save_auxilliary_data()
-        mpi_comm.Barrier()
+        mpi_comm.Barrier() # Wait for all the cores to catch up.
 
         if mpi_rank == 0:
             combine_hdf5s(record_path=self.simulation_outputs_path)
@@ -344,7 +352,7 @@ class SimulationPlotter:
                 self.contact_simulator.process_results()
             if self.occupancy_tracker:
                 self.occupancy_simulator.process_results()
-            if self.time_spent_simulator:
+            if self.time_spent_tracker:
                 self.time_spent_simulator.process_results()
 
     def make_plots(self):
@@ -374,10 +382,9 @@ class SimulationPlotter:
         Note: What is called here is all that should need to be called
         """
         
-        #self.generate_simulator()
+        self.generate_simulator()
         self.load_operations(
             simulation_days=simulation_days,
-            #contact_tracker_pickle_path=None
         )        
         self.run_simulation(simulation_days=simulation_days)
         if mpi_rank == 0:
@@ -431,7 +438,7 @@ if __name__ == "__main__":
         default=7,
     )
 
-    ## set up the operations switches.
+    ## set up the operations switches, try to keep uppercase.
     operations_dict = {
         "C": "contact_counter", 
         "T": "contact_tracker", 
@@ -458,6 +465,10 @@ if __name__ == "__main__":
     )
         
     args = parser.parse_args()
+    args.outputs_dir = Path.cwd() / args.outputs_dir
+
+    if mpi_rank == 0:
+        logger.info(f"saving outputs to {args.outputs_dir}")
 
     operation_args = {}
     for op in args.operations:
@@ -474,7 +485,10 @@ if __name__ == "__main__":
         simulation_plotter.generate_simulator()
         simulation_plotter.run_all(simulation_days=args.simulation_days)
     else:
-        simulation_plotter = SimulationPlotter.without_world(operation_args=operation_args)
+        simulation_plotter = SimulationPlotter.without_world(
+            simulation_outputs_path=args.outputs_dir,
+            operation_args=operation_args
+        )
         simulation_plotter.load_operations(generate_simulation_record=False)
         if mpi_rank == 0:
             simulation_plotter.make_plots()

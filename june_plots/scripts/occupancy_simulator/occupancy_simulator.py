@@ -69,7 +69,7 @@ class OccupancySimulator:
                 self.world.cinemas, 
                 #self.world.city_transports, 
                 #self.world.inter_city_transports, 
-                #self.world.companies, 
+                self.world.companies, 
                 self.world.groceries, 
                 #self.world.hospitals, 
                 #self.world.households, # households aren't really all that interesting?
@@ -85,8 +85,8 @@ class OccupancySimulator:
         )
 
     def track_occupancy(self, n_people, group: Group):
-        if isinstance(group, SocialVenue):
-            occ = n_people #/ group.max_size
+        #if isinstance(group, SocialVenue):
+        occ = n_people #/ group.max_size
         self.occupancy_tracker[group.spec].append(
             (occ, group.id) #, group.super_area.region, group.super_area)
         )
@@ -138,22 +138,28 @@ class OccupancySimulator:
         self.record_output()
 
     def process_results(self):
-        pass
-
-    def load_results(self):
         """this is fast enough to process every time?"""
         self.read = RecordReader(
             self.simulation_outputs_path, 
             record_name="simulation_record.h5"
         )
         self.occupancy_df = self.read.table_to_df("occupancy", index="location_id")
+        print("read occ df")
         self.occupancy_df.reset_index(inplace=True)
         self.occupancy_df["timestamp"] = pd.to_datetime(self.occupancy_df["timestamp"])
         self.occupancy_df.set_index(["venue_type", "timestamp", "time"], inplace=True)
+        print("occ index")
 
         self.occupancy_df.sort_index(inplace=True) # gets rid of lexsort error?
+        occupancy_df_path = self.simulation_outputs_path / "occupancy.csv"
+        self.occupancy_df.to_csv(occupancy_df_path)
         #self.locations_df = self.read.table_to_df("locations")
         #self.occupancy_df.merge() # can merge for by region.
+
+    def load_results(self):
+        #occupancy_df_path = self.simulation_outputs_path / "occupancy.csv"
+        #self.occupancy_df = pd.read_csv(occupancy_df_path)      
+        self.process_results()
 
     def plot_venue_occupancy(
         self, venue_type, timestamps=None, bins=None, color_palette=None,
@@ -164,18 +170,17 @@ class OccupancySimulator:
             dx = 0.05
             bins = np.arange(0., 1. + dx, dx)
         if color_palette is None:
-            color_palette = {"general_1": "C0", "general_2": "C1", "general_3": "C2"}
+            color_palette = {f"general_{i+1}": f"C{i}" for i in range(10)}
 
-        mids = 0.5*(bins[1:]+bins[:-1])
+        mids = 0.5*(bins[1:] + bins[:-1])
         f, ax = plt.subplots()
         #for timestamp in timestamps:
         #    date = timestamp.strftime("%Y-%m-%d")
         #    time = timestamp.strftime("%H:%M")
         for (timestamp, time), df in self.occupancy_df.groupby(["timestamp","time"]):
+            if venue_type not in df.index:
+                continue
             data = df.loc[venue_type]
-            #    (venue_type, date, time)
-            #]
-            print(data)
             plot_kwargs = {}
             if timestamp.weekday() > 4:
                 plot_kwargs["color"] = color_palette["general_1"]
@@ -194,6 +199,54 @@ class OccupancySimulator:
         ax.legend()
         return ax
 
+    def plot_venue_occupancy_timeseries(
+        self, venue_type, color_palette=None
+    ):
+        data = self.occupancy_df.loc[venue_type]
+
+        timestamps = sorted(data.index.get_level_values(0).unique())
+        weekend_timestamps = [t for t in timestamps if t.weekday() > 4]
+        weekday_timestamps = [t for t in timestamps if t.weekday() <= 4]
+
+        weekend_data = (
+            data
+            .loc[(weekend_timestamps, slice(None))]
+            .groupby("timestamp")
+            .agg({"occupancy": [np.mean, np.std]})
+        )
+        
+        weekend_data.columns = ["_".join(col) for col in weekend_data.columns]
+        print(weekend_data)
+    
+        weekday_data = (
+            data
+            .loc[(weekday_timestamps, slice(None))]
+            .groupby(["timestamp", "time"])
+            .agg({"occupancy": [np.mean, np.std]})
+        )
+        weekday_data.columns = ["_".join(col) for col in weekday_data.columns]
+        print(weekday_data)
+
+        fig, ax = plt.subplots(figsize=(8,5))
+        ax.scatter(
+            weekend_data.index, weekend_data["occupancy_mean"], 
+            color=color_palette["general_1"], s=5, label="weekend"
+        )
+        index_levels = weekday_data.index.get_level_values(1).unique()
+        #for ii, weekday_time in enumerate(index_levels):
+        #    for t in weekday_time.index.unique():
+        #        print(t)
+        #    weekday_time_data = weekday_data.loc[(slice(None), weekday_time)]
+        for ii, (weekday_time, weekday_time_data) in enumerate(weekday_data.groupby("time")):
+            print(weekday_time_data.index)
+            ax.scatter(
+                weekday_time_data.index.get_level_values(0), weekday_time_data["occupancy_mean"],
+                color=color_palette[f"general_{ii+2}"], label=f"weekday {weekday_time}", s=5
+            )
+        ax.legend()
+
+        return ax
+
     def make_plots(self, save_dir, venue_types=None, color_palette=None):
         save_dir.mkdir(exist_ok=True, parents=True)
         if venue_types is None:
@@ -204,6 +257,11 @@ class OccupancySimulator:
             venue_plot.plot()
             plt.savefig(save_dir / f"{venue_type}_occupancy.png", dpi=150, bbox_inches='tight')
 
+            timeseries_plot = self.plot_venue_occupancy_timeseries(
+                venue_type, color_palette=color_palette
+            )
+            timeseries_plot.plot()
+            plt.savefig(save_dir / f"{venue_type}_occupancy_timeseries.png", dpi=150, bbox_inches='tight')
 
 
 
