@@ -342,6 +342,11 @@ class Region:
     def regional_compliance(self):
         return self.policy["regional_compliance"]
 
+    @regional_compliance.setter
+    def regional_compliance(self, value):
+        self.policy["regional_compliance"] = value
+
+
     @property
     def closed_venues(self):
         return self.policy["local_closed_venues"] | self.policy["global_closed_venues"]
