@@ -242,6 +242,7 @@ class Leisure:
             )  # we boost the policy parameter as well
         else:
             policy_activity_poisson_parameter = original_activity_poisson_parameter
+
         activity_poisson_parameter = distributor.get_poisson_parameter(
             sex=sex,
             age=age,
