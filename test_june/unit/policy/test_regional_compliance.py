@@ -1,5 +1,5 @@
 from june.geography import Region, Regions
-from june.policy import RegionalCompliance, RegionalCompliances
+from june.policy import RegionalCompliance, RegionalCompliances, TieredLockdown, TieredLockdowns
 
 
 class TestSetRegionCompliance:
