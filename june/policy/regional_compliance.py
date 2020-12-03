@@ -46,7 +46,7 @@ class TieredLockdown(Policy):
         date = read_date(date)
         if self.is_active(date):
             for region in regions:
-                lockdown_tier = self.tiers_per_region[region.name]
+                lockdown_tier = int(self.tiers_per_region[region.name])
                 region.policy["lockdown_tier"] = lockdown_tier
                 if lockdown_tier == 2:
                     region.policy["local_closed_venues"].update("household_visits")
