@@ -136,6 +136,9 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         original_poisson_parameter = (
             original_poisson_parameter * self.get_weekend_boost(is_weekend)
         )
+        if policy_poisson_parameter is None:
+            return original_poisson_parameter
+        
         poisson_parameter = original_poisson_parameter + regional_compliance * (
             policy_poisson_parameter - original_poisson_parameter
         )
