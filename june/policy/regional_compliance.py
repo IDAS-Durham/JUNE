@@ -57,7 +57,7 @@ class TieredLockdowns(PolicyCollection):
     policy_type = "tiered_lockdown"
 
     def apply(self, date: datetime, regions: Regions):
-        # before applying compliances, reset all of them to None
+        # before applying compliances, reset all of them to None and empty sets
         if self.policies:
             for region in regions:
                 region.policy["lockdown_tier"] = None
