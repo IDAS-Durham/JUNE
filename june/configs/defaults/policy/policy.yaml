@@ -26,15 +26,15 @@ tiered_lockdown:
     start_time: 2020-12-03
     end_time: 9999-12-01
     tiers_per_region:
-      London: 1.
-      South East: 1.
-      South West: 1.
-      West Midlands: 1.
-      East Midlands: 1.
-      East of England: 1.
-      North West: 1.
-      North East: 1.
-      Yorkshire and The Humber: 1.
+      London: 2.
+      South East: 2.
+      South West: 2.
+      West Midlands: 3. # becuase of Birmingham
+      East Midlands: 3.
+      East of England: 2.
+      North West: 3. # becuase of Manchester
+      North East: 3.
+      Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
 
 limit_long_commute:
   # prevents people that have their workplace
