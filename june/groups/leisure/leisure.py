@@ -231,14 +231,17 @@ class Leisure:
         Computes an activity poisson parameter taking into account active policies
         and regional compliances.
         """
-        weekend_boost = distributor.get_weekend_boost(is_weekend=is_weekend)
+        if is_weekend:
+            day_type = "weekend"
+        else:
+            day_type = "weekday"
         original_activity_poisson_parameter = distributor.get_poisson_parameter(
-            sex=sex, age=age, is_weekend=is_weekend
+            sex=sex, age=age, day_type=day_type 
         )
         if activity in self.policy_poisson_parameters:
-            policy_activity_poisson_parameter = self.policy_poisson_parameters[
-                activity
-            ][sex][age] * weekend_boost # we boost the policy parameter as well
+            policy_activity_poisson_parameter = (
+                self.policy_poisson_parameters[activity][sex][age] # TODO: daytype
+            )  # we boost the policy parameter as well
         else:
             policy_activity_poisson_parameter = original_activity_poisson_parameter
         activity_poisson_parameter = (
@@ -330,13 +333,13 @@ class Leisure:
     ):
         """
         Main function of the Leisure class. For every possible activity a person can do,
-        we chech the Poisson parameter lambda = probability / day * deltat of that activty 
+        we chech the Poisson parameter lambda = probability / day * deltat of that activty
         taking place. We then sum up the Poisson parameters to decide whether a person
         does any activity at all. The relative weight of the Poisson parameters gives then
-        the specific activity a person does. 
+        the specific activity a person does.
         If a person ends up going to a social venue, we do a second check to see if his/her
         entire household accompanies him/her.
-        The social venue subgroups are attached to the involved people, but they are not 
+        The social venue subgroups are attached to the involved people, but they are not
         added to the subgroups, since it is possible they change their plans if a policy is in
         place or they have other responsibilities.
         The function returns None if no activity takes place.
@@ -412,11 +415,13 @@ class Leisure:
                     regional_compliance=region.regional_compliance,
                 )
         else:
-            self.probabilities_by_region_sex_age = self._generate_leisure_probabilities_for_age_and_sex(
-                delta_time=delta_time,
-                working_hours=working_hours,
-                is_weekend=is_weekend,
-                regional_compliance=1.0,
+            self.probabilities_by_region_sex_age = (
+                self._generate_leisure_probabilities_for_age_and_sex(
+                    delta_time=delta_time,
+                    working_hours=working_hours,
+                    is_weekend=is_weekend,
+                    regional_compliance=1.0,
+                )
             )
 
     def _generate_leisure_probabilities_for_age_and_sex(

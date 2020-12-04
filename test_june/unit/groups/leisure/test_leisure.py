@@ -25,66 +25,105 @@ class MockArea:
         pass
 
 
-@fixture(name="geography")
-def make_geography():
-    geography = Geography.from_file({"super_area": ["E02000140"]})
-    return geography
-
-
 @fixture(name="leisure")
 def make_leisure():
     pubs = Pubs([Pub()], make_tree=False)
     pub_distributor = PubDistributor(
         pubs,
-        poisson_parameters={"male": {"18-50": 0.5}, "female": {"10-40": 0.2}},
-        drags_household_probability=0.0,
+        times_per_week={
+            "weekday": {"male": {"18-50": 0.5}, "female": {"10-40": 0.3}},
+            "weekend": {"male": {"18-50": 0.7}, "female": {"18-50": 0.4}},
+        },
     )
     pubs[0].coordinates = [1, 2]
     cinemas = Cinemas([Cinema()], make_tree=False)
     cinemas[0].coordinates = [1, 2]
     cinema_distributor = CinemaDistributor(
         cinemas,
-        poisson_parameters={"male": {"10-40": 0.2}, "female": {"10-40": 0.2}},
+        times_per_week={
+            "weekday": {"male": {"10-40": 0.1}, "female": {"10-40": 0.2}},
+            "weekend": {"male": {"18-50": 0.4}, "female": {"18-50": 0.5}},
+        },
         drags_household_probability=1.0,
     )
     leisure = Leisure(
         leisure_distributors={"pubs": pub_distributor, "cinemas": cinema_distributor}
     )
-    leisure.generate_leisure_probabilities_for_timestep(0.01, False, False)
     return leisure
 
 
-def test__probability_of_leisure(leisure):
-    person = Person.from_attributes(sex="m", age=26)
-    person.area = MockArea()
-    household = Household(type="student")
-    household.add(person)
-    person.area.social_venues = {
-        "cinemas": [leisure.leisure_distributors["cinemas"].social_venues[0]],
-        "pubs": [leisure.leisure_distributors["pubs"].social_venues[0]],
-    }
-
-    estimated_time_for_activity = 1 / (0.5 + 0.2)
-    times = []
-    times_goes_pub = 0
-    times_goes_cinema = 0
-    for _ in range(0, 300):
-        counter = 0
-        while True:
-            counter += 0.01
+def _get_times_pub_cinema(leisure, person, is_weekend=False):
+    if is_weekend:
+        delta_time = 0.125 # in reality is 0.5 but make it smaller for stats
+        n_days = 8 # in reality is 2
+    else:
+        delta_time = 1/8
+        n_days = 5
+    leisure.generate_leisure_probabilities_for_timestep(
+        delta_time, working_hours=False, is_weekend=is_weekend
+    )
+    times_goes_pub = []
+    times_goes_cinema = []
+    for _ in range(0, 5000):
+        goes_pub = 0
+        goes_cinema = 0
+        for _ in range(n_days):  # one week
             subgroup = leisure.get_subgroup_for_person_and_housemates(person)
             if subgroup is None:
                 continue
             if subgroup.group.spec == "pub":
-                times_goes_pub += 1
+                goes_pub += 1
             elif subgroup.group.spec == "cinema":
-                times_goes_cinema += 1
+                goes_cinema += 1
             else:
                 raise ValueError
-            times.append(counter)
-            break
-    assert np.isclose(np.mean(times), estimated_time_for_activity, atol=0.2, rtol=0)
-    assert np.isclose(times_goes_pub / times_goes_cinema, 0.5 / 0.2, atol=0, rtol=0.25)
+        times_goes_pub.append(goes_pub)
+        times_goes_cinema.append(goes_cinema)
+    times_pub_a_week = np.mean(times_goes_pub)
+    times_cinema_a_week = np.mean(times_goes_cinema)
+    return times_pub_a_week, times_cinema_a_week
+
+
+def test__probability_of_leisure(leisure):
+    household = Household(type="student")
+    male = Person.from_attributes(sex="m", age=26)
+    male.area = MockArea()
+    household.add(male)
+    female = Person.from_attributes(sex="f", age=26)
+    female.area = MockArea()
+    household.add(female)
+    male.area.social_venues = {
+        "cinemas": [leisure.leisure_distributors["cinemas"].social_venues[0]],
+        "pubs": [leisure.leisure_distributors["pubs"].social_venues[0]],
+    }
+    female.area.social_venues = {
+        "cinemas": [leisure.leisure_distributors["cinemas"].social_venues[0]],
+        "pubs": [leisure.leisure_distributors["pubs"].social_venues[0]],
+    }
+    # weekday male
+    times_pub_a_week, times_cinema_a_week = _get_times_pub_cinema(
+        person=male, leisure=leisure, is_weekend=False
+    )
+    assert np.isclose(times_pub_a_week, 0.5, rtol=0.1)
+    assert np.isclose(times_cinema_a_week, 0.1, rtol=0.1)
+    # weekday female
+    times_pub_a_week, times_cinema_a_week = _get_times_pub_cinema(
+        person=female, leisure=leisure, is_weekend=False
+    )
+    assert np.isclose(times_pub_a_week, 0.3, rtol=0.1)
+    assert np.isclose(times_cinema_a_week, 0.2, rtol=0.1)
+    # weekend male
+    times_pub_a_week, times_cinema_a_week = _get_times_pub_cinema(
+        person=male, leisure=leisure, is_weekend=True
+    )
+    assert np.isclose(times_pub_a_week, 0.7, rtol=0.1)
+    assert np.isclose(times_cinema_a_week, 0.4, rtol=0.1)
+    # weekend female
+    times_pub_a_week, times_cinema_a_week = _get_times_pub_cinema(
+        person=female, leisure=leisure, is_weekend=True
+    )
+    assert np.isclose(times_pub_a_week, 0.4, rtol=0.1)
+    assert np.isclose(times_cinema_a_week, 0.5, rtol=0.1)
 
 
 def test__person_drags_household(leisure):
@@ -100,23 +139,21 @@ def test__person_drags_household(leisure):
     social_venue = leisure.leisure_distributors["cinemas"].social_venues[0]
     social_venue.add(person1)
     leisure.send_household_with_person_if_necessary(
-        person1, person1.leisure, 1.0,
+        person1,
+        person1.leisure,
+        1.0,
     )
     for person in [person1, person2, person3]:
         assert person.subgroups.leisure == social_venue.subgroups[0]
 
 
-def test__generate_leisure_from_world():
-    geography = Geography.from_file({"super_area": ["E02002135"]})
-    world = generate_world_from_geography(geography, include_households=True)
-    world.pubs = Pubs.for_geography(geography)
-    world.cinemas = Cinemas.for_geography(geography)
-    world.groceries = Groceries.for_geography(geography)
+def test__generate_leisure_from_world(dummy_world):
+    world = dummy_world
     person = Person.from_attributes(sex="m", age=27)
     household = Household()
     household.area = world.areas[0]
     household.add(person)
-    person.area = geography.areas[0]
+    person.area = world.areas[0]
     leisure = generate_leisure_for_world(
         list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world
     )
@@ -136,6 +173,6 @@ def test__generate_leisure_from_world():
                 n_cinemas += 1
             elif subgroup.group.spec == "grocery":
                 n_groceries += 1
-    assert 0 < n_pubs < 100
-    assert 0 < n_cinemas < 100
-    assert 0 < n_groceries < 107
+    assert 0 < n_pubs 
+    assert 0 < n_cinemas 
+    assert 0 < n_groceries 
