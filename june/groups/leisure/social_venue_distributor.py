@@ -1,7 +1,7 @@
 import numpy as np
 from random import choice, random, sample, randint
-from numba import jit
-from numba import typed
+from numba import jit, typed
+from typing import Dict
 from itertools import chain
 import yaml
 import re
@@ -20,7 +20,6 @@ def random_choice_numba(arr, prob):
     return arr[np.searchsorted(np.cumsum(prob), random(), side="right")]
 
 
-
 class SocialVenueDistributor:
     """
     Tool to associate social venues to people.
@@ -29,11 +28,11 @@ class SocialVenueDistributor:
     def __init__(
         self,
         social_venues: SocialVenues,
-        poisson_parameters: dict = None,
-        drags_household_probability=0.5,
+        times_per_week: Dict[Dict, float],
+        hours_per_day: Dict[Dict, float] = None,
+        drags_household_probability=0.0,
         neighbours_to_consider=5,
         maximum_distance=5,
-        weekend_boost: float = 1.0,
     ):
         """
         A sex/age profile for the social venue attendees can be specified as
@@ -44,7 +43,7 @@ class SocialVenueDistributor:
         social_venues
             A SocialVenues object
         poisson_parameters
-            A dictionary with sex as keys, and as values another dictionary specifying the 
+            A dictionary with sex as keys, and as values another dictionary specifying the
             poisson parameters by age for the activity. Example:
             poisson_parameters = {"m" : {"0-50":0.5, "50-100" : 0.2, "f" : {"0-100" : 0.5}}
             Note that the upper limit of the age bracket is not inclusive.
@@ -53,9 +52,18 @@ class SocialVenueDistributor:
         weekend_boost
             boosting factor for the weekend probability
         """
+        if hours_per_day is None:
+            hours_per_day = {
+                "weekday": {
+                    "male": {"0-65": 3, "65-100": 11},
+                    "female": {"0-65": 3, "65-100": 11},
+                },
+                "weekend": {"male": {"0-100": 12}, "female": {"0-100": 12}},
+            }
         self.social_venues = social_venues
-        self.poisson_parameters = self._parse_poisson_parameters(poisson_parameters)
-        self.weekend_boost = weekend_boost
+        self.poisson_parameters = self._parse_poisson_parameters(
+            times_per_week=times_per_week, hours_per_day=hours_per_day
+        )
         self.neighbours_to_consider = neighbours_to_consider
         self.maximum_distance = maximum_distance
         self.drags_household_probability = drags_household_probability
@@ -70,14 +78,40 @@ class SocialVenueDistributor:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(social_venues, **config)
 
-    def _parse_poisson_parameters(self, poisson_parameters):
+    def _compute_poisson_parameter_from_times_per_week(
+        self, times_per_week, hours_per_day, day_type
+    ):
+        if times_per_week == 0:
+            return 0
+        if day_type == "weekend":
+            days = 2
+        else:
+            days = 5
+        return times_per_week / days * 24 / hours_per_day
+
+    def _parse_poisson_parameters(self, times_per_week, hours_per_day):
         ret = {}
-        ret["m"] = parse_age_probabilities(poisson_parameters["male"])
-        ret["f"] = parse_age_probabilities(poisson_parameters["female"])
+        _sex_t = {"male": "m", "female": "f"}
+        for day_type in ["weekday", "weekend"]:
+            ret[day_type] = {}
+            for sex in ["male", "female"]:
+                parsed_times_per_week = parse_age_probabilities(
+                    times_per_week[day_type][sex]
+                )
+                parsed_hours_per_day = parse_age_probabilities(
+                    hours_per_day[day_type][sex]
+                )
+                ret[day_type][_sex_t[sex]] = [
+                    self._compute_poisson_parameter_from_times_per_week(
+                        times_per_week=parsed_times_per_week[i],
+                        hours_per_day=parsed_hours_per_day[i],
+                        day_type=day_type,
+                    )
+                    for i in range(len(parsed_times_per_week))
+                ]
         return ret
 
-
-    def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
+    def get_poisson_parameter(self, sex, age, day_type):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
         age and sex and the distribution of visitors in the venue.
@@ -91,8 +125,7 @@ class SocialVenueDistributor:
         is_weekend
             whether it is a weekend or not
         """
-        poisson_parameter = self.poisson_parameters[sex][age]
-        poisson_parameter = poisson_parameter * self.get_weekend_boost(is_weekend)
+        poisson_parameter = self.poisson_parameters[day_type][sex][age]
         return poisson_parameter
 
     def get_weekend_boost(self, is_weekend):
@@ -101,9 +134,7 @@ class SocialVenueDistributor:
         else:
             return 1.0
 
-    def probability_to_go_to_social_venue(
-        self, person, delta_time, is_weekend: bool = False
-    ):
+    def probability_to_go_to_social_venue(self, person, delta_time, day_type):
         """
         Probabilty of a person going to one social venue according to their
         age and sex and the distribution of visitors in the venue.
@@ -117,9 +148,7 @@ class SocialVenueDistributor:
         is_weekend
             whether it is a weekend or not
         """
-        poisson_parameter = self.get_poisson_parameter(
-            person.sex, person.age, is_weekend
-        )
+        poisson_parameter = self.get_poisson_parameter(person.sex, person.age, day_type)
         return 1 - np.exp(-poisson_parameter * delta_time)
 
     def get_possible_venues_for_area(self, area: Area):
@@ -137,7 +166,7 @@ class SocialVenueDistributor:
             closest_venue = self.social_venues.get_closest_venues(area_location, k=1)
             if closest_venue is None:
                 return
-            return (closest_venue[0], )
+            return (closest_venue[0],)
         indices_len = min(len(potential_venues), self.neighbours_to_consider)
         random_idx_choice = sample(range(len(potential_venues)), indices_len)
         return tuple([potential_venues[idx] for idx in random_idx_choice])
@@ -151,7 +180,7 @@ class SocialVenueDistributor:
         Parameters
         ----------
         person
-            
+
         """
         person_location = person.area.coordinates
         potential_venues = self.social_venues.get_venues_in_radius(
@@ -174,5 +203,3 @@ class SocialVenueDistributor:
 
     def get_leisure_subgroup_type(self, person):
         return 0
-
-
