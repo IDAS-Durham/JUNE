@@ -28,7 +28,7 @@ class TestSetTiers:
         tiered_lockdown = TieredLockdown(
             start_time="2020-05-01",
             end_time="2020-09-01",
-            tiers_per_region={"London": 2},
+            tiers_per_region={"London": 2.},
         )
         tiered_lockdowns = TieredLockdowns([tiered_lockdown])
         region = Region(name="London")
