@@ -32,7 +32,8 @@ class LeisurePolicies(PolicyCollection):
 
         This is very similar to how we deal with social distancing / mask wearing policies.
         """
-        leisure.closed_venues = set()
+        for region in leisure.regions:
+            region.policy["global_closed_venues"] = set()
         leisure.policy_poisson_parameters = {}
         change_leisure_probability_policies_counter = 0
         for policy in self.get_active(date):
@@ -71,8 +72,9 @@ class CloseLeisureVenue(LeisurePolicy):
         self.venues_to_close = venues_to_close
 
     def apply(self, leisure: Leisure):
-        for venue in self.venues_to_close:
-            leisure.closed_venues.add(venue)
+        for region in leisure.regions:
+            for venue in self.venues_to_close:
+                region.policy["global_closed_venues"].add(venue)
 
 
 class ChangeLeisureProbability(LeisurePolicy):
