@@ -165,13 +165,6 @@ def create_simulator_box(world_box, interaction, selector):
     )
 
 
-@pytest.fixture(name="world_visits", scope="session")
-def make_super_areas():
-    geo = Geography.from_file({"super_area": ["E02003353"]})
-    geo.care_homes = CareHomes.for_geography(geo)
-    world = generate_world_from_geography(geo, include_households=True)
-    return world
-
 
 # policy dummy world
 @pytest.fixture(name="dummy_world", scope="session")

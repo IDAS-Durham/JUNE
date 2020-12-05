@@ -7,7 +7,7 @@ import yaml
 import re
 
 from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
-from june.groups import Household
+from june.groups import Household, ExternalSubgroup
 from june.utils.parse_probabilities import parse_age_probabilities
 from june.geography import Area
 
@@ -33,6 +33,7 @@ class SocialVenueDistributor:
         drags_household_probability=0.0,
         neighbours_to_consider=5,
         maximum_distance=5,
+        leisure_subgroup_type=0,
     ):
         """
         A sex/age profile for the social venue attendees can be specified as
@@ -42,15 +43,28 @@ class SocialVenueDistributor:
         ----------
         social_venues
             A SocialVenues object
-        poisson_parameters
-            A dictionary with sex as keys, and as values another dictionary specifying the
-            poisson parameters by age for the activity. Example:
-            poisson_parameters = {"m" : {"0-50":0.5, "50-100" : 0.2, "f" : {"0-100" : 0.5}}
-            Note that the upper limit of the age bracket is not inclusive.
-            The probability of going into a social venue will then be determined by
-            1 - exp(-poisson_parameter(age,sex) * delta_t * weekend_boost)
-        weekend_boost
-            boosting factor for the weekend probability
+        times_per_week:
+            How many times per day type, age, and sex, a person does this activity.
+            Example:
+            times_per_week = {"weekday" : {"male" : {"0-50":0.5, "50-100" : 0.2},
+                                            "female" : {"0-100" : 0.5}},
+                              "weekend" : {"male" : {"0-100" : 1.0},
+                                            "female" : {"0-100" : 1.0}}}
+        hours_per_day:
+            How many leisure hours per day a person has. This is the time window in which
+            a person can do leisure.
+            Example:
+            hours_per_day = {"weekday" : {"male" : {"0-65": 3, "65-100" : 11},
+                                          "female" : {"0-65" : 3, "65-100" : 11}},
+                              "weekend" : {"male" : {"0-100" : 12},
+                                            "female" : {"0-100" : 12}}}
+        drags_household_probabilitiy:
+            Probability of doing a certain activity together with the housheold.
+        maximum_distance:
+            Maximum distance to travel until the social venue
+        leisure_subgroup_type
+            Subgroup of the venue that the person will be appended to
+            (for instance, the visitors subgroup of the care home)
         """
         if hours_per_day is None:
             hours_per_day = {
@@ -67,6 +81,7 @@ class SocialVenueDistributor:
         self.neighbours_to_consider = neighbours_to_consider
         self.maximum_distance = maximum_distance
         self.drags_household_probability = drags_household_probability
+        self.leisure_subgroup_type = leisure_subgroup_type
         self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
         self.spec = "_".join(self.spec).lower()
 
@@ -111,7 +126,7 @@ class SocialVenueDistributor:
                 ]
         return ret
 
-    def get_poisson_parameter(self, sex, age, day_type):
+    def get_poisson_parameter(self, sex, age, day_type, working_hours):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
         age and sex and the distribution of visitors in the venue.
@@ -127,12 +142,6 @@ class SocialVenueDistributor:
         """
         poisson_parameter = self.poisson_parameters[day_type][sex][age]
         return poisson_parameter
-
-    def get_weekend_boost(self, is_weekend):
-        if is_weekend:
-            return self.weekend_boost
-        else:
-            return 1.0
 
     def probability_to_go_to_social_venue(self, person, delta_time, day_type):
         """
@@ -171,29 +180,27 @@ class SocialVenueDistributor:
         random_idx_choice = sample(range(len(potential_venues)), indices_len)
         return tuple([potential_venues[idx] for idx in random_idx_choice])
 
-    def get_social_venue_for_person(self, person):
-        """
-        Adds a person to one of the social venues in the distributor. To decide, we select randomly
-        from a certain number of neighbours, or the closest venue if the distance is greater than
-        the maximum_distance.
-
-        Parameters
-        ----------
-        person
-
-        """
-        person_location = person.area.coordinates
-        potential_venues = self.social_venues.get_venues_in_radius(
-            person_location, self.maximum_distance
-        )
-        if potential_venues is None:
-            return self.social_venues.get_closest_venues(person_location, k=1)[0]
+    def get_leisure_group(self, person):
+        candidates = person.area.social_venues[self.spec]
+        n_candidates = len(candidates)
+        if n_candidates == 0:
+            return
+        elif n_candidates == 1:
+            group = candidates[0]
         else:
-            return choice(
-                potential_venues[
-                    : min(len(potential_venues), self.neighbours_to_consider)
-                ]
-            )
+            group = candidates[randint(0, n_candidates - 1)]
+
+    def get_leisure_subgroup(self, person, to_send_abroad=None):
+        group = self.get_leisure_group(person)
+        # this may not necessary be the same subgroup, allow for customization here.
+        if group is None:
+            return
+        subgroup = group.get_leisure_subgroup(
+            person=person,
+            subgroup_type=self.leisure_subgroup_type,
+            to_send_abroad=to_send_abroad,
+        )
+        return subgroup
 
     def person_drags_household(self):
         """
@@ -201,5 +208,39 @@ class SocialVenueDistributor:
         """
         return random() < self.drags_household_probability
 
-    def get_leisure_subgroup_type(self, person):
-        return 0
+    def send_household_with_person_if_necessary(self, person, to_send_abroad=None):
+        """
+        When we know that the person does an activity in the social venue X,
+        then we ask X whether the person needs to drag the household with
+        him or her.
+        """
+        if (
+            person.residence.group.spec == "care_home"
+            or person.residence.group.type in ["communal", "other", "student"]
+        ):
+            return
+        subgroup = person.leisure
+        if self.person_drags_household():
+            for mate in person.residence.group.residents:
+                if mate != person:
+                    if mate.busy:
+                        if (
+                            mate.leisure is not None
+                        ):  # this perosn has already been assigned somewhere
+                            if not mate.leisure.external:
+                                if mate not in mate.leisure.people:
+                                    # person active somewhere else, let's not disturb them
+                                    continue
+                                mate.leisure.remove(mate)
+                            else:
+                                ret = to_send_abroad.delete_person(mate, mate.leisure)
+                                if ret:
+                                    # person active somewhere else, let's not disturb them
+                                    continue
+                            if not subgroup.external:
+                                subgroup.append(mate)
+                            else:
+                                to_send_abroad.add_person(mate, subgroup)
+                    mate.subgroups.leisure = (
+                        subgroup  # person will be added later in the simulator.
+                    )

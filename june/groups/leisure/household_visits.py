@@ -39,7 +39,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
 
     def link_households_to_households(self, super_areas):
         """
-        Links people between households. Strategy: We pair each household with 0, 1, or 2 other households (with equal prob.). The household of the former then has a probability of visiting the household of the later 
+        Links people between households. Strategy: We pair each household with 0, 1, or 2 other households (with equal prob.). The household of the former then has a probability of visiting the household of the later
         at every time step.
 
         Parameters
@@ -79,17 +79,16 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                     person_idx = randint(0, len(house.people) - 1)
                     households_to_visit.append(house)
                 if households_to_visit:
-                    household.residences_to_visit["household"] = tuple(households_to_visit)
+                    household.residences_to_visit["household"] = tuple(
+                        households_to_visit
+                    )
 
     def get_social_venue_for_person(self, person):
         households_to_visit = person.residence.group.residences_to_visit["household"]
         if households_to_visit is None:
             return None
-        return households_to_visit[
-            randint(0, len(households_to_visit) - 1)
-        ]
+        return households_to_visit[randint(0, len(households_to_visit) - 1)]
 
-    def get_leisure_subgroup_type(self, person):
         """
         A person wants to come and visit this household. We need to assign the person
         to the relevant age subgroup, and make sure the residents welcome him and

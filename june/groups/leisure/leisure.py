@@ -178,12 +178,7 @@ class Leisure:
         drags_household_probabilities = []
         activities = []
         for activity, distributor in self.leisure_distributors.items():
-            if (
-                activity == "household_visits"
-                and working_hours
-                or distributor.spec in self.closed_venues
-            ):
-                # we do not have household visits during working hours as most households by then.
+            if distributor.spec in self.closed_venues:
                 continue
             drags_household_probabilities.append(
                 distributor.drags_household_probability
@@ -194,6 +189,7 @@ class Leisure:
                 age=age,
                 sex=sex,
                 is_weekend=is_weekend,
+                working_hours=working_hours,
                 regional_compliance=regional_compliance,
             )
             poisson_parameters.append(activity_poisson_parameter)
@@ -225,6 +221,7 @@ class Leisure:
         age: int,
         sex: str,
         is_weekend: bool,
+        working_hours: bool,
         regional_compliance: float,
     ):
         """
@@ -236,12 +233,14 @@ class Leisure:
         else:
             day_type = "weekday"
         original_activity_poisson_parameter = distributor.get_poisson_parameter(
-            sex=sex, age=age, day_type=day_type 
+            sex=sex, age=age, day_type=day_type, working_hours=working_hours
         )
         if activity in self.policy_poisson_parameters:
-            policy_activity_poisson_parameter = (
-                self.policy_poisson_parameters[activity][sex][age] # TODO: daytype
-            )  # we boost the policy parameter as well
+            policy_activity_poisson_parameter = self.policy_poisson_parameters[
+                activity
+            ][sex][
+                age
+            ]  # TODO: daytype  # we boost the policy parameter as well
         else:
             policy_activity_poisson_parameter = original_activity_poisson_parameter
         activity_poisson_parameter = (
@@ -273,45 +272,6 @@ class Leisure:
                     list(self.probabilities_by_region_sex_age.keys())[0]
                 ][person.sex][person.age]["drags_household"][activity]
         return random() < prob
-
-    def send_household_with_person_if_necessary(
-        self, person, subgroup, probability, to_send_abroad=None
-    ):
-        """
-        When we know that the person does an activity in the social venue X,
-        then we ask X whether the person needs to drag the household with
-        him or her.
-        """
-        if (
-            person.residence.group.spec == "care_home"
-            or person.residence.group.type in ["communal", "other", "student"]
-        ):
-            return
-        assert subgroup is not None
-        if random() < probability:
-            for mate in person.residence.group.residents:
-                if mate != person:
-                    if mate.busy:
-                        if (
-                            mate.leisure is not None
-                        ):  # this perosn has already been assigned somewhere
-                            if not mate.leisure.external:
-                                if mate not in mate.leisure.people:
-                                    # person active somewhere else, let's not disturb them
-                                    continue
-                                mate.leisure.remove(mate)
-                            else:
-                                ret = to_send_abroad.delete_person(mate, mate.leisure)
-                                if ret:
-                                    # person active somewhere else, let's not disturb them
-                                    continue
-                            if not subgroup.external:
-                                subgroup.append(mate)
-                            else:
-                                to_send_abroad.add_person(mate, subgroup)
-                    mate.subgroups.leisure = (
-                        subgroup  # person will be added later in the simulator.
-                    )
 
     def get_activity_probabilities_for_person(self, person: Person):
         try:
@@ -359,45 +319,13 @@ class Leisure:
             )
             activity = list(prob_age_sex["activities"].keys())[activity_idx]
             activity_distributor = self.leisure_distributors[activity]
-            leisure_subgroup_type = activity_distributor.get_leisure_subgroup_type(
-                person
+            subgroup = activity_distributor.get_leisure_subgroup(
+                person, to_send_abroad=to_send_abroad
             )
-            if "visits" in activity:
-                residence_type = "_".join(activity.split("_")[:-1])
-                if residence_type not in person.residence.group.residences_to_visit:
-                    return
-                else:
-                    candidates = person.residence.group.residences_to_visit[
-                        residence_type
-                    ]
-            else:
-                candidates = person.area.social_venues[activity]
-            candidates_length = len(candidates)
-            if candidates_length == 0:
-                return
-            elif candidates_length == 1:
-                group = candidates[0]
-            else:
-                group = candidates[randint(0, candidates_length - 1)]
-            if group is None:
-                return
-            elif group.external:
-                subgroup = ExternalSubgroup(
-                    subgroup_type=leisure_subgroup_type, group=group
-                )
-            else:
-                subgroup = group[leisure_subgroup_type]
-            assert subgroup is not None
-            self.send_household_with_person_if_necessary(
-                person,
-                subgroup,
-                prob_age_sex["drags_household"][activity],
-                to_send_abroad=to_send_abroad,
-            )
-            if activity == "household_visits":
-                group.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
-                group.household_visit = True
             person.subgroups.leisure = subgroup
+            activity_distributor.send_household_with_person_if_necessary(
+                person=person, to_send_abroad=to_send_abroad
+            )
             return subgroup
 
     def generate_leisure_probabilities_for_timestep(

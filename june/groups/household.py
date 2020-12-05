@@ -14,7 +14,7 @@ from recordclass import dataobject
 
 class Household(Group):
     """
-    The Household class represents a household and contains information about 
+    The Household class represents a household and contains information about
     its residents.
     We assume four subgroups:
     0 - kids
@@ -51,19 +51,23 @@ class Household(Group):
         self.quarantine_starting_date = None
         self.max_size = max_size
         self.residents = ()
-        self.residences_to_visit = {}
+        self.residences_to_visit = ()
         self.being_visited = False  # this is True when people from other households have been added to the group
+
+    def _get_leisure_subgroup_for_person(self, person):
+        if person.age < 18:
+            subgroup = self.SubgroupType.kids
+        elif person.age <= 35:
+            subgroup = self.SubgroupType.young_adults
+        elif person.age < 65:
+            subgroup = self.SubgroupType.adults
+        else:
+            subgroup = self.SubgroupType.old_adults
+        return subgroup
 
     def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
         if activity == "leisure":
-            if person.age < 18:
-                subgroup = self.SubgroupType.kids
-            elif person.age <= 35:
-                subgroup = self.SubgroupType.young_adults
-            elif person.age < 65:
-                subgroup = self.SubgroupType.adults
-            else:
-                subgroup = self.SubgroupType.old_adults
+            subgroup = self._get_leisure_subgroup_for_person(person=person)
             person.subgroups.leisure = self[subgroup]
             self[subgroup].append(person)
             self.being_visited = True
@@ -150,6 +154,11 @@ class Household(Group):
 
     def get_interactive_group(self, people_from_abroad=None):
         return InteractiveHousehold(self, people_from_abroad=people_from_abroad)
+
+    def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
+        self.being_visited = True
+        self.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
+        return self[self._get_leisure_subgroup_for_person(person=person)]
 
 
 class Households(Supergroup):
