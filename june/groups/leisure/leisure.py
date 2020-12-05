@@ -11,8 +11,7 @@ from june.groups.leisure import (
     PubDistributor,
     GroceryDistributor,
     CinemaDistributor,
-    HouseholdVisitsDistributor,
-    CareHomeVisitsDistributor,
+    ResidenceVisitsDistributor,
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries
 from june.groups import Household, ExternalSubgroup, Households
@@ -74,18 +73,17 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
             leisure_distributors["groceries"] = GroceryDistributor.from_config(
                 world.groceries
             )
-    if "care_home_visits" in list_of_leisure_groups:
-        if not hasattr(world, "care_homes"):
-            raise ValueError("Your world does not have care homes.")
+    if (
+        "household_visits" in list_of_leisure_groups
+        or "care_home_visits" in list_of_leisure_groups
+    ):
+        if not hasattr(world, "care_homes") or not hasattr(world, "households"):
+            raise ValueError(
+                "Your world does not have care homes or households for visits."
+            )
         leisure_distributors[
-            "care_home_visits"
-        ] = CareHomeVisitsDistributor.from_config()
-    if "household_visits" in list_of_leisure_groups:
-        if not hasattr(world, "households"):
-            raise ValueError("Your world does not have households.")
-        leisure_distributors[
-            "household_visits"
-        ] = HouseholdVisitsDistributor.from_config()
+            "residence_visits"
+        ] = ResidenceVisitsDistributor.from_config()
     leisure = Leisure(leisure_distributors=leisure_distributors, regions=world.regions)
     return leisure
 
@@ -134,13 +132,13 @@ class Leisure:
     def distribute_social_venues_to_areas(self, areas: Areas, super_areas: SuperAreas):
         logger.info("Linking households for visits")
         if "household_visits" in self.leisure_distributors:
-            self.leisure_distributors["household_visits"].link_households_to_households(
+            self.leisure_distributors["residence_visits"].link_households_to_households(
                 super_areas
             )
         logger.info("Done")
         logger.info("Linking households with care homes for visits")
         if "care_home_visits" in self.leisure_distributors:
-            self.leisure_distributors["care_home_visits"].link_households_to_care_homes(
+            self.leisure_distributors["residence_visits"].link_households_to_care_homes(
                 super_areas
             )
         logger.info("Done")
