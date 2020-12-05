@@ -20,4 +20,4 @@ from .hospital import (
 from .household import Household, Households, InteractiveHousehold
 from .school import School, Schools, InteractiveSchool
 from .university import University, Universities
-from .leisure import Pub, Pubs, Grocery, Groceries, Cinema, Cinemas, Leisure
+from .leisure import Pub, Pubs, Grocery, Groceries, Cinema, Cinemas, Leisure, Gym, Gyms
