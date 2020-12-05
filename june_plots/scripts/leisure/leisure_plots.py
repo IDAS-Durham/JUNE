@@ -1,193 +1,240 @@
-import sys
+import pandas as pd
 import numpy as np
-from collections import OrderedDict, defaultdict
 import yaml
-from glob import glob
-from scipy import stats
-from random import random
-from tqdm import tqdm
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+from pathlib import Path
+from collections import defaultdict
 
-from june.utils import parse_age_probabilities
+plt.style.use(["science"])
+plt.style.reload_library()
+
+from june.groups.leisure import (
+    PubDistributor,
+    CinemaDistributor,
+    GroceryDistributor,
+    GymDistributor,
+    ResidenceVisitsDistributor,
+    Leisure,
+)
 from june import paths
 
-config_files_leisure = (paths.configs_path / "defaults/groups/leisure").glob("*.yaml")
+config_files_leisure = list(
+    (paths.configs_path / "defaults/groups/leisure").glob("*.yaml")
+)
+
+_sex_dict = {"male": "m", "female": "f"}
+
+
+def _reverse_interval(interval):
+    return f"{interval.left}-{interval.right}"
+
+
+def convert_interval(interval):
+    age1, age2 = list(map(int, interval.split("-")))
+    return pd.Interval(left=age1, right=age2 - 1, closed="both")
+
 
 class LeisurePlots:
+    def __init__(self):
+        leisure_distributors = {
+            "pubs": PubDistributor.from_config(social_venues=None),
+            "groceries": GroceryDistributor.from_config(social_venues=None),
+            "cinemas": CinemaDistributor.from_config(social_venues=None),
+            "gyms": GymDistributor.from_config(social_venues=None),
+            "residence_visits": ResidenceVisitsDistributor.from_config(),
+        }
+        self.leisure = Leisure(leisure_distributors=leisure_distributors)
+        age_edges = [0, 9, 15, 19, 31, 51, 66, 86]
+        self.age_bins = [
+            pd.Interval(left=age_edges[i], right=age_edges[i + 1] - 1, closed="both")
+            for i in range(len(age_edges) - 1)
+        ] + [pd.Interval(left=86, right=99, closed="both")]
 
-    def __init__(self, world):
-        self.world = world
-
-    def run_poisson_process(
-            self,
-    ):
-        probabilities_dict = parse_multiple_config_files()
-        self.time_spent_in_leisure, self.ret_child, self.ret_adult, self.ret_retired = simulate_leisure_week(probabilities_dict)
-
-    def plot_week_probabilities(
-            self,
-    ):
-        "Plotting probabaility of doing different activities in a week"
-
-        activities = []
-        new_activities = []
-        child_probability = []
-        adult_probability = []
-        retired_probability = []
-        for activity in self.ret_adult:
-            activities.append(activity)
-            new_activities.append(activity.replace("_", " "))
-            adult_probability.append(self.ret_adult[activity])
-            try:
-                child_probability.append(self.ret_child[activity])
-            except:
-                child_probability.append(0.)
-            retired_probability.append(self.ret_retired[activity])
-
-        x = np.arange(len(activities))  # the label locations
-        width = 0.35  # the width of the bars
-
-        f, ax = plt.subplots()
-        ax.bar(x - width/2, child_probability, width/2, label = 'Children')
-        ax.bar(x, adult_probability, width/2, label = 'Adults')
-        ax.bar(x + width/2, retired_probability, width/2, label = 'Retired')
-        ax.set_ylabel('Probability of doing activity in a week')
-        ax.set_xticks(x)
-        ax.set_xticklabels(new_activities)
-        ax.legend()
-        plt.xticks(rotation=45)
-
-        return ax
-
-    def plot_leisure_time_spent(
-            self
-    ):
-        "Plotting time spent in leisure by age"
-        
-        f, ax = plt.subplots()
-        ax.bar(self.time_spent_in_leisure.keys(), self.time_spent_in_leisure.values())
-        ax.axvline(65, color = "red", linestyle=":")
-        ax.set_ylabel("Hours of leisure a week")
-        ax.set_xlabel("Age")
-
-        return ax
-
-def parse_config_file(config_file_path):
-    with open(config_file_path) as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-    male_age_probabilities = parse_age_probabilities(config["male_age_probabilities"])
-    female_age_probabilities = parse_age_probabilities(
-        config["female_age_probabilities"]
-    )
-    return male_age_probabilities, female_age_probabilities
-
-def parse_config_file(config_file_path):
-    with open(config_file_path) as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-    male_age_probabilities = parse_age_probabilities(config["male_age_probabilities"])
-    female_age_probabilities = parse_age_probabilities(
-        config["female_age_probabilities"]
-    )
-    return male_age_probabilities, female_age_probabilities
-
-
-def parse_multiple_config_files(config_files=config_files_leisure):
-
-    probabilities_dict = OrderedDict()
-    for config_path in config_files:
-        name = config_path.name.split("/")[-1].split(".")[0]
-        probabilities_dict[name] = {}
-        (
-            probabilities_dict[name]["m"],
-            probabilities_dict[name]["f"],
-        ) = parse_config_file(config_path)
-    return probabilities_dict
-
-
-def simulate_poisson_process(
-    probabilities_dict, leisure_delta_t
-):
-    activities = list(probabilities_dict.keys())
-    does_activity_age = {}
-    for age in np.arange(0, 100):
-        poisson_parameters = [
-            probabilities_dict[activity]["m"][age] for activity in activities
-        ]
-        total_poisson = sum(poisson_parameters)
-        does_activity = random() < (1 - np.exp(-total_poisson * leisure_delta_t))
-        if does_activity:
-            which_activity = np.random.choice(
-                activities, p=np.array(poisson_parameters) / np.sum(poisson_parameters)
-            )
-            does_activity_age[age] = which_activity
+    def get_data_dfs(self, day_type, sex):
+        ret_times = pd.DataFrame(index=self.age_bins)
+        if day_type == "weekday":
+            n_days = 5
         else:
-            does_activity_age[age] = None
-    return does_activity_age
+            n_days = 2
+        for config_file in config_files_leisure:
+            name = Path(config_file).name.split(".")[0]
+            if name == "visits":
+                name = "residence_visits"
+            with open(config_file) as f:
+                config = yaml.load(f, Loader=yaml.FullLoader)
+                times_per_week = config["times_per_week"][day_type][sex]
+                hours_per_day = config["hours_per_day"][day_type][sex]
+                for _age_bin, value in times_per_week.items():
+                    age_bin = convert_interval(_age_bin)
+                    ret_times.loc[age_bin, name] = value
+        return ret_times
 
-def simulate_leisure_week(probabilities_dict):
-    weekday_leisure_workers = [3]
-    weekday_leisure_retired = [8, 3]
-    weekend_leisure = [4,4,4]
-    time_spent_in_leisure = defaultdict(list)
-    child_activities = defaultdict(list)
-    adult_activities = defaultdict(list)
-    retired_activities = defaultdict(list)
-    
-    ages = np.arange(0,100)
-    for i in tqdm(range(50)):
-        time_spent_in_leisure_week = defaultdict(int)
-        child_activities_week = defaultdict(int)
-        adult_activities_week = defaultdict(int)
-        retired_activities_week = defaultdict(int)
-        for _ in range(5):
-            for age in ages:
-                if age < 65:
-                    weekday_leisure = weekday_leisure_workers
-                else:
-                    weekday_leisure = weekday_leisure_retired
-                for dt in weekday_leisure:
-                    activities_age = simulate_poisson_process(probabilities_dict, dt / 24)
-                    if activities_age[age] is not None:
-                        time_spent_in_leisure_week[age] += dt
-                        if age < 19:
-                            child_activities_week[activities_age[age]] += 1
-                        elif age >= 19 and age < 65:
-                            adult_activities_week[activities_age[age]] += 1
-                        else:
-                            retired_activities_week[activities_age[age]] += 1
+    def get_june_dfs(self, day_type, sex):
+        ret_times = pd.DataFrame(index=self.age_bins)
+        ret_hours = pd.DataFrame(index=self.age_bins)
+        for age_bin in self.age_bins:
+            age = int(0.5 * (age_bin.left + age_bin.right))
+            prob_dict = defaultdict(float)
+            hours_dict = defaultdict(float)
+            if day_type == "weekday":
+                n_days = 5
+                if age >= 65:
+                    morning_prob = self.get_activity_probabilities(
+                        age=age,
+                        sex=sex,
+                        is_weekend=False,
+                        working_hours=True,
+                        delta_time=8 / 24,
+                    )
+                    for activity, value in morning_prob.items():
+                        prob_dict[activity] += value * 5  # mo-fri
+                        hours_dict[activity] += value * 5 * 8
+                afternoon_prob = self.get_activity_probabilities(
+                    age=age,
+                    sex=sex,
+                    is_weekend=False,
+                    working_hours=False,
+                    delta_time=3 / 24,
+                )
+                for activity, value in afternoon_prob.items():
+                    prob_dict[activity] += value * 5  # mo-fri
+                    hours_dict[activity] += value * 5 * 3
+            else:
+                n_days = 2
+                for _ in range(3):  # 3 leisure time steps per weekend
+                    ts_prob = self.get_activity_probabilities(
+                        age=age,
+                        sex=sex,
+                        is_weekend=True,
+                        working_hours=False,
+                        delta_time=4 / 24,
+                    )
+                    for activity, value in ts_prob.items():
+                        prob_dict[activity] += value * 2  # saturday and sunday
+                        hours_dict[activity] += value * 2 * 4
+            for activity, value in prob_dict.items():
+                ret_times.loc[age_bin, activity] = value
+            for activity, value in hours_dict.items():
+                ret_hours.loc[age_bin, activity] = value
+        return ret_times, ret_hours
 
-        for _ in range(2):
-            for dt in weekend_leisure:
-                activities_age = simulate_poisson_process(probabilities_dict, dt / 24)
-                for age in ages:
-                    if activities_age[age] is not None:
-                        time_spent_in_leisure_week[age] += dt
-                        if age < 19:
-                            child_activities_week[activities_age[age]] += 1
-                        elif age >= 19 and age < 65:
-                            adult_activities_week[activities_age[age]] += 1
-                        else:
-                            retired_activities_week[activities_age[age]] += 1
-                        
-        for age in activities_age:
-            time_spent_in_leisure[age].append(time_spent_in_leisure_week[age])
-        for activity in child_activities_week:
-            child_activities[activity].append(child_activities_week[activity]/(7*19))
-        for activity in adult_activities_week:
-            adult_activities[activity].append(adult_activities_week[activity]/(7*47))
-        for activity in retired_activities_week:
-            retired_activities[activity].append(retired_activities_week[activity]/(7*36))
-        
-    ret = defaultdict(float)
-    for age in activities_age:
-        ret[age] = np.mean(time_spent_in_leisure[age])
-    ret_child = defaultdict(float)
-    for activity in child_activities:
-        ret_child[activity] = np.mean(child_activities[activity])
-    ret_adult = defaultdict(float)
-    for activity in adult_activities:
-        ret_adult[activity] = np.mean(adult_activities[activity])
-    ret_retired = defaultdict(float)
-    for activity in retired_activities:
-        ret_retired[activity] = np.mean(retired_activities[activity])
-    return ret, ret_child, ret_adult, ret_retired
+    def get_activity_probabilities(
+        self, age, sex, is_weekend, delta_time, working_hours
+    ):
+        sex = _sex_dict[sex]
+        prob_dict = self.leisure.get_leisure_probability_for_age_and_sex(
+            age=age,
+            sex=sex,
+            is_weekend=is_weekend,
+            working_hours=working_hours,
+            delta_time=delta_time,
+            regional_compliance=1,
+        )
+        ret = {}
+        does_activity = prob_dict["does_activity"]
+        for activty, share in prob_dict["activities"].items():
+            ret[activty] = share * does_activity
+        return ret
+
+    def get_toplot(self, day_type, sex):
+        data_df = self.get_data_dfs(day_type=day_type, sex=sex)
+        june_df, _ = self.get_june_dfs(day_type=day_type, sex=sex)
+        june_df = june_df.loc[:, [column for column in data_df.columns]]
+        data_df = data_df.rename(_reverse_interval)
+        june_df = june_df.rename(_reverse_interval)
+        june_df = june_df.rename(columns={"residence_visits": "residence visits"})
+        data_df = data_df.rename(columns={"residence_visits": "residence visits"})
+        june_df = june_df.loc[
+            :, ["pubs", "groceries", "cinemas", "residence visits", "gyms"]
+        ]
+        data_df = data_df.loc[
+            :, ["pubs", "groceries", "cinemas", "residence visits", "gyms"]
+        ]
+        return june_df, data_df
+
+    def plot_times_per_week_comparison_single(
+        self, day_type, sex, ax=None, legend=True
+    ):
+        if ax is None:
+            fig, ax = plt.subplots()
+        toplot_june, toplot_data = self.get_toplot(day_type=day_type, sex=sex)
+        positions = np.arange(len(toplot_data.index)) + 0.15
+        width = 0.35
+        xtra_space = 0.05
+        bottom_june = np.zeros(len(toplot_june.index))
+        bottom_data = np.zeros(len(toplot_june.index))
+        for i, column in enumerate(toplot_june.columns):
+            ax.bar(
+                positions,
+                toplot_june[column],
+                width=width,
+                bottom=bottom_june,
+                color=f"C{i}",
+                label=f"{column} JUNE",
+            )
+            ax.bar(
+                positions + width + xtra_space,
+                toplot_data[column],
+                bottom=bottom_data,
+                width=width,
+                color=f"C{i}",
+                label=f"{column} data",
+                alpha=0.7,
+            )
+            bottom_june += toplot_june[column]
+            bottom_data += toplot_data[column]
+        if legend:
+            ax.legend(title="Leisure Activity")
+        major_tick_positions = []
+        major_tick_labels = []
+        for i, position in enumerate(positions):
+            major_tick_positions.append(position + (width + xtra_space) / 2)
+            major_tick_labels.append(toplot_june.index[i])
+        ax.set_xticks(major_tick_positions)
+        ax.xaxis.set_ticklabels(major_tick_labels)
+        ax.tick_params(axis="x", which="major")
+        ax.set_xlabel("Age range")
+        ax.set_title(f"{day_type} {sex}")
+        return ax
+
+    def plot_times_per_week_comparison(self):
+        fig, ax = plt.subplots(2, 2, figsize=(10, 10))
+        for i, day_type in enumerate(["weekday", "weekend"]):
+            for j, sex in enumerate(["male", "female"]):
+                self.plot_times_per_week_comparison_single(
+                    ax=ax[i, j], day_type=day_type, sex=sex, legend=False
+                )
+                ax[i, j].set_ylabel("Times")
+                handles, labels = ax[i, j].get_legend_handles_labels()
+        fig.legend(handles, labels, loc="center left", bbox_to_anchor=(0.92, 0.5))
+        plt.subplots_adjust(wspace=0.2, hspace=0.5)
+        return fig, ax
+
+    def plot_leisure_hours_per_week(self):
+        ret = None
+        for i, day_type in enumerate(["weekday", "weekend"]):
+            #for j, sex in enumerate(["male", "female"]):
+            if ret is None:
+                _, ret = self.get_june_dfs(day_type=day_type, sex="male")
+            else:
+                _, hours = self.get_june_dfs(day_type=day_type, sex="male")
+                ret += hours
+        ret["total"] = ret.sum(axis=1)
+        ret = ret.rename(_reverse_interval)
+        ret = ret.rename(columns={"residence_visits" : "residence visits"})
+        ax = ret.plot.bar(
+            xlabel="Age range", ylabel="Hours", title="Hours of leisure per week"
+        )
+        ax.axhline(8.6, linestyle="--", color = "C0", alpha=0.5, label= "ONS average")
+        ax.legend()
+        plt.show()
+
+
+if __name__ == "__main__":
+    leisure_plots = LeisurePlots()
+    # leisure_plots.plot_times_per_week_comparison_single(day_type="weekday", sex="female")
+    # fig, ax = leisure_plots.plot_times_per_week_comparison()
+    # fig.savefig("leisure_comparison.pdf", bbox_inches="tight", dpi=300)
+    # plt.show()
+    leisure_plots.plot_leisure_hours_per_week()
