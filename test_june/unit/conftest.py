@@ -329,6 +329,7 @@ def create_full_world(full_world_geography):
     leisure.distribute_social_venues_to_areas(
         areas=world.areas, super_areas=world.super_areas
     )
+    print(world.households[0].residences_to_visit)
     travel = Travel()
     travel.initialise_commute(world)
     return world
