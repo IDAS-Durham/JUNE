@@ -2,6 +2,8 @@ from itertools import count
 from random import choice
 from recordclass import dataobject
 import numpy as np
+from datetime import datetime
+from typing import Optional
 
 from june.infection import Infection
 
@@ -35,6 +37,8 @@ class Person(dataobject):
     sector: str = None
     sub_sector: str = None
     lockdown_status: str = None
+    vaccine_date: Optional[datetime] = None
+    effective_vaccine_date: Optional[datetime] = None
     comorbidity: str = None
     # commute
     mode_of_transport: "ModeOfTransport" = None
