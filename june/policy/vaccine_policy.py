@@ -1,5 +1,7 @@
-from datetime import datetime
-
+import operator
+import random
+import numpy as np
+import datetime 
 from june.demography.person import Person
 from .policy import Policy, PolicyCollection, Policies, read_date
 from june import paths
@@ -9,15 +11,15 @@ class VaccineDistribution(Policy):
 
     def __init__(
         self,
-        start_time: str,
-        end_time: str,
-        group_description: str,
-        group_coverage: int,
-        efficacy: float,
-        second_dose_compliance: float,
-        first_rollout_days: int,
-        mean_time_delay: int,
-        std_time_delay: int,
+        start_time: str = "1900-01-01",
+        end_time: str="2100-01-01",
+        group_description: dict={'by': 'residence', 'group': 'care_home'},
+        group_coverage: float=0.4,
+        efficacy: float=1.,
+        second_dose_compliance: float=1.,
+        first_rollout_days: int=100,
+        mean_time_delay: int=1,
+        std_time_delay: int=1,
     ):
         """
         Policy to apply a vaccinated tag to people based on certain attributes with a given probability
@@ -45,12 +47,39 @@ class VaccineDistribution(Policy):
         """
         
         super().__init__(start_time=start_time, end_time=end_time)
-        self.group_description = group_description
+        self.group_attribute, self.group_value = self.process_group_description(group_description)
         self.group_coverage = group_coverage
         self.efficacy = efficacy
         self.second_dose_compliance = second_dose_compliance
-        self.total_days = (self.end_time - self.start_time).days()
-        self.probabilities = self.calculate_probabilities()
+        self.total_days = (self.end_time - self.start_time).days
+        #self.probabilities = self.calculate_probabilities()
+        self.final_susceptibilty = 1 - efficacy
+        self.vaccinated_ids = set()
+
+    def process_group_description(self, group_description):
+        if group_description["by"] in ("residence", "primary_activity"):
+            return f'{group_description["by"]}.group.spec', group_description["group"]
+        elif group_description["by"] == "age":
+            return f'{group_description["by"]}', group_description["group"]
+
+    def is_target_group(self, person):
+        if type(self.group_value) is not list:
+            try:
+                if (
+                    operator.attrgetter(self.group_attribute)(person)
+                    == self.group_value
+                ):
+                    return True
+            except:
+                return False
+        else:
+            if (
+                self.group_value[0]
+                <= getattr(person, self.group_attribute)
+                <= self.group_value[1]
+            ):
+                return True
+        return False
 
     def calculate_probabilities(self):
         values = np.zeros(total_days)
@@ -63,31 +92,36 @@ class VaccineDistribution(Policy):
 
         return probs
         
+    def apply(self, person: Person, date: datetime):
+        if person.susceptibility == 1. and self.is_target_group(person):
+            if random.random() < 1.: # TODO: fill in this 1. number
+                self.vaccinate(person=person, date=date)
 
-    def apply(self, date: datetime, person: Person):
-        date = read_date(date)
-        if self.is_active(date):
-            days_from_start = int(date - self.start_date).days()
-            
-            if (
-                self.group_description == "care_home_residents"
-                and person.residence.group.spec == 'care_home'
-            ):
-                
-                if randon() < self.probabilities[days_from_start]:
-                    person.vaccinated = True
+    def vaccinate(self, person, date):
+        person.vaccine_date = date
+        person.effective_vaccine_date = date + datetime.timedelta(
+            days=int(np.random.normal(loc=25, scale=10))
+            ) # TODO: change this to second dose + add more necessary numbers on target sus
+        self.vaccinated_ids.add(person.id)
 
-            else:
-                try:
-                    if(
-                        person.age < int(self.group_description.split('-')[1])
-                        and person.age > int(self.group_description.split('-')[0])
-                    ):
-                        if randon() < self.probabilities[days_from_start]:
-                            person.vaccinated = True
-                except:
-                    raise ValueError(f"vaccine policy group_description type not valid")
+    def susceptibility(self, time_from_vaccine, time_effective_from_vaccine):
+        return 1 - time_from_vaccine/time_effective_from_vaccine
 
+    def update_susceptibility(self, person, date):
+        time_effective_from_vaccine = (person.effective_vaccine_date - person.vaccine_date).days
+        person.susceptibility = self.susceptibility(
+            time_from_vaccine=(date-person.vaccine_date).days,
+            time_effective_from_vaccine=time_effective_from_vaccine
+        )
+
+    def update_susceptibility_of_vaccinated(self, people, date):
+        if self.vaccinated_ids:
+            for pid in self.vaccinated_ids:
+                person = people.get_from_id(pid)
+                if person.suscepbility == self.final_susceptibilty:
+                    self.vaccinated_ids.remove(person)
+                else:
+                    self.update_susceptibility(person, date)
 
 class VaccineDistributions(PolicyCollection):
     policy_type = "vaccine_distribution"
