@@ -46,7 +46,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         """
         for super_area in super_areas:
             near_super_areas = super_areas.get_closest_super_areas(
-                super_area.coordinates, k=n_close_super_areas
+                super_area.coordinates, k=min(n_close_super_areas, len(super_areas))
             )
             near_households = []
             for near_super_area in near_super_areas:

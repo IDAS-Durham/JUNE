@@ -568,31 +568,8 @@ class TestSaveWorld:
                 )
                 assert np.array_equal(social_venues_id, social_venues_recovered_id)
         for h1, h2 in zip(full_world.households, full_world_loaded.households):
-            if "household" not in h1.residences_to_visit:
-                assert "household" not in h2.residences_to_visit
-                continue
-            assert len(h1.residences_to_visit["household"]) == len(
-                h2.residences_to_visit["household"]
-            )
-            if "care_home" not in h1.residences_to_visit:
-                assert "care_home" not in h2.residences_to_visit
-                continue
-            assert len(h1.residences_to_visit["care_home"]) == len(
-                h2.residences_to_visit["care_home"]
-            )
-            if len(h1.residences_to_visit["household"]) > 0:
-                h1ids = np.sort(
-                    [relative.id for relative in h1.residences_to_visit["household"]]
-                )
-                h2ids = np.sort(
-                    [relative.id for relative in h2.residences_to_visit["household"]]
-                )
-                assert np.array_equal(h1ids, h2ids)
-            if len(h1.residences_to_visit["care_home"]) > 0:
-                h1ids = np.sort(
-                    [relative.id for relative in h1.residences_to_visit["care_home"]]
-                )
-                h2ids = np.sort(
-                    [relative.id for relative in h2.residences_to_visit["care_home"]]
-                )
-                assert np.array_equal(h1ids, h2ids)
+            assert h1.id == h2.id
+            assert len(h1.residences_to_visit) == len(h2.residences_to_visit)
+            for to_visit1, to_visit2 in zip(h1.residences_to_visit, h2.residences_to_visit):
+                assert to_visit1.spec == to_visit2.spec
+                assert to_visit1.id == to_visit2.id

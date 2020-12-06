@@ -8,6 +8,7 @@ from june.world import World
 from june.groups import Household, Households
 from june.mpi_setup import mpi_rank
 from .utils import read_dataset
+
 nan_integer = -999
 
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
@@ -27,7 +28,7 @@ def save_households_to_hdf5(
 
     Parameters
     ----------
-    companies 
+    companies
         population object
     file_path
         path of the saved hdf5 file
@@ -91,49 +92,43 @@ def save_households_to_hdf5(
                 households_dset["max_size"].resize(newshape)
                 households_dset["max_size"][idx1:idx2] = max_sizes
 
-        # I dont know how to chunk these...
-        households_to_visit = []
-        care_homes_to_visit = []
+        residences_to_visit_specs = []
+        residences_to_visit_ids = []
         for household in households:
-            if (
-                "household" not in household.residences_to_visit 
-                or len(household.residences_to_visit["household"]) == 0
-            ):
-                households_to_visit.append(np.array([nan_integer], dtype=np.int))
+            if not household.residences_to_visit:
+                residences_to_visit_specs.append(np.array(["none"], dtype="S20"))
+                residences_to_visit_ids.append(np.array([nan_integer], dtype=np.int))
             else:
-                households_to_visit.append(
+                residences_to_visit_ids.append(
                     np.array(
-                        [household.id for household in household.residences_to_visit["household"]],
+                        [residence.id for residence in household.residences_to_visit],
                         dtype=np.int,
                     )
                 )
-            if (
-                "care_home" not in household.residences_to_visit
-                or len(household.residences_to_visit["care_home"]) == 0
-            ):
-                care_homes_to_visit.append(np.array([nan_integer], dtype=np.int))
-            else:
-                care_homes_to_visit.append(
+                residences_to_visit_specs.append(
                     np.array(
-                        [care_home.id for care_home in household.residences_to_visit["care_home"]],
-                        dtype=np.int,
+                        [residence.spec for residence in household.residences_to_visit],
+                        dtype="S20",
                     )
                 )
-        care_homes_to_visit = np.array(care_homes_to_visit, dtype=int_vlen_type)
-        if len(np.unique(list(chain(*households_to_visit)))) > 1:
-            households_to_visit = np.array(
-                households_to_visit, dtype=int_vlen_type
+        if len(np.unique(list(chain(*residences_to_visit_ids)))) > 1:
+            residences_to_visit_ids = np.array(
+                residences_to_visit_ids, dtype=int_vlen_type
             )
-            households_dset.create_dataset(
-                "households_to_visit", data=households_to_visit,
+            residences_to_visit_specs = np.array(
+                residences_to_visit_specs, dtype=str_vlen_type
             )
-        if len(np.unique(list(chain(*care_homes_to_visit)))) > 1:
-            care_homes_to_visit = np.array(
-                care_homes_to_visit, dtype=int_vlen_type
-            )
-            households_dset.create_dataset(
-                "care_homes_to_visit", data=care_homes_to_visit,
-            )
+        else:
+            residences_to_visit_ids = np.array(residences_to_visit_ids, dtype=np.int)
+            residences_to_visit_ids = np.array(residences_to_visit_specs, dtype="S20")
+        households_dset.create_dataset(
+            "residences_to_visit_ids",
+            data=residences_to_visit_ids,
+        )
+        households_dset.create_dataset(
+            "residences_to_visit_specs",
+            data=residences_to_visit_specs,
+        )
 
 
 def load_households_from_hdf5(
@@ -176,6 +171,7 @@ def load_households_from_hdf5(
                 household.id = ids[k]
     return Households(households_list)
 
+
 def restore_households_properties_from_hdf5(
     world: World, file_path: str, chunk_size=50000, domain_super_areas=None
 ):
@@ -188,14 +184,6 @@ def restore_households_properties_from_hdf5(
     logger.info("restoring households...")
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         households = f["households"]
-        if "households_to_visit" in households:
-            has_household_visits = True
-        else:
-            has_household_visits = False
-        if "care_homes_to_visit" in households:
-            has_care_home_visits = True
-        else:
-            has_care_home_visits = False
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
         for chunk in range(n_chunks):
@@ -204,12 +192,14 @@ def restore_households_properties_from_hdf5(
             idx2 = min((chunk + 1) * chunk_size, n_households)
             length = idx2 - idx1
             ids = read_dataset(households["id"], idx1, idx2)
-            if has_household_visits:
-                households_to_visit_list = read_dataset(households["households_to_visit"], idx1, idx2)
-            if has_care_home_visits:
-                care_homes_to_visit_list = read_dataset(households["care_homes_to_visit"], idx1, idx2)
             super_areas = read_dataset(households["super_area"], idx1, idx2)
             areas = read_dataset(households["area"], idx1, idx2)
+            residences_to_visit_ids = read_dataset(
+                households["residences_to_visit_ids"], idx1, idx2
+            )
+            residences_to_visit_specs = read_dataset(
+                households["residences_to_visit_specs"], idx1, idx2
+            )
             for k in range(length):
                 if domain_super_areas is not None:
                     """
@@ -227,24 +217,15 @@ def restore_households_properties_from_hdf5(
                 household.area = area
                 area.households.append(household)
                 household.residents = tuple(household.people)
-                # relatives
-                if has_household_visits:
-                    if households_to_visit_list[k][0] == nan_integer:
-                        pass
-                    else:
-                        households_to_visit = []
-                        for house_id in households_to_visit_list[k]:
-                            households_to_visit.append(
-                                world.households.get_from_id(house_id)
-                            )
-                        household.residences_to_visit["household"] = tuple(households_to_visit)
-                if has_care_home_visits:
-                    if care_homes_to_visit_list[k][0] == nan_integer:
-                        pass
-                    else:
-                        care_homes_to_visit = []
-                        for care_home_id in care_homes_to_visit_list[k]:
-                            care_homes_to_visit.append(
-                                world.care_homes.get_from_id(care_home_id)
-                            )
-                        household.residences_to_visit["care_home"] = tuple(care_homes_to_visit)
+                # visits
+                visit_ids = residences_to_visit_ids[k]
+                visit_specs = residences_to_visit_specs[k]
+                to_append = []
+                print(to_append)
+                for visit_id, visit_spec in zip(visit_ids, visit_specs):
+                    if visit_spec == b"household":
+                        residence = world.households.get_from_id(visit_id)
+                    elif visit_spec == b"care_home":
+                        residence = world.care_homes.get_from_id(visit_id)
+                    to_append.append(residence)
+                household.residences_to_visit = tuple(to_append)
