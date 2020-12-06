@@ -227,14 +227,15 @@ class LeisurePlots:
             xlabel="Age range", ylabel="Hours", title="Hours of leisure per week"
         )
         ax.axhline(8.6, linestyle="--", color = "C0", alpha=0.5, label= "ONS average")
-        ax.legend()
-        plt.show()
+        ax.legend(loc="center left", bbox_to_anchor=(1,0.5))
+        return ax.get_figure(), ax
 
 
 if __name__ == "__main__":
     leisure_plots = LeisurePlots()
-    # leisure_plots.plot_times_per_week_comparison_single(day_type="weekday", sex="female")
-    # fig, ax = leisure_plots.plot_times_per_week_comparison()
-    # fig.savefig("leisure_comparison.pdf", bbox_inches="tight", dpi=300)
-    # plt.show()
-    leisure_plots.plot_leisure_hours_per_week()
+    fig, ax = leisure_plots.plot_times_per_week_comparison()
+    fig.savefig("leisure_comparison.pdf", bbox_inches="tight", dpi=300)
+    plt.show()
+    fig, ax = leisure_plots.plot_leisure_hours_per_week()
+    fig.savefig("leisure_hours_per_week.pdf", bbox_inches="tight", dpi=300)
+    plt.show()
