@@ -165,12 +165,14 @@ class InteractiveHousehold(InteractiveGroup):
     def get_processed_beta(self, betas, beta_reductions):
         """
         In the case of households, we need to apply the beta reduction of household visits
-        if the household has a visit, otherwise we apply the beta reduction for a normal household.
+        if the household has a visit, otherwise we apply the beta reduction for a normal 
+        household.
         """
-        beta = betas[self.spec]
         if self.group.being_visited:
+            beta = betas["household_visits"]
             beta_reduction = beta_reductions.get("household_visits", 1.0)
         else:
+            beta = betas["household"]
             beta_reduction = beta_reductions.get(self.spec, 1.0)
         regional_compliance = self.super_area.region.regional_compliance
         return beta * (1 + regional_compliance * (beta_reduction - 1))

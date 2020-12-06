@@ -11,9 +11,10 @@ from june.groups import (
     School,
     Pub,
     InteractiveSchool,
+    InteractiveHousehold,
     Company,
     InteractiveCompany,
-    Household
+    Household,
 )
 from june.interaction import Interaction
 from june.groups.school import _translate_school_subgroup, _get_contacts_in_school
@@ -23,7 +24,7 @@ from june import paths
 test_config = paths.configs_path / "tests/interaction.yaml"
 
 
-def test__substract_information_from_group():
+def test__substract_information_from_group(selector):
     hospital = Hospital(n_beds=None, n_icu_beds=None)
     person1 = Person.from_attributes()
     person2 = Person.from_attributes()
@@ -33,19 +34,18 @@ def test__substract_information_from_group():
     person2.susceptibility = 2
     person3.susceptibility = 3
     person4.susceptibility = 4
-    infection_selector = InfectionSelector.from_file()
     hospital.add(person1, subgroup_type=0)
     hospital.add(person2, subgroup_type=0)
     hospital.add(person3, subgroup_type=1)
     hospital.add(person4, subgroup_type=2)
-    infection_selector.infect_person_at_time(person1, 1)
+    selector.infect_person_at_time(person1, 1)
     person1.infection.update_health_status(5, 5)
     person3.susceptibility = 0.0
     interactive_group = InteractiveGroup(hospital)
     assert len(interactive_group.infector_ids) == 1
     assert interactive_group.infector_ids[0][0] == person1.id
     assert (
-        interactive_group.infector_transmission_probabilities[0]
+        interactive_group.infector_transmission_probabilities[0][0]
         == person1.infection.transmission.probability
     )
     assert len(interactive_group.susceptible_ids) == 2
@@ -169,17 +169,32 @@ class TestInteractiveCompany:
         assert beta_processed == 2
         InteractiveCompany.sector_betas = bkp
 
+
 class TestInteractiveHousehold:
+    def test__household_visits_beta(self):
+        person = Person.from_attributes()
+        region = Region()
+        region.regional_compliance = 1.0
+        super_area = SuperArea(region=region)
+        area = Area(super_area=super_area)
+        household = Household(area=area)
+        betas = {"household": 1, "household_visits": 3}
+        interactive_household = household.get_interactive_group()
+        assert interactive_household.get_processed_beta(betas, beta_reductions={}) == 1
+        household.add(person, activity="leisure")
+        interactive_household = household.get_interactive_group()
+        assert interactive_household.get_processed_beta(betas, beta_reductions={}) == 3
+
     def test__household_visits_social_distancing(self):
         region = Region()
         region.regional_compliance = 1.0
         super_area = SuperArea(region=region)
-        area = Area(super_area = super_area)
+        area = Area(super_area=super_area)
         household = Household(area=area)
         person = Person.from_attributes()
         household.add(person)
-        betas = {"household" : 1}
-        beta_reductions = {"household" : 0.5, "household_visits" : 0.1}
+        betas = {"household": 1, "household_visits" : 2}
+        beta_reductions = {"household": 0.5, "household_visits": 0.1}
         household.add(person)
         int_household = household.get_interactive_group()
         assert household.being_visited is False
@@ -190,4 +205,4 @@ class TestInteractiveHousehold:
         assert household.being_visited is True
         int_household = household.get_interactive_group()
         beta = int_household.get_processed_beta(betas, beta_reductions)
-        assert np.isclose(beta, 0.1)
+        assert np.isclose(beta, 0.2)
