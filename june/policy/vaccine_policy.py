@@ -92,7 +92,6 @@ class VaccineDistribution(Policy):
 
         return probs
         
-
     def apply(self, person: Person, date: datetime):
         if person.susceptibility == 1. and self.is_target_group(person):
             if random.random() < 1.: # TODO: fill in this 1. number
