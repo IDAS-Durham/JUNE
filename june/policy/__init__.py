@@ -40,3 +40,5 @@ from .regional_compliance import (
     TieredLockdown,
     TieredLockdowns
 )
+
+from .vaccine_policy import VaccineDistribution
