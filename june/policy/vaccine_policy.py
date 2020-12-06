@@ -6,6 +6,11 @@ from june.demography.person import Person
 from .policy import Policy, PolicyCollection, Policies, read_date
 from june import paths
 
+# TODO: put in daily probability of being vaccinated
+# TODO: modify parameters
+# TODO: add option for second dose compliance
+# TODO: add type of vaccine that just makes people asymptomatic instead of non susceptible
+
 
 class VaccinePlan:
     def __init__(
@@ -19,18 +24,37 @@ class VaccinePlan:
         original_susceptibility,
     ):
         self.first_dose_date = first_dose_date
-        self.second_dose_date = second_dose_date
         self.first_dose_effective_days = first_dose_effective_days
-        self.second_dose_effective_days = second_dose_effective_days
         self.first_dose_susceptibility = first_dose_susceptibility
-        self.second_dose_susceptibility = second_dose_susceptibility
+        if second_dose_date is None:
+            self.second_dose_date = first_dose_date + datetime.timedelta(days=self.first_dose_effective_days) 
+        else:
+            self.second_dose_date = second_dose_date
+        if second_dose_effective_days is None:
+            self.second_dose_effective_days = 0 
+        else:
+            self.second_dose_effective_days = second_dose_effective_days
+        if second_dose_susceptibility is None:
+            self.second_dose_susceptibility = first_dose_susceptibility
+        else:
+            self.second_dose_susceptibility = second_dose_susceptibility
         self.first_dose_effective_date = self.first_dose_date + datetime.timedelta(
             days=self.first_dose_effective_days
         )
-        self.second_dose_effective_date = self.second_dose_date + datetime.timedelta(
-            days=self.second_dose_effective_days
-        )
+        if second_dose_date is not None:
+            self.second_dose_effective_date = self.second_dose_date + datetime.timedelta(
+                days=self.second_dose_effective_days
+            )
+        else:
+            self.second_dose_effective_date=first_dose_effective_date
         self.original_susceptibility = original_susceptibility
+
+    @property
+    def minimal_susceptibility(self):
+        if self.second_dose_date is None:
+            return self.first_dose_susceptibility
+        else:
+            return self.second_dose_susceptibility
 
     def straight_line(self, n_days, p0, p1):
         m = (p1[1] - p0[1]) / (p1[0] - p0[0])
@@ -155,7 +179,8 @@ class VaccineDistribution(Policy):
         person.vaccine_plan = VaccinePlan(
             first_dose_date=date,
             first_dose_effective_days=10,
-            first_dose_susceptibility=0.5*(person.susceptibility-self.final_susceptibility),
+            first_dose_susceptibility=0.5
+            * (person.susceptibility - self.final_susceptibility),
             second_dose_date=date + datetime.timedelta(days=20),
             second_dose_effective_days=10,
             second_dose_susceptibility=self.final_susceptibility,
@@ -163,19 +188,20 @@ class VaccineDistribution(Policy):
         )
         self.vaccinated_ids.add(person.id)
 
-    def update_susceptibility(self, person,date):
+    def update_susceptibility(self, person, date):
         person.susceptibility = person.vaccine_plan.susceptibility(date=date)
 
     def update_susceptibility_of_vaccinated(self, people, date):
+        ids_to_remove = set()
         if self.vaccinated_ids:
             for pid in self.vaccinated_ids:
                 person = people.get_from_id(pid)
-                if person.suscepbility == self.person.vaccine_plan.final_susceptibility:
-                    #TODO: will need changing if add compliance second dose
-                    self.vaccinated_ids.remove(person)
+                if person.susceptibility == person.vaccine_plan.minimal_susceptibility:
+                    ids_to_remove.add(person.id)
                     person.vaccine_plan = None
                 else:
-                    self.update_susceptibility(person=person,date=date)
+                    self.update_susceptibility(person=person, date=date)
+        self.vaccinated_ids -= ids_to_remove
 
 
 class VaccineDistributions(PolicyCollection):
