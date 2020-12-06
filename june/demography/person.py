@@ -37,8 +37,7 @@ class Person(dataobject):
     sector: str = None
     sub_sector: str = None
     lockdown_status: str = None
-    vaccine_date: Optional[datetime] = None
-    effective_vaccine_date: Optional[datetime] = None
+    vaccine_plan: "VaccinePlan" = None
     comorbidity: str = None
     # commute
     mode_of_transport: "ModeOfTransport" = None
