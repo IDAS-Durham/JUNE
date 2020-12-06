@@ -24,18 +24,6 @@ default_config_filename = paths.configs_path / "config_example.yaml"
 logger = logging.getLogger("leisure")
 
 
-@jit(nopython=True)
-def roll_activity_dice(poisson_parameters, delta_time, n_activities):
-    total_poisson_parameter = np.sum(poisson_parameters)
-    does_activity = random() < (1.0 - np.exp(-total_poisson_parameter * delta_time))
-    if does_activity:
-        poisson_parameters_normalized = poisson_parameters / total_poisson_parameter
-        return random_choice_numba(
-            np.arange(0, n_activities), poisson_parameters_normalized
-        )
-    return None
-
-
 def generate_leisure_for_world(list_of_leisure_groups, world):
     """
     Generates an instance of the leisure class for the specified geography and leisure groups.
@@ -130,14 +118,11 @@ class Leisure:
         self.closed_venues = set()
 
     def distribute_social_venues_to_areas(self, areas: Areas, super_areas: SuperAreas):
-        logger.info("Linking households for visits")
-        if "household_visits" in self.leisure_distributors:
+        logger.info("Linking households and care homes for visits")
+        if "residence_visits" in self.leisure_distributors:
             self.leisure_distributors["residence_visits"].link_households_to_households(
                 super_areas
             )
-        logger.info("Done")
-        logger.info("Linking households with care homes for visits")
-        if "care_home_visits" in self.leisure_distributors:
             self.leisure_distributors["residence_visits"].link_households_to_care_homes(
                 super_areas
             )

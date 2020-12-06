@@ -32,7 +32,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(**config)
 
-    def link_households_to_households(self, super_areas):
+    def link_households_to_households(self, super_areas, n_close_super_areas=10):
         """
         Links people between households. Strategy: We pair each household with 0, 1,
         or 2 other households (with equal prob.). The household of the former then
@@ -45,26 +45,34 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
             list of super areas
         """
         for super_area in super_areas:
-            households_super_area = []
-            for area in super_area.areas:
-                households_super_area += [
-                    household
-                    for household in area.households
-                    if household.type != "communal"
-                ]
-                shuffle(households_super_area)
-            for household in households_super_area:
+            near_super_areas = super_areas.get_closest_super_areas(
+                super_area.coordinates, k=n_close_super_areas
+            )
+            near_households = []
+            for near_super_area in near_super_areas:
+                for area in near_super_area.areas:
+                    near_households += [
+                        household
+                        for household in area.households
+                        if household.type != "communal"
+                    ]
+            shuffle(near_households)
+            households_in_super_area = [
+                household
+                for area in super_area.areas
+                for household in area.households
+                if household.type != "communal"
+            ]
+            for household in households_in_super_area:
                 if household.size == 0:
                     continue
-                households_to_link_n = randint(1, 3)
+                households_to_link_n = randint(2, 4)
                 households_to_visit = []
                 n_linked = 0
                 while n_linked < households_to_link_n:
-                    house_idx = randint(0, len(households_super_area) - 1)
-                    house = households_super_area[house_idx]
-                    if house.id == household.id:
-                        continue
-                    if not house.people:
+                    house_idx = randint(0, len(near_households) - 1)
+                    house = near_households[house_idx]
+                    if house.id == household.id or not house.people:
                         continue
                     households_to_visit.append(house)
                     n_linked += 1
