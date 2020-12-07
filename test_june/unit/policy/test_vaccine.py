@@ -41,6 +41,13 @@ class TestVaccination:
 
     def test__susceptibility(self,):
         person = Person.from_attributes(age=30, sex="f")
+        vaccine_policy = VaccineDistribution(
+            start_time = "2020-12-08",
+            end_time = "2020-12-09",
+            group_description={"by": "age", "group": "20-40"},
+            second_dose_compliance = 1.
+            effective_after_first_dose=1,
+        )
         vaccine_policy = VaccineDistribution()
         assert person.susceptibility == 1.0
         person.vaccine_date = datetime.datetime(2020, 11, 5)

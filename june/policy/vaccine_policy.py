@@ -78,6 +78,9 @@ class VaccineDistribution(Policy):
 
         # second dose
         if random() < self.second_dose_compliance:
+            second_dose_date = date
+            # allow someone to reach maximum first dose effectiveness before applying second dose
+            while second_dose_date < first_effective_date
             second_dose_date = date + datetime.timedelta(
                 days=int(np.random.normal(loc=self.mean_time_delay, scale=self.std_time_delay))
             )
