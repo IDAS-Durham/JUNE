@@ -98,7 +98,7 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     if world.universities is not None:
         logger.info("saving universities...")
         save_universities_to_hdf5(world.universities, file_path)
-    social_venue_possible_specs = ["pubs", "groceries", "cinemas"]  # TODO: generalise
+    social_venue_possible_specs = ["pubs", "groceries", "cinemas", "gyms"]  # TODO: generalise
     social_venues_list = []
     for spec in social_venue_possible_specs:
         if hasattr(world, spec) and getattr(world, spec) is not None:

@@ -323,6 +323,7 @@ def create_full_world(full_world_geography):
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
     world.groceries = Groceries.for_geography(geography)
+    world.gyms = Gyms.for_geography(geography)
     leisure = generate_leisure_for_world(
         ["pubs", "cinemas", "groceries", "household_visits", "care_home_visits"], world
     )

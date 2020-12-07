@@ -38,7 +38,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         if not hasattr(world, "pubs") or world.pubs is None or len(world.pubs) == 0:
             logger.warning("No pubs in this world/domain")
         else:
-            leisure_distributors["pubs"] = PubDistributor.from_config(world.pubs)
+            leisure_distributors["pub"] = PubDistributor.from_config(world.pubs)
     if "cinemas" in list_of_leisure_groups:
         if (
             not hasattr(world, "cinemas")
@@ -47,7 +47,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         ):
             logger.warning("No cinemas in this world/domain")
         else:
-            leisure_distributors["cinemas"] = CinemaDistributor.from_config(
+            leisure_distributors["cinema"] = CinemaDistributor.from_config(
                 world.cinemas
             )
     if "groceries" in list_of_leisure_groups:
@@ -58,7 +58,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         ):
             logger.warning("No groceries in this world/domain")
         else:
-            leisure_distributors["groceries"] = GroceryDistributor.from_config(
+            leisure_distributors["grocery"] = GroceryDistributor.from_config(
                 world.groceries
             )
     if (
