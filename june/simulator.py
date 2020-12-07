@@ -523,15 +523,6 @@ class Simulator:
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
         )
         if n_people != people_active:
-            for person in self.world.people:
-                groups = []
-                for subgroup in person.subgroups.iter():
-                    if subgroup is not None and not subgroup.external:
-                        if person in subgroup.people:
-                            groups.append(subgroup.group.spec)
-                            if len(groups) > 1:
-                                print(f"person {person.id} is in groups {groups}")
-
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {people_active}.\n"

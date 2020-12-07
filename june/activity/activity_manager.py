@@ -230,6 +230,7 @@ class ActivityManager:
                     person.busy = True
                     # this person goes to another MPI domain
                     return subgroup
+
                 subgroup.append(person)
                 return
         raise SimulatorError(
