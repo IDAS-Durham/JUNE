@@ -68,6 +68,24 @@ class VaccineDistribution(Policy):
             return f'{group_description["by"]}.group.spec', group_description["group"]
         elif group_description["by"] == "age":
             return f'{group_description["by"]}', group_description["group"]
+        
+    def vaccinate(self, person, date):
+        # first dose
+        person.first_effective_date = date + datetime.timedelta(days=self.effective_after_first_dose)
+
+        # second dose
+        if random() < self.second_dose_compliance:
+            second_dose_date = date + datetime.timedelta(
+                days=int(np.random.normal(loc=self.mean_time_delay, scale=self.std_time_delay))
+            )
+            second_effective_date = second_dose_date + datetime.timedelta(days=self.effective_after_second_dose)
+        else:
+            second_dose_date = None
+            second_effective_date = None
+        person.second_dose_date = second_dose_date
+        person.second_effective_date = second_effective_date
+
+        self.vaccinated_ids.add(person.id)
 
     def is_target_group(self, person):
         if type(self.group_value) is not list:
@@ -87,31 +105,14 @@ class VaccineDistribution(Policy):
             ):
                 return True
         return False
-        
+
     def apply(self, date: datetime, person: Person):
         if person.susceptibility == 1. and self.is_target_group(person):
             days_passed = (date - self.start_date).days
             if random() < self.group_coverage*(1-self.group_prevalence)*(1/(self.total_days-days_passed)):
                 self.vaccinate(person=person, date=date)                    
 
-    def vaccinate(self, person, date):
-        # first dose
-        person.first_effective_date = date + datetime.timedelta(days=self.effective_after_first_dose)
-
-        # second dose
-        if random() < self.second_dose_compliance:
-            second_dose_date = date + datetime.timedelta(
-                days=int(np.random.normal(loc=self.mean_time_delay, scale=self.std_time_delay))
-            )
-            second_effective_date = second_dose_date + datetime.timedelta(days=self.effective_after_second_dose)
-        else:
-            second_dose_date = None
-            second_effective_date = None
-        person.second_dose_date = second_dose_date
-        person.second_effective_date = second_effective_date
-
-        self.vaccinated_ids.add(person.id)
-
+        
     def susceptibility(self, time_vaccine_effect, vaccine_target, susceptibility):
         # ensure target susceptibility is reached and avoid rounding errors
         if time_vaccine_effect == 0:
