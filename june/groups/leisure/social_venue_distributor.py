@@ -143,7 +143,9 @@ class SocialVenueDistributor:
         poisson_parameter = self.poisson_parameters[day_type][sex][age]
         return poisson_parameter
 
-    def probability_to_go_to_social_venue(self, person, delta_time, day_type):
+    def probability_to_go_to_social_venue(
+        self, person, delta_time, day_type, working_hours
+    ):
         """
         Probabilty of a person going to one social venue according to their
         age and sex and the distribution of visitors in the venue.
@@ -157,7 +159,12 @@ class SocialVenueDistributor:
         is_weekend
             whether it is a weekend or not
         """
-        poisson_parameter = self.get_poisson_parameter(person.sex, person.age, day_type)
+        poisson_parameter = self.get_poisson_parameter(
+            sex=person.sex,
+            age=person.age,
+            day_type=day_type,
+            working_hours=working_hours,
+        )
         return 1 - np.exp(-poisson_parameter * delta_time)
 
     def get_possible_venues_for_area(self, area: Area):
@@ -189,6 +196,7 @@ class SocialVenueDistributor:
             group = candidates[0]
         else:
             group = candidates[randint(0, n_candidates - 1)]
+        return group
 
     def get_leisure_subgroup(self, person, to_send_abroad=None):
         group = self.get_leisure_group(person)

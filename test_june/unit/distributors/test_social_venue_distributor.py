@@ -116,7 +116,7 @@ class TestProbabilities:
             while time < max_time:
                 time += 0.25
                 probability = distrib.probability_to_go_to_social_venue(
-                    person, delta_time=delta_time, day_type=day_type
+                    person, delta_time=delta_time, day_type=day_type, working_hours=False
                 )
                 if random() < probability:
                     times_this_week += 1

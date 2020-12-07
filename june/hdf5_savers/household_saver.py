@@ -257,7 +257,10 @@ def restore_households_properties_from_hdf5(
                 for visit_id, visit_spec, visit_super_area in zip(
                     visit_ids, visit_specs, visit_super_areas
                 ):
-                    if visit_super_area not in domain_super_areas:
+                    if (
+                        domain_super_areas is not None
+                        and visit_super_area not in domain_super_areas
+                    ):
                         residence = ExternalGroup(
                             id=visit_id,
                             domain_id=super_areas_to_domain_dict[visit_super_area],

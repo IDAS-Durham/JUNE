@@ -24,7 +24,7 @@ class SocialVenue(Group):
     max_size = np.inf
 
     class SubgroupType(IntEnum):
-        default = 0
+        leisure = 0
 
     def __init__(self, area=None):
         super().__init__()
@@ -37,6 +37,9 @@ class SocialVenue(Group):
     @property
     def super_area(self):
         return self.area.super_area
+
+    def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
+        return self[self.SubgroupType.leisure]
 
 
 class SocialVenues(Supergroup):

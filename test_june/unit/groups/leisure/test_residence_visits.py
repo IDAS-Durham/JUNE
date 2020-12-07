@@ -32,7 +32,7 @@ def make_super_areas(rv_distributor):
     for i in range(n_super_areas):
         areas_super_area = []
         for j in range(n_areas_per_super_area):
-            area = Area()
+            area = Area(coordinates=[i,j])
             for _ in range(n_households_per_area):
                 household = Household(type="family")
                 household.add(person)
@@ -43,9 +43,9 @@ def make_super_areas(rv_distributor):
             area.care_home = CareHome(area=area)
             areas.append(area)
             areas_super_area.append(area)
-        super_area = SuperArea(areas=areas_super_area)
+        super_area = SuperArea(areas=areas_super_area, coordinates=[i,i])
         super_areas.append(super_area)
-    super_areas = SuperAreas(super_areas, ball_tree=False)
+    super_areas = SuperAreas(super_areas)
     rv_distributor.link_households_to_households(super_areas)
     return super_areas
 
@@ -92,7 +92,7 @@ class TestHouseholdVisits:
                             for residence in household.residences_to_visit
                             if residence.spec == "household"
                         ]
-                        assert len(to_visit) in range(1, 4)
+                        assert len(to_visit) in range(2, 5)
                         for household in to_visit:
                             assert household.type != "communal"
         assert has_visits
