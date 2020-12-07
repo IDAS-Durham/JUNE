@@ -15,9 +15,9 @@ class VaccineDistribution(Policy):
         end_time: str="2100-01-01",
         group_description: dict={'by': 'residence', 'group': 'care_home'},
         group_coverage: float=0.4,
+        group_prevalence: float=0.2,
         efficacy: float=1.,
         second_dose_compliance: float=1.,
-        first_rollout_days: int=100,
         mean_time_delay: int=1,
         std_time_delay: int=1,
         effective_after_first_dose: int=7,
@@ -31,14 +31,16 @@ class VaccineDistribution(Policy):
         start_time: start time of vaccine rollout
         end_time: end time of vaccine rollout
         group_description: type of people to get the vaccine, currently support:
-            - care_home_residents
-            - XX-YY where XX and YY denote an age range
+            by: either residence, primary activity or age
+            group: group type e.g. care_home for residence or XX-YY for age range
         group_coverage: % of group to be vaccinated over the rollout period
+        group_prevalence: the prevalence level in the group at time of vaccination rollout
         efficacy: % of people vaccinated who get the vaccinated tag
         second_dose_compliance: % of people getting their second vaccine dose if required
-        first_rollout_days: how many days will the first rollout last for
         mean_time_delay: mean time delay of the second dose being administered
         std_time_delay: std time delat of the second dose being administered
+        effective_after_first_dose: number of days for the first dose to become effective
+        effective_after_second_dose: number of days for second dose to become effective
 
         Assumptions
         -----------
@@ -49,10 +51,11 @@ class VaccineDistribution(Policy):
         """
         
         super().__init__(start_time=start_time, end_time=end_time)
+        self.total_days = (self.end_time - self.start_time).days
         self.group_attribute, self.group_value = self.process_group_description(group_description)
         self.group_coverage = group_coverage
+        self.group_prevalence = group_prevalence
         self.second_dose_compliance = second_dose_compliance
-        self.total_days = (self.end_time - self.start_time).days
         self.mean_time_delay = mean_time_delay
         self.std_time_delay = std_time_delay
         self.effective_after_first_dose = effective_after_first_dose
@@ -78,21 +81,20 @@ class VaccineDistribution(Policy):
                 return False
         else:
             if (
-                self.group_value[0]
+                self.group_value.split('-')[0]
                 <= getattr(person, self.group_attribute)
-                <= self.group_value[1]
+                <= self.group_value.split('-')[1]
             ):
                 return True
         return False
         
     def apply(self, person: Person, date: datetime):
         if person.susceptibility == 1. and self.is_target_group(person):
-            if random()  # * something to do with probaility scaling
+            if random() < self.group_coverage/self.total_days
                 self.vaccinate(person=person, date=date)                    
 
     def vaccinate(self, person, date):
         # first dose
-        person.first_dose_date = date
         person.first_effective_date = date + datetime.timedelta(days=self.effective_after_first_dose)
 
         # second dose
@@ -100,7 +102,7 @@ class VaccineDistribution(Policy):
             second_dose_date = date + datetime.timedelta(
                 days=int(np.random.normal(loc=self.mean_time_delay, scale=self.std_time_delay))
             )
-            second_effective_date = second_dose_date + datetime.timedelte(days=self.effective_after_second_dose)
+            second_effective_date = second_dose_date + datetime.timedelta(days=self.effective_after_second_dose)
         else:
             second_dose_date = None
             second_effective_date = None
