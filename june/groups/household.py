@@ -30,8 +30,8 @@ class Household(Group):
         "residents",
         "quarantine_starting_date",
         "residences_to_visit",
-        "ids_checked",
         "being_visited",
+        "household_to_care"
     )
 
     class SubgroupType(IntEnum):
@@ -52,18 +52,12 @@ class Household(Group):
         self.max_size = max_size
         self.residents = ()
         self.residences_to_visit = {}
+        self.household_to_care = None
         self.being_visited = False  # this is True when people from other households have been added to the group
 
     def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
         if activity == "leisure":
-            if person.age < 18:
-                subgroup = self.SubgroupType.kids
-            elif person.age <= 35:
-                subgroup = self.SubgroupType.young_adults
-            elif person.age < 65:
-                subgroup = self.SubgroupType.adults
-            else:
-                subgroup = self.SubgroupType.old_adults
+            subgroup = self.get_leisure_subgroup_type(person)
             person.subgroups.leisure = self[subgroup]
             self[subgroup].append(person)
             self.being_visited = True
@@ -73,6 +67,22 @@ class Household(Group):
             person.subgroups.residence = self[subgroup_type]
         else:
             raise NotImplementedError(f"Activity {activity} not supported in household")
+
+    @classmethod
+    def get_leisure_subgroup_type(cls, person):
+        """
+        A person wants to come and visit this household. We need to assign the person
+        to the relevant age subgroup, and make sure the residents welcome him and
+        don't go do any other leisure activities.
+        """
+        if person.age < 18:
+            return cls.SubgroupType.kids
+        elif person.age <= 35:
+            return cls.SubgroupType.young_adults
+        elif person.age < 65:
+            return cls.SubgroupType.adults
+        else:
+            return cls.SubgroupType.old_adults
 
     def make_household_residents_stay_home(self, to_send_abroad=None):
         """

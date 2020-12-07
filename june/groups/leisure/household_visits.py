@@ -49,24 +49,18 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         """
         for super_area in super_areas:
             households_super_area = []
-            old_people_households = []
             for area in super_area.areas:
-                for household in area.households:
-                    if household.type != "communal":
-                        households_super_area.append(household)
-                        if household.type == "old":
-                            old_people_households.append(household)
+                households_super_area += [
+                    household
+                    for household in area.households
+                    if household.type != "communal"
+                ]
                 shuffle(households_super_area)
-                shuffle(old_people_households)
             for household in households_super_area:
                 if household.size == 0:
                     continue
                 households_to_link_n = randint(1, 3)
                 households_to_visit = []
-                # guarantee one link to old people households as carers 
-                if old_people_households and household.type != "student":
-                    households_to_visit.append(old_people_households.pop())
-                    households_to_link_n -= 1
                 for _ in range(households_to_link_n):
                     house_idx = randint(0, len(households_super_area) - 1)
                     house = households_super_area[house_idx]
@@ -93,11 +87,4 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         to the relevant age subgroup, and make sure the residents welcome him and
         don't go do any other leisure activities.
         """
-        if person.age < 18:
-            return Household.SubgroupType.kids
-        elif person.age <= 35:
-            return Household.SubgroupType.young_adults
-        elif person.age < 65:
-            return Household.SubgroupType.adults
-        else:
-            return Household.SubgroupType.old_adults
+        return Household.get_leisure_subgroup_type(person)
