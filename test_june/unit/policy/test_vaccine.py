@@ -9,7 +9,7 @@ class TestVaccination:
     def test__process_target_population(self,):
         person = Person.from_attributes(age=30, sex="f")
         vaccine_policy = VaccineDistribution(
-            group_description={"by": "age", "group": [20, 40], "total_group_size": 100}
+            group_description={"by": "age", "group": "20-40"}
         )
         vaccine_policy.daily_vaccine_probability = 1.0
         date = datetime.datetime(2020, 11, 15)
@@ -24,7 +24,7 @@ class TestVaccination:
         person = Person.from_attributes(age=30, sex="f")
         care_home.add(person)
         vaccine_policy = VaccineDistribution(
-            group_description={"by": "residence", "group": 'care_home', "total_group_size": 100}
+            group_description={"by": "residence", "group": 'care_home'}
         )
         vaccine_policy.daily_vaccine_probability = 1.0
         date = datetime.datetime(2020, 11, 15)

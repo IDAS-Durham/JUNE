@@ -14,8 +14,8 @@ class VaccineDistribution(Policy):
         start_time: str = "1900-01-01",
         end_time: str="2100-01-01",
         group_description: dict={'by': 'residence', 'group': 'care_home'},
-        group_coverage: float=0.4,
-        group_prevalence: float=0.2,
+        group_coverage: float=0.5,
+        group_prevalence: float=0.,
         efficacy: float=1.,
         second_dose_compliance: float=1.,
         mean_time_delay: int=1,
@@ -33,7 +33,7 @@ class VaccineDistribution(Policy):
         group_description: type of people to get the vaccine, currently support:
             by: either residence, primary activity or age
             group: group type e.g. care_home for residence or XX-YY for age range
-        group_coverage: % of group to be vaccinated over the rollout period
+        group_coverage: % of group to be left as having target susceptibility after vaccination
         group_prevalence: the prevalence level in the group at time of vaccination rollout
         efficacy: % of people vaccinated who get the vaccinated tag
         second_dose_compliance: % of people getting their second vaccine dose if required
@@ -112,7 +112,7 @@ class VaccineDistribution(Policy):
     def apply(self, date: datetime, person: Person):
         if person.susceptibility == 1. and self.is_target_group(person):
             days_passed = (date - self.start_date).days
-            if random() < self.group_coverage*(1-self.group_prevalence)*(1/(self.total_days-days_passed)):
+            if random() < (self.group_coverage-self.group_prevalence)*(1/(self.total_days-days_passed)):
                 self.vaccinate(person=person, date=date)                    
 
         
