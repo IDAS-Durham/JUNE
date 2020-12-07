@@ -61,7 +61,7 @@ class Simulator:
 
         Parameters
         ----------
-        world: 
+        world:
             instance of World class
         """
         self.activity_manager = activity_manager
@@ -274,8 +274,8 @@ class Simulator:
 
     def bury_the_dead(self, world: World, person: "Person"):
         """
-        When someone dies, send them to cemetery. 
-        ZOMBIE ALERT!! 
+        When someone dies, send them to cemetery.
+        ZOMBIE ALERT!!
 
         Parameters
         ----------
@@ -406,7 +406,12 @@ class Simulator:
         tick, tickw = perf_counter(), wall_clock()
 
         invalid_id = 4294967295  # largest possible uint32
-        empty = np.array([invalid_id,], dtype=np.uint32)
+        empty = np.array(
+            [
+                invalid_id,
+            ],
+            dtype=np.uint32,
+        )
 
         # we want to make sure we transfer something for every domain.
         # (we have an np.concatenate which doesn't work on empty arrays)
@@ -439,7 +444,7 @@ class Simulator:
         to send people to the corresponding subgroups according to the current daytime.
         Then we iterate over all the groups and create an InteractiveGroup object, which
         extracts the relevant information of each group to carry the interaction in it.
-        We then pass the interactive group to the interaction module, which returns the ids 
+        We then pass the interactive group to the interaction module, which returns the ids
         of the people who got infected. We record the infection locations, update the health
         status of the population, and distribute scores among the infectors to calculate R0.
         """
@@ -518,6 +523,15 @@ class Simulator:
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
         )
         if n_people != people_active:
+            for person in self.world.people:
+                groups = []
+                for subgroup in person.subgroups.iter():
+                    if subgroup is not None and not subgroup.external:
+                        if person in subgroup.people:
+                            groups.append(subgroup.group.spec)
+                            if len(groups) > 1:
+                                print(f"person {person.id} is in groups {groups}")
+
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {people_active}.\n"

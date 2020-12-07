@@ -130,48 +130,11 @@ class ActivityManager:
     def get_personal_subgroup(self, person: "Person", activity: str):
         return getattr(person, activity)
 
-    def move_to_active_subgroup(
-        self, activities: List[str], person: Person, to_send_abroad=None
-    ) -> Optional["Subgroup"]:
-        """
-        Given the hierarchy of activities and a person, decide what subgroup
-        should they go to
-
-        Parameters
-        ----------
-        activities:
-            list of activities that take place at a given time step
-        person:
-            person that is looking for a subgroup to go to
-        Returns
-        -------
-        Subgroup to which person has to go, given the hierarchy of activities
-        """
-        for activity in activities:
-            if activity == "leisure" and person.leisure is None:
-                subgroup = self.leisure.get_subgroup_for_person_and_housemates(
-                    person=person, to_send_abroad=to_send_abroad
-                )
-            elif activity == "commute":
-                subgroup = self.travel.get_commute_subgroup(person=person)
-            else:
-                subgroup = self.get_personal_subgroup(person=person, activity=activity)
-            if subgroup is not None:
-                if subgroup.external:
-                    person.busy = True
-                    # this person goes to another MPI domain
-                    return subgroup
-                subgroup.append(person)
-                return
-        raise SimulatorError(
-            "Attention! Some people do not have an activity in this timestep."
-        )
-
     def do_timestep(self):
         # get time data
         date = self.timer.date
         is_weekend = self.timer.is_weekend
-        activities = self.timer.activities
+        activities = self.apply_activity_hierarchy(self.timer.activities)
         delta_time = self.timer.duration
         # apply leisure policies
         if self.leisure is not None:
@@ -218,9 +181,8 @@ class ActivityManager:
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
         )
-        activities = self.apply_activity_hierarchy(activities)
         to_send_abroad = MovablePeople()
-        for person in self.world.people.members:
+        for person in self.world.people:
             if person.dead or person.busy:
                 continue
             allowed_activities = self.policies.individual_policies.apply(
@@ -236,6 +198,43 @@ class ActivityManager:
                 to_send_abroad.add_person(person, external_subgroup)
 
         return to_send_abroad
+
+    def move_to_active_subgroup(
+        self, activities: List[str], person: Person, to_send_abroad=None
+    ) -> Optional["Subgroup"]:
+        """
+        Given the hierarchy of activities and a person, decide what subgroup
+        should they go to
+
+        Parameters
+        ----------
+        activities:
+            list of activities that take place at a given time step
+        person:
+            person that is looking for a subgroup to go to
+        Returns
+        -------
+        Subgroup to which person has to go, given the hierarchy of activities
+        """
+        for activity in activities:
+            if activity == "leisure" and person.leisure is None:
+                subgroup = self.leisure.get_subgroup_for_person_and_housemates(
+                    person=person, to_send_abroad=to_send_abroad
+                )
+            elif activity == "commute":
+                subgroup = self.travel.get_commute_subgroup(person=person)
+            else:
+                subgroup = self.get_personal_subgroup(person=person, activity=activity)
+            if subgroup is not None:
+                if subgroup.external:
+                    person.busy = True
+                    # this person goes to another MPI domain
+                    return subgroup
+                subgroup.append(person)
+                return
+        raise SimulatorError(
+            "Attention! Some people do not have an activity in this timestep."
+        )
 
     def send_and_receive_people_from_abroad(self, movable_people):
         """
