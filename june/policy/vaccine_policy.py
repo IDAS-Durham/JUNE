@@ -1,5 +1,5 @@
 import operator
-import random
+from random import random
 import numpy as np
 import datetime 
 from june.demography.person import Person
@@ -52,7 +52,6 @@ class VaccineDistribution(Policy):
         self.efficacy = efficacy
         self.second_dose_compliance = second_dose_compliance
         self.total_days = (self.end_time - self.start_time).days
-        #self.probabilities = self.calculate_probabilities()
         self.final_susceptibilty = 1 - efficacy
         self.vaccinated_ids = set()
 
@@ -80,24 +79,17 @@ class VaccineDistribution(Policy):
             ):
                 return True
         return False
-
-    def calculate_probabilities(self):
-        values = np.zeros(total_days)
-        for i in range(days):
-            vals = np.random.normal(loc=mean+i,scale=std,size=len(values))
-            val_ints = np.round(vals)
-            for j in val_ints:
-                values[int(j)] += 1
-        probs = values/np.sum(values)
-
-        return probs
         
     def apply(self, person: Person, date: datetime):
         if person.susceptibility == 1. and self.is_target_group(person):
-            if random.random() < 1.: # TODO: fill in this 1. number
-                self.vaccinate(person=person, date=date)
+            if random() < self.efficacy:
+                if random() < self.second_dose_compliance:
+                    self.vaccinate(person=person, date=date, second_dose=True)
+                else:
+                    self.vaccinate(person=person, date=date, second_dose=False)
+                    
 
-    def vaccinate(self, person, date):
+    def vaccinate(self, person, date, second_dose):
         person.vaccine_date = date
         person.effective_vaccine_date = date + datetime.timedelta(
             days=int(np.random.normal(loc=25, scale=10))
