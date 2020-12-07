@@ -110,8 +110,8 @@ def generate_simulator():
     leisure = generate_leisure_for_config(domain, config_path)
     #
     # health index and infection selecctor
-    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
-    infection_selector = InfectionSelector.from_file(
+    health_index_generator = HealthIndexGenerator.from_file()
+    infection_selector = InfectionSelector(
         health_index_generator=health_index_generator
     )
     oc = Observed2Cases.from_file(
