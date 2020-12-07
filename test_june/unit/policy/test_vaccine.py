@@ -45,21 +45,25 @@ class TestVaccination:
             start_time = "2020-12-08",
             end_time = "2020-12-09",
             group_description={"by": "age", "group": "20-40"},
-            second_dose_compliance = 1.
+            efficacy=1.,
+            second_dose_compliance = 1.,
             effective_after_first_dose=1,
         )
-        vaccine_policy = VaccineDistribution()
         assert person.susceptibility == 1.0
-        person.vaccine_date = datetime.datetime(2020, 11, 5)
-        person.effective_vaccine_date = person.vaccine_date + datetime.timedelta(
-            days=10
-        )
+        date = datetime.datetime(2020, 12, 8)
+        vaccine_policy.apply(person=person, date=date)
+        assert person.first_effective_date == date + datetime.timedelta(days=1)
+        assert person.second_dose_date is not None
+        assert person.second_effective_date is not None
+        
+        person.first_effective_date = date + datetime.timedelta(days=10)
+        person.second_effective_date = date + datetime.timedelta(days=15)
         vaccine_policy.update_susceptibility(
-            person=person, date=datetime.datetime(2020, 11, 9)
+            person=person, date=datetime.datetime(2020, 12, 9)
         )
         assert 0.0 < person.susceptibility < 1.0
         vaccine_policy.update_susceptibility(
-            person=person, date=datetime.datetime(2020, 11, 15)
+            person=person, date=datetime.datetime(2020, 12, 23)
         )
         assert person.susceptibility == 0.0
 
