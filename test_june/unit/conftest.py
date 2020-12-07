@@ -98,9 +98,7 @@ def make_hi():
 
 @pytest.fixture(name="symptoms_trajectories", scope="session")
 def create_symptoms_trajectories():
-    return Symptoms(
-        health_index=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
-    )
+    return Symptoms(health_index=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
 
 
 @pytest.fixture(name="transmission", scope="session")
@@ -173,7 +171,6 @@ def create_simulator_box(world_box, interaction, selector):
     )
 
 
-
 # policy dummy world
 @pytest.fixture(name="dummy_world", scope="session")
 def make_dummy_world():
@@ -192,7 +189,10 @@ def make_dummy_world():
     household = Household()
     household.area = super_area.areas[0]
     hospital = Hospital(
-        n_beds=40, n_icu_beds=5, area=area, coordinates=super_area.coordinates,
+        n_beds=40,
+        n_icu_beds=5,
+        area=area,
+        coordinates=super_area.coordinates,
     )
     super_area.closest_hospitals = [hospital]
     worker = Person.from_attributes(age=40)
@@ -325,7 +325,15 @@ def create_full_world(full_world_geography):
     world.groceries = Groceries.for_geography(geography)
     world.gyms = Gyms.for_geography(geography)
     leisure = generate_leisure_for_world(
-        ["pubs", "cinemas", "groceries", "household_visits", "care_home_visits"], world
+        [
+            "pubs",
+            "cinemas",
+            "groceries",
+            "gyms",
+            "household_visits",
+            "care_home_visits",
+        ],
+        world,
     )
     leisure.distribute_social_venues_to_areas(
         areas=world.areas, super_areas=world.super_areas
@@ -349,8 +357,17 @@ def create_domains_world():
     world.pubs = Pubs.for_geography(geography)
     world.cinemas = Cinemas.for_geography(geography)
     world.groceries = Groceries.for_geography(geography)
+    world.gyms = Gyms.for_geography(geography)
     leisure = generate_leisure_for_world(
-        ["pubs", "cinemas", "groceries", "household_visits", "care_home_visits"], world
+        [
+            "pubs",
+            "cinemas",
+            "groceries",
+            "gyms",
+            "household_visits",
+            "care_home_visits",
+        ],
+        world,
     )
     leisure.distribute_social_venues_to_areas(
         areas=world.areas, super_areas=world.super_areas

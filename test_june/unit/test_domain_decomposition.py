@@ -255,3 +255,24 @@ class TestDomainDecomposition:
                                     assert ct1.id == ct2.id
                             assert station.commuter_ids == station_domain.commuter_ids
                             break
+
+    def test__residences_to_visit(self, domains_world, domains):
+        assert len(domains_world.households) > 0
+        for household in domains_world.households:
+            for domain in domains:
+                domain_super_area_ids = [super_area.id for super_area in domain]
+                if household.super_area.id in domain_super_area_ids:
+                    household_domain = domain.households.get_from_id(household.id)
+                    assert household.id == household_domain.id
+                    assert len(household.residences_to_visit) == len(
+                        household_domain.residences_to_visit
+                    )
+                    for rv1, rv2 in zip(
+                        household.residences_to_visit, household_domain.residences_to_visit
+                    ):
+                        assert rv1.id == rv2.id
+                        assert rv1.spec == rv2.spec
+                        if rv1.super_area.id not in domain_super_area_ids:
+                            assert rv2.external
+                        else:
+                            assert not rv2.external
