@@ -47,7 +47,10 @@ class VaccineDistribution(Policy):
         - The chance of getting your first dose in the first first_rollout_days days is uniform
         - The probability of when you get your second dose is chosen from a Gaussian distribution
           with mean mean_time_delay and std std_time_delay
-        - The vaccine is immediatrly effective after the second dose - this can be changes as needed later
+        - The progression over time after vaccination (first and/or second dose) to reach the target
+          susceptibilty is linear
+        - The target susceptiblity after the first dose is half that of after the second dose
+        - The target susceptibility after the second dose is 1-efficacy of the vaccine
         """
         
         super().__init__(start_time=start_time, end_time=end_time)
