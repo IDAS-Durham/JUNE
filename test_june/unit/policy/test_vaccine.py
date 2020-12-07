@@ -90,16 +90,16 @@ class TestVaccination:
         )
         people = Population([young_person])
         for person in people:
-            vaccine_policy.apply(person=person, date=datetime.datetime(2020, 11, 15))
+            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
         young_person.vaccine_plan.second_dose_date = None
         vaccine_policy.update_susceptibility_of_vaccinated(
-            people=people, date=datetime.datetime(2020, 12, 31)
+            people=people, date=datetime.datetime(2100, 12, 31)
         )
 
         assert young_person.id in vaccine_policy.vaccinated_ids
         assert young_person.susceptibility == 0.5
         vaccine_policy.update_susceptibility_of_vaccinated(
-            people=people, date=datetime.datetime(2021, 12, 31)
+            people=people, date=datetime.datetime(2100, 12, 31)
         )
         assert young_person.id not in vaccine_policy.vaccinated_ids
         assert young_person.susceptibility == 0.5
