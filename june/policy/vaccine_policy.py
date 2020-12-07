@@ -109,17 +109,21 @@ class VaccineDistribution(Policy):
 
         self.vaccinated_ids.add(person.id)
 
-    def susceptibility(self, time_from_vaccine, time_effective_from_vaccine):
-        return 1 - time_from_vaccine/time_effective_from_vaccine
+    def susceptibility(self, time_vaccine_effect, vaccine_target, susceptibility):
+        if time_vaccine_effect == 0:
+            return vaccine_target
+        else:
+            return susceptibility + (vaccine_target-susceptibilty)/time_vaccine_effect
 
     def update_susceptibility(self, person, date):
 
         # update for first dose
         if person.susceptiblity <= self.final_susceptibility/2.:
-            time_from_vaccine = (person.first_effective_date - person.first_dose_date).days
+            time_vaccine_effect = (person.first_effective_date - date).days
             person.susceptibility = self.susceptibility(
-                time_from_vaccine=time_from_vaccine,
-                vaccine_target = self.final_susceptibility/2.
+                time_vaccine_effect=time_vaccine_effect,
+                vaccine_target = self.final_susceptibility/2.,
+                susceptibility = person.susceptibility
             )
 
         # update second dose
@@ -130,10 +134,11 @@ class VaccineDistribution(Policy):
                 if person.second_dose_date < date:
                     pass
                 else:
-                    time_from_vaccine = (person.second_effective_date - person.second_dose_date).days
+                    time_vaccine_effect = (person.second_effective_date - date).days
                     person.susceptibility = self.susceptibility(
-                        time_from_vaccine=time_from_vaccine,
-                        vaccine_target = self.final_susceptibility
+                        time_vaccine_effect=time_vaccine_effect,
+                        vaccine_target = self.final_susceptibility,
+                        susceptibility = person.susceptibility
                     )
 
     def update_susceptibility_of_vaccinated(self, people, date):
