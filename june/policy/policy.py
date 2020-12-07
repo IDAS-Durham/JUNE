@@ -13,6 +13,7 @@ from june.demography.person import Person
 from june.groups.leisure import Leisure
 from june.infection.symptom_tag import SymptomTag
 from june.interaction import Interaction
+from june.utils import read_date
 
 default_config_filename = paths.configs_path / "defaults/policy/policy.yaml"
 
@@ -25,28 +26,6 @@ def str_to_class(classname, base_policy_modules=("june.policy",)):
         except AttributeError:
             continue
     raise ValueError(f"Cannot find policy {classname} in paths!")
-
-
-def read_date(date: Union[str, datetime.datetime]) -> datetime.datetime:
-    """
-        Read date in two possible formats, either string or datetime.date, both
-        are translated into datetime.datetime to be used by the simulator
-
-        Parameters
-        ----------
-        date:
-            date to translate into datetime.datetime
-
-        Returns
-        -------
-            date in datetime format
-        """
-    if type(date) is str:
-        return datetime.datetime.strptime(date, "%Y-%m-%d")
-    elif isinstance(date, datetime.date):
-        return datetime.datetime.combine(date, datetime.datetime.min.time())
-    else:
-        raise TypeError("date must be a string or a datetime.date object")
 
 
 class Policy(ABC):
@@ -66,30 +45,8 @@ class Policy(ABC):
             date from which the policy won't apply
         """
         self.spec = self.get_spec()
-        self.start_time = self.read_date(start_time)
-        self.end_time = self.read_date(end_time)
-
-    @staticmethod
-    def read_date(date: Union[str, datetime.datetime]) -> datetime.datetime:
-        """
-        Read date in two possible formats, either string or datetime.date, both
-        are translated into datetime.datetime to be used by the simulator
-
-        Parameters
-        ----------
-        date:
-            date to translate into datetime.datetime
-
-        Returns
-        -------
-            date in datetime format
-        """
-        if type(date) is str:
-            return datetime.datetime.strptime(date, "%Y-%m-%d")
-        elif isinstance(date, datetime.date):
-            return datetime.datetime.combine(date, datetime.datetime.min.time())
-        else:
-            raise TypeError("date must be a string or a datetime.date object")
+        self.start_time = read_date(start_time)
+        self.end_time = read_date(end_time)
 
     def get_spec(self) -> str:
         """
