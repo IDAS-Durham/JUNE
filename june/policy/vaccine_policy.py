@@ -52,6 +52,8 @@ class VaccineDistribution(Policy):
         self.efficacy = efficacy
         self.second_dose_compliance = second_dose_compliance
         self.total_days = (self.end_time - self.start_time).days
+        self.mean_time_delay = mean_time_delay
+        self.std_time_delay = std_time_delay
         self.final_susceptibilty = 1 - efficacy
         self.vaccinated_ids = set()
 
@@ -82,18 +84,22 @@ class VaccineDistribution(Policy):
         
     def apply(self, person: Person, date: datetime):
         if person.susceptibility == 1. and self.is_target_group(person):
-            if random() < self.efficacy:
-                if random() < self.second_dose_compliance:
-                    self.vaccinate(person=person, date=date, second_dose=True)
-                else:
-                    self.vaccinate(person=person, date=date, second_dose=False)
-                    
+            if random() < self.efficacy: # * something to do with probaility scaling
+                self.vaccinate(person=person, date=date)                    
 
-    def vaccinate(self, person, date, second_dose):
+    def vaccinate(self, person, date):
+        # first dose
         person.vaccine_date = date
-        person.effective_vaccine_date = date + datetime.timedelta(
-            days=int(np.random.normal(loc=25, scale=10))
+
+        # second dose
+        if random() < self.second_dose_compliance:
+            second_effective_vaccine_date = date + datetime.timedelta(
+                days=int(np.random.normal(loc=self.mean_time_delay, scale=self.std_time_delay))
             ) # TODO: change this to second dose + add more necessary numbers on target sus
+        else:
+            second_effective_vaccine_date = None
+        person.second_effective_vaccine_date = second_effective_vaccine_date
+
         self.vaccinated_ids.add(person.id)
 
     def susceptibility(self, time_from_vaccine, time_effective_from_vaccine):
