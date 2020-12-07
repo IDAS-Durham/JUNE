@@ -90,7 +90,8 @@ class VaccineDistribution(Policy):
         
     def apply(self, person: Person, date: datetime):
         if person.susceptibility == 1. and self.is_target_group(person):
-            if random() < self.group_coverage/self.total_days
+            days_passed = (date - self.start_date).days
+            if random() < self.group_coverage*(1-self.group_prevalence)*(1/(self.total_days-days_passed)):
                 self.vaccinate(person=person, date=date)                    
 
     def vaccinate(self, person, date):
