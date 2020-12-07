@@ -17,7 +17,6 @@ class TestVaccination:
         )
         date = datetime.datetime(2020, 12, 8)
         vaccine_policy.apply(person=person, date=date)
-        print (vaccine_policy.total_days)
         assert person.first_effective_date == date + datetime.timedelta(days=1)
         person = Person.from_attributes(age=50, sex="f")
         vaccine_policy.apply(person=person, date=date)
@@ -30,16 +29,15 @@ class TestVaccination:
         vaccine_policy = VaccineDistribution(
             start_time = "2020-12-08",
             end_time = "2020-12-09",
-            group_description={"by": "residence", "group": 'care_home'}
+            group_description={"by": "residence", "group": 'care_home'},
             effective_after_first_dose=1,
         )
         date = datetime.datetime(2020, 12, 8)
         vaccine_policy.apply(person=person, date=date)
-        assert person.vaccine_date == date
+        assert person.first_effective_date == date + datetime.timedelta(days=1)
         person = Person.from_attributes(age=50, sex="f")
         vaccine_policy.apply(person=person, date=date)
-        assert person.vaccine_date is None
-
+        assert person.first_effective_date is None
 
     def test__susceptibility(self,):
         person = Person.from_attributes(age=30, sex="f")
