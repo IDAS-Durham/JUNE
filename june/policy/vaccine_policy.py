@@ -91,7 +91,7 @@ class VaccineDistribution(Policy):
         self.vaccinated_ids.add(person.id)
 
     def is_target_group(self, person):
-        if type(self.group_value) is not list:
+        if self.group_attribute is not "age":
             try:
                 if (
                     operator.attrgetter(self.group_attribute)(person)
@@ -102,16 +102,17 @@ class VaccineDistribution(Policy):
                 return False
         else:
             if (
-                self.group_value.split('-')[0]
+                int(self.group_value.split('-')[0])
                 <= getattr(person, self.group_attribute)
-                <= self.group_value.split('-')[1]
+                <= int(self.group_value.split('-')[1])
             ):
                 return True
         return False
 
     def apply(self, date: datetime, person: Person):
         if person.susceptibility == 1. and self.is_target_group(person):
-            days_passed = (date - self.start_date).days
+            print ("Passing")
+            days_passed = (date - self.start_time).days
             if random() < (self.group_coverage-self.group_prevalence)*(1/(self.total_days-days_passed)):
                 self.vaccinate(person=person, date=date)                    
 
