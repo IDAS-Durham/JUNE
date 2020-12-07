@@ -117,6 +117,7 @@ class VaccineDistribution(Policy):
 
         
     def susceptibility(self, time_vaccine_effect, vaccine_target, susceptibility):
+        
         # ensure target susceptibility is reached and avoid rounding errors
         if time_vaccine_effect == 0:
             return vaccine_target
@@ -148,6 +149,8 @@ class VaccineDistribution(Policy):
                         vaccine_target = self.final_susceptibility,
                         susceptibility = person.susceptibility
                     )
+            else:
+                self.vaccinated_ids.remove(person)
 
     def update_susceptibility_of_vaccinated(self, people, date):
         if self.vaccinated_ids:
