@@ -8,7 +8,7 @@ from june import paths
 
 # TODO: put in daily probability of being vaccinated
 # TODO: modify parameters
-# TODO: add option for second dose compliance
+# TODO: add option for second dose compliance (no second dose date needs testing)
 # TODO: add type of vaccine that just makes people asymptomatic instead of non susceptible
 
 
