@@ -56,7 +56,6 @@ class TestVaccination:
         assert person.second_dose_date is not None
         assert person.second_effective_date is not None
 
-        person.susceptibility = 1.0
         person.first_effective_date = date + datetime.timedelta(days=10)
         person.second_dose_date = date + datetime.timedelta(days=12)
         person.second_effective_date = date + datetime.timedelta(days=15)
@@ -65,6 +64,7 @@ class TestVaccination:
         )
         print (person.susceptibility)
         assert 0.0 < person.susceptibility < 1.0
+        assert 1 == 0
 
         # make sure person as ascertainted first dose max susceptibility
         person.susceptibility = 0.5
