@@ -5,7 +5,7 @@ from collections import defaultdict, OrderedDict
 from itertools import chain
 
 from june.world import World
-from june.groups import Household, Households
+from june.groups import Household, Households, ExternalGroup
 from june.mpi_setup import mpi_rank
 from .utils import read_dataset
 
@@ -94,10 +94,14 @@ def save_households_to_hdf5(
 
         residences_to_visit_specs = []
         residences_to_visit_ids = []
+        residences_to_visit_super_areas = []
         for household in households:
             if not household.residences_to_visit:
                 residences_to_visit_specs.append(np.array(["none"], dtype="S20"))
                 residences_to_visit_ids.append(np.array([nan_integer], dtype=np.int))
+                residences_to_visit_super_areas.append(
+                    np.array([nan_integer], dtype=np.int)
+                )
             else:
                 residences_to_visit_ids.append(
                     np.array(
@@ -111,6 +115,15 @@ def save_households_to_hdf5(
                         dtype="S20",
                     )
                 )
+                residences_to_visit_super_areas.append(
+                    np.array(
+                        [
+                            residence.super_area.id
+                            for residence in household.residences_to_visit
+                        ],
+                        dtype=np.int,
+                    )
+                )
         if len(np.unique(list(chain(*residences_to_visit_ids)))) > 1:
             residences_to_visit_ids = np.array(
                 residences_to_visit_ids, dtype=int_vlen_type
@@ -118,9 +131,15 @@ def save_households_to_hdf5(
             residences_to_visit_specs = np.array(
                 residences_to_visit_specs, dtype=str_vlen_type
             )
+            residences_to_visit_super_areas = np.array(
+                residences_to_visit_super_areas, dtype=int_vlen_type
+            )
         else:
             residences_to_visit_ids = np.array(residences_to_visit_ids, dtype=np.int)
-            residences_to_visit_ids = np.array(residences_to_visit_specs, dtype="S20")
+            residences_to_visit_specs = np.array(residences_to_visit_specs, dtype="S20")
+            residences_to_visit_super_areas = np.array(
+                residences_to_visit_super_areas, dtype=np.int
+            )
         households_dset.create_dataset(
             "residences_to_visit_ids",
             data=residences_to_visit_ids,
@@ -128,6 +147,10 @@ def save_households_to_hdf5(
         households_dset.create_dataset(
             "residences_to_visit_specs",
             data=residences_to_visit_specs,
+        )
+        households_dset.create_dataset(
+            "residences_to_visit_super_areas",
+            data=residences_to_visit_super_areas,
         )
 
 
@@ -173,7 +196,11 @@ def load_households_from_hdf5(
 
 
 def restore_households_properties_from_hdf5(
-    world: World, file_path: str, chunk_size=50000, domain_super_areas=None
+    world: World,
+    file_path: str,
+    chunk_size=50000,
+    domain_super_areas=None,
+    super_areas_to_domain_dict: dict = None,
 ):
     """
     Loads households from an hdf5 file located at ``file_path``.
@@ -200,6 +227,9 @@ def restore_households_properties_from_hdf5(
             residences_to_visit_specs = read_dataset(
                 households["residences_to_visit_specs"], idx1, idx2
             )
+            residences_to_visit_super_areas = read_dataset(
+                households["residences_to_visit_super_areas"], idx1, idx2
+            )
             for k in range(length):
                 if domain_super_areas is not None:
                     """
@@ -222,11 +252,21 @@ def restore_households_properties_from_hdf5(
                 if visit_ids[0] == nan_integer:
                     continue
                 visit_specs = residences_to_visit_specs[k]
+                visit_super_areas = residences_to_visit_super_areas[k]
                 to_append = []
-                for visit_id, visit_spec in zip(visit_ids, visit_specs):
-                    if visit_spec == b"household":
-                        residence = world.households.get_from_id(visit_id)
-                    elif visit_spec == b"care_home":
-                        residence = world.care_homes.get_from_id(visit_id)
+                for visit_id, visit_spec, visit_super_area in zip(
+                    visit_ids, visit_specs, visit_super_areas
+                ):
+                    if visit_super_area not in domain_super_areas:
+                        residence = ExternalGroup(
+                            id=visit_id,
+                            domain_id=super_areas_to_domain_dict[visit_super_area],
+                            spec=visit_spec.decode(),
+                        )
+                    else:
+                        if visit_spec == b"household":
+                            residence = world.households.get_from_id(visit_id)
+                        elif visit_spec == b"care_home":
+                            residence = world.care_homes.get_from_id(visit_id)
                     to_append.append(residence)
                 household.residences_to_visit = tuple(to_append)
