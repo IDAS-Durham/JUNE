@@ -6,9 +6,12 @@ from typing import Union, List
 
 from june.utils import read_date, str_to_class
 from june.paths import configs_path
+from june.mpi_setup import mpi_rank
 
 default_config_filename = configs_path / "defaults/event/events.yaml"
 logger = logging.getLogger("events")
+if mpi_rank > 0:
+    logger.propagate = False
 
 
 class Event(ABC):
