@@ -77,23 +77,35 @@ def create_school(n_students, n_teachers):
 
 
 @pytest.mark.parametrize(
-    "n_teachers,mode", [[2, "average"], [4, "average"], [6, "average"],],
+    "n_teachers,mode",
+    [
+        [2, "average"],
+        [4, "average"],
+        [6, "average"],
+    ],
 )
-def test__average_time_to_infect(n_teachers, mode):
+def test__average_time_to_infect(n_teachers, mode, selector):
     selector_config = (
         paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
     )
     transmission_probability = 0.1
-    selector = InfectionSelector.from_file(transmission_config_path=selector_config)
     n_students = 1
     contact_matrices = {
         "contacts": [[n_teachers - 1, 1], [1, 0]],
-        "proportion_physical": [[0, 0,], [0, 0]],
+        "proportion_physical": [
+            [
+                0,
+                0,
+            ],
+            [0, 0],
+        ],
         "xi": 1.0,
         "characteristic_time": 24,
     }
     interaction = Interaction(
-        betas={"school": 1,},
+        betas={
+            "school": 1,
+        },
         alpha_physical=1,
         contact_matrices={"school": contact_matrices},
     )
@@ -112,7 +124,9 @@ def test__average_time_to_infect(n_teachers, mode):
     teacher_teacher = transmission_probability * (n_teachers - 1)
     student_teacher = transmission_probability / n_students
     np.testing.assert_allclose(
-        np.mean(n_days), 1.0 / (teacher_teacher + student_teacher), rtol=0.1,
+        np.mean(n_days),
+        1.0 / (teacher_teacher + student_teacher),
+        rtol=0.1,
     )
 
 
@@ -206,7 +220,7 @@ def test__super_spreaders(selector):
     assert n_infections > 0
     culpable_ids, culpable_counts = np.unique(to_blame_ids, return_counts=True)
     for culpable_id, culpable_count in zip(culpable_ids, culpable_counts):
-        expected = id_to_trans[culpable_id] / total * n_infections,
+        expected = (id_to_trans[culpable_id] / total * n_infections,)
         assert np.isclose(
             culpable_count,
             expected,
