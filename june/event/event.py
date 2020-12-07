@@ -72,7 +72,17 @@ class Events:
             event.initialise(world=world)
             logger.info(f"Event {event.__class__.__name__} initialised")
 
-    def apply(self, date, world, activities: List[str], is_weekend: bool):
+    def apply(
+        self,
+        date,
+        world,
+        activities: List[str],
+        is_weekend: bool,
+    ):
         for event in self.events:
             if event.is_active(date=date):
-                event.apply(world=world, activities=activities, is_weekend=is_weekend)
+                event.apply(
+                    world=world,
+                    activities=activities,
+                    is_weekend=is_weekend,
+                )
