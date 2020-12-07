@@ -47,17 +47,17 @@ def make_leisure():
         drags_household_probability=1.0,
     )
     leisure = Leisure(
-        leisure_distributors={"pubs": pub_distributor, "cinemas": cinema_distributor}
+        leisure_distributors={"pub": pub_distributor, "cinema": cinema_distributor}
     )
     return leisure
 
 
 def _get_times_pub_cinema(leisure, person, is_weekend=False):
     if is_weekend:
-        delta_time = 0.125 # in reality is 0.5 but make it smaller for stats
-        n_days = 8 # in reality is 2
+        delta_time = 0.125  # in reality is 0.5 but make it smaller for stats
+        n_days = 8  # in reality is 2
     else:
-        delta_time = 1/8
+        delta_time = 1 / 8
         n_days = 5
     leisure.generate_leisure_probabilities_for_timestep(
         delta_time, working_hours=False, is_weekend=is_weekend
@@ -93,12 +93,12 @@ def test__probability_of_leisure(leisure):
     female.area = MockArea()
     household.add(female)
     male.area.social_venues = {
-        "cinemas": [leisure.leisure_distributors["cinemas"].social_venues[0]],
-        "pubs": [leisure.leisure_distributors["pubs"].social_venues[0]],
+        "cinema": [leisure.leisure_distributors["cinema"].social_venues[0]],
+        "pub": [leisure.leisure_distributors["pub"].social_venues[0]],
     }
     female.area.social_venues = {
-        "cinemas": [leisure.leisure_distributors["cinemas"].social_venues[0]],
-        "pubs": [leisure.leisure_distributors["pubs"].social_venues[0]],
+        "cinema": [leisure.leisure_distributors["cinema"].social_venues[0]],
+        "pub": [leisure.leisure_distributors["pub"].social_venues[0]],
     }
     # weekday male
     times_pub_a_week, times_cinema_a_week = _get_times_pub_cinema(
@@ -136,12 +136,10 @@ def test__person_drags_household(leisure):
     household.add(person3)
     person2.busy = False
     person3.busy = False
-    social_venue = leisure.leisure_distributors["cinemas"].social_venues[0]
+    social_venue = leisure.leisure_distributors["cinema"].social_venues[0]
     social_venue.add(person1)
-    leisure.send_household_with_person_if_necessary(
-        person1,
-        person1.leisure,
-        1.0,
+    leisure.leisure_distributors["cinema"].send_household_with_person_if_necessary(
+        person1, None
     )
     for person in [person1, person2, person3]:
         assert person.subgroups.leisure == social_venue.subgroups[0]
@@ -173,6 +171,6 @@ def test__generate_leisure_from_world(dummy_world):
                 n_cinemas += 1
             elif subgroup.group.spec == "grocery":
                 n_groceries += 1
-    assert 0 < n_pubs 
-    assert 0 < n_cinemas 
-    assert 0 < n_groceries 
+    assert 0 < n_pubs
+    assert 0 < n_cinemas
+    assert 0 < n_groceries

@@ -47,7 +47,7 @@ class TestCloseLeisure:
         )
         sim.activity_manager.leisure = leisure
         sim.activity_manager.policies = policies
-        leisure.leisure_distributors["pubs"].weekend_boost = 5000
+        leisure.leisure_distributors["pub"].weekend_boost = 5000
         sim.clear_world()
         time_before_policy = datetime(2019, 2, 1)
         activities = ["leisure", "residence"]
@@ -88,8 +88,8 @@ class TestReduceLeisureProbabilities:
         reduce_leisure_probabilities = ChangeLeisureProbability(
             start_time="2020-03-02",
             end_time="2020-03-05",
-            leisure_poisson_parameters={
-                "pubs": {"men": {"0-50": 0.2, "50-100": 0.0}, "women": {"0-100": 0.2},},
+            new_leisure_poisson_parameters={
+                "pubs": {"male": {"0-50": 0.2, "50-100": 0.0}, "female": {"0-100": 0.2},},
             },
         )
         policies = Policies([reduce_leisure_probabilities])
@@ -190,7 +190,7 @@ class TestReduceLeisureProbabilities:
             start_time="2020-03-02",
             end_time="2020-03-05",
             leisure_poisson_parameters={
-                "pubs": {"men": {"0-50": 0.2, "50-100": 0.0}, "women": {"0-100": 0.2},},
+                "pubs": {"male": {"0-50": 0.2, "50-100": 0.0}, "female": {"0-100": 0.2},},
             },
         )
         policies = Policies([reduce_leisure_probabilities])

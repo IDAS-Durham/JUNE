@@ -10,7 +10,8 @@ from june.groups.leisure import Leisure
 
 
 class LeisurePolicy(Policy):
-    policy_type="leisure"
+    policy_type = "leisure"
+
     def __init__(
         self,
         start_time: Union[str, datetime.datetime],
@@ -25,7 +26,7 @@ class LeisurePolicies(PolicyCollection):
 
     def apply(self, date: datetime, leisure: Leisure):
         """
-        Applies all the leisure policies. Each Leisure policy will change the probability of 
+        Applies all the leisure policies. Each Leisure policy will change the probability of
         doing a certain leisure activity. For instance, closing Pubs sets the probability of
         going to the Pub to zero. We store a dictionary with the relative reductions in leisure
         probabilities per activity, and this dictionary is then looked at by the leisure module.
@@ -39,8 +40,10 @@ class LeisurePolicies(PolicyCollection):
             if policy.policy_subtype == "change_leisure_probability":
                 change_leisure_probability_policies_counter += 1
                 if change_leisure_probability_policies_counter > 1:
-                    raise ValueError("Having more than one change leisure probability policy" 
-                                     "active is not supported.")
+                    raise ValueError(
+                        "Having more than one change leisure probability policy"
+                        "active is not supported."
+                    )
                 leisure.policy_poisson_parameters = policy.apply(leisure=leisure)
             else:
                 policy.apply(leisure=leisure)
@@ -48,6 +51,7 @@ class LeisurePolicies(PolicyCollection):
 
 class CloseLeisureVenue(LeisurePolicy):
     policy_subtype = "close_venues"
+
     def __init__(
         self,
         start_time: Union[str, datetime.datetime],
@@ -77,11 +81,12 @@ class CloseLeisureVenue(LeisurePolicy):
 
 class ChangeLeisureProbability(LeisurePolicy):
     policy_subtype = "change_leisure_probability"
+
     def __init__(
         self,
         start_time: str,
         end_time: str,
-        leisure_poisson_parameters: Dict[str, Dict[str, Dict[str, float]]],
+        new_leisure_poisson_parameters: Dict[str, Dict[str, Dict[str, float]]],
     ):
         """
         Changes the probability of the specified leisure activities.
@@ -96,17 +101,34 @@ class ChangeLeisureProbability(LeisurePolicy):
         """
         super().__init__(start_time, end_time)
         self.poisson_parameters = {}
-        for activity in leisure_poisson_parameters:
+        day_types = ["weekday", "weekend"]
+        sexes = ["male", "female"]
+        _sex_t = {"male": "m", "female": "f"}
+        for activity, pp in new_leisure_poisson_parameters.items():
             self.poisson_parameters[activity] = {}
-            for june_sex, sex in zip(["m", "f"], ["men", "women"]):
-                self.poisson_parameters[activity][june_sex] = parse_age_probabilities(
-                    leisure_poisson_parameters[activity][sex]
-                )
+            for day_type in pp:
+                if day_type == "any" or day_type in ["male", "female"]:
+                    self.poisson_parameters[activity] = {}
+                    for day_type, sex in zip(day_types, sexes):
+                        june_sex = _sex_t[sex]
+                        self.poisson_parameters[activity][day_type][
+                            june_sex
+                        ] = parse_age_probabilities(
+                            new_leisure_poisson_parameters[activity][sex]
+                        )
+                else:
+                    for day_type, sex in zip(day_types, sexes):
+                        june_sex = _sex_t[sex]
+                        self.poisson_parameters[activity][day_type][
+                            june_sex
+                        ] = parse_age_probabilities(
+                            new_leisure_poisson_parameters[activity][day_type][sex]
+                        )
 
     def apply(self, leisure: Leisure):
         """
         Changes probabilities of doing leisure activities according to the policies specified.
-        The current probabilities are stored in the policies, and restored at the end of the policy 
+        The current probabilities are stored in the policies, and restored at the end of the policy
         time span. Keep this in mind when trying to stack policies that modify the same social venue.
         """
         return self.poisson_parameters
