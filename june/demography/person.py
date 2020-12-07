@@ -58,6 +58,7 @@ class Person(dataobject):
         cls,
         sex="f",
         age=27,
+            susceptibility = 1.,
         ethnicity=None,
         socioecon_index=None,
         id=None,
@@ -74,6 +75,7 @@ class Person(dataobject):
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
             comorbidity=comorbidity,
+            susceptibility=susceptibility,
             subgroups=Activities(None, None, None, None, None, None, None),
         )
 
