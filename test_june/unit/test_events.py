@@ -111,6 +111,9 @@ class TestDomesticCare:
                 for person in household.residents:
                     if person.leisure is not None:
                         has_active = True
+                        assert person.busy
+                        assert person in person.leisure
+                        assert person in household.household_to_care.people
                         assert person.leisure.group.spec == "household"
                         assert person.leisure.group.type == "old"
                         break
@@ -123,6 +126,7 @@ class TestDomesticCare:
             if household.household_to_care:
                 for person in household.residents:
                     assert person.leisure is None
+                    assert not person.busy
 
     def test__carers_dont_go_outside_leisure(self, domestic_care, world):
         # leisure only go weekdays leisure
@@ -133,3 +137,18 @@ class TestDomesticCare:
             if household.household_to_care:
                 for person in household.residents:
                     assert person.leisure is None
+                    assert not person.busy
+
+    def test__residents_stay_home(self, domestic_care, world):
+        domestic_care.apply(
+            world=world, activities=["leisure"], is_weekend=False
+        )
+        active = False
+        for household in world.households:
+            if household.household_to_care:
+                household_to_care = household.household_to_care
+                for person in household_to_care.residents:
+                    active = True
+                    assert person in person.residence.people
+                    assert person.busy
+        assert active
