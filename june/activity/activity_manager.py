@@ -10,10 +10,9 @@ from time import time as wall_clock
 from june.demography import Person
 from june.exc import SimulatorError
 from june.groups import Subgroup
-
+from june.event import Events
 from june.groups.leisure import Leisure
 from june.groups.travel import Travel
-
 from june.policy import (
     IndividualPolicies,
     LeisurePolicies,
@@ -51,12 +50,16 @@ class ActivityManager:
         timer,
         all_activities,
         activity_to_super_groups: dict,
+        events: Optional[Events] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
     ):
         self.policies = policies
         if self.policies is not None:
             self.policies.init_policies(world=world)
+        self.events = events
+        if self.events is not None:
+            self.events.init_events(world=world)
         self.world = world
         self.timer = timer
         self.leisure = leisure
@@ -165,19 +168,31 @@ class ActivityManager:
         )
 
     def do_timestep(self):
+        # get time data
+        date = self.timer.date
+        is_weekend = self.timer.is_weekend
         activities = self.timer.activities
+        delta_time = self.timer.duration
+        # apply leisure policies
         if self.leisure is not None:
             if self.policies is not None:
-                self.policies.leisure_policies.apply(
-                    date=self.timer.date, leisure=self.leisure
-                )
+                self.policies.leisure_policies.apply(date=date, leisure=self.leisure)
             self.leisure.generate_leisure_probabilities_for_timestep(
-                delta_time=self.timer.duration,
-                is_weekend=self.timer.is_weekend,
+                delta_time=delta_time,
+                is_weekend=is_weekend,
                 working_hours="primary_activity" in activities,
             )
+        # apply events
+        if self.events is not None:
+            self.events.apply(
+                date=date,
+                world=self.world,
+                activities=activities,
+                is_weekend=is_weekend,
+            )
+        # move people to subgroups and get going abroad people
         to_send_abroad = self.move_people_to_active_subgroups(
-            activities, self.timer.date, self.timer.now
+            activities=activities, date=date, days_from_start=self.timer.now
         )
         (
             people_from_abroad,

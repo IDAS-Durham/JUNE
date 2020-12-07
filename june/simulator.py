@@ -27,6 +27,7 @@ from june.policy import (
     MedicalCarePolicies,
     InteractionPolicies,
 )
+from june.event import Events
 from june.time import Timer
 from june.records import Record
 from june.world import World
@@ -86,6 +87,7 @@ class Simulator:
         interaction: Interaction,
         infection_selector=None,
         policies: Optional[Policies] = None,
+        events: Optional[Events] = None,
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
@@ -122,7 +124,8 @@ class Simulator:
                 activity_to_super_groups = config["activity_to_super_groups"]
             except:
                 output_logger.warning(
-                    "Activity to groups in config is deprecated, please change it to activity_to_super_groups"
+                    "Activity to groups in config is deprecated"
+                    "please change it to activity_to_super_groups"
                 )
                 activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
@@ -162,6 +165,7 @@ class Simulator:
             world=world,
             all_activities=all_activities,
             activity_to_super_groups=activity_to_super_groups,
+            events=events,
             leisure=leisure,
             travel=travel,
             policies=policies,
