@@ -13,19 +13,9 @@ from june.demography.person import Person
 from june.groups.leisure import Leisure
 from june.infection.symptom_tag import SymptomTag
 from june.interaction import Interaction
-from june.utils import read_date
+from june.utils import read_date, str_to_class
 
 default_config_filename = paths.configs_path / "defaults/policy/policy.yaml"
-
-
-def str_to_class(classname, base_policy_modules=("june.policy",)):
-    for module_name in base_policy_modules:
-        try:
-            module = importlib.import_module(module_name)
-            return getattr(module, classname)
-        except AttributeError:
-            continue
-    raise ValueError(f"Cannot find policy {classname} in paths!")
 
 
 class Policy(ABC):
@@ -76,7 +66,7 @@ class Policies:
             InteractionPolicies,
             MedicalCarePolicies,
             LeisurePolicies,
-            RegionalCompliances
+            RegionalCompliances,
         )
 
         self.individual_policies = IndividualPolicies.from_policies(self)
