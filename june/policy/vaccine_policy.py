@@ -63,7 +63,7 @@ class VaccineDistribution(Policy):
         self.std_time_delay = std_time_delay
         self.effective_after_first_dose = effective_after_first_dose
         self.effective_after_second_dose = effective_after_second_dose
-        self.final_susceptibilty = 1 - efficacy
+        self.final_susceptibility = 1. - efficacy
         self.vaccinated_ids = set()
 
     def process_group_description(self, group_description):
@@ -114,7 +114,6 @@ class VaccineDistribution(Policy):
 
     def apply(self, date: datetime, person: Person):
         if person.susceptibility == 1. and self.is_target_group(person):
-            print ("Passing")
             days_passed = (date - self.start_time).days
             if random() < (self.group_coverage-self.group_prevalence)*(1/(self.total_days-days_passed)):
                 self.vaccinate(person=person, date=date)                    
@@ -126,12 +125,12 @@ class VaccineDistribution(Policy):
         if time_vaccine_effect == 0:
             return vaccine_target
         else:
-            return susceptibility + (vaccine_target-susceptibilty)/time_vaccine_effect
+            return susceptibility - (susceptibility-vaccine_target)/time_vaccine_effect
 
     def update_susceptibility(self, person, date):
 
         # update for first dose
-        if person.susceptiblity <= self.final_susceptibility/2.:
+        if person.susceptibility > (1-self.final_susceptibility)/2.:
             time_vaccine_effect = (person.first_effective_date - date).days
             person.susceptibility = self.susceptibility(
                 time_vaccine_effect=time_vaccine_effect,
@@ -145,8 +144,6 @@ class VaccineDistribution(Policy):
             if person.second_dose_date is not None:
                 # and they have already had it
                 if person.second_dose_date < date:
-                    pass
-                else:
                     time_vaccine_effect = (person.second_effective_date - date).days
                     person.susceptibility = self.susceptibility(
                         time_vaccine_effect=time_vaccine_effect,
