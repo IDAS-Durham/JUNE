@@ -219,9 +219,10 @@ def restore_households_properties_from_hdf5(
                 household.residents = tuple(household.people)
                 # visits
                 visit_ids = residences_to_visit_ids[k]
+                if visit_ids[0] == nan_integer:
+                    continue
                 visit_specs = residences_to_visit_specs[k]
                 to_append = []
-                print(to_append)
                 for visit_id, visit_spec in zip(visit_ids, visit_specs):
                     if visit_spec == b"household":
                         residence = world.households.get_from_id(visit_id)
