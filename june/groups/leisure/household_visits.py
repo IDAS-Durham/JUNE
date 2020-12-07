@@ -39,7 +39,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
 
     def link_households_to_households(self, super_areas):
         """
-        Links people between households. Strategy: We pair each household with 0, 1, or 2 other households (with equal prob.). The household of the former then has a probability of visiting the household of the later 
+        Links people between households. Strategy: We pair each household with 0, 1, or 2 other households (with equal prob.). The household of the former then has a probability of visiting the household of the later
         at every time step.
 
         Parameters
@@ -49,26 +49,24 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         """
         for super_area in super_areas:
             households_super_area = []
+            old_people_households = []
             for area in super_area.areas:
-                households_super_area += [
-                    household
-                    for household in area.households
-                    if household.type
-                    in [
-                        "family",
-                        "ya_parents",
-                        "nokids",
-                        "old",
-                        "student",
-                        "young_adults",
-                    ]
-                ]
+                for household in area.households:
+                    if household.type != "communal":
+                        households_super_area.append(household)
+                        if household.type == "old":
+                            old_people_households.append(household)
                 shuffle(households_super_area)
+                shuffle(old_people_households)
             for household in households_super_area:
                 if household.size == 0:
                     continue
                 households_to_link_n = randint(1, 3)
                 households_to_visit = []
+                # guarantee one link to old people households as carers 
+                if old_people_households and household.type != "student":
+                    households_to_visit.append(old_people_households.pop())
+                    households_to_link_n -= 1
                 for _ in range(households_to_link_n):
                     house_idx = randint(0, len(households_super_area) - 1)
                     house = households_super_area[house_idx]
@@ -79,15 +77,15 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                     person_idx = randint(0, len(house.people) - 1)
                     households_to_visit.append(house)
                 if households_to_visit:
-                    household.residences_to_visit["household"] = tuple(households_to_visit)
+                    household.residences_to_visit["household"] = tuple(
+                        households_to_visit
+                    )
 
     def get_social_venue_for_person(self, person):
         households_to_visit = person.residence.group.residences_to_visit["household"]
         if households_to_visit is None:
             return None
-        return households_to_visit[
-            randint(0, len(households_to_visit) - 1)
-        ]
+        return households_to_visit[randint(0, len(households_to_visit) - 1)]
 
     def get_leisure_subgroup_type(self, person):
         """
