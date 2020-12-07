@@ -88,7 +88,7 @@ class VaccineDistribution(Policy):
                 return True
         return False
         
-    def apply(self, person: Person, date: datetime):
+    def apply(self, date: datetime, person: Person):
         if person.susceptibility == 1. and self.is_target_group(person):
             days_passed = (date - self.start_date).days
             if random() < self.group_coverage*(1-self.group_prevalence)*(1/(self.total_days-days_passed)):
@@ -113,6 +113,7 @@ class VaccineDistribution(Policy):
         self.vaccinated_ids.add(person.id)
 
     def susceptibility(self, time_vaccine_effect, vaccine_target, susceptibility):
+        # ensure target susceptibility is reached and avoid rounding errors
         if time_vaccine_effect == 0:
             return vaccine_target
         else:
@@ -157,9 +158,6 @@ class VaccineDistributions(PolicyCollection):
     policy_type = "vaccine_distribution"
 
     def apply(self, date: datetime, person: Person):
-        # before applying compliances, reset all of them to 1.0
         if self.policies:
-            for region in regions:
-                region.regional_compliance = 1.0
-        for policy in self.policies:
-            policy.apply(date=date, regions=regions)
+            for policy in self.policies:
+                policy.apply(date=date, person=person)
