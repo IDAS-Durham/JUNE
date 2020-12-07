@@ -60,12 +60,15 @@ class TestVaccination:
         person.second_dose_date = date + datetime.timedelta(days=12)
         person.second_effective_date = date + datetime.timedelta(days=15)
         vaccine_policy.update_susceptibility(
-            person=person, date=datetime.datetime(2020, 12, 10)
+            person=person, date=datetime.datetime(2020, 12, 13)
         )
-        print (person.susceptibility)
         assert 0.0 < person.susceptibility < 1.0
-        assert 1 == 0
+        vaccine_policy.update_susceptibility(
+            person=person, date=datetime.datetime(2020, 12, 18)
+        )
+        assert person.susceptibility == 0.5
 
+        
         # make sure person as ascertainted first dose max susceptibility
         person.susceptibility = 0.5
         vaccine_policy.update_susceptibility(

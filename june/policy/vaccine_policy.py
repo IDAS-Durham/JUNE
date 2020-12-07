@@ -134,7 +134,7 @@ class VaccineDistribution(Policy):
             time_vaccine_effect = (person.first_effective_date - date).days
             person.susceptibility = self.susceptibility(
                 time_vaccine_effect=time_vaccine_effect,
-                vaccine_target = self.final_susceptibility/2.,
+                vaccine_target = (1-self.final_susceptibility)/2.,
                 susceptibility = person.susceptibility
             )
 
