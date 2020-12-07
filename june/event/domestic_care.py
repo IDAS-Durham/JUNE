@@ -53,14 +53,14 @@ class DomesticCare(Event):
         if "leisure" not in activities or is_weekend or "primary_activity" in activities:
             return
         for household in world.households:
-            if household.household_to_care:
+            if household.household_to_care is not None:
                 household_to_care = household.household_to_care
                 carers = list(household.residents)
                 shuffle(carers)
                 receives_care = False
                 for person in carers:
                     if person.age > 18 and person.available:
-                        household.add(person, activity="leisure")
+                        household_to_care.add(person, activity="leisure")
                         receives_care = True
                         break
                 if receives_care:
@@ -68,7 +68,6 @@ class DomesticCare(Event):
                     for person in household_to_care.residents:
                         if person.available:
                             person.residence.append(person)
-
 
     def _link_carers_to_households(self, world):
         """
