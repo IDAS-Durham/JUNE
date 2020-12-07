@@ -32,7 +32,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(**config)
 
-    def link_households_to_households(self, super_areas, n_close_super_areas=10):
+    def link_households_to_households(self, super_areas, n_close_super_areas=3):
         """
         Links people between households. Strategy: We pair each household with 0, 1,
         or 2 other households (with equal prob.). The household of the former then
@@ -72,7 +72,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
                 while n_linked < households_to_link_n:
                     house_idx = randint(0, len(near_households) - 1)
                     house = near_households[house_idx]
-                    if house.id == household.id or not house.people:
+                    if house.id == household.id or not house.residents:
                         continue
                     households_to_visit.append(house)
                     n_linked += 1
