@@ -26,30 +26,16 @@ class VaccinePlan:
         self.first_dose_date = first_dose_date
         self.first_dose_effective_days = first_dose_effective_days
         self.first_dose_susceptibility = first_dose_susceptibility
-        if second_dose_date is None:
-            self.second_dose_date = first_dose_date + datetime.timedelta(
-                days=self.first_dose_effective_days
-            )
-        else:
-            self.second_dose_date = second_dose_date
-        if second_dose_effective_days is None:
-            self.second_dose_effective_days = 0
-        else:
-            self.second_dose_effective_days = second_dose_effective_days
-        if second_dose_susceptibility is None:
-            self.second_dose_susceptibility = first_dose_susceptibility
-        else:
-            self.second_dose_susceptibility = second_dose_susceptibility
+        self.second_dose_date = second_dose_date
+        self.second_dose_effective_days = second_dose_effective_days
+        self.second_dose_susceptibility = second_dose_susceptibility
         self.first_dose_effective_date = self.first_dose_date + datetime.timedelta(
             days=self.first_dose_effective_days
         )
-        if second_dose_date is not None:
-            self.second_dose_effective_date = (
-                self.second_dose_date
-                + datetime.timedelta(days=self.second_dose_effective_days)
-            )
-        else:
-            self.second_dose_effective_date = first_dose_effective_date
+        self.second_dose_effective_date = (
+            self.second_dose_date
+            + datetime.timedelta(days=self.second_dose_effective_days)
+        )
         self.original_susceptibility = original_susceptibility
 
     @property
@@ -65,7 +51,9 @@ class VaccinePlan:
         return m * n_days + c
 
     def susceptibility(self, date):
-        if date < self.first_dose_effective_date:
+        if self.second_dose_date is None and date > self.first_dose_effective_date:
+            return self.first_dose_susceptibility
+        elif date < self.first_dose_effective_date:
             n_days = (date - self.first_dose_date).days
             return self.straight_line(
                 n_days,
