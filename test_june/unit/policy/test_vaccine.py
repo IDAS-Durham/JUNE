@@ -9,10 +9,11 @@ class TestVaccination:
     def test__process_target_population(self,):
         person = Person.from_attributes(age=30, sex="f")
         vaccine_policy = VaccineDistribution(
-            group_description={"by": "age", "group": "20-40"}
+            start_time = "2020-12-08",
+            end_time = "2020-12-09"
+            group_description={"by": "age", "group": "20-40"},
         )
-        vaccine_policy.daily_vaccine_probability = 1.0
-        date = datetime.datetime(2020, 11, 15)
+        date = datetime.datetime(2020, 12, 08)
         vaccine_policy.apply(person=person, date=date)
         assert person.vaccine_date == date
         person = Person.from_attributes(age=50, sex="f")

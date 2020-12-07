@@ -14,7 +14,7 @@ class VaccineDistribution(Policy):
         start_time: str = "1900-01-01",
         end_time: str="2100-01-01",
         group_description: dict={'by': 'residence', 'group': 'care_home'},
-        group_coverage: float=0.5,
+        group_coverage: float=1.,
         group_prevalence: float=0.,
         efficacy: float=1.,
         second_dose_compliance: float=1.,
