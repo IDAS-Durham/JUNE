@@ -331,6 +331,7 @@ class TestSaveLeisure:
                 full_world.pubs,
                 full_world.groceries,
                 full_world.cinemas,
+                full_world.gyms
             ],
             file_path=test_results / "test.hdf5",
         )
