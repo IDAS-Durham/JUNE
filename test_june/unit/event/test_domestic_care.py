@@ -5,22 +5,15 @@ import datetime
 from june.event import Event, Events, DomesticCare
 from june.world import World
 from june.groups import Household, Households
-from june.geography import Area, Areas, SuperArea, SuperAreas
+from june.geography import Area, Areas, SuperArea, SuperAreas, Region
 from june.demography import Population, Person
-
-
-def test__event_dates():
-    event = Event(start_time="2020-01-05", end_time="2020-12-05")
-    assert event.start_time.strftime("%Y-%m-%d") == "2020-01-05"
-    assert event.end_time.strftime("%Y-%m-%d") == "2020-12-05"
-    assert event.is_active(datetime.datetime.strptime("2020-03-05", "%Y-%m-%d"))
-    assert not event.is_active(datetime.datetime.strptime("2030-03-05", "%Y-%m-%d"))
 
 
 class TestDomesticCare:
     @pytest.fixture(name="world")
     def make_world(self):
         world = World()
+        region = Region()
         super_areas = []
         areas = []
         households = []
@@ -33,7 +26,7 @@ class TestDomesticCare:
                 areas.append(area)
                 _areas.append(area)
                 for _ in range(5):
-                    household = Household(type="old")
+                    household = Household(type="old", area=area)
                     p1 = Person.from_attributes(age=80)
                     p2 = Person.from_attributes(age=75)
                     household.add(p1)
@@ -43,7 +36,7 @@ class TestDomesticCare:
                     households.append(household)
                     area.households.append(household)
                 for _ in range(10):
-                    household = Household(type="random")
+                    household = Household(type="random", area=area)
                     p1 = Person.from_attributes(age=50)
                     p2 = Person.from_attributes(age=30)
                     household.add(p1)
@@ -52,7 +45,9 @@ class TestDomesticCare:
                     people.append(p2)
                     area.households.append(household)
                     households.append(household)
-            super_area = SuperArea(areas=_areas)
+            super_area = SuperArea(areas=_areas, region=region)
+            for area in _areas:
+                area.super_area = super_area
             super_areas.append(super_area)
         world.areas = Areas(areas, ball_tree=False)
         world.super_areas = SuperAreas(super_areas, ball_tree=False)
@@ -140,9 +135,7 @@ class TestDomesticCare:
                     assert not person.busy
 
     def test__residents_stay_home(self, domestic_care, world):
-        domestic_care.apply(
-            world=world, activities=["leisure"], is_weekend=False
-        )
+        domestic_care.apply(world=world, activities=["leisure"], is_weekend=False)
         active = False
         for household in world.households:
             if household.household_to_care:
@@ -152,3 +145,17 @@ class TestDomesticCare:
                     assert person in person.residence.people
                     assert person.busy
         assert active
+
+    def test__care_beta(self, domestic_care, world):
+        domestic_care.apply(world=world, activities=["leisure"], is_weekend=False)
+        for household in world.households:
+            if household.household_to_care:
+                household_to_care = household.household_to_care
+                assert household_to_care.receiving_care
+                int_house = household.get_interactive_group(None)
+                beta = (
+                    int_house.get_processed_beta(
+                        {"household": 1, "household_visits": 2, "care_visits": 3}, {}
+                    )
+                    == 3
+                )
