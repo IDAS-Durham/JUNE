@@ -29,7 +29,7 @@ class InteractiveGroup:
     - group : group that we want to prepare for interaction.
     """
 
-    def __init__(self, group: "Group", people_from_abroad=None, save_all_subgroup_ids=False):
+    def __init__(self, group: "Group", people_from_abroad=None):
         """
         This function is very long to avoid function calls for performance reasons.
         InteractiveGroups are created millions of times. Given a group, we need to extract:
@@ -53,7 +53,6 @@ class InteractiveGroup:
         self.subgroups_with_infectors = []
         self.subgroups_with_infectors_sizes = []
         self.subgroups_with_susceptible = []
-        self.subgroup_member_ids = []
 
         has_susceptible = False
         has_infector = False
@@ -73,10 +72,6 @@ class InteractiveGroup:
             if subgroup_size == 0:
                 continue
             group_size += subgroup_size
-
-            if save_all_subgroup_ids:
-                this_subgroup_ids = [p.id for p in subgroup.people] + people_abroad_ids
-                self.subgroup_member_ids.append(this_subgroups_ids)
 
             # get susceptible people in subgroup
             local_subgroup_susceptible_people = [

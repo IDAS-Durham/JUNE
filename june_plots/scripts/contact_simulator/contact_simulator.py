@@ -16,24 +16,18 @@ import matplotlib.colors as colors
 import pandas as pd
 import tables
 import networkx as nx
-#import seaborn as sns
-
-#from june_runs import Runner
-
-#default_run_config_path = (
-#    "/home/aidan/covid/june_runs/example_run/runs/run_000/parameters.json"#"/home/aidan/covid/june_runs/configuration/run_sets/quick_examples/local_example.yaml"
-#)
 
 from june.hdf5_savers import generate_world_from_hdf5
 from june.groups.leisure import generate_leisure_for_config
-from june.groups.group import Group, Subgroup
-from june.groups.interactive import InteractiveGroup
-from june.groups import InteractiveSchool, InteractiveCompany, InteractiveHousehold
+
+from june.groups.group.interactive import InteractiveGroup
 from june.groups.school import _get_contacts_in_school
-#from june.interaction.interaction import _get_contacts_in_school
-from june.infection import HealthIndexGenerator
-from june.infection_seed import InfectionSeed, Observed2Cases
-from june.infection import InfectionSelector, HealthIndexGenerator
+from june.groups import InteractiveSchool, InteractiveCompany, InteractiveHousehold
+from june.groups import Group, Subgroup
+
+#from june.infection import HealthIndexGenerator
+#from june.infection_seed import InfectionSeed, Observed2Cases
+#from june.infection import InfectionSelector, HealthIndexGenerator
 from june.groups.travel import Travel
 from june.policy import Policies
 from june.records import Record, RecordReader
@@ -82,26 +76,28 @@ class ContactSimulator:
         self.simulation_days = simulation_days
         self.world_name = world_name
 
-        self.load_interactions()
+        # Why not just use the simulator.interaction.contact_matrices?
+        # Want to be absolutely sure that the alpha = 1.0, proportion_physical = [[0.]]...
+        self.load_interactions() 
         if self.simulator is not None:
             self.world = self.simulator.world
             self.timer = self.simulator.timer
 
-            self.group_types = [
-                #self.world.care_homes,
-                #self.world.cinemas, 
-                #self.world.city_transports, 
-                #self.world.inter_city_transports, 
-                #self.world.companies, 
-                #self.world.groceries, 
-                #self.world.hospitals, 
-                #self.world.households, 
-                #self.world.pubs, 
+            self.supergroups = [
+                self.world.care_homes,
+                self.world.cinemas, 
+                self.world.city_transports, 
+                self.world.inter_city_transports, 
+                self.world.companies, 
+                self.world.groceries, 
+                self.world.hospitals, 
+                self.world.households, 
+                self.world.pubs, 
                 self.world.schools, 
-                #self.world.universities
+                self.world.universities
             ]
             self.contact_types = (
-                [groups[0].spec for groups in self.group_types if len(groups) > 0]
+                [supergroup[0].spec for supergroup in self.supergroups if len(supergroup) > 0]
                 + ["care_home_visits", "household_visits"]
             )
             if interaction_type in ["1d", "network"]:
@@ -118,14 +114,31 @@ class ContactSimulator:
             interaction_config = yaml.load(f, Loader=yaml.FullLoader)
             self.interaction_matrices = interaction_config["contact_matrices"]
 
-            self.interaction_matrices["school"]["contacts"] = (
-                InteractiveSchool.get_processed_contact_matrix(
-                    self.interaction_matrices["school"]["contacts"],
-                    alpha_physical=1.0 # Cheat it so we just the the total number, NOT adjusted for physical contacts
-                    phyiscal_ratios=0. # None of them are physical.
-                    characteristic_time=self.interaction_matrices["school"]["characteristic_time"]
-                )
-            )
+            for spec in self.interaction_matrices.keys():
+                contact_data = self.interaction_matrices.get(spec, {})
+                matrix = np.array( contact_data.get("contacts", [[1]]) )
+                characteristic_time = contact_data.get("characteristic_time", 8)
+                proportion_physical = np.zeros(matrix.shape)
+                alpha_physical = 1.0
+
+                if spec == "school":
+                    self.interaction_matrices["school"]["contacts"] = (
+                        InteractiveSchool.get_processed_contact_matrix(
+                            contact_matrix=matrix, 
+                            alpha_physical=alpha_physical, 
+                            proportion_physical=proportion_physical, 
+                            characteristic_time=characteristic_time
+                        )
+                    )
+                else:
+                    self.interaction_matrices[spec]["contacts"] = (
+                        InteractiveGroup.get_processed_contact_matrix(
+                            contact_matrix=matrix, 
+                            alpha_physical=alpha_physical, 
+                            proportion_physical=proportion_physical, 
+                            characteristic_time=characteristic_time
+                        )
+                    )
 
     def initialise_contact_matrices(self, include_global=False, matrix_types=None):
         self.contact_matrices = {}
@@ -191,18 +204,141 @@ class ContactSimulator:
         print(f"{mpi_rank} has imported {len(collated_traveller_age_data)} travellers")
         self.traveller_age_data = collated_traveller_age_data        
 
+    def global_operations(self, people_from_abroad):
+        pass
+
+    def operations(
+        self, people_from_abroad_dict, to_send_abroad, record_time_step=False
+    ):  
+        tick = time.time()               
+        self.contact_pairs = []
+
+        self.export_import_traveller_age_data(to_send_abroad)
+
+        for supergroup in self.supergroups:
+            if len(supergroup) == 0:
+                continue
+            spec = supergroup[0].spec
+            for group in supergroup:
+                if group.external:
+                    continue
+                people_from_abroad = people_from_abroad_dict.get(
+                    group.spec, {}
+                ).get(group.id, None)                    
+                interactive_group = group.get_interactive_group(people_from_abroad)
+                if interactive_group.size == 0:
+                    continue
+                self.modify_interactive_group(interactive_group, people_from_abroad)
+                if self.interaction_type == "1d":
+                    self.simulate_1d_contacts(interactive_group)
+                elif self.interaction_type == "network":
+                    raise NotImplementedError
+                    #self.simulate_network_contacts(int_group)
+            self.tracker[spec] = self.tracker[spec] + Counter(self.contact_pairs)
+        tock = time.time()
+        print(f"{mpi_rank} {self.timer.date} done in {(tock-tick)/60.} min")
+
+        if record_time_step:
+            self.record_output()
+
+    def modify_interactive_group(self, interactive_group, people_from_abroad):
+        """"""
+        people_from_abroad = people_from_abroad or {}
+
+        interactive_group.subgroup_member_ids = []
+        for subgroup_index, subgroup in enumerate(interactive_group.group.subgroups):
+            subgroup_size = len(subgroup.people)
+            if subgroup.subgroup_type in people_from_abroad:
+                people_abroad_data = people_from_abroad[subgroup.subgroup_type]
+                people_abroad_ids = people_abroad_data.keys()
+                subgroup_size += len(people_abroad_ids)
+            else:
+                people_abroad_data = None
+                people_abroad_ids = []
+             
+            this_subgroup_ids = [p.id for p in subgroup.people] + list(people_abroad_ids)
+            interactive_group.subgroup_member_ids.append(this_subgroup_ids)
+
+        if interactive_group.group.spec == "school":
+            if (len(interactive_group.subgroup_member_ids) == 
+                len(interactive_group.school_years) + 2):
+                assert len(interactive_group.subgroup_member_ids[-1]) == 0
+                del interactive_group.subgroup_member_ids[-1]
+            else:
+                print("you can probably remove this 'if school' statement in modify_interactive_group")
+
+    def simulate_1d_contacts(self, interactive_group: InteractiveGroup):
+        """get the total number of contacts each person has in a simulation.
+            Estimate contact matrices by choosing the the allotted number of people
+            per subgroup.
+        """                      
+
+        all_members = [ 
+            np.array(subgroup) for subgroup in interactive_group.subgroup_member_ids
+        ] # it's better to use arrays for np choice later on.
+
+        spec = interactive_group.spec
+
+        for subgroup_type, subgroup_ids in enumerate(interactive_group.subgroup_member_ids):
+            #------some set up that it's faster to do only once.
+            if len(subgroup_ids) == 0:
+                continue
+            # lists of probablilites to do the fast random choice later on,
+            # account for fact that there's 1 less contact in your own subgroup. ie, you!
+            prob_lists = []
+            for ii, m in enumerate(interactive_group.subgroup_member_ids):
+                len_subgroup = len(m)
+                if subgroup_type == ii:
+                    len_subgroup -= 1                     
+                if len_subgroup > 0:
+                    prob_lists.append(np.full(len_subgroup, 1./len_subgroup))
+                else:
+                    prob_lists.append(np.array([]))
+            # how many contacts will a person in this subgroup have with each other subgroup?
+            contacts_per_subgroup = self.get_contacts_per_subgroup(
+                subgroup_type, interactive_group
+            )
+            # sum the number of contacts, no contacts if you're the only one in your subgroup.
+            total_contacts = 0
+            for ii, (m, c) in enumerate(
+                zip(interactive_group.subgroup_member_ids, contacts_per_subgroup)
+            ):
+                len_subgroup = len(m)
+                if ii == subgroup_type:
+                    len_subgroup -= 1
+                total_contacts += c*(len_subgroup > 0)
+
+            for pid in subgroup_ids:
+                subgroup_members = [x for x in all_members] 
+                subgroup_members[subgroup_type] = np.setdiff1d(
+                    all_members[subgroup_type], np.array([pid]), assume_unique=True
+                ) # make a copy of subgroup_members, but remove yourself. # this is faster than "x for x in subgroup if x != pid" ??
+                assert len(subgroup_members[subgroup_type]) == len(all_members[subgroup_type])-1
+                self.counter[spec][pid] += total_contacts
+                potential_contacts = [ # do this inside the loop as it should be different for every person.
+                    self._random_round(c)*( len(m) > 0 ) 
+                    for c,m in zip(contacts_per_subgroup, subgroup_members)
+                ]
+                #contact_ids = [ # I think this version is much slower?
+                #    cid for members, x in zip(subgroup_members, potential_contacts) for cid in np.random.choice(members, x)
+                #]
+                contact_ids = [
+                    random_choice_numba(members, probs)
+                    for members, probs, c in zip(subgroup_members, prob_lists, potential_contacts)
+                    for _ in range(c)
+                ]
+                self.increment_contact_matrices(pid, contact_ids, spec=spec)
+                if self.contact_tracker:
+                    self.contact_pairs.extend([
+                        (pid, cid) for cid in contact_ids
+                    ])
+
     @staticmethod
     def _random_round(x):
         """round float to integer randomly with probability x%1.
             eg. round 3.7 to 4 with probability 70%, else round to 3.
         """
         return int(np.floor(x+np.random.random()))
-        """
-        f = x % 1
-        if np.random.uniform(0,1,1) < f:
-            return int(x)+1
-        else:
-            return int(x)"""
 
     def get_active_subgroup(self, person: Person):
         """maybe not so useful here, but could be for others"""
@@ -230,192 +366,44 @@ class ContactSimulator:
             return None
         else:
             active_subgroup = active_subgroups[0]
-
         return active_subgroup
 
-    def get_contacts_per_subgroup(self, subgroup_type, int_group: InteractiveGroup):
-        """
-        Get contacts that a person of subgroup type `subgroup_type` will have with each of the other subgroups,
-        in a given group.
-        eg. household has subgroups[subgroup_type]: kids[0], young_adults[1], adults[2], old[3]
-        subgroup_type is the integer representing the type of person you're wanting to look at.
-        
-        """ 
-        spec = int_group.group.spec
+    def get_contacts_per_subgroup(self, subgroup_type, interactive_group: InteractiveGroup):
+        """"""
+        spec = interactive_group.group.spec
         matrix = self.interaction_matrices[spec]["contacts"]
         delta_t = self.timer.delta_time.seconds / 3600.
-        characteristic_time = self.interaction_matrices[spec]["characteristic_time"]
-        factor = delta_t / characteristic_time
-        if spec == "household":
-            factor = delta_t / characteristic_time
-            contacts_per_subgroup = [
-                matrix[subgroup_type][ii]*factor 
-                for ii, _ in enumerate(group.subgroup_member_ids) # this is a list of lists.
-            ]
-        elif spec == "school":
-            contacts_per_subgroup = [
-                _get_contacts_in_school(matrix, group.school_years, subgroup_type, other_type)
-                if len(subgroup_ids) > 0 else 0 for 
-                other_type, subgroup_ids in enumerate(group.subgroup_member_ids)
-            ]
-        elif spec == "care_home":
-            group_timings = [8.,24.,3.] # [wk,res,vis]
-            factors = [
-                min(time, group_timings[subgroup_type]) / characteristic_time
-                for time in group_timings
-            ]
-            contacts_per_subgroup = [
-                matrix[subgroup_type][ii]*factors[ii] for 
-                ii, _ in enumerate(group.subgroup_member_ids) # this is a list of lists.
-            ]
-        else:
-            contacts_per_subgroup = [
-                matrix[subgroup_type][ii]*factor
-                for ii, _ in enumerate(group.subgroup_member_ids) # this is a list of lists.
-            ]
+        factor = delta_t / 24.
+
+        contacts_per_subgroup = [
+            interactive_group.get_contacts_between_subgroups(
+                matrix, subgroup_type, other_subgroup
+            ) * factor for other_subgroup, _ in enumerate(interactive_group.subgroup_member_ids)
+        ]
         return contacts_per_subgroup
 
-    def simulate_1d_contacts(self, group: InteractiveGroup):
-        """get the total number of contacts each person has in a simulation.
-            Estimate contact matrices by choosing the the allotted number of people
-            per subgroup.
-        """
-        
-                
-
-        all_members = [ 
-            np.array([x for x in subgroup]) # it's better to use arrays for np choice later on.
-            for subgroup in group.subgroup_member_ids
-        ]
-
-        for subgroup_type, subgroup_ids in enumerate(group.subgroup_member_ids):    
-            prob_lists = []
-            for ii, m in enumerate(group.subgroup_member_ids):
-                len_subgroup = len(m) - (subgroup_type == ii)
-                if len_subgroup > 0:
-                    prob_lists.append(np.full(len_subgroup, 1./len_subgroup))
+    def increment_contact_matrices(self, pid, contact_ids, spec):
+        for bin_type in self.age_bins.keys():
+            if pid in self.age_data:
+                age_idx = self.age_data[pid][bin_type]
+            elif pid in self.traveller_age_data:
+                age_idx = self.traveller_age_data[pid][bin_type]
+            contact_age_idxes = []
+            for cid in contact_ids:
+                if cid in self.age_data:
+                    contact_age_idxes.append(self.age_data[cid][bin_type])
+                elif cid in self.traveller_age_data:
+                    contact_age_idxes.append(self.traveller_age_data[cid][bin_type])
                 else:
-                    prob_lists.append(np.array([]))
-            contacts_per_subgroup = self.get_contacts_per_subgroup(
-                subgroup_type, group
-            )       
-            for pid in subgroup_ids:
-                t1 = time.time()
+                    print(mpi_rank, group.spec, pid, cid, subgroup_members, contact_ids)
+                    raise ValueError(f"{mpi_rank}: No key {cid}")
 
-                subgroup_members = [x for x in all_members]
-                subgroup_members[subgroup_type] = np.setdiff1d(
-                    all_members[subgroup_type], np.array([pid]), assume_unique=True
-                ) # this is faster than "x for x in subgroup if x != pid" ??
-                t2 = time.time()
-                print(group.spec, id(group), "do copy", f"{(t2-t1)*1000:.4f}")
-                #t1 = time.time()
-                #subgroup_members[subgroup_type].remove(pid)
-                #t2 = time.time()
-                #print(group.spec, id(group), "pop", f"{(t2-t1)*1000:.4f}")
-                t1 = time.time()
-
-                t2 = time.time() 
-                print(group.spec, id(group), "get_contacts", f"{(t2-t1)*1000:.4f}")
-                #t1 = time.time()
-                total_contacts = sum([
-                    c for c,m in zip(contacts_per_subgroup, subgroup_members) if len(m) > 0
-                ])
-                t2 = time.time()
-                print(group.spec, id(group), "total_contacts", f"{(t2-t1)*1000:.4f}")
-                #t1 = time.time()
-                self.counter[group.spec][pid] += total_contacts
-                #int_contacts = [
-                #    self._random_round( x ) for x in contacts_per_subgroup
-                #]
-                #t2 = time.time()
-                #print(group.spec, id(group), "random_round", f"{(t2-t1)*1000:.4f}")
-                #t1 = time.time()
-                potential_contacts = [
-                    self._random_round(c) if len(m) > 0 else 0 
-                    for c,m in zip(contacts_per_subgroup, subgroup_members)
-                ]
-                #t2 = time.time()
-                #print(group.spec, id(group), "potential contacts", f"{(t2-t1)*1000:.4f}")
-                #t1 = time.time()
-                #contact_ids = [ # I think this version is much slower?
-                #    cid
-                #    for members, x in zip(subgroup_members, potential_contacts)
-                #    for cid in np.random.choice(members, x)
-                #]
-                contact_ids = [
-                    #members[np.random.randint(0, len(members), c)] 
-                    random_choice_numba(members, probs)
-                    for members, probs, c in zip(subgroup_members, prob_lists, potential_contacts)
-                    for _ in range(c)
-                ]
-                for bin_type in self.age_bins.keys():
-                    if pid in self.age_data:
-                        age_idx = self.age_data[pid][bin_type]
-                    elif pid in self.traveller_age_data:
-                        age_idx = self.traveller_age_data[pid][bin_type]
-                    contact_age_idxes = []
-                    for cid in contact_ids:
-                        if cid in self.age_data:
-                            contact_age_idxes.append(self.age_data[cid][bin_type])
-                        elif cid in self.traveller_age_data:
-                            contact_age_idxes.append(self.traveller_age_data[cid][bin_type])
-                        else:
-                            print(mpi_rank, group.spec, pid, cid, subgroup_members, contact_ids)
-                            raise ValueError(f"{mpi_rank}: No key {cid}")
-
-                    bincount = np.bincount(
-                        contact_age_idxes, minlength=len(self.age_bins[bin_type])-1
-                    )
-                    #self.contact_matrices[bin_type]["global"][age_idx,:] += bincount
-                    self.contact_matrices[bin_type][group.spec][age_idx,:] += bincount 
-                if self.contact_tracker:
-                    self.contact_pairs.extend([
-                        (pid, cid) for cid in contact_ids
-                    ])
-
-    def operations(
-        self, people_from_abroad_dict, to_send_abroad, record_time_step=False
-    ):  
-        
-        tick = time.time()               
-        self.contact_pairs = []
-
-        self.export_import_traveller_age_data(to_send_abroad)
-
-        for group_type in self.group_types:
-            if len(group_type) == 0:
-                continue
-            group_spec = group_type[0].spec
-            for group in group_type:
-                if group.external:
-                    continue
-                if (
-                    group.spec in people_from_abroad_dict
-                    and group.id in people_from_abroad_dict[group.spec]
-                ):
-                    people_from_abroad = people_from_abroad_dict[group.spec][group.id]
-                else:
-                    people_from_abroad = None
-
-                int_group = InteractiveGroup(
-                    group, people_from_abroad, save_all_subgroup_ids=True
-                )
-                if int_group.size == 0:
-                    continue
-                if self.interaction_type == "1d":
-                    self.simulate_1d_contacts(int_group)
-                elif self.interaction_type == "network":
-                    raise NotImplementedError
-                    #self.simulate_network_contacts(int_group)
-            self.tracker[group_spec] = self.tracker[group_spec] + Counter(self.contact_pairs)
-        tock = time.time()
-        print(f"{mpi_rank} {self.timer.date} done in {(tock-tick)/60.} min")
-
-        if record_time_step:
-            self.record_output()
+            bincount = np.bincount(
+                contact_age_idxes, minlength=len(self.age_bins[bin_type])-1
+            )
+            self.contact_matrices[bin_type][spec][age_idx,:] += bincount         
 
     def record_output(self):
-
         if mpi_rank == 0:
             logger.info(f"record output at {self.timer.date}")
         for contact_type in self.contact_types:
@@ -491,8 +479,8 @@ class ContactSimulator:
                             f["contact_matrices"][bin_type][contact_type]
                         )
         combined_cm_path = self.simulation_outputs_path / "contact_matrices.pkl"
-        with open(combined_cm_path, "wb+") as pkl:
-            pickle.dump(self.contact_matrices, pkl)
+        #with open(combined_cm_path, "wb+") as pkl:
+        #    pickle.dump(self.contact_matrices, pkl)
 
         self.read = RecordReader(
             self.simulation_outputs_path, 
@@ -503,13 +491,17 @@ class ContactSimulator:
             'primary_activity_id', 
             'residence_id', 
             'area_id', 
-            'primary_activity_type'
+            #'primary_activity_type'
         ]
+
+        print("LEN POP IDs", len(self.population.index.unique()))
         self.population.drop(drop_cols, axis=1, inplace=True)
         self.contacts = self.read.table_to_df("counter", index="id")
+        print("LEN CONTACTs IDs", len(self.contacts.index))
         self.contacts.set_index(
             ["contact_type", "timestamp"], append=True, inplace=True
         )
+        print(self.contacts)
 
     def get_age_profiles(self, age_data):
         self.age_profiles = {}
@@ -517,31 +509,44 @@ class ContactSimulator:
             hist, edges = np.histogram(age_data, bins=bins)
             self.age_profiles[bin_type] = hist
         combined_age_profiles_path = self.simulation_outputs_path / "age_profiles.pkl"
-        with open(combined_age_profiles_path, "wb+") as pkl:
-            pickle.dump(self.age_profiles, pkl)
+        #with open(combined_age_profiles_path, "wb+") as pkl:
+        #    pickle.dump(self.age_profiles, pkl)
 
     def convert_contacts(self):
+        #for idx, df in self.contacts.groupby(["id", "contact_type"]):
+        #    print(idx, df)
+
         all_contacts = self.contacts.groupby(["id", "contact_type"]).sum()
-        self.contacts_df = all_contacts["num_contacts"].unstack("contact_type", fill_value=0)
-        self.contacts_df = self.contacts_df.join(
+        df = all_contacts["num_contacts"].unstack(
+            level="contact_type", fill_value=0.
+        )
+
+        pd.set_option('max_rows', 100)
+        pd.set_option('max_columns', 30)
+        df = df.join(
             self.population, on="id"
         )
         for bin_type, bins in self.age_bins.items():
             bins_idx = f"{bin_type}_idx"
-            self.contacts_df[bins_idx] = np.digitize(self.contacts_df["age"], bins) - 1
+            df[bins_idx] = np.digitize(df["age"], bins) - 1
+        
+        self.contacts_df = df
+        #print("contacts len", len(self.contacts_df[self.contacts_df["company"] > 0]))
+        #print(self.contacts_df[self.contacts_df["company"] > 0].head(n=10))
 
     def calc_average_contacts(self):
         """ average contacts over age bins. Returns a dict of {bin_type: df} -- where df is
-            has rows of age bins, columns of group_type -- for each set of bins in age_bins"""
+            has rows of age bins, columns of supergroup -- for each set of bins in age_bins"""
         self.average_contacts = {}
         for bin_type in self.age_bins.keys():
             bins_idx = f"{bin_type}_idx"
             self.average_contacts[bin_type] = (
                 self.contacts_df.groupby(self.contacts_df[bins_idx]).mean() / self.simulation_days
             )
+            #print(self.average_contacts[bin_type])
         combined_ave_contacts_path = self.simulation_outputs_path / "average_contacts.pkl"
-        with open(combined_ave_contacts_path, "wb+") as pkl:
-            pickle.dump(self.average_contacts, pkl)
+        #with open(combined_ave_contacts_path, "wb+") as pkl:
+        #    pickle.dump(self.average_contacts, pkl)
 
     def normalise_contact_matrices(self, set_on_copy=True):
         if set_on_copy:
@@ -590,47 +595,16 @@ class ContactSimulator:
         self.normalise_contact_matrices(set_on_copy=True)
         self.save_collated_results()
 
-    def load_results(self):
-        combined_age_profiles_path = self.simulation_outputs_path / "age_profiles.pkl"
-        with open(combined_age_profiles_path, "rb") as pkl:
-            self.age_profiles = pickle.load(pkl)
-        combined_cm_path = self.simulation_outputs_path / "contact_matrices.pkl"
-        with open(combined_cm_path, "rb") as pkl:
-            self.contact_matrices = pickle.load(pkl)  
+    def load_results(self, collated_results_name="collated_results.pkl"):
+        collated_results_path = self.simulation_outputs_path / collated_results_name
+        with open(collated_results_path, "rb") as pkl:
+            dat = pickle.load(pkl)            
+            self.age_profiles = dat["age_profiles"]
+            self.age_bins = dat["age_bins"]
+            self.contact_matrices = dat["raw_contact_matrices"]
+            self.average_contacts = dat["average_contacts"]
         self.normalise_contact_matrices()
-        combined_ave_contacts_path = self.simulation_outputs_path / "average_contacts.pkl"
-        with open(combined_ave_contacts_path, "rb") as pkl:
-            self.average_contacts = pickle.load(pkl)       
-
-    @staticmethod
-    def _read_contact_data(contact_data_path):
-        contact_data = pd.read_csv(contact_data_path)
-        important_cols = np.array(["age_min", "age_max", "contacts"])
-        mask = np.array([col in contact_data.columns for col in important_cols])
-        if any(mask):
-            print(f"{contact_data_path} missing col(s) {important_cols[mask]}")
-        return contact_data
-
-    """
-    def load_real_contact_data(
-        self,
-        contact_data_paths=default_contact_data_paths
-    ):
-        '''
-        Parameters
-        ----------
-        contact_data_path
-            either the path to a csv containing "real" data, or a dict of "data_name": path
-            for plotting several sets of real data. eg. {"bbc_data": "/path/to/data"}.
-            CSV(s) should contain at least columns: age_min, age_max, contacts.
-        '''
-        if type(contact_data_paths) is dict:
-            contact_data = {}
-            for key, data_path in contact_data_paths.items():
-                contact_data[key] = self._read_contact_data(data_path)
-        else:
-            contact_data = self._read_contact_data(contact_data_paths)
-        self.contact_data = contact_data       """
+            
 
     def load_real_contact_data(
         self, **kwargs
@@ -671,7 +645,6 @@ class ContactSimulator:
         # just use the last matrix
         bbc_contact_data["age_min"] = [int(col.split("-")[0]) for col in mat.columns]
         bbc_contact_data["age_max"] = [int(col.split("-")[1]) for col in mat.columns]
-        print(bbc_contact_data)
         self.real_contact_matrices["bbc"] = bbc_contact_matrices
         self.real_contact_data["bbc"] = bbc_contact_data
 
@@ -695,8 +668,8 @@ class ContactSimulator:
         bins = self.age_bins[bin_type]
         mids = 0.5*(bins[:-1]+bins[1:])
         widths = (bins[1:]-bins[:-1])
-        plotted = 0
-
+        real_plotted=False
+        real_kwargs = {"marker":"x", "ms":5, "lw":1, "ls":"--",}
         for ii, contact_type in enumerate(contact_types):
             if contact_type not in average_contacts.columns:
                 print(f"No contact_type {contact_type}")
@@ -707,16 +680,20 @@ class ContactSimulator:
             )
 
             if plot_real_data:
-                if "real_contact_data" in self.__dict__:
-                    real_kwargs = {"marker":"x", "ms":5, "lw":1, "ls":"--",}
+                if "real_contact_data" in self.__dict__:                    
                     for jj, (key, data) in enumerate(self.real_contact_data.items()):
                         self._plot_real_data(
                             ax, data, contact_type=contact_type, errorbar=False,
                             color=f"C{ii%6}", **real_kwargs, 
                         )
+                    real_plotted=True
             else:
                 print("\"Real\" data not loaded - do contact_tracker.load_contact_data() before plotting.")
-
+        
+        ax2 = ax.twinx()
+        ax2.plot((0,0),(0,0),color="grey", label="JUNE")
+        ax2.plot((0,0),(0,0), color="grey", **real_kwargs, label=bin_type)
+        ax2.legend(bbox_to_anchor=(0.6,1.0))
         ax.legend()
         ax.set_xlim(bins[0], bins[-1])
         ax.set_xlabel('Age')
@@ -773,7 +750,7 @@ class ContactSimulator:
         return ax 
 
     def plot_contact_matrix(
-        self, bin_type="bbc", contact_type="school", ratio_with_real=False, **kwargs
+        self, bin_type="bbc", contact_type="school", real=False, ratio_with_real=False, **kwargs
     ):
         bins = self.age_bins[bin_type]
         if len(bins) < 25:
@@ -785,18 +762,22 @@ class ContactSimulator:
 
         plot_kwargs = {}
         if ratio_with_real:
+            matrix_type=f"ratio JUNE/{bin_type.upper()}"
             model_mat = self.normalised_contact_matrices[bin_type][contact_type]
             real_mat = self.real_contact_matrices[bin_type][contact_type]
             mat = model_mat / real_mat
             vmin, vmax= 0.2, 3.0
-            #plot_kwargs["vmin"]=vmin
-            #plot_kwargs["vmax"]=vmax
             plot_kwargs["norm"]=colors.LogNorm(vmin=vmin, vmax=vmax)
             
         else:
-            mat = self.normalised_contact_matrices[bin_type][contact_type]
+            if real:
+                matrix_type = bin_type.upper()
+                mat = self.real_contact_matrices[bin_type][contact_type]
+            else:
+                matrix_type = "JUNE"
+                mat = self.normalised_contact_matrices[bin_type][contact_type]
             plot_kwargs["vmin"]=0.0
-            plot_kwargs["vmax"]=4.0
+            plot_kwargs["vmax"]=1.0
 
         plot_kwargs.update(kwargs)
 
@@ -805,7 +786,7 @@ class ContactSimulator:
         plot_kwargs["cmap"] = cmap
 
         f, ax = plt.subplots()
-        im = ax.imshow(mat.T, origin='lower', **plot_kwargs)
+        im = ax.imshow(mat, origin='lower', **plot_kwargs)
         if labels is not None:
             ax.set_xticks(np.arange(len(mat)))
             ax.set_xticklabels(labels,rotation=90)
@@ -815,9 +796,9 @@ class ContactSimulator:
 
         if self.world_name is not None:
             world_name = self.world_name.split("_")[0].capitalize()
-            title = f"{contact_type} contacts in {world_name} ({bin_type} bins)"
+            title = f"{contact_type} ({world_name}, {matrix_type})"
         else:
-            title = f"{contact_type} contacts ({bin_type} bins)"
+            title = f"{contact_type} ({matrix_type})"
         ax.set_title(title)
         ax.set_xlabel("Participant age group")
         ax.set_ylabel("Contact age group")
@@ -840,6 +821,13 @@ class ContactSimulator:
         self.load_real_contact_data()
         save_dir.mkdir(exist_ok=True, parents=True)
 
+        limits = {
+            "household": {"vmin": 0., "vmax": 1.},
+            "school": {"vmin": 0., "vmax": 3.5},
+            "company": {"vmin": 0., "vmax": 1.0}
+        }
+            
+
         groups_plot = self.plot_group_contacts(
             contact_types=relevant_contact_types+["global"]
         )
@@ -853,14 +841,20 @@ class ContactSimulator:
             plt.savefig(save_dir / f"{rbt}_stacked_contacts.png", dpi=150, bbox_inches='tight')
             mat_dir = save_dir / f"{rbt}_matrices"
             mat_dir.mkdir(exist_ok=True, parents=True)
+            
             for rct in relevant_contact_types:
                 mat_plot = self.plot_contact_matrix(
-                    bin_type=rbt, contact_type=rct
+                    bin_type=rbt, contact_type=rct, **limits.get(rbt, {})
                 )
                 mat_plot.plot()
-                plt.savefig(mat_dir / f"{rct}.png", dpi=150, bbox_inches='tight')    
+                plt.savefig(mat_dir / f"{rct}.png", dpi=150, bbox_inches='tight')     
                 if rbt not in ratio_bin_types:
                     continue
+                real_plot = self.plot_contact_matrix(
+                    bin_type=rbt, contact_type=rct, real=True, **limits.get(rbt, {})
+                )
+                real_plot.plot()
+                plt.savefig(mat_dir / f"{rct}_real.png", dpi=150, bbox_inches='tight')   
                 ratio_plot = self.plot_contact_matrix(
                     bin_type=rbt, contact_type=rct, ratio_with_real=True
                 )

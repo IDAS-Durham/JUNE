@@ -12,20 +12,20 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import pandas as pd
 import tables
-import networkx as nx
+#import networkx as nx
 #import seaborn as sns
 
-from june.demography import Person
-from june.groups.leisure import generate_leisure_for_config
-from june.groups.group import Group, Subgroup
-from june.groups.travel import Travel
-from june.hdf5_savers import generate_world_from_hdf5
-from june.infection import HealthIndexGenerator
-from june.infection import InfectionSelector, HealthIndexGenerator
-from june.infection_seed import InfectionSeed, Observed2Cases
-from june.interaction import Interaction
-from june.interaction.interaction import _get_contacts_in_school
-from june.policy import Policies
+#from june.demography import Person
+#from june.groups.leisure import generate_leisure_for_config
+#from june.groups.group import Group, Subgroup
+#from june.groups.travel import Travel
+#from june.hdf5_savers import generate_world_from_hdf5
+#from june.infection import HealthIndexGenerator
+#from june.infection import InfectionSelector, HealthIndexGenerator
+#from june.infection_seed import InfectionSeed, Observed2Cases
+#from june.interaction import Interaction
+#from june.interaction.interaction import _get_contacts_in_school
+#from june.policy import Policies
 from june.records import Record, RecordReader
 from june.records.event_records_writer import EventRecord
 from june.records.static_records_writer import (
@@ -39,19 +39,12 @@ from june.simulator import Simulator
 
 from june import paths
 
-
-
-
 default_simulation_config_path = (
     paths.configs_path / "config_example.yaml"
 )
 default_interaction_path = (
     paths.configs_path / "defaults/interaction/interaction.yaml"
 )
-default_contact_data_paths = {
-    "bbc": paths.data_path / "plotting/contact_tracking/BBC.csv",
-    "polymod": paths.data_path / "plotting/contact_tracking/polymod.csv",
-}
 
 class SimulationRecord:
     """
@@ -203,7 +196,7 @@ class TimeSpentRecord(EventRecord):
 
 def combine_hdf5s(
     record_path,
-    table_names=("counter", "tracker", "occupancy"),
+    table_names=("counter", "tracker", "occupancy", "population"),
     remove_left_overs=False,
     save_dir=None,
 ):
@@ -225,9 +218,11 @@ def combine_hdf5s(
                             merged_record.root, dataset.name, description=description,
                         )
                     if len(arr_data) > 0:
-                        table = getattr(merged_record.root, dataset.name)
+                        table = getattr(merged_record.root, dataset.name)          
                         table.append(arr_data)
                         table.flush()
+
+                    
             if remove_left_overs:
                 record_file.unlink()
 

@@ -12,6 +12,8 @@ from itertools import combinations
 from pathlib import Path
 
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
+numexpr_logger = logging.getLogger("numexpr.utils")
+numexpr_logger.setLevel(logging.WARNING)
 
 import h5py
 import numpy as np
@@ -23,16 +25,16 @@ import networkx as nx
 
 from june.hdf5_savers import generate_world_from_hdf5
 from june.groups.leisure import generate_leisure_for_config
-from june.groups.group import Group, Subgroup
+#from june.groups.group import Group, Subgroup
 from june.interaction import Interaction
-from june.interaction.interaction import _get_contacts_in_school
-from june.infection import HealthIndexGenerator
-from june.infection_seed import InfectionSeed, Observed2Cases
-from june.infection import InfectionSelector, HealthIndexGenerator
+#from june.interaction.interaction import _get_contacts_in_school
+#from june.infection import HealthIndexGenerator
+#from june.infection_seed import InfectionSeed, Observed2Cases
+#from june.infection import InfectionSelector, HealthIndexGenerator
 from june.groups.travel import Travel
 from june.policy import Policies
 from june.records import Record
-from june.demography import Person
+#from june.demography import Person
 from june import paths
 from june.simulator import Simulator
 
@@ -335,7 +337,7 @@ class SimulationPlotter:
         ]
         if self.save_points[-1] != self.end_time:
             self.save_points.append(self.end_time)
-
+        
         ### THE MAIN EVENT ###
         while self.simulator.timer.date <= self.end_time:
             self.advance_step()
@@ -359,20 +361,20 @@ class SimulationPlotter:
         """Call class functions to create plots"""
         if self.contact_counter or self.contact_tracker:
             self.contact_simulator.load_results()
-            self.contact_simulator.make_plots(
-                save_dir = default_output_plots_path / "contact_tracker",
+            self.contact_simulator.make_plots(                
+                save_dir=self.simulation_outputs_path / "contact_tracker",
                 color_palette=default_color_palette
             )
         if self.occupancy_tracker:
             self.occupancy_simulator.load_results()
             self.occupancy_simulator.make_plots(
-                save_dir=default_output_plots_path / "occupancy",
+                save_dir=self.simulation_outputs_path / "occupancy",
                 color_palette=default_color_palette
             )
         if self.time_spent_tracker:
             self.time_spent_simulator.load_results()
             self.time_spent_simulator.make_plots(
-                save_dir=default_output_plots_path / "time_spent",
+                save_dir=self.simulation_outputs_path / "time_spent",
                 color_palette=default_color_palette
             )
 
@@ -443,7 +445,7 @@ if __name__ == "__main__":
         "C": "contact_counter", 
         "T": "contact_tracker", 
         "O": "occupancy_tracker",
-        "D": "distance_tracker",
+        #"D": "distance_tracker",
         "S": "time_spent_tracker",
     }
     operations_notes = {"T":"(warning: *VERY* large output)", "D":"(coming soon...)"}
@@ -476,6 +478,8 @@ if __name__ == "__main__":
             raise ValueError(f"{op} not a recognised argument. Choose from {operations_dict}")
         operation_args[operations_dict[op]] = True
 
+    start_time = time.time()
+
     if not args.only_plots:
         simulation_plotter = SimulationPlotter.from_file(
             args.world_filename, 
@@ -492,6 +496,13 @@ if __name__ == "__main__":
         simulation_plotter.load_operations(generate_simulation_record=False)
         if mpi_rank == 0:
             simulation_plotter.make_plots()
+
+    end_time = time.time()
+    mins = (end_time-start_time) / 60.
+
+    if mpi_rank == 0:
+        logger.info(f"main loop done in {mins:.3f} mins")
+
 
 
 
