@@ -50,7 +50,11 @@ class DomesticCare(Event):
         a random person is sent during leisure to take care of that household.
         We checked that the person is not at hospital when we send them.
         """
-        if "leisure" not in activities or is_weekend or "primary_activity" in activities:
+        if (
+            "leisure" not in activities
+            or is_weekend
+            or "primary_activity" in activities
+        ):
             return
         for household in world.households:
             if household.household_to_care is not None:
