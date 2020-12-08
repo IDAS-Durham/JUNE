@@ -221,9 +221,9 @@ class Leisure:
         if activity in self.policy_poisson_parameters:
             policy_activity_poisson_parameter = self.policy_poisson_parameters[
                 activity
-            ][sex][
+            ][day_type][sex][
                 age
-            ]  # TODO: daytype  # we boost the policy parameter as well
+            ]  
         else:
             policy_activity_poisson_parameter = original_activity_poisson_parameter
         activity_poisson_parameter = (

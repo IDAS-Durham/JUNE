@@ -30,8 +30,8 @@ class Household(Group):
         "residents",
         "quarantine_starting_date",
         "residences_to_visit",
-        "ids_checked",
         "being_visited",
+        "household_to_care"
     )
 
     class SubgroupType(IntEnum):
@@ -52,6 +52,7 @@ class Household(Group):
         self.max_size = max_size
         self.residents = ()
         self.residences_to_visit = ()
+        self.household_to_care = None
         self.being_visited = False  # this is True when people from other households have been added to the group
 
     def _get_leisure_subgroup_for_person(self, person):
@@ -67,9 +68,9 @@ class Household(Group):
 
     def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
         if activity == "leisure":
-            subgroup = self._get_leisure_subgroup_for_person(person=person)
-            person.subgroups.leisure = self[subgroup]
-            self[subgroup].append(person)
+            subgroup_type = self.get_leisure_subgroup_type(person)
+            person.subgroups.leisure = self[subgroup_type]
+            self[subgroup_type].append(person)
             self.being_visited = True
         elif activity == "residence":
             self[subgroup_type].append(person)
@@ -77,6 +78,22 @@ class Household(Group):
             person.subgroups.residence = self[subgroup_type]
         else:
             raise NotImplementedError(f"Activity {activity} not supported in household")
+
+    @classmethod
+    def get_leisure_subgroup_type(cls, person):
+        """
+        A person wants to come and visit this household. We need to assign the person
+        to the relevant age subgroup, and make sure the residents welcome him and
+        don't go do any other leisure activities.
+        """
+        if person.age < 18:
+            return cls.SubgroupType.kids
+        elif person.age <= 35:
+            return cls.SubgroupType.young_adults
+        elif person.age < 65:
+            return cls.SubgroupType.adults
+        else:
+            return cls.SubgroupType.old_adults
 
     def make_household_residents_stay_home(self, to_send_abroad=None):
         """
@@ -174,12 +191,14 @@ class InteractiveHousehold(InteractiveGroup):
     def get_processed_beta(self, betas, beta_reductions):
         """
         In the case of households, we need to apply the beta reduction of household visits
-        if the household has a visit, otherwise we apply the beta reduction for a normal household.
+        if the household has a visit, otherwise we apply the beta reduction for a normal 
+        household.
         """
-        beta = betas[self.spec]
         if self.group.being_visited:
+            beta = betas["household_visits"]
             beta_reduction = beta_reductions.get("household_visits", 1.0)
         else:
+            beta = betas["household"]
             beta_reduction = beta_reductions.get(self.spec, 1.0)
         regional_compliance = self.super_area.region.regional_compliance
         return beta * (1 + regional_compliance * (beta_reduction - 1))

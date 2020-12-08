@@ -526,119 +526,119 @@ change_leisure_probability:
     1:
         start_time: 2020-03-24
         end_time: 2020-05-21
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             household_visits:
-                men: 
+                male: 
                     0-64: 0.1
                     65-100: 0.05
-                women: 
+                female: 
                     0-64: 0.1
                     65-100: 0.05
             care_home_visits:
-                men:
+                male:
                     0-100: 0.05
-                women:
+                female:
                     0-100: 0.05
     2:
         start_time: 2020-05-21
         end_time: 2020-05-31
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             household_visits:
-                men: 
+                male: 
                     0-64: 0.25
                     65-100: 0.125
-                women: 
+                female: 
                     0-64: 0.25
                     65-100: 0.125
             care_home_visits:
-                men:
+                male:
                     0-100: 0.05
-                women:
+                female:
                     0-100: 0.05
     3:
         start_time: 2020-05-31
         end_time: 2020-06-04
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             household_visits:
-                men: 
+                male: 
                     0-64: 0.50
                     65-100: 0.25
-                women: 
+                female: 
                     0-64: 0.50
                     65-100: 0.25
             care_home_visits:
-                men:
+                male:
                     0-100: 0.05
-                women:
+                female:
                     0-100: 0.05
     4:
         start_time: 2020-06-04
         end_time: 2020-06-14
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             household_visits:
-                men: 
+                male: 
                     0-64: 0.7
                     65-100: 0.35
-                women: 
+                female: 
                     0-64: 0.7
                     65-100: 0.35
             care_home_visits:
-                men:
+                male:
                     0-100: 0.05
-                women:
+                female:
                     0-100: 0.05
     5:
         start_time: 2020-06-14
         end_time: 2020-07-04
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             household_visits:
-                men: 
+                male: 
                     0-64: 1.25
                     65-100: 0.625
-                women: 
+                female: 
                     0-64: 1.25
                     65-100: 0.625
             care_home_visits:
-                men:
+                male:
                     0-100: 0.05
-                women:
+                female:
                     0-100: 0.05
 
     6:
         start_time: 2020-07-04
         end_time: 2020-07-11
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             pubs:
-                men:
+                male:
                     18-65: 0.256
                     65-100: 0.170
-                women:
+                female:
                     18-65: 0.256
                     65-100: 0.170
             household_visits:
-                men: 
+                male: 
                     0-64: 1.4
                     65-100: 0.7
-                women: 
+                female: 
                     0-64: 1.4
                     65-100: 0.7
 
     7:
         start_time: 2020-07-11
         end_time: 2020-07-18
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             pubs:
-                men:
+                male:
                     18-65: 0.402
                     65-100: 0.268
-                women:
+                female:
                     18-65: 0.402
                     65-100: 0.268
             household_visits:
-                men: 
+                male: 
                     0-64: 1.4
                     65-100: 0.7
-                women: 
+                female: 
                     0-64: 1.4
                     65-100: 0.7
 
@@ -646,19 +646,19 @@ change_leisure_probability:
     8:
         start_time: 2020-07-18
         end_time: 2020-07-25
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             pubs:
-                men:
+                male:
                     18-65: 0.548
                     65-100: 0.366
-                women:
+                female:
                     18-65: 0.548
                     65-100: 0.366
             household_visits:
-                men: 
+                male: 
                     0-64: 1.4
                     65-100: 0.7
-                women: 
+                female: 
                     0-64: 1.4
                     65-100: 0.7
 
@@ -666,19 +666,19 @@ change_leisure_probability:
     9:
         start_time: 2020-07-25
         end_time: 2020-08-01
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             pubs:
-                men:
+                male:
                     18-65: 0.695
                     65-100: 0.463
-                women:
+                female:
                     18-65: 0.695
                     65-100: 0.463
             household_visits:
-                men: 
+                male: 
                     0-64: 1.4
                     65-100: 0.7
-                women: 
+                female: 
                     0-64: 1.4
                     65-100: 0.7
 
@@ -686,19 +686,19 @@ change_leisure_probability:
     10:
         start_time: 2020-08-01
         end_time: 2020-08-08
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             pubs:
-                men:
+                male:
                     18-65: 0.841
                     65-100: 0.561
-                women:
+                female:
                     18-65: 0.841
                     65-100: 0.561
             household_visits:
-                men: 
+                male: 
                     0-64: 1.4
                     65-100: 0.7
-                women: 
+                female: 
                     0-64: 1.4
                     65-100: 0.7
 
@@ -706,65 +706,65 @@ change_leisure_probability:
     11:
         start_time: 2020-08-08
         end_time: 2020-08-15
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             pubs:
-                men:
+                male:
                     18-65: 0.988
                     65-100: 0.659
-                women:
+                female:
                     18-65: 0.988
                     65-100: 0.659
 
     12:
         start_time: 2020-08-15
         end_time: 2020-08-22
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             pubs:
-                men:
+                male:
                     18-65: 1.13
                     65-100: 0.756
-                women:
+                female:
                     18-65: 1.13
                     65-100: 0.756
 
     13:
         start_time: 2020-08-22
         end_time: 2020-08-29
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             pubs:
-                men:
+                male:
                     18-65: 1.28
                     65-100: 0.854
-                women:
+                female:
                     18-65: 1.28
                     65-100: 0.854
 
     14:
         start_time: 2020-08-29
         end_time: 2020-08-31
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             pubs:
-                men:
+                male:
                     18-65: 1.38
                     65-100: 0.917
-                women:
+                female:
                     18-65: 1.38
                     65-100: 0.917
     15:
         start_time: 2020-11-05
         end_time: 2020-12-03
-        leisure_poisson_parameters:
+        new_leisure_poisson_parameters:
             household_visits:
-                men: 
+                male: 
                     0-64: 0.1
                     65-100: 0.05
-                women: 
+                female: 
                     0-64: 0.1
                     65-100: 0.05
             care_home_visits:
-                men:
+                male:
                     0-100: 0.05
-                women:
+                female:
                     0-100: 0.05
 
 

@@ -38,7 +38,9 @@ class TestCloseLeisure:
     def test__close_leisure_venues(self, setup_policy_world):
         world, pupil, student, worker, sim = setup_policy_world
         close_venues = CloseLeisureVenue(
-            start_time="2020-3-1", end_time="2020-3-30", venues_to_close=["pub"],
+            start_time="2020-3-1",
+            end_time="2020-3-30",
+            venues_to_close=["pub"],
         )
         policies = Policies([close_venues])
         leisure = generate_leisure_for_config(world=world, config_filename=test_config)
@@ -89,7 +91,10 @@ class TestReduceLeisureProbabilities:
             start_time="2020-03-02",
             end_time="2020-03-05",
             new_leisure_poisson_parameters={
-                "pubs": {"male": {"0-50": 0.2, "50-100": 0.0}, "female": {"0-100": 0.2},},
+                "pub": {
+                    "male": {"0-50": 0.2, "50-100": 0.0},
+                    "female": {"0-100": 0.2},
+                },
             },
         )
         policies = Policies([reduce_leisure_probabilities])
@@ -111,7 +116,7 @@ class TestReduceLeisureProbabilities:
         person1 = Person.from_attributes(age=60, sex="m")
         person1.area = super_area.areas[0]
         household.add(person1)
-        person2 = Person.from_attributes(age=80, sex="f")
+        person2 = Person.from_attributes(age=19, sex="f")
         person2.area = super_area.areas[0]
         leisure.distribute_social_venues_to_areas(
             world.areas, super_areas=world.super_areas
@@ -135,8 +140,10 @@ class TestReduceLeisureProbabilities:
             next(sim.timer)
         policies.leisure_policies.apply(date=sim.timer.date, leisure=leisure)
         leisure.generate_leisure_probabilities_for_timestep(0.1, False, False)
-        assert leisure.policy_poisson_parameters["pubs"]["m"][60] == 0.0
-        assert leisure.policy_poisson_parameters["pubs"]["f"][60] == 0.2
+        assert leisure.policy_poisson_parameters["pub"]["weekday"]["m"][60] == 0.0
+        assert leisure.policy_poisson_parameters["pub"]["weekday"]["f"][19] == 0.2
+        assert leisure.policy_poisson_parameters["pub"]["weekend"]["m"][60] == 0.0
+        assert leisure.policy_poisson_parameters["pub"]["weekend"]["f"][19] == 0.2
         pubs1_visits_after = 0
         pubs2_visits_after = 0
         for _ in range(5000):
@@ -189,8 +196,11 @@ class TestReduceLeisureProbabilities:
         reduce_leisure_probabilities = ChangeLeisureProbability(
             start_time="2020-03-02",
             end_time="2020-03-05",
-            leisure_poisson_parameters={
-                "pubs": {"male": {"0-50": 0.2, "50-100": 0.0}, "female": {"0-100": 0.2},},
+            new_leisure_poisson_parameters={
+                "pub": {
+                    "male": {"0-50": 0.2, "50-100": 0.0},
+                    "female": {"0-100": 0.2},
+                },
             },
         )
         policies = Policies([reduce_leisure_probabilities])
@@ -199,25 +209,31 @@ class TestReduceLeisureProbabilities:
 
         # compliance to 1
         policies.leisure_policies.apply(date=sim.timer.date, leisure=leisure)
-        assert leisure.policy_poisson_parameters["pubs"]["m"][60] == 0.0
-        assert leisure.policy_poisson_parameters["pubs"]["f"][40] == 0.2
+        assert leisure.policy_poisson_parameters["pub"]["weekday"]["m"][60] == 0.0
+        assert leisure.policy_poisson_parameters["pub"]["weekday"]["f"][40] == 0.2
+        assert leisure.policy_poisson_parameters["pub"]["weekend"]["m"][60] == 0.0
+        assert leisure.policy_poisson_parameters["pub"]["weekend"]["f"][40] == 0.2
         original_poisson_parameter = leisure.leisure_distributors[
-            "pubs"
-        ].get_poisson_parameter(sex="m", age=25, is_weekend=False)
+            "pub"
+        ].get_poisson_parameter(
+            sex="m", age=25, day_type="weekday", working_hours=False
+        )
         full_comp_poisson_parameter = leisure._get_activity_poisson_parameter(
-            activity="pubs",
-            distributor=leisure.leisure_distributors["pubs"],
+            activity="pub",
+            distributor=leisure.leisure_distributors["pub"],
             sex="m",
             age=25,
             is_weekend=False,
+            working_hours=False,
             regional_compliance=1.0,
         )
         half_comp_poisson_parameter = leisure._get_activity_poisson_parameter(
-            activity="pubs",
-            distributor=leisure.leisure_distributors["pubs"],
+            activity="pub",
+            distributor=leisure.leisure_distributors["pub"],
             sex="m",
             age=25,
             is_weekend=False,
+            working_hours=False,
             regional_compliance=0.5,
         )
         assert np.isclose(full_comp_poisson_parameter, 0.2)
@@ -237,10 +253,10 @@ class TestReduceLeisureProbabilities:
         # this is  a reduction, so being less compliant means you go more often
         assert half_comp_probs["does_activity"] > full_comp_probs["does_activity"]
         assert (
-            half_comp_probs["activities"]["pubs"]
-            > full_comp_probs["activities"]["pubs"]
+            half_comp_probs["activities"]["pub"]
+            > full_comp_probs["activities"]["pub"]
         )
         assert (
-            half_comp_probs["drags_household"]["pubs"]
-            == full_comp_probs["drags_household"]["pubs"]
+            half_comp_probs["drags_household"]["pub"]
+            == full_comp_probs["drags_household"]["pub"]
         )
