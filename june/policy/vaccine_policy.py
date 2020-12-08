@@ -191,7 +191,7 @@ class VaccineDistribution(Policy):
         )
 
     def apply(self, person: Person, date: datetime):
-        if person.susceptibility == 1.0 and self.is_target_group(person):
+        if person.should_be_vaccinated and self.is_target_group(person):
             days_passed = (date - self.start_time).days
             if random() < self.daily_vaccine_probability(days_passed=days_passed):
                 self.vaccinate(person=person, date=date)
@@ -207,6 +207,7 @@ class VaccineDistribution(Policy):
                 if person.susceptibility == person.vaccine_plan.minimal_susceptibility:
                     ids_to_remove.add(person.id)
                     person.vaccine_plan = None
+                    person.vaccinated = True
                 else:
                     self.update_susceptibility(person=person, date=date)
             self.vaccinated_ids -= ids_to_remove
