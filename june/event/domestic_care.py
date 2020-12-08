@@ -68,6 +68,7 @@ class DomesticCare(Event):
                         receives_care = True
                         break
                 if receives_care:
+                    household_to_care.receiving_care = True
                     # make residents stay at home
                     for person in household_to_care.residents:
                         if person.available:
