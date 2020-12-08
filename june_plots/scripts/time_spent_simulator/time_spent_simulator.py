@@ -1,5 +1,6 @@
 from collections import Counter, defaultdict
 import logging
+import time
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,12 +18,15 @@ import networkx as nx
 
 from june.hdf5_savers import generate_world_from_hdf5
 from june.groups.leisure import generate_leisure_for_config, SocialVenue
-from june.groups.group import Group, Subgroup
-from june.interaction import Interaction, InteractiveGroup
-from june.interaction.interaction import _get_contacts_in_school
-from june.infection import HealthIndexGenerator
-from june.infection_seed import InfectionSeed, Observed2Cases
-from june.infection import InfectionSelector, HealthIndexGenerator
+
+from june.groups.group.interactive import InteractiveGroup
+from june.groups.school import _get_contacts_in_school
+from june.groups import InteractiveSchool, InteractiveCompany, InteractiveHousehold
+from june.groups import Group, Subgroup
+
+#from june.infection import HealthIndexGenerator
+#from june.infection_seed import InfectionSeed, Observed2Cases
+#from june.infection import InfectionSelector, HealthIndexGenerator
 from june.groups.travel import Travel
 from june.policy import Policies
 from june.records import Record, RecordReader
@@ -59,7 +63,7 @@ class TimeSpentSimulator:
         if simulator is not None:
             self.world = self.simulator.world
             self.timer = self.simulator.timer
-            self.group_types = [
+            self.supergroups = [
                 self.world.care_homes,
                 self.world.cinemas, 
                 self.world.city_transports, 
@@ -73,7 +77,7 @@ class TimeSpentSimulator:
                 self.world.universities
             ]
             self.contact_types = (
-                [groups[0].spec for groups in self.group_types if len(groups) > 0]
+                [supergroup[0].spec for supergroup in self.supergroups if len(supergroup) > 0]
                 + ["care_home_visits", "household_visits"]
             )
             self.initialise_time_spent_tracker()
@@ -81,36 +85,8 @@ class TimeSpentSimulator:
     def initialise_time_spent_tracker(self):
         self.time_spent_tracker = {spec: defaultdict(float) for spec in self.contact_types}
 
-    def track_time_spent(self, delta_t, group: InteractiveGroup, household_visit=False):
-        if household_visit:
-            venue_type = f"household_visits"
-        else:
-            venue_type = group.spec
-        for subgroup_type, subgroup_ids in enumerate(group.subgroup_member_ids):
-            if group.spec == "care_home" and subgroup_type == 2: # sg_type 2 is visitors...
-                venue_type = "care_home_visits"
-                # shouldn't need to reset this as visitors should always be the last group.
-            for pid in subgroup_ids:
-                self.time_spent_tracker[venue_type][pid] += delta_t
 
-    def record_output(self):
-        if mpi_rank == 0:
-            logger.info(f"recording output at {self.timer.date}")
-        for venue_type in self.time_spent_tracker.keys():
-            if len(self.time_spent_tracker[venue_type]) > 0: # ie. no one in pub in sleep timestep.
-                person_ids = list(self.time_spent_tracker[venue_type].keys())
-                time_spent = list(self.time_spent_tracker[venue_type].values())
-                self.simulation_record.accumulate(
-                    table_name="time_spent",
-                    venue_type=venue_type,
-                    person_ids=person_ids,
-                    time_spent=time_spent,
-                )
-        self.simulation_record.time_step(self.timer.date)
-
-        # Reset the counters for the next interval...
-        self.initialise_time_spent_tracker()
-
+    '''
     def operations(
         self, people_from_abroad_dict, to_send_abroad, record_time_step=False):
         """The main thing in this simulator."""
@@ -134,15 +110,106 @@ class TimeSpentSimulator:
                 household_visit = False
                 if group.spec == "household":
                     for person in group.people:
-                        if person.leisure is not None and person.leisure.group.id == person.residence.group.id:
+                        leisure_not_none = (person.leisure is not None)
+                        leisure_is_residence = (person.leisure.group.id == person.residence.group.id)
+                        if leisure_not_none and leisure_is_residence:
                             household_visit = True
+                            break
                 if int_group.size == 0:
                     continue
 
                 delta_t = self.timer.delta_time.seconds / 3600.
                 self.track_time_spent(delta_t, int_group, household_visit=household_visit)
         if record_time_step:
+            self.record_output()'''
+
+    def operations(
+        self, people_from_abroad_dict, to_send_abroad, record_time_step=False
+    ):  
+        tick = time.time()               
+
+        for supergroup in self.supergroups:
+            if len(supergroup) == 0:
+                continue
+            spec = supergroup[0].spec
+            for group in supergroup:
+                if group.external:
+                    continue
+                people_from_abroad = people_from_abroad_dict.get(
+                    group.spec, {}
+                ).get(group.id, None)                    
+                interactive_group = group.get_interactive_group(people_from_abroad)
+                self.modify_interactive_group(interactive_group, people_from_abroad)
+                if interactive_group.size == 0:
+                    continue
+                delta_t = self.timer.delta_time.seconds / 3600.
+                self.track_time_spent(delta_t, interactive_group)
+        tock = time.time()
+        print(f"{mpi_rank} {self.timer.date} done in {(tock-tick)/60.} min")
+        if record_time_step:
             self.record_output()
+
+    def modify_interactive_group(self, interactive_group, people_from_abroad):
+        """"""
+        people_from_abroad = people_from_abroad or {}
+
+        interactive_group.subgroup_member_ids = []
+        for subgroup_index, subgroup in enumerate(interactive_group.group.subgroups):
+            subgroup_size = len(subgroup.people)
+            if subgroup.subgroup_type in people_from_abroad:
+                people_abroad_data = people_from_abroad[subgroup.subgroup_type]
+                people_abroad_ids = people_abroad_data.keys()
+                subgroup_size += len(people_abroad_ids)
+            else:
+                people_abroad_data = None
+                people_abroad_ids = []
+             
+            this_subgroup_ids = [p.id for p in subgroup.people] + list(people_abroad_ids)
+            interactive_group.subgroup_member_ids.append(this_subgroup_ids)
+
+        if interactive_group.group.spec == "school":
+            if (len(interactive_group.subgroup_member_ids) == 
+                len(interactive_group.school_years) + 2):
+                assert len(interactive_group.subgroup_member_ids[-1]) == 0
+                del interactive_group.subgroup_member_ids[-1]
+            else:
+                print("you can probably remove this 'if school' statement in modify_interactive_group")
+
+    def track_time_spent(self, delta_t, interactive_group: InteractiveGroup,):
+        household_visit = False
+        if interactive_group.spec == "household":
+            for person in interactive_group.group.people:
+                if person.leisure is not None and person.leisure.group.id == person.residence.group.id:
+                    household_visit = True
+                    break
+        
+        for subgroup_type, subgroup_ids in enumerate(interactive_group.subgroup_member_ids):
+            venue_type = interactive_group.spec
+            if household_visit:
+                venue_type = f"household_visits"
+            if interactive_group.spec == "care_home" and subgroup_type == 2: # sg_type 2 is visitors...
+                venue_type = "care_home_visits"
+                # shouldn't need to reset this as visitors should always be the last group.
+            for pid in subgroup_ids:
+                self.time_spent_tracker[venue_type][pid] += delta_t
+
+    def record_output(self):
+        if mpi_rank == 0:
+            logger.info(f"recording output at {self.timer.date}")
+        for venue_type in self.time_spent_tracker.keys():
+            if len(self.time_spent_tracker[venue_type]) > 0: # ie. no one in pub in sleep timestep.
+                person_ids = list(self.time_spent_tracker[venue_type].keys())
+                time_spent = list(self.time_spent_tracker[venue_type].values())
+                self.simulation_record.accumulate(
+                    table_name="time_spent",
+                    venue_type=venue_type,
+                    person_ids=person_ids,
+                    time_spent=time_spent,
+                )
+        self.simulation_record.time_step(self.timer.date)
+
+        # Reset the counters for the next interval...
+        self.initialise_time_spent_tracker()
 
     def process_results(self, combined_venues=None):
         if combined_venues is None:
@@ -172,7 +239,7 @@ class TimeSpentSimulator:
         
         ### !!!=============NOTE HERE!=============!!! ###
         # Need to do this step as some people have time recorded in two/three domains,
-        # so each person
+        # so each person could appear several times...
         time_spent = time_spent.groupby(level=[0,1]).agg(
             {"time_spent": sum}
         )
@@ -219,6 +286,8 @@ class TimeSpentSimulator:
                 self.time_spent.index, data, 
                 color=color_palette[f"general_{i+1}"], label=label
             )
+        ax.set_xlabel("Age")
+        ax.set_ylabel("Average time spent in activity [hours]")
         ax.legend(bbox_to_anchor = (0.5,1.02), loc='lower center', ncol=3)
         return ax
 
