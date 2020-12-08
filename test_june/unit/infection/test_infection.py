@@ -35,7 +35,7 @@ def make_selector(
     desired_symptoms, transmission_config_path=default_transmission_config_path
 ):
     health_index_generator = MockHealthIndexGenerator(desired_symptoms)
-    selector = InfectionSelector.from_file(
+    selector = InfectionSelector(
         health_index_generator=health_index_generator,
         transmission_config_path=transmission_config_path,
     )
@@ -62,7 +62,9 @@ def infect_person(
 
 class TestInfection:
     def test__infect_person__gives_them_symptoms_and_transmission(self):
-        selector = InfectionSelector.from_file()
+        selector = InfectionSelector(
+            health_index_generator=MockHealthIndexGenerator("severe")
+        )
         victim = person.Person(sex="f", age=26)
         selector.infect_person_at_time(person=victim, time=0.2)
 
@@ -85,11 +87,11 @@ class TestInfection:
 
 class TestInfectionSelector:
     def test__defaults_when_no_filename_is_given(self):
-        selector = InfectionSelector.from_file()
+        selector = InfectionSelector()
         assert selector.transmission_type == "gamma"
 
     def test__constant_filename(self):
-        selector = InfectionSelector.from_file(
+        selector = InfectionSelector(
             transmission_config_path=paths.configs_path
             / "defaults/transmission/TransmissionConstant.yaml",
         )
@@ -136,9 +138,11 @@ class TestInfectionSelector:
         )
 
     def test__lognormal_in_maxprob(self):
-        selector = InfectionSelector.from_file(
+        health_index_generator=MockHealthIndexGenerator("severe")
+        selector = InfectionSelector(
             transmission_config_path=paths.configs_path
-            / "tests/transmission/test_transmission_lognormal.yaml"
+            / "tests/transmission/test_transmission_lognormal.yaml",
+            health_index_generator=health_index_generator
         )
         avg_gamma = transmission.TransmissionGamma.from_file(
             config_path=paths.configs_path

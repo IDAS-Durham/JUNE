@@ -44,8 +44,11 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 
 @pytest.fixture(name="selector", scope="module")
-def make_selector():
-    selector = InfectionSelector.from_file(transmission_config_path=constant_config)
+def make_selector(health_index_generator):
+    selector = InfectionSelector(
+        health_index_generator=health_index_generator,
+        transmission_config_path=constant_config,
+    )
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     return selector
