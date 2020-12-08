@@ -100,30 +100,36 @@ class ChangeLeisureProbability(LeisurePolicy):
             * leisure_activities_probabilities = {"pubs" : {"men" :{"0-50" : 0.5, "50-99" : 0.2}, "women" : {"0-70" : 0.2, "71-99" : 0.8}}}
         """
         super().__init__(start_time, end_time)
-        self.poisson_parameters = {}
+        self.poisson_parameters = self._read_poisson_parameters(
+            new_leisure_poisson_parameters
+        )
+
+    def _read_poisson_parameters(self, new_leisure_poisson_parameters):
+        ret = {}
         day_types = ["weekday", "weekend"]
         sexes = ["male", "female"]
         _sex_t = {"male": "m", "female": "f"}
         for activity, pp in new_leisure_poisson_parameters.items():
-            self.poisson_parameters[activity] = {}
+            ret[activity] = {}
+            ret[activity]["weekday"] = {}
+            ret[activity]["weekend"] = {}
             for day_type in pp:
                 if day_type == "any" or day_type in ["male", "female"]:
-                    self.poisson_parameters[activity] = {}
-                    for day_type, sex in zip(day_types, sexes):
+                    for sex in sexes:
                         june_sex = _sex_t[sex]
-                        self.poisson_parameters[activity][day_type][
-                            june_sex
-                        ] = parse_age_probabilities(
+                        probs = parse_age_probabilities(
                             new_leisure_poisson_parameters[activity][sex]
                         )
+                        for day_type in day_types:
+                            ret[activity][day_type][june_sex] = probs
                 else:
-                    for day_type, sex in zip(day_types, sexes):
-                        june_sex = _sex_t[sex]
-                        self.poisson_parameters[activity][day_type][
-                            june_sex
-                        ] = parse_age_probabilities(
-                            new_leisure_poisson_parameters[activity][day_type][sex]
-                        )
+                    for day_type in day_types:
+                        for sex in sexes:
+                            june_sex = _sex_t[sex]
+                            ret[activity][day_type][june_sex] = parse_age_probabilities(
+                                new_leisure_poisson_parameters[activity][day_type][sex]
+                            )
+        return ret
 
     def apply(self, leisure: Leisure):
         """
