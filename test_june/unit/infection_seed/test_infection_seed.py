@@ -6,7 +6,6 @@ from june.geography import Geography, SuperArea, SuperAreas, Area
 from june.demography import Demography, Person, Population
 from june import World
 from june.infection_seed import InfectionSeed
-from june.infection import InfectionSelector
 from pathlib import Path
 from june.time import Timer
 
