@@ -443,12 +443,21 @@ class Simulator:
         tick, tickw = perf_counter(), wall_clock()
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
-                date=self.timer.date,
-                interaction=self.interaction,
+                date=self.timer.date, interaction=self.interaction,
             )
             self.activity_manager.policies.regional_compliance.apply(
                 date=self.timer.date, regions=self.world.regions
             )
+            if self.activity_manager.policies.vaccine_distribution is not None:
+                if self.activity_manager.policies.vaccine_distribution.is_active(date=self.timer.date):
+                    #TODO: mix with individual policies in activity
+                    for person in self.world.people:
+                        self.activity_manager.policies.vaccine_distribution.apply(
+                            person=person, date=self.timer.date
+                        )
+                self.activity_manager.policies.vaccine_distribution.update_susceptibility_of_vaccinated(
+                    self.world.people, date=self.timer.date
+                )
         activities = self.timer.activities
         if not activities or len(activities) == 0:
             output_logger.info("==== do_timestep(): no active groups found. ====")
