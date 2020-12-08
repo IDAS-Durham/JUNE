@@ -838,3 +838,7 @@ close_schools:
 close_universities:
     start_time: 2020-03-20
     end_time: 2021-09-28
+
+vaccine_distribution:
+    start_time: 2020-02-01
+    end_time: 2021-02-01

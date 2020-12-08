@@ -6,9 +6,6 @@ from june.demography.person import Person
 from .policy import Policy, PolicyCollection, Policies, read_date
 from june import paths
 
-# TODO: put in daily probability of being vaccinated
-# TODO: modify parameters
-# TODO: add option for second dose compliance (no second dose date needs testing)
 # TODO: add type of vaccine that just makes people asymptomatic instead of non susceptible
 
 
@@ -32,9 +29,8 @@ class VaccinePlan:
         self.first_dose_effective_date = self.first_dose_date + datetime.timedelta(
             days=self.first_dose_effective_days
         )
-        self.second_dose_effective_date = (
-            self.second_dose_date
-            + datetime.timedelta(days=self.second_dose_effective_days)
+        self.second_dose_effective_date = self.second_dose_date + datetime.timedelta(
+            days=self.second_dose_effective_days
         )
         self.original_susceptibility = original_susceptibility
 
@@ -74,13 +70,14 @@ class VaccinePlan:
 
 
 class VaccineDistribution(Policy):
-    policy_type = "vaccine_distribuion"
+    policy_type = "vaccine_distribution"
 
     def __init__(
         self,
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
-        group_description: dict = {"by": "residence", "group": "care_home"},
+        #group_description: dict = {"by": "residence", "group": "care_home"},
+        group_description: dict = {"by": "age", "group": "50-100"},
         group_coverage: float = 1.0,
         group_prevalence: float = 0.0,
         efficacy: float = 1.0,
@@ -142,7 +139,7 @@ class VaccineDistribution(Policy):
             return f'{group_description["by"]}', group_description["group"]
 
     def is_target_group(self, person):
-        if self.group_attribute is not "age":
+        if self.group_attribute != "age":
             try:
                 if (
                     operator.attrgetter(self.group_attribute)(person)
@@ -193,7 +190,7 @@ class VaccineDistribution(Policy):
             1 / (self.total_days - days_passed)
         )
 
-    def apply(self, date: datetime, person: Person):
+    def apply(self, person: Person, date: datetime):
         if person.susceptibility == 1.0 and self.is_target_group(person):
             days_passed = (date - self.start_time).days
             if random() < self.daily_vaccine_probability(days_passed=days_passed):
@@ -203,8 +200,8 @@ class VaccineDistribution(Policy):
         person.susceptibility = person.vaccine_plan.susceptibility(date=date)
 
     def update_susceptibility_of_vaccinated(self, people, date):
-        ids_to_remove = set()
         if self.vaccinated_ids:
+            ids_to_remove = set()
             for pid in self.vaccinated_ids:
                 person = people.get_from_id(pid)
                 if person.susceptibility == person.vaccine_plan.minimal_susceptibility:
@@ -212,13 +209,24 @@ class VaccineDistribution(Policy):
                     person.vaccine_plan = None
                 else:
                     self.update_susceptibility(person=person, date=date)
-        self.vaccinated_ids -= ids_to_remove
+            self.vaccinated_ids -= ids_to_remove
 
 
 class VaccineDistributions(PolicyCollection):
     policy_type = "vaccine_distribution"
 
-    def apply(self, date: datetime, person: Person):
+    def apply(self, person: Person, date: datetime):
+        if self.policies:
+            active_polices = self.get_active(date)
+            for policy in active_polices:
+                policy.apply(person=person, date=date)
+
+    def is_active(self, date: datetime):
+        if self.get_active(date): 
+            return True
+        return False
+
+    def update_susceptibility_of_vaccinated(self, people, date: datetime):
         if self.policies:
             for policy in self.policies:
-                policy.apply(date=date, person=person)
+                policy.update_susceptibility_of_vaccinated(people=people, date=date)
