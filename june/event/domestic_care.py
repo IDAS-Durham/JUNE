@@ -1,9 +1,11 @@
 from typing import Dict, Union
 from random import random, shuffle, randint
+import logging
 import datetime
 
 from .event import Event
 from june.utils import parse_age_probabilities
+logger = logging.getLogger("domestic_care")
 
 
 class DomesticCare(Event):
@@ -91,6 +93,9 @@ class DomesticCare(Event):
                         can_provide_care.append(household)
             shuffle(need_care)
             shuffle(can_provide_care)
+            if len(need_care) > len(can_provide_care):
+                logger.warning(f"super area {super_area.id} does not"
+                                f"have enough carers")
             for needer, provider in zip(need_care, can_provide_care):
                 provider.household_to_care = needer
 
