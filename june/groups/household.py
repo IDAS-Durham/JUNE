@@ -31,7 +31,8 @@ class Household(Group):
         "quarantine_starting_date",
         "residences_to_visit",
         "being_visited",
-        "household_to_care"
+        "household_to_care",
+        "receiving_care"
     )
 
     class SubgroupType(IntEnum):
@@ -54,6 +55,7 @@ class Household(Group):
         self.residences_to_visit = {}
         self.household_to_care = None
         self.being_visited = False  # this is True when people from other households have been added to the group
+        self.receiving_care = False
 
     def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
         if activity == "leisure":
@@ -157,6 +159,7 @@ class Household(Group):
     def clear(self):
         super().clear()
         self.being_visited = False
+        self.receiving_care = False
 
     def get_interactive_group(self, people_from_abroad=None):
         return InteractiveHousehold(self, people_from_abroad=people_from_abroad)
@@ -181,6 +184,9 @@ class InteractiveHousehold(InteractiveGroup):
         if self.group.being_visited:
             beta = betas["household_visits"]
             beta_reduction = beta_reductions.get("household_visits", 1.0)
+        elif self.group.receiving_care:
+            beta = betas["care_visits"]
+            beta_reduction = beta_reductions.get("care_visits", 1.0)
         else:
             beta = betas["household"]
             beta_reduction = beta_reductions.get(self.spec, 1.0)
