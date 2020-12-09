@@ -1,9 +1,12 @@
 from typing import Dict, Union
 from random import random, shuffle, randint
+import logging
 import datetime
 
 from .event import Event
 from june.utils import parse_age_probabilities
+
+logger = logging.getLogger("domestic_care")
 
 
 class DomesticCare(Event):
@@ -68,6 +71,7 @@ class DomesticCare(Event):
                         receives_care = True
                         break
                 if receives_care:
+                    household_to_care.receiving_care = True
                     # make residents stay at home
                     for person in household_to_care.residents:
                         if person.available:
@@ -78,6 +82,7 @@ class DomesticCare(Event):
         Links old people households to other households that provide them with care aid.
         All linking is restricted to the super area level.
         """
+        total_need_care = 0
         for super_area in world.super_areas:
             # get households that need care
             need_care = []
@@ -90,8 +95,14 @@ class DomesticCare(Event):
                         can_provide_care.append(household)
             shuffle(need_care)
             shuffle(can_provide_care)
+            if len(need_care) > len(can_provide_care):
+                logger.warning(
+                    f"super area {super_area.id} does not" f"have enough carers"
+                )
             for needer, provider in zip(need_care, can_provide_care):
+                total_need_care += 1
                 provider.household_to_care = needer
+        logger.info(f"A total number of {total_need_care} people need care here.")
 
     def _check_household_needs_care(self, household):
         """
@@ -99,16 +110,11 @@ class DomesticCare(Event):
         person in the household to be representative of the risk
         for needing care.
         """
-        oldest_person = None
-        oldest_age = 0
         if household.type == "old":
             for person in household.residents:
-                if person.age > oldest_age:
-                    oldest_person = person
-                    oldest_age = person.age
-            care_probability = self.needs_care_probabilities[oldest_age]
-            if random() < care_probability:
-                return True
+                care_probability = self.needs_care_probabilities[person.age]
+                if random() < care_probability:
+                    return True
         return False
 
     def _check_household_can_provide_care(self, household):

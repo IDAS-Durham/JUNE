@@ -31,7 +31,8 @@ class Household(Group):
         "quarantine_starting_date",
         "residences_to_visit",
         "being_visited",
-        "household_to_care"
+        "household_to_care",
+        "receiving_care"
     )
 
     class SubgroupType(IntEnum):
@@ -54,6 +55,7 @@ class Household(Group):
         self.residences_to_visit = ()
         self.household_to_care = None
         self.being_visited = False  # this is True when people from other households have been added to the group
+        self.receiving_care = False
 
     def _get_leisure_subgroup_for_person(self, person):
         if person.age < 18:
@@ -168,6 +170,7 @@ class Household(Group):
     def clear(self):
         super().clear()
         self.being_visited = False
+        self.receiving_care = False
 
     def get_interactive_group(self, people_from_abroad=None):
         return InteractiveHousehold(self, people_from_abroad=people_from_abroad)
@@ -194,7 +197,11 @@ class InteractiveHousehold(InteractiveGroup):
         if the household has a visit, otherwise we apply the beta reduction for a normal 
         household.
         """
-        if self.group.being_visited:
+        if self.group.receiving_care:
+            # important than this goes first than being visited
+            beta = betas["care_visits"]
+            beta_reduction = beta_reductions.get("care_visits", 1.0)
+        elif self.group.being_visited:
             beta = betas["household_visits"]
             beta_reduction = beta_reductions.get("household_visits", 1.0)
         else:
