@@ -619,6 +619,14 @@ if __name__ == "__main__":
         default=False,
         action="store_true",
     )
+    parser.add_argument(
+        "-co",
+        "--companies",
+        help="Plot only companies",
+        required=False,
+        default=False,
+        action="store_true"
+    )
 
     args = parser.parse_args()
     plotter = Plotter.from_file(args.world_filename)
@@ -634,6 +642,8 @@ if __name__ == "__main__":
         plotter.plot_universities()
     elif args.health_index:
         plotter.plot_health_index()
+    elif args.companies:
+        plotter.plot_companies()
 
     else:
         plotter.plot_all()

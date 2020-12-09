@@ -213,7 +213,7 @@ class CompanyPlots:
         ax.set_xticks(x)
         ax.set_xticklabels(sectors)
         ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter(useMathText=True))
-        ax.ticklabel_format(axis='y', style='sci', scilimits=(0,100000000))
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
         ax.legend()
 
         return ax

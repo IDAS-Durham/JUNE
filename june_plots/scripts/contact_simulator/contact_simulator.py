@@ -10,6 +10,9 @@ from pathlib import Path
 from typing import List
 import logging
 
+import matplotlib
+matplotlib.use("Agg")
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
