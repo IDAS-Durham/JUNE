@@ -11,7 +11,7 @@ from june.domain import Domain
 from june.demography import Population
 from june.geography import SuperAreas
 from june.infection.infection_selector import InfectionSelector
-from june.infection.health_index import HealthIndexGenerator
+from june.infection.health_index.health_index import HealthIndexGenerator
 
 
 class InfectionSeed:
