@@ -63,21 +63,8 @@ class TimeSpentSimulator:
         if simulator is not None:
             self.world = self.simulator.world
             self.timer = self.simulator.timer
-            self.supergroups = [
-                self.world.care_homes,
-                self.world.cinemas, 
-                self.world.city_transports, 
-                self.world.inter_city_transports, 
-                self.world.companies, 
-                self.world.groceries, 
-                self.world.hospitals, 
-                self.world.households, # households aren't really all that interesting?
-                self.world.pubs, 
-                self.world.schools, 
-                self.world.universities
-            ]
             self.contact_types = (
-                [supergroup[0].spec for supergroup in self.supergroups if len(supergroup) > 0]
+                [supergroup[0].spec for supergroup in self.world.supergroups if len(supergroup) > 0]
                 + ["care_home_visits", "household_visits"]
             )
             self.initialise_time_spent_tracker()
@@ -85,97 +72,17 @@ class TimeSpentSimulator:
     def initialise_time_spent_tracker(self):
         self.time_spent_tracker = {spec: defaultdict(float) for spec in self.contact_types}
 
+    def global_operations(self,):
+        pass
 
-    '''
-    def operations(
-        self, people_from_abroad_dict, to_send_abroad, record_time_step=False):
-        """The main thing in this simulator."""
-        for group_type in self.group_types:
-            if len(group_type) == 0:
-                continue
-            group_spec = group_type[0].spec
-            for group in group_type:
-                if group.external:
-                    continue
-                if (
-                    group.spec in people_from_abroad_dict
-                    and group.id in people_from_abroad_dict[group.spec]
-                ):
-                    foreign_people = people_from_abroad_dict[group.spec][group.id]
-                else:
-                    foreign_people = None
-                int_group = InteractiveGroup(
-                    group, foreign_people, save_subgroup_ids=True
-                )
-                household_visit = False
-                if group.spec == "household":
-                    for person in group.people:
-                        leisure_not_none = (person.leisure is not None)
-                        leisure_is_residence = (person.leisure.group.id == person.residence.group.id)
-                        if leisure_not_none and leisure_is_residence:
-                            household_visit = True
-                            break
-                if int_group.size == 0:
-                    continue
+    def group_operations(self, interactive_group: InteractiveGroup):
+        """group operations for time_spent"""
+        if interactive_group.size == 0:
+            return
+        delta_t = self.timer.delta_time.seconds / 3600.
+        self.track_time_spent(delta_t, interactive_group)
 
-                delta_t = self.timer.delta_time.seconds / 3600.
-                self.track_time_spent(delta_t, int_group, household_visit=household_visit)
-        if record_time_step:
-            self.record_output()'''
-
-    def operations(
-        self, people_from_abroad_dict, to_send_abroad, record_time_step=False
-    ):  
-        tick = time.time()               
-
-        for supergroup in self.supergroups:
-            if len(supergroup) == 0:
-                continue
-            spec = supergroup[0].spec
-            for group in supergroup:
-                if group.external:
-                    continue
-                people_from_abroad = people_from_abroad_dict.get(
-                    group.spec, {}
-                ).get(group.id, None)                    
-                interactive_group = group.get_interactive_group(people_from_abroad)
-                self.modify_interactive_group(interactive_group, people_from_abroad)
-                if interactive_group.size == 0:
-                    continue
-                delta_t = self.timer.delta_time.seconds / 3600.
-                self.track_time_spent(delta_t, interactive_group)
-        tock = time.time()
-        print(f"{mpi_rank} {self.timer.date} done in {(tock-tick)/60.} min")
-        if record_time_step:
-            self.record_output()
-
-    def modify_interactive_group(self, interactive_group, people_from_abroad):
-        """"""
-        people_from_abroad = people_from_abroad or {}
-
-        interactive_group.subgroup_member_ids = []
-        for subgroup_index, subgroup in enumerate(interactive_group.group.subgroups):
-            subgroup_size = len(subgroup.people)
-            if subgroup.subgroup_type in people_from_abroad:
-                people_abroad_data = people_from_abroad[subgroup.subgroup_type]
-                people_abroad_ids = people_abroad_data.keys()
-                subgroup_size += len(people_abroad_ids)
-            else:
-                people_abroad_data = None
-                people_abroad_ids = []
-             
-            this_subgroup_ids = [p.id for p in subgroup.people] + list(people_abroad_ids)
-            interactive_group.subgroup_member_ids.append(this_subgroup_ids)
-
-        if interactive_group.group.spec == "school":
-            if (len(interactive_group.subgroup_member_ids) == 
-                len(interactive_group.school_years) + 2):
-                assert len(interactive_group.subgroup_member_ids[-1]) == 0
-                del interactive_group.subgroup_member_ids[-1]
-            else:
-                print("you can probably remove this 'if school' statement in modify_interactive_group")
-
-    def track_time_spent(self, delta_t, interactive_group: InteractiveGroup,):
+    def track_time_spent(self, delta_t, interactive_group: InteractiveGroup):
         household_visit = False
         if interactive_group.spec == "household":
             for person in interactive_group.group.people:

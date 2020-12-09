@@ -13,8 +13,6 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import pandas as pd
 import tables
-import networkx as nx
-#import seaborn as sns
 
 from june.hdf5_savers import generate_world_from_hdf5
 from june.groups.leisure import generate_leisure_for_config, SocialVenue
@@ -60,31 +58,25 @@ class OccupancySimulator:
         if simulator is not None:
             self.world = self.simulator.world
             self.timer = self.simulator.timer
-            self.supergroups = [
-                #self.world.care_homes,
-                self.world.cinemas, 
-                #self.world.city_transports, 
-                #self.world.inter_city_transports, 
-                self.world.companies, 
-                self.world.groceries, 
-                #self.world.hospitals, 
-                #self.world.households, # households aren't really all that interesting?
-                self.world.pubs, 
-                #self.world.schools, 
-                #self.world.universities
-            ]
             self.initialise_occupancy_tracker()
 
     def initialise_occupancy_tracker(self):
         self.occupancy_tracker = (
-            {supergroup[0].spec: [] for supergroup in self.supergroups if len(supergroup) > 0}
+            {supergroup[0].spec: [] for supergroup in self.world.supergroups if len(supergroup) > 0}
         )
 
-    def track_occupancy(self, n_people, group: Group):
+    def global_operations(self,):
+        pass
+
+    def group_operations(self, interactive_group: InteractiveGroup):
+        """operations for occupancy simulator"""
+        self.track_occupancy(interactive_group)
+
+    def track_occupancy(self, interactive_group: InteractiveGroup):
         #if isinstance(group, SocialVenue):
-        occ = n_people #/ group.max_size
-        self.occupancy_tracker[group.spec].append(
-            (occ, group.id) #, group.super_area.region, group.super_area)
+        occ = interactive_group.size #/ group.max_size
+        self.occupancy_tracker[interactive_group.spec].append(
+            (occ, interactive_group.group.id) #, group.super_area.region, group.super_area)
         )
             
     def record_output(self):
@@ -108,55 +100,6 @@ class OccupancySimulator:
         # Reset the counters for the next interval...
         self.initialise_occupancy_tracker()
 
-    def operations(
-        self, people_from_abroad_dict, to_send_abroad, record_time_step=False
-    ):  
-        tick = time.time()               
-
-        for supergroup in self.supergroups:
-            if len(supergroup) == 0:
-                continue
-            spec = supergroup[0].spec
-            for group in supergroup:
-                if group.external:
-                    continue
-                people_from_abroad = people_from_abroad_dict.get(
-                    group.spec, {}
-                ).get(group.id, None)                    
-                interactive_group = group.get_interactive_group(people_from_abroad)
-                self.modify_interactive_group(interactive_group, people_from_abroad)
-                self.track_occupancy(interactive_group.size, group)
-        tock = time.time()
-        print(f"{mpi_rank} {self.timer.date} done in {(tock-tick)/60.} min")
-
-        self.record_output()
-
-    def modify_interactive_group(self, interactive_group, people_from_abroad):
-        """"""
-        people_from_abroad = people_from_abroad or {}
-
-        interactive_group.subgroup_member_ids = []
-        for subgroup_index, subgroup in enumerate(interactive_group.group.subgroups):
-            subgroup_size = len(subgroup.people)
-            if subgroup.subgroup_type in people_from_abroad:
-                people_abroad_data = people_from_abroad[subgroup.subgroup_type]
-                people_abroad_ids = people_abroad_data.keys()
-                subgroup_size += len(people_abroad_ids)
-            else:
-                people_abroad_data = None
-                people_abroad_ids = []
-             
-            this_subgroup_ids = [p.id for p in subgroup.people] + list(people_abroad_ids)
-            interactive_group.subgroup_member_ids.append(this_subgroup_ids)
-
-        if interactive_group.group.spec == "school":
-            if (len(interactive_group.subgroup_member_ids) == 
-                len(interactive_group.school_years) + 2):
-                assert len(interactive_group.subgroup_member_ids[-1]) == 0
-                del interactive_group.subgroup_member_ids[-1]
-            else:
-                print("you can probably remove this 'if school' statement in modify_interactive_group")
-
     def process_results(self):
         """this is fast enough to process every time?"""
         self.read = RecordReader(
@@ -164,14 +107,11 @@ class OccupancySimulator:
             record_name="simulation_record.h5"
         )
         self.occupancy_df = self.read.table_to_df("occupancy", index="location_id")
-        print("read occ df")
         self.occupancy_df.reset_index(inplace=True)
         self.occupancy_df["timestamp"] = pd.to_datetime(self.occupancy_df["timestamp"])
         self.occupancy_df.set_index(
             ["venue_type", "timestamp", "time", "location_id"], inplace=True
         )
-        print("occ index")
-
         self.occupancy_df.sort_index(inplace=True) # gets rid of lexsort error?
         occupancy_df_path = self.simulation_outputs_path / "occupancy.csv"
         self.occupancy_df.to_csv(occupancy_df_path)
@@ -197,9 +137,7 @@ class OccupancySimulator:
         total_data = self.occupancy_df.loc[venue_type]
         
         if bins is None:
-            print(total_data.max())
             bins = np.linspace(0, total_data.values.max(), 25, endpoint=True, dtype=int)
-            print(bins)
             mids = 0.5*(bins[1:] + bins[:-1])
         for (timestamp, time), df in self.occupancy_df.groupby(["timestamp","time"]):
             if venue_type not in df.index:
@@ -251,16 +189,19 @@ class OccupancySimulator:
         )
         weekday_data.columns = ["_".join(col) for col in weekday_data.columns]
 
+        drop_times = []
+        for timestep in weekday_data.index.get_level_values(1).unique():
+            if all(weekday_data.xs(timestep, level="time")["occupancy_mean"] == 0):
+                print(venue_type, timestep)
+                drop_times.append(timestep)
+        weekday_data.drop(drop_times, level=1, axis=0, inplace=True)
+
         fig, ax = plt.subplots(figsize=(8,5))
         ax.scatter(
             weekend_data.index, weekend_data["occupancy_mean"], 
             color=color_palette["general_1"], s=5, label="weekend"
         )
         index_levels = weekday_data.index.get_level_values(1).unique()
-        #for ii, weekday_time in enumerate(index_levels):
-        #    for t in weekday_time.index.unique():
-        #        print(t)
-        #    weekday_time_data = weekday_data.loc[(slice(None), weekday_time)]
         for ii, (weekday_time, weekday_time_data) in enumerate(weekday_data.groupby("time")):
             ax.scatter(
                 weekday_time_data.index.get_level_values(0), weekday_time_data["occupancy_mean"],

@@ -12,20 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import pandas as pd
 import tables
-#import networkx as nx
-#import seaborn as sns
 
-#from june.demography import Person
-#from june.groups.leisure import generate_leisure_for_config
-#from june.groups.group import Group, Subgroup
-#from june.groups.travel import Travel
-#from june.hdf5_savers import generate_world_from_hdf5
-#from june.infection import HealthIndexGenerator
-#from june.infection import InfectionSelector, HealthIndexGenerator
-#from june.infection_seed import InfectionSeed, Observed2Cases
-#from june.interaction import Interaction
-#from june.interaction.interaction import _get_contacts_in_school
-#from june.policy import Policies
 from june.records import Record, RecordReader
 from june.records.event_records_writer import EventRecord
 from june.records.static_records_writer import (
@@ -150,7 +137,7 @@ class TrackerRecord(EventRecord):
         self.tracker_count.extend(tracker_count)
                 
 class OccupancyRecord(EventRecord):
-    """track specific ids of contacts"""
+    """track occupancies of venues over time."""
     def __init__(
         self, hdf5_file,
     ):
@@ -173,7 +160,7 @@ class OccupancyRecord(EventRecord):
         #self.super_area_names.extend(super_area_names)
 
 class TimeSpentRecord(EventRecord):
-    """track specific ids of contacts"""
+    """track time spent in specific venues."""
     def __init__(
         self, hdf5_file,
     ):
