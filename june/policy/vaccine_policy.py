@@ -10,6 +10,16 @@ from june import paths
 
 
 class VaccinePlan:
+    __slots__ = (
+        "first_dose_date",
+        "second_dose_date",
+        "first_dose_effective_days",
+        "second_dose_effective_days",
+        "first_dose_susceptibility",
+        "second_dose_susceptibility",
+        "original_susceptibility",
+    )
+
     def __init__(
         self,
         first_dose_date,
