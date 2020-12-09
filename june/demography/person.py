@@ -38,9 +38,8 @@ class Person(dataobject):
     sub_sector: str = None
     lockdown_status: str = None
     # vaccine
-    first_effective_date: Optional[datetime] = None
-    second_dose_date: Optional[datetime] = None
-    second_effective_date: Optional[datetime] = None
+    vaccine_plan: "VaccinePlan" = None
+    vaccinated: bool = False
     # comorbidity
     comorbidity: str = None
     # commute
@@ -193,3 +192,9 @@ class Person(dataobject):
         if self.work_super_area is None:
             return None
         return self.work_super_area.city
+
+    @property
+    def should_be_vaccinated(self):
+        if self.vaccine_plan is None and not self.vaccinated:
+            return True
+        return False

@@ -120,7 +120,8 @@ class Policies:
             MedicalCarePolicies,
             LeisurePolicies,
             RegionalCompliances,
-            TieredLockdowns
+            TieredLockdowns,
+            VaccineDistributions
         )
 
         self.individual_policies = IndividualPolicies.from_policies(self)
@@ -129,6 +130,7 @@ class Policies:
         self.leisure_policies = LeisurePolicies.from_policies(self)
         self.regional_compliance = RegionalCompliances.from_policies(self)
         self.tiered_lockdown = TieredLockdowns.from_policies(self)
+        self.vaccine_distribution = VaccineDistributions.from_policies(self)
 
     @classmethod
     def from_file(

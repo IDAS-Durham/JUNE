@@ -203,6 +203,7 @@ class ActivityManager:
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
         )
+        active_vaccine_policies = self.policies.vaccine_distribution.get_active(date=date)
         activities = self.apply_activity_hierarchy(activities)
         to_send_abroad = MovablePeople()
         for person in self.world.people.members:
@@ -214,6 +215,8 @@ class ActivityManager:
                 activities=activities,
                 days_from_start=days_from_start,
             )
+            self.policies.vaccine_distribution.apply(person=person,date=date,
+                    active_policies=active_vaccine_policies)
             external_subgroup = self.move_to_active_subgroup(
                 allowed_activities, person, to_send_abroad
             )
