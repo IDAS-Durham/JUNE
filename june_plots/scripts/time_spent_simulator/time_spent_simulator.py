@@ -2,6 +2,9 @@ from collections import Counter, defaultdict
 import logging
 import time
 
+import matplotlib
+matplotlib.use("Agg")
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm

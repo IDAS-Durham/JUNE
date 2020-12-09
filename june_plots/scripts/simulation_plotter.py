@@ -15,6 +15,9 @@ os.environ['OPENBLAS_NUM_THREADS'] = '1'
 numexpr_logger = logging.getLogger("numexpr.utils")
 numexpr_logger.setLevel(logging.WARNING)
 
+import matplotlib
+matplotlib.use("Agg")
+
 import h5py
 import numpy as np
 import numba as nb
