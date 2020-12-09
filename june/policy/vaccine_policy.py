@@ -26,13 +26,19 @@ class VaccinePlan:
         self.second_dose_date = second_dose_date
         self.second_dose_effective_days = second_dose_effective_days
         self.second_dose_susceptibility = second_dose_susceptibility
-        self.first_dose_effective_date = self.first_dose_date + datetime.timedelta(
+        self.original_susceptibility = original_susceptibility
+
+    @property
+    def first_dose_effective_date(self):
+        return self.first_dose_date + datetime.timedelta(
             days=self.first_dose_effective_days
         )
-        self.second_dose_effective_date = self.second_dose_date + datetime.timedelta(
+
+    @property
+    def second_dose_effective_date(self):
+        return self.second_dose_date + datetime.timedelta(
             days=self.second_dose_effective_days
         )
-        self.original_susceptibility = original_susceptibility
 
     @property
     def minimal_susceptibility(self):
