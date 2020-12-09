@@ -117,7 +117,7 @@ class VaccineDistribution(Policy):
         group_prevalence: the prevalence level in the group at time of vaccination rollout
         efficacy: % of people vaccinated who get the vaccinated tag
         second_dose_compliance: % of people getting their second vaccine dose if required
-        mean_time_delay: mean time delay of the second dose being administered
+        mean_time_delay: mean time delay of the second dose being administered after the first dose has had an effect
         std_time_delay: std time delat of the second dose being administered
         effective_after_first_dose: number of days for the first dose to become effective
         effective_after_second_dose: number of days for second dose to become effective
