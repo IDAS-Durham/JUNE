@@ -48,16 +48,19 @@ class CommutePlots:
                 names.append(str(city.name).split(' ')[0])
                 internal_commuters.append(internal)
 
+        names = np.array(names)
         internal_commuters = np.array(internal_commuters)
         external_commuters = np.array(external_commuters)
-
+        total_commuters = internal_commuters+external_commuters
+        total_sort = np.argsort(total_commuters)[::-1]
+        
         x = np.arange(len(names))  # the label locations
         width = 0.35  # the width of the bars
 
         f, ax = plt.subplots()
-        ax.bar(x, internal_commuters, width/2, label = 'Internal commuters', color=self.colors['general_1'])
-        ax.bar(x - width/2, external_commuters, width/2, label = 'External commuters', color=self.colors['general_2'])
-        ax.bar(x + width/2, external_commuters+internal_commuters, width/2, label = 'Total commuters', color=self.colors['general_3'])
+        ax.bar(x, internal_commuters[total_sort], width/2, label = 'Internal commuters', color=self.colors['general_1'])
+        ax.bar(x - width/2, external_commuters[total_sort], width/2, label = 'External commuters', color=self.colors['general_2'])
+        ax.bar(x + width/2, total_commuters[total_sort], width/2, label = 'Total commuters', color=self.colors['general_3'])
         ax.set_ylabel('Frequency')
         ax.set_xticks(x)
         ax.set_xticklabels(names)

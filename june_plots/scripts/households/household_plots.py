@@ -478,6 +478,6 @@ class HouseholdPlots:
         ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         plt.xticks(r - barWidth / 2, names)
         ax.set_ylabel("Household type [\%]")
-        ax.set_xlabel("Age")
+        ax.set_xlabel("Age group")
 
         return ax
