@@ -7,6 +7,7 @@ import datetime as dt
 import yaml
 from collections import Counter, defaultdict, ChainMap
 from pathlib import Path
+from typing import List
 import logging
 
 import numpy as np
@@ -82,24 +83,13 @@ class ContactSimulator:
         if self.simulator is not None:
             self.world = self.simulator.world
             self.timer = self.simulator.timer
-
-            self.supergroups = [
-                self.world.care_homes,
-                self.world.cinemas, 
-                self.world.city_transports, 
-                self.world.inter_city_transports, 
-                self.world.companies, 
-                self.world.groceries, 
-                self.world.hospitals, 
-                self.world.households, 
-                self.world.pubs, 
-                self.world.schools, 
-                self.world.universities
-            ]
             self.contact_types = (
-                [supergroup[0].spec for supergroup in self.supergroups if len(supergroup) > 0]
+                [
+                    supergroup[0].spec 
+                    for supergroup in self.world.supergroups if len(supergroup) > 0 # note: world does not usually have attr supergroups. added by hand,
+                ]
                 + ["care_home_visits", "household_visits"]
-            )
+            ) 
             if interaction_type in ["1d", "network"]:
                 self.interaction_type = interaction_type
             else:
@@ -157,10 +147,24 @@ class ContactSimulator:
         self.counter = {spec: defaultdict(int) for spec in self.contact_types}
 
     def initalise_tracker(self):
+        """A `colletions.Counter` object for each contact_type. We only really want to
+        keep the number of times each pair has contacted."""
         self.tracker = {spec: Counter() for spec in self.contact_types}
+        self.initalise_contact_pairs_tracker()
+
+    def initalise_contact_pairs_tracker(self):
+        """
+        Lists to keep tuples of (person_id, contact_id) in. 
+        Do it this way as it's better to append to a list than to add the Counters
+        every loop."""
+        self.contact_pairs = {spec: []  for spec in self.contact_types}
 
     def hash_ages(self):
-        """store all ages and age_bin indexes in python dict for quick lookup"""
+        """
+        Store all ages and age_bin indexes in python dict for quick lookup.
+        We'll use these when we fill the contact_matrices. This is only for people in 
+        this domain. Travellers from external domains
+        """
         self.age_data = {}
         for person in self.world.people:
             self.age_data[person.id] = {
@@ -170,7 +174,8 @@ class ContactSimulator:
             self.age_data[person.id]["age"] = person.age
 
     def export_import_traveller_age_data(self, travellers: MovablePeople):
-        """The new parallel bit"""
+        """The new parallel bit. Import the age data of travellers to fill in the
+           contact_matrices."""
         traveller_age_data = {rank: {} for rank in range(mpi_size)}
         for domain_id, domain_data in travellers.skinny_out.items():
             for group_spec, group_spec_data in domain_data.items():
@@ -204,124 +209,88 @@ class ContactSimulator:
         print(f"{mpi_rank} has imported {len(collated_traveller_age_data)} travellers")
         self.traveller_age_data = collated_traveller_age_data        
 
-    def global_operations(self, people_from_abroad):
-        pass
-
-    def operations(
-        self, people_from_abroad_dict, to_send_abroad, record_time_step=False
-    ):  
-        tick = time.time()               
-        self.contact_pairs = []
-
+    def global_operations(self, to_send_abroad):
+        """
+        Do operations for that are relevant to all groups. Here, that's import/export
+        of the age data of all the travellers (so we can fill in the contact matrices).
+        """
         self.export_import_traveller_age_data(to_send_abroad)
 
-        for supergroup in self.supergroups:
-            if len(supergroup) == 0:
-                continue
-            spec = supergroup[0].spec
-            for group in supergroup:
-                if group.external:
-                    continue
-                people_from_abroad = people_from_abroad_dict.get(
-                    group.spec, {}
-                ).get(group.id, None)                    
-                interactive_group = group.get_interactive_group(people_from_abroad)
-                if interactive_group.size == 0:
-                    continue
-                self.modify_interactive_group(interactive_group, people_from_abroad)
-                if self.interaction_type == "1d":
-                    self.simulate_1d_contacts(interactive_group)
-                elif self.interaction_type == "network":
-                    raise NotImplementedError
-                    #self.simulate_network_contacts(int_group)
-            self.tracker[spec] = self.tracker[spec] + Counter(self.contact_pairs)
-        tock = time.time()
-        print(f"{mpi_rank} {self.timer.date} done in {(tock-tick)/60.} min")
-
-        if record_time_step:
-            self.record_output()
-
-    def modify_interactive_group(self, interactive_group, people_from_abroad):
-        """"""
-        people_from_abroad = people_from_abroad or {}
-
-        interactive_group.subgroup_member_ids = []
-        for subgroup_index, subgroup in enumerate(interactive_group.group.subgroups):
-            subgroup_size = len(subgroup.people)
-            if subgroup.subgroup_type in people_from_abroad:
-                people_abroad_data = people_from_abroad[subgroup.subgroup_type]
-                people_abroad_ids = people_abroad_data.keys()
-                subgroup_size += len(people_abroad_ids)
-            else:
-                people_abroad_data = None
-                people_abroad_ids = []
-             
-            this_subgroup_ids = [p.id for p in subgroup.people] + list(people_abroad_ids)
-            interactive_group.subgroup_member_ids.append(this_subgroup_ids)
-
-        if interactive_group.group.spec == "school":
-            if (len(interactive_group.subgroup_member_ids) == 
-                len(interactive_group.school_years) + 2):
-                assert len(interactive_group.subgroup_member_ids[-1]) == 0
-                del interactive_group.subgroup_member_ids[-1]
-            else:
-                print("you can probably remove this 'if school' statement in modify_interactive_group")
+    def group_operations(self, interactive_group: InteractiveGroup):
+        """
+        Operations that happen on a specific group. Here, that's picking contacts
+        for each person in each subgroup, and filling out the contact_matrices.
+        """          
+        if interactive_group.size == 0:
+            return
+        if self.interaction_type == "1d":
+            self.simulate_1d_contacts(interactive_group)
+        elif self.interaction_type == "network":
+            raise NotImplementedError
 
     def simulate_1d_contacts(self, interactive_group: InteractiveGroup):
-        """get the total number of contacts each person has in a simulation.
-            Estimate contact matrices by choosing the the allotted number of people
-            per subgroup.
+        """
+        Get the total number of contacts each person has in a simulation.
+        Estimate contact matrices by choosing the the allotted number of people
+        per subgroup randomly (with replacement).
+
+        Steps in order:
+            - Make a list of arrays of all of the people in each subgroup *i* in [0, N].
+                Arrays are better than lists here to use the numba-compiled np.random.choice.
+
+            - For each subgroup *j* in the group's subgroups [0, N]:
+            - Make some arrays of probabilies for the random.choice. Each person in a subgroup 
+                has the same probability of being chosen. Account for the fact that a person can't 
+                contact themself if they're calculating contacts in their own subgroup.
+            - Calculate the number of contacts a person in *j* should have per subgroup *i*.
+                These numbers are not necessarily integers.
+            - Sum the numbers of contacts to find the total number of contacts for any 
+                person in *j*. Again, account for the fact that a person has no
+                contacts in subgroup *j* if they are the only person in subgroup *j*.
+
+            - For each person *p* in the subgroup *j*:
+            - Copy the list of arrays people made in step 1. 
+                Remove person *p* from array *j*. `np.setdiff` seems to be the fastest way?
+            - Increment the number of contacts for person *p* with the total calulated in 5.
+            - Convert the number of contacts form step 4 to integers.
+            - Choose this many people from the list of arrays in step 7 from each subgroup *i* 
+                (with replacement - you can contact someone more than once).
+            - Add these people to the correct bins in each contact matrix.
+            - If we're tracking individual pair contacts, add these as tuples.
         """                      
 
         all_members = [ 
             np.array(subgroup) for subgroup in interactive_group.subgroup_member_ids
-        ] # it's better to use arrays for np choice later on.
-
+        ]
         spec = interactive_group.spec
-
         for subgroup_type, subgroup_ids in enumerate(interactive_group.subgroup_member_ids):
-            #------some set up that it's faster to do only once.
             if len(subgroup_ids) == 0:
                 continue
-            # lists of probablilites to do the fast random choice later on,
-            # account for fact that there's 1 less contact in your own subgroup. ie, you!
             prob_lists = []
             for ii, m in enumerate(interactive_group.subgroup_member_ids):
-                len_subgroup = len(m)
-                if subgroup_type == ii:
-                    len_subgroup -= 1                     
+                len_subgroup = len(m) - (subgroup_type == ii) # length not including you. # is this unpythonic?
                 if len_subgroup > 0:
-                    prob_lists.append(np.full(len_subgroup, 1./len_subgroup))
+                    prob_lists.append(np.full(len_subgroup, 1./len_subgroup)) # equal prob for all contacts.
                 else:
                     prob_lists.append(np.array([]))
-            # how many contacts will a person in this subgroup have with each other subgroup?
-            contacts_per_subgroup = self.get_contacts_per_subgroup(
-                subgroup_type, interactive_group
-            )
-            # sum the number of contacts, no contacts if you're the only one in your subgroup.
+            contacts_per_subgroup = self.get_contacts_per_subgroup(subgroup_type, interactive_group)            
             total_contacts = 0
             for ii, (m, c) in enumerate(
                 zip(interactive_group.subgroup_member_ids, contacts_per_subgroup)
             ):
-                len_subgroup = len(m)
-                if ii == subgroup_type:
-                    len_subgroup -= 1
+                len_subgroup = len(m) - (ii == subgroup_type) # length not including you. # is this unpythonic?
                 total_contacts += c*(len_subgroup > 0)
-
             for pid in subgroup_ids:
                 subgroup_members = [x for x in all_members] 
                 subgroup_members[subgroup_type] = np.setdiff1d(
                     all_members[subgroup_type], np.array([pid]), assume_unique=True
-                ) # make a copy of subgroup_members, but remove yourself. # this is faster than "x for x in subgroup if x != pid" ??
+                )
                 assert len(subgroup_members[subgroup_type]) == len(all_members[subgroup_type])-1
                 self.counter[spec][pid] += total_contacts
-                potential_contacts = [ # do this inside the loop as it should be different for every person.
+                potential_contacts = [
                     self._random_round(c)*( len(m) > 0 ) 
                     for c,m in zip(contacts_per_subgroup, subgroup_members)
                 ]
-                #contact_ids = [ # I think this version is much slower?
-                #    cid for members, x in zip(subgroup_members, potential_contacts) for cid in np.random.choice(members, x)
-                #]
                 contact_ids = [
                     random_choice_numba(members, probs)
                     for members, probs, c in zip(subgroup_members, prob_lists, potential_contacts)
@@ -329,14 +298,15 @@ class ContactSimulator:
                 ]
                 self.increment_contact_matrices(pid, contact_ids, spec=spec)
                 if self.contact_tracker:
-                    self.contact_pairs.extend([
+                    self.contact_pairs[spec].extend([
                         (pid, cid) for cid in contact_ids
                     ])
 
     @staticmethod
     def _random_round(x):
-        """round float to integer randomly with probability x%1.
-            eg. round 3.7 to 4 with probability 70%, else round to 3.
+        """
+        Round float to integer randomly with probability x%1.
+        eg. round 3.7 to 4 with probability 70%, else round to 3.
         """
         return int(np.floor(x+np.random.random()))
 
@@ -369,7 +339,10 @@ class ContactSimulator:
         return active_subgroup
 
     def get_contacts_per_subgroup(self, subgroup_type, interactive_group: InteractiveGroup):
-        """"""
+        """
+        Use the `interactive_group`'s inbuilt function to get the number of 
+        contacts for this group in this timestep.
+        """
         spec = interactive_group.group.spec
         matrix = self.interaction_matrices[spec]["contacts"]
         delta_t = self.timer.delta_time.seconds / 3600.
@@ -382,7 +355,11 @@ class ContactSimulator:
         ]
         return contacts_per_subgroup
 
-    def increment_contact_matrices(self, pid, contact_ids, spec):
+    def increment_contact_matrices(self, pid: int, contact_ids: List[int], spec):
+        """
+        Find out which age bin a person, and each of that person's contacts belong to, 
+        and increment each of these bins by 1. 
+        """
         for bin_type in self.age_bins.keys():
             if pid in self.age_data:
                 age_idx = self.age_data[pid][bin_type]
@@ -397,11 +374,15 @@ class ContactSimulator:
                 else:
                     print(mpi_rank, group.spec, pid, cid, subgroup_members, contact_ids)
                     raise ValueError(f"{mpi_rank}: No key {cid}")
-
             bincount = np.bincount(
                 contact_age_idxes, minlength=len(self.age_bins[bin_type])-1
             )
-            self.contact_matrices[bin_type][spec][age_idx,:] += bincount         
+            self.contact_matrices[bin_type][spec][age_idx,:] += bincount
+
+    def concluding_operations(self,):
+        for spec, contact_list in self.contact_pairs.items():
+            self.tracker[spec] = self.tracker[spec] + Counter(contact_list)
+        self.initalise_contact_pairs_tracker()
 
     def record_output(self):
         if mpi_rank == 0:
@@ -453,7 +434,10 @@ class ContactSimulator:
     ### some functions for processing.
 
     def collate_results(self):
-        """ This should be called for mpi_rank==0 only...  """
+        """ 
+        Sum all of the raw contact matrices, combine the hdf5s.
+        This should be called for mpi_rank==0 only.
+        """
         matrix_types = [
             "care_home", "cinema", "city_transport", "inter_city_transport", "company", 
             "grocery", "hospital", "household", "pub", "school", "university", 
@@ -493,15 +477,11 @@ class ContactSimulator:
             'area_id', 
             #'primary_activity_type'
         ]
-
-        print("LEN POP IDs", len(self.population.index.unique()))
         self.population.drop(drop_cols, axis=1, inplace=True)
         self.contacts = self.read.table_to_df("counter", index="id")
-        print("LEN CONTACTs IDs", len(self.contacts.index))
         self.contacts.set_index(
             ["contact_type", "timestamp"], append=True, inplace=True
         )
-        print(self.contacts)
 
     def get_age_profiles(self, age_data):
         self.age_profiles = {}

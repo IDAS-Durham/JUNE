@@ -243,6 +243,21 @@ class SimulationPlotter:
             record=Record,
         )
 
+        # world doesn't normall have attr supergroups.
+        self.world.supergroups = [
+            self.world.care_homes,
+            self.world.cinemas, 
+            self.world.city_transports, 
+            self.world.inter_city_transports, 
+            self.world.companies, 
+            self.world.groceries, 
+            self.world.hospitals, 
+            self.world.households, 
+            self.world.pubs, 
+            self.world.schools, 
+            self.world.universities
+        ]
+
     def load_operations(
         self, 
         simulation_days=7,
@@ -273,6 +288,8 @@ class SimulationPlotter:
                 simulation_days=simulation_days,
                 world_name=self.world_name  
             )
+        else:
+            self.contact_simulator = None
         if self.occupancy_tracker:
             self.occupancy_simulator = OccupancySimulator(
                 simulator=self.simulator,
@@ -280,6 +297,8 @@ class SimulationPlotter:
                 simulation_outputs_path=self.simulation_outputs_path,
                 simulation_days=simulation_days
             )
+        else:
+            self.occupancy_simulator = None
         if self.time_spent_tracker:
             self.time_spent_simulator = TimeSpentSimulator(  
                 simulator=self.simulator,
@@ -287,7 +306,9 @@ class SimulationPlotter:
                 simulation_outputs_path=self.simulation_outputs_path,
                 simulation_days=simulation_days
             )
-
+        else:
+            self.time_spent_tracker = None
+    
     def advance_step(self):
         "Advance a simulation time step and carry out operations"
         self.simulator.clear_world()
@@ -298,32 +319,81 @@ class SimulationPlotter:
             n_people_going_abroad,
             people_to_send_abroad
         ) = self.simulator.activity_manager.do_timestep(return_to_send_abroad=True)
-        if self.contact_counter or self.contact_tracker:
-            record_contact_counter = (self.simulator.timer.date in self.save_points)
-            self.contact_simulator.operations(
-                people_from_abroad_dict, 
-                people_to_send_abroad, 
-                record_time_step=record_contact_counter,
-            )
-        if self.occupancy_tracker:
-            self.occupancy_simulator.operations(
-                people_from_abroad_dict, 
-                people_to_send_abroad, 
-                record_time_step=True,
-            )
-        if self.time_spent_tracker:
-            record_time_spent = (self.simulator.timer.date == self.end_time)
-            self.time_spent_simulator.operations(
-                people_from_abroad_dict, 
-                people_to_send_abroad, 
-                record_time_step=record_time_spent, # Only do this at the end.
-            )
+        self.operations(people_from_abroad_dict, people_to_send_abroad)
         next(self.simulator.timer)
+
+    def operations(self, people_from_abroad_dict, to_send_abroad):  
+        tick = time.time()               
+
+        if self.contact_simulator is not None:
+            self.contact_simulator.global_operations(to_send_abroad)
+        if self.occupancy_simulator is not None:
+            self.occupancy_simulator.global_operations() # this is really just "pass"
+        if self.time_spent_simulator is not None:
+            self.time_spent_simulator.global_operations()
+
+        for supergroup in self.world.supergroups: # world does not 
+            if len(supergroup) == 0:
+                continue
+            spec = supergroup[0].spec
+            for group in supergroup:
+                if group.external:
+                    continue
+                people_from_abroad = people_from_abroad_dict.get(
+                    group.spec, {}
+                ).get(group.id, None)                    
+                interactive_group = group.get_interactive_group(people_from_abroad)
+                self.modify_interactive_group(interactive_group, people_from_abroad)
+                if self.contact_simulator is not None:
+                    self.contact_simulator.group_operations(interactive_group)
+                if self.occupancy_simulator is not None:
+                    self.occupancy_simulator.group_operations(interactive_group)
+                if self.time_spent_simulator is not None:
+                    self.time_spent_simulator.group_operations(interactive_group)
+        
+        # record outputs at certain steps.
+        if self.contact_simulator is not None:
+            self.contact_simulator.concluding_operations()
+            if self.simulator.timer.date in self.save_points:
+                self.contact_simulator.record_output()
+        if self.occupancy_simulator is not None:
+            self.occupancy_simulator.record_output()
+        if self.time_spent_simulator is not None:
+            if self.simulator.timer.date == self.end_time:
+                self.time_spent_simulator.record_output()
+        tock = time.time()
+        print(f"{mpi_rank} {self.simulator.timer.date} done in {(tock-tick)/60.} min")
+
+    def modify_interactive_group(self, interactive_group, people_from_abroad):
+        """"""
+        people_from_abroad = people_from_abroad or {}
+
+        interactive_group.subgroup_member_ids = []
+        for subgroup_index, subgroup in enumerate(interactive_group.group.subgroups):
+            subgroup_size = len(subgroup.people)
+            if subgroup.subgroup_type in people_from_abroad:
+                people_abroad_data = people_from_abroad[subgroup.subgroup_type]
+                people_abroad_ids = people_abroad_data.keys()
+                subgroup_size += len(people_abroad_ids)
+            else:
+                people_abroad_data = None
+                people_abroad_ids = []
+             
+            this_subgroup_ids = [p.id for p in subgroup.people] + list(people_abroad_ids)
+            interactive_group.subgroup_member_ids.append(this_subgroup_ids)
+
+        if interactive_group.group.spec == "school":
+            if (len(interactive_group.subgroup_member_ids) == 
+                len(interactive_group.school_years) + 2):
+                assert len(interactive_group.subgroup_member_ids[-1]) == 0
+                del interactive_group.subgroup_member_ids[-1]
+            else:
+                print("you can probably remove this 'if school' statement in modify_interactive_group")
         
     def run_simulation(
         self,
         simulation_days = 7,
-        save_interval = 1,
+        save_interval = 7,
         save_all = True
     ):
         "Run simulation with pre-built simualtor"
