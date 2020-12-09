@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import yaml
-from random import randint, shuffle
+from random import randint, shuffle, random
 from june.geography import Areas, SuperAreas
 from june.groups import Households
 
@@ -88,3 +88,43 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         don't go do any other leisure activities.
         """
         return Household.get_leisure_subgroup_type(person)
+
+    def get_poisson_parameter(
+        self,
+        sex,
+        age,
+        is_weekend: bool = False,
+        policy_poisson_parameter=None,
+        region=None,
+    ):
+        """
+        Poisson parameter (lambda) of a person going to one social venue according to their
+        age and sex and the distribution of visitors in the venue.
+
+        Parameters
+        ----------
+        person
+            an instance of Person
+        delta_t
+            interval of time in units of days
+        is_weekend
+            whether it is a weekend or not
+        """
+        if region is None:
+            regional_compliance = 1
+        else:
+            regional_compliance = region.regional_compliance
+            if self.spec in region.closed_venues:
+                if random() < regional_compliance:
+                    return 0
+        original_poisson_parameter = self.poisson_parameters[sex][age]
+        original_poisson_parameter = (
+            original_poisson_parameter * self.get_weekend_boost(is_weekend)
+        )
+        if policy_poisson_parameter is None:
+            return original_poisson_parameter
+        
+        poisson_parameter = original_poisson_parameter + regional_compliance * (
+            policy_poisson_parameter - original_poisson_parameter
+        )
+        return poisson_parameter

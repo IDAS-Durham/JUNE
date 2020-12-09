@@ -129,7 +129,6 @@ class Leisure:
         self.n_activities = len(self.leisure_distributors)
         self.policy_poisson_parameters = {}
         self.regions = regions  # needed for regional compliances
-        self.closed_venues = set()
 
     def distribute_social_venues_to_areas(self, areas: Areas, super_areas: SuperAreas):
         logger.info("Linking households for visits")
@@ -163,7 +162,7 @@ class Leisure:
         delta_time: float,
         is_weekend: bool,
         working_hours: bool,
-        regional_compliance: float,
+        region: Region = None,
     ):
         """
         Computes the probabilities of going to different leisure activities,
@@ -173,16 +172,18 @@ class Leisure:
         regional compliance like so:
         $ lambda = lambda_1 + regional_compliance * (lambda_2 - lambda_1) $
         where lambda_1 is the original poisson parameter.
+        lockdown tier: 1,2,3 - has different implications for leisure:
+            1: do nothing
+            2: stop household-to-household probability with regional compliance and
+               reduce pub probability by 20% - conservative to account for the serving of meals
+            3: stop household-to-household probability with regional compliance and
+               reduce pub and cinema probability to 0 to simulate closure
         """
         poisson_parameters = []
         drags_household_probabilities = []
         activities = []
         for activity, distributor in self.leisure_distributors.items():
-            if (
-                activity == "household_visits"
-                and working_hours
-                or distributor.spec in self.closed_venues
-            ):
+            if activity == "household_visits" and working_hours:
                 # we do not have household visits during working hours as most households by then.
                 continue
             drags_household_probabilities.append(
@@ -194,7 +195,7 @@ class Leisure:
                 age=age,
                 sex=sex,
                 is_weekend=is_weekend,
-                regional_compliance=regional_compliance,
+                region=region,
             )
             poisson_parameters.append(activity_poisson_parameter)
             activities.append(activity)
@@ -225,11 +226,11 @@ class Leisure:
         age: int,
         sex: str,
         is_weekend: bool,
-        regional_compliance: float,
+        region: Region = None,
     ):
         """
-        Computes an activity poisson parameter taking into account active policies
-        and regional compliances.
+        Computes an activity poisson parameter taking into account active policies,
+        regional compliances and lockdown tiers.
         """
         weekend_boost = distributor.get_weekend_boost(is_weekend=is_weekend)
         original_activity_poisson_parameter = distributor.get_poisson_parameter(
@@ -241,10 +242,13 @@ class Leisure:
             )  # we boost the policy parameter as well
         else:
             policy_activity_poisson_parameter = original_activity_poisson_parameter
-        activity_poisson_parameter = (
-            original_activity_poisson_parameter
-            + regional_compliance
-            * (policy_activity_poisson_parameter - original_activity_poisson_parameter)
+
+        activity_poisson_parameter = distributor.get_poisson_parameter(
+            sex=sex,
+            age=age,
+            is_weekend=is_weekend,
+            policy_poisson_parameter=policy_activity_poisson_parameter,
+            region=region,
         )
         return activity_poisson_parameter
 
@@ -414,7 +418,7 @@ class Leisure:
                     delta_time=delta_time,
                     working_hours=working_hours,
                     is_weekend=is_weekend,
-                    regional_compliance=region.regional_compliance,
+                    region=region,
                 )
         else:
             self.probabilities_by_region_sex_age = (
@@ -422,7 +426,7 @@ class Leisure:
                     delta_time=delta_time,
                     working_hours=working_hours,
                     is_weekend=is_weekend,
-                    regional_compliance=1.0,
+                    region=None,
                 )
             )
 
@@ -431,7 +435,7 @@ class Leisure:
         delta_time: float,
         working_hours: bool,
         is_weekend: bool,
-        regional_compliance: float,
+        region: Region = None,
     ):
         ret = {}
         for sex in ["m", "f"]:
@@ -442,7 +446,7 @@ class Leisure:
                     delta_time=delta_time,
                     is_weekend=is_weekend,
                     working_hours=working_hours,
-                    regional_compliance=regional_compliance,
+                    region=region,
                 )
                 for age in range(0, 100)
             ]
