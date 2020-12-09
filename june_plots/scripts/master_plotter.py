@@ -19,7 +19,7 @@ from june_plots.scripts.commute import CommutePlots
 from june_plots.scripts.contact_matrix import ContactMatrixPlots
 from june_plots.scripts.life_expectancy import LifeExpectancyPlots
 from june_plots.scripts.demography import DemographyPlots
-from june_plots.scripts.health_index import HealthIndexPlots
+from june_plots.scripts.health_index import HealthIndexPlots, RatesPlotter
 from june_plots.scripts.university import UniversityPlots
 
 
