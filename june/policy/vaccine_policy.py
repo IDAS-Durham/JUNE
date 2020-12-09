@@ -174,6 +174,7 @@ class VaccineDistribution(Policy):
         return False
 
     def vaccinate(self, person, date):
+        person.vaccinated = True
         first_dose_effective_date = date + datetime.timedelta(
             days=self.effective_after_first_dose
         )
@@ -202,8 +203,8 @@ class VaccineDistribution(Policy):
         self.vaccinated_ids.add(person.id)
 
     def daily_vaccine_probability(self, days_passed):
-        return (self.group_coverage - self.group_prevalence) * (
-            1 / (self.total_days - days_passed)
+        return self.group_coverage * (
+            1 / (self.total_days - days_passed*self.group_coverage)
         )
 
     def apply(self, person: Person, date: datetime):
@@ -223,7 +224,6 @@ class VaccineDistribution(Policy):
                 if person.susceptibility == person.vaccine_plan.minimal_susceptibility:
                     ids_to_remove.add(person.id)
                     person.vaccine_plan = None
-                    person.vaccinated = True
                 else:
                     self.update_susceptibility(person=person, date=date)
             self.vaccinated_ids -= ids_to_remove

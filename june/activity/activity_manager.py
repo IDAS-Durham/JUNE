@@ -207,6 +207,8 @@ class ActivityManager:
         activities = self.apply_activity_hierarchy(activities)
         to_send_abroad = MovablePeople()
         for person in self.world.people.members:
+            self.policies.vaccine_distribution.apply(person=person,date=date,
+                    active_policies=active_vaccine_policies)
             if person.dead or person.busy:
                 continue
             allowed_activities = self.policies.individual_policies.apply(
@@ -215,8 +217,6 @@ class ActivityManager:
                 activities=activities,
                 days_from_start=days_from_start,
             )
-            self.policies.vaccine_distribution.apply(person=person,date=date,
-                    active_policies=active_vaccine_policies)
             external_subgroup = self.move_to_active_subgroup(
                 allowed_activities, person, to_send_abroad
             )
