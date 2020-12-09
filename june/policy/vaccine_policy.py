@@ -76,8 +76,8 @@ class VaccineDistribution(Policy):
         self,
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
-        #group_description: dict = {"by": "residence", "group": "care_home"},
-        group_description: dict = {"by": "age", "group": "50-100"},
+        group_by: str = 'age', #'residence',
+        group_type: str = '50-100',
         group_coverage: float = 1.0,
         group_prevalence: float = 0.0,
         efficacy: float = 1.0,
@@ -119,7 +119,7 @@ class VaccineDistribution(Policy):
 
         super().__init__(start_time=start_time, end_time=end_time)
         self.group_attribute, self.group_value = self.process_group_description(
-            group_description
+           group_by, group_type 
         )
         self.total_days = (self.end_time - self.start_time).days
         self.group_coverage = group_coverage
@@ -132,11 +132,11 @@ class VaccineDistribution(Policy):
         self.final_susceptibility = 1.0 - efficacy
         self.vaccinated_ids = set()
 
-    def process_group_description(self, group_description):
-        if group_description["by"] in ("residence", "primary_activity"):
-            return f'{group_description["by"]}.group.spec', group_description["group"]
-        elif group_description["by"] == "age":
-            return f'{group_description["by"]}', group_description["group"]
+    def process_group_description(self, group_by, group_type):
+        if group_by in ("residence", "primary_activity"):
+            return f'{group_by}.group.spec', group_type
+        elif group_by == "age":
+            return f'{group_by}', group_type
 
     def is_target_group(self, person):
         if self.group_attribute != "age":

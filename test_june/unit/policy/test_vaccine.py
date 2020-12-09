@@ -9,7 +9,8 @@ class TestVaccination:
     def test__process_target_population(self,):
         person = Person.from_attributes(age=30, sex="f")
         vaccine_policy = VaccineDistribution(
-            group_description={"by": "age", "group": "20-40", "total_group_size": 100}
+            group_by='age',
+            group_type='20-40',
         )
         date = datetime.datetime(2100, 1, 1)
         vaccine_policy.apply(person=person, date=date)
@@ -23,11 +24,8 @@ class TestVaccination:
         person = Person.from_attributes(age=30, sex="f")
         care_home.add(person)
         vaccine_policy = VaccineDistribution(
-            group_description={
-                "by": "residence",
-                "group": "care_home",
-                "total_group_size": 100,
-            }
+            group_by= "residence",
+            group_type= "care_home",
         )
         date = datetime.datetime(2100, 1, 1)
         vaccine_policy.apply(person=person, date=date)
@@ -40,7 +38,8 @@ class TestVaccination:
         person = Person.from_attributes(age=30, sex="f")
         date = datetime.datetime(2100, 1, 1)
         vaccine_policy = VaccineDistribution(
-            group_description={"by": "age", "group": "20-40", "total_group_size": 100}
+            group_by='age',
+            group_type='20-40',
         )
         vaccine_policy.apply(person=person, date=date)
         assert person.susceptibility == 1.0
@@ -65,7 +64,8 @@ class TestVaccination:
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
         vaccine_policy = VaccineDistribution(
-            group_description={"by": "age", "group": "20-40", "total_group_size": 100}
+            group_by='age',
+            group_type='20-40',
         )
         people = Population([young_person, old_person])
         for person in people:
@@ -86,7 +86,8 @@ class TestVaccination:
     def test_overall_susceptibility_update_no_second_dose(self,):
         young_person = Person.from_attributes(age=30, sex="f")
         vaccine_policy = VaccineDistribution(
-            group_description={"by": "age", "group": "20-40", "total_group_size": 100}
+            group_by='age',
+            group_type='20-40',
         )
         people = Population([young_person])
         for person in people:

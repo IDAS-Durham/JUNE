@@ -841,4 +841,10 @@ close_universities:
 
 vaccine_distribution:
     start_time: 2020-02-01
-    end_time: 2021-02-01
+    end_time: 2020-03-15
+    group_by: 'age'
+    group_type: '60-100'
+    group_coverage: 1.
+    effective_after_first_dose: 3 
+    effective_after_second_dose: 2 
+
