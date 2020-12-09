@@ -85,6 +85,7 @@ class TestDomesticCare:
         has_at_least_one = False
         n_linked = 0
         total = 0
+        probability_care = 1 - (0.7 * 0.7)
         for household in world.households:
             if household.type == "old":
                 assert household.household_to_care is None
@@ -95,7 +96,7 @@ class TestDomesticCare:
                     assert household.household_to_care.type == "old"
                     has_at_least_one = True
         assert has_at_least_one
-        assert np.isclose(n_linked / total, 0.3, rtol=0.1)
+        assert np.isclose(n_linked / total, probability_care, rtol=0.1)
 
     def test__send_carers_during_leisure(self, domestic_care, world):
         # leisure only go weekdays leisure
