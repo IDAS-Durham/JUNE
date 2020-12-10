@@ -72,12 +72,11 @@ def save_checkpoint_to_hdf5(
                 dataset_name=name,
                 data=np.array(data, dtype=np.int),
             )
-    if infection_list:
-        save_infections_to_hdf5(
-            hdf5_file_path=hdf5_file_path,
-            infections=infection_list,
-            chunk_size=chunk_size,
-        )
+    save_infections_to_hdf5(
+        hdf5_file_path=hdf5_file_path,
+        infections=infection_list,
+        chunk_size=chunk_size,
+    )
 
 
 def load_checkpoint_from_hdf5(hdf5_file_path: str, chunk_size=50000, load_date=True):
@@ -220,5 +219,5 @@ def generate_simulator_from_checkpoint(
         # comment=comment,
     )
     return restore_simulator_to_checkpoint(
-        world=world, checkpoint_path=checkpoint_path, chunk_size=chunk_size
+        world=world, checkpoint_path=checkpoint_path, chunk_size=chunk_size, simulator=simulator
     )
