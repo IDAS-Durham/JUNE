@@ -95,7 +95,6 @@ class VaccineDistribution(Policy):
         group_by: str = 'age', #'residence',
         group_type: str = '50-100',
         group_coverage: float = 1.0,
-        group_prevalence: float = 0.0,
         efficacy: float = 1.0,
         second_dose_compliance: float = 1.0,
         mean_time_delay: int = 1,
@@ -114,7 +113,6 @@ class VaccineDistribution(Policy):
             by: either residence, primary activity or age
             group: group type e.g. care_home for residence or XX-YY for age range
         group_coverage: % of group to be left as having target susceptibility after vaccination
-        group_prevalence: the prevalence level in the group at time of vaccination rollout
         efficacy: % of people vaccinated who get the vaccinated tag
         second_dose_compliance: % of people getting their second vaccine dose if required
         mean_time_delay: mean time delay of the second dose being administered after the first dose has had an effect
@@ -139,7 +137,6 @@ class VaccineDistribution(Policy):
         )
         self.total_days = (self.end_time - self.start_time).days
         self.group_coverage = group_coverage
-        self.group_prevalence = group_prevalence
         self.second_dose_compliance = second_dose_compliance
         self.mean_time_delay = mean_time_delay
         self.std_time_delay = std_time_delay
