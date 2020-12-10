@@ -23,6 +23,7 @@ from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_c
 from june.simulator import Simulator
 from june.infection_seed import InfectionSeed, Observed2Cases
 from june.policy import Policies
+from june.event import Events
 from june import paths
 from june.groups.commute import *
 from june.records import Record
@@ -135,12 +136,16 @@ def generate_simulator():
     # policies
     policies = Policies.from_file()
 
+    # events
+    events = Events.from_file()
+
     # create simulator
 
     travel = Travel()
     simulator = Simulator.from_file(
         world=domain,
         policies=policies,
+        events=events,
         interaction=interaction,
         leisure=leisure,
         travel=travel,
