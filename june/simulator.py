@@ -27,6 +27,7 @@ from june.policy import (
     MedicalCarePolicies,
     InteractionPolicies,
 )
+from june.event import Events
 from june.time import Timer
 from june.records import Record
 from june.world import World
@@ -60,7 +61,7 @@ class Simulator:
 
         Parameters
         ----------
-        world: 
+        world:
             instance of World class
         """
         self.activity_manager = activity_manager
@@ -86,6 +87,7 @@ class Simulator:
         interaction: Interaction,
         infection_selector=None,
         policies: Optional[Policies] = None,
+        events: Optional[Events] = None,
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
@@ -122,7 +124,8 @@ class Simulator:
                 activity_to_super_groups = config["activity_to_super_groups"]
             except:
                 output_logger.warning(
-                    "Activity to groups in config is deprecated, please change it to activity_to_super_groups"
+                    "Activity to groups in config is deprecated"
+                    "please change it to activity_to_super_groups"
                 )
                 activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
@@ -162,6 +165,7 @@ class Simulator:
             world=world,
             all_activities=all_activities,
             activity_to_super_groups=activity_to_super_groups,
+            events=events,
             leisure=leisure,
             travel=travel,
             policies=policies,
@@ -270,8 +274,8 @@ class Simulator:
 
     def bury_the_dead(self, world: World, person: "Person"):
         """
-        When someone dies, send them to cemetery. 
-        ZOMBIE ALERT!! 
+        When someone dies, send them to cemetery.
+        ZOMBIE ALERT!!
 
         Parameters
         ----------
@@ -402,7 +406,12 @@ class Simulator:
         tick, tickw = perf_counter(), wall_clock()
 
         invalid_id = 4294967295  # largest possible uint32
-        empty = np.array([invalid_id,], dtype=np.uint32)
+        empty = np.array(
+            [
+                invalid_id,
+            ],
+            dtype=np.uint32,
+        )
 
         # we want to make sure we transfer something for every domain.
         # (we have an np.concatenate which doesn't work on empty arrays)
@@ -435,7 +444,7 @@ class Simulator:
         to send people to the corresponding subgroups according to the current daytime.
         Then we iterate over all the groups and create an InteractiveGroup object, which
         extracts the relevant information of each group to carry the interaction in it.
-        We then pass the interactive group to the interaction module, which returns the ids 
+        We then pass the interactive group to the interaction module, which returns the ids
         of the people who got infected. We record the infection locations, update the health
         status of the population, and distribute scores among the infectors to calculate R0.
         """
