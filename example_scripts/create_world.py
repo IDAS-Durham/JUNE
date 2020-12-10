@@ -48,6 +48,8 @@ london_areas = np.concatenate(
     )
 )
 
+london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[40:50]
+
 
 t1 = time.time()
 

@@ -32,7 +32,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls(**config)
 
-    def link_households_to_households(self, super_areas, n_close_super_areas=3):
+    def link_households_to_households(self, super_areas):
         """
         Links people between households. Strategy: We pair each household with 0, 1,
         or 2 other households (with equal prob.). The household of the former then
@@ -45,18 +45,6 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
             list of super areas
         """
         for super_area in super_areas:
-            near_super_areas = super_areas.get_closest_super_areas(
-                super_area.coordinates, k=min(n_close_super_areas, len(super_areas))
-            )
-            near_households = []
-            for near_super_area in near_super_areas:
-                for area in near_super_area.areas:
-                    near_households += [
-                        household
-                        for household in area.households
-                        if household.type != "communal"
-                    ]
-            shuffle(near_households)
             households_in_super_area = [
                 household
                 for area in super_area.areas
@@ -70,8 +58,8 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
                 households_to_visit = []
                 n_linked = 0
                 while n_linked < households_to_link_n:
-                    house_idx = randint(0, len(near_households) - 1)
-                    house = near_households[house_idx]
+                    house_idx = randint(0, len(households_in_super_area) - 1)
+                    house = households_in_super_area[house_idx]
                     if house.id == household.id or not house.residents:
                         continue
                     households_to_visit.append(house)
