@@ -39,7 +39,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
 
     def link_households_to_households(self, super_areas):
         """
-        Links people between households. Strategy: We pair each household with 0, 1, or 2 other households (with equal prob.). The household of the former then has a probability of visiting the household of the later 
+        Links people between households. Strategy: We pair each household with 0, 1, or 2 other households (with equal prob.). The household of the former then has a probability of visiting the household of the later
         at every time step.
 
         Parameters
@@ -53,15 +53,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
                 households_super_area += [
                     household
                     for household in area.households
-                    if household.type
-                    in [
-                        "family",
-                        "ya_parents",
-                        "nokids",
-                        "old",
-                        "student",
-                        "young_adults",
-                    ]
+                    if household.type != "communal"
                 ]
                 shuffle(households_super_area)
             for household in households_super_area:
@@ -95,14 +87,7 @@ class HouseholdVisitsDistributor(SocialVenueDistributor):
         to the relevant age subgroup, and make sure the residents welcome him and
         don't go do any other leisure activities.
         """
-        if person.age < 18:
-            return Household.SubgroupType.kids
-        elif person.age <= 35:
-            return Household.SubgroupType.young_adults
-        elif person.age < 65:
-            return Household.SubgroupType.adults
-        else:
-            return Household.SubgroupType.old_adults
+        return Household.get_leisure_subgroup_type(person)
 
     def get_poisson_parameter(
         self,
