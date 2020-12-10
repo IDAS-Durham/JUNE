@@ -11,12 +11,12 @@ class Timer:
         initial_day: str = "2020-03-01",
         total_days: int = 10,
         weekday_step_duration: List[int] = (12, 12),
-        weekend_step_duration: List[int] = (24),
+        weekend_step_duration: List[int] = (24,),
         weekday_activities: List[List[str]] = (
             ("primary_activity", "residence"),
-            ("residence"),
+            ("residence",),
         ),
-        weekend_activities: List[List[str]] = (("residence")),
+        weekend_activities: List[List[str]] = (("residence",),),
     ):
 
         self.initial_date = datetime.datetime(
