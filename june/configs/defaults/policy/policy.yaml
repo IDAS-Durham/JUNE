@@ -50,7 +50,7 @@ vaccine_distribution:
     group_by: 'age' ## TBC
     group_type: '60-100' ## TBC
     group_coverage: 1. ## TBC
-    first_dose_efficacy: 0.82 # FDA - 0.82 primary efficacy endpoint and 0.89 for secondary
+    first_dose_efficacy: 0.89 # FDA - 0.82 primary efficacy endpoint and 0.89 for secondary
     second_dose_efficacy: 0.95 # FDA + Pfizer > 55=0.94
     second_dose_compliance: 0.95 # assumption
     mean_time_delay: 14 # 21-7 from FDA monitoring
