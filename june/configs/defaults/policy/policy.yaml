@@ -45,15 +45,18 @@ tiered_lockdown:
       Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
 
 vaccine_distribution:
-    start_time: 2020-02-29
-    end_time: 2020-03-4
-    group_by: 'age'
-    group_type: '60-100'
-    group_coverage: 1.
-    first_dose_efficacy: 0.89
-    second_dose_efficacy: 0.95
-    effective_after_first_dose: 3 
-    effective_after_second_dose: 7
+    start_time: 2020-02-29 ## TBC
+    end_time: 2020-03-4 ## TBC
+    group_by: 'age' ## TBC
+    group_type: '60-100' ## TBC
+    group_coverage: 1. ## TBC
+    first_dose_efficacy: 0.89 # FDA
+    second_dose_efficacy: 0.95 # FDA + Pfizer
+    second_dose_compliance: 0.95 # assumption
+    mean_time_delay: 14 # 21-7 from FDA monitoring
+    std_time_delay: 5 # based on Pfizer trials
+    effective_after_first_dose: 7 # FDA monitoring
+    effective_after_second_dose: 7 # FDA monitoring
 
 quarantine:
     1:
