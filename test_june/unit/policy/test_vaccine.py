@@ -40,6 +40,8 @@ class TestVaccination:
         vaccine_policy = VaccineDistribution(
             group_by='age',
             group_type='20-40',
+            first_dose_efficacy=0.5,
+            second_dose_efficacy=1.0,
         )
         vaccine_policy.apply(person=person, date=date)
         assert person.susceptibility == 1.0
@@ -66,6 +68,8 @@ class TestVaccination:
         vaccine_policy = VaccineDistribution(
             group_by='age',
             group_type='20-40',
+            first_dose_efficacy=0.5,
+            second_dose_efficacy=1.0,
         )
         people = Population([young_person, old_person])
         for person in people:
@@ -88,6 +92,8 @@ class TestVaccination:
         vaccine_policy = VaccineDistribution(
             group_by='age',
             group_type='20-40',
+            first_dose_efficacy=0.5,
+            second_dose_efficacy=1.0,
         )
         people = Population([young_person])
         for person in people:

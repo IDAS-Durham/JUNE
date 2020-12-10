@@ -96,7 +96,7 @@ class VaccineDistribution(Policy):
         group_type: str = '50-100',
         group_coverage: float = 1.0,
         first_dose_efficacy: float = 0.5,
-        second_dose_efficacy: float = 1.0
+            second_dose_efficacy: float = 1.0,
         second_dose_compliance: float = 1.0,
         mean_time_delay: int = 1,
         std_time_delay: int = 1,
