@@ -50,8 +50,10 @@ vaccine_distribution:
     group_by: 'age'
     group_type: '60-100'
     group_coverage: 1.
+    first_dose_efficacy: 0.89
+    second_dose_efficacy: 0.95
     effective_after_first_dose: 3 
-    effective_after_second_dose: 2 
+    effective_after_second_dose: 7
 
 quarantine:
     1:

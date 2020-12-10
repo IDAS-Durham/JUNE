@@ -95,7 +95,8 @@ class VaccineDistribution(Policy):
         group_by: str = 'age', #'residence',
         group_type: str = '50-100',
         group_coverage: float = 1.0,
-        efficacy: float = 1.0,
+        first_dose_efficacy: float = 0.5,
+        second_dose_efficacy: float = 1.0
         second_dose_compliance: float = 1.0,
         mean_time_delay: int = 1,
         std_time_delay: int = 1,
@@ -113,7 +114,8 @@ class VaccineDistribution(Policy):
             by: either residence, primary activity or age
             group: group type e.g. care_home for residence or XX-YY for age range
         group_coverage: % of group to be left as having target susceptibility after vaccination
-        efficacy: % of people vaccinated who get the vaccinated tag
+        first_dose_efficacy: % reduction in susceptibility after first dose
+        second_dose_efficacy: % reduction in susceptibility after second dose
         second_dose_compliance: % of people getting their second vaccine dose if required
         mean_time_delay: mean time delay of the second dose being administered after the first dose has had an effect
         std_time_delay: std time delat of the second dose being administered
@@ -142,7 +144,8 @@ class VaccineDistribution(Policy):
         self.std_time_delay = std_time_delay
         self.effective_after_first_dose = effective_after_first_dose
         self.effective_after_second_dose = effective_after_second_dose
-        self.final_susceptibility = 1.0 - efficacy
+        self.first_susceptibility = 1.0 - first_dose_efficacy
+        self.second_susceptibility = 1.0 - second_dose_efficacy
         self.vaccinated_ids = set()
 
     def process_group_description(self, group_by, group_type):
@@ -190,11 +193,10 @@ class VaccineDistribution(Policy):
         person.vaccine_plan = VaccinePlan(
             first_dose_date=date,
             first_dose_effective_days=self.effective_after_first_dose,
-            first_dose_susceptibility=0.5
-            * (person.susceptibility - self.final_susceptibility),
+            first_dose_susceptibility=self.first_susceptibility,
             second_dose_date=second_dose_date,
             second_dose_effective_days=second_dose_effective_days,
-            second_dose_susceptibility=self.final_susceptibility,
+            second_dose_susceptibility=self.second_susceptibility,
             original_susceptibility=person.susceptibility,
         )
         self.vaccinated_ids.add(person.id)
