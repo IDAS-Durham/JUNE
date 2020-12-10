@@ -840,8 +840,8 @@ close_universities:
     end_time: 2021-09-28
 
 vaccine_distribution:
-    start_time: 2020-02-01
-    end_time: 2020-03-15
+    start_time: 2020-02-29
+    end_time: 2020-03-4
     group_by: 'age'
     group_type: '60-100'
     group_coverage: 1.
