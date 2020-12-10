@@ -151,6 +151,7 @@ class TestCheckpoints:
                 assert inf1.number_of_infected == inf2.number_of_infected
                 assert inf1.transmission.probability == inf2.transmission.probability
                 assert inf1.symptoms.tag == inf2.symptoms.tag
+                assert inf1.symptoms.stage == inf2.symptoms.stage
                 continue
             assert person1.susceptible == person2.susceptible
             assert person1.infected == person2.infected
