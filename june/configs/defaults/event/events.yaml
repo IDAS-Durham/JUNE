@@ -1,0 +1,12 @@
+domestic_care:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  needs_care_probabilities:
+    0-65: 0
+    65-70: 0.3 #0.15
+    70-75: 0.36 #0.18
+    75-80: 0.38 #0.19
+    80-85: 0.56 #0.28
+    85-100: 0.72 #0.36
+    # source : https://www.ageuk.org.uk/globalassets/age-uk/documents/reports-and-publications/reports-and-briefings/health--wellbeing/age_uk_briefing_state_of_health_and_care_of_older_people_july2019.pdf
+
