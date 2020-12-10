@@ -77,6 +77,7 @@ class Simulator:
             self.checkpoint_dates = checkpoint_dates
         else:
             self.checkpoint_dates = ()
+        self.checkpoint_dates = checkpoint_dates or ()
         self.medical_facilities = self._get_medical_facilities()
         self.record = record
 
