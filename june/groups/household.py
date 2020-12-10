@@ -4,12 +4,13 @@ import numpy as np
 from random import random
 import h5py
 
-from june.groups import Group, Supergroup
+from june.groups import Group, Supergroup, ExternalSubgroup, ExternalGroup
 from june.groups.group.interactive import InteractiveGroup
 
 from enum import IntEnum
 from typing import List
 from recordclass import dataobject
+
 
 
 class Household(Group):
@@ -209,3 +210,4 @@ class InteractiveHousehold(InteractiveGroup):
             beta_reduction = beta_reductions.get(self.spec, 1.0)
         regional_compliance = self.super_area.region.regional_compliance
         return beta * (1 + regional_compliance * (beta_reduction - 1))
+
