@@ -40,7 +40,8 @@ t1 = time.time()
 config_path = "./config_simulation.yaml"
 
 # define geography, let's run the first 20 super areas of london
-geography = Geography.from_file({"super_area": london_areas})
+#geography = Geography.from_file({"super_area": london_areas})
+geography = Geography.from_file({"region": ["North East"]})
 #geography = Geography.from_file({"region": ["North East"]})
 
 # add buildings
@@ -65,5 +66,5 @@ travel.initialise_commute(world)
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 # save the world to hdf5 to load it later
-world.to_hdf5("tests.hdf5")
+world.to_hdf5("north_east.hdf5")
 print("Done :)")
