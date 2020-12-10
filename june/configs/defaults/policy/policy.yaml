@@ -6,6 +6,14 @@ severe_symptoms_stay_home:
   start_time: 1000-01-01
   end_time: 9999-01-01
 
+limit_long_commute:
+  # prevents people that have their workplace
+  # far away from their homes of commuting daily.
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  apply_from_distance: 100
+  going_to_work_probability: 0.2 # once a week
+
 regional_compliance:
   1:
     start_time: 1000-07-04
@@ -36,13 +44,14 @@ tiered_lockdown:
       North East: 3.
       Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
 
-limit_long_commute:
-  # prevents people that have their workplace
-  # far away from their homes of commuting daily.
-  start_time: 1000-01-01
-  end_time: 9999-01-01
-  apply_from_distance: 100
-  going_to_work_probability: 0.2 # once a week
+vaccine_distribution:
+    start_time: 2020-02-29
+    end_time: 2020-03-4
+    group_by: 'age'
+    group_type: '60-100'
+    group_coverage: 1.
+    effective_after_first_dose: 3 
+    effective_after_second_dose: 2 
 
 quarantine:
     1:
@@ -838,13 +847,3 @@ close_schools:
 close_universities:
     start_time: 2020-03-20
     end_time: 2021-09-28
-
-vaccine_distribution:
-    start_time: 2020-02-29
-    end_time: 2020-03-4
-    group_by: 'age'
-    group_type: '60-100'
-    group_coverage: 1.
-    effective_after_first_dose: 3 
-    effective_after_second_dose: 2 
-
