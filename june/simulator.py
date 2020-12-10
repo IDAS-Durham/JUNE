@@ -136,7 +136,7 @@ class Simulator:
                         datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
                     )
         else:
-            checkpoint_dates = None
+            checkpoint_dates = ()
         weekday_activities = [
             activity for activity in time_config["step_activities"]["weekday"].values()
         ]

@@ -401,3 +401,10 @@ def combine_records(record_path, remove_left_overs=False, save_dir=None):
         record_path, remove_left_overs=remove_left_overs, save_dir=save_dir
     )
     combine_hdf5s(record_path, remove_left_overs=remove_left_overs, save_dir=save_dir)
+
+def prepend_checkpoint_record(
+    pre_checkpoint_record_path, 
+    post_checkpoint_record_path,
+    checkpoint_date=None
+):
+    pass

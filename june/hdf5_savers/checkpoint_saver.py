@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import h5py
 from collections import defaultdict
 from glob import glob
+import logging
 
 from june.world import World
 from june.interaction import Interaction
@@ -25,6 +26,7 @@ import june.simulator as june_simulator_module
 
 default_config_filename = june_simulator_module.default_config_filename
 
+logger = logging.getLogger("checkpoint_saver")
 
 def save_checkpoint_to_hdf5(
     population: Population, date: str, hdf5_file_path: str, chunk_size: int = 50000
@@ -117,7 +119,11 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
         rank = 0, 1, 2, etc.
     """
     checkpoint_files = glob(hdf5_file_root + ".[0-9]*.hdf5")
-    print(f"found {checkpoint_files}")
+    try:
+        cp_date = hdf5_file_root.split("_")[-1]
+    except:
+        cp_date = hdf5_file_root
+    logger.info(f"found {len(checkpoint_files)} {cp_date} checkpoint files")
     ret = load_checkpoint_from_hdf5(checkpoint_files[0])
     for i in range(1, len(checkpoint_files)):
         file = checkpoint_files[i]
