@@ -41,6 +41,24 @@ if mpi_rank > 0:
     output_logger.propagate = False
 
 
+def _read_checkpoint_dates(checkpoint_dates):
+    if isinstance(checkpoint_dates, datetime.date):
+        return (checkpoint_dates,)
+    elif type(checkpoint_dates) == str:
+        return (datetime.datetime.strptime(checkpoint_dates, "%Y-%m-%d"),)
+    elif type(checkpoint_dates) in [list, tuple]:
+        ret = []
+        for date in checkpoint_dates:
+            if type(date) == str:
+                dd = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+            else:
+                dd = date
+            ret.append(dd)
+        return tuple(ret)
+    else:
+        return ()
+
+
 class Simulator:
     ActivityManager = ActivityManager
 
@@ -53,8 +71,8 @@ class Simulator:
         infection_selector: InfectionSelector = None,
         infection_seed: Optional["InfectionSeed"] = None,
         record: Optional[Record] = None,
-        checkpoint_dates: List[datetime.date] = None,
-        checkpoint_path: str = None,
+        checkpoint_save_dates: List[datetime.date] = None,
+        checkpoint_save_path: str = None,
     ):
         """
         Class to run an epidemic spread simulation on the world.
@@ -71,13 +89,12 @@ class Simulator:
         self.infection_seed = infection_seed
         self.timer = timer
         # self.comment = comment
-        if checkpoint_path is not None:
-            self.checkpoint_path = Path(checkpoint_path)
-            self.checkpoint_path.mkdir(parents=True, exist_ok=True)
-            self.checkpoint_dates = checkpoint_dates
-        else:
-            self.checkpoint_dates = ()
-        self.checkpoint_dates = checkpoint_dates or ()
+        self.checkpoint_save_dates = _read_checkpoint_dates(checkpoint_save_dates)
+        if self.checkpoint_save_dates:
+            if not checkpoint_save_path:
+                checkpoint_save_path = "results/checkpoints"
+            self.checkpoint_save_path = Path(checkpoint_save_path)
+            self.checkpoint_save_path.mkdir(parents=True, exist_ok=True)
         self.medical_facilities = self._get_medical_facilities()
         self.record = record
 
@@ -93,7 +110,7 @@ class Simulator:
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
-        checkpoint_path: str = None,
+        checkpoint_save_path: str = None,
         record: Optional[Record] = None,
     ) -> "Simulator":
 
@@ -130,17 +147,7 @@ class Simulator:
                 )
                 activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
-        if "checkpoint_dates" in config:
-            if isinstance(config["checkpoint_dates"], datetime.date):
-                checkpoint_dates = [config["checkpoint_dates"]]
-            else:
-                checkpoint_dates = []
-                for date_str in config["checkpoint_dates"].split():
-                    checkpoint_dates.append(
-                        datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
-                    )
-        else:
-            checkpoint_dates = ()
+        checkpoint_save_dates = _read_checkpoint_dates(config.get("checkpoint_save_dates", None))
         weekday_activities = [
             activity for activity in time_config["step_activities"]["weekday"].values()
         ]
@@ -180,15 +187,15 @@ class Simulator:
             infection_selector=infection_selector,
             infection_seed=infection_seed,
             record=record,
-            checkpoint_dates=checkpoint_dates,
-            checkpoint_path=checkpoint_path,
+            checkpoint_save_dates=checkpoint_save_dates,
+            checkpoint_save_path=checkpoint_save_path,
         )
 
     @classmethod
     def from_checkpoint(
         cls,
         world: World,
-        checkpoint_path: str,
+        checkpoint_load_path: str,
         interaction: Interaction,
         infection_selector=None,
         policies: Optional[Policies] = None,
@@ -203,7 +210,7 @@ class Simulator:
 
         return generate_simulator_from_checkpoint(
             world=world,
-            checkpoint_path=checkpoint_path,
+            checkpoint_path=checkpoint_load_path,
             interaction=interaction,
             infection_selector=infection_selector,
             policies=policies,
@@ -573,7 +580,7 @@ class Simulator:
                     )
             self.do_timestep()
             if (
-                self.timer.date.date() in self.checkpoint_dates
+                self.timer.date.date() in self.checkpoint_save_dates
                 and (self.timer.now + self.timer.duration).is_integer()
             ):  # this saves in the last time step of the day
                 saving_date = self.timer.date.date()
@@ -590,10 +597,10 @@ class Simulator:
         from june.hdf5_savers.checkpoint_saver import save_checkpoint_to_hdf5
 
         if mpi_size == 1:
-            save_path = self.checkpoint_path / f"checkpoint_{saving_date}.hdf5"
+            save_path = self.checkpoint_save_path / f"checkpoint_{saving_date}.hdf5"
         else:
             save_path = (
-                self.checkpoint_path / f"checkpoint_{saving_date}.{mpi_rank}.hdf5"
+                self.checkpoint_save_path / f"checkpoint_{saving_date}.{mpi_rank}.hdf5"
             )
         save_checkpoint_to_hdf5(
             population=self.world.people,
