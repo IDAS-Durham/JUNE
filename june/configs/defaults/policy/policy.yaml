@@ -21,6 +21,21 @@ regional_compliance:
       North East: 0.95
       Yorkshire and The Humber: 0.95
 
+tiered_lockdown:
+  1:
+    start_time: 2020-12-03
+    end_time: 9999-12-01
+    tiers_per_region:
+      London: 2.
+      South East: 2.
+      South West: 2.
+      West Midlands: 3. # becuase of Birmingham
+      East Midlands: 3.
+      East of England: 2.
+      North West: 3. # becuase of Manchester
+      North East: 3.
+      Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
+
 limit_long_commute:
   # prevents people that have their workplace
   # far away from their homes of commuting daily.
