@@ -48,9 +48,6 @@ london_areas = np.concatenate(
     )
 )
 
-london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[40:50]
-
-
 t1 = time.time()
 
 # default config path
@@ -83,5 +80,5 @@ travel.initialise_commute(world)
 t2 = time.time()
 print(f"Took {t2 -t1} seconds to run.")
 # save the world to hdf5 to load it later
-world.to_hdf5("tests.hdf5")
+world.to_hdf5("north_east.hdf5")
 print("Done :)")

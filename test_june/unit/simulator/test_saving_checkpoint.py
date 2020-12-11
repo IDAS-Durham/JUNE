@@ -7,7 +7,7 @@ import june.simulator
 from pathlib import Path
 from random import randint
 
-from june.records import Record 
+from june.records import Record
 from june.groups import Hospitals, Hospital
 from june.demography import Population, Person
 from june.geography import Area, Areas, SuperArea, SuperAreas
@@ -17,7 +17,7 @@ from june.groups import Cemeteries
 from june.geography import Geography
 from june.geography import Areas
 from june.hdf5_savers import generate_world_from_hdf5
-from june.groups.travel import Travel 
+from june.groups.travel import Travel
 from june.policy import Policies
 from june.interaction import Interaction
 from june.simulator import Simulator
@@ -78,7 +78,14 @@ def create_world():
     world.areas = areas
     world.super_areas = super_areas
     world.hospitals = Hospitals(
-        [Hospital(n_beds=1000, n_icu_beds=1000, area=None, coordinates=None,)],
+        [
+            Hospital(
+                n_beds=1000,
+                n_icu_beds=1000,
+                area=None,
+                coordinates=None,
+            )
+        ],
         ball_tree=False,
     )
     world.cemeteries = Cemeteries()
@@ -96,7 +103,7 @@ def run_simulator(selector, test_results):
         config_filename=test_config,
         leisure=None,
         policies=policies,
-        checkpoint_path=test_results / 'checkpoint_tests',
+        checkpoint_save_path=test_results / "checkpoint_tests",
     )
     seed = InfectionSeed(sim.world, selector)
     seed.unleash_virus(sim.world.people, n_cases=50)
@@ -118,7 +125,7 @@ class TestCheckpoints:
         policies = Policies([])
         sim_recovered = Simulator.from_checkpoint(
             world=fresh_world,
-            checkpoint_path=checkpoint_folder / "checkpoint_2020-03-25.hdf5",
+            checkpoint_load_path=checkpoint_folder / "checkpoint_2020-03-25.hdf5",
             interaction=interaction,
             infection_selector=selector,
             config_filename=test_config,
@@ -144,6 +151,7 @@ class TestCheckpoints:
                 assert inf1.number_of_infected == inf2.number_of_infected
                 assert inf1.transmission.probability == inf2.transmission.probability
                 assert inf1.symptoms.tag == inf2.symptoms.tag
+                assert inf1.symptoms.stage == inf2.symptoms.stage
                 continue
             assert person1.susceptible == person2.susceptible
             assert person1.infected == person2.infected
