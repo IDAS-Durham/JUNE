@@ -4,6 +4,7 @@ import numpy as np
 import datetime
 import logging
 import june.simulator
+import os
 from pathlib import Path
 from random import randint
 
@@ -105,6 +106,7 @@ def run_simulator(selector, test_results):
         policies=policies,
         checkpoint_save_path=test_results / "checkpoint_tests",
     )
+    print(sim.checkpoint_save_dates)
     seed = InfectionSeed(sim.world, selector)
     seed.unleash_virus(sim.world.people, n_cases=50)
     sim.run()
@@ -159,3 +161,5 @@ class TestCheckpoints:
             assert person1.susceptibility == person2.susceptibility
             assert person1.dead == person2.dead
         # clean up
+        os.remove(checkpoint_folder / "checkpoint_2020-03-25.hdf5")
+        # gotta delete, else it passes any time it should have failed...
