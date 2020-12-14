@@ -130,7 +130,7 @@ class ActivityManager:
     def get_personal_subgroup(self, person: "Person", activity: str):
         return getattr(person, activity)
 
-    def do_timestep(self, return_to_send_abroad=False):
+    def do_timestep(self):
         # get time data
         date = self.timer.date
         is_weekend = self.timer.is_weekend
@@ -162,10 +162,7 @@ class ActivityManager:
             n_people_from_abroad,
             n_people_going_abroad,
         ) = self.send_and_receive_people_from_abroad(to_send_abroad)
-        if return_to_send_abroad:
-            return people_from_abroad, n_people_from_abroad, n_people_going_abroad, to_send_abroad
-        else:
-            return people_from_abroad, n_people_from_abroad, n_people_going_abroad
+        return people_from_abroad, n_people_from_abroad, n_people_going_abroad, to_send_abroad
 
     def move_people_to_active_subgroups(
         self,

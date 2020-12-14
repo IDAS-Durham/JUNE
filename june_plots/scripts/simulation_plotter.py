@@ -321,7 +321,7 @@ class SimulationPlotter:
             n_people_from_abroad,
             n_people_going_abroad,
             people_to_send_abroad
-        ) = self.simulator.activity_manager.do_timestep(return_to_send_abroad=True)
+        ) = self.simulator.activity_manager.do_timestep()
         self.operations(people_from_abroad_dict, people_to_send_abroad)
         next(self.simulator.timer)
 
