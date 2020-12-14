@@ -206,7 +206,7 @@ class Simulator:
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
         record: Optional[Record] = None,
-        events:Optional[Events] = None,
+        events: Optional[Events] = None,
         reset_infections=False,
     ):
         from june.hdf5_savers.checkpoint_saver import generate_simulator_from_checkpoint
@@ -581,7 +581,9 @@ class Simulator:
                     >= self.infection_seed.min_date
                 ):
                     self.infection_seed.unleash_virus_per_day(
-                        self.timer.date, record=self.record
+                        self.timer.date,
+                        record=self.record,
+                        days_from_start=self.timer.now,
                     )
             self.do_timestep()
             if (
