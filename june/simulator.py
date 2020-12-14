@@ -147,7 +147,9 @@ class Simulator:
                 )
                 activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
-        checkpoint_save_dates = _read_checkpoint_dates(config.get("checkpoint_save_dates", None))
+        checkpoint_save_dates = _read_checkpoint_dates(
+            config.get("checkpoint_save_dates", None)
+        )
         weekday_activities = [
             activity for activity in time_config["step_activities"]["weekday"].values()
         ]
@@ -204,6 +206,7 @@ class Simulator:
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
         record: Optional[Record] = None,
+        events:Optional[Events] = None,
         reset_infections=False,
     ):
         from june.hdf5_savers.checkpoint_saver import generate_simulator_from_checkpoint
@@ -219,6 +222,7 @@ class Simulator:
             travel=travel,
             config_filename=config_filename,
             record=record,
+            events=events,
             reset_infections=reset_infections,
         )
 

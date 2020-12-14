@@ -10,6 +10,7 @@ from june.world import World
 from june.interaction import Interaction
 from june.groups.leisure import Leisure
 from june.policy import Policies
+from june.event import Events
 from june.infection import InfectionSelector, Infection
 from june.infection_seed import InfectionSeed
 from june import paths
@@ -152,7 +153,11 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
 
 
 def restore_simulator_to_checkpoint(
-    simulator, world: World, checkpoint_path: str, chunk_size: Optional[int] = 50000, reset_infections=False
+    simulator,
+    world: World,
+    checkpoint_path: str,
+    chunk_size: Optional[int] = 50000,
+    reset_infections=False,
 ):
     """
     Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
@@ -214,6 +219,7 @@ def generate_simulator_from_checkpoint(
     infection_seed: Optional[InfectionSeed] = None,
     leisure: Optional[Leisure] = None,
     travel: Optional[Travel] = None,
+    events: Optional[Events] = None,
     config_filename: str = default_config_filename,
     record: "Record" = None,
     reset_infections=False,
@@ -226,6 +232,7 @@ def generate_simulator_from_checkpoint(
         infection_seed=infection_seed,
         leisure=leisure,
         travel=travel,
+        events=events,
         config_filename=config_filename,
         record=record,
     )
