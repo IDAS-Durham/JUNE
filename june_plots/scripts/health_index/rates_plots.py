@@ -581,7 +581,7 @@ class RatesPlotter:
         toplot = pd.DataFrame(index=data.index)
         toplot.loc[:, "JUNE male"] = june_ifrs_male * 100
         toplot.loc[:, "JUNE female"] = june_ifrs_female * 100
-        toplot.loc[:, "JUNE"] = june_ifrs_all * 100
+        toplot.loc[:, "JUNE average"] = june_ifrs_all * 100
         toplot.loc[:, data_name] = data.values
         colors = [f"C{i}" for i in range(3)] + ["black"]
         toplot = toplot.rename(mapper=revert_to_string)
@@ -589,7 +589,7 @@ class RatesPlotter:
         june_errors = np.zeros_like(errors)
         errors_to_plot = np.array([errors, june_errors, june_errors, june_errors])
         # ax = toplot.plot.bar(yerr = , capsize=4, ylabel="IFR [%]", xlabel="Age bin")
-        ax = toplot.loc[:, ["JUNE male", "JUNE female", "JUNE"]].plot.bar(
+        ax = toplot.loc[:, ["JUNE male", "JUNE female", "JUNE average"]].plot.bar(
             capsize=4,
             ylabel="IFR [\%]",
             xlabel="Age group",
@@ -600,12 +600,11 @@ class RatesPlotter:
         )
         ax = toplot.loc[:, [data_name]].plot.bar(
             ax=ax,
-            capsize=4,
+            capsize=2,
             width=0.8,
-            color="black",
+            color="C3",
             yerr=errors,
-            alpha=0.6,
-            linewidth=1,
+            alpha=0.3,
         )
         fig = ax.get_figure()
         fig.savefig(output_file, dpi=300, bbox_inches="tight")
@@ -613,10 +612,10 @@ class RatesPlotter:
 
     def plot_comparison_with_imperial(self, output_file="imperial_vs_june.png"):
         return self.plot_ifr_comparison(
-            data_file=ifr_imperial_file, output_file=output_file, data_name="Imperial"
+            data_file=ifr_imperial_file, output_file=output_file, data_name="Brazeau et al. average"
         )
 
     def plot_comparison_with_ward(self, output_file="ward_vs_june.png"):
         return self.plot_ifr_comparison(
-            data_file=ifr_ward_file, output_file=output_file, data_name="Ward"
+            data_file=ifr_ward_file, output_file=output_file, data_name="Ward et al. average"
         )

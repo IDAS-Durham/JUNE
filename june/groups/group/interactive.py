@@ -66,7 +66,7 @@ class InteractiveGroup:
                 subgroup_size += len(people_abroad_ids)
             else:
                 people_abroad_data = None
-                people_abroad_ids = []               
+                people_abroad_ids = []
             if subgroup_size == 0:
                 continue
             group_size += subgroup_size
