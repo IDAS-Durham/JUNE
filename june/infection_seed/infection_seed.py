@@ -62,7 +62,7 @@ class InfectionSeed:
         """
         Infects ```n_cases``` people in ```population```
 
-        Parameters 
+        Parameters
         ----------
         population:
             population to infect
@@ -85,7 +85,9 @@ class InfectionSeed:
             n_cases = round(self.seed_strength * n_cases)
             if self.age_profile is None:
                 ids_to_infect = np.random.choice(
-                    susceptible_ids, n_cases, replace=False,
+                    susceptible_ids,
+                    n_cases,
+                    replace=False,
                 )
             else:
                 ids_to_infect = self.select_susceptiles_by_age(susceptible_ids, n_cases)
@@ -100,7 +102,7 @@ class InfectionSeed:
                     self.infection_selector.infect_person_at_time(person, 0.0)
                     if record is not None:
                         record.accumulate(
-                            table_name='infections',
+                            table_name="infections",
                             location_spec="infection_seed",
                             region_name=person.super_area.region.name,
                             location_id=0,
@@ -117,7 +119,7 @@ class InfectionSeed:
                 self.infection_selector.infect_person_at_time(person_to_infect, 0.0)
                 if record is not None:
                     record.accumulate(
-                        table_name='infections',
+                        table_name="infections",
                         location_spec="infection_seed",
                         region_name=person_to_infect.super_area.region.name,
                         location_id=0,
@@ -204,14 +206,14 @@ class InfectionSeed:
             except KeyError as e:
                 raise KeyError("There is no data on cases for super area: %s" % str(e))
 
-    def unleash_virus_per_day(self, date: "datetime", record: Optional[Record]=None):
+    def unleash_virus_per_day(self, date: "datetime", record: Optional[Record] = None):
         """
         Infect super areas at a given ```date```
 
         Parameters
         ----------
         date:
-            datetime object 
+            datetime object
         """
         date_str = date.strftime("%Y-%m-%d")
         date = date.date()
@@ -219,5 +221,7 @@ class InfectionSeed:
             date not in self.dates_seeded
             and date_str in self.daily_super_area_cases.index
         ):
-            self.infect_super_areas(self.daily_super_area_cases.loc[date_str], record=record)
+            self.infect_super_areas(
+                self.daily_super_area_cases.loc[date_str], record=record
+            )
             self.dates_seeded.append(date)

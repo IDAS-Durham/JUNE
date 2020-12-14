@@ -89,7 +89,7 @@ def setup_sim(dummy_world, selector):
         policies=policies,
     )
     sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-        3, False, False
+        delta_time=3, working_hours=False, day_type="weekday" 
     )
     sim.clear_world()
     return sim

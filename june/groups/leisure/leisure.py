@@ -139,7 +139,7 @@ class Leisure:
         logger.info(f"Distributed in {len(areas)} of {len(areas)} areas.")
 
     def generate_leisure_probabilities_for_timestep(
-        self, delta_time: float, working_hours: bool, is_weekend: bool
+            self, delta_time: float, working_hours: bool, day_type:str,
     ):
         self.probabilities_by_region_sex_age = {}
         if self.regions:
@@ -149,16 +149,16 @@ class Leisure:
                 ] = self._generate_leisure_probabilities_for_age_and_sex(
                     delta_time=delta_time,
                     working_hours=working_hours,
-                    is_weekend=is_weekend,
-                    regional_compliance=region.regional_compliance,
+                    day_type=day_type,
+                    region=region,
                 )
         else:
             self.probabilities_by_region_sex_age = (
                 self._generate_leisure_probabilities_for_age_and_sex(
                     delta_time=delta_time,
                     working_hours=working_hours,
-                    is_weekend=is_weekend,
-                    regional_compliance=1.0,
+                    day_type=day_type,
+                    region=None,
                 )
             )
 
@@ -202,14 +202,37 @@ class Leisure:
             )
             return subgroup
 
+    def _generate_leisure_probabilities_for_age_and_sex(
+        self,
+        delta_time: float,
+        working_hours: bool,
+        day_type: str,
+        region: Region 
+    ):
+        ret = {}
+        for sex in ["m", "f"]:
+            probs = [
+                self._get_leisure_probability_for_age_and_sex(
+                    age=age,
+                    sex=sex,
+                    delta_time=delta_time,
+                    day_type=day_type,
+                    working_hours=working_hours,
+                    region=region
+                )
+                for age in range(0, 100)
+            ]
+            ret[sex] = probs
+        return ret
+
     def _get_leisure_probability_for_age_and_sex(
         self,
         age: int,
         sex: str,
         delta_time: float,
-        is_weekend: bool,
+        day_type: str,
         working_hours: bool,
-        region: Region = None,
+        region: Region,
     ):
         """
         Computes the probabilities of going to different leisure activities,
@@ -230,8 +253,6 @@ class Leisure:
         drags_household_probabilities = []
         activities = []
         for activity, distributor in self.leisure_distributors.items():
-            if distributor.spec in self.closed_venues:
-                continue
             drags_household_probabilities.append(
                 distributor.drags_household_probability
             )
@@ -240,9 +261,9 @@ class Leisure:
                 distributor=distributor,
                 age=age,
                 sex=sex,
-                is_weekend=is_weekend,
+                day_type=day_type,
                 working_hours=working_hours,
-                regional_compliance=regional_compliance,
+                region=region,
             )
             poisson_parameters.append(activity_poisson_parameter)
             activities.append(activity)
@@ -272,32 +293,25 @@ class Leisure:
         distributor: SocialVenueDistributor,
         age: int,
         sex: str,
-        is_weekend: bool,
+        day_type: str,
         working_hours: bool,
-        regional_compliance: float,
+        region: Region,
     ):
         """
         Computes an activity poisson parameter taking into account active policies,
         regional compliances and lockdown tiers.
         """
-        if is_weekend:
-            day_type = "weekend"
-        else:
-            day_type = "weekday"
-        original_activity_poisson_parameter = distributor.get_poisson_parameter(
-            sex=sex, age=age, day_type=day_type, working_hours=working_hours
-        )
         if activity in self.policy_poisson_parameters:
-            policy_activity_poisson_parameter = self.policy_poisson_parameters[
-                activity
-            ][day_type][sex][age]
+            policy_activity_poisson_parameter = (
+                self.policy_poisson_parameters[activity][day_type][sex][age]
+            )  
         else:
-            policy_activity_poisson_parameter = original_activity_poisson_parameter
-
+            policy_activity_poisson_parameter = None
         activity_poisson_parameter = distributor.get_poisson_parameter(
             sex=sex,
             age=age,
-            is_weekend=is_weekend,
+            day_type=day_type,
+            working_hours=working_hours,
             policy_poisson_parameter=policy_activity_poisson_parameter,
             region=region,
         )
@@ -341,25 +355,3 @@ class Leisure:
                     list(self.probabilities_by_region_sex_age.keys())[0]
                 ][person.sex][person.age]
 
-    def _generate_leisure_probabilities_for_age_and_sex(
-        self,
-        delta_time: float,
-        working_hours: bool,
-        is_weekend: bool,
-        region: Region = None,
-    ):
-        ret = {}
-        for sex in ["m", "f"]:
-            probs = [
-                self._get_leisure_probability_for_age_and_sex(
-                    age=age,
-                    sex=sex,
-                    delta_time=delta_time,
-                    is_weekend=is_weekend,
-                    working_hours=working_hours,
-                    region=region,
-                )
-                for age in range(0, 100)
-            ]
-            ret[sex] = probs
-        return ret
