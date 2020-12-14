@@ -152,7 +152,7 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
 
 
 def restore_simulator_to_checkpoint(
-    simulator, world: World, checkpoint_path: str, chunk_size: Optional[int] = 50000, reset_infected=False
+    simulator, world: World, checkpoint_path: str, chunk_size: Optional[int] = 50000, reset_infections=False
 ):
     """
     Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
@@ -187,7 +187,7 @@ def restore_simulator_to_checkpoint(
             continue
         person = simulator.world.people.get_from_id(recovered_id)
         person.susceptibility = 0.0
-    if not reset_infected:
+    if not reset_infections:
         for infected_id, infection in zip(
             checkpoint_data["infected_id"], checkpoint_data["infection_list"]
         ):
@@ -216,7 +216,7 @@ def generate_simulator_from_checkpoint(
     travel: Optional[Travel] = None,
     config_filename: str = default_config_filename,
     record: "Record" = None,
-    reset_infected=False,
+    reset_infections=False,
 ):
     simulator = Simulator.from_file(
         world=world,
@@ -234,5 +234,5 @@ def generate_simulator_from_checkpoint(
         checkpoint_path=checkpoint_path,
         chunk_size=chunk_size,
         simulator=simulator,
-        reset_infected=reset_infected,
+        reset_infections=reset_infections,
     )

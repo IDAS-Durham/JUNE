@@ -204,7 +204,7 @@ class Simulator:
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
         record: Optional[Record] = None,
-        reset_infected=False,
+        reset_infections=False,
     ):
         from june.hdf5_savers.checkpoint_saver import generate_simulator_from_checkpoint
 
@@ -219,7 +219,7 @@ class Simulator:
             travel=travel,
             config_filename=config_filename,
             record=record,
-            reset_infected=reset_infected,
+            reset_infections=reset_infections,
         )
 
     def clear_world(self):
