@@ -133,7 +133,7 @@ class ActivityManager:
     def do_timestep(self):
         # get time data
         date = self.timer.date
-        is_weekend = self.timer.is_weekend
+        day_type = self.timer.day_type
         activities = self.apply_activity_hierarchy(self.timer.activities)
         delta_time = self.timer.duration
         # apply leisure policies
@@ -142,7 +142,7 @@ class ActivityManager:
                 self.policies.leisure_policies.apply(date=date, leisure=self.leisure)
             self.leisure.generate_leisure_probabilities_for_timestep(
                 delta_time=delta_time,
-                is_weekend=is_weekend,
+                day_type=day_type,
                 working_hours="primary_activity" in activities,
             )
         # apply events
@@ -151,7 +151,7 @@ class ActivityManager:
                 date=date,
                 world=self.world,
                 activities=activities,
-                is_weekend=is_weekend,
+                day_type=day_type
             )
         # move people to subgroups and get going abroad people
         to_send_abroad = self.move_people_to_active_subgroups(

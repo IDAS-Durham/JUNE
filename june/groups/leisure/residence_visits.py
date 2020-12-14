@@ -112,12 +112,26 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
             group = candidates[randint(0, n_candidates - 1)]
         return group
 
-    def get_poisson_parameter(self, sex, age, day_type, working_hours):
+    def get_poisson_parameter(
+        self,
+        sex,
+        age,
+        day_type,
+        working_hours,
+        region=None,
+        policy_poisson_parameter=None,
+    ):
         """
         This differs from the super() implementation in that we do not allow
         visits during working hours as most people are away.
         """
         if working_hours:
             return 0
-        poisson_parameter = self.poisson_parameters[day_type][sex][age]
-        return poisson_parameter
+        return super().get_poisson_parameter(
+            sex=sex,
+            age=age,
+            day_type=day_type,
+            working_hours=working_hours,
+            region=region,
+            policy_poisson_parameter=policy_poisson_parameter,
+        )

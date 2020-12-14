@@ -126,7 +126,15 @@ class SocialVenueDistributor:
                 ]
         return ret
 
-    def get_poisson_parameter(self, sex, age, day_type, working_hours):
+    def get_poisson_parameter(
+        self,
+        sex,
+        age,
+        day_type,
+        working_hours,
+        region=None,
+        policy_poisson_parameter=None,
+    ):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
         age and sex and the distribution of visitors in the venue.
@@ -137,10 +145,22 @@ class SocialVenueDistributor:
             an instance of Person
         delta_t
             interval of time in units of days
-        is_weekend
+        weekday or weekend
+
             whether it is a weekend or not
         """
-        poisson_parameter = self.poisson_parameters[day_type][sex][age]
+        if region is None:
+            regional_compliance = 1
+        else:
+            if self.spec in region.closed_venues:
+                return 0
+            regional_compliance = region.regional_compliance
+        original_poisson_parameter = self.poisson_parameters[day_type][sex][age]
+        if policy_poisson_parameter is None:
+            return original_poisson_parameter
+        poisson_parameter = original_poisson_parameter + regional_compliance * (
+            policy_poisson_parameter - original_poisson_parameter
+        )
         return poisson_parameter
 
     def probability_to_go_to_social_venue(
@@ -156,8 +176,8 @@ class SocialVenueDistributor:
             an instance of Person
         delta_t
             interval of time in units of days
-        is_weekend
-            whether it is a weekend or not
+        day_type 
+            weekday or weekend
         """
         poisson_parameter = self.get_poisson_parameter(
             sex=person.sex,

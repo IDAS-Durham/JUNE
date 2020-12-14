@@ -51,11 +51,12 @@ class TestCloseLeisure:
         )
         sim.activity_manager.leisure = leisure
         sim.activity_manager.policies = policies
-        leisure.leisure_distributors["pub"].weekend_boost = 5000
         sim.clear_world()
         time_before_policy = datetime(2019, 2, 1)
         activities = ["leisure", "residence"]
-        leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
+        leisure.generate_leisure_probabilities_for_timestep(
+            delta_time=10000, working_hours=False, day_type="weekday"
+        )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_before_policy, 0.0
         )
@@ -64,7 +65,9 @@ class TestCloseLeisure:
         time_during_policy = datetime(2020, 3, 14)
         policies.leisure_policies.apply(date=time_during_policy, leisure=leisure)
         assert list(world.regions[0].policy["global_closed_venues"]) == ["pub"]
-        leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
+        leisure.generate_leisure_probabilities_for_timestep(
+            delta_time=10000, working_hours=False, day_type="weekday"
+        )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy, 0.0
         )
@@ -77,7 +80,9 @@ class TestCloseLeisure:
         time_after_policy = datetime(2020, 3, 30)
         policies.leisure_policies.apply(date=time_after_policy, leisure=leisure)
         assert list(world.regions[0].policy["global_closed_venues"]) == []
-        leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
+        leisure.generate_leisure_probabilities_for_timestep(
+            delta_time=10000, working_hours=False, day_type="weekday"
+        )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy, 0.0
         )
@@ -88,10 +93,10 @@ class TestCloseLeisure:
         tiered_lockdown = TieredLockdown(
             start_time="2020-03-01",
             end_time="2020-03-30",
-            tiers_per_region={"North East": 3.},
+            tiers_per_region={"North East": 3.0},
         )
         tiered_lockdowns = TieredLockdowns([tiered_lockdown])
-        
+
         policies = Policies([tiered_lockdowns])
         leisure = generate_leisure_for_config(world=world, config_filename=test_config)
         leisure.distribute_social_venues_to_areas(
@@ -99,11 +104,12 @@ class TestCloseLeisure:
         )
         sim.activity_manager.leisure = leisure
         sim.activity_manager.policies = policies
-        leisure.leisure_distributors["pubs"].weekend_boost = 5000
         sim.clear_world()
         time_before_policy = datetime(2019, 2, 1)
         activities = ["leisure", "residence"]
-        leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
+        leisure.generate_leisure_probabilities_for_timestep(
+            delta_time=10000, working_hours=False, day_type="weekday"
+        )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_before_policy, 0.0
         )
@@ -113,7 +119,9 @@ class TestCloseLeisure:
         policies.tiered_lockdown.apply(date=time_during_policy, regions=world.regions)
         assert "pub" in list(world.regions[0].policy["local_closed_venues"])
         assert "cinema" in list(world.regions[0].policy["local_closed_venues"])
-        leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
+        leisure.generate_leisure_probabilities_for_timestep(
+            delta_time=10000, working_hours=False, day_type="weekday"
+        )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy, 0.0
         )
@@ -124,13 +132,13 @@ class TestCloseLeisure:
         time_after_policy = datetime(2020, 3, 30)
         policies.tiered_lockdown.apply(date=time_after_policy, regions=world.regions)
         assert list(world.regions[0].policy["local_closed_venues"]) == []
-        leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
+        leisure.generate_leisure_probabilities_for_timestep(
+            delta_time=10000, working_hours=False, day_type="weekday"
+        )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy, 0.0
         )
         assert worker in worker.leisure.people
-
-    
 
 
 class TestReduceLeisureProbabilities:
@@ -156,7 +164,7 @@ class TestReduceLeisureProbabilities:
             date=sim.timer.date, leisure=sim.activity_manager.leisure
         )
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-            0.1, False, False
+            0.1, working_hours=False, day_type="weekday"
         )
         assert str(sim.timer.date.date()) == "2020-03-01"
         household = Household()
@@ -190,7 +198,9 @@ class TestReduceLeisureProbabilities:
         while str(sim.timer.date.date()) != "2020-03-02":
             next(sim.timer)
         policies.leisure_policies.apply(date=sim.timer.date, leisure=leisure)
-        leisure.generate_leisure_probabilities_for_timestep(0.1, False, False)
+        leisure.generate_leisure_probabilities_for_timestep(
+            0.1, working_hours=False, day_type="weekday"
+        )
         assert leisure.policy_poisson_parameters["pub"]["weekday"]["m"][60] == 0.0
         assert leisure.policy_poisson_parameters["pub"]["weekday"]["f"][19] == 0.2
         assert leisure.policy_poisson_parameters["pub"]["weekend"]["m"][60] == 0.0
@@ -215,7 +225,7 @@ class TestReduceLeisureProbabilities:
             date=sim.timer.date, leisure=sim.activity_manager.leisure
         )
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-            0.1, False, False
+            0.1, working_hours=False, day_type="weekday"
         )
         assert leisure.policy_poisson_parameters == {}
         assert leisure.policy_poisson_parameters == {}
@@ -274,9 +284,9 @@ class TestReduceLeisureProbabilities:
             distributor=leisure.leisure_distributors["pub"],
             sex="m",
             age=25,
-            is_weekend=False,
+            day_type="weekday",
             working_hours=False,
-            regional_compliance=1.0,
+            region=region,
         )
         region.regional_compliance = 0.5
         half_comp_poisson_parameter = leisure._get_activity_poisson_parameter(
@@ -284,9 +294,9 @@ class TestReduceLeisureProbabilities:
             distributor=leisure.leisure_distributors["pub"],
             sex="m",
             age=25,
-            is_weekend=False,
+            day_type="weekday",
             working_hours=False,
-            regional_compliance=0.5,
+            region=region,
         )
         assert np.isclose(full_comp_poisson_parameter, 0.2)
         assert np.isclose(
@@ -297,16 +307,19 @@ class TestReduceLeisureProbabilities:
 
         # check integration with region object
         region.regional_compliance = 1.0
-        leisure.generate_leisure_probabilities_for_timestep(0.1, False, False)
-        full_comp_probs = leisure.get_activity_probabilities_for_person(person=worker)
+        leisure.generate_leisure_probabilities_for_timestep(
+            delta_time=0.1, working_hours=False, day_type="weekday"
+        )
+        full_comp_probs = leisure._get_activity_probabilities_for_person(person=worker)
         region.regional_compliance = 0.5
-        leisure.generate_leisure_probabilities_for_timestep(0.1, False, False)
-        half_comp_probs = leisure.get_activity_probabilities_for_person(person=worker)
+        leisure.generate_leisure_probabilities_for_timestep(
+            delta_time=0.1, working_hours=False, day_type="weekday"
+        )
+        half_comp_probs = leisure._get_activity_probabilities_for_person(person=worker)
         # this is  a reduction, so being less compliant means you go more often
         assert half_comp_probs["does_activity"] > full_comp_probs["does_activity"]
         assert (
-            half_comp_probs["activities"]["pub"]
-            > full_comp_probs["activities"]["pub"]
+            half_comp_probs["activities"]["pub"] > full_comp_probs["activities"]["pub"]
         )
         assert (
             half_comp_probs["drags_household"]["pub"]
