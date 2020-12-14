@@ -310,7 +310,7 @@ class SimulationPlotter:
                 simulation_days=simulation_days
             )
         else:
-            self.time_spent_tracker = None
+            self.time_spent_simulator = None
     
     def advance_step(self):
         "Advance a simulation time step and carry out operations"

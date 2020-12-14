@@ -777,12 +777,6 @@ class ContactSimulator:
             ax.set_yticklabels(labels)
         f.colorbar(im)
 
-        if self.world_name is not None:
-            world_name = self.world_name.split("_")[0].capitalize()
-            title = f"{contact_type} ({world_name}, {matrix_type})"
-        else:
-            title = f"{contact_type} ({matrix_type})"
-        ax.set_title(title)
         ax.set_xlabel("Participant age group")
         ax.set_ylabel("Contact age group")
         return ax
