@@ -8,19 +8,14 @@ from june.infection.health_index import Data2Rates
 from june.infection.health_index.health_index import HealthIndexGenerator
 
 
-@pytest.fixture(name="data_to_rates", scope="module")
-def make_rates():
-    return Data2Rates.from_file()
-
-
 @pytest.fixture(name="health_index", scope="module")
-def make_hi(data_to_rates):
-    return HealthIndexGenerator(data_to_rates=data_to_rates)
+def make_hi():
+    return HealthIndexGenerator.from_file()
 
 
 class TestHealthIndex:
     def test__probabilities_positive_sum_to_one(self, health_index):
-        for population in ("care_home", "general_population"):
+        for population in ("ch", "gp"):
             for sex in ("m", "f"):
                 for age in np.arange(100):
                     cum_probs = health_index.cumulative_probabilities[population][sex][
