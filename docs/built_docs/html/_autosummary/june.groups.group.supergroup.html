@@ -40,7 +40,7 @@
 <span id="june-groups-group-supergroup"></span><h1>june.groups.group.supergroup<a class="headerlink" href="#module-june.groups.group.supergroup" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="june.groups.group.supergroup.Supergroup">
-<em class="property">class </em><code class="sig-prename descclassname">june.groups.group.supergroup.</code><code class="sig-name descname">Supergroup</code><a class="headerlink" href="#june.groups.group.supergroup.Supergroup" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.group.supergroup.</code><code class="sig-name descname">Supergroup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">members</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.group.supergroup.Supergroup" title="Permalink to this definition">¶</a></dt>
 <dd><p>A group containing a collection of groups of the same specification,
 like households, carehomes, etc.
 This class is meant to be used as template to inherit from, and it
@@ -49,9 +49,25 @@ It also includes a method to delete information about people in the
 groups.</p>
 <dl class="py method">
 <dt id="june.groups.group.supergroup.Supergroup.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.group.supergroup.Supergroup.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">members</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.group.supergroup.Supergroup.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.group.supergroup.Supergroup._make_member_ids_dict">
+<code class="sig-name descname">_make_member_ids_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">members</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.group.supergroup.Supergroup._make_member_ids_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes a dictionary with the ids of the members.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.group.supergroup.Supergroup.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">group</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.group.supergroup.Supergroup.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.group.supergroup.Supergroup.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.group.supergroup.Supergroup.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt id="june.groups.group.supergroup.Supergroup.for_box_mode">
@@ -66,6 +82,27 @@ groups.</p>
 <dl class="py method">
 <dt id="june.groups.group.supergroup.Supergroup.from_file">
 <em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.group.supergroup.Supergroup.from_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.group.supergroup.Supergroup.get_from_id">
+<code class="sig-name descname">get_from_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.group.supergroup.Supergroup.get_from_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.group.supergroup.Supergroup.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.groups.group.supergroup.Supergroup.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the super group.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.group.supergroup.Supergroup.group_spec">
+<em class="property">property </em><code class="sig-name descname">group_spec</code><a class="headerlink" href="#june.groups.group.supergroup.Supergroup.group_spec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.groups.group.supergroup.Supergroup.member_ids">
+<em class="property">property </em><code class="sig-name descname">member_ids</code><a class="headerlink" href="#june.groups.group.supergroup.Supergroup.member_ids" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

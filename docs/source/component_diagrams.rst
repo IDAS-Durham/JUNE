@@ -1,9 +1,27 @@
 Component diagrams
 ------------------
 
-.. Docs note: it does not seem to be possible to use an autosummary template
-   to apply the same ''uml' directive to all components below. However, it
-   is not much more work to just use the 'uml' directive directly for each.
+.. Docs note 1: it does not seem to be possible to use an autosummary
+   template to apply the same ''uml' directive to all components below.
+   However, it is not much more work to just use the 'uml' directive
+   directly for each.
+
+.. Docs note 2: there are some further JUNE modules such as 'Records'
+   which are not included here, either because when generated they are
+   blank (empty) diagrams due to having no class or module structure,
+   or because attempts to add them here in the same way
+   as the other modules lead to errors in generation of the diagrams
+   ultimately coming through as an error breaking the Sphinx build, e.g:
+
+   Exception occurred:
+     File "/home/sadie/anaconda3/envs/june/lib/python3.8/site-packages/PIL/Image.py", line 2878, in open
+     fp = builtins.open(filename, "rb")
+     FileNotFoundError: [Errno 2] No such file or directory: '/home/sadie/JUNE/docs/source/uml_images/packages_june.record.png'
+
+   These might get fixed in a newer version of sphinx_pyreverse, pyreverse
+   or Sphinx. Or there may be some reason based on the code structure or
+   nature that those diagrams can't be generated. I do not have time to
+   investigate, but it might be fixable.
 
 
 Activity
@@ -74,6 +92,23 @@ Modules
     :packages:
 
 
+Geography
+^^^^^^^^^
+
+Classes
+"""""""
+
+.. uml:: june.geography
+    :classes:
+
+
+Modules
+"""""""
+
+.. uml:: june.geography
+    :packages:
+
+
 Groups
 ^^^^^^
 
@@ -92,23 +127,6 @@ Modules
 
 See also the sub-sections below, showing sub-diagrams for the various
 types of `Groups`.
-
-
-Commute Groups
-""""""""""""""
-
-Classes
-"""""""
-
-.. uml:: june.groups.commute
-    :classes:
-
-
-Modules
-"""""""
-
-.. uml:: june.groups.commute
-    :packages:
 
 
 Group Groups
@@ -165,13 +183,6 @@ Modules
 HDF5 Savers
 ^^^^^^^^^^^
 
-Classes
-"""""""
-
-.. uml:: june.hdf5_savers
-    :classes:
-
-
 Modules
 """""""
 
@@ -193,6 +204,23 @@ Modules
 """""""
 
 .. uml:: june.infection
+    :packages:
+
+
+Infection Seed
+^^^^^^^^^^^^^^
+
+Classes
+"""""""
+
+.. uml:: june.infection_seed
+    :classes:
+
+
+Modules
+"""""""
+
+.. uml:: june.infection_seed
     :packages:
 
 
@@ -249,13 +277,6 @@ Modules
 
 Utilities (`utils`)
 ^^^^^^^^^^^^^^^^^^^
-
-Classes
-"""""""
-
-.. uml:: june.utils
-    :classes:
-
 
 Modules
 """""""

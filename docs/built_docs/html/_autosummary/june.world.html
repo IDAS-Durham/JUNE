@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Classes" href="../classes.html" />
-    <link rel="prev" title="june.visualization" href="june.visualization.html" /> 
+    <link rel="prev" title="june.utils.numba_random" href="june.utils.numba_random.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
           <span>JUNE  documentation</span></a></h1>
@@ -25,7 +25,7 @@
       <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
-        «&#160;&#160;<a href="june.visualization.html">june.visualization</a>
+        «&#160;&#160;<a href="june.utils.numba_random.html">june.utils.numba_random</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -57,19 +57,9 @@ this later).</p>
 
 <dl class="py method">
 <dt id="june.world.World.distribute_people">
-<code class="sig-name descname">distribute_people</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">include_households</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">include_commute</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">include_rail_travel</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.world.World.distribute_people" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">distribute_people</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">include_households</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.world.World.distribute_people" title="Permalink to this definition">¶</a></dt>
 <dd><p>Distributes people to buildings assuming default configurations.</p>
 </dd></dl>
-
-<dl class="py method">
-<dt id="june.world.World.initialise_commuting">
-<code class="sig-name descname">initialise_commuting</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.world.World.initialise_commuting" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.world.World.initialise_rail_travel">
-<code class="sig-name descname">initialise_rail_travel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.world.World.initialise_rail_travel" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt id="june.world.World.to_hdf5">
@@ -91,32 +81,14 @@ It is advise to keep it around 1e5</p>
 
 <dl class="py function">
 <dt id="june.world._populate_areas">
-<code class="sig-prename descclassname">june.world.</code><code class="sig-name descname">_populate_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Areas" title="june.demography.geography.Areas">june.demography.geography.Areas</a></span></em>, <em class="sig-param"><span class="n">demography</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.world._populate_areas" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">june.world.</code><code class="sig-name descname">_populate_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Areas" title="june.geography.geography.Areas">june.geography.geography.Areas</a></span></em>, <em class="sig-param"><span class="n">demography</span></em>, <em class="sig-param"><span class="n">ethnicity</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">socioecon_index</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">comorbidity</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.world._populate_areas" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt id="june.world.generate_world_from_geography">
-<code class="sig-prename descclassname">june.world.</code><code class="sig-name descname">generate_world_from_geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geography</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Geography" title="june.demography.geography.Geography">june.demography.geography.Geography</a></span></em>, <em class="sig-param"><span class="n">demography</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Demography" title="june.demography.demography.Demography">june.demography.demography.Demography</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">box_mode</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">include_households</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">include_commute</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">include_rail_travel</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.world.generate_world_from_geography" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">june.world.</code><code class="sig-name descname">generate_world_from_geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geography</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Geography" title="june.geography.geography.Geography">june.geography.geography.Geography</a></span></em>, <em class="sig-param"><span class="n">demography</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Demography" title="june.demography.demography.Demography">june.demography.demography.Demography</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">box_mode</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">include_households</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">ethnicity</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">socioecon_index</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">comorbidity</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.world.generate_world_from_geography" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes the world given a geometry. The demography is calculated
 with the default settings for that geography.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt id="june.world.generate_world_from_hdf5">
-<code class="sig-prename descclassname">june.world.</code><code class="sig-name descname">generate_world_from_hdf5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="o">=</span><span class="default_value">500000</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#june.world.World" title="june.world.World">june.world.World</a><a class="headerlink" href="#june.world.generate_world_from_hdf5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads the world from an hdf5 file. All id references are substituted
-by actual references to the relevant instances.
-Parameters
-———-
-file_path</p>
-<blockquote>
-<div><p>path of the hdf5 file</p>
-</div></blockquote>
-<dl class="simple">
-<dt>chunk_size</dt><dd><p>how many units of supergroups to process at a time.
-It is advise to keep it around 1e6</p>
-</dd>
-</dl>
 </dd></dl>
 
 </div>
@@ -126,7 +98,7 @@ It is advise to keep it around 1e6</p>
       <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
-        «&#160;&#160;<a href="june.visualization.html">june.visualization</a>
+        «&#160;&#160;<a href="june.utils.numba_random.html">june.utils.numba_random</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;

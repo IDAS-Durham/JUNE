@@ -15,7 +15,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="june.distributors.carehome_distributor.CareHomeError" href="june.distributors.carehome_distributor.CareHomeError.html" />
+    <link rel="next" title="june.distributors.care_home_distributor.CareHomeError" href="june.distributors.care_home_distributor.CareHomeError.html" />
     <link rel="prev" title="june.distributors.university_distributor.UniversityDistributor" href="june.distributors.university_distributor.UniversityDistributor.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
@@ -29,7 +29,7 @@
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.distributors.carehome_distributor.CareHomeError.html">june.distributors.carehome_distributor.CareHomeError</a>&#160;&#160;»
+        <a href="june.distributors.care_home_distributor.CareHomeError.html">june.distributors.care_home_distributor.CareHomeError</a>&#160;&#160;»
         </p>
 
       </div>
@@ -108,7 +108,7 @@ become furloughed of will randomly assigned to go to work during a lockdown</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">_assign_lockdown_status</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">idx</span></em>, <em class="sig-param"><span class="n">person</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">_assign_lockdown_status</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">probabilities_by_sector</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">lockdown_tags</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">lockdown_tags_idx</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Assign lockdown_status in proportion to definitions in the policy config</p>
 </dd></dl>
 
@@ -138,6 +138,12 @@ become furloughed of will randomly assigned to go to work during a lockdown</p>
 
 <dl class="py method">
 <dt>
+<code class="sig-name descname">_parse_closure_probabilities_by_sector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">company_closure</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">lockdown_tags</span><span class="p">:</span> <span class="n">List</span></em><span class="sig-paren">)</span></dt>
+<dd><p>parses config file of closure probabilities</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
 <code class="sig-name descname">_select_rnd_superarea</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Selects random SuperArea to send a worker to work in</p>
 </dd></dl>
@@ -151,7 +157,7 @@ of work.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">distribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Areas" title="june.demography.geography.Areas">june.demography.geography.Areas</a></span></em>, <em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.SuperAreas" title="june.demography.geography.SuperAreas">june.demography.geography.SuperAreas</a></span></em>, <em class="sig-param"><span class="n">population</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Population" title="june.demography.demography.Population">june.demography.demography.Population</a></span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">distribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Areas" title="june.geography.geography.Areas">june.geography.geography.Areas</a></span></em>, <em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.SuperAreas" title="june.geography.geography.SuperAreas">june.geography.geography.SuperAreas</a></span></em>, <em class="sig-param"><span class="n">population</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Population" title="june.demography.demography.Population">june.demography.demography.Population</a></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Assign any person within the eligible working age range a location
 (SuperArea) of their work, and the sector (e.g. “P”=education) of
 their work.</p>
@@ -159,7 +165,7 @@ their work.</p>
 
 <dl class="py method">
 <dt>
-<em class="property">classmethod </em><code class="sig-name descname">for_geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geography</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.geography.html#june.demography.geography.Geography" title="june.demography.geography.Geography">june.demography.geography.Geography</a></span></em>, <em class="sig-param"><span class="n">workflow_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/work/work_flow.csv')</span></em>, <em class="sig-param"><span class="n">sex_per_sector_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/work/industry_by_sex_ew.csv')</span></em>, <em class="sig-param"><span class="n">config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/distributors/worker_distributor.yaml')</span></em>, <em class="sig-param"><span class="n">policy_config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/policy/company_closure.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.distributors.worker_distributor.html#june.distributors.worker_distributor.WorkerDistributor" title="june.distributors.worker_distributor.WorkerDistributor">june.distributors.worker_distributor.WorkerDistributor</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">for_geography</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geography</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Geography" title="june.geography.geography.Geography">june.geography.geography.Geography</a></span></em>, <em class="sig-param"><span class="n">workflow_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/work/work_flow.csv')</span></em>, <em class="sig-param"><span class="n">sex_per_sector_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/work/industry_by_sex_ew.csv')</span></em>, <em class="sig-param"><span class="n">config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/distributors/worker_distributor.yaml')</span></em>, <em class="sig-param"><span class="n">policy_config_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/policy/company_closure.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.distributors.worker_distributor.html#june.distributors.worker_distributor.WorkerDistributor" title="june.distributors.worker_distributor.WorkerDistributor">june.distributors.worker_distributor.WorkerDistributor</a></dt>
 <dd><dl class="simple">
 <dt>geography</dt><dd><p>an instance of the geography class</p>
 </dd>
@@ -208,7 +214,7 @@ healthcare_sector_file</p>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.distributors.carehome_distributor.CareHomeError.html">june.distributors.carehome_distributor.CareHomeError</a>&#160;&#160;»
+        <a href="june.distributors.care_home_distributor.CareHomeError.html">june.distributors.care_home_distributor.CareHomeError</a>&#160;&#160;»
         </p>
 
       </div>
