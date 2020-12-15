@@ -605,13 +605,13 @@ class Data2Rates:
             function=self.get_n_home_deaths, age=age, sex=sex, is_care_home=is_care_home
         )
 
-    def get_mild_rate(self, age: Union[int, pd.Interval], sex: str):
+    def get_mild_rate(self, age: Union[int, pd.Interval], sex: str, is_care_home):
         if isinstance(age, pd.Interval):
             return self.mild_rates_by_age_sex_df.loc[age.left : age.right, sex].mean()
         else:
             return self.mild_rates_by_age_sex_df.loc[age, sex]
 
-    def get_asymptomatic_rate(self, age: Union[int, pd.Interval], sex: str):
+    def get_asymptomatic_rate(self, age: Union[int, pd.Interval], sex: str, is_care_home):
         if isinstance(age, pd.Interval):
             return self.asymptomatic_rates_by_age_sex_df.loc[
                 age.left : age.right, sex
@@ -625,19 +625,32 @@ def get_outputs_df(rates, age_bins):
         index=age_bins,
     )
     for pop in ["gp", "ch"]:
-        for sex in ["male", "female", "all"]:
+        for sex in ["male", "female"]:
             for fname, function in zip(
-                ["ifr", "hospital_ifr", "admissions", "home_ifr"],
                 [
+                    "asymptomatic",
+                    "mild",
+                    "ifr",
+                    "hospital_ifr",
+                    "icu_ifr",
+                    "hospital",
+                    "icu",
+                    "home_ifr",
+                ],
+                [
+                    rates.get_asymptomatic_rate,
+                    rates.get_mild_rate,
                     rates.get_infection_fatality_rate,
                     rates.get_hospital_infection_fatality_rate,
+                    rates.get_icu_infection_fatality_rate,
                     rates.get_hospital_infection_admission_rate,
+                    rates.get_icu_infection_admission_rate,
                     rates.get_home_infection_fatality_rate,
                 ],
             ):
                 colname = f"{pop}_{fname}_{sex}"
                 for age_bin in age_bins:
                     outputs.loc[age_bin, colname] = (
-                        function(age=age_bin, sex=sex, is_care_home=pop == "ch") * 100
+                        function(age=age_bin, sex=sex, is_care_home=pop == "ch")
                     )
     return outputs
