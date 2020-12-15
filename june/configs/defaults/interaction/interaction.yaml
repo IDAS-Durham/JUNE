@@ -16,6 +16,8 @@ betas:
  company: 0.371
  school: 0.070 
  household: 0.208 
+ household_visits: 0.208
+ care_visits: 0.208
  university: 0.306
 
 contact_matrices:
@@ -28,8 +30,8 @@ contact_matrices:
   
   care_home:
     # note, visitors contacts are multiplied by ~4 because they only stay 1/4th of the characteristic time.
-    contacts: [[15.00, 30.0, 24.0], [3., 2, 48.], [1.5, 6, 0]]
-    proportion_physical: [[0.05, 1., 0.], [1.0, 0.4, 1.],[0., 0.5, 0.]]
+    contacts: [[15.00, 15.0, 5], [1.5, 4, 1], [1, 20, 0]]
+    proportion_physical: [[0.05, 1., 0.], [1.0, 0.0, 0.1],[0., 0.1, 0.]]
     characteristic_time: 24 
   
   company:

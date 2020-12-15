@@ -42,11 +42,11 @@ def test_weekend_transition():
     for _ in range(0, 8):  # 5 days for 3 time steps per day
         next(timer)
     assert timer.is_weekend is True
-    assert timer.activities == ["residence"]
+    assert timer.activities == ("residence",)
     next(timer)
     assert timer.is_weekend is True
-    assert timer.activities == ["residence"]
+    assert timer.activities == ("residence",)
     next(timer)
     assert timer.is_weekend is False
-    assert timer.activities == ["primary_activity", "residence"]
+    assert timer.activities == ("primary_activity", "residence",)
     # a second test
