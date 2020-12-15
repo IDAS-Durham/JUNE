@@ -129,7 +129,6 @@ class Leisure:
         self.n_activities = len(self.leisure_distributors)
         self.policy_poisson_parameters = {}
         self.regions = regions  # needed for regional compliances
-        self.closed_venues = set()
 
     def distribute_social_venues_to_areas(self, areas: Areas, super_areas: SuperAreas):
         logger.info("Linking households for visits")
@@ -163,7 +162,7 @@ class Leisure:
         delta_time: float,
         is_weekend: bool,
         working_hours: bool,
-        regional_compliance: float,
+        region: Region = None,
     ):
         """
         Computes the probabilities of going to different leisure activities,
@@ -173,16 +172,18 @@ class Leisure:
         regional compliance like so:
         $ lambda = lambda_1 + regional_compliance * (lambda_2 - lambda_1) $
         where lambda_1 is the original poisson parameter.
+        lockdown tier: 1,2,3 - has different implications for leisure:
+            1: do nothing
+            2: stop household-to-household probability with regional compliance and
+               reduce pub probability by 20% - conservative to account for the serving of meals
+            3: stop household-to-household probability with regional compliance and
+               reduce pub and cinema probability to 0 to simulate closure
         """
         poisson_parameters = []
         drags_household_probabilities = []
         activities = []
         for activity, distributor in self.leisure_distributors.items():
-            if (
-                activity == "household_visits"
-                and working_hours
-                or distributor.spec in self.closed_venues
-            ):
+            if activity == "household_visits" and working_hours:
                 # we do not have household visits during working hours as most households by then.
                 continue
             drags_household_probabilities.append(
@@ -194,7 +195,7 @@ class Leisure:
                 age=age,
                 sex=sex,
                 is_weekend=is_weekend,
-                regional_compliance=regional_compliance,
+                region=region,
             )
             poisson_parameters.append(activity_poisson_parameter)
             activities.append(activity)
@@ -225,26 +226,29 @@ class Leisure:
         age: int,
         sex: str,
         is_weekend: bool,
-        regional_compliance: float,
+        region: Region = None,
     ):
         """
-        Computes an activity poisson parameter taking into account active policies
-        and regional compliances.
+        Computes an activity poisson parameter taking into account active policies,
+        regional compliances and lockdown tiers.
         """
         weekend_boost = distributor.get_weekend_boost(is_weekend=is_weekend)
         original_activity_poisson_parameter = distributor.get_poisson_parameter(
             sex=sex, age=age, is_weekend=is_weekend
         )
         if activity in self.policy_poisson_parameters:
-            policy_activity_poisson_parameter = self.policy_poisson_parameters[
-                activity
-            ][sex][age] * weekend_boost # we boost the policy parameter as well
+            policy_activity_poisson_parameter = (
+                self.policy_poisson_parameters[activity][sex][age] * weekend_boost
+            )  # we boost the policy parameter as well
         else:
             policy_activity_poisson_parameter = original_activity_poisson_parameter
-        activity_poisson_parameter = (
-            original_activity_poisson_parameter
-            + regional_compliance
-            * (policy_activity_poisson_parameter - original_activity_poisson_parameter)
+
+        activity_poisson_parameter = distributor.get_poisson_parameter(
+            sex=sex,
+            age=age,
+            is_weekend=is_weekend,
+            policy_poisson_parameter=policy_activity_poisson_parameter,
+            region=region,
         )
         return activity_poisson_parameter
 
@@ -284,7 +288,6 @@ class Leisure:
             or person.residence.group.type in ["communal", "other", "student"]
         ):
             return
-        assert subgroup is not None
         if random() < probability:
             for mate in person.residence.group.residents:
                 if mate != person:
@@ -292,6 +295,12 @@ class Leisure:
                         if (
                             mate.leisure is not None
                         ):  # this perosn has already been assigned somewhere
+                            if mate.residence.group.household_to_care is not None:
+                                if (
+                                    mate
+                                    in mate.residence.group.household_to_care.people
+                                ):
+                                    continue
                             if not mate.leisure.external:
                                 if mate not in mate.leisure.people:
                                     # person active somewhere else, let's not disturb them
@@ -306,6 +315,7 @@ class Leisure:
                                 subgroup.append(mate)
                             else:
                                 to_send_abroad.add_person(mate, subgroup)
+                                mate.busy = True
                     mate.subgroups.leisure = (
                         subgroup  # person will be added later in the simulator.
                     )
@@ -330,13 +340,13 @@ class Leisure:
     ):
         """
         Main function of the Leisure class. For every possible activity a person can do,
-        we chech the Poisson parameter lambda = probability / day * deltat of that activty 
+        we chech the Poisson parameter lambda = probability / day * deltat of that activty
         taking place. We then sum up the Poisson parameters to decide whether a person
         does any activity at all. The relative weight of the Poisson parameters gives then
-        the specific activity a person does. 
+        the specific activity a person does.
         If a person ends up going to a social venue, we do a second check to see if his/her
         entire household accompanies him/her.
-        The social venue subgroups are attached to the involved people, but they are not 
+        The social venue subgroups are attached to the involved people, but they are not
         added to the subgroups, since it is possible they change their plans if a policy is in
         place or they have other responsibilities.
         The function returns None if no activity takes place.
@@ -384,7 +394,6 @@ class Leisure:
                 )
             else:
                 subgroup = group[leisure_subgroup_type]
-            assert subgroup is not None
             self.send_household_with_person_if_necessary(
                 person,
                 subgroup,
@@ -393,7 +402,7 @@ class Leisure:
             )
             if activity == "household_visits":
                 group.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
-                group.household_visit = True
+                group.being_visited = True
             person.subgroups.leisure = subgroup
             return subgroup
 
@@ -409,14 +418,16 @@ class Leisure:
                     delta_time=delta_time,
                     working_hours=working_hours,
                     is_weekend=is_weekend,
-                    regional_compliance=region.regional_compliance,
+                    region=region,
                 )
         else:
-            self.probabilities_by_region_sex_age = self._generate_leisure_probabilities_for_age_and_sex(
-                delta_time=delta_time,
-                working_hours=working_hours,
-                is_weekend=is_weekend,
-                regional_compliance=1.0,
+            self.probabilities_by_region_sex_age = (
+                self._generate_leisure_probabilities_for_age_and_sex(
+                    delta_time=delta_time,
+                    working_hours=working_hours,
+                    is_weekend=is_weekend,
+                    region=None,
+                )
             )
 
     def _generate_leisure_probabilities_for_age_and_sex(
@@ -424,7 +435,7 @@ class Leisure:
         delta_time: float,
         working_hours: bool,
         is_weekend: bool,
-        regional_compliance: float,
+        region: Region = None,
     ):
         ret = {}
         for sex in ["m", "f"]:
@@ -435,7 +446,7 @@ class Leisure:
                     delta_time=delta_time,
                     is_weekend=is_weekend,
                     working_hours=working_hours,
-                    regional_compliance=regional_compliance,
+                    region=region,
                 )
                 for age in range(0, 100)
             ]

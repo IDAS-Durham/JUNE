@@ -16,6 +16,7 @@ betas:
  company: 0.371
  school: 0.070 
  household: 0.208 
+ household_visits: 0.408 
  university: 0.306
 
 contact_matrices:
