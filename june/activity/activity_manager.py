@@ -162,7 +162,7 @@ class ActivityManager:
             n_people_from_abroad,
             n_people_going_abroad,
         ) = self.send_and_receive_people_from_abroad(to_send_abroad)
-        return people_from_abroad, n_people_from_abroad, n_people_going_abroad
+        return people_from_abroad, n_people_from_abroad, n_people_going_abroad, to_send_abroad
 
     def move_people_to_active_subgroups(
         self,

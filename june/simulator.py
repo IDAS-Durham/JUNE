@@ -474,6 +474,7 @@ class Simulator:
             people_from_abroad_dict,
             n_people_from_abroad,
             n_people_going_abroad,
+            to_send_abroad, # useful for knowing who's MPI-ing, so can send extra info as needed.
             # ) = self.activity_manager.do_timestep(regional_compliance=regional_compliance)
         ) = self.activity_manager.do_timestep()
 

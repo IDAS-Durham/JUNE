@@ -5,21 +5,27 @@ from datetime import datetime, timedelta
 import argparse
 import os
 import mpu
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+from collections import defaultdict
 
 from june import paths
 
 default_size_nr_file = (
-    paths.data_path / "input/companies/company_size_2019.csv"
+    paths.data_path / "input/companies/company_size_2011.csv"
 )
 default_sector_nr_per_msoa_file = (
     paths.data_path / "input/companies/company_sector_2011.csv"
 )
+default_sex_per_sector_per_superarea_file = (
+    paths.data_path / "input/work/industry_by_sex_ew.csv"
+)
 
 class CompanyPlots:
 
-    def __init__(self, world):
+    def __init__(self, world, colors):
         self.world = world
+        self.colors = colors
 
     def load_company_data(
             self,
@@ -56,8 +62,8 @@ class CompanyPlots:
             bin_widths.append(size_brackets[i+1]-size_brackets[i])
 
         f, ax = plt.subplots()
-        ax.bar(size_brackets[:-1], world_company_sizes_binned, width=bin_widths, align='edge', alpha=0.7, label='NOMIS sizes')
-        ax.bar(size_brackets[:-1], JUNE_company_sizes_binned, width=bin_widths, align='edge', alpha=0.7, label='JUNE sizes')
+        ax.bar(size_brackets[:-1], world_company_sizes_binned, width=bin_widths, align='edge', alpha=0.7, label='ONS sizes', color=self.colors['ONS'])
+        ax.bar(size_brackets[:-1], JUNE_company_sizes_binned, width=bin_widths, align='edge', alpha=0.7, label='JUNE sizes', color=self.colors['JUNE'])
         ax.set_xlim((-5,np.max(size_brackets)))
         ax.set_yscale('log')
         ax.set_ylabel('Frequency')
@@ -91,8 +97,8 @@ class CompanyPlots:
             bin_widths.append(size_brackets[i+1]-size_brackets[i])
 
         f, ax = plt.subplots()
-        ax.bar(size_brackets[:-1], world_company_sizes_binned, width=bin_widths, align='edge', alpha=0.7, label='NOMIS sizes')
-        ax.bar(size_brackets[:-1], JUNE_company_workers_binned, width=bin_widths, align='edge', alpha=0.7, label='JUNE workers')
+        ax.bar(size_brackets[:-1], world_company_sizes_binned, width=bin_widths, align='edge', alpha=0.7, label='ONS sizes', color=self.colors['ONS'])
+        ax.bar(size_brackets[:-1], JUNE_company_workers_binned, width=bin_widths, align='edge', alpha=0.7, label='JUNE workers', color=self.colors['JUNE'])
         ax.set_xlim((-5,np.max(size_brackets)))
         ax.set_yscale('log')
         ax.set_ylabel('Frequency')
@@ -131,16 +137,87 @@ class CompanyPlots:
         x = np.arange(len(sector_brackets))
 
         f, ax = plt.subplots()
-        ax.bar(x, world_company_sectors_binned, align='center', alpha=0.7, label='NOMIS')
-        ax.bar(x, JUNE_company_sectors_binned, align='center', alpha=0.7, label='JUNE')
+        ax.bar(x, world_company_sectors_binned, align='center', alpha=0.7, label='ONS', color=self.colors['ONS'])
+        ax.bar(x, JUNE_company_sectors_binned, align='center', alpha=0.7, label='JUNE', color=self.colors['JUNE'])
         ax.set_ylabel('Frequency')
         ax.set_xlabel('Company sector')
         ax.set_xticks(x)
         ax.set_xticklabels(sector_brackets)
+        ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter(useMathText=True))
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(0,100000000))
         ax.legend()
 
         return ax
 
+    def plot_sector_by_sex(
+            self,
+            sector_by_sex_filename = default_sex_per_sector_per_superarea_file,
+    ):
+        "Plotting sector by sex distributions"
+
+        sex_per_sector = pd.read_csv(sector_by_sex_filename)
+
+        areas = []
+        for area in self.world.areas:
+            areas.append(area.name)
+
+        sex_per_sector = sex_per_sector[sex_per_sector['oareas'].isin(areas)]
+
+        JUNE_male_dict = defaultdict(int)
+        JUNE_female_dict = defaultdict(int)
+        for person in self.world.people:
+            if person.sector is not None:
+                if person.sex == 'f':
+                    JUNE_female_dict[person.sector] += 1
+                else:
+                    JUNE_male_dict[person.sector] += 1
+
+        m_columns = [col for col in sex_per_sector.columns.values if "m " in col]
+        m_columns.remove("m all")
+        m_columns.remove("m R S T U")
+        f_columns = [col for col in sex_per_sector.columns.values if "f " in col]
+        f_columns.remove("f all")
+        f_columns.remove("f R S T U")
+
+        male_dict = defaultdict(int)
+        female_dict = defaultdict(int)
+        for column in m_columns:
+            male_dict[column.split(' ')[1]] = np.sum(sex_per_sector[column])
+        for column in f_columns:
+            female_dict[column.split(' ')[1]] = np.sum(sex_per_sector[column])
+
+        sector_dict = {
+                    (idx + 1): col.split(" ")[-1] for idx, col in enumerate(m_columns)
+                }
+
+        sectors = []
+        male_sector = []
+        female_sector = []
+        JUNE_male_sector = []
+        JUNE_female_sector = []
+        for key in sector_dict:
+            sectors.append(sector_dict[key])
+            male_sector.append(male_dict[sector_dict[key]])
+            female_sector.append(female_dict[sector_dict[key]])
+            JUNE_male_sector.append(JUNE_male_dict[sector_dict[key]])
+            JUNE_female_sector.append(JUNE_female_dict[sector_dict[key]])
+
+        x = np.arange(len(sectors))
+        width = 0.35
+
+        f, ax = plt.subplots()
+        ax.bar(x+width/2, JUNE_female_sector, width, label='Female', color=self.colors['female'])
+        ax.bar(x-width/2, JUNE_male_sector, width, label='Male', color=self.colors['male'])
+        ax.set_ylabel('Frequency')
+        ax.set_xlabel('Company sector')
+        ax.set_xticks(x)
+        ax.set_xticklabels(sectors)
+        ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter(useMathText=True))
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+        ax.legend()
+
+        return ax
+    
     def plot_work_distance_travel(self):
         "Plotting distance travelled to work by sex"
 
@@ -168,9 +245,9 @@ class CompanyPlots:
         work_travel_female_binned, work_travel_female_bins = np.histogram(work_travel_female, bins=100)
 
         f, ax = plt.subplots()
-        ax.scatter(work_travel_male_bins[1:], work_travel_male_binned, label='Male',s=10,color='orange')
-        ax.scatter(work_travel_female_bins[1:], work_travel_female_binned, label='Female',s=10,color='maroon')
-        ax.set_xlabel('Distance to work (km)')
+        ax.scatter(work_travel_male_bins[1:], work_travel_male_binned, label='Male',s=10,color=self.colors['male'])
+        ax.scatter(work_travel_female_bins[1:], work_travel_female_binned, label='Female',s=10,color=self.colors['female'])
+        ax.set_xlabel('Distance to work [km]')
         ax.set_ylabel('Frequency')
         ax.set_yscale('log')
         ax.legend()

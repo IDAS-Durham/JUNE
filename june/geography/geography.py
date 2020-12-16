@@ -544,7 +544,7 @@ class Geography:
         logger.info(
             f"There are {len(areas)} areas and "
             + f"{len(super_areas)} super_areas "
-            + f"and {len(regions)} in the world."
+            + f"and {len(regions)} regions in the world."
         )
         return areas, super_areas, regions
 
