@@ -189,7 +189,7 @@ class TestCheckpointForReseeding:
             leisure=None,
             travel=None,
             policies=policies,
-            reset_infected=True,
+            reset_infections=True,
         )
         # check timer is correct
         assert sim_recovered.timer.initial_date == sim.timer.initial_date
