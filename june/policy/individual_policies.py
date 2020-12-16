@@ -174,11 +174,12 @@ class Quarantine(StayHome):
                         if random() < self.compliance * regional_compliance:
                             return True
         housemates_quarantine = person.residence.group.quarantine(
-           time=days_from_start,
-           quarantine_days=self.n_days_household,
-           household_compliance=self.household_compliance * regional_compliance,
+            time=days_from_start,
+            quarantine_days=self.n_days_household,
+            household_compliance=self.household_compliance * regional_compliance,
         )
         return housemates_quarantine
+
 
 class SchoolQuarantine(StayHome):
     def __init__(
@@ -200,7 +201,7 @@ class SchoolQuarantine(StayHome):
         n_days:
             days for which the person has to stay at home if they show symtpoms
         n_days_household:
-            days for which the person has to stay at home if someone in their household 
+            days for which the person has to stay at home if someone in their household
             shows symptoms
         compliance:
             percentage of symptomatic people that will adhere to the quarantine policy
@@ -213,7 +214,10 @@ class SchoolQuarantine(StayHome):
 
     def check_stay_home_condition(self, person: Person, days_from_start):
         try:
-            if not person.primary_activity.group.spec == "school":
+            if (
+                not person.primary_activity.group.spec == "school"
+                or person.primary_activity.group.external
+            ):
                 return False
         except:
             return False
