@@ -33,10 +33,9 @@ class SimulatorBox(Simulator):
             activity_manager,
             infection_selector: InfectionSelector = None,
             infection_seed: Optional["InfectionSeed"] = None,
-            checkpoint_dates: List[datetime.date] = None,
+            checkpoint_save_dates: List[datetime.date] = None,
             record: "Record" = None,
-            checkpoint_path: str = None,
-            #comment: str = None,
+            checkpoint_save_path: str = None,
     ):
         """
         Class to run an epidemic spread simulation on a box. It is 
@@ -69,9 +68,8 @@ class SimulatorBox(Simulator):
             infection_selector=infection_selector,
             infection_seed=infection_seed,
             record=record,
-            #comment=comment,
-            checkpoint_dates=checkpoint_dates,
-            checkpoint_path = checkpoint_path
+            checkpoint_save_dates=checkpoint_save_dates,
+            checkpoint_save_path = checkpoint_save_path
         )
 
     def update_health_status(self, time: float, duration: float):
