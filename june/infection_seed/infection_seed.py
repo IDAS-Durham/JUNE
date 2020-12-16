@@ -245,19 +245,24 @@ class InfectionSeed:
             )
             self.dates_seeded.append(date)
 
+
 class SeroprevalenceSetter:
     """
     This class is used to set a sero-prevalence profile in the population,
     just before starting to run.
     """
+
     def __init__(self, target_seroprevalence_by_region_age=None):
-        self.target_seroprevalence_by_region_age = self._parse_input(target_seroprevalence_by_region_age)
+        self.target_seroprevalence_by_region_age = self._parse_input(
+            target_seroprevalence_by_region_age
+        )
 
     def _parse_input(target_seroprevalence_by_region_age):
         ret = {}
         for region in target_seroprevalence_by_region_age:
-            ret[region] = parse_probabilities(target_seroprevalence_by_region_age[region])
+            ret[region] = parse_probabilities(
+                target_seroprevalence_by_region_age[region]
+            )
 
-    #def apply(self, population):
+    # def apply(self, population):
     #    for person in population:
-

@@ -351,11 +351,6 @@ class Simulator:
         for person in self.world.people.infected:
             previous_tag = person.infection.tag
             new_status = person.infection.update_health_status(time, duration)
-            if (
-                previous_tag == SymptomTag.exposed
-                and person.infection.tag == SymptomTag.mild
-            ):
-                person.residence.group.quarantine_starting_date = time
             if self.record is not None:
                 if previous_tag != person.infection.tag:
                     self.record.accumulate(

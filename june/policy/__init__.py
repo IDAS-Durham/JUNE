@@ -21,6 +21,7 @@ from .individual_policies import (
     StayHome,
     SevereSymptomsStayHome,
     Quarantine,
+    SchoolQuarantine,
     Shielding,
     CloseCompanies,
     CloseSchools,
