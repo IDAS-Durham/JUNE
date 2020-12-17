@@ -15,26 +15,6 @@ the corresponding class. Note these functions can also be viewed in the
 API reference page for the module they are defined within.
 
 
-`commute_rail_travel`
-^^^^^^^^^^^^^^^^^^^^^
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: function.rst
-
-   commute_rail_travel.distribute_passengers
-
-
-Demography
-^^^^^^^^^^
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: function.rst
-
-   demography.geography._filtering
-
-
 Distributors
 ^^^^^^^^^^^^
 
@@ -53,32 +33,47 @@ HDF5 Savers
    :toctree: _autosummary
    :template: function.rst
 
+   hdf5_savers.generate_domain_from_hdf5
+   hdf5_savers.generate_world_from_hdf5
    hdf5_savers.load_care_homes_from_hdf5
-   hdf5_savers.load_cinemas_from_hdf5
-   hdf5_savers.load_commute_cities_from_hdf5
-   hdf5_savers.load_commute_hubs_from_hdf5
+   hdf5_savers.load_cities_from_hdf5
    hdf5_savers.load_companies_from_hdf5
    hdf5_savers.load_geography_from_hdf5
-   hdf5_savers.load_groceries_from_hdf5
    hdf5_savers.load_hospitals_from_hdf5
    hdf5_savers.load_households_from_hdf5
+   hdf5_savers.load_infections_from_hdf5
    hdf5_savers.load_population_from_hdf5
-   hdf5_savers.load_pubs_from_hdf5
    hdf5_savers.load_schools_from_hdf5
+   hdf5_savers.load_social_venues_from_hdf5
+   hdf5_savers.load_stations_from_hdf5
+   hdf5_savers.load_symptoms_from_hdf5
+   hdf5_savers.load_transmissions_from_hdf5
    hdf5_savers.load_universities_from_hdf5
+   hdf5_savers.restore_care_homes_properties_from_hdf5
+   hdf5_savers.restore_cities_and_stations_properties_from_hdf5
+   hdf5_savers.restore_companies_properties_from_hdf5
+   hdf5_savers.restore_geography_properties_from_hdf5
+   hdf5_savers.restore_hospital_properties_from_hdf5
+   hdf5_savers.restore_households_properties_from_hdf5
+   hdf5_savers.restore_population_properties_from_hdf5
+   hdf5_savers.restore_school_properties_from_hdf5
+   hdf5_savers.restore_social_venues_properties_from_hdf5
+   hdf5_savers.restore_universities_properties_from_hdf5
    hdf5_savers.save_care_homes_to_hdf5
-   hdf5_savers.save_cinemas_to_hdf5
-   hdf5_savers.save_commute_cities_to_hdf5
-   hdf5_savers.save_commute_hubs_to_hdf5
+   hdf5_savers.save_cities_to_hdf5
    hdf5_savers.save_companies_to_hdf5
    hdf5_savers.save_geography_to_hdf5
-   hdf5_savers.save_groceries_to_hdf5
    hdf5_savers.save_hospitals_to_hdf5
    hdf5_savers.save_households_to_hdf5
+   hdf5_savers.save_infections_to_hdf5
    hdf5_savers.save_population_to_hdf5
-   hdf5_savers.save_pubs_to_hdf5
    hdf5_savers.save_schools_to_hdf5
+   hdf5_savers.save_social_venues_to_hdf5
+   hdf5_savers.save_stations_to_hdf5
+   hdf5_savers.save_symptoms_to_hdf5
+   hdf5_savers.save_transmissions_to_hdf5
    hdf5_savers.save_universities_to_hdf5
+   hdf5_savers.save_world_to_hdf5
 
 
 Paths
@@ -110,32 +105,19 @@ World
    :template: function.rst
 
    world._populate_areas
+   world.generate_commuting_network
    world.generate_world_from_geography
-   world.generate_world_from_hdf5
-   world.load_care_homes_from_hdf5
-   world.load_cinemas_from_hdf5
-   world.load_commute_cities_from_hdf5
-   world.load_commute_hubs_from_hdf5
-   world.load_companies_from_hdf5
-   world.load_geography_from_hdf5
-   world.load_groceries_from_hdf5
-   world.load_hospitals_from_hdf5
-   world.load_households_from_hdf5
-   world.load_population_from_hdf5
-   world.load_pubs_from_hdf5
-   world.load_schools_from_hdf5
-   world.load_universities_from_hdf5
-   world.save_care_homes_to_hdf5
-   world.save_cinemas_to_hdf5
-   world.save_commute_cities_to_hdf5
-   world.save_commute_hubs_to_hdf5
-   world.save_companies_to_hdf5
-   world.save_geography_to_hdf5
-   world.save_groceries_to_hdf5
-   world.save_hospitals_to_hdf5
-   world.save_households_to_hdf5
-   world.save_population_to_hdf5
-   world.save_pubs_to_hdf5
-   world.save_schools_to_hdf5
-   world.save_universities_to_hdf5
 
+
+Other/miscellaneous
+^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: function.rst
+
+   commute_rail_travel.distribute_passengers
+   domain.generate_domain_from_hdf5
+   mpi_setup.move_info
+   simulator.move_info
+   simulator.profile

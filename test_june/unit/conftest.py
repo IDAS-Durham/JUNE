@@ -31,9 +31,8 @@ from june.groups import *
 from june.groups.leisure import *
 from june.groups.travel import Travel
 from june.demography import Person, Population
-from june.infection import Infection
+from june.infection import Infection, Symptoms, TrajectoryMakers
 from june.infection.infection_selector import InfectionSelector
-from june.infection import trajectory_maker as tmaker
 from june.infection import transmission as trans
 from june.simulator import Simulator
 from june.simulator_box import SimulatorBox
@@ -84,7 +83,7 @@ def configs(pytestconfig):
 
 @pytest.fixture(name="trajectories", scope="session")
 def create_trajectories():
-    return tmaker.TrajectoryMakers.from_file()
+    return TrajectoryMakers.from_file()
 
 
 @pytest.fixture(name="symptoms", scope="session")
@@ -92,9 +91,14 @@ def create_symptoms(symptoms_trajectories):
     return symptoms_trajectories
 
 
+@pytest.fixture(name="health_index_generator", scope="session")
+def make_hi():
+    return lambda person: [0.4, 0.5, 0.7, 0.74, 0.85, 0.90, 0.95]
+
+
 @pytest.fixture(name="symptoms_trajectories", scope="session")
 def create_symptoms_trajectories():
-    return june.infection.symptoms.Symptoms(
+    return Symptoms(
         health_index=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
     )
 
@@ -115,10 +119,11 @@ def create_infection_constant(transmission, symptoms_constant):
 
 
 @pytest.fixture(name="interaction", scope="session")
-def create_interaction():
+def create_interaction(health_index_generator):
     interaction = Interaction.from_file(config_filename=interaction_config)
-    interaction.selector = InfectionSelector.from_file(
-        transmission_config_path=constant_config
+    interaction.selector = InfectionSelector(
+        transmission_config_path=constant_config,
+        health_index_generator=health_index_generator,
     )
     return interaction
 
@@ -150,8 +155,11 @@ def create_box_world():
 
 
 @pytest.fixture(name="selector", scope="session")
-def make_selector():
-    return InfectionSelector.from_file(transmission_config_path=constant_config)
+def make_selector(health_index_generator):
+    return InfectionSelector(
+        transmission_config_path=constant_config,
+        health_index_generator=health_index_generator,
+    )
 
 
 @pytest.fixture(name="simulator_box", scope="session")
@@ -308,9 +316,9 @@ def make_full_world_geography():
 
 
 @pytest.fixture(name="full_world", scope="session")
-def create_full_world(full_world_geography):
+def create_full_world(full_world_geography, test_results):
     # clean file
-    with h5py.File("test.hdf5", "w") as f:
+    with h5py.File(test_results / "test.hdf5", "w") as f:
         pass
     geography = full_world_geography
     geography.hospitals = Hospitals.for_geography(geography)

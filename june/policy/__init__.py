@@ -34,4 +34,9 @@ from .medical_care_policies import (
     Hospitalisation,
 )
 
-from .regional_compliance import RegionalCompliance, RegionalCompliances
+from .regional_compliance import (
+    RegionalCompliance,
+    RegionalCompliances,
+    TieredLockdown,
+    TieredLockdowns
+)

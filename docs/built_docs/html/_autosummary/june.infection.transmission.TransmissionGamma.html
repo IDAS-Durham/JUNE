@@ -40,7 +40,7 @@
 <h1>june.infection.transmission.TransmissionGamma<a class="headerlink" href="#june-infection-transmission-transmissiongamma" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">june.infection.transmission.</code><code class="sig-name descname">TransmissionGamma</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_infectiousness</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">shape</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">rate</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">3.0</span></em>, <em class="sig-param"><span class="n">shift</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">- 2.0</span></em>, <em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>SymptomTag<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">asymptomatic_infectious_factor</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mild_infectious_factor</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.infection.transmission.</code><code class="sig-name descname">TransmissionGamma</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_infectiousness</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">shape</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">rate</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">3.0</span></em>, <em class="sig-param"><span class="n">shift</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">- 2.0</span></em>, <em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">asymptomatic_infectious_factor</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mild_infectious_factor</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><dl class="simple">
 <dt>Module to simulate the infectiousness profiles found in :</dt><dd><ul class="simple">
 <li><p><a class="reference external" href="https://www.nature.com/articles/s41591-020-0869-5">https://www.nature.com/articles/s41591-020-0869-5</a></p></li>
@@ -67,7 +67,7 @@ of asymptomatic and mild individuals if wanted</p>
 </dl>
 <dl class="py method">
 <dt>
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_infectiousness</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">shape</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">rate</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">3.0</span></em>, <em class="sig-param"><span class="n">shift</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">- 2.0</span></em>, <em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>SymptomTag<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">asymptomatic_infectious_factor</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mild_infectious_factor</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_infectiousness</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">shape</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">rate</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">3.0</span></em>, <em class="sig-param"><span class="n">shift</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">- 2.0</span></em>, <em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">asymptomatic_infectious_factor</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mild_infectious_factor</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><dl class="simple">
 <dt>max_infectiousness:</dt><dd><p>value of the infectiousness at its peak</p>
 </dd>
@@ -89,7 +89,22 @@ of asymptomatic and mild individuals if wanted</p>
 
 <dl class="py method">
 <dt>
-<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.infection.symptom_tag.html#june.infection.symptom_tag.SymptomTag" title="june.infection.symptom_tag.SymptomTag">june.infection.symptom_tag.SymptomTag</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/transmission/nature.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.infection.transmission.html#june.infection.transmission.TransmissionGamma" title="june.infection.transmission.TransmissionGamma">june.infection.transmission.TransmissionGamma</a></dt>
+<code class="sig-name descname">_modify_infectiousness_for_symptoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">asymptomatic_infectious_factor</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mild_infectious_factor</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Lowers the infectiousness of asymptomatic and mild cases, by modifying
+the norm of the distribution</p>
+<dl class="simple">
+<dt>max_symptoms:</dt><dd><p>maximum symptom severity the person will ever have</p>
+</dd>
+<dt>asymptomatic_infectious_factor:</dt><dd><p>factor to reduce the infectiousness of asymptomatic individuals</p>
+</dd>
+<dt>mild_infectious_factor:</dt><dd><p>factor to reduce the infectiousness of mild individuals</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/transmission/nature.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.infection.transmission.html#june.infection.transmission.TransmissionGamma" title="june.infection.transmission.TransmissionGamma">june.infection.transmission.TransmissionGamma</a></dt>
 <dd><p>Generate transmission class reading parameters from config file</p>
 <dl class="simple">
 <dt>max_symptoms:</dt><dd><p>maximum symptoms the individual will develop, used to reduce the infectiousness
@@ -105,7 +120,7 @@ of asymptomatic and mild individuals if wanted</p>
 
 <dl class="py method">
 <dt>
-<em class="property">classmethod </em><code class="sig-name descname">from_file_linked_symptoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_to_symptoms_onset</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="june.infection.symptom_tag.html#june.infection.symptom_tag.SymptomTag" title="june.infection.symptom_tag.SymptomTag">june.infection.symptom_tag.SymptomTag</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/transmission/nature.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.infection.transmission.html#june.infection.transmission.TransmissionGamma" title="june.infection.transmission.TransmissionGamma">june.infection.transmission.TransmissionGamma</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_file_linked_symptoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_to_symptoms_onset</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/transmission/nature.yaml')</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="june.infection.transmission.html#june.infection.transmission.TransmissionGamma" title="june.infection.transmission.TransmissionGamma">june.infection.transmission.TransmissionGamma</a></dt>
 <dd><p>Generate transmission class reading parameters from config file, linked to
 the time of symptoms onset</p>
 <dl class="simple">
@@ -124,17 +139,6 @@ of asymptomatic and mild individuals if wanted</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">modify_infectiousness_for_symptoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_symptoms</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.symptom_tag.html#june.infection.symptom_tag.SymptomTag" title="june.infection.symptom_tag.SymptomTag">june.infection.symptom_tag.SymptomTag</a></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Lowers the infectiousness of asymptomatic and mild cases, by modifying
-the norm of the distribution</p>
-<dl class="simple">
-<dt>max_symptoms:</dt><dd><p>maximum symptom severity the person will ever have</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt>
 <em class="property">classmethod </em><code class="sig-name descname">object_from_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
 <dd><p>Loads the default Transmission class from the general.ini config file and 
 returns the class as object (not as an instance). This is used to set up the 
@@ -143,21 +147,46 @@ epidemiology model in world.py via configs if an input is not provided.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">time_at_maximum_infectivity</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; float</dt>
-<dd><p>Computes the time at which the individual is maximally infectious (in this case for
-a gamma distribution</p>
+<code class="sig-name descname">update_infection_probability</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_from_infection</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Performs a probability update given time from infection</p>
 <dl class="simple">
-<dt>t_max:</dt><dd><p>time at maximal infectiousness</p>
+<dt>time_from_infection:</dt><dd><p>time elapsed since person became infected</p>
 </dd>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">norm</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">probability</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">scale</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">shape</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">shift</code></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt>
-<code class="sig-name descname">update_probability_from_delta_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_from_infection</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Performs a probability update given time from infection</p>
+<em class="property">property </em><code class="sig-name descname">time_at_maximum_infectivity</code></dt>
+<dd><p>Computes the time at which the individual is maximally infectious (in this case for
+a gamma distribution</p>
 <dl class="simple">
-<dt>time_from_infection:</dt><dd><p>time elapsed since person became infected</p>
+<dt>t_max:</dt><dd><p>time at maximal infectiousness</p>
 </dd>
 </dl>
 </dd></dl>

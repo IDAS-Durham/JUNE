@@ -6,13 +6,12 @@ from datetime import datetime
 from june.infection_seed import Observed2Cases
 from june.demography import Person
 from june.geography import Area, SuperArea, SuperAreas
-from june.infection import HealthIndexGenerator
 from june.infection.trajectory_maker import TrajectoryMaker
 from june import paths
 
 
 @pytest.fixture(name="oc")
-def get_oc():
+def get_oc(health_index_generator):
     area_super_region_df = pd.DataFrame(
         {
             "area": ["beautiful"],
@@ -29,7 +28,6 @@ def get_oc():
     female_fraction_per_area_df = pd.DataFrame(
         female_fraction_per_area_dict, index=["beautiful"]
     )
-    health_index_generator = HealthIndexGenerator.from_file()
     with open(paths.configs_path / "defaults/symptoms/trajectories.yaml") as f:
         trajectories = yaml.safe_load(f)["trajectories"]
     symptoms_trajectories = [
@@ -45,7 +43,7 @@ def get_oc():
 
 
 @pytest.fixture(name="oc_multiple_super_areas")
-def get_oc_multiple_super_areas():
+def get_oc_multiple_super_areas(health_index_generator):
     area_super_region_df = pd.DataFrame(
         {
             "area": ["area_1", "area_2", "area_3"],
@@ -64,7 +62,6 @@ def get_oc_multiple_super_areas():
     female_fraction_per_area_df = pd.DataFrame(
         female_fraction_per_area_dict, index=["area_1", "area_2", "area_3"]
     )
-    health_index_generator = HealthIndexGenerator.from_file()
     return Observed2Cases(
         age_per_area_df=age_per_area_df,
         female_fraction_per_area_df=female_fraction_per_area_df,

@@ -26,6 +26,8 @@ from june.policy import (
     CloseLeisureVenue,
     ChangeLeisureProbability,
     LeisurePolicies,
+    TieredLockdown,
+    TieredLockdowns,
 )
 from june.simulator import Simulator
 from june.world import World
@@ -59,7 +61,7 @@ class TestCloseLeisure:
         sim.clear_world()
         time_during_policy = datetime(2020, 3, 14)
         policies.leisure_policies.apply(date=time_during_policy, leisure=leisure)
-        assert list(leisure.closed_venues) == ["pub"]
+        assert list(world.regions[0].policy["global_closed_venues"]) == ["pub"]
         leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy, 0.0
@@ -72,12 +74,61 @@ class TestCloseLeisure:
         sim.clear_world()
         time_after_policy = datetime(2020, 3, 30)
         policies.leisure_policies.apply(date=time_after_policy, leisure=leisure)
-        assert list(leisure.closed_venues) == []
+        assert list(world.regions[0].policy["global_closed_venues"]) == []
         leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy, 0.0
         )
         assert worker in worker.leisure.people
+
+    def test__close_leisure_venues_tiered_lockdowns(self, setup_policy_world):
+        world, pupil, student, worker, sim = setup_policy_world
+        tiered_lockdown = TieredLockdown(
+            start_time="2020-03-01",
+            end_time="2020-03-30",
+            tiers_per_region={"North East": 3.},
+        )
+        tiered_lockdowns = TieredLockdowns([tiered_lockdown])
+        
+        policies = Policies([tiered_lockdowns])
+        leisure = generate_leisure_for_config(world=world, config_filename=test_config)
+        leisure.distribute_social_venues_to_areas(
+            world.areas, super_areas=world.super_areas
+        )
+        sim.activity_manager.leisure = leisure
+        sim.activity_manager.policies = policies
+        leisure.leisure_distributors["pubs"].weekend_boost = 5000
+        sim.clear_world()
+        time_before_policy = datetime(2019, 2, 1)
+        activities = ["leisure", "residence"]
+        leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_before_policy, 0.0
+        )
+        assert worker in worker.leisure.people
+        sim.clear_world()
+        time_during_policy = datetime(2020, 3, 14)
+        policies.tiered_lockdown.apply(date=time_during_policy, regions=world.regions)
+        assert "pub" in list(world.regions[0].policy["local_closed_venues"])
+        assert "cinema" in list(world.regions[0].policy["local_closed_venues"])
+        leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_during_policy, 0.0
+        )
+        assert worker in worker.residence.people
+        sim.clear_world()
+
+        sim.clear_world()
+        time_after_policy = datetime(2020, 3, 30)
+        policies.tiered_lockdown.apply(date=time_after_policy, regions=world.regions)
+        assert list(world.regions[0].policy["local_closed_venues"]) == []
+        leisure.generate_leisure_probabilities_for_timestep(10000, False, False)
+        sim.activity_manager.move_people_to_active_subgroups(
+            activities, time_after_policy, 0.0
+        )
+        assert worker in worker.leisure.people
+
+    
 
 
 class TestReduceLeisureProbabilities:
@@ -204,21 +255,23 @@ class TestReduceLeisureProbabilities:
         original_poisson_parameter = leisure.leisure_distributors[
             "pubs"
         ].get_poisson_parameter(sex="m", age=25, is_weekend=False)
+        region.regional_compliance = 1.0
         full_comp_poisson_parameter = leisure._get_activity_poisson_parameter(
             activity="pubs",
             distributor=leisure.leisure_distributors["pubs"],
             sex="m",
             age=25,
             is_weekend=False,
-            regional_compliance=1.0,
+            region=region,
         )
+        region.regional_compliance = 0.5
         half_comp_poisson_parameter = leisure._get_activity_poisson_parameter(
             activity="pubs",
             distributor=leisure.leisure_distributors["pubs"],
             sex="m",
             age=25,
             is_weekend=False,
-            regional_compliance=0.5,
+            region=region,
         )
         assert np.isclose(full_comp_poisson_parameter, 0.2)
         assert np.isclose(

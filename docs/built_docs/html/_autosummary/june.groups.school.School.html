@@ -40,7 +40,7 @@
 <h1>june.groups.school.School<a class="headerlink" href="#june-groups-school-school" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">june.groups.school.</code><code class="sig-name descname">School</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n_pupils_max</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">age_min</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">age_max</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">sector</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.school.</code><code class="sig-name descname">School</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_pupils_max</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">age_min</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">age_max</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">18</span></em>, <em class="sig-param"><span class="n">sector</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Area" title="june.geography.geography.Area">june.geography.geography.Area</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_classrooms</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">years</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Create a School given its description.</p>
 <dl class="simple">
 <dt>coordinates:</dt><dd><p>latitude and longitude</p>
@@ -52,6 +52,12 @@
 <dt>age_max:</dt><dd><p>maximum age of the pupils</p>
 </dd>
 <dt>sector:</dt><dd><p>whether it is a “primary”, “secondary” or both “primary_secondary”</p>
+</dd>
+<dt>area:</dt><dd><p>area the school belongs to</p>
+</dd>
+<dt>n_classrooms:</dt><dd><p>number of classrooms in the school</p>
+</dd>
+<dt>years:</dt><dd><p>age group year per classroom</p>
 </dd>
 </dl>
 <p>number of SubGroups N = age_max-age_min year +1 (student years) + 1 (teachers):
@@ -77,7 +83,7 @@ n - year of highest age (age_max)</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n_pupils_max</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">age_min</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">age_max</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">sector</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_pupils_max</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">age_min</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">age_max</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">18</span></em>, <em class="sig-param"><span class="n">sector</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Area" title="june.geography.geography.Area">june.geography.geography.Area</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_classrooms</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">years</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Create a School given its description.</p>
 <dl class="simple">
 <dt>coordinates:</dt><dd><p>latitude and longitude</p>
@@ -89,6 +95,12 @@ n - year of highest age (age_max)</p>
 <dt>age_max:</dt><dd><p>maximum age of the pupils</p>
 </dd>
 <dt>sector:</dt><dd><p>whether it is a “primary”, “secondary” or both “primary_secondary”</p>
+</dd>
+<dt>area:</dt><dd><p>area the school belongs to</p>
+</dd>
+<dt>n_classrooms:</dt><dd><p>number of classrooms in the school</p>
+</dd>
+<dt>years:</dt><dd><p>age group year per classroom</p>
 </dd>
 </dl>
 <p>number of SubGroups N = age_max-age_min year +1 (student years) + 1 (teachers):
@@ -141,6 +153,16 @@ a student is added to the subgroup matching their age.</p>
 
 <dl class="py method">
 <dt>
+<code class="sig-name descname">limit_classroom_sizes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_classroom_size</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Make all subgroups smaller than <code class="docutils literal notranslate"><span class="pre">`max_classroom_size`</span></code></p>
+<dl class="simple">
+<dt>max_classroom_size:</dt><dd><p>maximum number of students per classroom (subgroup)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
 <code class="sig-name descname">remove_person</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Remove a person from this group by removing them
 from the subgroup to which they belong</p>
@@ -184,6 +206,11 @@ from the subgroup to which they belong</p>
 <dl class="py method">
 <dt>
 <em class="property">property </em><code class="sig-name descname">dead</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">external</code><em class="property"> = False</em></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -289,9 +316,9 @@ the name fo the class with the id of the instance.</p>
 <code class="sig-name descname">subgroups</code></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="py method">
 <dt>
-<code class="sig-name descname">super_area</code></dt>
+<em class="property">property </em><code class="sig-name descname">super_area</code></dt>
 <dd></dd></dl>
 
 <dl class="py method">

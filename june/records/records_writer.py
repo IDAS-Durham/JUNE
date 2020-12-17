@@ -10,6 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
 from collections import Counter, defaultdict
+import logging
+
 import subprocess
 import june
 from june.groups import Supergroup
@@ -30,6 +32,8 @@ from june.records.static_records_writer import (
     RegionRecord,
 )
 from june import paths
+
+logger = logging.getLogger("records_writer")
 
 
 class Record:
@@ -197,7 +201,11 @@ class Record:
                 ]
                 if sum(data) > 0:
                     summary_writer.writerow(
-                        [timestamp.strftime("%Y-%m-%d"), region,] + data
+                        [
+                            timestamp.strftime("%Y-%m-%d"),
+                            region,
+                        ]
+                        + data
                     )
 
     def combine_outputs(self, remove_left_overs=True):
@@ -217,7 +225,8 @@ class Record:
             )
 
     def parameters_interaction(
-        self, interaction: "Interaction" = None,
+        self,
+        interaction: "Interaction" = None,
     ):
         if interaction is not None:
             interaction_dict = {}
@@ -232,7 +241,8 @@ class Record:
             self.append_dict_to_configs(config_dict={"interaction": interaction_dict})
 
     def parameters_seed(
-        self, infection_seed: "InfectionSeed" = None,
+        self,
+        infection_seed: "InfectionSeed" = None,
     ):
         if infection_seed is not None:
             infection_seed_dict = {}
@@ -248,18 +258,17 @@ class Record:
             )
 
     def parameters_infection(
-        self, infection_selector: "InfectionSelector" = None,
+        self,
+        infection_selector: "InfectionSelector" = None,
     ):
         if infection_selector is not None:
             infection_dict = {}
-            infection_dict[
-                "asymptomatic_ratio"
-            ] = infection_selector.health_index_generator.asymptomatic_ratio
             infection_dict["transmission_type"] = infection_selector.transmission_type
             self.append_dict_to_configs(config_dict={"infection": infection_dict})
 
     def parameters_policies(
-        self, activity_manager: "ActivityManager" = None,
+        self,
+        activity_manager: "ActivityManager" = None,
     ):
         if activity_manager is not None:
             policy_dicts = []
@@ -378,7 +387,9 @@ def combine_hdf5s(
                     if i == 0:
                         description = getattr(record.root, dataset.name).description
                         merged_record.create_table(
-                            merged_record.root, dataset.name, description=description,
+                            merged_record.root,
+                            dataset.name,
+                            description=description,
                         )
                     if len(arr_data) > 0:
                         table = getattr(merged_record.root, dataset.name)
@@ -394,3 +405,96 @@ def combine_records(record_path, remove_left_overs=False, save_dir=None):
         record_path, remove_left_overs=remove_left_overs, save_dir=save_dir
     )
     combine_hdf5s(record_path, remove_left_overs=remove_left_overs, save_dir=save_dir)
+
+def prepend_checkpoint_hdf5(
+    pre_checkpoint_record_path, 
+    post_checkpoint_record_path,
+    tables_to_merge=(
+        "deaths", "discharges", "hospital_admissions", "icu_admissions", "infections", 
+        "recoveries", "symptoms"
+    ),
+    merged_record_path=None,
+    checkpoint_date: str=None,
+):
+    if merged_record_path is None:
+        merged_record_path = post_checkpoint_record_path.parent / "merged_checkpoint_june_record.h5"  
+
+    with tables.open_file(merged_record_path, "w") as merged_record:
+        with tables.open_file(pre_checkpoint_record_path, "r") as pre_record:
+            with tables.open_file(post_checkpoint_record_path, "r") as post_record:
+                post_infection_dates = np.array([
+                    datetime.strptime(x.decode("utf-8"), "%Y-%m-%d") 
+                    for x in post_record.root["infections"][:]["timestamp"]
+                ])
+                min_date = min(post_infection_dates)
+                if checkpoint_date is None:
+                    print("provide the date you expect the checkpoint to start at!")
+                else:
+                    if checkpoint_date != checkpoint_date:
+                        print(f"provided date {checkpoint_date} does not match min date {min_date}")
+                        
+                for dataset in post_record.root._f_list_nodes(): 
+                    description = getattr(post_record.root, dataset.name).description
+                    if dataset.name not in tables_to_merge:
+                        arr_data = dataset[:]
+                        merged_record.create_table(
+                            merged_record.root, dataset.name, description=description
+                        )
+                        if len(arr_data) > 0:
+                            table = getattr(merged_record.root, dataset.name)
+                            table.append(arr_data)
+                            table.flush()
+                    else:
+                        pre_arr_data = pre_record.root[dataset.name][:]
+                        pre_dates = np.array([
+                            datetime.strptime(x.decode("utf-8"), "%Y-%m-%d") 
+                            for x in pre_arr_data["timestamp"]
+                        ])
+                        pre_arr_data = pre_arr_data[ pre_dates < min_date ]
+                        post_arr_data = dataset[:]
+                                               
+                        merged_record.create_table(
+                            merged_record.root, dataset.name, description=description
+                        )
+                        table = getattr(merged_record.root, dataset.name)
+                        if len(pre_arr_data) > 0:
+                            table.append(pre_arr_data)
+                        if len(post_arr_data) > 0:
+                            table.append(post_arr_data)
+                        table.flush()
+    logger.info(f"written prepended record to {merged_record_path}")
+
+def prepend_checkpoint_summary(
+    pre_checkpoint_summary_path,
+    post_checkpoint_summary_path,
+    merged_summary_path=None,
+    checkpoint_date=None,
+):
+    if merged_summary_path is None:
+        merged_summary_path = post_checkpoint_summary_path.parent / "merged_checkpoint_summary.csv"
+
+    pre_summary = pd.read_csv(pre_checkpoint_summary_path)
+    post_summary = pd.read_csv(post_checkpoint_summary_path)
+    pre_summary["time_stamp"] = pd.to_datetime(pre_summary["time_stamp"])
+    post_summary["time_stamp"] = pd.to_datetime(post_summary["time_stamp"])
+    min_date = min(post_summary["time_stamp"])
+    if checkpoint_date is None:
+        print("Provide the checkpoint date you expect the post-summary to start at!")
+    else:
+        if min_date != checkpoint_date:
+            print("Provided date {checkpoint_date} does not match the earliest date in the summary!")
+    pre_summary = pre_summary[ pre_summary["time_stamp"] < min_date ]
+    merged_summary = pd.concat([pre_summary, post_summary], ignore_index=True)
+    merged_summary.set_index(["region", "time_stamp"])
+    merged_summary.sort_index(inplace=True)
+    merged_summary.to_csv(merged_summary_path, index=True)
+    logger.info(f"Written merged summary to {merged_summary_path}")    
+
+    
+
+
+
+
+
+
+
