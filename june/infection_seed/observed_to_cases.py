@@ -16,7 +16,7 @@ default_area_super_region_path = (
     paths.data_path / "input/geography/area_super_area_region.csv"
 )
 default_observed_deaths_path = (
-    paths.data_path / "input/infection_seed/hospital_deaths_per_region_per_age_old.csv"
+    paths.data_path / "input/infection_seed/hospital_deaths_per_region_per_date_old.csv"
 )
 default_age_per_area_path = (
     paths.data_path / "input/demography/age_structure_single_year.csv"
