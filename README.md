@@ -17,7 +17,7 @@ pip install june
 and download the data by running the command
 
 ```
-get_june_data.sh
+scripts/get_june_data.sh
 ```
 
 This will require a working installation of Openmpi or Intelmpi to compile ``mpi4py``. 
@@ -43,6 +43,6 @@ including auto-generated class and module diagrams.
 Run the tests with
 
 ```
-cd tests
+cd test_june
 pytest
 ```
