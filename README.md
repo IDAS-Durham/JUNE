@@ -3,7 +3,7 @@
 
 # JUNE: open-source individual-based epidemiology simulation
 
-Repository for data and models built, named after [June Almeida](https://en.wikipedia.org/wiki/June_Almeida). June was the female Scottish virologist that first identified the coronavirus group of viruses. checkout the [release paper](https://www.medrxiv.org/content/10.1101/2020.12.15.20248246v1) for a physical description of the model.
+This is the offical repository of JUNE, named after [June Almeida](https://en.wikipedia.org/wiki/June_Almeida), who was the female Scottish virologist that first identified the coronavirus group of viruses. checkout the [release paper](https://www.medrxiv.org/content/10.1101/2020.12.15.20248246v1) for a physical description of the model.
 
 
 # Setup
