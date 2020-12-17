@@ -33,6 +33,8 @@ def save_infections_to_hdf5(
         f.create_group("infections")
         n_infections = len(infections)
         f["infections"].attrs["n_infections"] = n_infections
+        if n_infections == 0:
+            return
         symptoms_list = [infection.symptoms for infection in infections]
         transmission_list = [infection.transmission for infection in infections]
         save_symptoms_to_hdf5(
@@ -84,6 +86,9 @@ def load_infections_from_hdf5(hdf5_file_path: str, chunk_size=50000):
     infections = []
     with h5py.File(hdf5_file_path, "r") as f:
         infections_group = f["infections"]
+        n_infections = infections_group.attrs["n_infections"]
+        if n_infections == 0:
+            return []
         symptoms_list = load_symptoms_from_hdf5(
             hdf5_file_path=hdf5_file_path, chunk_size=chunk_size
         )

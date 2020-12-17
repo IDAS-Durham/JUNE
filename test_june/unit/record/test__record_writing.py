@@ -358,13 +358,10 @@ def test__meta_information():
     assert parameters["meta_information"]["number_of_cores"] == 20
 
 
-def test__parameters(dummy_world):
+def test__parameters(dummy_world, selector):
     interaction = Interaction.from_file(config_filename=config_interaction)
     interaction.alpha_physical = 100.0
-    health_index_generator = HealthIndexGenerator.from_file(asymptomatic_ratio=0.6)
-    infection_selector = InfectionSelector.from_file(
-        health_index_generator=health_index_generator
-    )
+    infection_selector = selector
     infection_seed = InfectionSeed(
         world=None, infection_selector=infection_selector, seed_strength=0.0,
     )
@@ -409,7 +406,6 @@ def test__parameters(dummy_world):
         "%Y-%m-%d"
     )
 
-    assert parameters["infection"]["asymptomatic_ratio"] == 0.6
     assert (
         parameters["infection"]["transmission_type"]
         == infection_selector.transmission_type

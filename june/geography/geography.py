@@ -3,6 +3,7 @@ from itertools import count, chain
 from typing import List, Dict, Tuple, Optional
 import pandas as pd
 import numpy as np
+from collections import defaultdict
 from sklearn.neighbors import BallTree
 
 from june import paths
@@ -320,7 +321,7 @@ class Region:
     Coarsest geographical resolution
     """
 
-    __slots__ = ("id", "name", "super_areas", "regional_compliance")
+    __slots__ = ("id", "name", "super_areas", "policy")
     _id = count()
 
     def __init__(
@@ -329,13 +330,31 @@ class Region:
         self.id = next(self._id)
         self.name = name
         self.super_areas = super_areas or []
-        self.regional_compliance = 1.0
+        self.policy = {
+            "regional_compliance": 1.,
+            "lockdown_tier" : None,
+            "local_closed_venues": set(),
+            "global_closed_venues": set(),
+        }
 
     @property
     def people(self):
         return list(
             chain.from_iterable(super_area.people for super_area in self.super_areas)
         )
+
+    @property
+    def regional_compliance(self):
+        return self.policy["regional_compliance"]
+
+    @regional_compliance.setter
+    def regional_compliance(self, value):
+        self.policy["regional_compliance"] = value
+
+
+    @property
+    def closed_venues(self):
+        return self.policy["local_closed_venues"] | self.policy["global_closed_venues"]
 
 
 class Regions:

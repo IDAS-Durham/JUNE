@@ -25,10 +25,13 @@ def test__every_household_has_up_to_3_links(world_visits, visits_distributor):
     for super_area in super_areas:
         for area in super_area.areas:
             for household in area.households:
-                if household.type in [
-                    "other",
-                    "communal",
-                ]:
+                if (
+                    household.type
+                    in [
+                        "communal",
+                    ]
+                    or household.size == 0
+                ):
                     assert "household" not in household.residences_to_visit
                 else:
                     has_visits = True
@@ -69,11 +72,10 @@ def test__household_home_visits_leisure_integration(leisure):
         if subgroup is not None:
             counter += 1
             assert subgroup == person2.residence
-            assert subgroup.group.household_visit == True
+            assert subgroup.group.being_visited is True
             # small test to mimic clear_world() in Simulator
-            if subgroup.group.spec == "household":
-                subgroup.group.household_visit = False
-            assert subgroup.group.household_visit == False
+            subgroup.group.clear()
+            assert subgroup.group.being_visited is False
     assert np.isclose(counter, np.random.poisson(1.0 * 0.1 * 200), rtol=5)
 
 

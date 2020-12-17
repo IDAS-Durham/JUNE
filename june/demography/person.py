@@ -181,3 +181,9 @@ class Person(dataobject):
         if self.work_super_area is None:
             return None
         return self.work_super_area.city
+
+    @property
+    def available(self):
+        if (not self.dead) and (self.medical_facility is None) and (not self.busy):
+            return True
+        return False

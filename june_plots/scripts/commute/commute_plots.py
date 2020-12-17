@@ -27,8 +27,9 @@ class CommutePlots:
         Preloaded world which can also be passed from the master plotting script
     """
 
-    def __init__(self, world):
+    def __init__(self, world, colors):
         self.world = world
+        self.colors = colors
 
     def plot_internal_external_numbers(self):
         "Plotting number of internal and external commuters across all cities in World"
@@ -38,30 +39,34 @@ class CommutePlots:
         names = []
         for city in self.world.cities:
             external = 0
-            for station in city.stations:
+            for station in city.inter_city_stations:
                 external += len(station.commuter_ids)
 
-            internal = len(city.commuter_ids)
+            internal = len(city.internal_commuter_ids)
             if external != 0 and internal != 0:
                 external_commuters.append(external)
-                names.append(city.name)
+                names.append(str(city.name).split(' ')[0])
                 internal_commuters.append(internal)
 
+        names = np.array(names)
         internal_commuters = np.array(internal_commuters)
         external_commuters = np.array(external_commuters)
-
+        total_commuters = internal_commuters+external_commuters
+        total_sort = np.argsort(total_commuters)[::-1]
+        
         x = np.arange(len(names))  # the label locations
         width = 0.35  # the width of the bars
 
         f, ax = plt.subplots()
-        ax.bar(x, internal_commuters, width/2, label = 'Internal commuters')
-        ax.bar(x - width/2, external_commuters, width/2, label = 'External commuters')
-        ax.bar(x + width/2, external_commuters+internal_commuters, width/2, label = 'Total commuters')
-        ax.set_ylabel('Number of people')
+        ax.bar(x, internal_commuters[total_sort], width/2, label = 'Internal commuters', color=self.colors['general_1'])
+        ax.bar(x - width/2, external_commuters[total_sort], width/2, label = 'External commuters', color=self.colors['general_2'])
+        ax.bar(x + width/2, total_commuters[total_sort], width/2, label = 'Total commuters', color=self.colors['general_3'])
+        ax.set_ylabel('Frequency')
         ax.set_xticks(x)
         ax.set_xticklabels(names)
+        ax.set_yscale('log')
         ax.legend()
-        plt.xticks(rotation=45)
+        plt.xticks(rotation=90)
 
         return ax
 
@@ -88,10 +93,10 @@ class CommutePlots:
             internal_commuters_ids = []
             external_commuters_ids = []
             commuters_ids = []
-            for commuter in list(city.commuter_ids):
+            for commuter in list(city.internal_commuter_ids):
                 internal_commuters_ids.append(commuter)
                 commuters_ids.append(commuter)
-            for station in city.stations:
+            for station in city.inter_city_stations:
                 for commuter in list(station.commuter_ids):
                     commuters_ids.append(commuter)
                     external_commuters_ids.append(commuter)
@@ -125,12 +130,12 @@ class CommutePlots:
         else:
             return None, None
 
-    def plot_commute_areas(self, commute_areas):
+    def plot_commute_areas(self, commute_areas, figsize=(7,5)):
 
-        fig, ax = plt.subplots(figsize=(7,5))
+        fig, ax = plt.subplots(figsize=figsize)
         gplt.choropleth(
             commute_areas, hue='commuters',
-            cmap='Reds', legend=True, edgecolor="black", ax=ax, linewidth=0.2
+            cmap='Reds', legend=True, edgecolor="black", ax=ax, linewidth=0.1
         )
 
         return ax

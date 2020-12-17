@@ -4,7 +4,8 @@ import numpy as np
 import yaml
 
 from june import paths
-from june.infection.health_index import HealthIndexGenerator
+from june.infection.health_index.health_index import HealthIndexGenerator
+from june.infection.health_index import Data2Rates
 from june.infection import Infection
 from june.infection.symptoms import Symptoms, SymptomTag
 from june.infection.trajectory_maker import TrajectoryMakers
@@ -23,9 +24,9 @@ default_trajectories_config_path = (
 class InfectionSelector:
     def __init__(
         self,
-        transmission_config_path: str,
+        transmission_config_path: str = default_transmission_config_path,
         trajectory_maker=TrajectoryMakers.from_file(default_trajectories_config_path),
-        health_index_generator=HealthIndexGenerator.from_file(asymptomatic_ratio=0.3),
+        health_index_generator: HealthIndexGenerator = None,
     ):
         """
         Selects the type of infection a person is given
@@ -34,8 +35,6 @@ class InfectionSelector:
         ----------
         transmission_config_path:
             path to transmission config file
-        asymptomatic_ratio:
-            proportion of infected people that are asymptomatic
         """
         self.transmission_config_path = transmission_config_path
         self.trajectory_maker = trajectory_maker
@@ -47,9 +46,7 @@ class InfectionSelector:
         cls,
         transmission_config_path: str = default_transmission_config_path,
         trajectories_config_path: str = default_trajectories_config_path,
-        health_index_generator: HealthIndexGenerator = HealthIndexGenerator.from_file(
-            asymptomatic_ratio=0.3
-        ),
+        data_to_rates=None,
     ) -> "InfectionSelector":
         """
         Generate infection selector from default config file
@@ -63,6 +60,9 @@ class InfectionSelector:
         health_index_generator:
             health index generator
         """
+        if not data_to_rates:
+            data_to_rates = Data2Rates.from_file()
+        health_index_generator = HealthIndexGenerator(data_to_rates=data_to_rates)
         trajectory_maker = TrajectoryMakers.from_file(trajectories_config_path)
         return InfectionSelector(
             transmission_config_path=transmission_config_path,
@@ -183,9 +183,7 @@ class InfectionSelector:
         self.probability = CompletionTime.from_dict(transmission_config["probability"])
 
     def _select_transmission(
-        self,
-        time_to_symptoms_onset: float,
-        max_symptoms_tag: "SymptomsTag",
+        self, time_to_symptoms_onset: float, max_symptoms_tag: "SymptomsTag",
     ) -> "Transmission":
         """
         Selects the transmission type specified by the user in the init, 
@@ -245,4 +243,3 @@ class InfectionSelector:
         """
         health_index = self.health_index_generator(person)
         return Symptoms(health_index=health_index)
-
