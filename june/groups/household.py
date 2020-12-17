@@ -49,7 +49,7 @@ class Household(Group):
         super().__init__()
         self.area = area
         self.type = type
-        self.quarantine_starting_date = None
+        self.quarantine_starting_date = -99
         self.max_size = max_size
         self.residents = ()
         self.residences_to_visit = {}
