@@ -20,6 +20,8 @@ and download the data by running the command
 scripts/get_june_data.sh
 ```
 
+Disclaimer: All the data is constructed by mixing different datasets from the Office for National Statistics (ONS), thus it may contain modifications. Please refere to the original source (cited in the [release paper](https://www.medrxiv.org/content/10.1101/2020.12.15.20248246v1)) for the raw dataset.
+
 This will require a working installation of Openmpi or Intelmpi to compile ``mpi4py``. 
 
 If you want to get the most up-to-date version of the code, then you can clone this repository, and install it using
