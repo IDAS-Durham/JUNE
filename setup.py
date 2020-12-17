@@ -20,7 +20,7 @@ scripts = glob("scripts/*.py") + glob("scripts/*.sh")
 
 setup(
         name="june",
-        version="0.9",
+        version="1.0",
         description="A framework for high resolution Agent Based Modelling.",
         url="https://github.com/idas-durham/june",
         long_description_content_type='text/markdown',
