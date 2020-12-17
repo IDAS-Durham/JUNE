@@ -1,4 +1,4 @@
-# Create the world
+# Instructions
 1. First run ``create_world.py`` to create a world and save it to ``.hdf5`` format. You can edit
 the script to create the region you want. 
 
