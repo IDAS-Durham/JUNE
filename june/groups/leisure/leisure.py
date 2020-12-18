@@ -113,7 +113,7 @@ class Leisure:
         self.probabilities_by_region_sex_age = None
         self.leisure_distributors = leisure_distributors
         self.n_activities = len(self.leisure_distributors)
-        self.policy_poisson_parameters = {}
+        self.policy_reductions = {}
         self.regions = regions  # needed for regional compliances
 
     def distribute_social_venues_to_areas(self, areas: Areas, super_areas: SuperAreas):
@@ -301,18 +301,18 @@ class Leisure:
         Computes an activity poisson parameter taking into account active policies,
         regional compliances and lockdown tiers.
         """
-        if activity in self.policy_poisson_parameters:
-            policy_activity_poisson_parameter = (
-                self.policy_poisson_parameters[activity][day_type][sex][age]
+        if activity in self.policy_reductions:
+            policy_reduction = (
+                self.policy_reductions[activity][day_type][sex][age]
             )  
         else:
-            policy_activity_poisson_parameter = None
+            policy_reduction = 1
         activity_poisson_parameter = distributor.get_poisson_parameter(
             sex=sex,
             age=age,
             day_type=day_type,
             working_hours=working_hours,
-            policy_poisson_parameter=policy_activity_poisson_parameter,
+            policy_reduction=policy_reduction,
             region=region,
         )
         return activity_poisson_parameter

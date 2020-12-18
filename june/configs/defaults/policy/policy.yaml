@@ -541,7 +541,7 @@ change_leisure_probability:
     1:
         start_time: 2020-03-24
         end_time: 2020-05-21
-        new_leisure_poisson_parameters:
+        activity_reductions:
             household_visits:
                 male: 
                     0-64: 0.1
@@ -557,7 +557,7 @@ change_leisure_probability:
     2:
         start_time: 2020-05-21
         end_time: 2020-05-31
-        new_leisure_poisson_parameters:
+        activity_reductions:
             household_visits:
                 male: 
                     0-64: 0.25
@@ -573,7 +573,7 @@ change_leisure_probability:
     3:
         start_time: 2020-05-31
         end_time: 2020-06-04
-        new_leisure_poisson_parameters:
+        activity_reductions:
             household_visits:
                 male: 
                     0-64: 0.50
@@ -589,7 +589,7 @@ change_leisure_probability:
     4:
         start_time: 2020-06-04
         end_time: 2020-06-14
-        new_leisure_poisson_parameters:
+        activity_reductions:
             household_visits:
                 male: 
                     0-64: 0.7
@@ -605,7 +605,7 @@ change_leisure_probability:
     5:
         start_time: 2020-06-14
         end_time: 2020-07-04
-        new_leisure_poisson_parameters:
+        activity_reductions:
             household_visits:
                 male: 
                     0-64: 1.25
@@ -622,7 +622,7 @@ change_leisure_probability:
     6:
         start_time: 2020-07-04
         end_time: 2020-07-11
-        new_leisure_poisson_parameters:
+        activity_reductions:
             pubs:
                 male:
                     18-65: 0.256
@@ -641,7 +641,7 @@ change_leisure_probability:
     7:
         start_time: 2020-07-11
         end_time: 2020-07-18
-        new_leisure_poisson_parameters:
+        activity_reductions:
             pubs:
                 male:
                     18-65: 0.402
@@ -661,7 +661,7 @@ change_leisure_probability:
     8:
         start_time: 2020-07-18
         end_time: 2020-07-25
-        new_leisure_poisson_parameters:
+        activity_reductions:
             pubs:
                 male:
                     18-65: 0.548
@@ -681,7 +681,7 @@ change_leisure_probability:
     9:
         start_time: 2020-07-25
         end_time: 2020-08-01
-        new_leisure_poisson_parameters:
+        activity_reductions:
             pubs:
                 male:
                     18-65: 0.695
@@ -701,7 +701,7 @@ change_leisure_probability:
     10:
         start_time: 2020-08-01
         end_time: 2020-08-08
-        new_leisure_poisson_parameters:
+        activity_reductions:
             pubs:
                 male:
                     18-65: 0.841
@@ -721,7 +721,7 @@ change_leisure_probability:
     11:
         start_time: 2020-08-08
         end_time: 2020-08-15
-        new_leisure_poisson_parameters:
+        activity_reductions:
             pubs:
                 male:
                     18-65: 0.988
@@ -733,7 +733,7 @@ change_leisure_probability:
     12:
         start_time: 2020-08-15
         end_time: 2020-08-22
-        new_leisure_poisson_parameters:
+        activity_reductions:
             pubs:
                 male:
                     18-65: 1.13
@@ -745,7 +745,7 @@ change_leisure_probability:
     13:
         start_time: 2020-08-22
         end_time: 2020-08-29
-        new_leisure_poisson_parameters:
+        activity_reductions:
             pubs:
                 male:
                     18-65: 1.28
@@ -757,7 +757,7 @@ change_leisure_probability:
     14:
         start_time: 2020-08-29
         end_time: 2020-08-31
-        new_leisure_poisson_parameters:
+        activity_reductions:
             pubs:
                 male:
                     18-65: 1.38
@@ -768,7 +768,7 @@ change_leisure_probability:
     15:
         start_time: 2020-11-05
         end_time: 2020-12-03
-        new_leisure_poisson_parameters:
+        activity_reductions:
             household_visits:
                 male: 
                     0-64: 0.1

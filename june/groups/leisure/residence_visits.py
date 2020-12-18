@@ -119,7 +119,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         day_type,
         working_hours,
         region=None,
-        policy_poisson_parameter=None,
+        policy_reduction=None,
     ):
         """
         This differs from the super() implementation in that we do not allow
@@ -133,5 +133,5 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
             day_type=day_type,
             working_hours=working_hours,
             region=region,
-            policy_poisson_parameter=policy_poisson_parameter,
+            policy_reduction=policy_reduction,
         )

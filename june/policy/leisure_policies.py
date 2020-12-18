@@ -35,7 +35,7 @@ class LeisurePolicies(PolicyCollection):
         """
         for region in leisure.regions:
             region.policy["global_closed_venues"] = set()
-        leisure.policy_poisson_parameters = {}
+        leisure.policy_reductions = {}
         change_leisure_probability_policies_counter = 0
         for policy in self.get_active(date):
             if policy.policy_subtype == "change_leisure_probability":
@@ -45,7 +45,7 @@ class LeisurePolicies(PolicyCollection):
                         "Having more than one change leisure probability policy"
                         "active is not supported."
                     )
-                leisure.policy_poisson_parameters = policy.apply(leisure=leisure)
+                leisure.policy_reductions = policy.apply(leisure=leisure)
             else:
                 policy.apply(leisure=leisure)
 
@@ -88,7 +88,7 @@ class ChangeLeisureProbability(LeisurePolicy):
         self,
         start_time: str,
         end_time: str,
-        new_leisure_poisson_parameters: Dict[str, Dict[str, Dict[str, float]]],
+        activity_reductions: Dict[str, Dict[str, Dict[str, float]]],
     ):
         """
         Changes the probability of the specified leisure activities.
@@ -102,25 +102,31 @@ class ChangeLeisureProbability(LeisurePolicy):
             * leisure_activities_probabilities = {"pubs" : {"men" :{"0-50" : 0.5, "50-99" : 0.2}, "women" : {"0-70" : 0.2, "71-99" : 0.8}}}
         """
         super().__init__(start_time, end_time)
-        self.poisson_parameters = self._read_poisson_parameters(
-            new_leisure_poisson_parameters
-        )
+        self.activity_reductions = self._read_activity_reductions(activity_reductions)
 
-    def _read_poisson_parameters(self, new_leisure_poisson_parameters):
+    def _read_activity_reductions(self, activity_reductions):
         ret = {}
         day_types = ["weekday", "weekend"]
         sexes = ["male", "female"]
         _sex_t = {"male": "m", "female": "f"}
-        for activity, pp in new_leisure_poisson_parameters.items():
+        for activity, pp in activity_reductions.items():
             ret[activity] = {}
             ret[activity]["weekday"] = {}
             ret[activity]["weekend"] = {}
-            for day_type in pp:
-                if day_type == "any" or day_type in ["male", "female"]:
+            for first_entry in pp:
+                if first_entry in ["weekday_factor", "weekday_factor"]:
+                    day_type = first_entry.split(" ")[0]
+                    factor = parse_age_probabilities(
+                        activity_reductions[activity][first_entry]
+                    )
+                    for sex in sexes:
+                        june_sex = _sex_t[sex]
+                        ret[activity][day_type][june_sex] = np.ones(100) * factor
+                elif first_entry == "any" or first_entry in ["male", "female"]:
                     for sex in sexes:
                         june_sex = _sex_t[sex]
                         probs = parse_age_probabilities(
-                            new_leisure_poisson_parameters[activity][sex]
+                            activity_reductions[activity][sex]
                         )
                         for day_type in day_types:
                             ret[activity][day_type][june_sex] = probs
@@ -129,7 +135,7 @@ class ChangeLeisureProbability(LeisurePolicy):
                         for sex in sexes:
                             june_sex = _sex_t[sex]
                             ret[activity][day_type][june_sex] = parse_age_probabilities(
-                                new_leisure_poisson_parameters[activity][day_type][sex]
+                                activity_reductions[activity][day_type][sex]
                             )
         return ret
 
@@ -139,4 +145,4 @@ class ChangeLeisureProbability(LeisurePolicy):
         The current probabilities are stored in the policies, and restored at the end of the policy
         time span. Keep this in mind when trying to stack policies that modify the same social venue.
         """
-        return self.poisson_parameters
+        return self.activity_reductions

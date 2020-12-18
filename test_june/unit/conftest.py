@@ -260,6 +260,20 @@ def make_dummy_world():
     world.inter_city_transports = inter_city_transports
     station.city_transports = city_transports
     station.inter_city_transports = inter_city_transports
+    # leisure
+    leisure = generate_leisure_for_world(
+        world=world,
+        list_of_leisure_groups=[
+            "pubs",
+            "cinemas",
+            "groceries",
+            "household_visits",
+            "care_home_visits",
+        ],
+    )
+    leisure.distribute_social_venues_to_areas(
+        areas=world.areas, super_areas=world.super_areas
+    )
     world.cemeteries = Cemeteries()
     return world
 

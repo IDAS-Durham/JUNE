@@ -149,10 +149,10 @@ class TestReduceLeisureProbabilities:
         reduce_leisure_probabilities = ChangeLeisureProbability(
             start_time="2020-03-02",
             end_time="2020-03-05",
-            new_leisure_poisson_parameters={
+            activity_reductions={
                 "pub": {
-                    "male": {"0-50": 0.2, "50-100": 0.0},
-                    "female": {"0-100": 0.2},
+                    "male": {"0-50": 0.5, "50-100": 0.0},
+                    "female": {"0-100": 0.5},
                 },
             },
         )
@@ -201,10 +201,10 @@ class TestReduceLeisureProbabilities:
         leisure.generate_leisure_probabilities_for_timestep(
             0.1, working_hours=False, day_type="weekday"
         )
-        assert leisure.policy_poisson_parameters["pub"]["weekday"]["m"][60] == 0.0
-        assert leisure.policy_poisson_parameters["pub"]["weekday"]["f"][19] == 0.2
-        assert leisure.policy_poisson_parameters["pub"]["weekend"]["m"][60] == 0.0
-        assert leisure.policy_poisson_parameters["pub"]["weekend"]["f"][19] == 0.2
+        assert leisure.policy_reductions["pub"]["weekday"]["m"][60] == 0.0
+        assert leisure.policy_reductions["pub"]["weekday"]["f"][19] == 0.5
+        assert leisure.policy_reductions["pub"]["weekend"]["m"][60] == 0.0
+        assert leisure.policy_reductions["pub"]["weekend"]["f"][19] == 0.5
         pubs1_visits_after = 0
         pubs2_visits_after = 0
         for _ in range(5000):
@@ -217,7 +217,7 @@ class TestReduceLeisureProbabilities:
                 pubs2_visits_after += 1
             person2.subgroups.leisure = None
         assert pubs1_visits_after == 0
-        assert 0 < pubs2_visits_after < pubs2_visits_before
+        assert np.isclose(pubs2_visits_after / pubs2_visits_before, 0.5, rtol=0.1)
         # end of policy
         while str(sim.timer.date.date()) != "2020-03-05":
             next(sim.timer)
@@ -227,8 +227,8 @@ class TestReduceLeisureProbabilities:
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
             0.1, working_hours=False, day_type="weekday"
         )
-        assert leisure.policy_poisson_parameters == {}
-        assert leisure.policy_poisson_parameters == {}
+        assert leisure.policy_reductions == {}
+        assert leisure.policy_reductions == {}
         pubs1_visits_restored = 0
         pubs2_visits_restored = 0
         for _ in range(5000):
@@ -242,7 +242,7 @@ class TestReduceLeisureProbabilities:
             person2.subgroups.leisure = None
         assert np.isclose(pubs1_visits_restored, pubs1_visits_before, rtol=0.1)
         assert np.isclose(pubs2_visits_restored, pubs2_visits_before, rtol=0.1)
-        assert leisure.policy_poisson_parameters == {}
+        assert leisure.policy_reductions == {}
 
     def test__reduce_household_visits_with_regional_compliance(
         self, setup_policy_world
@@ -257,10 +257,10 @@ class TestReduceLeisureProbabilities:
         reduce_leisure_probabilities = ChangeLeisureProbability(
             start_time="2020-03-02",
             end_time="2020-03-05",
-            new_leisure_poisson_parameters={
+            activity_reductions={
                 "pub": {
-                    "male": {"0-50": 0.2, "50-100": 0.0},
-                    "female": {"0-100": 0.2},
+                    "male": {"0-50": 0.5, "50-100": 0.0},
+                    "female": {"0-100": 0.5},
                 },
             },
         )
@@ -270,10 +270,10 @@ class TestReduceLeisureProbabilities:
 
         # compliance to 1
         policies.leisure_policies.apply(date=sim.timer.date, leisure=leisure)
-        assert leisure.policy_poisson_parameters["pub"]["weekday"]["m"][60] == 0.0
-        assert leisure.policy_poisson_parameters["pub"]["weekday"]["f"][40] == 0.2
-        assert leisure.policy_poisson_parameters["pub"]["weekend"]["m"][60] == 0.0
-        assert leisure.policy_poisson_parameters["pub"]["weekend"]["f"][40] == 0.2
+        assert leisure.policy_reductions["pub"]["weekday"]["m"][60] == 0.0
+        assert leisure.policy_reductions["pub"]["weekday"]["f"][40] == 0.5
+        assert leisure.policy_reductions["pub"]["weekend"]["m"][60] == 0.0
+        assert leisure.policy_reductions["pub"]["weekend"]["f"][40] == 0.5
         original_poisson_parameter = leisure.leisure_distributors[
             "pub"
         ].get_poisson_parameter(
@@ -298,7 +298,7 @@ class TestReduceLeisureProbabilities:
             working_hours=False,
             region=region,
         )
-        assert np.isclose(full_comp_poisson_parameter, 0.2)
+        assert np.isclose(full_comp_poisson_parameter, 0.5 * original_poisson_parameter)
         assert np.isclose(
             half_comp_poisson_parameter,
             original_poisson_parameter

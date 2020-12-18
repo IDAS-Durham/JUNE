@@ -133,7 +133,7 @@ class SocialVenueDistributor:
         day_type,
         working_hours,
         region=None,
-        policy_poisson_parameter=None,
+        policy_reduction=None,
     ):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
@@ -156,10 +156,10 @@ class SocialVenueDistributor:
                 return 0
             regional_compliance = region.regional_compliance
         original_poisson_parameter = self.poisson_parameters[day_type][sex][age]
-        if policy_poisson_parameter is None:
+        if policy_reduction is None:
             return original_poisson_parameter
-        poisson_parameter = original_poisson_parameter + regional_compliance * (
-            policy_poisson_parameter - original_poisson_parameter
+        poisson_parameter = original_poisson_parameter * (
+            1 + regional_compliance * (policy_reduction - 1)
         )
         return poisson_parameter
 
@@ -176,7 +176,7 @@ class SocialVenueDistributor:
             an instance of Person
         delta_t
             interval of time in units of days
-        day_type 
+        day_type
             weekday or weekend
         """
         poisson_parameter = self.get_poisson_parameter(
