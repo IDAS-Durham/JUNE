@@ -12,6 +12,7 @@ from june.demography import Population
 from june.geography import SuperAreas
 from june.infection.infection_selector import InfectionSelector
 from june.infection.health_index.health_index import HealthIndexGenerator
+from june.utils import parse_probabilities
 
 
 class InfectionSeed:
@@ -54,6 +55,7 @@ class InfectionSeed:
         population: "Population",
         n_cases: int,
         mpi_rank: int = 0,
+        days_from_start: float = 0,
         mpi_comm: Optional["MPI.COMM_WORLD"] = None,
         mpi_size: Optional[int] = None,
         box_mode=False,
@@ -99,7 +101,9 @@ class InfectionSeed:
             for inf_id in ids_to_infect:
                 if inf_id in self.world.people.people_dict:
                     person = self.world.people.get_from_id(inf_id)
-                    self.infection_selector.infect_person_at_time(person, 0.0)
+                    self.infection_selector.infect_person_at_time(
+                        person, days_from_start
+                    )
                     if record is not None:
                         record.accumulate(
                             table_name="infections",
@@ -116,7 +120,9 @@ class InfectionSeed:
                     person_to_infect = self.world.members[0].people[inf_id]
                 else:
                     person_to_infect = self.world.people.get_from_id(inf_id)
-                self.infection_selector.infect_person_at_time(person_to_infect, 0.0)
+                self.infection_selector.infect_person_at_time(
+                    person_to_infect, days_from_start
+                )
                 if record is not None:
                     record.accumulate(
                         table_name="infections",
@@ -187,7 +193,10 @@ class InfectionSeed:
         return choices
 
     def infect_super_areas(
-        self, n_cases_per_super_area: pd.DataFrame, record: Optional["Record"] = None
+        self,
+        n_cases_per_super_area: pd.DataFrame,
+        record: Optional["Record"] = None,
+        days_from_start=0,
     ):
         """
         Infect super areas with numer of cases given by data frame
@@ -201,12 +210,20 @@ class InfectionSeed:
             try:
                 n_cases = int(n_cases_per_super_area[super_area.name])
                 self.unleash_virus(
-                    Population(super_area.people), n_cases=n_cases, record=record
+                    Population(super_area.people),
+                    n_cases=n_cases,
+                    record=record,
+                    days_from_start=days_from_start,
                 )
             except KeyError as e:
                 raise KeyError("There is no data on cases for super area: %s" % str(e))
 
-    def unleash_virus_per_day(self, date: "datetime", record: Optional[Record] = None):
+    def unleash_virus_per_day(
+        self,
+        date: "datetime",
+        record: Optional[Record] = None,
+        days_from_start: float = 0,
+    ):
         """
         Infect super areas at a given ```date```
 
@@ -222,6 +239,8 @@ class InfectionSeed:
             and date_str in self.daily_super_area_cases.index
         ):
             self.infect_super_areas(
-                self.daily_super_area_cases.loc[date_str], record=record
+                self.daily_super_area_cases.loc[date_str],
+                record=record,
+                days_from_start=days_from_start,
             )
             self.dates_seeded.append(date)

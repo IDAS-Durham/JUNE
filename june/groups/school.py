@@ -27,6 +27,10 @@ logger = logging.getLogger("schools")
 class SchoolError(BaseException):
     pass
 
+class SchoolClass(Subgroup):
+    def __init__(self, group, subgroup_type: int):
+        super().__init__(group, subgroup_type)
+        self.quarantine_starting_date = - np.inf 
 
 class School(Group):
 
@@ -90,7 +94,7 @@ class School(Group):
         # for i, _ in enumerate(range(age_min, age_max + 2)):
         if n_classrooms is None:
             n_classrooms = age_max - age_min
-        self.subgroups = [Subgroup(self, i) for i in range(n_classrooms + 2)]
+        self.subgroups = [SchoolClass(self, i) for i in range(n_classrooms + 2)]
         self.n_classrooms = n_classrooms
         self.coordinates = coordinates
         self.area = area
@@ -137,7 +141,7 @@ class School(Group):
                 self.years += [year_age_group[idx]] * n_classrooms
                 pupils_in_classroom = np.array_split(subgroup.people, n_classrooms)
                 for i in range(n_classrooms):
-                    classroom = Subgroup(self, counter)
+                    classroom = SchoolClass(self, counter)
                     for pupil in pupils_in_classroom[i]:
                         classroom.append(pupil)
                         pupil.subgroups.primary_activity = classroom

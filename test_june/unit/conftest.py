@@ -309,9 +309,9 @@ def make_full_world_geography():
 
 
 @pytest.fixture(name="full_world", scope="session")
-def create_full_world(full_world_geography):
+def create_full_world(full_world_geography, test_results):
     # clean file
-    with h5py.File("test.hdf5", "w") as f:
+    with h5py.File(test_results / "test.hdf5", "w") as f:
         pass
     geography = full_world_geography
     geography.hospitals = Hospitals.for_geography(geography)
