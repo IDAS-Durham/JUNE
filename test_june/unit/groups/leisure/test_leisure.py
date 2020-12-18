@@ -52,15 +52,15 @@ def make_leisure():
     return leisure
 
 
-def _get_times_pub_cinema(leisure, person, is_weekend=False):
-    if is_weekend:
+def _get_times_pub_cinema(leisure, person, day_type):
+    if day_type == "weekend":
         delta_time = 0.125  # in reality is 0.5 but make it smaller for stats
         n_days = 8  # in reality is 2
     else:
         delta_time = 1 / 8
         n_days = 5
     leisure.generate_leisure_probabilities_for_timestep(
-        delta_time, working_hours=False, is_weekend=is_weekend
+        delta_time, working_hours=False, day_type=day_type
     )
     times_goes_pub = []
     times_goes_cinema = []
@@ -102,25 +102,25 @@ def test__probability_of_leisure(leisure):
     }
     # weekday male
     times_pub_a_week, times_cinema_a_week = _get_times_pub_cinema(
-        person=male, leisure=leisure, is_weekend=False
+        person=male, leisure=leisure, day_type="weekday"
     )
     assert np.isclose(times_pub_a_week, 0.5, rtol=0.1)
     assert np.isclose(times_cinema_a_week, 0.1, rtol=0.1)
     # weekday female
     times_pub_a_week, times_cinema_a_week = _get_times_pub_cinema(
-        person=female, leisure=leisure, is_weekend=False
+        person=female, leisure=leisure, day_type="weekday"
     )
     assert np.isclose(times_pub_a_week, 0.3, rtol=0.1)
     assert np.isclose(times_cinema_a_week, 0.2, rtol=0.1)
     # weekend male
     times_pub_a_week, times_cinema_a_week = _get_times_pub_cinema(
-        person=male, leisure=leisure, is_weekend=True
+        person=male, leisure=leisure, day_type="weekend"
     )
     assert np.isclose(times_pub_a_week, 0.7, rtol=0.1)
     assert np.isclose(times_cinema_a_week, 0.4, rtol=0.1)
     # weekend female
     times_pub_a_week, times_cinema_a_week = _get_times_pub_cinema(
-        person=female, leisure=leisure, is_weekend=True
+        person=female, leisure=leisure, day_type="weekend"
     )
     assert np.isclose(times_pub_a_week, 0.4, rtol=0.1)
     assert np.isclose(times_cinema_a_week, 0.5, rtol=0.1)
@@ -158,7 +158,7 @@ def test__generate_leisure_from_world(dummy_world):
     leisure.distribute_social_venues_to_areas(
         world.areas, super_areas=world.super_areas
     )
-    leisure.generate_leisure_probabilities_for_timestep(0.1, False, False)
+    leisure.generate_leisure_probabilities_for_timestep(0.1, False, day_type="weekday")
     n_pubs = 0
     n_cinemas = 0
     n_groceries = 0
