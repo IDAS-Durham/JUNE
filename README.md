@@ -17,8 +17,11 @@ pip install june
 and download the data by running the command
 
 ```
-scripts/get_june_data.sh
+get_june_data.sh
 ```
+
+if the above command fails, then manually clone the repo and use the script ```scripts/get_june_data.sh```.
+
 
 Disclaimer: All the data is constructed by mixing different datasets from the Office for National Statistics (ONS), thus it may contain modifications. Please refere to the original source (cited in the [release paper](https://www.medrxiv.org/content/10.1101/2020.12.15.20248246v1)) for the raw dataset.
 
