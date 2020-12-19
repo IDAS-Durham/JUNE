@@ -31,7 +31,7 @@ class Observed2Cases:
         self,
         age_per_area_df: pd.DataFrame,
         female_fraction_per_area_df: pd.DataFrame,
-        regional_infections_per_hundred_thousand=50,
+        regional_infections_per_hundred_thousand=100,
         health_index_generator: "HealthIndexGenerator" = None,
         symptoms_trajectories: Optional["TrajectoryMaker"] = None,
         n_observed_deaths: Optional[pd.DataFrame] = None,
@@ -97,7 +97,7 @@ class Observed2Cases:
     def from_file(
         cls,
         health_index_generator,
-        regional_infections_per_hundred_thousand=50,
+        regional_infections_per_hundred_thousand=100,
         age_per_area_path: str = default_age_per_area_path,
         female_fraction_per_area_path: str = default_female_fraction_per_area_path,
         trajectories_path: str = default_trajectories_path,
@@ -381,7 +381,6 @@ class Observed2Cases:
         cummulative_infections_hundred_thousand = (
             n_cases_per_region_df.cumsum() / people_per_region * 100_000
         )
-        print(cummulative_infections_hundred_thousand)
         regional_series = []
         for region in n_cases_per_region_df.columns:
             regional_index = (
@@ -390,7 +389,6 @@ class Observed2Cases:
                     self.regional_infections_per_hundred_thousand,
                 )
             )
-            print(n_cases_per_region_df[region].iloc[:regional_index])
             regional_series.append(n_cases_per_region_df[region].iloc[:regional_index])
         return pd.concat(regional_series, axis=1).fillna(0.0)
 
