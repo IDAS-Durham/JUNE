@@ -6,7 +6,7 @@ from june.groups import CareHome, Household
 from june.infection.symptom_tag import SymptomTag
 from june.demography import Person
 from june.infection.health_index import Data2Rates
-from june.infection.health_index.health_index import HealthIndexGenerator
+from june.infection.health_index.health_index import HealthIndexGenerator, index_to_maximum_symptoms_tag
 
 
 @pytest.fixture(name="health_index", scope="module")
@@ -83,7 +83,7 @@ class TestComorbidities:
         health_index.comorbidity_prevalence_reference_population = health_index._parse_prevalence_comorbidities_in_reference_population(
             prevalence_reference_population
         )
-        health_index.max_mild_symptom_tag = [tag.value for tag in SymptomTag if tag.name == 'severe'][0]
+        health_index.max_mild_symptom_tag = {value: key for key, value in index_to_maximum_symptoms_tag.items()}['severe']
 
         dummy = Person.from_attributes(sex="f", age=60,)
         feo = Person.from_attributes(sex="f", age=60, comorbidity="feo")
