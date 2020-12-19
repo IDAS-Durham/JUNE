@@ -47,8 +47,10 @@ class HealthIndexGenerator:
         self.age_bins = self.rates_df.index
         self.probabilities = self._get_probabilities(max_age)
         self.use_comorbidities = use_comorbidities
-        self.comorbidity_multipliers = comorbidity_multipliers
-        self.comorbidity_prevalence_reference_population = comorbidity_prevalence_reference_population
+        if self.use_comorbidities:
+            self.comorbidity_multipliers = comorbidity_multipliers
+            self.comorbidity_prevalence_reference_population = comorbidity_prevalence_reference_population
+            self._parse_prevalence_comorbidities_in_reference_population()
 
     @classmethod
     def from_file(cls, rates_file: str = default_rates_file, care_home_min_age=50):
@@ -163,3 +165,9 @@ class HealthIndexGenerator:
                     )
         return probabilities
 
+    def _parse_prevalence_comorbidities_in_reference_population(self,):
+        for comorbidity, values in self.comorbidity_prevalence_reference_population.items():
+            self.comorbidity_prevalence_reference_population[comorbidity] = {
+                    'f': parse_age_probabilities(values['f']),
+                    'm': parse_age_probabilities(values['m']),
+            }

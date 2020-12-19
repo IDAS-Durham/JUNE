@@ -49,6 +49,7 @@ class TestComorbidities:
         health_index.comorbidity_prevalence_reference_population = (
             prevalence_reference_population
         )
+        health_index._parse_prevalence_comorbidities_in_reference_population()
         dummy = Person.from_attributes(sex="f", age=40,)
         mean_multiplier_uk = (
             prevalence_reference_population["feo"]["f"]["10-100"]
