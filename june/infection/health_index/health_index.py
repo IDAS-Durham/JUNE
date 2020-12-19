@@ -67,10 +67,48 @@ class HealthIndexGenerator:
             )
 
     @classmethod
-    def from_file(cls, rates_file: str = default_rates_file, care_home_min_age=50):
+    def from_file(
+        cls,
+        rates_file: str = default_rates_file,
+        care_home_min_age=50,
+        use_comorbidities=False,
+        comorbidity_multipliers=None,
+        comorbidity_prevalence_reference_population=None,
+    ):
         ifrs = pd.read_csv(rates_file, index_col=0)
         ifrs = ifrs.rename(_parse_interval)
-        return cls(rates_df=ifrs, care_home_min_age=care_home_min_age)
+        return cls(
+            rates_df=ifrs,
+            care_home_min_age=care_home_min_age,
+            use_comorbidities=use_comorbidities,
+            comorbidity_multipliers=comorbidity_multipliers,
+            comorbidity_prevalence_reference_population=comorbidity_prevalence_reference_population,
+        )
+
+    @classmethod
+    def from_file_with_comorbidities(
+        cls,
+        multipliers_path: str,
+        male_prevalence_path: str,
+        female_prevalence_path: str,
+        rates_file: str = default_rates_file,
+        care_home_min_age=50,
+    ) -> "HealthIndexGenerator":
+
+        with open(multipliers_path) as f:
+            comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
+        female_prevalence = read_comorbidity_csv(female_prevalence_path)
+        male_prevalence = read_comorbidity_csv(male_prevalence_path)
+        prevalence_reference_population = convert_comorbidities_prevalence_to_dict(
+            female_prevalence, male_prevalence
+        )
+        return cls.from_file(
+            rates_file=rates_file,
+            care_home_min_age=care_home_min_age,
+            use_comorbidities=True,
+            comorbidity_multipliers=comorbidity_multipliers,
+            comorbidity_prevalence_reference_population=comorbidity_prevalence_reference_population,
+        )
 
     def __call__(self, person):
         """
@@ -239,3 +277,30 @@ class HealthIndexGenerator:
                 "m": parse_age_probabilities(values["m"]),
             }
         return parsed_comorbidity_prevalence
+
+
+def read_comorbidity_csv(filename: str):
+    comorbidity_df = pd.read_csv(filename, index_col=0)
+    column_names = [f"0-{comorbidity_df.columns[0]}"]
+    for i in range(len(comorbidity_df.columns) - 1):
+        column_names.append(
+            f"{comorbidity_df.columns[i]}-{comorbidity_df.columns[i+1]}"
+        )
+    comorbidity_df.columns = column_names
+    for column in comorbidity_df.columns:
+        no_comorbidity = comorbidity_df[column].loc["no_condition"]
+        should_have_comorbidity = 1 - no_comorbidity
+        has_comorbidity = np.sum(comorbidity_df[column]) - no_comorbidity
+        comorbidity_df[column].iloc[:-1] *= should_have_comorbidity / has_comorbidity
+
+    return comorbidity_df.T
+
+
+def convert_comorbidities_prevalence_to_dict(prevalence_female, prevalence_male):
+    prevalence_reference_population = {}
+    for comorbidity in prevalence_female.columns:
+        prevalence_reference_population[comorbidity] = {
+            "f": prevalence_female[comorbidity].to_dict(),
+            "m": prevalence_male[comorbidity].to_dict(),
+        }
+    return prevalence_reference_population
