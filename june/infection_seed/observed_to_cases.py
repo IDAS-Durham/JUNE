@@ -31,6 +31,7 @@ class Observed2Cases:
         self,
         age_per_area_df: pd.DataFrame,
         female_fraction_per_area_df: pd.DataFrame,
+        regional_infections_per_hundred_thousand=100,
         health_index_generator: "HealthIndexGenerator" = None,
         symptoms_trajectories: Optional["TrajectoryMaker"] = None,
         n_observed_deaths: Optional[pd.DataFrame] = None,
@@ -66,6 +67,9 @@ class Observed2Cases:
             the expected number of cases (therefore the estimates becomes less
             dependent on spikes in the data)
         """
+        self.regional_infections_per_hundred_thousand = (
+            regional_infections_per_hundred_thousand
+        )
         self.area_super_region_df = area_super_region_df
         self.age_per_area_df = age_per_area_df
         (
@@ -93,6 +97,7 @@ class Observed2Cases:
     def from_file(
         cls,
         health_index_generator,
+        regional_infections_per_hundred_thousand=100,
         age_per_area_path: str = default_age_per_area_path,
         female_fraction_per_area_path: str = default_female_fraction_per_area_path,
         trajectories_path: str = default_trajectories_path,
@@ -151,6 +156,7 @@ class Observed2Cases:
             }
         )
         return cls(
+            regional_infections_per_hundred_thousand=regional_infections_per_hundred_thousand,
             age_per_area_df=age_per_area_df,
             female_fraction_per_area_df=female_fraction_per_area_df,
             health_index_generator=health_index_generator,
@@ -184,9 +190,7 @@ class Observed2Cases:
         )
 
     def aggregate_age_sex_dfs_by_region(
-        self,
-        age_per_area_df: pd.DataFrame,
-        female_fraction_per_area_df: pd.DataFrame,
+        self, age_per_area_df: pd.DataFrame, female_fraction_per_area_df: pd.DataFrame,
     ) -> (pd.DataFrame, pd.DataFrame):
         """
         Combines the age per area dataframe and female fraction per area to
@@ -223,9 +227,7 @@ class Observed2Cases:
         males_per_age_region_df = self.aggregate_areas_by_region(males_per_age_area_df)
         return females_per_age_region_df, males_per_age_region_df
 
-    def get_symptoms_rates_per_age_sex(
-        self,
-    ) -> dict:
+    def get_symptoms_rates_per_age_sex(self,) -> dict:
         """
         Computes the rates of ending up with certain SymptomTag for all
         ages and sex.
@@ -336,9 +338,7 @@ class Observed2Cases:
         )
         return n_cases_per_region_df
 
-    def get_super_area_population_weights(
-        self,
-    ) -> pd.DataFrame:
+    def get_super_area_population_weights(self,) -> pd.DataFrame:
         """
         Compute the weight in population that a super area has over its whole region, used
         to convert regional cases to cases by super area by population density
@@ -374,10 +374,27 @@ class Observed2Cases:
         )
         return people_per_super_aera_and_region[["weights", "region"]]
 
+    def limit_cases_per_region(self, n_cases_per_region_df):
+        people_per_region = self.females_per_age_region_df.sum(
+            axis=1
+        ) + self.males_per_age_region_df.sum(axis=1)
+        cummulative_infections_hundred_thousand = (
+            n_cases_per_region_df.cumsum() / people_per_region * 100_000
+        )
+        regional_series = []
+        for region in n_cases_per_region_df.columns:
+            regional_index = (
+                np.searchsorted(
+                    cummulative_infections_hundred_thousand[region].values,
+                    self.regional_infections_per_hundred_thousand,
+                )
+            )
+            regional_series.append(n_cases_per_region_df[region].iloc[:regional_index])
+        return pd.concat(regional_series, axis=1).fillna(0.0)
+
     def convert_regional_cases_to_super_area(
         self,
         n_cases_per_region_df: pd.DataFrame,
-        dates: Union[List[str], Dict[str, List]],
     ) -> pd.DataFrame:
         """
         Converts regional cases to cases by super area by weighting each super area
@@ -394,17 +411,9 @@ class Observed2Cases:
         -------
         data frame with the number of cases by super area, indexed by date
         """
-        if type(dates) == dict:
-            n_cases_per_region_asynchronised = {}
-            for region, dates in dates.items():
-                n_cases_per_region_asynchronised[region] = n_cases_per_region_df.loc[
-                    dates[0] : dates[1], region
-                ]
-            n_cases_per_region_df = pd.DataFrame.from_dict(
-                n_cases_per_region_asynchronised
-            ).fillna(0)
-        else:
-            n_cases_per_region_df = n_cases_per_region_df.loc[dates[0] : dates[-1]]
+        n_cases_per_region_df = self.limit_cases_per_region(
+            n_cases_per_region_df=n_cases_per_region_df
+        )
         n_cases_per_super_area_df = pd.DataFrame(
             0,
             index=n_cases_per_region_df.index,
@@ -546,9 +555,7 @@ class Observed2Cases:
             avg_rate_for_symptoms
         )
 
-    def get_regional_latent_cases(
-        self,
-    ) -> pd.DataFrame:
+    def get_regional_latent_cases(self,) -> pd.DataFrame:
         """
         Find regional latent cases from the observed one.
 
