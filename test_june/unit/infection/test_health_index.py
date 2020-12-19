@@ -15,53 +15,55 @@ def make_hi():
 
 class TestHealthIndex:
     def test__probabilities_positive_sum_to_one(self, health_index):
-        for population in ("ch", "gp"):
+        for population in ("gp", "ch"):
             for sex in ("m", "f"):
                 for age in np.arange(100):
-                    cum_probs = health_index.cumulative_probabilities[population][sex][
+                    print(population)
+                    print(age)
+                    print(sex)
+                    probs = health_index.probabilities[population][sex][
                         age
                     ]
-                    assert all(cum_probs > 0)
-                    assert np.min(np.diff(cum_probs, prepend=0, append=1)) >= 0
+                    assert all(probs>= 0)
+                    assert sum(probs) == pytest.approx(1,rel=1.e-2)
 
-    # class TestComorbidities:
-    #    def test__mean_multiplier_reference(self, data_to_rates, health_index):
-    #        comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
-    #        prevalence_reference_population = {
-    #            "feo": {
-    #                "f": {"0-10": 0.2, "10-100": 0.4},
-    #                "m": {"0-10": 0.6, "10-100": 0.5},
-    #            },
-    #            "guapo": {
-    #                "f": {"0-10": 0.1, "10-100": 0.1},
-    #                "m": {"0-10": 0.05, "10-100": 0.2},
-    #            },
-    #            "no_condition": {
-    #                "f": {"0-10": 0.7, "10-100": 0.5},
-    #                "m": {"0-10": 0.35, "10-100": 0.3},
-    #            },
-    #        }
-    #        data_to_rates.comorbidity_multipliers = comorbidity_multipliers
-    #        data_to_rates.comorbidity_prevalence_reference_population = (
-    #            prevalence_reference_population
-    #        )
-    #        dummy = Person.from_attributes(sex="f", age=40,)
-    #
-    #        mean_multiplier_uk = (
-    #            prevalence_reference_population["feo"]["f"]["10-100"]
-    #            * comorbidity_multipliers["feo"]
-    #            + prevalence_reference_population["guapo"]["f"]["10-100"]
-    #            * comorbidity_multipliers["guapo"]
-    #            + prevalence_reference_population["no_condition"]["f"]["10-100"]
-    #            * comorbidity_multipliers["no_condition"]
-    #        )
-    #        assert (
-    #            health_index.get_multiplier_from_reference_prevalence(dummy.age, dummy.sex)
-    #            == mean_multiplier_uk
-    #        )
+class TestComorbidities:
+    def test__mean_multiplier_reference(self, health_index):
+        comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
+        prevalence_reference_population = {
+            "feo": {
+                "f": {"0-10": 0.2, "10-100": 0.4},
+                "m": {"0-10": 0.6, "10-100": 0.5},
+                },
+            "guapo": {
+                "f": {"0-10": 0.1, "10-100": 0.1},
+                "m": {"0-10": 0.05, "10-100": 0.2},
+                },
+            "no_condition": {
+                "f": {"0-10": 0.7, "10-100": 0.5},
+                "m": {"0-10": 0.35, "10-100": 0.3},
+                },
+            }
+        health_index.use_comorbidities = True
+        health_index.comorbidity_multipliers = comorbidity_multipliers
+        health_index.comorbidity_prevalence_reference_population = (
+            prevalence_reference_population
+        )
+        dummy = Person.from_attributes(sex="f", age=40,)
+        mean_multiplier_uk = (
+            prevalence_reference_population["feo"]["f"]["10-100"]
+                * comorbidity_multipliers["feo"]
+            + prevalence_reference_population["guapo"]["f"]["10-100"]
+                * comorbidity_multipliers["guapo"]
+            + prevalence_reference_population["no_condition"]["f"]["10-100"]
+                * comorbidity_multipliers["no_condition"]
+        )
+        assert (
+            health_index.get_multiplier_from_reference_prevalence(dummy.age, dummy.sex)
+                == mean_multiplier_uk
+        )
 
     """
-
     def test__comorbidities_effect(self):
         comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
         prevalence_reference_population = {

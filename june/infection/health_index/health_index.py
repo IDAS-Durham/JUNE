@@ -29,7 +29,7 @@ def _parse_interval(interval):
     return pd.Interval(left=age1, right=age2, closed="both")
 
 class HealthIndexGenerator:
-    def __init__(self, rates_df: pd.DataFrame, care_home_min_age: int = 50, max_age=99):
+    def __init__(self, rates_df: pd.DataFrame, care_home_min_age: int = 50, max_age=99, use_comorbidities: bool = False, comorbidity_multipliers: Optional[dict]=None, comorbidity_prevalence_reference_population: Optional[dict]=None):
         """
         A Generator to determine the final outcome of an infection.
 
@@ -45,7 +45,10 @@ class HealthIndexGenerator:
         self.care_home_min_age = care_home_min_age
         self.rates_df = rates_df
         self.age_bins = self.rates_df.index
-        self.cumulative_probabilities = self._get_cumulative_probabilities(max_age)
+        self.probabilities = self._get_probabilities(max_age)
+        self.use_comorbidities = use_comorbidities
+        self.comorbidity_multipliers = comorbidity_multipliers
+        self.comorbidity_prevalence_reference_population = comorbidity_prevalence_reference_population
 
     @classmethod
     def from_file(cls, rates_file: str = default_rates_file, care_home_min_age=50):
@@ -66,21 +69,19 @@ class HealthIndexGenerator:
             population = "ch"
         else:
             population = "gp"
-        cumulative_probabilities = self.cumulative_probabilities[population][
+        probabilities = self.probabilities[population][
             person.sex
         ][person.age]
-        return cumulative_probabilities
+        return np.cumsum(probabilities)
 
     def get_multiplier_from_reference_prevalence(self, age, sex):
         """
         Compute mean comorbidity multiplier given the prevalence of the different comorbidities
-        in the reference population (for example the UK). It will be used to remove effect of comorbidities
-        in the reference population
+        in the reference population (for example the UK). It will be used to remove effect of 
+        comorbidities in the reference population
 
         Parameters
         ----------
-        prevalence_reference_population:
-            nested dictionary with prevalence of comorbidity by comorbodity, age and sex cohort
         age:
             age group to compute average multiplier
         sex:
@@ -93,16 +94,16 @@ class HealthIndexGenerator:
         weighted_multiplier = 0.0
         for (
             comorbidity
-        ) in self.data_to_rates.comorbidity_prevalence_reference_population.keys():
+        ) in self.comorbidity_prevalence_reference_population.keys():
             weighted_multiplier += (
-                self.data_to_rates.comorbidity_multipliers[comorbidity]
-                * self.data_to_rates.comorbidity_prevalence_reference_population[
+                self.comorbidity_multipliers[comorbidity]
+                * self.comorbidity_prevalence_reference_population[
                     comorbidity
                 ][sex][age]
             )
         return weighted_multiplier
 
-    def _set_cumulative_probability_per_age_bin(self, cp, age_bin, sex, population):
+    def _set_probability_per_age_bin(self, p, age_bin, sex, population):
         _sex = _sex_short_to_long[sex]
         asymptomatic_rate = self.rates_df.loc[
             age_bin, f"{population}_asymptomatic_{_sex}"
@@ -121,44 +122,44 @@ class HealthIndexGenerator:
         )
         # fill each age in bin
         for age in range(age_bin.left, age_bin.right + 1):
-            cp[population][sex][age][0] = asymptomatic_rate  # recovers as asymptomatic
-            cp[population][sex][age][1] = mild_rate  # recovers as mild
-            cp[population][sex][age][2] = severe_rate  # recovers as severe
-            cp[population][sex][age][3] = (
+            p[population][sex][age][0] = asymptomatic_rate  # recovers as asymptomatic
+            p[population][sex][age][1] = mild_rate  # recovers as mild
+            p[population][sex][age][2] = severe_rate  # recovers as severe
+            p[population][sex][age][3] = (
                 hospital_rate - hospital_dead_rate
             )  # recovers in the ward
-            cp[population][sex][age][4] = max(
+            p[population][sex][age][4] = max(
                 icu_rate - icu_dead_rate, 0
             )  # recovers in the icu
-            cp[population][sex][age][5] = max(home_dead_rate, 0)  # dies at home
-            cp[population][sex][age][6] = max(
+            p[population][sex][age][5] = max(home_dead_rate, 0)  # dies at home
+            p[population][sex][age][6] = max(
                 hospital_dead_rate - icu_dead_rate, 0
             )  # dies in the ward
-            # cp[population][sex][age][7] = icu_ifr  # dies in the icu
-            total = np.sum(cp[population][sex][age]) + icu_dead_rate
-            cp[population][sex][age] = np.cumsum(cp[population][sex][age]) / total
+            p[population][sex][age][7] = icu_dead_rate
+            total = np.sum(p[population][sex][age])
+            p[population][sex][age] = p[population][sex][age] / total
 
-    def _get_cumulative_probabilities(self, max_age=99):
+    def _get_probabilities(self, max_age=99):
         n_outcomes = 8
-        cumulative_probabilities = {
+        probabilities = {
             "ch": {
-                "m": np.zeros((max_age + 1, n_outcomes - 1)),
-                "f": np.zeros((max_age + 1, n_outcomes - 1)),
+                "m": np.zeros((max_age + 1, n_outcomes)),
+                "f": np.zeros((max_age + 1, n_outcomes)),
             },
             "gp": {
-                "m": np.zeros((max_age + 1, n_outcomes - 1)),
-                "f": np.zeros((max_age + 1, n_outcomes - 1)),
+                "m": np.zeros((max_age + 1, n_outcomes)),
+                "f": np.zeros((max_age + 1, n_outcomes)),
             },
         }
         for population in ("ch", "gp"):
             for sex in ["m", "f"]:
                 # values are constant at each bin
                 for age_bin in self.age_bins:
-                    self._set_cumulative_probability_per_age_bin(
-                        cp=cumulative_probabilities,
+                    self._set_probability_per_age_bin(
+                        p=probabilities,
                         age_bin=age_bin,
                         sex=sex,
                         population=population,
                     )
-        return cumulative_probabilities
+        return probabilities
 
