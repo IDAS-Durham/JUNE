@@ -177,6 +177,7 @@ def make_dummy_world():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     super_area = g.super_areas.members[0]
     area = g.areas.members[0]
+    area.households = []
     company = Company(super_area=super_area, n_workers_max=100, sector="S")
     school = School(
         coordinates=super_area.coordinates,
@@ -186,8 +187,15 @@ def make_dummy_world():
         sector="primary",
         area=area,
     )
-    household = Household()
+    household = Household(type="family")
     household.area = super_area.areas[0]
+    household2 = Household(type="family")
+    worker2 = Person.from_attributes(age=40)
+    worker2.area = super_area.areas[0]
+    household2.area = super_area.areas[0]
+    household2.add(worker2)
+    area.households.append(household)
+    area.households.append(household2)
     hospital = Hospital(
         n_beds=40,
         n_icu_beds=5,
@@ -204,7 +212,6 @@ def make_dummy_world():
     pupil = Person.from_attributes(age=6)
     pupil.area = super_area.areas[0]
     household.add(pupil, subgroup_type=household.SubgroupType.kids)
-    household.area = super_area.areas[0]
     school.add(pupil)
 
     student = Person.from_attributes(age=21)
@@ -224,12 +231,12 @@ def make_dummy_world():
     world = World()
     world.schools = Schools([school])
     world.hospitals = Hospitals([hospital])
-    world.households = Households([household])
+    world.households = Households([household, household2])
     world.universities = Universities([])
     world.companies = Companies([company])
     world.universities = Universities([university])
     world.care_homes = CareHomes([CareHome(area=area)])
-    world.people = Population([worker, pupil, student, commuter])
+    world.people = Population([worker, pupil, student, commuter, worker2])
     world.areas = Areas([super_area.areas[0]])
     world.areas[0].people = world.people
     world.super_areas = SuperAreas([super_area])

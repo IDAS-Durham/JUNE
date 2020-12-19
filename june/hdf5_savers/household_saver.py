@@ -103,27 +103,22 @@ def save_households_to_hdf5(
                     np.array([nan_integer], dtype=np.int)
                 )
             else:
-                residences_to_visit_ids.append(
-                    np.array(
-                        [residence.id for residence in household.residences_to_visit],
-                        dtype=np.int,
-                    )
-                )
-                residences_to_visit_specs.append(
-                    np.array(
-                        [residence.spec for residence in household.residences_to_visit],
-                        dtype="S20",
-                    )
-                )
+                to_visit_ids = []
+                to_visit_specs = []
+                to_visit_super_areas = []
+                for residence_type in household.residences_to_visit:
+                    for residence_to_visit in household.residences_to_visit[
+                        residence_type
+                    ]:
+                        to_visit_specs.append(residence_type)
+                        to_visit_ids.append(residence_to_visit.id)
+                        to_visit_super_areas.append(residence_to_visit.super_area.id)
+                residences_to_visit_specs.append(np.array(to_visit_specs, dtype="S20"))
+                residences_to_visit_ids.append(np.array(to_visit_ids, dtype=np.int))
                 residences_to_visit_super_areas.append(
-                    np.array(
-                        [
-                            residence.super_area.id
-                            for residence in household.residences_to_visit
-                        ],
-                        dtype=np.int,
-                    )
+                    np.array(to_visit_super_areas, dtype=np.int)
                 )
+
         if len(np.unique(list(chain(*residences_to_visit_ids)))) > 1:
             residences_to_visit_ids = np.array(
                 residences_to_visit_ids, dtype=int_vlen_type
@@ -253,7 +248,6 @@ def restore_households_properties_from_hdf5(
                     continue
                 visit_specs = residences_to_visit_specs[k]
                 visit_super_areas = residences_to_visit_super_areas[k]
-                to_append = []
                 for visit_id, visit_spec, visit_super_area in zip(
                     visit_ids, visit_specs, visit_super_areas
                 ):
@@ -267,9 +261,11 @@ def restore_households_properties_from_hdf5(
                             spec=visit_spec.decode(),
                         )
                     else:
-                        if visit_spec == b"household":
+                        visit_spec = visit_spec.decode()
+                        if visit_spec == "household":
                             residence = world.households.get_from_id(visit_id)
-                        elif visit_spec == b"care_home":
+                        elif visit_spec == "care_home":
                             residence = world.care_homes.get_from_id(visit_id)
-                    to_append.append(residence)
-                household.residences_to_visit = tuple(to_append)
+                    household.residences_to_visit[visit_spec] = (
+                        *household.residences_to_visit[visit_spec], residence
+                    )

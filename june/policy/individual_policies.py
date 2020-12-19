@@ -341,7 +341,6 @@ class CloseSchools(SkipActivity):
                     keyworkers_parents += 1
                     if keyworkers_parents > 1:
                         return True
-
         return False
 
     def check_skips_activity(self, person: "Person") -> bool:

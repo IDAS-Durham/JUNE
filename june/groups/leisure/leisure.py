@@ -128,12 +128,16 @@ class Leisure:
         logger.info("Done")
         logger.info("Distributing social venues to areas")
         for i, area in enumerate(areas):
+            print(area.id, area)
             if i % 2000 == 0:
                 logger.info(f"Distributed in {i} of {len(areas)} areas.")
             for activity, distributor in self.leisure_distributors.items():
                 if "visits" in activity:
                     continue
                 social_venues = distributor.get_possible_venues_for_area(area)
+                print(activity)
+                print(social_venues)
+                print(area.id)
                 if social_venues is not None:
                     area.social_venues[activity] = social_venues
         logger.info(f"Distributed in {len(areas)} of {len(areas)} areas.")

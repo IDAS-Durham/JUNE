@@ -1119,7 +1119,6 @@ class TestQuarantine:
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
         infect_person(worker, selector, "asymptomatic")
-        print(worker.infection.time_of_symptoms_onset)
         sim.update_health_status(0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()

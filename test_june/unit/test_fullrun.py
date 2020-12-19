@@ -34,6 +34,7 @@ def test__full_run(dummy_world, selector, test_results):
         person.infection = None
         person.susceptibility = 1.0
         person.dead = False
+        print(person.residence.group.residences_to_visit)
     travel = Travel()
     leisure = generate_leisure_for_config(
         world=dummy_world, config_filename=test_config

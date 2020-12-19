@@ -14,6 +14,7 @@ from .leisure_policies import (
     LeisurePolicies,
     CloseLeisureVenue,
     ChangeLeisureProbability,
+    ChangeVisitsProbability,
 )
 from .individual_policies import (
     IndividualPolicy,
@@ -39,5 +40,5 @@ from .regional_compliance import (
     RegionalCompliance,
     RegionalCompliances,
     TieredLockdown,
-    TieredLockdowns
+    TieredLockdowns,
 )

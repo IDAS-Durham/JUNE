@@ -51,3 +51,10 @@ hours_per_day:
     female:
       0-100: 12
 drags_household_probability: 0
+residence_type_probabilities:
+  # if a person can visit both,
+  # with what probability will
+  # that person visit one or the 
+  # other.
+  household: 0.66
+  care_home: 0.34

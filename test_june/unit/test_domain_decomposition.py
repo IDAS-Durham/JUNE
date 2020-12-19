@@ -267,12 +267,17 @@ class TestDomainDecomposition:
                     assert len(household.residences_to_visit) == len(
                         household_domain.residences_to_visit
                     )
-                    for rv1, rv2 in zip(
-                        household.residences_to_visit, household_domain.residences_to_visit
-                    ):
-                        assert rv1.id == rv2.id
-                        assert rv1.spec == rv2.spec
-                        if rv1.super_area.id not in domain_super_area_ids:
-                            assert rv2.external
-                        else:
-                            assert not rv2.external
+                    assert len(household.residences_to_visit) == len(
+                        household_domain.residences_to_visit
+                    )
+                    for rv1_spec in household.residences_to_visit:
+                        for r1, r2 in zip(
+                            household.residences_to_visit[rv1_spec],
+                            household_domain.residences_to_visit[rv1_spec],
+                        ):
+                            assert r1.id == r2.id
+                            assert r1.spec == r2.spec
+                            if r1.super_area.id not in domain_super_area_ids:
+                                assert r2.external
+                            else:
+                                assert not r2.external

@@ -1,4 +1,5 @@
 import datetime
+from copy import deepcopy
 import numpy as np
 from collections import defaultdict
 from typing import Dict, Union
@@ -36,6 +37,8 @@ class LeisurePolicies(PolicyCollection):
         for region in leisure.regions:
             region.policy["global_closed_venues"] = set()
         leisure.policy_reductions = {}
+        if "residence_visits" in leisure.leisure_distributors:
+            leisure.leisure_distributors["residence_visits"].policy_reductions = {}
         change_leisure_probability_policies_counter = 0
         for policy in self.get_active(date):
             if policy.policy_subtype == "change_leisure_probability":
@@ -140,9 +143,32 @@ class ChangeLeisureProbability(LeisurePolicy):
         return ret
 
     def apply(self, leisure: Leisure):
-        """
-        Changes probabilities of doing leisure activities according to the policies specified.
-        The current probabilities are stored in the policies, and restored at the end of the policy
-        time span. Keep this in mind when trying to stack policies that modify the same social venue.
-        """
         return self.activity_reductions
+
+
+class ChangeVisitsProbability(LeisurePolicy):
+    policy_subtype = "change_visits_probability"
+
+    def __init__(
+        self,
+        start_time: str,
+        end_time: str,
+        new_residence_type_probabilities: Dict[str, float],
+    ):
+        """
+        Changes the probability of the specified leisure activities.
+
+        Parameters
+        ----------
+        - start_time : starting time of the policy.
+        - end_time : end time of the policy.
+        - new_residence_type_probabilities
+            new probabilities for residence visits splits, eg, {"household" : 0.8, "care_home" : 0.2}
+        """
+        super().__init__(start_time, end_time)
+        self.policy_reductions = new_residence_type_probabilities
+
+    def apply(self, leisure: Leisure):
+        leisure.leisure_distributors[
+            "residence_visits"
+        ].policy_reductions = self.policy_reductions

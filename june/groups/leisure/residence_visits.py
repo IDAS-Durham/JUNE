@@ -1,8 +1,11 @@
 import yaml
 from random import shuffle, randint
+import numpy as np
+from numpy.random import choice
 
 from june.groups.leisure import SocialVenueDistributor
 from june.paths import configs_path
+from june.utils import random_choice_numba
 
 default_config_filename = configs_path / "defaults/groups/leisure/visits.yaml"
 
@@ -15,7 +18,15 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
     so we ignore some parameters.
     """
 
-    def __init__(self, times_per_week, hours_per_day, drags_household_probability=0):
+    def __init__(
+        self,
+        residence_type_probabilities,
+        times_per_week,
+        hours_per_day,
+        drags_household_probability=0,
+    ):
+        self.residence_type_probabilities = residence_type_probabilities
+        self.policy_reductions = {}
         super().__init__(
             social_venues=None,
             times_per_week=times_per_week,
@@ -65,8 +76,8 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
                     households_to_visit.append(house)
                     n_linked += 1
                 if households_to_visit:
-                    household.residences_to_visit = tuple(
-                        *household.residences_to_visit, households_to_visit
+                    household.residences_to_visit["household"] = tuple(
+                        *household.residences_to_visit["household"], households_to_visit
                     )
 
     def link_households_to_care_homes(self, super_areas):
@@ -96,13 +107,28 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
                     ]
                     for i, person in enumerate(people_in_care_home):
                         household = households_super_area[i]
-                        household.residences_to_visit = (
-                            *household.residences_to_visit,
+                        household.residences_to_visit["care_home"] = (
+                            *household.residences_to_visit["care_home"],
                             area.care_home,
                         )
 
     def get_leisure_group(self, person):
-        candidates = person.residence.group.residences_to_visit
+        residence_types = list(person.residence.group.residences_to_visit.keys())
+        if self.policy_reductions:
+            probabilities = self.policy_reductions
+        else:
+            probabilities = self.residence_type_probabilities
+        residence_type_probabilities = np.array(
+            [
+                probabilities[residence_type]
+                for residence_type in residence_types
+            ]
+        )
+        residence_type_probabilities = (
+            residence_type_probabilities / residence_type_probabilities.sum()
+        )
+        which_type = choice(residence_types, p=residence_type_probabilities)
+        candidates = person.residence.group.residences_to_visit[which_type]
         n_candidates = len(candidates)
         if n_candidates == 0:
             return

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -16,7 +16,14 @@ from june.groups import (
     Universities,
     Cemeteries,
 )
-from june.groups.leisure import Cinemas, Pubs, Cinema, Pub, generate_leisure_for_config
+from june.groups.leisure import (
+    Cinemas,
+    Pubs,
+    Cinema,
+    Pub,
+    generate_leisure_for_config,
+    generate_leisure_for_world,
+)
 from june.infection import SymptomTag
 from june.infection.infection_selector import InfectionSelector
 from june.interaction import Interaction
@@ -28,6 +35,7 @@ from june.policy import (
     LeisurePolicies,
     TieredLockdown,
     TieredLockdowns,
+    ChangeVisitsProbability,
 )
 from june.simulator import Simulator
 from june.world import World
@@ -325,3 +333,43 @@ class TestReduceLeisureProbabilities:
             half_comp_probs["drags_household"]["pub"]
             == full_comp_probs["drags_household"]["pub"]
         )
+
+
+class TestChangeVisitsProbabilities:
+    def test__change_split(self, setup_policy_world):
+        world, pupil, student, worker, sim = setup_policy_world
+        super_area = world.super_areas[0]
+        leisure = generate_leisure_for_world(
+            world=world, list_of_leisure_groups=["care_home_visits", "household_visits"]
+        )
+        reduce_leisure_probabilities = ChangeVisitsProbability(
+            start_time="2020-03-02",
+            end_time="2020-03-05",
+            new_residence_type_probabilities={"household": 0.9, "care_home": 0.1},
+        )
+        policies = Policies([reduce_leisure_probabilities])
+        assert leisure.leisure_distributors[
+            "residence_visits"
+        ].residence_type_probabilities == {"household": 0.66, "care_home": 0.34}
+        starting_date = datetime(2020, 2, 25)
+        ending_date = datetime(2020, 4, 1)
+        current_date = starting_date
+        checks1 = False
+        checks2 = False
+        while current_date < ending_date:
+            policies.leisure_policies.apply(date=current_date, leisure=leisure)
+            if current_date < datetime(2020, 3, 2) or current_date >= datetime(
+                2020, 3, 5
+            ):
+                assert (
+                    leisure.leisure_distributors["residence_visits"].policy_reductions
+                    == {}
+                )
+                checks1 = True
+            else:
+                assert leisure.leisure_distributors[
+                    "residence_visits"
+                ].policy_reductions == {"household": 0.9, "care_home": 0.1}
+                checks2 = True
+            current_date += timedelta(days=1)
+        assert checks1 and checks2

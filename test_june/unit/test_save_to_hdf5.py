@@ -52,6 +52,7 @@ from june import paths
 
 from pytest import fixture
 
+
 @pytest.fixture(autouse=True)
 def remove_hdf5(test_results):
     with h5py.File(test_results / "test.hdf5", "w"):
@@ -250,9 +251,7 @@ class TestSaveTravel:
         city_transports = full_world.city_transports
         assert len(cities) > 0
         save_cities_to_hdf5(cities, test_results / "test.hdf5")
-        cities_recovered = load_cities_from_hdf5(
-            test_results / "test.hdf5"
-        )
+        cities_recovered = load_cities_from_hdf5(test_results / "test.hdf5")
         assert len(cities) == len(cities_recovered)
         for city, city_recovered in zip(cities, cities_recovered):
             assert city.name == city_recovered.name
@@ -331,7 +330,7 @@ class TestSaveLeisure:
                 full_world.pubs,
                 full_world.groceries,
                 full_world.cinemas,
-                full_world.gyms
+                full_world.gyms,
             ],
             file_path=test_results / "test.hdf5",
         )
@@ -439,8 +438,14 @@ class TestSaveWorld:
                 assert p1.work_super_area == p1.primary_activity.group.super_area
                 assert p2.work_super_area == p2.primary_activity.group.super_area
                 assert p1.work_super_area.id == p2.primary_activity.group.super_area.id
-                assert p1.work_super_area.coordinates[0] == p2.work_super_area.coordinates[0]
-                assert p1.work_super_area.coordinates[1] == p2.work_super_area.coordinates[1]
+                assert (
+                    p1.work_super_area.coordinates[0]
+                    == p2.work_super_area.coordinates[0]
+                )
+                assert (
+                    p1.work_super_area.coordinates[1]
+                    == p2.work_super_area.coordinates[1]
+                )
                 if p1.work_super_area.city is None:
                     assert p2.work_super_area.city is None
                 else:
@@ -571,6 +576,10 @@ class TestSaveWorld:
         for h1, h2 in zip(full_world.households, full_world_loaded.households):
             assert h1.id == h2.id
             assert len(h1.residences_to_visit) == len(h2.residences_to_visit)
-            for to_visit1, to_visit2 in zip(h1.residences_to_visit, h2.residences_to_visit):
-                assert to_visit1.spec == to_visit2.spec
-                assert to_visit1.id == to_visit2.id
+            for (key1, value1), (key2, value2) in zip(
+                h1.residences_to_visit.items(), h2.residences_to_visit.items()
+            ):
+                assert key1 == key2
+                for residence1, residence2 in zip(value1, value2):
+                    assert residence1.id == residence2.id
+                    assert residence1.spec == residence2.spec

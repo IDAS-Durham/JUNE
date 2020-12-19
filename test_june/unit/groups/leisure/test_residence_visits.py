@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from june.groups.leisure.residence_visits import ResidenceVisitsDistributor
@@ -9,6 +10,7 @@ from june.geography import SuperArea, SuperAreas, Area, Areas
 @pytest.fixture(name="rv_distributor", scope="module")
 def make_rvd():
     residence_visits_distributor = ResidenceVisitsDistributor(
+        residence_type_probabilities={"household": 0.7, "care_home": 0.3},
         times_per_week={
             "weekday": {"male": {"0-100": 1}, "female": {"0-100": 1}},
             "weekend": {"male": {"0-100": 1}, "female": {"0-100": 1}},
@@ -32,7 +34,7 @@ def make_super_areas(rv_distributor):
     for i in range(n_super_areas):
         areas_super_area = []
         for j in range(n_areas_per_super_area):
-            area = Area(coordinates=[i,j])
+            area = Area(coordinates=[i, j])
             for _ in range(n_households_per_area):
                 household = Household(type="family")
                 household.add(person)
@@ -43,7 +45,7 @@ def make_super_areas(rv_distributor):
             area.care_home = CareHome(area=area)
             areas.append(area)
             areas_super_area.append(area)
-        super_area = SuperArea(areas=areas_super_area, coordinates=[i,i])
+        super_area = SuperArea(areas=areas_super_area, coordinates=[i, i])
         super_areas.append(super_area)
     super_areas = SuperAreas(super_areas)
     rv_distributor.link_households_to_households(super_areas)
@@ -56,7 +58,7 @@ class TestResidenceVisitsDistributor:
         household = Household(type="family")
         household2 = Household()
         household.add(person)
-        household.residences_to_visit = (household2,)
+        household.residences_to_visit["household"] = (household2,)
         rv_distributor.get_leisure_group(person) == household2
         rv_distributor.get_leisure_subgroup(person) == household2[
             household2.SubgroupType.kids
@@ -89,8 +91,7 @@ class TestHouseholdVisits:
                         has_visits = True
                         to_visit = [
                             residence
-                            for residence in household.residences_to_visit
-                            if residence.spec == "household"
+                            for residence in household.residences_to_visit["household"]
                         ]
                         assert len(to_visit) in range(2, 5)
                         for household in to_visit:
@@ -106,7 +107,7 @@ class TestHouseholdVisits:
         household_residents = Household(type="family")
         household_residents.add(resident1)
         household_residents.add(resident2)
-        household_visitor.residences_to_visit = (household_residents,)
+        household_visitor.residences_to_visit["household"] = (household_residents,)
         # resident 1 is at the pub, he can go bakc home
         pub = Pub()
         pub.add(resident1)
@@ -152,3 +153,26 @@ class TestCareHomeVisits:
                     else:
                         raise ValueError
         assert has_visits
+
+    def test__type_probabilities(self, rv_distributor):
+        visitor = Person.from_attributes(age=20)
+        household = Household(type="family")
+        household2 = Household(type="family")
+        care_home = CareHome()
+        household.add(visitor)
+        household.residences_to_visit = {
+            "household": (household2,),
+            "care_home": (care_home,),
+        }
+        gets_household = 0
+        gets_care_home = 0
+        for _ in range(500):
+            tovisit = rv_distributor.get_leisure_group(visitor)
+            assert tovisit in [household2, care_home]
+            if tovisit == household2:
+                gets_household += 1
+            else:
+                gets_care_home += 1
+        total = gets_care_home + gets_household
+        assert np.isclose(gets_household / total, 0.7, rtol=0.1)
+        assert np.isclose(gets_care_home / total, 0.3, rtol=0.1)

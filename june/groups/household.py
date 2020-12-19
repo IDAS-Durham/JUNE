@@ -53,7 +53,7 @@ class Household(Group):
         self.quarantine_starting_date = -99
         self.max_size = max_size
         self.residents = ()
-        self.residences_to_visit = ()
+        self.residences_to_visit = defaultdict(tuple)
         self.household_to_care = None
         self.being_visited = False  # this is True when people from other households have been added to the group
         self.receiving_care = False
