@@ -133,6 +133,14 @@ class ChangeLeisureProbability(LeisurePolicy):
                         )
                         for day_type in day_types:
                             ret[activity][day_type][june_sex] = probs
+                elif first_entry == "both_sexes":
+                    for sex in sexes:
+                        june_sex = _sex_t[sex]
+                        probs = parse_age_probabilities(
+                            activity_reductions[activity]["both_sexes"]
+                        )
+                        for day_type in day_types:
+                            ret[activity][day_type][june_sex] = probs
                 else:
                     for day_type in day_types:
                         for sex in sexes:

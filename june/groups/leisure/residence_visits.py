@@ -25,6 +25,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         hours_per_day,
         drags_household_probability=0,
     ):
+        # it is necessary to make them arrays for performance
         self.residence_type_probabilities = residence_type_probabilities
         self.policy_reductions = {}
         super().__init__(
@@ -57,13 +58,10 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         """
         for super_area in super_areas:
             households_in_super_area = [
-                household
-                for area in super_area.areas
-                for household in area.households
-                if household.type != "communal"
+                household for area in super_area.areas for household in area.households
             ]
             for household in households_in_super_area:
-                if household.size == 0:
+                if household.n_residents == 0:
                     continue
                 households_to_link_n = randint(2, 4)
                 households_to_visit = []
@@ -114,20 +112,24 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
 
     def get_leisure_group(self, person):
         residence_types = list(person.residence.group.residences_to_visit.keys())
-        if self.policy_reductions:
-            probabilities = self.policy_reductions
+        if not residence_types:
+            return
+        if len(residence_types) == 0:
+            which_type = residence_types[0]
         else:
-            probabilities = self.residence_type_probabilities
-        residence_type_probabilities = np.array(
-            [
-                probabilities[residence_type]
-                for residence_type in residence_types
-            ]
-        )
-        residence_type_probabilities = (
-            residence_type_probabilities / residence_type_probabilities.sum()
-        )
-        which_type = choice(residence_types, p=residence_type_probabilities)
+            if self.policy_reductions:
+                probabilities = self.policy_reductions
+            else:
+                probabilities = self.residence_type_probabilities
+            residence_type_probabilities = np.array(
+                [probabilities[residence_type] for residence_type in residence_types]
+            )
+            residence_type_probabilities = (
+                residence_type_probabilities / residence_type_probabilities.sum()
+            )
+            which_type = random_choice_numba(
+                residence_types, residence_type_probabilities
+            )
         candidates = person.residence.group.residences_to_visit[which_type]
         n_candidates = len(candidates)
         if n_candidates == 0:
