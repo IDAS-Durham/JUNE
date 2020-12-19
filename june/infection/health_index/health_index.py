@@ -99,7 +99,7 @@ class HealthIndexGenerator:
             comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
         female_prevalence = read_comorbidity_csv(female_prevalence_path)
         male_prevalence = read_comorbidity_csv(male_prevalence_path)
-        prevalence_reference_population = convert_comorbidities_prevalence_to_dict(
+        comorbidity_prevalence_reference_population = convert_comorbidities_prevalence_to_dict(
             female_prevalence, male_prevalence
         )
         return cls.from_file(
@@ -188,7 +188,9 @@ class HealthIndexGenerator:
             age=age, sex=sex
         )
         effective_multiplier = multiplier / reference_weighted_multiplier
+        return self.apply_effective_multiplier(probabilities=probabilities, effective_multiplier=effective_multiplier)
 
+    def apply_effective_multiplier(self, probabilities, effective_multiplier):
         probabilities_with_comorbidity = np.zeros_like(probabilities)
         p_mild = probabilities[: self.max_mild_symptom_tag].sum()
         p_severe = probabilities[self.max_mild_symptom_tag :].sum() + (
