@@ -22,14 +22,24 @@ index_to_maximum_symptoms_tag = {
 
 default_rates_file = paths.data_path / "input/health_index/infection_outcome_rates.csv"
 
+
 def _parse_interval(interval):
     age1, age2 = interval.split(",")
     age1 = int(age1.split("[")[-1])
     age2 = int(age2.split("]")[0])
     return pd.Interval(left=age1, right=age2, closed="both")
 
+
 class HealthIndexGenerator:
-    def __init__(self, rates_df: pd.DataFrame, care_home_min_age: int = 50, max_age=99, use_comorbidities: bool = False, comorbidity_multipliers: Optional[dict]=None, comorbidity_prevalence_reference_population: Optional[dict]=None):
+    def __init__(
+        self,
+        rates_df: pd.DataFrame,
+        care_home_min_age: int = 50,
+        max_age=99,
+        use_comorbidities: bool = False,
+        comorbidity_multipliers: Optional[dict] = None,
+        comorbidity_prevalence_reference_population: Optional[dict] = None,
+    ):
         """
         A Generator to determine the final outcome of an infection.
 
@@ -48,9 +58,13 @@ class HealthIndexGenerator:
         self.probabilities = self._get_probabilities(max_age)
         self.use_comorbidities = use_comorbidities
         if self.use_comorbidities:
+            self.max_mild_symptom_tag = [
+                tag.value for tag in SymptomTag if tag.name == "severe"
+            ][0]
             self.comorbidity_multipliers = comorbidity_multipliers
-            self.comorbidity_prevalence_reference_population = comorbidity_prevalence_reference_population
-            self._parse_prevalence_comorbidities_in_reference_population()
+            self.comorbidity_prevalence_reference_population = self._parse_prevalence_comorbidities_in_reference_population(
+                comorbidity_prevalence_reference_population
+            )
 
     @classmethod
     def from_file(cls, rates_file: str = default_rates_file, care_home_min_age=50):
@@ -71,9 +85,14 @@ class HealthIndexGenerator:
             population = "ch"
         else:
             population = "gp"
-        probabilities = self.probabilities[population][
-            person.sex
-        ][person.age]
+        probabilities = self.probabilities[population][person.sex][person.age]
+        if self.use_comorbidities and person.comorbidity is not None:
+            probabilities = self.adjust_for_comorbidities(
+                    probabilities=probabilities,
+                    comorbidity=person.comorbidity,
+                    age=person.age,
+                    sex=person.sex
+            )
         return np.cumsum(probabilities)
 
     def get_multiplier_from_reference_prevalence(self, age, sex):
@@ -94,16 +113,59 @@ class HealthIndexGenerator:
                 weighted mean of the multipliers given prevalence
         """
         weighted_multiplier = 0.0
-        for (
-            comorbidity
-        ) in self.comorbidity_prevalence_reference_population.keys():
+        for comorbidity in self.comorbidity_prevalence_reference_population.keys():
             weighted_multiplier += (
                 self.comorbidity_multipliers[comorbidity]
-                * self.comorbidity_prevalence_reference_population[
-                    comorbidity
-                ][sex][age]
+                * self.comorbidity_prevalence_reference_population[comorbidity][sex][
+                    age
+                ]
             )
         return weighted_multiplier
+
+    def adjust_for_comorbidities(self, probabilities: List[float], comorbidity: str, age: int, sex: str):
+        """
+        Compute adjusted probabilities for a person with given comorbidity, age and sex.
+        Parameters
+        ----------
+        probabilities:
+            list with probability values for the 8 different outcomes (has len 7, but 8th value
+            can be inferred from 1 - probabilities.sum())
+        comorbidity:
+            comorbidty type that the person has
+        age:
+            age group to compute average multiplier
+        sex:
+            sex group to compute average multiplier
+        Returns
+        -------
+            probabilities adjusted for comorbidity 
+        """
+
+        multiplier = self.comorbidity_multipliers.get(comorbidity, 1.0)
+        reference_weighted_multiplier = self.get_multiplier_from_reference_prevalence(
+            age=age, sex=sex
+        )
+        effective_multiplier = multiplier / reference_weighted_multiplier
+    
+        probabilities_with_comorbidity = np.zeros_like(probabilities)
+        p_mild = probabilities[: self.max_mild_symptom_tag].sum()
+        p_severe = probabilities[self.max_mild_symptom_tag :].sum() + (
+            1 - probabilities.sum()
+        )
+        p_severe_with_comorbidity = p_severe * effective_multiplier
+        p_mild_with_comorbidity = 1 - p_severe_with_comorbidity
+        probabilities_with_comorbidity[: self.max_mild_symptom_tag] = (
+            probabilities[: self.max_mild_symptom_tag]
+            * p_mild_with_comorbidity
+            / p_mild
+        )
+        probabilities_with_comorbidity[self.max_mild_symptom_tag :] = (
+            probabilities[self.max_mild_symptom_tag :]
+            * p_severe_with_comorbidity
+            / p_severe
+        )
+        return probabilities_with_comorbidity
+
 
     def _set_probability_per_age_bin(self, p, age_bin, sex, population):
         _sex = _sex_short_to_long[sex]
@@ -119,8 +181,7 @@ class HealthIndexGenerator:
         ]
         icu_dead_rate = self.rates_df.loc[age_bin, f"{population}_icu_ifr_{_sex}"]
         severe_rate = max(
-            0,
-            1 - (hospital_rate + home_dead_rate + asymptomatic_rate + mild_rate),
+            0, 1 - (hospital_rate + home_dead_rate + asymptomatic_rate + mild_rate),
         )
         # fill each age in bin
         for age in range(age_bin.left, age_bin.right + 1):
@@ -165,9 +226,13 @@ class HealthIndexGenerator:
                     )
         return probabilities
 
-    def _parse_prevalence_comorbidities_in_reference_population(self,):
-        for comorbidity, values in self.comorbidity_prevalence_reference_population.items():
-            self.comorbidity_prevalence_reference_population[comorbidity] = {
-                    'f': parse_age_probabilities(values['f']),
-                    'm': parse_age_probabilities(values['m']),
+    def _parse_prevalence_comorbidities_in_reference_population(
+        self, comorbidity_prevalence_reference_population
+    ):
+        parsed_comorbidity_prevalence = {}
+        for comorbidity, values in comorbidity_prevalence_reference_population.items():
+            parsed_comorbidity_prevalence[comorbidity] = {
+                "f": parse_age_probabilities(values["f"]),
+                "m": parse_age_probabilities(values["m"]),
             }
+        return parsed_comorbidity_prevalence
