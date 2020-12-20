@@ -2,17 +2,17 @@ import numpy as np
 from numba import jit
 import yaml
 import logging
-from random import random, randint 
+from random import random, randint
 from typing import List, Dict
 from june.demography import Person
-from june.geography import Geography, SuperAreas, Areas
+from june.geography import Geography, SuperAreas, Areas, Regions, Region
 from june.groups.leisure import (
     SocialVenueDistributor,
     PubDistributor,
     GroceryDistributor,
     CinemaDistributor,
-    HouseholdVisitsDistributor,
-    CareHomeVisitsDistributor,
+    ResidenceVisitsDistributor,
+    GymDistributor
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries
 from june.groups import Household, ExternalSubgroup, Households
@@ -23,18 +23,6 @@ from june import paths
 default_config_filename = paths.configs_path / "config_example.yaml"
 
 logger = logging.getLogger("leisure")
-
-
-@jit(nopython=True)
-def roll_activity_dice(poisson_parameters, delta_time, n_activities):
-    total_poisson_parameter = np.sum(poisson_parameters)
-    does_activity = random() < (1.0 - np.exp(-total_poisson_parameter * delta_time))
-    if does_activity:
-        poisson_parameters_normalized = poisson_parameters / total_poisson_parameter
-        return random_choice_numba(
-            np.arange(0, n_activities), poisson_parameters_normalized
-        )
-    return None
 
 
 def generate_leisure_for_world(list_of_leisure_groups, world):
@@ -51,7 +39,12 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         if not hasattr(world, "pubs") or world.pubs is None or len(world.pubs) == 0:
             logger.warning("No pubs in this world/domain")
         else:
-            leisure_distributors["pubs"] = PubDistributor.from_config(world.pubs)
+            leisure_distributors["pub"] = PubDistributor.from_config(world.pubs)
+    if "gyms" in list_of_leisure_groups:
+        if not hasattr(world, "gyms") or world.gyms is None or len(world.gyms) == 0:
+            logger.warning("No gyms in this world/domain")
+        else:
+            leisure_distributors["gym"] = GymDistributor.from_config(world.gyms)
     if "cinemas" in list_of_leisure_groups:
         if (
             not hasattr(world, "cinemas")
@@ -60,7 +53,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         ):
             logger.warning("No cinemas in this world/domain")
         else:
-            leisure_distributors["cinemas"] = CinemaDistributor.from_config(
+            leisure_distributors["cinema"] = CinemaDistributor.from_config(
                 world.cinemas
             )
     if "groceries" in list_of_leisure_groups:
@@ -71,22 +64,21 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         ):
             logger.warning("No groceries in this world/domain")
         else:
-            leisure_distributors["groceries"] = GroceryDistributor.from_config(
+            leisure_distributors["grocery"] = GroceryDistributor.from_config(
                 world.groceries
             )
-    if "care_home_visits" in list_of_leisure_groups:
-        if not hasattr(world, "care_homes"):
-            raise ValueError("Your world does not have care homes.")
+    if (
+        "household_visits" in list_of_leisure_groups
+        or "care_home_visits" in list_of_leisure_groups
+    ):
+        if not hasattr(world, "care_homes") or not hasattr(world, "households"):
+            raise ValueError(
+                "Your world does not have care homes or households for visits."
+            )
         leisure_distributors[
-            "care_home_visits"
-        ] = CareHomeVisitsDistributor.from_config()
-    if "household_visits" in list_of_leisure_groups:
-        if not hasattr(world, "households"):
-            raise ValueError("Your world does not have households.")
-        leisure_distributors[
-            "household_visits"
-        ] = HouseholdVisitsDistributor.from_config()
-    leisure = Leisure(leisure_distributors)
+            "residence_visits"
+        ] = ResidenceVisitsDistributor.from_config()
+    leisure = Leisure(leisure_distributors=leisure_distributors, regions=world.regions)
     return leisure
 
 
@@ -113,28 +105,30 @@ class Leisure:
     Class to manage all possible activites that happen during leisure time.
     """
 
-    def __init__(self, leisure_distributors: Dict[str, SocialVenueDistributor]):
+    def __init__(
+        self,
+        leisure_distributors: Dict[str, SocialVenueDistributor],
+        regions: Regions = None,
+    ):
         """
         Parameters
         ----------
         leisure_distributors
             List of social venue distributors.
         """
-        self.probabilities_by_age_sex = None
+        self.probabilities_by_region_sex_age = None
         self.leisure_distributors = leisure_distributors
         self.n_activities = len(self.leisure_distributors)
-        self.closed_venues = set()
+        self.policy_reductions = {}
+        self.regions = regions  # needed for regional compliances
 
     def distribute_social_venues_to_areas(self, areas: Areas, super_areas: SuperAreas):
-        logger.info("Linking households for visits")
-        if "household_visits" in self.leisure_distributors:
-            self.leisure_distributors["household_visits"].link_households_to_households(
+        logger.info("Linking households and care homes for visits")
+        if "residence_visits" in self.leisure_distributors:
+            self.leisure_distributors["residence_visits"].link_households_to_households(
                 super_areas
             )
-        logger.info("Done")
-        logger.info("Linking households with care homes for visits")
-        if "care_home_visits" in self.leisure_distributors:
-            self.leisure_distributors["care_home_visits"].link_households_to_care_homes(
+            self.leisure_distributors["residence_visits"].link_households_to_care_homes(
                 super_areas
             )
         logger.info("Done")
@@ -150,55 +144,134 @@ class Leisure:
                     area.social_venues[activity] = social_venues
         logger.info(f"Distributed in {len(areas)} of {len(areas)} areas.")
 
-    def update_household_and_care_home_visits_targets(self, people: List[Person]):
-        """
-        Updates the candidates to go for visiting households and care homes.
-        This is necessary in case the relatives have died.
-        """
-        for person in people:
-            if person.residence is None or person.residence.group.spec != "household":
-                continue
-            if "household_visits" in person.residence.group.social_venues:
-                person.residence.group.social_venues[
-                    "household_visits"
-                ] = self.leisure_distributors[
-                    "household_visits"
-                ].get_possible_venues_for_household(
-                    person.residence.group
+    def generate_leisure_probabilities_for_timestep(
+            self, delta_time: float, working_hours: bool, day_type:str,
+    ):
+        self.probabilities_by_region_sex_age = {}
+        if self.regions:
+            for region in self.regions:
+                self.probabilities_by_region_sex_age[
+                    region.name
+                ] = self._generate_leisure_probabilities_for_age_and_sex(
+                    delta_time=delta_time,
+                    working_hours=working_hours,
+                    day_type=day_type,
+                    region=region,
                 )
-            if "care_home_visits" in person.residence.group.social_venues:
-                person.residence.group.social_venues[
-                    "care_home_visits"
-                ] = self.leisure_distributors[
-                    "care_home_visits"
-                ].get_possible_venues_for_household(
-                    person.residence.group
+        else:
+            self.probabilities_by_region_sex_age = (
+                self._generate_leisure_probabilities_for_age_and_sex(
+                    delta_time=delta_time,
+                    working_hours=working_hours,
+                    day_type=day_type,
+                    region=None,
                 )
+            )
 
-    def get_leisure_probability_for_age_and_sex(
-        self, age, sex, delta_time, is_weekend, working_hours
+    def get_subgroup_for_person_and_housemates(
+        self, person: Person, to_send_abroad: dict = None
+    ):
+        """
+        Main function of the Leisure class. For every possible activity a person can do,
+        we chech the Poisson parameter lambda = probability / day * deltat of that activty
+        taking place. We then sum up the Poisson parameters to decide whether a person
+        does any activity at all. The relative weight of the Poisson parameters gives then
+        the specific activity a person does.
+        If a person ends up going to a social venue, we do a second check to see if his/her
+        entire household accompanies him/her.
+        The social venue subgroups are attached to the involved people, but they are not
+        added to the subgroups, since it is possible they change their plans if a policy is in
+        place or they have other responsibilities.
+        The function returns None if no activity takes place.
+
+        Parameters
+        ----------
+        person
+            an instance of person
+        """
+        if person.residence.group.spec == "care_home":
+            return
+        prob_age_sex = self._get_activity_probabilities_for_person(person=person)
+        if random() < prob_age_sex["does_activity"]:
+            activity_idx = random_choice_numba(
+                arr=np.arange(0, len(prob_age_sex["activities"])),
+                prob=np.array(list(prob_age_sex["activities"].values())),
+            )
+            activity = list(prob_age_sex["activities"].keys())[activity_idx]
+            activity_distributor = self.leisure_distributors[activity]
+            subgroup = activity_distributor.get_leisure_subgroup(
+                person, to_send_abroad=to_send_abroad
+            )
+            person.subgroups.leisure = subgroup
+            activity_distributor.send_household_with_person_if_necessary(
+                person=person, to_send_abroad=to_send_abroad
+            )
+            return subgroup
+
+    def _generate_leisure_probabilities_for_age_and_sex(
+        self,
+        delta_time: float,
+        working_hours: bool,
+        day_type: str,
+        region: Region 
+    ):
+        ret = {}
+        for sex in ["m", "f"]:
+            probs = [
+                self._get_leisure_probability_for_age_and_sex(
+                    age=age,
+                    sex=sex,
+                    delta_time=delta_time,
+                    day_type=day_type,
+                    working_hours=working_hours,
+                    region=region
+                )
+                for age in range(0, 100)
+            ]
+            ret[sex] = probs
+        return ret
+
+    def _get_leisure_probability_for_age_and_sex(
+        self,
+        age: int,
+        sex: str,
+        delta_time: float,
+        day_type: str,
+        working_hours: bool,
+        region: Region,
     ):
         """
         Computes the probabilities of going to different leisure activities,
         and dragging the household with the person that does the activity.
+        When policies are present, then the regional leisure poisson parameters are
+        changed according to the present policy poisson parameter (lambda_2) and the local
+        regional compliance like so:
+        $ lambda = lambda_1 + regional_compliance * (lambda_2 - lambda_1) $
+        where lambda_1 is the original poisson parameter.
+        lockdown tier: 1,2,3 - has different implications for leisure:
+            1: do nothing
+            2: stop household-to-household probability with regional compliance and
+               reduce pub probability by 20% - conservative to account for the serving of meals
+            3: stop household-to-household probability with regional compliance and
+               reduce pub and cinema probability to 0 to simulate closure
         """
         poisson_parameters = []
         drags_household_probabilities = []
         activities = []
         for activity, distributor in self.leisure_distributors.items():
-            if (
-                activity == "household_visits" and working_hours
-            ) or distributor.spec in self.closed_venues:
-                # we do not have household visits during working hours as most households by then.
-                continue
             drags_household_probabilities.append(
                 distributor.drags_household_probability
             )
-            poisson_parameters.append(
-                distributor.get_poisson_parameter(
-                    sex=sex, age=age, is_weekend=is_weekend
-                )
+            activity_poisson_parameter = self._get_activity_poisson_parameter(
+                activity=activity,
+                distributor=distributor,
+                age=age,
+                sex=sex,
+                day_type=day_type,
+                working_hours=working_hours,
+                region=region,
             )
+            poisson_parameters.append(activity_poisson_parameter)
             activities.append(activity)
         total_poisson_parameter = sum(poisson_parameters)
         does_activity_probability = 1.0 - np.exp(-delta_time * total_poisson_parameter)
@@ -220,144 +293,71 @@ class Leisure:
             "activities": activities_probabilities,
         }
 
-    def drags_household_to_activity(self, person, activity):
-        prob = self.probabilities_by_age_sex[person.sex][person.age]["drags_household"][
-            activity
-        ]
+    def _get_activity_poisson_parameter(
+        self,
+        activity: str,
+        distributor: SocialVenueDistributor,
+        age: int,
+        sex: str,
+        day_type: str,
+        working_hours: bool,
+        region: Region,
+    ):
+        """
+        Computes an activity poisson parameter taking into account active policies,
+        regional compliances and lockdown tiers.
+        """
+        if activity in self.policy_reductions:
+            policy_reduction = (
+                self.policy_reductions[activity][day_type][sex][age]
+            )  
+        else:
+            policy_reduction = 1
+        activity_poisson_parameter = distributor.get_poisson_parameter(
+            sex=sex,
+            age=age,
+            day_type=day_type,
+            working_hours=working_hours,
+            policy_reduction=policy_reduction,
+            region=region,
+        )
+        return activity_poisson_parameter
+
+    def _drags_household_to_activity(self, person, activity):
+        """
+        Checks whether the person drags the household to the activity.
+        """
+        try:
+            prob = self.probabilities_by_region_sex_age[person.region.name][person.sex][
+                person.age
+            ]["drags_household"][activity]
+        except KeyError:
+            prob = self.probabilities_by_region_sex_age[person.sex][person.age][
+                "drags_household"
+            ][activity]
+        except AttributeError:
+            if person.sex in self.probabilities_by_region_sex_age:
+                prob = self.probabilities_by_region_sex_age[person.sex][person.age][
+                    "drags_household"
+                ][activity]
+            else:
+                prob = self.probabilities_by_region_sex_age[
+                    list(self.probabilities_by_region_sex_age.keys())[0]
+                ][person.sex][person.age]["drags_household"][activity]
         return random() < prob
 
-    def send_household_with_person_if_necessary(
-        self, person, subgroup, probability, to_send_abroad=None
-    ):
-        """
-        When we know that the person does an activity in the social venue X,
-        then we ask X whether the person needs to drag the household with
-        him or her.
-        """
-        # this produces a recursive import...
-        if (
-            person.residence.group.spec == "care_home"
-            or person.residence.group.type in ["communal", "other", "student"]
-        ):
-            return
-        assert subgroup is not None
-        if random() < probability:
-            for mate in person.residence.group.residents:
-                if mate != person:
-                    if mate.busy:
-                        if (
-                            mate.leisure is not None
-                        ):  # this perosn has already been assigned somewhere
-                            if not mate.leisure.external:
-                                if mate not in mate.leisure.people:
-                                    # person active somewhere else, let's not disturb them
-                                    continue
-                                mate.leisure.remove(mate)
-                            else:
-                                ret = to_send_abroad.delete_person(mate, mate.leisure)
-                                if ret:
-                                    # person active somewhere else, let's not disturb them
-                                    continue
-                            if not subgroup.external:
-                                subgroup.append(mate)
-                            else:
-                                to_send_abroad.add_person(mate, subgroup)
-                    mate.subgroups.leisure = (
-                        subgroup  # person will be added later in the simulator.
-                    )
-
-    def get_subgroup_for_person_and_housemates(
-        self, person: Person, to_send_abroad: dict = None
-    ):
-        """
-        Main function of the Leisure class. For every possible activity a person can do,
-        we chech the Poisson parameter lambda = probability / day * deltat of that activty 
-        taking place. We then sum up the Poisson parameters to decide whether a person
-        does any activity at all. The relative weight of the Poisson parameters gives then
-        the specific activity a person does. 
-        If a person ends up going to a social venue, we do a second check to see if his/her
-        entire household accompanies him/her.
-        The social venue subgroups are attached to the involved people, but they are not 
-        added to the subgroups, since it is possible they change their plans if a policy is in
-        place or they have other responsibilities.
-        The function returns None if no activity takes place.
-
-        Parameters
-        ----------
-        person
-            an instance of person
-        """
-        if person.residence.group.spec == "care_home":
-            return
-        prob_age_sex = self.probabilities_by_age_sex[person.sex][person.age]
-        if random() < prob_age_sex["does_activity"]:
-            activity_idx = random_choice_numba(
-                arr=np.arange(0, len(prob_age_sex["activities"])),
-                prob=np.array(list(prob_age_sex["activities"].values())),
-            )
-            activity = list(prob_age_sex["activities"].keys())[activity_idx]
-            activity_distributor = self.leisure_distributors[activity]
-            leisure_subgroup_type = activity_distributor.get_leisure_subgroup_type(
-                person
-            )
-            if "visits" in activity:
-                residence_type = "_".join(activity.split("_")[:-1])
-                if residence_type not in person.residence.group.residences_to_visit:
-                    return
-                else:
-                    candidates = person.residence.group.residences_to_visit[residence_type]
+    def _get_activity_probabilities_for_person(self, person: Person):
+        try:
+            return self.probabilities_by_region_sex_age[person.region.name][person.sex][
+                person.age
+            ]
+        except KeyError:
+            return self.probabilities_by_region_sex_age[person.sex][person.age]
+        except AttributeError:
+            if person.sex in self.probabilities_by_region_sex_age:
+                return self.probabilities_by_region_sex_age[person.sex][person.age]
             else:
-                candidates = person.area.social_venues[activity]
-            candidates_length = len(candidates)
-            if candidates_length == 0:
-                return
-            elif candidates_length == 1:
-                group = candidates[0]
-            else:
-                group = candidates[randint(0, candidates_length-1)]
-            if group is None:
-                return
-            elif group.external:
-                subgroup = ExternalSubgroup(
-                    subgroup_type=leisure_subgroup_type, group=group
-                )
-            else:
-                subgroup = group[leisure_subgroup_type]
-            assert subgroup is not None
-            self.send_household_with_person_if_necessary(
-                person,
-                subgroup,
-                prob_age_sex["drags_household"][activity],
-                to_send_abroad=to_send_abroad,
-            )
-            if activity == "household_visits":
-                group.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
-            person.subgroups.leisure = subgroup
-            return subgroup
+                return self.probabilities_by_region_sex_age[
+                    list(self.probabilities_by_region_sex_age.keys())[0]
+                ][person.sex][person.age]
 
-    def generate_leisure_probabilities_for_timestep(
-        self, delta_time: float, working_hours: bool, is_weekend: bool
-    ):
-        men_probs = [
-            self.get_leisure_probability_for_age_and_sex(
-                age=age,
-                sex="m",
-                delta_time=delta_time,
-                is_weekend=is_weekend,
-                working_hours=working_hours,
-            )
-            for age in range(0, 100)
-        ]
-        women_probs = [
-            self.get_leisure_probability_for_age_and_sex(
-                age=age,
-                sex="f",
-                delta_time=delta_time,
-                is_weekend=is_weekend,
-                working_hours=working_hours,
-            )
-            for age in range(0, 100)
-        ]
-        self.probabilities_by_age_sex = {}
-        self.probabilities_by_age_sex["m"] = men_probs
-        self.probabilities_by_age_sex["f"] = women_probs

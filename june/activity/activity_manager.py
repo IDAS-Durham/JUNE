@@ -10,10 +10,9 @@ from time import time as wall_clock
 from june.demography import Person
 from june.exc import SimulatorError
 from june.groups import Subgroup
-
+from june.event import Events
 from june.groups.leisure import Leisure
 from june.groups.travel import Travel
-
 from june.policy import (
     IndividualPolicies,
     LeisurePolicies,
@@ -51,12 +50,16 @@ class ActivityManager:
         timer,
         all_activities,
         activity_to_super_groups: dict,
+        events: Optional[Events] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
     ):
         self.policies = policies
         if self.policies is not None:
             self.policies.init_policies(world=world)
+        self.events = events
+        if self.events is not None:
+            self.events.init_events(world=world)
         self.world = world
         self.timer = timer
         self.leisure = leisure
@@ -127,6 +130,75 @@ class ActivityManager:
     def get_personal_subgroup(self, person: "Person", activity: str):
         return getattr(person, activity)
 
+    def do_timestep(self):
+        # get time data
+        date = self.timer.date
+        day_type = self.timer.day_type
+        activities = self.apply_activity_hierarchy(self.timer.activities)
+        delta_time = self.timer.duration
+        # apply leisure policies
+        if self.leisure is not None:
+            if self.policies is not None:
+                self.policies.leisure_policies.apply(date=date, leisure=self.leisure)
+            self.leisure.generate_leisure_probabilities_for_timestep(
+                delta_time=delta_time,
+                day_type=day_type,
+                working_hours="primary_activity" in activities,
+            )
+        # apply events
+        if self.events is not None:
+            self.events.apply(
+                date=date,
+                world=self.world,
+                activities=activities,
+                day_type=day_type
+            )
+        # move people to subgroups and get going abroad people
+        to_send_abroad = self.move_people_to_active_subgroups(
+            activities=activities, date=date, days_from_start=self.timer.now
+        )
+        (
+            people_from_abroad,
+            n_people_from_abroad,
+            n_people_going_abroad,
+        ) = self.send_and_receive_people_from_abroad(to_send_abroad)
+        return people_from_abroad, n_people_from_abroad, n_people_going_abroad
+
+    def move_people_to_active_subgroups(
+        self,
+        activities: List[str],
+        date: datetime = datetime(2020, 2, 2),
+        days_from_start=0,
+    ):
+        """
+        Sends every person to one subgroup. If a person has a mild illness,
+        they stay at home
+
+        Parameters
+        ----------
+
+        """
+        active_individual_policies = self.policies.individual_policies.get_active(
+            date=date
+        )
+        to_send_abroad = MovablePeople()
+        for person in self.world.people:
+            if person.dead or person.busy:
+                continue
+            allowed_activities = self.policies.individual_policies.apply(
+                active_policies=active_individual_policies,
+                person=person,
+                activities=activities,
+                days_from_start=days_from_start,
+            )
+            external_subgroup = self.move_to_active_subgroup(
+                allowed_activities, person, to_send_abroad
+            )
+            if external_subgroup is not None:
+                to_send_abroad.add_person(person, external_subgroup)
+
+        return to_send_abroad
+
     def move_to_active_subgroup(
         self, activities: List[str], person: Person, to_send_abroad=None
     ) -> Optional["Subgroup"]:
@@ -158,69 +230,12 @@ class ActivityManager:
                     person.busy = True
                     # this person goes to another MPI domain
                     return subgroup
+
                 subgroup.append(person)
                 return
         raise SimulatorError(
             "Attention! Some people do not have an activity in this timestep."
         )
-
-    def do_timestep(self):
-        activities = self.timer.activities
-        if self.leisure is not None:
-            if self.policies is not None:
-                self.policies.leisure_policies.apply(
-                    date=self.timer.date, leisure=self.leisure,
-                )
-            self.leisure.generate_leisure_probabilities_for_timestep(
-                delta_time=self.timer.duration,
-                is_weekend=self.timer.is_weekend,
-                working_hours="primary_activity" in activities,
-            )
-        to_send_abroad = self.move_people_to_active_subgroups(
-            activities, self.timer.date, self.timer.now,
-        )
-        (
-            people_from_abroad,
-            n_people_from_abroad,
-            n_people_going_abroad,
-        ) = self.send_and_receive_people_from_abroad(to_send_abroad)
-        return people_from_abroad, n_people_from_abroad, n_people_going_abroad
-
-    def move_people_to_active_subgroups(
-        self,
-        activities: List[str],
-        date: datetime = datetime(2020, 2, 2),
-        days_from_start=0,
-    ):
-        """
-        Sends every person to one subgroup. If a person has a mild illness,
-        they stay at home
-
-        Parameters
-        ----------
-
-        """
-        active_individual_policies = self.policies.individual_policies.get_active(
-            date=date
-        )
-        activities = self.apply_activity_hierarchy(activities)
-        to_send_abroad = MovablePeople()
-        for person in self.world.people.members:
-            if person.dead or person.busy:
-                continue
-            allowed_activities = self.policies.individual_policies.apply(
-                active_policies=active_individual_policies,
-                person=person,
-                activities=activities,
-                days_from_start=days_from_start,
-            )
-            external_subgroup = self.move_to_active_subgroup(
-                allowed_activities, person, to_send_abroad
-            )
-            if external_subgroup is not None:
-                to_send_abroad.add_person(person, external_subgroup)
-
-        return to_send_abroad
 
     def send_and_receive_people_from_abroad(self, movable_people):
         """

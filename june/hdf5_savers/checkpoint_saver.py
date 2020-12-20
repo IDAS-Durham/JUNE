@@ -4,11 +4,13 @@ from datetime import datetime, timedelta
 import h5py
 from collections import defaultdict
 from glob import glob
+import logging
 
 from june.world import World
 from june.interaction import Interaction
 from june.groups.leisure import Leisure
 from june.policy import Policies
+from june.event import Events
 from june.infection import InfectionSelector, Infection
 from june.infection_seed import InfectionSeed
 from june import paths
@@ -24,6 +26,8 @@ from june.groups.travel import Travel
 import june.simulator as june_simulator_module
 
 default_config_filename = june_simulator_module.default_config_filename
+
+logger = logging.getLogger("checkpoint_saver")
 
 
 def save_checkpoint_to_hdf5(
@@ -69,20 +73,21 @@ def save_checkpoint_to_hdf5(
                 dataset_name=name,
                 data=np.array(data, dtype=np.int),
             )
-    if infection_list:
-        save_infections_to_hdf5(
-            hdf5_file_path=hdf5_file_path, infections=infection_list, chunk_size=chunk_size
-        )
+    save_infections_to_hdf5(
+        hdf5_file_path=hdf5_file_path,
+        infections=infection_list,
+        chunk_size=chunk_size,
+    )
 
 
 def load_checkpoint_from_hdf5(hdf5_file_path: str, chunk_size=50000, load_date=True):
     """
-    Loads checkpoint data from hdf5. 
+    Loads checkpoint data from hdf5.
 
     Parameters
     ----------
     hdf5_file_path
-        hdf5 path to load from  
+        hdf5 path to load from
     chunk_size
         number of hdf5 chunks to use while loading
     """
@@ -117,7 +122,11 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
         rank = 0, 1, 2, etc.
     """
     checkpoint_files = glob(hdf5_file_root + ".[0-9]*.hdf5")
-    print(f"found {checkpoint_files}")
+    try:
+        cp_date = hdf5_file_root.split("_")[-1]
+    except:
+        cp_date = hdf5_file_root
+    logger.info(f"found {len(checkpoint_files)} {cp_date} checkpoint files")
     ret = load_checkpoint_from_hdf5(checkpoint_files[0])
     for i in range(1, len(checkpoint_files)):
         file = checkpoint_files[i]
@@ -143,38 +152,30 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
     )
 
 
-def generate_simulator_from_checkpoint(
+def restore_simulator_to_checkpoint(
+    simulator,
     world: World,
     checkpoint_path: str,
-    interaction: Interaction,
     chunk_size: Optional[int] = 50000,
-    infection_selector: Optional[InfectionSelector] = None,
-    policies: Optional[Policies] = None,
-    infection_seed: Optional[InfectionSeed] = None,
-    leisure: Optional[Leisure] = None,
-    travel: Optional[Travel] = None,
-    config_filename: str = default_config_filename,
-    record: "Record" = None,
-    #comment: Optional[str] = None,
+    reset_infections=False,
 ):
     """
     Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
     initialisation but with the additional path to where the checkpoint pickle file is located.
     The checkpoint saves information about the infection status of all the people in the world as well as the timings.
     Note, nonetheless, that all the past infections / deaths will have the checkpoint date as date.
+
+    Parameters
+    ----------
+    simulator:
+        An instance of the Simulator class
+    checkpoint_path:
+        path to the hdf5 file containing the checkpoint data
+    chunk_size
+        chunk load size of the hdf5
+    reset_infected
+        whether to reset the current infected to 0. Useful for reseeding.
     """
-    simulator = Simulator.from_file(
-        world=world,
-        interaction=interaction,
-        infection_selector=infection_selector,
-        policies=policies,
-        infection_seed=infection_seed,
-        leisure=leisure,
-        travel=travel,
-        config_filename=config_filename,
-        record=record,
-        #comment=comment,
-    )
     people_ids = set(world.people.people_ids)
     checkpoint_data = load_checkpoint_from_hdf5(checkpoint_path, chunk_size=chunk_size)
     for dead_id in checkpoint_data["dead_id"]:
@@ -191,17 +192,54 @@ def generate_simulator_from_checkpoint(
             continue
         person = simulator.world.people.get_from_id(recovered_id)
         person.susceptibility = 0.0
-    for infected_id, infection in zip(
-        checkpoint_data["infected_id"], checkpoint_data["infection_list"]
-    ):
-        if infected_id not in people_ids:
-            continue
-        person = simulator.world.people.get_from_id(infected_id)
-        person.infection = infection
-        person.susceptibility = 0.0
+    if not reset_infections:
+        for infected_id, infection in zip(
+            checkpoint_data["infected_id"], checkpoint_data["infection_list"]
+        ):
+            if infected_id not in people_ids:
+                continue
+            person = simulator.world.people.get_from_id(infected_id)
+            person.infection = infection
+            person.susceptibility = 0.0
     # restore timer
     checkpoint_date = datetime.strptime(checkpoint_data["date"], "%Y-%m-%d")
     # we need to start the next day
     checkpoint_date += timedelta(days=1)
     simulator.timer.date = checkpoint_date
     return simulator
+
+
+def generate_simulator_from_checkpoint(
+    world: World,
+    checkpoint_path: str,
+    interaction: Interaction,
+    chunk_size: Optional[int] = 50000,
+    infection_selector: Optional[InfectionSelector] = None,
+    policies: Optional[Policies] = None,
+    infection_seed: Optional[InfectionSeed] = None,
+    leisure: Optional[Leisure] = None,
+    travel: Optional[Travel] = None,
+    events: Optional[Events] = None,
+    config_filename: str = default_config_filename,
+    record: "Record" = None,
+    reset_infections=False,
+):
+    simulator = Simulator.from_file(
+        world=world,
+        interaction=interaction,
+        infection_selector=infection_selector,
+        policies=policies,
+        infection_seed=infection_seed,
+        leisure=leisure,
+        travel=travel,
+        events=events,
+        config_filename=config_filename,
+        record=record,
+    )
+    return restore_simulator_to_checkpoint(
+        world=world,
+        checkpoint_path=checkpoint_path,
+        chunk_size=chunk_size,
+        simulator=simulator,
+        reset_infections=reset_infections,
+    )

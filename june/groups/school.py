@@ -1,7 +1,8 @@
 import logging
 import yaml
-from enum import IntEnum
+import numba as nb
 import math
+from enum import IntEnum
 from itertools import count
 from copy import deepcopy
 from june import paths
@@ -12,7 +13,8 @@ import pandas as pd
 from sklearn.neighbors import BallTree
 
 from june.geography import Geography, Areas, Area
-from june.groups.group import Group, Subgroup, Supergroup
+from june.groups import Group, Subgroup, Supergroup
+from june.groups.group.interactive import InteractiveGroup
 
 
 default_data_filename = paths.data_path / "input/schools/england_schools.csv"
@@ -24,6 +26,12 @@ logger = logging.getLogger("schools")
 
 class SchoolError(BaseException):
     pass
+
+
+class SchoolClass(Subgroup):
+    def __init__(self, group, subgroup_type: int):
+        super().__init__(group, subgroup_type)
+        self.quarantine_starting_date = -np.inf
 
 
 class School(Group):
@@ -61,7 +69,7 @@ class School(Group):
         Parameters
         ----------
         coordinates:
-            latitude and longitude 
+            latitude and longitude
         n_pupils_max:
             maximum number of pupils that can attend the school
         age_min:
@@ -88,7 +96,7 @@ class School(Group):
         # for i, _ in enumerate(range(age_min, age_max + 2)):
         if n_classrooms is None:
             n_classrooms = age_max - age_min
-        self.subgroups = [Subgroup(self, i) for i in range(n_classrooms + 2)]
+        self.subgroups = [SchoolClass(self, i) for i in range(n_classrooms + 2)]
         self.n_classrooms = n_classrooms
         self.coordinates = coordinates
         self.area = area
@@ -101,6 +109,9 @@ class School(Group):
             self.years = tuple(range(age_min, age_max + 1))
         else:
             self.years = tuple(years)
+
+    def get_interactive_group(self, people_from_abroad=None):
+        return InteractiveSchool(self, people_from_abroad=people_from_abroad)
 
     def add(self, person, subgroup_type=SubgroupType.students):
         if subgroup_type == self.SubgroupType.students:
@@ -132,7 +143,7 @@ class School(Group):
                 self.years += [year_age_group[idx]] * n_classrooms
                 pupils_in_classroom = np.array_split(subgroup.people, n_classrooms)
                 for i in range(n_classrooms):
-                    classroom = Subgroup(self, counter)
+                    classroom = SchoolClass(self, counter)
                     for pupil in pupils_in_classroom[i]:
                         classroom.append(pupil)
                         pupil.subgroups.primary_activity = classroom
@@ -244,7 +255,7 @@ class Schools(Supergroup):
         config_file: str = default_config_filename,
     ) -> "Schools":
         """
-        Initialize Schools from path to data frame, and path to config file 
+        Initialize Schools from path to data frame, and path to config file
 
         Parameters
         ----------
@@ -321,7 +332,10 @@ class Schools(Supergroup):
         )
 
     @staticmethod
-    def init_trees(school_df: pd.DataFrame, age_range: Tuple[int, int],) -> "Schools":
+    def init_trees(
+        school_df: pd.DataFrame,
+        age_range: Tuple[int, int],
+    ) -> "Schools":
         """
         Create trees to easily find the closest school that
         accepts a pupil given their age
@@ -333,7 +347,11 @@ class Schools(Supergroup):
         """
         school_trees = {}
         school_agegroup_to_global_indices = {
-            k: [] for k in range(int(age_range[0]), int(age_range[1]) + 1,)
+            k: []
+            for k in range(
+                int(age_range[0]),
+                int(age_range[1]) + 1,
+            )
         }
         # have a tree per age
         for age in range(int(age_range[0]), int(age_range[1]) + 1):
@@ -356,7 +374,7 @@ class Schools(Supergroup):
 
         Parameters
         ----------
-        school_df: 
+        school_df:
             dataframe with school characteristics data
 
         Returns
@@ -378,14 +396,14 @@ class Schools(Supergroup):
         ----------
         age:
             age of the pupil
-        coordinates: 
+        coordinates:
             latitude and longitude
         k:
             k-th neighbour
 
         Returns
         -------
-        ID of the k-th closest school, within school trees for 
+        ID of the k-th closest school, within school trees for
         a given age group
 
         """
@@ -393,6 +411,79 @@ class Schools(Supergroup):
         coordinates_rad = np.deg2rad(coordinates).reshape(1, -1)
         k = min(k, school_tree.data.shape[0])
         distances, neighbours = school_tree.query(
-            coordinates_rad, k=k, sort_results=True,
+            coordinates_rad,
+            k=k,
+            sort_results=True,
         )
         return neighbours[0]
+
+
+@nb.jit(nopython=True)
+def _translate_school_subgroup(idx, school_years):
+    if idx > 0:
+        idx = school_years[idx - 1] + 1
+    return idx
+
+
+class InteractiveSchool(InteractiveGroup):
+    def __init__(self, group: "Group", people_from_abroad=None):
+        super().__init__(group=group, people_from_abroad=people_from_abroad)
+        self.school_years = group.years
+
+    @classmethod
+    def get_processed_contact_matrix(
+        cls, contact_matrix, alpha_physical, proportion_physical, characteristic_time
+    ):
+        """
+        Creates a global contact matrix for school, which is by default 20x20, to take into account
+        all possible school years combinations. Each school will then use a slice of this matrix.
+        We assume that the number of contacts between two different school years goes as
+        $ xi**abs(age_difference_between_school_years) * contacts_between_students$
+        Teacher contacts are left as specified in the config file.
+        """
+        xi = 0.3
+        age_min = 0
+        age_max = 20
+        n_subgroups_max = (age_max - age_min) + 2  # adding teachers
+        age_differences = np.subtract.outer(
+            range(age_min, age_max + 1), range(age_min, age_max + 1)
+        )
+        processed_contact_matrix = np.zeros((n_subgroups_max, n_subgroups_max))
+        processed_contact_matrix[0, 0] = contact_matrix[0][0]
+        processed_contact_matrix[0, 1:] = contact_matrix[0][1]
+        processed_contact_matrix[1:, 0] = contact_matrix[1][0]
+        processed_contact_matrix[1:, 1:] = (
+            xi ** abs(age_differences) * contact_matrix[1][1]
+        )
+        physical_ratios = np.zeros((n_subgroups_max, n_subgroups_max))
+        physical_ratios[0, 0] = proportion_physical[0][0]
+        physical_ratios[0, 1:] = proportion_physical[0][1]
+        physical_ratios[1:, 0] = proportion_physical[1][0]
+        physical_ratios[1:, 1:] = proportion_physical[1][1]
+        # add physical contacts
+        processed_contact_matrix = processed_contact_matrix * (
+            1.0 + (alpha_physical - 1.0) * physical_ratios
+        )
+        processed_contact_matrix *= 24 / characteristic_time
+        return processed_contact_matrix
+
+    def get_contacts_between_subgroups(
+        self, contact_matrix, subgroup_1_idx, subgroup_2_idx
+    ):
+        susceptibles_idx = subgroup_1_idx
+        infecters_idx = subgroup_2_idx
+        n_contacts = contact_matrix[
+            _translate_school_subgroup(susceptibles_idx, self.school_years)
+        ][_translate_school_subgroup(infecters_idx, self.school_years)]
+        if (susceptibles_idx == 0 or infecters_idx == 0) and (
+            susceptibles_idx != infecters_idx
+        ):
+            n_contacts /= len(self.school_years)
+        elif (
+            _translate_school_subgroup(susceptibles_idx, self.school_years)
+            == _translate_school_subgroup(infecters_idx, self.school_years)
+            and susceptibles_idx != infecters_idx
+        ):
+            # If same age but different class room, reduce contacts
+            n_contacts /= 4
+        return n_contacts

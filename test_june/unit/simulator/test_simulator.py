@@ -44,8 +44,11 @@ test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 
 @pytest.fixture(name="selector", scope="module")
-def make_selector():
-    selector = InfectionSelector.from_file(transmission_config_path=constant_config)
+def make_selector(health_index_generator):
+    selector = InfectionSelector(
+        health_index_generator=health_index_generator,
+        transmission_config_path=constant_config,
+    )
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     return selector
@@ -86,7 +89,7 @@ def setup_sim(dummy_world, selector):
         policies=policies,
     )
     sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-        3, False, False
+        delta_time=3, working_hours=False, day_type="weekday" 
     )
     sim.clear_world()
     return sim

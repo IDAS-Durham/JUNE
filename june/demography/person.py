@@ -125,13 +125,16 @@ class Person(dataobject):
 
     @property
     def intensive_care(self):
-        if (
-            self.hospital is not None
-            and self.hospital.subgroup_type
-            == self.hospital.group.SubgroupType.icu_patients
-        ):
-            return True
-        return False
+        try:
+            return all(
+                [
+                    self.medical_facility.group.spec == "hospital",
+                    self.medical_facility.subgroup_type
+                    == self.medical_facility.group.SubgroupType.icu_patients,
+                ]
+            )
+        except AttributeError:
+            return False
 
     @property
     def housemates(self):
@@ -166,6 +169,13 @@ class Person(dataobject):
             return None
 
     @property
+    def region(self):
+        try:
+            return self.super_area.region
+        except:
+            return None
+
+    @property
     def home_city(self):
         return self.area.super_area.city
 
@@ -174,3 +184,9 @@ class Person(dataobject):
         if self.work_super_area is None:
             return None
         return self.work_super_area.city
+
+    @property
+    def available(self):
+        if (not self.dead) and (self.medical_facility is None) and (not self.busy):
+            return True
+        return False

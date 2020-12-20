@@ -15,7 +15,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="june.infection_seed" href="june.infection_seed.html" />
+    <link rel="next" title="june.interaction.interaction" href="june.interaction.interaction.html" />
     <link rel="prev" title="june.infection_seed.infection_seed" href="june.infection_seed.infection_seed.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
@@ -29,7 +29,7 @@
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.infection_seed.html">june.infection_seed</a>&#160;&#160;»
+        <a href="june.interaction.interaction.html">june.interaction.interaction</a>&#160;&#160;»
         </p>
 
       </div>
@@ -40,107 +40,275 @@
 <span id="june-infection-seed-observed-to-cases"></span><h1>june.infection_seed.observed_to_cases<a class="headerlink" href="#module-june.infection_seed.observed_to_cases" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="june.infection_seed.observed_to_cases.Observed2Cases">
-<em class="property">class </em><code class="sig-prename descclassname">june.infection_seed.observed_to_cases.</code><code class="sig-name descname">Observed2Cases</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trajectories</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">super_areas</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">health_index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_observed_deaths</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">msoa_region</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">regions</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trajectories</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">super_areas</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">health_index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_observed_deaths</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">msoa_region</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">regions</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases._filter_region">
-<code class="sig-name descname">_filter_region</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span></em>, <em class="sig-param"><span class="n">region</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'North East'</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>SuperArea<span class="p">]</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases._filter_region" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a region, return a list of super areas belonging to that region</p>
+<em class="property">class </em><code class="sig-prename descclassname">june.infection_seed.observed_to_cases.</code><code class="sig-name descname">Observed2Cases</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">age_per_area_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">female_fraction_per_area_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">health_index_generator</span><span class="p">:</span> <span class="n">HealthIndexGenerator</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">symptoms_trajectories</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>TrajectoryMaker<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_observed_deaths</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area_super_region_df</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to convert observed deaths over time into predicted number of latent cases 
+over time, use for the seed of the infection. 
+It reads population data, to compute average death rates for a particular region, 
+timings from config file estimate the median time it takes for someone infected to 
+die in hospital, and the health index to obtain the death rate as a function of
+age and sex.</p>
 <dl class="simple">
-<dt>region:</dt><dd><p>name of the region</p>
+<dt>age_per_area_df:</dt><dd><p>data frame with the age distribution per area, to compute the weighted death rate</p>
+</dd>
+<dt>female_fraction_per_area_df:</dt><dd><p>data frame with the fraction of females per area as a function of age to compute
+the weighted death rate</p>
+</dd>
+<dt>health_index_generator:</dt><dd><p>generator of the health index to compute death_rate(age,sex)</p>
+</dd>
+<dt>symptoms_trajectories:</dt><dd><p>used to read the trajectory config file and compute the 
+median time it takes to die in hospital</p>
+</dd>
+<dt>n_observed_deaths: </dt><dd><p>time series with the number of observed deaths per region</p>
+</dd>
+<dt>area_super_region_df:</dt><dd><p>df with area, super_area, region mapping</p>
+</dd>
+<dt>smoothing:</dt><dd><p>whether to smooth the observed deaths time series before computing
+the expected number of cases (therefore the estimates becomes less
+dependent on spikes in the data)</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="june.infection_seed.observed_to_cases.Observed2Cases.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">age_per_area_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">female_fraction_per_area_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">health_index_generator</span><span class="p">:</span> <span class="n">HealthIndexGenerator</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">symptoms_trajectories</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>TrajectoryMaker<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_observed_deaths</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area_super_region_df</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to convert observed deaths over time into predicted number of latent cases 
+over time, use for the seed of the infection. 
+It reads population data, to compute average death rates for a particular region, 
+timings from config file estimate the median time it takes for someone infected to 
+die in hospital, and the health index to obtain the death rate as a function of
+age and sex.</p>
+<dl class="simple">
+<dt>age_per_area_df:</dt><dd><p>data frame with the age distribution per area, to compute the weighted death rate</p>
+</dd>
+<dt>female_fraction_per_area_df:</dt><dd><p>data frame with the fraction of females per area as a function of age to compute
+the weighted death rate</p>
+</dd>
+<dt>health_index_generator:</dt><dd><p>generator of the health index to compute death_rate(age,sex)</p>
+</dd>
+<dt>symptoms_trajectories:</dt><dd><p>used to read the trajectory config file and compute the 
+median time it takes to die in hospital</p>
+</dd>
+<dt>n_observed_deaths: </dt><dd><p>time series with the number of observed deaths per region</p>
+</dd>
+<dt>area_super_region_df:</dt><dd><p>df with area, super_area, region mapping</p>
+</dd>
+<dt>smoothing:</dt><dd><p>whether to smooth the observed deaths time series before computing
+the expected number of cases (therefore the estimates becomes less
+dependent on spikes in the data)</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="june.infection_seed.observed_to_cases.Observed2Cases._smooth_time_series">
-<code class="sig-name descname">_smooth_time_series</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_series_df</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases._smooth_time_series" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">_smooth_time_series</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_series_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases._smooth_time_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Smooth a time series by applying a gaussian filter in 1d</p>
+<dl class="simple">
+<dt>time_series_df:</dt><dd><p>df with time as index</p>
+</dd>
+</dl>
+<p>smoothed time series df</p>
+</dd></dl>
 
 <dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.cases_from_admissions_for_region">
-<code class="sig-name descname">cases_from_admissions_for_region</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">region</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.cases_from_admissions_for_region" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="june.infection_seed.observed_to_cases.Observed2Cases.aggregate_age_sex_dfs_by_region">
+<code class="sig-name descname">aggregate_age_sex_dfs_by_region</code><span class="sig-paren">(</span><em class="sig-param">age_per_area_df: pandas.core.frame.DataFrame</em>, <em class="sig-param">female_fraction_per_area_df: pandas.core.frame.DataFrame) -&gt; (&lt;class 'pandas.core.frame.DataFrame'&gt;</em>, <em class="sig-param">&lt;class 'pandas.core.frame.DataFrame'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.aggregate_age_sex_dfs_by_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combines the age per area dataframe and female fraction per area to  
+create two data frames with numbers of females by age per region, and
+numbers of males by age per region</p>
+<dl class="simple">
+<dt>age_per_area_df:</dt><dd><p>data frame with the number of people with a certain age per area</p>
+</dd>
+<dt>female_fraction_per_area_df:</dt><dd><p>fraction of those that are females per area and age bin</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>females_per_age_region_df:</dt><dd><p>number of females as a function of age per region</p>
+</dd>
+<dt>males_per_age_region_df:</dt><dd><p>number of males as a function of age per region</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.cases_from_deaths">
-<code class="sig-name descname">cases_from_deaths</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.cases_from_deaths" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="june.infection_seed.observed_to_cases.Observed2Cases.aggregate_areas_by_region">
+<code class="sig-name descname">aggregate_areas_by_region</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df_per_area</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.aggregate_areas_by_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aggregates an area dataframe into a region dataframe</p>
+<dl class="simple">
+<dt>df_per_area:</dt><dd><p>data frame indexed by area</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.cases_from_deaths_for_region">
-<code class="sig-name descname">cases_from_deaths_for_region</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">region</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.cases_from_deaths_for_region" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="june.infection_seed.observed_to_cases.Observed2Cases.convert_regional_cases_to_super_area">
+<code class="sig-name descname">convert_regional_cases_to_super_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_cases_per_region_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">dates</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>Dict<span class="p">[</span>str<span class="p">, </span>List<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.convert_regional_cases_to_super_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts regional cases to cases by super area by weighting each super area
+within the region according to its population</p>
+<dl class="simple">
+<dt>n_cases_per_region_df:</dt><dd><p>data frame with the number of cases by region, indexed by date</p>
+</dd>
+<dt>dates:</dt><dd><p>dates to select (it can be a dictinary with different dates for different regions</p>
+</dd>
+</dl>
+<p>data frame with the number of cases by super area, indexed by date</p>
+</dd></dl>
 
 <dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.cases_from_observation">
-<code class="sig-name descname">cases_from_observation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_observed_df</span></em>, <em class="sig-param"><span class="n">time_to_get_there</span></em>, <em class="sig-param"><span class="n">avg_rates</span></em>, <em class="sig-param"><span class="n">region</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.cases_from_observation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.filter_trajectories">
-<code class="sig-name descname">filter_trajectories</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trajectories</span></em>, <em class="sig-param"><span class="n">symptoms_to_keep</span><span class="o">=</span><span class="default_value">'dead_hospital', 'dead_icu'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.filter_trajectories" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.find_regions_for_super_areas">
-<code class="sig-name descname">find_regions_for_super_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.find_regions_for_super_areas" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="june.infection_seed.observed_to_cases.Observed2Cases.filter_symptoms_trajectories">
+<code class="sig-name descname">filter_symptoms_trajectories</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symptoms_trajectories</span><span class="p">:</span> <span class="n">List<span class="p">[</span>TrajectoryMaker<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">symptoms_to_keep</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'dead_hospital', 'dead_icu'</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="june.infection.trajectory_maker.html#june.infection.trajectory_maker.TrajectoryMaker" title="june.infection.trajectory_maker.TrajectoryMaker">june.infection.trajectory_maker.TrajectoryMaker</a><span class="p">]</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.filter_symptoms_trajectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter all symptoms trajectories to obtain only the ones that contain given symtpoms 
+in <code class="docutils literal notranslate"><span class="pre">`symptoms_to_keep`</span></code></p>
+<dl class="simple">
+<dt>symptoms_trajectories:</dt><dd><p>list of all symptoms trajectories</p>
+</dd>
+<dt>symptoms_to_keep:</dt><dd><p>tuple of strings containing the desired symptoms for which to find trajectories</p>
+</dd>
+</dl>
+<p>trajectories containing <code class="docutils literal notranslate"><span class="pre">`symptoms_to_keep`</span></code></p>
+</dd></dl>
 
 <dl class="py method">
 <dt id="june.infection_seed.observed_to_cases.Observed2Cases.from_file">
-<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span></em>, <em class="sig-param"><span class="n">health_index</span></em>, <em class="sig-param"><span class="n">config_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/symptoms/trajectories.yaml')</span></em>, <em class="sig-param"><span class="n">msoa_region_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/geography/area_super_area_region.csv')</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.from_file" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">health_index_generator</span></em>, <em class="sig-param"><span class="n">age_per_area_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/demography/age_structure_single_year.csv')</span></em>, <em class="sig-param"><span class="n">female_fraction_per_area_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/demography/female_ratios_per_age_bin.csv')</span></em>, <em class="sig-param"><span class="n">trajectories_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/configs/defaults/symptoms/trajectories.yaml')</span></em>, <em class="sig-param"><span class="n">observed_deaths_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/covid_real_data/n_deaths_region.csv')</span></em>, <em class="sig-param"><span class="n">area_super_region_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/sadie/JUNE/data/input/geography/area_super_area_region.csv')</span></em>, <em class="sig-param"><span class="n">smoothing</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#june.infection_seed.observed_to_cases.Observed2Cases" title="june.infection_seed.observed_to_cases.Observed2Cases">june.infection_seed.observed_to_cases.Observed2Cases</a><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates class from paths to data</p>
+<dl class="simple">
+<dt>health_index_generator:</dt><dd><p>generator of the health index to compute death_rate(age,sex)</p>
+</dd>
+<dt>age_per_area_path:</dt><dd><p>path to data with number of people of a given age by area</p>
+</dd>
+<dt>female_fraction_per_area_df:</dt><dd><p>path to data with fraction of people that are female by area and age bin</p>
+</dd>
+<dt>trajectories_path:</dt><dd><p>path to config file with possible symptoms trajectories and their timings</p>
+</dd>
+<dt>observed_deaths_path:</dt><dd><p>path to time series of observed deaths over time</p>
+</dd>
+<dt>area_super_region_path:</dt><dd><p>path to data on area, super_area, region mapping</p>
+</dd>
+<dt>smoothing:</dt><dd><p>whether to smooth the observed deaths time series before computing
+the expected number of cases (therefore the estimates becomes less
+dependent on spikes in the data)</p>
+</dd>
+</dl>
+<p>Instance of Observed2Cases</p>
+</dd></dl>
 
 <dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_age_structure">
-<code class="sig-name descname">get_age_structure</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">region</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_age_structure" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_latent_cases_from_observed">
+<code class="sig-name descname">get_latent_cases_from_observed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_observed</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">avg_rates</span><span class="p">:</span> <span class="n">List</span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_latent_cases_from_observed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a number of observed cases, such as observed deaths or observed hospital
+admissions, this function converts it into number of latent cases necessary to
+produce such an observation.</p>
+<dl class="simple">
+<dt>n_observed:</dt><dd><p>observed number of cases (such as deaths or hospital admissions)</p>
+</dd>
+<dt>avg_rates:</dt><dd><p>average rates to produce the observed cases, such as average death rate or average
+admission rates. It is a list, since we might want to look at, for instance, 
+death rate, which is a combination of deat_home, deat_hospital, dead_icu rates.</p>
+</dd>
+</dl>
+<p>Number of latent cases</p>
+</dd></dl>
 
 <dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_avg_rate_for_symptoms">
-<code class="sig-name descname">get_avg_rate_for_symptoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symptoms_tags</span></em>, <em class="sig-param"><span class="n">region</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_avg_rate_for_symptoms" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_avg_time_to_symptoms">
-<code class="sig-name descname">get_avg_time_to_symptoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trajectories</span></em>, <em class="sig-param"><span class="n">avg_rate_for_symptoms</span></em>, <em class="sig-param"><span class="n">symptoms_tags</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_avg_time_to_symptoms" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_health_index_by_age_and_sex">
-<code class="sig-name descname">get_health_index_by_age_and_sex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_health_index_by_age_and_sex" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_latent_cases_per_region">
+<code class="sig-name descname">get_latent_cases_per_region</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_observed_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">time_to_get_symptoms</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">avg_rates_per_region</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_latent_cases_per_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts observed cases per region into latent cases per region.</p>
+<dl class="simple">
+<dt>n_observed_df:</dt><dd><p>time series of the observed cases</p>
+</dd>
+<dt>time_to_get_symptoms:</dt><dd><p>days it takes form infection to the symptoms of interest (such as time to death)</p>
+</dd>
+<dt>avg_rates_per_region:</dt><dd><p>average probability to get those symptoms per region</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>n_cases_per_region_df:</dt><dd><p>number of latent cases per region time series</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_median_completion_time">
-<code class="sig-name descname">get_median_completion_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">stage</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_median_completion_time" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">get_median_completion_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">stage</span><span class="p">:</span> <span class="n">Stage</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_median_completion_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get median completion time of a stage, from its distribution</p>
+<blockquote>
+<div><dl class="simple">
+<dt>stage:</dt><dd><p>given stage in trajectory</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Median time spent in stage</p>
+</dd></dl>
 
 <dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_n_cases_from_observed">
-<code class="sig-name descname">get_n_cases_from_observed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_observed</span></em>, <em class="sig-param"><span class="n">avg_rates</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_n_cases_from_observed" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_regional_latent_cases">
+<code class="sig-name descname">get_regional_latent_cases</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_regional_latent_cases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find regional latent cases from the observed one.</p>
+<p>data frame with latent cases per region indexed by date</p>
+</dd></dl>
 
 <dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_population">
-<code class="sig-name descname">get_population</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span></em>, <em class="sig-param"><span class="n">regions</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_population" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_super_area_population_weights">
+<code class="sig-name descname">get_super_area_population_weights</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_super_area_population_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the weight in population that a super area has over its whole region, used
+to convert regional cases to cases by super area by population density</p>
+<p>data frame indexed by super area, with weights and region</p>
+</dd></dl>
 
 <dl class="py method">
-<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_population_for_region">
-<code class="sig-name descname">get_population_for_region</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span></em>, <em class="sig-param"><span class="n">region</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_population_for_region" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_symptoms_rates_per_age_sex">
+<code class="sig-name descname">get_symptoms_rates_per_age_sex</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_symptoms_rates_per_age_sex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the rates of ending up with certain SymptomTag for all 
+ages and sex.</p>
+<p>dictionary with rates of symptoms (fate) as a function of age and sex</p>
+</dd></dl>
 
 <dl class="py method">
 <dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_time_it_takes_to_symptoms">
-<code class="sig-name descname">get_time_it_takes_to_symptoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trajectories</span></em>, <em class="sig-param"><span class="n">symptoms_tags</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_time_it_takes_to_symptoms" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">get_time_it_takes_to_symptoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symptoms_trajectories</span><span class="p">:</span> <span class="n">List<span class="p">[</span>TrajectoryMaker<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">symptoms_tags</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_time_it_takes_to_symptoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the median time it takes to get certain symptoms in <code class="docutils literal notranslate"><span class="pre">`symptoms_tags`</span></code>, such as death or hospital
+admission.</p>
+<dl class="simple">
+<dt>symptoms_trajectories:</dt><dd><p>list of symptoms trajectories</p>
+</dd>
+<dt>symptoms_tags:</dt><dd><p>symptoms tags for the symptoms of interest</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.infection_seed.observed_to_cases.Observed2Cases.get_weighted_time_to_symptoms">
+<code class="sig-name descname">get_weighted_time_to_symptoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symptoms_trajectories</span><span class="p">:</span> <span class="n">List<span class="p">[</span>TrajectoryMaker<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">avg_rate_for_symptoms</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">symptoms_tags</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.get_weighted_time_to_symptoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the time it takes to get certain symptoms weighted by population. For instance, 
+when computing the death rate, more people die in hospital than in icu, 
+therefore the median time to die in hospital gets weighted more than the median time 
+to die in icu.</p>
+<dl class="simple">
+<dt>symptoms_trajectories:</dt><dd><p>trajectories for symptoms that include the symptoms of interest</p>
+</dd>
+<dt>avg_rate_for_symptoms:</dt><dd><p>list containing the average rate for certain symptoms given in <code class="docutils literal notranslate"><span class="pre">`symptoms</span> <span class="pre">tags`</span></code>. 
+WARNING: should be in the same order</p>
+</dd>
+<dt>symptoms_tags:</dt><dd><p>tags of the symptoms for which we want to know the median time</p>
+</dd>
+</dl>
+<p>Weighted median time to symptoms</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.infection_seed.observed_to_cases.Observed2Cases.weight_rates_by_age_sex_per_region">
+<code class="sig-name descname">weight_rates_by_age_sex_per_region</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symptoms_rates_dict</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">symptoms_tags</span><span class="p">:</span> <span class="n">List<span class="p">[</span>SymptomTag<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>float<span class="p">]</span><a class="headerlink" href="#june.infection_seed.observed_to_cases.Observed2Cases.weight_rates_by_age_sex_per_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the weighted average by age and sex of symptoms rates for symptoms in symptoms_tags. 
+For example to get the weighted average death rate per region, 
+select symptoms_tags = (‘dead_hospital’, ‘dead_icu’, ‘dead_home’)</p>
+<dl class="simple">
+<dt>symtpoms_rates_dict:</dt><dd><p>dictionary with rates for all the possible final symptoms, indexed by sex and age.</p>
+</dd>
+<dt>symptoms_tags:</dt><dd><p>final symptoms to keep</p>
+</dd>
+</dl>
+<p>List of weighted rates for symptoms in <code class="docutils literal notranslate"><span class="pre">`symptoms_tags`</span></code> (ordered in the same way!!)</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -155,7 +323,7 @@
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.infection_seed.html">june.infection_seed</a>&#160;&#160;»
+        <a href="june.interaction.interaction.html">june.interaction.interaction</a>&#160;&#160;»
         </p>
 
       </div>

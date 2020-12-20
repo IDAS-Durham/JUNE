@@ -15,7 +15,6 @@ from june.geography import SuperArea
 from june.hdf5_savers import generate_domain_from_hdf5
 from june import paths
 
-# default_super_area_shapes_path = paths.data_path / "plotting/super_area_boundaries"
 default_super_area_centroids = (
     paths.data_path / "input/geography/super_area_centroids.csv"
 )

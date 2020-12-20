@@ -11,20 +11,12 @@ nan_integer = -999
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 str_vlen_type = h5py.vlen_dtype(np.dtype("S40"))
 
-social_venues_spec_mapper = {
-    "pubs": "pubs",
-    "household_visits": "households",
-    "care_home_visits": "care_homes",
-    "cinemas": "cinemas",
-    "groceries": "groceries",
+spec_to_supergroup_mapper = {
+    "pub": "pubs",
+    "cinema": "cinemas",
+    "grocery": "groceries",
+    "gym" : "gyms"
 }
-
-super_group_to_group_mapper = {
-    "pubs": "pub",
-    "groceries": "grocery",
-    "cinemas": "cinema",
-}
-
 
 def save_geography_to_hdf5(geography: Geography, file_path: str):
     """
@@ -147,7 +139,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     super_area_n_people = np.array(super_area_n_people, dtype=np.int)
     super_area_n_workers = np.array(super_area_n_workers, dtype=np.int)
     region_ids = np.array(region_ids, dtype=np.int)
-    region_names = np.array(region_names, dtype='S20')
+    region_names = np.array(region_names, dtype='S50')
     if len(np.unique(hospital_lengths)) == 1:
         closest_hospitals_ids = np.array(closest_hospitals_ids, dtype=np.int)
         closest_hospitals_super_areas = np.array(
@@ -382,7 +374,7 @@ def restore_geography_properties_from_hdf5(
                         social_venues_super_areas[k],
                     ):
                         spec = group_spec.decode()
-                        spec_mapped = social_venues_spec_mapper[spec]
+                        spec_mapped = spec_to_supergroup_mapper[spec]
                         supergroup = getattr(world, spec_mapped)
                         if (
                             domain_super_areas is not None
@@ -395,7 +387,7 @@ def restore_geography_properties_from_hdf5(
                             group = ExternalGroup(
                                 id=group_id,
                                 domain_id=domain_of_group,
-                                spec=super_group_to_group_mapper[spec],
+                                spec=spec,
                             )
                         else:
                             group = supergroup.get_from_id(group_id)

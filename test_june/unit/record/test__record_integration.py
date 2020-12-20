@@ -61,7 +61,7 @@ class MockHealthIndexGenerator:
 
 def make_selector(desired_symptoms,):
     health_index_generator = MockHealthIndexGenerator(desired_symptoms)
-    selector = InfectionSelector.from_file(
+    selector = InfectionSelector(
         health_index_generator=health_index_generator,
     )
     return selector
@@ -84,9 +84,10 @@ def infect_dead_person(person):
 
 
 @pytest.fixture(name="selector", scope="module")
-def create_selector():
-    selector = InfectionSelector.from_file(
-        paths.configs_path / "defaults/transmission/XNExp.yaml"
+def create_selector(health_index_generator):
+    selector = InfectionSelector(
+        paths.configs_path / "defaults/transmission/XNExp.yaml",
+        health_index_generator=health_index_generator
     )
     selector.recovery_rate = 1.0
     selector.transmission_probability = 1.0
@@ -96,10 +97,10 @@ def create_selector():
 @pytest.fixture(name="interaction", scope="module")
 def create_interaction():
     interaction = Interaction.from_file(config_filename=interaction_config)
-    interaction.beta["school"] = 0.8
-    interaction.beta["cinema"] = 0.0
-    interaction.beta["pub"] = 0.0
-    interaction.beta["household"] = 10.0
+    interaction.betas["school"] = 0.8
+    interaction.betas["cinema"] = 0.0
+    interaction.betas["pub"] = 0.0
+    interaction.betas["household"] = 10.0
     interaction.alpha_physical = 2.7
     return interaction
 

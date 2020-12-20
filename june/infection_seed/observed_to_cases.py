@@ -15,7 +15,9 @@ default_trajectories_path = paths.configs_path / "defaults/symptoms/trajectories
 default_area_super_region_path = (
     paths.data_path / "input/geography/area_super_area_region.csv"
 )
-default_observed_deaths_path = paths.data_path / "covid_real_data/n_deaths_region.csv"
+default_observed_deaths_path = (
+    paths.data_path / "input/infection_seed/hospital_deaths_per_region_per_date.csv"
+)
 default_age_per_area_path = (
     paths.data_path / "input/demography/age_structure_single_year.csv"
 )
@@ -29,6 +31,7 @@ class Observed2Cases:
         self,
         age_per_area_df: pd.DataFrame,
         female_fraction_per_area_df: pd.DataFrame,
+        regional_infections_per_hundred_thousand=100,
         health_index_generator: "HealthIndexGenerator" = None,
         symptoms_trajectories: Optional["TrajectoryMaker"] = None,
         n_observed_deaths: Optional[pd.DataFrame] = None,
@@ -36,10 +39,10 @@ class Observed2Cases:
         smoothing=False,
     ):
         """
-        Class to convert observed deaths over time into predicted number of latent cases 
-        over time, use for the seed of the infection. 
-        It reads population data, to compute average death rates for a particular region, 
-        timings from config file estimate the median time it takes for someone infected to 
+        Class to convert observed deaths over time into predicted number of latent cases
+        over time, use for the seed of the infection.
+        It reads population data, to compute average death rates for a particular region,
+        timings from config file estimate the median time it takes for someone infected to
         die in hospital, and the health index to obtain the death rate as a function of
         age and sex.
 
@@ -51,11 +54,11 @@ class Observed2Cases:
             data frame with the fraction of females per area as a function of age to compute
             the weighted death rate
         health_index_generator:
-            generator of the health index to compute death_rate(age,sex) 
+            generator of the health index to compute death_rate(age,sex)
         symptoms_trajectories:
-            used to read the trajectory config file and compute the 
+            used to read the trajectory config file and compute the
             median time it takes to die in hospital
-        n_observed_deaths: 
+        n_observed_deaths:
             time series with the number of observed deaths per region
         area_super_region_df:
             df with area, super_area, region mapping
@@ -64,6 +67,9 @@ class Observed2Cases:
             the expected number of cases (therefore the estimates becomes less
             dependent on spikes in the data)
         """
+        self.regional_infections_per_hundred_thousand = (
+            regional_infections_per_hundred_thousand
+        )
         self.area_super_region_df = area_super_region_df
         self.age_per_area_df = age_per_area_df
         (
@@ -91,6 +97,7 @@ class Observed2Cases:
     def from_file(
         cls,
         health_index_generator,
+        regional_infections_per_hundred_thousand=100,
         age_per_area_path: str = default_age_per_area_path,
         female_fraction_per_area_path: str = default_female_fraction_per_area_path,
         trajectories_path: str = default_trajectories_path,
@@ -104,7 +111,7 @@ class Observed2Cases:
         Parameters
         ----------
         health_index_generator:
-            generator of the health index to compute death_rate(age,sex) 
+            generator of the health index to compute death_rate(age,sex)
         age_per_area_path:
             path to data with number of people of a given age by area
         female_fraction_per_area_df:
@@ -149,6 +156,7 @@ class Observed2Cases:
             }
         )
         return cls(
+            regional_infections_per_hundred_thousand=regional_infections_per_hundred_thousand,
             age_per_area_df=age_per_area_df,
             female_fraction_per_area_df=female_fraction_per_area_df,
             health_index_generator=health_index_generator,
@@ -166,7 +174,7 @@ class Observed2Cases:
         ----------
         df_per_area:
             data frame indexed by area
-        
+
         Returns
         -------
         """
@@ -185,9 +193,9 @@ class Observed2Cases:
         self, age_per_area_df: pd.DataFrame, female_fraction_per_area_df: pd.DataFrame,
     ) -> (pd.DataFrame, pd.DataFrame):
         """
-        Combines the age per area dataframe and female fraction per area to  
+        Combines the age per area dataframe and female fraction per area to
         create two data frames with numbers of females by age per region, and
-        numbers of males by age per region 
+        numbers of males by age per region
 
         Parameters
         ----------
@@ -221,7 +229,7 @@ class Observed2Cases:
 
     def get_symptoms_rates_per_age_sex(self,) -> dict:
         """
-        Computes the rates of ending up with certain SymptomTag for all 
+        Computes the rates of ending up with certain SymptomTag for all
         ages and sex.
 
         Returns
@@ -242,8 +250,8 @@ class Observed2Cases:
         self, symptoms_rates_dict: dict, symptoms_tags: List["SymptomTag"]
     ) -> List[float]:
         """
-        Get the weighted average by age and sex of symptoms rates for symptoms in symptoms_tags. 
-        For example to get the weighted average death rate per region, 
+        Get the weighted average by age and sex of symptoms rates for symptoms in symptoms_tags.
+        For example to get the weighted average death rate per region,
         select symptoms_tags = ('dead_hospital', 'dead_icu', 'dead_home')
 
         Parameters
@@ -288,7 +296,7 @@ class Observed2Cases:
             observed number of cases (such as deaths or hospital admissions)
         avg_rates:
             average rates to produce the observed cases, such as average death rate or average
-            admission rates. It is a list, since we might want to look at, for instance, 
+            admission rates. It is a list, since we might want to look at, for instance,
             death rate, which is a combination of deat_home, deat_hospital, dead_icu rates.
         Returns
         -------
@@ -366,10 +374,27 @@ class Observed2Cases:
         )
         return people_per_super_aera_and_region[["weights", "region"]]
 
+    def limit_cases_per_region(self, n_cases_per_region_df):
+        people_per_region = self.females_per_age_region_df.sum(
+            axis=1
+        ) + self.males_per_age_region_df.sum(axis=1)
+        cummulative_infections_hundred_thousand = (
+            n_cases_per_region_df.cumsum() / people_per_region * 100_000
+        )
+        regional_series = []
+        for region in n_cases_per_region_df.columns:
+            regional_index = (
+                np.searchsorted(
+                    cummulative_infections_hundred_thousand[region].values,
+                    self.regional_infections_per_hundred_thousand,
+                )
+            )
+            regional_series.append(n_cases_per_region_df[region].iloc[:regional_index])
+        return pd.concat(regional_series, axis=1).fillna(0.0)
+
     def convert_regional_cases_to_super_area(
         self,
         n_cases_per_region_df: pd.DataFrame,
-        dates: Union[List[str], Dict[str, List]],
     ) -> pd.DataFrame:
         """
         Converts regional cases to cases by super area by weighting each super area
@@ -381,22 +406,14 @@ class Observed2Cases:
             data frame with the number of cases by region, indexed by date
         dates:
             dates to select (it can be a dictinary with different dates for different regions
-        
+
         Returns
         -------
         data frame with the number of cases by super area, indexed by date
         """
-        if type(dates) == dict:
-            n_cases_per_region_asynchronised = {}
-            for region, dates in dates.items():
-                n_cases_per_region_asynchronised[region] = n_cases_per_region_df.loc[
-                    dates[0] : dates[1], region
-                ]
-            n_cases_per_region_df = pd.DataFrame.from_dict(
-                n_cases_per_region_asynchronised
-            ).fillna(0)
-        else:
-            n_cases_per_region_df = n_cases_per_region_df.loc[dates[0] : dates[-1]]
+        n_cases_per_region_df = self.limit_cases_per_region(
+            n_cases_per_region_df=n_cases_per_region_df
+        )
         n_cases_per_super_area_df = pd.DataFrame(
             0,
             index=n_cases_per_region_df.index,
@@ -442,7 +459,7 @@ class Observed2Cases:
         symptoms_to_keep: Tuple[str] = ("dead_hospital", "dead_icu"),
     ) -> List["TrajectoryMaker"]:
         """
-        Filter all symptoms trajectories to obtain only the ones that contain given symtpoms 
+        Filter all symptoms trajectories to obtain only the ones that contain given symtpoms
         in ```symptoms_to_keep```
 
         Parameters
@@ -511,9 +528,9 @@ class Observed2Cases:
         symptoms_tags: List[str],
     ) -> float:
         """
-        Get the time it takes to get certain symptoms weighted by population. For instance, 
-        when computing the death rate, more people die in hospital than in icu, 
-        therefore the median time to die in hospital gets weighted more than the median time 
+        Get the time it takes to get certain symptoms weighted by population. For instance,
+        when computing the death rate, more people die in hospital than in icu,
+        therefore the median time to die in hospital gets weighted more than the median time
         to die in icu.
 
         Parameters
@@ -521,11 +538,11 @@ class Observed2Cases:
         symptoms_trajectories:
             trajectories for symptoms that include the symptoms of interest
         avg_rate_for_symptoms:
-            list containing the average rate for certain symptoms given in ```symptoms tags```. 
+            list containing the average rate for certain symptoms given in ```symptoms tags```.
             WARNING: should be in the same order
         symptoms_tags:
             tags of the symptoms for which we want to know the median time
-        
+
         Returns
         -------
         Weighted median time to symptoms

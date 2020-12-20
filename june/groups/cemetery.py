@@ -1,4 +1,4 @@
-from june.groups.group import Supergroup, Group
+from june.groups import Supergroup, Group
 
 
 class Cemetery(Group):

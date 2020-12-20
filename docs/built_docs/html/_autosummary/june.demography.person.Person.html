@@ -40,8 +40,8 @@
 <h1>june.demography.person.Person<a class="headerlink" href="#june-demography-person-person" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">june.demography.person.</code><code class="sig-name descname">Person</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">sex</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'f'</span></em>, <em class="sig-param"><span class="n">age</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">27</span></em>, <em class="sig-param"><span class="n">ethnicity</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">socioecon_index</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n">Area</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">work_super_area</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sector</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sub_sector</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">lockdown_status</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">comorbidity</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">home_city</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode_of_transport</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.commute.html#june.commute.ModeOfTransport" title="june.commute.ModeOfTransport">june.commute.ModeOfTransport</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">busy</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">subgroups</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Activities" title="june.demography.person.Activities">june.demography.person.Activities</a></span> <span class="o">=</span> <span class="default_value">Activities(residence=None, primary_activity=None, medical_facility=None, commute=None, rail_travel=None, leisure=None, box=None)</span></em>, <em class="sig-param"><span class="n">health_information</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.health_information.html#june.infection.health_information.HealthInformation" title="june.infection.health_information.HealthInformation">june.infection.health_information.HealthInformation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">susceptibility</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">dead</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Create new instance: Person(id, sex, age, ethnicity, socioecon_index, area, work_super_area, sector, sub_sector, lockdown_status, comorbidity, home_city, mode_of_transport, busy, subgroups, health_information, susceptibility, dead)</p>
+<em class="property">class </em><code class="sig-prename descclassname">june.demography.person.</code><code class="sig-name descname">Person</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">sex</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'f'</span></em>, <em class="sig-param"><span class="n">age</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">27</span></em>, <em class="sig-param"><span class="n">ethnicity</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">socioecon_index</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n">Area</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">work_super_area</span><span class="p">:</span> <span class="n">SuperArea</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sector</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sub_sector</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">lockdown_status</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">comorbidity</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode_of_transport</span><span class="p">:</span> <span class="n">ModeOfTransport</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">busy</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">subgroups</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Activities" title="june.demography.person.Activities">june.demography.person.Activities</a></span> <span class="o">=</span> <span class="default_value">Activities(residence=None, primary_activity=None, medical_facility=None, commute=None, rail_travel=None, leisure=None, box=None)</span></em>, <em class="sig-param"><span class="n">infection</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.infection.html#june.infection.infection.Infection" title="june.infection.infection.Infection">june.infection.infection.Infection</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">susceptibility</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">dead</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Create new instance: Person(id, sex, age, ethnicity, socioecon_index, area, work_super_area, sector, sub_sector, lockdown_status, comorbidity, mode_of_transport, busy, subgroups, infection, susceptibility, dead)</p>
 <dl class="py method">
 <dt>
 <code class="sig-name descname">find_guardian</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
@@ -97,14 +97,9 @@
 <code class="sig-name descname">ethnicity</code><em class="property">: str</em></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="py method">
 <dt>
-<code class="sig-name descname">health_information</code><em class="property">: <a class="reference internal" href="june.infection.health_information.html#june.infection.health_information.HealthInformation" title="june.infection.health_information.HealthInformation">june.infection.health_information.HealthInformation</a></em></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">home_city</code><em class="property">: str</em></dt>
+<em class="property">property </em><code class="sig-name descname">home_city</code></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -127,9 +122,9 @@
 <em class="property">property </em><code class="sig-name descname">infected</code></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="py attribute">
 <dt>
-<em class="property">property </em><code class="sig-name descname">infection</code></dt>
+<code class="sig-name descname">infection</code><em class="property">: <a class="reference internal" href="june.infection.infection.html#june.infection.infection.Infection" title="june.infection.infection.Infection">june.infection.infection.Infection</a></em></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -154,7 +149,7 @@
 
 <dl class="py attribute">
 <dt>
-<code class="sig-name descname">mode_of_transport</code><em class="property">: <a class="reference internal" href="june.commute.html#june.commute.ModeOfTransport" title="june.commute.ModeOfTransport">june.commute.ModeOfTransport</a></em></dt>
+<code class="sig-name descname">mode_of_transport</code><em class="property">: ModeOfTransport</em></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -202,6 +197,11 @@
 <code class="sig-name descname">subgroups</code><em class="property">: <a class="reference internal" href="june.demography.person.html#june.demography.person.Activities" title="june.demography.person.Activities">june.demography.person.Activities</a></em></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">super_area</code></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt>
 <code class="sig-name descname">susceptibility</code><em class="property">: float</em></dt>
@@ -217,9 +217,14 @@
 <em class="property">property </em><code class="sig-name descname">symptoms</code></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">work_city</code></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt>
-<code class="sig-name descname">work_super_area</code><em class="property">: str</em></dt>
+<code class="sig-name descname">work_super_area</code><em class="property">: SuperArea</em></dt>
 <dd></dd></dl>
 
 </dd></dl>

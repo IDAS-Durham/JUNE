@@ -1,4 +1,8 @@
-from .policy import Policy, Policies, PolicyCollection
+from .policy import (
+    Policy,
+    Policies,
+    PolicyCollection,
+)  # , regional_compliance_is_active
 from .interaction_policies import (
     InteractionPolicy,
     InteractionPolicies,
@@ -10,6 +14,7 @@ from .leisure_policies import (
     LeisurePolicies,
     CloseLeisureVenue,
     ChangeLeisureProbability,
+    ChangeVisitsProbability,
 )
 from .individual_policies import (
     IndividualPolicy,
@@ -17,15 +22,23 @@ from .individual_policies import (
     StayHome,
     SevereSymptomsStayHome,
     Quarantine,
+    SchoolQuarantine,
     Shielding,
     CloseCompanies,
     CloseSchools,
     CloseUniversities,
-    LimitLongCommute
+    LimitLongCommute,
 )
 
 from .medical_care_policies import (
     MedicalCarePolicy,
     MedicalCarePolicies,
     Hospitalisation,
+)
+
+from .regional_compliance import (
+    RegionalCompliance,
+    RegionalCompliances,
+    TieredLockdown,
+    TieredLockdowns,
 )

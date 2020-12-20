@@ -17,11 +17,17 @@ from june.exc import SimulatorError
 from june.groups.leisure import Leisure
 from june.groups import MedicalFacilities
 from june.groups.travel import Travel
+from june.groups.group.interactive import InteractiveGroup
 from june.infection.symptom_tag import SymptomTag
 from june.infection import InfectionSelector
 from june.infection_seed import InfectionSeed
-from june.interaction import Interaction, InteractiveGroup
-from june.policy import Policies, MedicalCarePolicies, InteractionPolicies
+from june.interaction import Interaction
+from june.policy import (
+    Policies,
+    MedicalCarePolicies,
+    InteractionPolicies,
+)
+from june.event import Events
 from june.time import Timer
 from june.records import Record
 from june.world import World
@@ -33,6 +39,24 @@ default_config_filename = paths.configs_path / "config_example.yaml"
 output_logger = logging.getLogger("simulator")
 if mpi_rank > 0:
     output_logger.propagate = False
+
+
+def _read_checkpoint_dates(checkpoint_dates):
+    if isinstance(checkpoint_dates, datetime.date):
+        return (checkpoint_dates,)
+    elif type(checkpoint_dates) == str:
+        return (datetime.datetime.strptime(checkpoint_dates, "%Y-%m-%d"),)
+    elif type(checkpoint_dates) in [list, tuple]:
+        ret = []
+        for date in checkpoint_dates:
+            if type(date) == str:
+                dd = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+            else:
+                dd = date
+            ret.append(dd)
+        return tuple(ret)
+    else:
+        return ()
 
 
 class Simulator:
@@ -47,15 +71,15 @@ class Simulator:
         infection_selector: InfectionSelector = None,
         infection_seed: Optional["InfectionSeed"] = None,
         record: Optional[Record] = None,
-        checkpoint_dates: List[datetime.date] = None,
-        checkpoint_path: str = None,
+        checkpoint_save_dates: List[datetime.date] = None,
+        checkpoint_save_path: str = None,
     ):
         """
         Class to run an epidemic spread simulation on the world.
 
         Parameters
         ----------
-        world: 
+        world:
             instance of World class
         """
         self.activity_manager = activity_manager
@@ -65,12 +89,12 @@ class Simulator:
         self.infection_seed = infection_seed
         self.timer = timer
         # self.comment = comment
-        if checkpoint_path is not None:
-            self.checkpoint_path = Path(checkpoint_path)
-            self.checkpoint_path.mkdir(parents=True, exist_ok=True)
-            self.checkpoint_dates = checkpoint_dates
-        else:
-            self.checkpoint_dates = ()
+        self.checkpoint_save_dates = _read_checkpoint_dates(checkpoint_save_dates)
+        if self.checkpoint_save_dates:
+            if not checkpoint_save_path:
+                checkpoint_save_path = "results/checkpoints"
+            self.checkpoint_save_path = Path(checkpoint_save_path)
+            self.checkpoint_save_path.mkdir(parents=True, exist_ok=True)
         self.medical_facilities = self._get_medical_facilities()
         self.record = record
 
@@ -81,11 +105,12 @@ class Simulator:
         interaction: Interaction,
         infection_selector=None,
         policies: Optional[Policies] = None,
+        events: Optional[Events] = None,
         infection_seed: Optional[InfectionSeed] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
-        checkpoint_path: str = None,
+        checkpoint_save_path: str = None,
         record: Optional[Record] = None,
     ) -> "Simulator":
 
@@ -117,21 +142,14 @@ class Simulator:
                 activity_to_super_groups = config["activity_to_super_groups"]
             except:
                 output_logger.warning(
-                    "Activity to groups in config is deprecated, please change it to activity_to_super_groups"
+                    "Activity to groups in config is deprecated"
+                    "please change it to activity_to_super_groups"
                 )
                 activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
-        if "checkpoint_dates" in config:
-            if isinstance(config["checkpoint_dates"], datetime.date):
-                checkpoint_dates = [config["checkpoint_dates"]]
-            else:
-                checkpoint_dates = []
-                for date_str in config["checkpoint_dates"].split():
-                    checkpoint_dates.append(
-                        datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
-                    )
-        else:
-            checkpoint_dates = None
+        checkpoint_save_dates = _read_checkpoint_dates(
+            config.get("checkpoint_save_dates", None)
+        )
         weekday_activities = [
             activity for activity in time_config["step_activities"]["weekday"].values()
         ]
@@ -157,6 +175,7 @@ class Simulator:
             world=world,
             all_activities=all_activities,
             activity_to_super_groups=activity_to_super_groups,
+            events=events,
             leisure=leisure,
             travel=travel,
             policies=policies,
@@ -170,15 +189,15 @@ class Simulator:
             infection_selector=infection_selector,
             infection_seed=infection_seed,
             record=record,
-            checkpoint_dates=checkpoint_dates,
-            checkpoint_path=checkpoint_path,
+            checkpoint_save_dates=checkpoint_save_dates,
+            checkpoint_save_path=checkpoint_save_path,
         )
 
     @classmethod
     def from_checkpoint(
         cls,
         world: World,
-        checkpoint_path: str,
+        checkpoint_load_path: str,
         interaction: Interaction,
         infection_selector=None,
         policies: Optional[Policies] = None,
@@ -187,13 +206,14 @@ class Simulator:
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
         record: Optional[Record] = None,
-        # comment: Optional[str] = None,
+        events: Optional[Events] = None,
+        reset_infections=False,
     ):
         from june.hdf5_savers.checkpoint_saver import generate_simulator_from_checkpoint
 
         return generate_simulator_from_checkpoint(
             world=world,
-            checkpoint_path=checkpoint_path,
+            checkpoint_path=checkpoint_load_path,
             interaction=interaction,
             infection_selector=infection_selector,
             policies=policies,
@@ -202,6 +222,8 @@ class Simulator:
             travel=travel,
             config_filename=config_filename,
             record=record,
+            events=events,
+            reset_infections=reset_infections,
         )
 
     def clear_world(self):
@@ -215,8 +237,7 @@ class Simulator:
             grouptype = getattr(self.world, super_group_name)
             if grouptype is not None:
                 for group in grouptype.members:
-                    if not group.external:
-                        group.clear()
+                    group.clear()
 
         for person in self.world.people.members:
             person.busy = False
@@ -266,8 +287,8 @@ class Simulator:
 
     def bury_the_dead(self, world: World, person: "Person"):
         """
-        When someone dies, send them to cemetery. 
-        ZOMBIE ALERT!! 
+        When someone dies, send them to cemetery.
+        ZOMBIE ALERT!!
 
         Parameters
         ----------
@@ -330,11 +351,6 @@ class Simulator:
         for person in self.world.people.infected:
             previous_tag = person.infection.tag
             new_status = person.infection.update_health_status(time, duration)
-            if (
-                previous_tag == SymptomTag.exposed
-                and person.infection.tag == SymptomTag.mild
-            ):
-                person.residence.group.quarantine_starting_date = time
             if self.record is not None:
                 if previous_tag != person.infection.tag:
                     self.record.accumulate(
@@ -398,7 +414,12 @@ class Simulator:
         tick, tickw = perf_counter(), wall_clock()
 
         invalid_id = 4294967295  # largest possible uint32
-        empty = np.array([invalid_id,], dtype=np.uint32)
+        empty = np.array(
+            [
+                invalid_id,
+            ],
+            dtype=np.uint32,
+        )
 
         # we want to make sure we transfer something for every domain.
         # (we have an np.concatenate which doesn't work on empty arrays)
@@ -431,7 +452,7 @@ class Simulator:
         to send people to the corresponding subgroups according to the current daytime.
         Then we iterate over all the groups and create an InteractiveGroup object, which
         extracts the relevant information of each group to carry the interaction in it.
-        We then pass the interactive group to the interaction module, which returns the ids 
+        We then pass the interactive group to the interaction module, which returns the ids
         of the people who got infected. We record the infection locations, update the health
         status of the population, and distribute scores among the infectors to calculate R0.
         """
@@ -439,7 +460,11 @@ class Simulator:
         tick, tickw = perf_counter(), wall_clock()
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
-                date=self.timer.date, interaction=self.interaction,
+                date=self.timer.date,
+                interaction=self.interaction,
+            )
+            self.activity_manager.policies.regional_compliance.apply(
+                date=self.timer.date, regions=self.world.regions
             )
         activities = self.timer.activities
         if not activities or len(activities) == 0:
@@ -449,6 +474,7 @@ class Simulator:
             people_from_abroad_dict,
             n_people_from_abroad,
             n_people_going_abroad,
+            # ) = self.activity_manager.do_timestep(regional_compliance=regional_compliance)
         ) = self.activity_manager.do_timestep()
 
         # get the supergroup instances that are active in this time step:
@@ -479,38 +505,19 @@ class Simulator:
             for group in super_group:
                 if group.external:
                     continue
-                if (
-                    group.spec in people_from_abroad_dict
-                    and group.id in people_from_abroad_dict[group.spec]
-                ):
-                    foreign_people = people_from_abroad_dict[group.spec][group.id]
                 else:
-                    foreign_people = None
-                int_group = InteractiveGroup(group, foreign_people)
-                n_people += int_group.size
-                if int_group.must_timestep:
-                    new_infected_ids = self.interaction.time_step_for_group(
-                        self.timer.duration, int_group
+                    people_from_abroad = people_from_abroad_dict.get(
+                        group.spec, {}
+                    ).get(group.id, None)
+                    new_infected_ids, group_size = self.interaction.time_step_for_group(
+                        group=group,
+                        people_from_abroad=people_from_abroad,
+                        delta_time=self.timer.duration,
+                        record=self.record,
                     )
-                    if new_infected_ids and self.record is not None:
-                        n_infected = len(new_infected_ids)
-                        tprob_norm = sum(int_group.transmission_probabilities)
-                        infector_ids = list(chain.from_iterable(int_group.infector_ids))
-                        infector_ids = np.random.choice(
-                            infector_ids,
-                            n_infected,
-                            # TODO: p=np.array(transmission_probabilities) / tprob_norm,
-                        )
-                        self.record.accumulate(
-                            table_name="infections",
-                            location_spec=group.spec,
-                            location_id=group.id,
-                            region_name=group.super_area.region.name,
-                            infected_ids=new_infected_ids,
-                            infector_ids=infector_ids,
-                        )
-
                     infected_ids += new_infected_ids
+                    n_people += group_size
+
         # infect the people that got exposed
         if self.infection_selector:
             infect_in_domains = self.infect_people(
@@ -518,6 +525,7 @@ class Simulator:
                 people_from_abroad_dict=people_from_abroad_dict,
             )
             to_infect = self.tell_domains_to_infect(infect_in_domains)
+
         # recount people active to check people conservation
         people_active = (
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
@@ -531,11 +539,13 @@ class Simulator:
                 f"People coming from abroad {n_people_from_abroad}\n"
                 f"Current rank {mpi_rank}\n"
             )
+
         # update the health status of the population
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.record is not None:
             self.record.summarise_time_step(timestamp=self.timer.date, world=self.world)
             self.record.time_step(timestamp=self.timer.date)
+
         # remove everyone from their active groups
         self.clear_world()
         tock, tockw = perf_counter(), wall_clock()
@@ -566,11 +576,13 @@ class Simulator:
                     >= self.infection_seed.min_date
                 ):
                     self.infection_seed.unleash_virus_per_day(
-                        self.timer.date, record=self.record
+                        self.timer.date,
+                        record=self.record,
+                        days_from_start=self.timer.now,
                     )
             self.do_timestep()
             if (
-                self.timer.date.date() in self.checkpoint_dates
+                self.timer.date.date() in self.checkpoint_save_dates
                 and (self.timer.now + self.timer.duration).is_integer()
             ):  # this saves in the last time step of the day
                 saving_date = self.timer.date.date()
@@ -587,10 +599,10 @@ class Simulator:
         from june.hdf5_savers.checkpoint_saver import save_checkpoint_to_hdf5
 
         if mpi_size == 1:
-            save_path = self.checkpoint_path / f"checkpoint_{saving_date}.hdf5"
+            save_path = self.checkpoint_save_path / f"checkpoint_{saving_date}.hdf5"
         else:
             save_path = (
-                self.checkpoint_path / f"checkpoint_{saving_date}.{mpi_rank}.hdf5"
+                self.checkpoint_save_path / f"checkpoint_{saving_date}.{mpi_rank}.hdf5"
             )
         save_checkpoint_to_hdf5(
             population=self.world.people,

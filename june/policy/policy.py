@@ -13,18 +13,9 @@ from june.demography.person import Person
 from june.groups.leisure import Leisure
 from june.infection.symptom_tag import SymptomTag
 from june.interaction import Interaction
+from june.utils import read_date, str_to_class
 
 default_config_filename = paths.configs_path / "defaults/policy/policy.yaml"
-
-
-def str_to_class(classname, base_policy_modules=("june.policy",)):
-    for module_name in base_policy_modules:
-        try:
-            module = importlib.import_module(module_name)
-            return getattr(module, classname)
-        except AttributeError:
-            continue
-    raise ValueError("Cannot find policy in paths!")
 
 
 class Policy(ABC):
@@ -44,30 +35,8 @@ class Policy(ABC):
             date from which the policy won't apply
         """
         self.spec = self.get_spec()
-        self.start_time = self.read_date(start_time)
-        self.end_time = self.read_date(end_time)
-
-    @staticmethod
-    def read_date(date: Union[str, datetime.datetime]) -> datetime.datetime:
-        """
-        Read date in two possible formats, either string or datetime.date, both
-        are translated into datetime.datetime to be used by the simulator
-
-        Parameters
-        ----------
-        date:
-            date to translate into datetime.datetime
-
-        Returns
-        -------
-            date in datetime format
-        """
-        if type(date) is str:
-            return datetime.datetime.strptime(date, "%Y-%m-%d")
-        elif isinstance(date, datetime.date):
-            return datetime.datetime.combine(date, datetime.datetime.min.time())
-        else:
-            raise TypeError("date must be a string or a datetime.date object")
+        self.start_time = read_date(start_time)
+        self.end_time = read_date(end_time)
 
     def get_spec(self) -> str:
         """
@@ -97,15 +66,22 @@ class Policies:
             InteractionPolicies,
             MedicalCarePolicies,
             LeisurePolicies,
+            RegionalCompliances,
+            TieredLockdowns
         )
+
         self.individual_policies = IndividualPolicies.from_policies(self)
         self.interaction_policies = InteractionPolicies.from_policies(self)
         self.medical_care_policies = MedicalCarePolicies.from_policies(self)
         self.leisure_policies = LeisurePolicies.from_policies(self)
+        self.regional_compliance = RegionalCompliances.from_policies(self)
+        self.tiered_lockdown = TieredLockdowns.from_policies(self)
 
     @classmethod
     def from_file(
-        cls, config_file=default_config_filename, base_policy_modules=("june.policy",)
+        cls,
+        config_file=default_config_filename,
+        base_policy_modules=("june.policy",),
     ):
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -128,6 +104,7 @@ class Policies:
                 policies.append(
                     str_to_class(camel_case_key, base_policy_modules)(**policy_data)
                 )
+
         return Policies(policies=policies)
 
     def get_policies_for_type(self, policy_type):
@@ -142,19 +119,20 @@ class Policies:
         like policies depending on workers' behaviours during lockdown.
         """
         from june.policy import CloseCompanies, LimitLongCommute
+
         CloseCompanies.set_ratios(world=world)
         LimitLongCommute.get_long_commuters(people=world.people)
 
 
-
 class PolicyCollection:
-
     def __init__(self, policies: List[Policy]):
         """
         A collection of like policies active on the same date
         """
         self.policies = policies
-        self.policies_by_name = {self._get_policy_name(policy) : policy for policy in policies}
+        self.policies_by_name = {
+            self._get_policy_name(policy): policy for policy in policies
+        }
 
     def _get_policy_name(self, policy):
         return re.sub(r"(?<!^)(?=[A-Z])", "_", policy.__class__.__name__).lower()
@@ -180,4 +158,3 @@ class PolicyCollection:
 
     def __contains__(self, policy_name):
         return policy_name in self.policies_by_name
-

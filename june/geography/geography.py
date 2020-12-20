@@ -3,6 +3,7 @@ from itertools import count, chain
 from typing import List, Dict, Tuple, Optional
 import pandas as pd
 import numpy as np
+from collections import defaultdict
 from sklearn.neighbors import BallTree
 
 from june import paths
@@ -81,6 +82,10 @@ class Area:
             comorbidity=comorbidity,
         ):
             self.add(person)
+
+    @property
+    def region(self):
+        return self.super_area.region
 
 
 class Areas:
@@ -311,7 +316,7 @@ class Region:
     Coarsest geographical resolution
     """
 
-    __slots__ = ("id", "name", "super_areas")
+    __slots__ = ("id", "name", "super_areas", "policy")
     _id = count()
 
     def __init__(
@@ -320,12 +325,31 @@ class Region:
         self.id = next(self._id)
         self.name = name
         self.super_areas = super_areas or []
+        self.policy = {
+            "regional_compliance": 1.,
+            "lockdown_tier" : None,
+            "local_closed_venues": set(),
+            "global_closed_venues": set(),
+        }
 
     @property
     def people(self):
         return list(
             chain.from_iterable(super_area.people for super_area in self.super_areas)
         )
+
+    @property
+    def regional_compliance(self):
+        return self.policy["regional_compliance"]
+
+    @regional_compliance.setter
+    def regional_compliance(self, value):
+        self.policy["regional_compliance"] = value
+
+
+    @property
+    def closed_venues(self):
+        return self.policy["local_closed_venues"] | self.policy["global_closed_venues"]
 
 
 class Regions:
@@ -349,6 +373,9 @@ class Regions:
 
     def get_from_id(self, id):
         return self.members_by_id[id]
+
+    def get_from_name(self, name):
+        return self.members_by_name[name]
 
     @property
     def members(self):

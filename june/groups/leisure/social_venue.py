@@ -24,11 +24,11 @@ class SocialVenue(Group):
     max_size = np.inf
 
     class SubgroupType(IntEnum):
-        default = 0
+        leisure = 0
 
-    def __init__(self):
+    def __init__(self, area=None):
         super().__init__()
-        self.area = None
+        self.area = area
 
     def add(self, person, activity="leisure"):
         self.subgroups[0].append(person)
@@ -37,6 +37,10 @@ class SocialVenue(Group):
     @property
     def super_area(self):
         return self.area.super_area
+
+    def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
+        return self[self.SubgroupType.leisure]
+
 
 class SocialVenues(Supergroup):
     social_venue_class = SocialVenue
@@ -78,24 +82,26 @@ class SocialVenues(Supergroup):
             sv.coordinates = coord
             if super_areas:
                 area = Areas(super_area.areas).get_closest_area(coordinates=coord)
-                sv.area = area 
+                sv.area = area
             social_venues.append(sv)
         return cls(social_venues, **kwargs)
 
     @classmethod
     def for_super_areas(
-        cls, super_areas: List[SuperArea], coordinates_filename: str = None,
+        cls,
+        super_areas: List[SuperArea],
+        coordinates_filename: str = None,
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
         sv_coordinates = pd.read_csv(coordinates_filename, index_col=0).values
-        return cls.from_coordinates(
-            sv_coordinates, super_areas=super_areas
-        )
+        return cls.from_coordinates(sv_coordinates, super_areas=super_areas)
 
     @classmethod
     def for_areas(
-        cls, areas: Areas, coordinates_filename: str = None,
+        cls,
+        areas: Areas,
+        coordinates_filename: str = None,
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
@@ -104,7 +110,9 @@ class SocialVenues(Supergroup):
 
     @classmethod
     def for_geography(
-        cls, geography: Geography, coordinates_filename: str = None,
+        cls,
+        geography: Geography,
+        coordinates_filename: str = None,
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
@@ -125,9 +133,9 @@ class SocialVenues(Supergroup):
         areas
             list of areas to generate the venues in
         venues_per_capita
-            number of venues per person in each area. 
+            number of venues per person in each area.
         venues_per_area
-            number of venues in each area. 
+            number of venues in each area.
         """
         if venues_per_area is not None and venues_per_capita is not None:
             raise SocialVenueError(
@@ -219,7 +227,7 @@ class SocialVenues(Supergroup):
             number of neighbours desired
         """
         if not self.members:
-            return 
+            return
         if self.ball_tree is None:
             raise SocialVenueError("Initialise ball tree first with self.make_tree()")
         venue_idxs = self.ball_tree.query(
@@ -240,7 +248,7 @@ class SocialVenues(Supergroup):
             radius in km to query
         """
         if not self.members:
-            return 
+            return
         if self.ball_tree is None:
             raise SocialVenueError("Initialise ball tree first with self.make_tree()")
         radius = radius / earth_radius
@@ -255,3 +263,6 @@ class SocialVenues(Supergroup):
             return None
         social_venues = self.members
         return [social_venues[idx] for idx in venue_idxs]
+
+    def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
+        return self[subgroup_type]

@@ -15,7 +15,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="june.commute_rail_travel" href="june.commute_rail_travel.html" />
+    <link rel="next" title="june.demography.demography" href="june.demography.demography.html" />
     <link rel="prev" title="june.activity.activity_manager" href="june.activity.activity_manager.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
@@ -29,7 +29,7 @@
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.commute_rail_travel.html">june.commute_rail_travel</a>&#160;&#160;»
+        <a href="june.demography.demography.html">june.demography.demography</a>&#160;&#160;»
         </p>
 
       </div>
@@ -83,7 +83,7 @@ starting at 0</p>
 
 <dl class="py method">
 <dt id="june.box.box_mode.Box.add">
-<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">activity</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">subgroup_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.group.group.html#june.groups.group.group.Group.SubgroupType" title="june.groups.group.group.Group.SubgroupType">june.groups.group.group.Group.SubgroupType</a></span></em>, <em class="sig-param"><span class="n">dynamic</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.box.box_mode.Box.add" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">activity</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">subgroup_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.groups.group.group.html#june.groups.group.group.Group.SubgroupType" title="june.groups.group.group.Group.SubgroupType">june.groups.group.group.Group.SubgroupType</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.box.box_mode.Box.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a person to a given subgroup. For example, in a school
 a student is added to the subgroup matching their age.</p>
 <dl class="simple">
@@ -134,6 +134,11 @@ from the subgroup to which they belong</p>
 <dl class="py method">
 <dt id="june.box.box_mode.Box.dead">
 <em class="property">property </em><code class="sig-name descname">dead</code><a class="headerlink" href="#june.box.box_mode.Box.dead" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="june.box.box_mode.Box.external">
+<code class="sig-name descname">external</code><em class="property"> = False</em><a class="headerlink" href="#june.box.box_mode.Box.external" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -221,6 +226,22 @@ the name fo the class with the id of the instance.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="june.box.box_mode.Boxes._make_member_ids_dict">
+<code class="sig-name descname">_make_member_ids_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">members</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.box.box_mode.Boxes._make_member_ids_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes a dictionary with the ids of the members.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.box.box_mode.Boxes.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">group</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.box.box_mode.Boxes.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.box.box_mode.Boxes.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.box.box_mode.Boxes.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="june.box.box_mode.Boxes.erase_people_from_groups_and_subgroups">
 <code class="sig-name descname">erase_people_from_groups_and_subgroups</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.box.box_mode.Boxes.erase_people_from_groups_and_subgroups" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -240,6 +261,27 @@ the name fo the class with the id of the instance.</p>
 <em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.box.box_mode.Boxes.from_file" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt id="june.box.box_mode.Boxes.get_from_id">
+<code class="sig-name descname">get_from_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.box.box_mode.Boxes.get_from_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.box.box_mode.Boxes.get_spec">
+<code class="sig-name descname">get_spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#june.box.box_mode.Boxes.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the speciailization of the super group.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="june.box.box_mode.Boxes.group_spec">
+<em class="property">property </em><code class="sig-name descname">group_spec</code><a class="headerlink" href="#june.box.box_mode.Boxes.group_spec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="june.box.box_mode.Boxes.member_ids">
+<em class="property">property </em><code class="sig-name descname">member_ids</code><a class="headerlink" href="#june.box.box_mode.Boxes.member_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </div>
@@ -253,7 +295,7 @@ the name fo the class with the id of the instance.</p>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.commute_rail_travel.html">june.commute_rail_travel</a>&#160;&#160;»
+        <a href="june.demography.demography.html">june.demography.demography</a>&#160;&#160;»
         </p>
 
       </div>
