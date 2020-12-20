@@ -74,7 +74,9 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
                     households_to_visit.append(house)
                     n_linked += 1
                 if households_to_visit:
-                    household.residences_to_visit["household"] = tuple(households_to_visit)
+                    household.residences_to_visit["household"] = tuple(
+                        households_to_visit
+                    )
 
     def link_households_to_care_homes(self, super_areas):
         """
@@ -125,9 +127,11 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
             residence_type_probabilities = (
                 residence_type_probabilities / residence_type_probabilities.sum()
             )
-            which_type = choice(
-                residence_types, p=residence_type_probabilities
+            type_sample = random_choice_numba(
+                tuple(range(len(residence_type_probabilities))),
+                residence_type_probabilities,
             )
+            which_type = residence_types[type_sample]
         candidates = person.residence.group.residences_to_visit[which_type]
         n_candidates = len(candidates)
         if n_candidates == 0:
