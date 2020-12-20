@@ -37,8 +37,20 @@ from june.utils.profiler import profile
 default_config_filename = paths.configs_path / "config_example.yaml"
 
 output_logger = logging.getLogger("simulator")
+mpi_logger = logging.getLogger("mpi")
+mpi_logger.propagate = False
+
 if mpi_rank > 0:
     output_logger.propagate = False
+
+
+def enable_mpi_debug(results_folder):
+    from june.logging import MPIFileHandler
+    logging_file = Path(results_folder) / "mpi.log"
+    with open(logging_file, "w") as f:
+        pass
+    mh = MPIFileHandler(logging_file)                                           
+    mpi_logger.addHandler(mh)
 
 
 def _read_checkpoint_dates(checkpoint_dates):
@@ -436,6 +448,7 @@ class Simulator:
         output_logger.info(
             f"CMS: Infection COMS-v2 for rank {mpi_rank}/{mpi_size}({n_sending+n_receiving}) {tock-tick},{tockw-tickw} - {self.timer.date}"
         )
+        mpi_logger.info(f"{mpi_rank},infection,{tock-tick}")
 
         for infection_data in people_to_infect:
             try:
@@ -552,6 +565,7 @@ class Simulator:
         output_logger.info(
             f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick}, {tockw-tickw} - {self.timer.date}\n"
         )
+        mpi_logger.info(f"{mpi_rank},timestep,{tock-tick}")
 
     def run(self):
         """

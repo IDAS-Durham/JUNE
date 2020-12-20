@@ -27,6 +27,7 @@ from june.mpi_setup import (
 )
 
 logger = logging.getLogger("activity_manager")
+mpi_logger = logging.getLogger("mpi")
 if mpi_rank > 0:
     logger.propagate = False
 
@@ -148,10 +149,7 @@ class ActivityManager:
         # apply events
         if self.events is not None:
             self.events.apply(
-                date=date,
-                world=self.world,
-                activities=activities,
-                day_type=day_type
+                date=date, world=self.world, activities=activities, day_type=day_type
             )
         # move people to subgroups and get going abroad people
         to_send_abroad = self.move_people_to_active_subgroups(
@@ -279,4 +277,5 @@ class ActivityManager:
         logger.info(
             f"CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw - tickw} - {self.timer.date}"
         )
+        mpi_logger.info(f"{mpi_rank},people,{tock-tick}")
         return movable_people.skinny_in, n_people_from_abroad, n_people_going_abroad
