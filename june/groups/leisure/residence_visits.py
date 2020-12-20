@@ -125,8 +125,8 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
             residence_type_probabilities = (
                 residence_type_probabilities / residence_type_probabilities.sum()
             )
-            which_type = random_choice_numba(
-                residence_types, residence_type_probabilities
+            which_type = choice(
+                residence_types, p=residence_type_probabilities
             )
         candidates = person.residence.group.residences_to_visit[which_type]
         n_candidates = len(candidates)
