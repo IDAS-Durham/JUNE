@@ -74,9 +74,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
                     households_to_visit.append(house)
                     n_linked += 1
                 if households_to_visit:
-                    household.residences_to_visit["household"] = tuple(
-                        *household.residences_to_visit["household"], households_to_visit
-                    )
+                    household.residences_to_visit["household"] = tuple(households_to_visit)
 
     def link_households_to_care_homes(self, super_areas):
         """

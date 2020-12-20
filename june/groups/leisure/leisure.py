@@ -12,6 +12,7 @@ from june.groups.leisure import (
     GroceryDistributor,
     CinemaDistributor,
     ResidenceVisitsDistributor,
+    GymDistributor
 )
 from june.groups.leisure import Pubs, Cinemas, Groceries
 from june.groups import Household, ExternalSubgroup, Households
@@ -39,6 +40,11 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
             logger.warning("No pubs in this world/domain")
         else:
             leisure_distributors["pub"] = PubDistributor.from_config(world.pubs)
+    if "gyms" in list_of_leisure_groups:
+        if not hasattr(world, "gyms") or world.gyms is None or len(world.gyms) == 0:
+            logger.warning("No gyms in this world/domain")
+        else:
+            leisure_distributors["gym"] = GymDistributor.from_config(world.gyms)
     if "cinemas" in list_of_leisure_groups:
         if (
             not hasattr(world, "cinemas")

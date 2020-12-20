@@ -15,6 +15,7 @@ spec_to_supergroup_mapper = {
     "pub": "pubs",
     "cinema": "cinemas",
     "grocery": "groceries",
+    "gym" : "gyms"
 }
 
 def save_geography_to_hdf5(geography: Geography, file_path: str):
