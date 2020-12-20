@@ -448,7 +448,7 @@ class Simulator:
         output_logger.info(
             f"CMS: Infection COMS-v2 for rank {mpi_rank}/{mpi_size}({n_sending+n_receiving}) {tock-tick},{tockw-tickw} - {self.timer.date}"
         )
-        mpi_logger.info(f"{mpi_rank},infection,{tock-tick}")
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},infection,{tock-tick}")
 
         for infection_data in people_to_infect:
             try:
@@ -489,6 +489,7 @@ class Simulator:
             n_people_going_abroad,
             # ) = self.activity_manager.do_timestep(regional_compliance=regional_compliance)
         ) = self.activity_manager.do_timestep()
+        tick_interaction = perf_counter()
 
         # get the supergroup instances that are active in this time step:
         active_super_groups = self.activity_manager.active_super_groups
@@ -530,6 +531,8 @@ class Simulator:
                     )
                     infected_ids += new_infected_ids
                     n_people += group_size
+        tock_interaction = perf_counter()
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},interaction,{tock_interaction-tick_interaction}")
 
         # infect the people that got exposed
         if self.infection_selector:
@@ -565,7 +568,7 @@ class Simulator:
         output_logger.info(
             f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick}, {tockw-tickw} - {self.timer.date}\n"
         )
-        mpi_logger.info(f"{mpi_rank},timestep,{tock-tick}")
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},timestep,{tock-tick}")
 
     def run(self):
         """

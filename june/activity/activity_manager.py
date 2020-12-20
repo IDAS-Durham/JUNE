@@ -176,6 +176,7 @@ class ActivityManager:
         ----------
 
         """
+        tick = perf_counter()
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
         )
@@ -195,6 +196,8 @@ class ActivityManager:
             if external_subgroup is not None:
                 to_send_abroad.add_person(person, external_subgroup)
 
+        tock = perf_counter()
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},activity,{tock-tick}")
         return to_send_abroad
 
     def move_to_active_subgroup(
@@ -277,5 +280,5 @@ class ActivityManager:
         logger.info(
             f"CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw - tickw} - {self.timer.date}"
         )
-        mpi_logger.info(f"{mpi_rank},people,{tock-tick}")
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},people_comms,{tock-tick}")
         return movable_people.skinny_in, n_people_from_abroad, n_people_going_abroad
