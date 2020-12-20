@@ -108,9 +108,9 @@ class DomainSplitter:
         The score is calculated as:
         score = people_weight * n_people + workers_weight * n_workers + commute_weight * n_commuters
         """
-        people_weight = 2
+        people_weight = 3
         workers_weight = 1
-        commute_weight = 1
+        commute_weight = 2
         ret = defaultdict(float)
         with h5py.File(world_path, "r") as f:
             geography_dset = f["geography"]
