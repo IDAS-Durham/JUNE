@@ -84,5 +84,6 @@ except FileNotFoundError:
     )
     if answer == "y":
         subprocess.call(["get_june_data.sh"])
+    data_path = path_for_name("data", look_in_package=True)
 
 configs_path = path_for_name("configs")
