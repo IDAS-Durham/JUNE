@@ -62,7 +62,7 @@ def make_policies():
     )
 
 
-@pytest.fixture(name="sim", scope="module")
+@pytest.fixture(name="sim")
 def setup_sim(dummy_world, selector):
     world = dummy_world
     for person in world.people:

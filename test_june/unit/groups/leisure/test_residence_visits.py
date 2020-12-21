@@ -85,17 +85,12 @@ class TestHouseholdVisits:
         for super_area in super_areas:
             for area in super_area.areas:
                 for household in area.households:
-                    if household.type == "communal":
-                        assert len(household.residences_to_visit) == 0
-                    else:
-                        has_visits = True
-                        to_visit = [
-                            residence
-                            for residence in household.residences_to_visit["household"]
-                        ]
-                        assert len(to_visit) in range(2, 5)
-                        for household in to_visit:
-                            assert household.type != "communal"
+                    has_visits = True
+                    to_visit = [
+                        residence
+                        for residence in household.residences_to_visit["household"]
+                    ]
+                    assert len(to_visit) in range(2, 5)
         assert has_visits
 
     def test__visitors_stay_home_when_visited(self, rv_distributor):

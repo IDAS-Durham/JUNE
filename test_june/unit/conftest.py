@@ -172,7 +172,7 @@ def create_simulator_box(world_box, interaction, selector):
 
 
 # policy dummy world
-@pytest.fixture(name="dummy_world", scope="session")
+@pytest.fixture(name="dummy_world")#, scope="session")
 def make_dummy_world():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     super_area = g.super_areas.members[0]
@@ -285,7 +285,7 @@ def make_dummy_world():
     return world
 
 
-@pytest.fixture(name="policy_simulator", scope="session")
+@pytest.fixture(name="policy_simulator")
 def make_policy_simulator(dummy_world, interaction, selector):
     config_name = paths.configs_path / "tests/test_simulator_simple.yaml"
     travel = Travel()
@@ -305,21 +305,10 @@ def make_policy_simulator(dummy_world, interaction, selector):
 @pytest.fixture(name="setup_policy_world")
 def setup_world(dummy_world, policy_simulator):
     world = dummy_world
-    world.regions[0].regional_compliance = 1
     worker = world.people[0]
     pupil = world.people[1]
     student = world.people[2]
-    student.lockdown_status = None
-    worker.lockdown_status = None
-    policy_simulator.timer.reset()
     policy_simulator.clear_world()
-    for household in world.households:
-        household.quarantine_starting_date = None
-    for person in [pupil, student, worker]:
-        person.infection = None
-        person.susceptibility = 1.0
-        person.dead = False
-        person.subgroups.medical_facility = None
     return world, pupil, student, worker, policy_simulator
 
 

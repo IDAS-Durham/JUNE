@@ -109,6 +109,7 @@ class TestSevereSymptomsStayHome:
         date = datetime(2019, 2, 1)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
+        assert student in student.primary_activity.people
         sim.clear_world()
         infect_person(pupil, selector, "severe")
         sim.update_health_status(0.0, 0.0)
@@ -117,8 +118,12 @@ class TestSevereSymptomsStayHome:
             ["primary_activity", "residence"],
         )
         assert pupil in pupil.residence.people
-        assert worker in worker.residence.people
-        pupil.infection = None
+        has_guardian = False
+        for person in [worker, student]:
+            if person in person.residence.people:
+                has_guardian = True
+                break
+        assert has_guardian
         sim.clear_world()
 
 

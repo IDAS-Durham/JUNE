@@ -19,6 +19,8 @@ class TestHealthIndex:
         for population in ("gp", "ch"):
             for sex in ("m", "f"):
                 for age in np.arange(100):
+                    if population == "ch" and age < 50:
+                        continue
                     probs = health_index.probabilities[population][sex][age]
                     assert all(probs >= 0)
                     assert sum(probs) == pytest.approx(1, rel=1.0e-2)

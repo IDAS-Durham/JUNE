@@ -251,11 +251,8 @@ class HealthIndexGenerator:
             total = p[population][sex][age].sum()
             to_keep_sum = p[population][sex][age][5:].sum()
             to_adjust_sum = p[population][sex][age][:5].sum()
-            target_adjust_sum = 1 - to_keep_sum
+            target_adjust_sum = max(1 - to_keep_sum, 0)
             p[population][sex][age][:5] *= target_adjust_sum / to_adjust_sum
-            if age > 50:
-                assert np.isclose(p[population][sex][age].sum(), 1, rtol=0.01)
-                assert np.isclose(p[population][sex][age][5:].sum(), to_keep_sum, rtol=0.01)
 
     def _get_probabilities(self, max_age=99):
         n_outcomes = 8
