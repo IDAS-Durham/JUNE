@@ -62,8 +62,10 @@ class HealthIndexGenerator:
                 value: key for key, value in index_to_maximum_symptoms_tag.items()
             }["severe"]
             self.comorbidity_multipliers = comorbidity_multipliers
-            self.comorbidity_prevalence_reference_population = self._parse_prevalence_comorbidities_in_reference_population(
-                comorbidity_prevalence_reference_population
+            self.comorbidity_prevalence_reference_population = (
+                self._parse_prevalence_comorbidities_in_reference_population(
+                    comorbidity_prevalence_reference_population
+                )
             )
 
     @classmethod
@@ -99,8 +101,8 @@ class HealthIndexGenerator:
             comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
         female_prevalence = read_comorbidity_csv(female_prevalence_path)
         male_prevalence = read_comorbidity_csv(male_prevalence_path)
-        comorbidity_prevalence_reference_population = convert_comorbidities_prevalence_to_dict(
-            female_prevalence, male_prevalence
+        comorbidity_prevalence_reference_population = (
+            convert_comorbidities_prevalence_to_dict(female_prevalence, male_prevalence)
         )
         return cls.from_file(
             rates_file=rates_file,
@@ -138,7 +140,7 @@ class HealthIndexGenerator:
     def get_multiplier_from_reference_prevalence(self, age, sex):
         """
         Compute mean comorbidity multiplier given the prevalence of the different comorbidities
-        in the reference population (for example the UK). It will be used to remove effect of 
+        in the reference population (for example the UK). It will be used to remove effect of
         comorbidities in the reference population
 
         Parameters
@@ -180,7 +182,7 @@ class HealthIndexGenerator:
             sex group to compute average multiplier
         Returns
         -------
-            probabilities adjusted for comorbidity 
+            probabilities adjusted for comorbidity
         """
 
         multiplier = self.comorbidity_multipliers.get(comorbidity, 1.0)
@@ -188,7 +190,9 @@ class HealthIndexGenerator:
             age=age, sex=sex
         )
         effective_multiplier = multiplier / reference_weighted_multiplier
-        return self.apply_effective_multiplier(probabilities=probabilities, effective_multiplier=effective_multiplier)
+        return self.apply_effective_multiplier(
+            probabilities=probabilities, effective_multiplier=effective_multiplier
+        )
 
     def apply_effective_multiplier(self, probabilities, effective_multiplier):
         probabilities_with_comorbidity = np.zeros_like(probabilities)
@@ -224,7 +228,8 @@ class HealthIndexGenerator:
         ]
         icu_dead_rate = self.rates_df.loc[age_bin, f"{population}_icu_ifr_{_sex}"]
         severe_rate = max(
-            0, 1 - (hospital_rate + home_dead_rate + asymptomatic_rate + mild_rate),
+            0,
+            1 - (hospital_rate + home_dead_rate + asymptomatic_rate + mild_rate),
         )
         # fill each age in bin
         for age in range(age_bin.left, age_bin.right + 1):
@@ -242,8 +247,15 @@ class HealthIndexGenerator:
                 hospital_dead_rate - icu_dead_rate, 0
             )  # dies in the ward
             p[population][sex][age][7] = icu_dead_rate
-            total = np.sum(p[population][sex][age])
-            p[population][sex][age] = p[population][sex][age] / total
+            # renormalise all but death rates (since those are the most certain ones)
+            total = p[population][sex][age].sum()
+            to_keep_sum = p[population][sex][age][5:].sum()
+            to_adjust_sum = p[population][sex][age][:5].sum()
+            target_adjust_sum = 1 - to_keep_sum
+            p[population][sex][age][:5] *= target_adjust_sum / to_adjust_sum
+            if age > 50:
+                assert np.isclose(p[population][sex][age].sum(), 1, rtol=0.01)
+                assert np.isclose(p[population][sex][age][5:].sum(), to_keep_sum, rtol=0.01)
 
     def _get_probabilities(self, max_age=99):
         n_outcomes = 8

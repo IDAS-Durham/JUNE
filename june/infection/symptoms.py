@@ -28,7 +28,9 @@ class Symptoms:
         self.max_tag = None
         self.tag = SymptomTag.exposed
         self.max_severity = random()
-        self.trajectory = self._make_symptom_trajectory(health_index) # this also sets max_tag
+        self.trajectory = self._make_symptom_trajectory(
+            health_index
+        )  # this also sets max_tag
         self.stage = 0
         self.time_of_symptoms_onset = self._compute_time_from_infection_to_symptoms()
 
@@ -75,4 +77,3 @@ class Symptoms:
     @property
     def dead(self):
         return self.tag in dead_tags
-
