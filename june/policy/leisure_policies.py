@@ -117,14 +117,22 @@ class ChangeLeisureProbability(LeisurePolicy):
             ret[activity]["weekday"] = {}
             ret[activity]["weekend"] = {}
             for first_entry in pp:
-                if first_entry in ["weekday_factor", "weekday_factor"]:
-                    day_type = first_entry.split(" ")[0]
-                    factor = parse_age_probabilities(
-                        activity_reductions[activity][first_entry]
-                    )
-                    for sex in sexes:
-                        june_sex = _sex_t[sex]
-                        ret[activity][day_type][june_sex] = np.ones(100) * factor
+                if first_entry in ["weekday", "weekend"]:
+                    day_type = first_entry
+                    if "both_sexes" in pp[day_type]:
+                        for sex in sexes:
+                            june_sex = _sex_t[sex]
+                            probs = parse_age_probabilities(
+                                activity_reductions[activity][day_type]["both_sexes"]
+                            )
+                            ret[activity][day_type][june_sex] = probs
+                    else:
+                        for sex in sexes:
+                            june_sex = _sex_t[sex]
+                            probs = parse_age_probabilities(
+                                activity_reductions[activity][day_type][sex]
+                            )
+                            ret[activity][day_type][june_sex] = probs
                 elif first_entry == "any" or first_entry in ["male", "female"]:
                     for sex in sexes:
                         june_sex = _sex_t[sex]
