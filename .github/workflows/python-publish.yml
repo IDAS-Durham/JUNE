@@ -47,4 +47,3 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         env_vars: OS,PYTHON
-        token: 453a1f8a-d0fd-4f4d-b812-5649b3f7ae93
