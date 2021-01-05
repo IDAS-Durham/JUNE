@@ -196,5 +196,9 @@ class Person(dataobject):
     @property
     def should_be_vaccinated(self):
         if self.vaccine_plan is None and not self.vaccinated:
+
+    @property
+    def available(self):
+        if (not self.dead) and (self.medical_facility is None) and (not self.busy):
             return True
         return False

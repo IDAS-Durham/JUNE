@@ -20,11 +20,11 @@ scripts = glob("scripts/*.py") + glob("scripts/*.sh")
 
 setup(
         name="june",
-        version="0.2.0.8",
-        description="The most amazing covid simulation",
+        version="1.0",
+        description="A framework for high resolution Agent Based Modelling.",
         url="https://github.com/idas-durham/june",
         long_description_content_type='text/markdown',
-        long_description="hello, yes, this is dog",
+        long_description=long_description,
         scripts=scripts,
         author="IDAS-Durham",
         author_email='arnauq@protonmail.com',
