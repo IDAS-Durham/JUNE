@@ -56,8 +56,8 @@ vaccine_distribution:
         first_dose_efficacy: 0.52 # FDA - primary efficacy endpoint
         second_dose_efficacy: 0.95 # FDA + Pfizer > 55=0.94
         second_dose_compliance: 0.95 # assumption
-        mean_time_delay: 14 # 21-7 from FDA monitoring
-        std_time_delay: 5 # based on Pfizer trials
+        mean_time_delay: 14 # 21-7 from FDA monitoring - to be changed
+        std_time_delay: 5 # based on Pfizer trials - to be changed
         effective_after_first_dose: 12 # FDA monitoring
         effective_after_second_dose: 7 # FDA monitoring
     2:
@@ -81,26 +81,26 @@ vaccine_distribution:
         group_by: 'residence'
         group_type: 'care_home'
         group_coverage: 0.5
-        first_dose_efficacy: 0.52 # FDA - primary efficacy endpoint
-        second_dose_efficacy: 0.95 # FDA + Pfizer > 55=0.94
+        first_dose_efficacy: 0.4 # assumption
+        second_dose_efficacy: 0.60 # Lancet UK SD/SD
         second_dose_compliance: 0.95 # assumption
-        mean_time_delay: 14 # 21-7 from FDA monitoring
-        std_time_delay: 5 # based on Pfizer trials
-        effective_after_first_dose: 12 # FDA monitoring
-        effective_after_second_dose: 7 # FDA monitoring
+        mean_time_delay: 36 # roughly from Lancet trials
+        std_time_delay: 10 # roughly from Lancet trials
+        effective_after_first_dose: 12 # Taken as Pfizer - unknown
+        effective_after_second_dose: 14 # Lancet trials
     4:
         start_time: 2020-01-03
         end_time: 2020-02-15 
         group_by: 'age'
         group_type: '70-100'
         group_coverage: 0.5
-        first_dose_efficacy: 0.52 # FDA - primary efficacy endpoint
-        second_dose_efficacy: 0.95 # FDA + Pfizer > 55=0.94
+        first_dose_efficacy: 0.4 # assumption
+        second_dose_efficacy: 0.60 # Lancet UK SD/SD
         second_dose_compliance: 0.95 # assumption
-        mean_time_delay: 14 # 21-7 from FDA monitoring
-        std_time_delay: 5 # based on Pfizer trials
-        effective_after_first_dose: 12 # FDA monitoring
-        effective_after_second_dose: 7 # FDA monitoring
+        mean_time_delay: 36 # roughly from Lancet trials
+        std_time_delay: 10 # roughly from Lancet trials
+        effective_after_first_dose: 12 # Taken as Pfizer - unknown
+        effective_after_second_dose: 14 # Lancet trials
 
 
 quarantine:
