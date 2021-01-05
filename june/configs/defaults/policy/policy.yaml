@@ -15,37 +15,54 @@ limit_long_commute:
   going_to_work_probability: 0.2 # once a week
 
 regional_compliance:
-  1:
-    start_time: 1000-07-04
-    end_time: 9999-12-01
-    compliances_per_region:
-      London: 1.15
-      South East: 0.99
-      South West: 0.99
-      West Midlands: 1.
-      East Midlands: 1.
-      East of England: 1.
-      North West: 0.95
-      North East: 0.95
-      Yorkshire and The Humber: 0.95
+    1:
+        start_time: 1000-07-04
+        end_time: 9999-12-01
+        compliances_per_region:
+            London: 1.15
+            South East: 0.99
+            South West: 0.99
+            West Midlands: 1.
+            East Midlands: 1.
+            East of England: 1.
+            North West: 0.95
+            North East: 0.95
+            Yorkshire and The Humber: 0.95
 
 tiered_lockdown:
-  1:
-    start_time: 2020-12-03
-    end_time: 9999-12-01
-    tiers_per_region:
-      London: 2.
-      South East: 2.
-      South West: 2.
-      West Midlands: 3. # becuase of Birmingham
-      East Midlands: 3.
-      East of England: 2.
-      North West: 3. # becuase of Manchester
-      North East: 3.
-      Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
+    1:
+      start_time: 2020-12-03
+      end_time: 9999-12-01
+      tiers_per_region:
+          London: 2.
+          South East: 2.
+          South West: 2.
+          West Midlands: 3. # becuase of Birmingham
+          East Midlands: 3.
+          East of England: 2.
+          North West: 3. # becuase of Manchester
+          North East: 3.
+          Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
 
+# Groups 1-4 Pfizer/BioNTech
 vaccine_distribution:
-    start_time: 2020-02-29 ## TBC
+    1:
+        start_time: 2020-12-08 
+        end_time: 2020-02-15 
+        group_by: 'residence'
+        group_type: 'care_home'
+        group_coverage: 0.5
+        first_dose_efficacy: 0.52 # FDA - primary efficacy endpoint
+        second_dose_efficacy: 0.95 # FDA + Pfizer > 55=0.94
+        second_dose_compliance: 0.95 # assumption
+        mean_time_delay: 14 # 21-7 from FDA monitoring
+        std_time_delay: 5 # based on Pfizer trials
+        effective_after_first_dose: 12 # FDA monitoring
+        effective_after_second_dose: 7 # FDA monitoring
+
+# Groups 1-4 Oxford/AstraZeneca
+vaccine_distribution:
+    start_time: 2021-01-03 ## TBC
     end_time: 2020-03-4 ## TBC
     group_by: 'age' ## TBC
     group_type: '60-100' ## TBC
