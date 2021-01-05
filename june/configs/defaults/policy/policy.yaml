@@ -76,7 +76,20 @@ vaccine_distribution:
 
     # Groups 1-4 Oxford/AstraZeneca
     3:
-        start_time: 2020-01-01 
+        start_time: 2020-01-03
+        end_time: 2020-02-15 
+        group_by: 'residence'
+        group_type: 'care_home'
+        group_coverage: 0.5
+        first_dose_efficacy: 0.52 # FDA - primary efficacy endpoint
+        second_dose_efficacy: 0.95 # FDA + Pfizer > 55=0.94
+        second_dose_compliance: 0.95 # assumption
+        mean_time_delay: 14 # 21-7 from FDA monitoring
+        std_time_delay: 5 # based on Pfizer trials
+        effective_after_first_dose: 12 # FDA monitoring
+        effective_after_second_dose: 7 # FDA monitoring
+    4:
+        start_time: 2020-01-03
         end_time: 2020-02-15 
         group_by: 'age'
         group_type: '70-100'
@@ -88,21 +101,7 @@ vaccine_distribution:
         std_time_delay: 5 # based on Pfizer trials
         effective_after_first_dose: 12 # FDA monitoring
         effective_after_second_dose: 7 # FDA monitoring
-        
 
-vaccine_distribution:
-    start_time: 2021-01-03 ## TBC
-    end_time: 2020-03-4 ## TBC
-    group_by: 'age' ## TBC
-    group_type: '60-100' ## TBC
-    group_coverage: 1. ## TBC
-    first_dose_efficacy: 0.89 # FDA - 0.82 primary efficacy endpoint and 0.89 for secondary
-    second_dose_efficacy: 0.95 # FDA + Pfizer > 55=0.94
-    second_dose_compliance: 0.95 # assumption
-    mean_time_delay: 14 # 21-7 from FDA monitoring
-    std_time_delay: 5 # based on Pfizer trials
-    effective_after_first_dose: 7 # FDA monitoring
-    effective_after_second_dose: 7 # FDA monitoring
 
 quarantine:
     1:
