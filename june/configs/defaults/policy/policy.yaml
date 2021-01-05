@@ -44,8 +44,9 @@ tiered_lockdown:
           North East: 3.
           Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
 
-# Groups 1-4 Pfizer/BioNTech
+
 vaccine_distribution:
+    # Groups 1-4 Pfizer/BioNTech
     1:
         start_time: 2020-12-08 
         end_time: 2020-02-15 
@@ -59,8 +60,36 @@ vaccine_distribution:
         std_time_delay: 5 # based on Pfizer trials
         effective_after_first_dose: 12 # FDA monitoring
         effective_after_second_dose: 7 # FDA monitoring
+    2:
+        start_time: 2020-01-01 
+        end_time: 2020-02-15 
+        group_by: 'age'
+        group_type: '70-100'
+        group_coverage: 0.5
+        first_dose_efficacy: 0.52 # FDA - primary efficacy endpoint
+        second_dose_efficacy: 0.95 # FDA + Pfizer > 55=0.94
+        second_dose_compliance: 0.95 # assumption
+        mean_time_delay: 14 # 21-7 from FDA monitoring
+        std_time_delay: 5 # based on Pfizer trials
+        effective_after_first_dose: 12 # FDA monitoring
+        effective_after_second_dose: 7 # FDA monitoring
 
-# Groups 1-4 Oxford/AstraZeneca
+    # Groups 1-4 Oxford/AstraZeneca
+    3:
+        start_time: 2020-01-01 
+        end_time: 2020-02-15 
+        group_by: 'age'
+        group_type: '70-100'
+        group_coverage: 0.5
+        first_dose_efficacy: 0.52 # FDA - primary efficacy endpoint
+        second_dose_efficacy: 0.95 # FDA + Pfizer > 55=0.94
+        second_dose_compliance: 0.95 # assumption
+        mean_time_delay: 14 # 21-7 from FDA monitoring
+        std_time_delay: 5 # based on Pfizer trials
+        effective_after_first_dose: 12 # FDA monitoring
+        effective_after_second_dose: 7 # FDA monitoring
+        
+
 vaccine_distribution:
     start_time: 2021-01-03 ## TBC
     end_time: 2020-03-4 ## TBC
