@@ -406,6 +406,7 @@ class Observed2Cases:
     def convert_regional_cases_to_super_area(
         self,
         n_cases_per_region_df: pd.DataFrame,
+        starting_date: str,
     ) -> pd.DataFrame:
         """
         Converts regional cases to cases by super area by weighting each super area
@@ -423,7 +424,7 @@ class Observed2Cases:
         data frame with the number of cases by super area, indexed by date
         """
         n_cases_per_region_df = self.limit_cases_per_region(
-            n_cases_per_region_df=n_cases_per_region_df
+            n_cases_per_region_df=n_cases_per_region_df, starting_date=starting_date,
         )
         n_cases_per_super_area_df = pd.DataFrame(
             0,
