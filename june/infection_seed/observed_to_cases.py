@@ -393,20 +393,12 @@ class Observed2Cases:
                 cummulative_infections_hundred_thousand[region].values,
                 self.regional_infections_per_hundred_thousand,
             )
-            if (
-                cummulative_infections_hundred_thousand[regional_index]
-                < self.regional_infections_per_hundred_thousand
-            ):
-                regional_cases_to_seed = n_cases_per_region_df[region].iloc[
-                    : regional_index + 1
-                ]
-                regional_cases_to_seed.iloc[-1] = min(
-                    regional_cases_to_seed.iloc[-1],
-                    self.regional_infections_per_hundred_thousand
-                    - cummulative_infections_hundred_thousand[region].iloc[
-                        regional_index
-                    ],
-                )
+            regional_cases_to_seed = n_cases_per_region_df[region].iloc[
+                : regional_index + 1
+            ]
+            target_cases = self.regional_infections_per_hundred_thousand * people_per_region.loc[region] / 100_000
+            remaining_cases = np.round(max(0, target_cases - regional_cases_to_seed.iloc[:-1].sum()))
+            regional_cases_to_seed.iloc[-1] = remaining_cases
             regional_series.append(regional_cases_to_seed)
         return pd.concat(regional_series, axis=1).fillna(0.0)
 
