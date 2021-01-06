@@ -190,7 +190,9 @@ class Observed2Cases:
         )
 
     def aggregate_age_sex_dfs_by_region(
-        self, age_per_area_df: pd.DataFrame, female_fraction_per_area_df: pd.DataFrame,
+        self,
+        age_per_area_df: pd.DataFrame,
+        female_fraction_per_area_df: pd.DataFrame,
     ) -> (pd.DataFrame, pd.DataFrame):
         """
         Combines the age per area dataframe and female fraction per area to
@@ -227,7 +229,9 @@ class Observed2Cases:
         males_per_age_region_df = self.aggregate_areas_by_region(males_per_age_area_df)
         return females_per_age_region_df, males_per_age_region_df
 
-    def get_symptoms_rates_per_age_sex(self,) -> dict:
+    def get_symptoms_rates_per_age_sex(
+        self,
+    ) -> dict:
         """
         Computes the rates of ending up with certain SymptomTag for all
         ages and sex.
@@ -338,7 +342,9 @@ class Observed2Cases:
         )
         return n_cases_per_region_df
 
-    def get_super_area_population_weights(self,) -> pd.DataFrame:
+    def get_super_area_population_weights(
+        self,
+    ) -> pd.DataFrame:
         """
         Compute the weight in population that a super area has over its whole region, used
         to convert regional cases to cases by super area by population density
@@ -383,13 +389,25 @@ class Observed2Cases:
         )
         regional_series = []
         for region in n_cases_per_region_df.columns:
-            regional_index = (
-                np.searchsorted(
-                    cummulative_infections_hundred_thousand[region].values,
-                    self.regional_infections_per_hundred_thousand,
-                )
+            regional_index = np.searchsorted(
+                cummulative_infections_hundred_thousand[region].values,
+                self.regional_infections_per_hundred_thousand,
             )
-            regional_series.append(n_cases_per_region_df[region].iloc[:regional_index])
+            if (
+                cummulative_infections_hundred_thousand[regional_index]
+                < self.regional_infections_per_hundred_thousand
+            ):
+                regional_cases_to_seed = n_cases_per_region_df[region].iloc[
+                    : regional_index + 1
+                ]
+                regional_cases_to_seed.iloc[-1] = min(
+                    regional_cases_to_seed.iloc[-1],
+                    self.regional_infections_per_hundred_thousand
+                    - cummulative_infections_hundred_thousand[region].iloc[
+                        regional_index
+                    ],
+                )
+            regional_series.append(regional_cases_to_seed)
         return pd.concat(regional_series, axis=1).fillna(0.0)
 
     def convert_regional_cases_to_super_area(
@@ -555,7 +573,9 @@ class Observed2Cases:
             avg_rate_for_symptoms
         )
 
-    def get_regional_latent_cases(self,) -> pd.DataFrame:
+    def get_regional_latent_cases(
+        self,
+    ) -> pd.DataFrame:
         """
         Find regional latent cases from the observed one.
 
