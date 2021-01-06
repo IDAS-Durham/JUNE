@@ -380,10 +380,11 @@ class Observed2Cases:
         )
         return people_per_super_aera_and_region[["weights", "region"]]
 
-    def limit_cases_per_region(self, n_cases_per_region_df):
+    def limit_cases_per_region(self, n_cases_per_region_df, starting_date="2020-02-28"):
         people_per_region = self.females_per_age_region_df.sum(
             axis=1
         ) + self.males_per_age_region_df.sum(axis=1)
+        n_cases_per_region_df = n_cases_per_region_df.loc[starting_date:]
         cummulative_infections_hundred_thousand = (
             n_cases_per_region_df.cumsum() / people_per_region * 100_000
         )
