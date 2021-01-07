@@ -380,7 +380,7 @@ class Observed2Cases:
         )
         return people_per_super_aera_and_region[["weights", "region"]]
 
-    def limit_cases_per_region(self, n_cases_per_region_df, starting_date="2020-02-28"):
+    def limit_cases_per_region(self, n_cases_per_region_df, starting_date="2020-02-24"):
         people_per_region = self.females_per_age_region_df.sum(
             axis=1
         ) + self.males_per_age_region_df.sum(axis=1)
