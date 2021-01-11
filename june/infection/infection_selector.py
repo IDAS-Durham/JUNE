@@ -6,7 +6,7 @@ import yaml
 from june import paths
 from june.infection.health_index.health_index import HealthIndexGenerator
 from june.infection.health_index import Data2Rates
-from june.infection import Infection
+from june.infection import Infection, Covid19
 from june.infection.symptoms import Symptoms, SymptomTag
 from june.infection.trajectory_maker import TrajectoryMakers
 from june.infection.transmission import TransmissionConstant, TransmissionGamma
@@ -26,6 +26,7 @@ class InfectionSelector:
     def __init__(
         self,
         transmission_config_path: str = default_transmission_config_path,
+        infection_class: Infection = Covid19,
         trajectory_maker=TrajectoryMakers.from_file(default_trajectories_config_path),
         health_index_generator: HealthIndexGenerator = None,
     ):
@@ -37,6 +38,7 @@ class InfectionSelector:
         transmission_config_path:
             path to transmission config file
         """
+        self.infection_class = infection_class
         self.transmission_config_path = transmission_config_path
         self.trajectory_maker = trajectory_maker
         self.health_index_generator = health_index_generator
@@ -45,6 +47,7 @@ class InfectionSelector:
     @classmethod
     def from_file(
         cls,
+        infection_class: Infection = Covid19,
         transmission_config_path: str = default_transmission_config_path,
         trajectories_config_path: str = default_trajectories_config_path,
         rates_file: str = default_rates_file,
@@ -64,6 +67,7 @@ class InfectionSelector:
         health_index_generator = HealthIndexGenerator.from_file(rates_file=rates_file)
         trajectory_maker = TrajectoryMakers.from_file(trajectories_config_path)
         return InfectionSelector(
+            infection_class=infection_class,
             transmission_config_path=transmission_config_path,
             trajectory_maker=trajectory_maker,
             health_index_generator=health_index_generator,
@@ -100,7 +104,9 @@ class InfectionSelector:
             time_to_symptoms_onset=time_to_symptoms_onset,
             max_symptoms_tag=symptoms.max_tag.name,
         )
-        return Infection(transmission=transmission, symptoms=symptoms, start_time=time)
+        return self.infection_class(
+            transmission=transmission, symptoms=symptoms, start_time=time
+        )
 
     def _load_transmission(self):
         """

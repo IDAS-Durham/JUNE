@@ -11,12 +11,6 @@ from june.infection.transmission import TransmissionConstant, TransmissionGamma
 from june.infection.transmission_xnexp import TransmissionXNExp
 from june.infection.trajectory_maker import CompletionTime
 
-default_transmission_config_path = (
-    paths.configs_path / "defaults/transmission/nature.yaml"
-)
-default_trajectories_config_path = (
-    paths.configs_path / "defaults/symptoms/trajectories.yaml"
-)
 
 
 class Infection:
@@ -26,7 +20,6 @@ class Infection:
     infected, which is useful to compute R0. The infection probability is updated at every 
     time step, according to an infectivity profile.
     """
-
     __slots__ = (
         "number_of_infected",
         "start_time",
@@ -128,3 +121,9 @@ class Infection:
     @property
     def infection_probability(self):
         return self.transmission.probability
+
+class Covid19(Infection):
+    pass
+
+class Covid20(Infection):
+    pass

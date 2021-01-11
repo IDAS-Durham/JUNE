@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import june.infection.symptoms
 from june.demography import person
-from june.infection import Infection, InfectionSelector
+from june.infection import Infection, InfectionSelector, Covid19
 from june.infection.infection_selector import default_transmission_config_path
 from june.infection import symptoms_trajectory as symtraj
 from june.infection import transmission
@@ -18,6 +18,9 @@ dir_pwd = path_pwd.parent
 constant_config = (
     dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
 )
+
+class MockInfection(Infection):
+    pass
 
 
 class MockHealthIndexGenerator:
@@ -214,3 +217,20 @@ class TestInfectionSelector:
         np.testing.assert_allclose(
             max_prob / true_avg_peak_infectivity, 0.48, atol=0.1,
         )
+
+def test__multiple_virus():
+    health_index_generator = MockHealthIndexGenerator("asymptomatic")
+    selector = InfectionSelector(
+        health_index_generator=health_index_generator,
+        transmission_config_path=default_transmission_config_path,
+    )
+    p = person.Person(sex="f", age=26)
+    infection = selector._make_infection(person=p, time=0)
+    assert isinstance(infection, Covid19)
+    selector = InfectionSelector(
+        infection_class=MockInfection,
+        health_index_generator=health_index_generator,
+        transmission_config_path=default_transmission_config_path,
+    )
+    infection = selector._make_infection(person=p, time=0)
+    assert isinstance(infection, MockInfection)
