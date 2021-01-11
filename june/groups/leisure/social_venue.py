@@ -26,7 +26,7 @@ class SocialVenue(Group):
     class SubgroupType(IntEnum):
         default = 0
 
-    def __init__(self, area = None):
+    def __init__(self, area=None):
         super().__init__()
         self.area = area
 
@@ -37,6 +37,7 @@ class SocialVenue(Group):
     @property
     def super_area(self):
         return self.area.super_area
+
 
 class SocialVenues(Supergroup):
     social_venue_class = SocialVenue
@@ -78,7 +79,7 @@ class SocialVenues(Supergroup):
             sv.coordinates = coord
             if super_areas:
                 area = Areas(super_area.areas).get_closest_area(coordinates=coord)
-                sv.area = area 
+                sv.area = area
             social_venues.append(sv)
         return cls(social_venues, **kwargs)
 
@@ -89,9 +90,7 @@ class SocialVenues(Supergroup):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
         sv_coordinates = pd.read_csv(coordinates_filename, index_col=0).values
-        return cls.from_coordinates(
-            sv_coordinates, super_areas=super_areas
-        )
+        return cls.from_coordinates(sv_coordinates, super_areas=super_areas)
 
     @classmethod
     def for_areas(
@@ -146,6 +145,7 @@ class SocialVenues(Supergroup):
                 for _ in range(int(np.ceil(venues_per_capita * area_population))):
                     sv = cls.social_venue_class()
                     sv.area = area
+                    sv.coordinates = area.coordinates
                     social_venues.append(sv)
         else:
             raise SocialVenueError(
@@ -179,11 +179,15 @@ class SocialVenues(Supergroup):
                     sv.area = area
                     social_venues.append(sv)
         elif venues_per_capita is not None:
-            for area in super_areas:
-                area_population = len(area.people)
-                for _ in range(int(np.ceil(venues_per_capita * area_population))):
+            for super_area in super_areas:
+                super_area_population = len(super_area.people)
+                for _ in range(int(np.ceil(venues_per_capita * super_area_population))):
                     sv = cls.social_venue_class()
+                    area = Areas(super_area.areas).get_closest_area(
+                        coordinates=super_area.coordinates
+                    )
                     sv.area = area
+                    sv.coordinates = area.coordinates
                     social_venues.append(sv)
         else:
             raise SocialVenueError(
@@ -219,7 +223,7 @@ class SocialVenues(Supergroup):
             number of neighbours desired
         """
         if not self.members:
-            return 
+            return
         if self.ball_tree is None:
             raise SocialVenueError("Initialise ball tree first with self.make_tree()")
         venue_idxs = self.ball_tree.query(
@@ -240,7 +244,7 @@ class SocialVenues(Supergroup):
             radius in km to query
         """
         if not self.members:
-            return 
+            return
         if self.ball_tree is None:
             raise SocialVenueError("Initialise ball tree first with self.make_tree()")
         radius = radius / earth_radius
