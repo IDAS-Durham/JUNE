@@ -1,5 +1,5 @@
-from .infection import Infection, Covid19
-from .infection_selector import InfectionSelector
+from .infection import Infection, Covid19, Covid20
+from .infection_selector import InfectionSelector, InfectionSelectors
 from .trajectory_maker import TrajectoryMakers
 from .health_index.health_index import HealthIndexGenerator
 from .health_index.data_to_rates import Data2Rates

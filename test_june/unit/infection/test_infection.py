@@ -1,23 +1,24 @@
+import pytest
 import statistics
+import numpy as np
 from pathlib import Path
 
-import numpy as np
-import pytest
+from june import paths
 import june.infection.symptoms
 from june.demography import person
-from june.infection import Infection, InfectionSelector, Covid19
-from june.infection.infection_selector import default_transmission_config_path
-from june.infection import symptoms_trajectory as symtraj
 from june.infection import transmission
-from june.infection import transmission_xnexp as transxnexp
 from june.infection.symptom_tag import SymptomTag
-from june import paths
+from june.infection import symptoms_trajectory as symtraj
+from june.infection import transmission_xnexp as transxnexp
+from june.infection.infection_selector import default_transmission_config_path
+from june.infection import Infection, InfectionSelector, Covid19, InfectionSelectors
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = (
     dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
 )
+
 
 class MockInfection(Infection):
     pass
@@ -72,9 +73,13 @@ class TestInfection:
         selector.infect_person_at_time(person=victim, time=0.2)
 
         assert victim.infection.start_time == 0.2
-        assert isinstance(victim.infection.symptoms, june.infection.symptoms.Symptoms,)
         assert isinstance(
-            victim.infection.transmission, transmission.TransmissionGamma,
+            victim.infection.symptoms,
+            june.infection.symptoms.Symptoms,
+        )
+        assert isinstance(
+            victim.infection.transmission,
+            transmission.TransmissionGamma,
         )
 
     def test__update_to_time__calls_transmission_symptoms_methods(
@@ -141,11 +146,11 @@ class TestInfectionSelector:
         )
 
     def test__lognormal_in_maxprob(self):
-        health_index_generator=MockHealthIndexGenerator("severe")
+        health_index_generator = MockHealthIndexGenerator("severe")
         selector = InfectionSelector(
             transmission_config_path=paths.configs_path
             / "tests/transmission/test_transmission_lognormal.yaml",
-            health_index_generator=health_index_generator
+            health_index_generator=health_index_generator,
         )
         avg_gamma = transmission.TransmissionGamma.from_file(
             config_path=paths.configs_path
@@ -166,10 +171,14 @@ class TestInfectionSelector:
             maxprobs.append(infection.transmission.probability)
 
         np.testing.assert_allclose(
-            statistics.mean(norms), 1.13, rtol=0.05,
+            statistics.mean(norms),
+            1.13,
+            rtol=0.05,
         )
         np.testing.assert_allclose(
-            statistics.median(norms), 1.00, rtol=0.05,
+            statistics.median(norms),
+            1.00,
+            rtol=0.05,
         )
         np.testing.assert_allclose(
             statistics.median(maxprobs) / true_avg_peak_infectivity, 1.0, rtol=0.1
@@ -194,7 +203,9 @@ class TestInfectionSelector:
         infection.update_symptoms_and_transmission(max_t)
         max_prob = infection.transmission.probability
         np.testing.assert_allclose(
-            max_prob / true_avg_peak_infectivity, 0.3, atol=0.1,
+            max_prob / true_avg_peak_infectivity,
+            0.3,
+            atol=0.1,
         )
 
     def test__infectivity_for_mild_carriers(self):
@@ -215,22 +226,41 @@ class TestInfectionSelector:
         infection.update_symptoms_and_transmission(max_t)
         max_prob = infection.transmission.probability
         np.testing.assert_allclose(
-            max_prob / true_avg_peak_infectivity, 0.48, atol=0.1,
+            max_prob / true_avg_peak_infectivity,
+            0.48,
+            atol=0.1,
         )
 
-def test__multiple_virus():
-    health_index_generator = MockHealthIndexGenerator("asymptomatic")
-    selector = InfectionSelector(
-        health_index_generator=health_index_generator,
-        transmission_config_path=default_transmission_config_path,
-    )
-    p = person.Person(sex="f", age=26)
-    infection = selector._make_infection(person=p, time=0)
-    assert isinstance(infection, Covid19)
-    selector = InfectionSelector(
-        infection_class=MockInfection,
-        health_index_generator=health_index_generator,
-        transmission_config_path=default_transmission_config_path,
-    )
-    infection = selector._make_infection(person=p, time=0)
-    assert isinstance(infection, MockInfection)
+
+class TestMultipleVirus:
+    def test__infection_id_generation(self):
+        infection1 = Covid19(transmission=None, symptoms=None)
+        infection11 = Covid19(transmission=None, symptoms=None)
+        infection2 = MockInfection(transmission=None, symptoms=None)
+        infection22 = MockInfection(transmission=None, symptoms=None)
+        assert type(infection1.infection_id()) == int
+        assert infection1.infection_id() > 0
+        assert infection1.infection_id() == infection11.infection_id()
+        assert infection2.infection_id() == infection22.infection_id()
+        assert infection1.infection_id() != infection2.infection_id()
+
+    def test__multiple_virus(self):
+        health_index_generator = MockHealthIndexGenerator("asymptomatic")
+        selector1 = InfectionSelector(
+            health_index_generator=health_index_generator,
+            transmission_config_path=default_transmission_config_path,
+        )
+        p = person.Person(sex="f", age=26)
+        infection = selector1._make_infection(person=p, time=0)
+        assert isinstance(infection, Covid19)
+        selector2 = InfectionSelector(
+            infection_class=MockInfection,
+            health_index_generator=health_index_generator,
+            transmission_config_path=default_transmission_config_path,
+        )
+        infection = selector2._make_infection(person=p, time=0)
+        assert isinstance(infection, MockInfection)
+        infection_selectors = InfectionSelectors([selector1, selector2])
+        assert set(infection_selectors.infection_id_to_selector.values()) == set(
+            [selector1, selector2]
+        )

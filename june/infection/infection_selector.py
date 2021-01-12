@@ -1,6 +1,7 @@
 from enum import IntEnum
 
 import numpy as np
+from itertools import count
 import yaml
 
 from june import paths
@@ -14,7 +15,7 @@ from june.infection.transmission_xnexp import TransmissionXNExp
 from june.infection.trajectory_maker import CompletionTime
 
 default_transmission_config_path = (
-    paths.configs_path / "defaults/transmission/nature.yaml"
+    paths.configs_path / "defaults/transmission/covid19.yaml"
 )
 default_trajectories_config_path = (
     paths.configs_path / "defaults/symptoms/trajectories.yaml"
@@ -250,3 +251,41 @@ class InfectionSelector:
         """
         health_index = self.health_index_generator(person)
         return Symptoms(health_index=health_index)
+
+
+class InfectionSelectors:
+    def __init__(self, infection_selectors: list = None):
+        self._infection_selectors = infection_selectors
+        self.infection_id_to_selector = self.make_dict() 
+
+    def make_dict(self):
+        """
+        Makes two dicts:
+        infection_type_id -> infection_class (needed for easier MPI comms)
+        infection_class -> infection_selector (needed to map infection to 
+                            the class that creates infections)
+        """
+        if not self._infection_selectors:
+            return {Covid19.infection_id(): InfectionSelector.from_file()}
+        ret = {}
+        for i, selector in enumerate(self._infection_selectors):
+            ret[selector.infection_class.infection_id()] = selector
+        return ret
+
+    def infect_person_at_time(
+        self, person: "Person", time: float, infection_id: int = Covid19.infection_id()
+    ):
+        """
+        Infects a person at a given time with the given infection_class.
+
+        Parameters
+        ----------
+        infection_class:
+            type of infection to create
+        person:
+            person that will be infected
+        time:
+            time at which infection happens
+        """
+        selector = self.infection_id_to_selector[infection_id]
+        selector.infect_person_at_time(person=person, time=time)

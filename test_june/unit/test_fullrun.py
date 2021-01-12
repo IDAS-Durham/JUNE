@@ -10,7 +10,7 @@ from june.time import Timer
 from june.geography import Geography
 from june.demography import Demography, Person, Population
 from june.interaction import Interaction
-from june.infection import InfectionSelector
+from june.infection import InfectionSelectors
 from june.groups.travel import ModeOfTransport, Travel
 from june.groups import (
     Hospitals,
@@ -79,10 +79,11 @@ def test__full_run(dummy_world, selector, test_results):
             record_path = test_results / 'results',
     )
     policies = Policies.from_file()
+    selectors = InfectionSelectors([selector])
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selector=selector,
+        infection_selectors=selectors,
         config_filename=test_config,
         leisure=leisure_instance,
         travel=travel,

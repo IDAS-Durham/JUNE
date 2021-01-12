@@ -242,29 +242,35 @@ class Record:
 
     def parameters_seed(
         self,
-        infection_seed: "InfectionSeed" = None,
+        infection_seeds: "InfectionSeeds" = None,
     ):
-        if infection_seed is not None:
-            infection_seed_dict = {}
-            infection_seed_dict["seed_strength"] = infection_seed.seed_strength
-            infection_seed_dict["min_date"] = infection_seed.min_date.strftime(
-                "%Y-%m-%d"
-            )
-            infection_seed_dict["max_date"] = infection_seed.max_date.strftime(
-                "%Y-%m-%d"
-            )
-            self.append_dict_to_configs(
-                config_dict={"infection_seed": infection_seed_dict}
-            )
+        if infection_seeds is not None:
+            infection_seeds_dict = {}
+            for infection_seed in infection_seeds:
+                inf_seed_dict = {}
+                inf_seed_dict["seed_strength"] = infection_seed.seed_strength
+                inf_seed_dict["min_date"] = infection_seed.min_date.strftime(
+                    "%Y-%m-%d"
+                )
+                inf_seed_dict["max_date"] = infection_seed.max_date.strftime(
+                    "%Y-%m-%d"
+                )
+                infection_seeds_dict[infection_seed.__class__.__name__] = inf_seed_dict
+        self.append_dict_to_configs(
+            config_dict={"infection_seeds": infection_seeds_dict}
+        )
 
     def parameters_infection(
         self,
-        infection_selector: "InfectionSelector" = None,
+        infection_selectors: "InfectionSelectors" = None,
     ):
-        if infection_selector is not None:
-            infection_dict = {}
-            infection_dict["transmission_type"] = infection_selector.transmission_type
-            self.append_dict_to_configs(config_dict={"infection": infection_dict})
+        if infection_selectors is not None:
+            save_dict = {}
+            for selector in infection_selectors._infection_selectors:
+                class_name = selector.infection_class.__class__.__name__
+                save_dict[class_name] = {}
+                save_dict[class_name]["transmission_type"] = selector.transmission_type
+            self.append_dict_to_configs(config_dict={"infection": save_dict})
 
     def parameters_policies(
         self,
@@ -288,14 +294,14 @@ class Record:
     def parameters(
         self,
         interaction: "Interaction" = None,
-        infection_seed: "InfectionSeed" = None,
-        infection_selector: "InfectionSelector" = None,
+        infection_seeds: "InfectionSeeds" = None,
+        infection_selectors: "InfectionSelector" = None,
         activity_manager: "ActivityManager" = None,
     ):
         if self.mpi_rank is None or self.mpi_rank == 0:
             self.parameters_interaction(interaction=interaction)
-            self.parameters_seed(infection_seed=infection_seed)
-            self.parameters_infection(infection_selector=infection_selector)
+            self.parameters_seed(infection_seeds=infection_seeds)
+            self.parameters_infection(infection_selectors=infection_selectors)
             self.parameters_policies(activity_manager=activity_manager)
 
     def meta_information(

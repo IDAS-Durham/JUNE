@@ -47,6 +47,7 @@ class InteractiveGroup:
         self.group = group
 
         self.infector_ids = []
+        self.infector_infection_ids = []
         self.susceptible_ids = []
         self.infector_transmission_probabilities = []
         self.susceptible_susceptibilities = []
@@ -76,12 +77,10 @@ class InteractiveGroup:
                 person for person in subgroup if person.susceptible
             ]
             subgroup_susceptible_ids = [
-                person.id for person in local_subgroup_susceptible_people 
+                person.id for person in local_subgroup_susceptible_people
             ]
             subgroup_susceptible_ids += [
-                id
-                for id in people_abroad_ids
-                if people_abroad_data[id]["susc"] > 0.0
+                id for id in people_abroad_ids if people_abroad_data[id]["susc"] > 0.0
             ]
 
             if subgroup_susceptible_ids:
@@ -89,7 +88,8 @@ class InteractiveGroup:
                 has_susceptible = True
                 self.subgroups_with_susceptible.append(subgroup_index)
                 subgroup_susceptibilities = [
-                    person.susceptibility for person in local_subgroup_susceptible_people 
+                    person.susceptibility
+                    for person in local_subgroup_susceptible_people
                 ]
                 subgroup_susceptibilities += [
                     people_abroad_data[id]["susc"]
@@ -106,13 +106,9 @@ class InteractiveGroup:
                 if person.infection is not None
                 and person.infection.transmission.probability > 0
             ]
-            subgroup_infector_ids = [
-                person.id for person in local_subgroup_infectors
-            ]
+            subgroup_infector_ids = [person.id for person in local_subgroup_infectors]
             subgroup_infector_ids += [
-                id
-                for id in people_abroad_ids
-                if people_abroad_data[id]["inf_prob"] > 0
+                id for id in people_abroad_ids if people_abroad_data[id]["inf_prob"] > 0
             ]
             if subgroup_infector_ids:
                 # has infected
@@ -120,14 +116,24 @@ class InteractiveGroup:
                 self.subgroups_with_infectors.append(subgroup_index)
                 subgroup_infector_trans_prob = [
                     person.infection.transmission.probability
-                    for person in local_subgroup_infectors 
+                    for person in local_subgroup_infectors
                 ]
-                subgroup_infector_trans_prob += [
-                    people_abroad_data[id]["inf_prob"]
-                    for id in people_abroad_ids
-                    if people_abroad_data[id]["inf_prob"] > 0
+                subgroup_infector_infection_ids = [
+                    person.infection.infection_id()
+                    for person in local_subgroup_infectors
                 ]
-                self.infector_transmission_probabilities.append(subgroup_infector_trans_prob)
+                for id in people_abroad_ids:
+                    if people_abroad_data[id]["inf_prob"] > 0:
+                        subgroup_infector_trans_prob.append(
+                            people_abroad_data[id]["inf_prob"]
+                        )
+                        subgroup_infector_infection_ids.append(
+                            people_abroad_data[id]["inf_id"]
+                        )
+                self.infector_transmission_probabilities.append(
+                    subgroup_infector_trans_prob
+                )
+                self.infector_infection_ids.append(subgroup_infector_infection_ids)
                 self.infector_ids.append(subgroup_infector_ids)
                 self.subgroups_with_infectors_sizes.append(subgroup_size)
         self.must_timestep = has_susceptible and has_infector
