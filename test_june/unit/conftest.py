@@ -290,7 +290,7 @@ def make_dummy_world():
     return world
 
 
-@pytest.fixture(name="policy_simulator", scope="session")
+@pytest.fixture(name="policy_simulator")
 def make_policy_simulator(dummy_world, interaction, selectors):
     config_name = paths.configs_path / "tests/test_simulator_simple.yaml"
     travel = Travel()

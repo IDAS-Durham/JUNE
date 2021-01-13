@@ -168,10 +168,10 @@ class TestCheckpointForReseeding:
     These tests the situation in which we load from checkpoint and 
     want all the infections reseted.
     """
-    def test__checkpoints_are_saved(self, selector, test_results):
+    def test__checkpoints_are_saved(self, selectors, test_results):
         checkpoint_folder = Path(test_results / "checkpoint_tests")
         checkpoint_folder.mkdir(exist_ok=True, parents=True)
-        sim = run_simulator(selector, test_results)
+        sim = run_simulator(selectors, test_results)
         assert len(sim.world.people.infected) > 0
         assert len(sim.world.people.recovered) > 0
         assert len(sim.world.people.susceptible) > 0
@@ -183,7 +183,7 @@ class TestCheckpointForReseeding:
             world=fresh_world,
             checkpoint_load_path=checkpoint_folder / "checkpoint_2020-03-25.hdf5",
             interaction=interaction,
-            infection_selector=selector,
+            infection_selectors=selectors,
             config_filename=test_config,
             leisure=None,
             travel=None,

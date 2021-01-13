@@ -31,14 +31,14 @@ def get_oc(health_index_generator):
     with open(paths.configs_path / "defaults/symptoms/trajectories.yaml") as f:
         trajectories = yaml.safe_load(f)["trajectories"]
     symptoms_trajectories = [
-            TrajectoryMaker.from_dict(trajectory) for trajectory in trajectories
+        TrajectoryMaker.from_dict(trajectory) for trajectory in trajectories
     ]
     return Observed2Cases(
         age_per_area_df=age_per_area_df,
         female_fraction_per_area_df=female_fraction_per_area_df,
         area_super_region_df=area_super_region_df,
         health_index_generator=health_index_generator,
-        symptoms_trajectories = symptoms_trajectories
+        symptoms_trajectories=symptoms_trajectories,
     )
 
 
@@ -67,7 +67,7 @@ def get_oc_multiple_super_areas(health_index_generator):
         female_fraction_per_area_df=female_fraction_per_area_df,
         area_super_region_df=area_super_region_df,
         health_index_generator=health_index_generator,
-        regional_infections_per_hundred_thousand=2.e8,
+        regional_infections_per_hundred_thousand=2.0e8,
     )
 
 
@@ -107,21 +107,24 @@ def test__expected_cases(oc):
 
 def test__latent_cases_per_region(oc):
     n_observed_df = pd.DataFrame(
-        {"date": ["2020-04-20", "2020-04-21"], "magnificient": [100, 200],}
+        {
+            "date": ["2020-04-20", "2020-04-21"],
+            "magnificient": [100, 200],
+        }
     )
     n_observed_df.set_index("date", inplace=True)
     n_observed_df.index = pd.to_datetime(n_observed_df.index)
     n_expected_true_df = pd.DataFrame(
-        {"date": ["2020-04-10", "2020-04-11"], "magnificient": [100 / 0.4, 200 / 0.4],}
+        {
+            "date": ["2020-04-10", "2020-04-11"],
+            "magnificient": [100 / 0.4, 200 / 0.4],
+        }
     )
     n_expected_true_df.set_index("date", inplace=True)
     n_expected_true_df.index = pd.to_datetime(n_expected_true_df.index)
     avg_death_rate = {"magnificient": [0.2, 0.1, 0.1]}
-    n_expected_df = oc.get_latent_cases_per_region(
-        n_observed_df, 10, avg_death_rate
-    )
+    n_expected_df = oc.get_latent_cases_per_region(n_observed_df, 10, avg_death_rate)
     pd.testing.assert_frame_equal(n_expected_df, n_expected_true_df)
-
 
 
 def test__filter_trajectories(oc):
@@ -138,6 +141,7 @@ def test__filter_trajectories(oc):
     for trajectory in dead_trajectories:
         symptom_tags = [stage.symptoms_tag.name for stage in trajectory.stages]
         assert "dead" in symptom_tags[-1]
+
 
 def test__median_completion_time(oc):
     assert oc.get_median_completion_time(oc.symptoms_trajectories[0].stages[1]) == 14
@@ -165,13 +169,14 @@ def test__get_time_it_takes_to_symptoms(oc):
     for time in times_to_hospital:
         assert 1.0 < time < 16.0
 
+
 def test__get_weighted_time_to_symptoms(oc):
     rates_dict = oc.get_symptoms_rates_per_age_sex()
     avg_rates = oc.weight_rates_by_age_sex_per_region(
         rates_dict,
-        symptoms_tags=["hospitalised", "intensive_care", "dead_hospital", "dead_icu"], 
+        symptoms_tags=["hospitalised", "intensive_care", "dead_hospital", "dead_icu"],
     )
-    avg_rates = avg_rates['magnificient']
+    avg_rates = avg_rates["magnificient"]
     hospitalised_trajectories = oc.filter_symptoms_trajectories(
         oc.symptoms_trajectories,
         symptoms_to_keep=[
@@ -187,17 +192,22 @@ def test__get_weighted_time_to_symptoms(oc):
     )
     assert 1.0 < avg_time_to_hospital < 13.0
 
+
 def test__cases_from_observation_per_super_area(oc_multiple_super_areas):
     n_observed_df = pd.DataFrame(
-        {"date": ["2020-04-20", "2020-04-21"], "magnificient": [100, 200],}
+        {
+            "date": ["2020-04-20", "2020-04-21"],
+            "magnificient": [100, 200],
+        }
     )
     n_observed_df.set_index("date", inplace=True)
     n_observed_df.index = pd.to_datetime(n_observed_df.index)
     n_expected_true_df = pd.DataFrame(
-        {"date": ["2020-04-10", "2020-04-11"], 
-            'super_1': [round(100/3 / 0.4), round(200/3 / 0.4)],
-            'super_2': [round(100/3 / 0.4), round(200/3 / 0.4)],
-            'super_3': [round(100/3 / 0.4), round(200/3 / 0.4)],
+        {
+            "date": ["2020-04-10", "2020-04-11"],
+            "super_1": [round(100 / 3 / 0.4), round(200 / 3 / 0.4)],
+            "super_2": [round(100 / 3 / 0.4), round(200 / 3 / 0.4)],
+            "super_3": [round(100 / 3 / 0.4), round(200 / 3 / 0.4)],
         }
     )
     n_expected_true_df.set_index("date", inplace=True)
@@ -207,20 +217,21 @@ def test__cases_from_observation_per_super_area(oc_multiple_super_areas):
         n_observed_df, 10, avg_death_rate
     )
     super_area_weights = oc_multiple_super_areas.get_super_area_population_weights()
-    
+
     assert (
         super_area_weights.groupby("region").sum()["weights"].loc["magnificient"] == 1.0
     )
-    assert super_area_weights.loc['super_1']['weights'] == pytest.approx(0.33, rel=0.05)
-    assert super_area_weights.loc['super_2']['weights'] == pytest.approx(0.33, rel=0.05)
-    assert super_area_weights.loc['super_3']['weights'] == pytest.approx(0.33, rel=0.05)
-    n_expected_per_super_area_df = oc_multiple_super_areas.convert_regional_cases_to_super_area(
-        n_expected_per_region_df, 
+    assert super_area_weights.loc["super_1"]["weights"] == pytest.approx(0.33, rel=0.05)
+    assert super_area_weights.loc["super_2"]["weights"] == pytest.approx(0.33, rel=0.05)
+    assert super_area_weights.loc["super_3"]["weights"] == pytest.approx(0.33, rel=0.05)
+    n_expected_per_super_area_df = (
+        oc_multiple_super_areas.convert_regional_cases_to_super_area(
+            n_expected_per_region_df, starting_date="2020-04-10"
+        )
     )
-    
-    pd.testing.assert_series_equal(
-            n_expected_per_super_area_df.sum(axis=1), 
-            n_expected_per_region_df['magnificient'].astype(int),
-            check_names=False
-            )
 
+    pd.testing.assert_series_equal(
+        n_expected_per_super_area_df.sum(axis=1),
+        n_expected_per_region_df["magnificient"].astype(int),
+        check_names=False,
+    )
