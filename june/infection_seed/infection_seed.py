@@ -218,8 +218,8 @@ class InfectionSeed:
                     record=record,
                     time=time,
                 )
-            except KeyError as e:
-                raise KeyError("There is no data on cases for super area: %s" % str(e))
+            except KeyError:
+                continue
 
     def unleash_virus_per_day(
         self, date: datetime, time: float = 0, record: Optional[Record] = None

@@ -28,7 +28,7 @@ class TestCasesDistributor:
     def make_cases_per_region_per_day(self):
         index = ["2020-03-01", "2020-03-02"]
         ret = pd.DataFrame(index=index)
-        ret["East of England"] = [60, 120]
+        ret["East of England"] = [600, 1200]
         return ret
 
     def test__from_regional_cases(
@@ -41,9 +41,13 @@ class TestCasesDistributor:
             residents_per_super_area=residents_by_super_area,
         )
         cases_per_super_area = cd.cases_per_super_area
-        assert (
-            cases_per_super_area.loc[:, "a1"] == np.array([20, 40], dtype=np.float)
-        ).all()
-        assert (
-            cases_per_super_area.loc[:, "a2"] == np.array([40, 80], dtype=np.float)
-        ).all()
+        assert np.allclose(
+            cases_per_super_area.loc[:, "a1"].values,
+            np.array([200, 400], dtype=np.float),
+            rtol=0.25,
+        )
+        assert np.allclose(
+            cases_per_super_area.loc[:, "a2"].values,
+            np.array([400, 800], dtype=np.float),
+            rtol=0.25,
+        )
