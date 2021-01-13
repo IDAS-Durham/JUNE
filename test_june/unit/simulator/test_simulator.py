@@ -9,7 +9,7 @@ from june.world import World
 from june.groups import Hospitals, Schools, Companies, CareHomes, Universities
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.groups.travel import ModeOfTransport, Travel
-from june.infection import InfectionSelector, SymptomTag
+from june.infection import InfectionSelector, SymptomTag, InfectionSelectors
 from june.interaction import Interaction
 from june.policy import (
     Policies,
@@ -43,7 +43,7 @@ interaction_config = paths.configs_path / "tests/interaction.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
 
 
-@pytest.fixture(name="selector", scope="module")
+@pytest.fixture(name="selectors", scope="module")
 def make_selector(health_index_generator):
     selector = InfectionSelector(
         health_index_generator=health_index_generator,
@@ -51,6 +51,7 @@ def make_selector(health_index_generator):
     )
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
+    return InfectionSelectors([selector])
     return selector
 
 
@@ -63,7 +64,7 @@ def make_policies():
 
 
 @pytest.fixture(name="sim", scope="module")
-def setup_sim(dummy_world, selector):
+def setup_sim(dummy_world, selectors):
     world = dummy_world
     for person in world.people:
         person.susceptibility = 1.0
@@ -81,7 +82,7 @@ def setup_sim(dummy_world, selector):
     travel = Travel()
     sim = Simulator.from_file(
         world=world,
-        infection_selector=selector,
+        infection_selectors=selectors,
         interaction=interaction,
         config_filename=test_config,
         leisure=leisure_instance,
@@ -105,7 +106,7 @@ def create_health_index():
 
 def test__everyone_has_an_activity(sim: Simulator):
     for person in sim.world.people.members:
-        assert person.subgroups.iter().count(None) != len(person.subgroups)
+        assert person.subgroups.iter().count(None) != len(person.subgroups.iter())
 
 
 def test__apply_activity_hierarchy(sim: Simulator):
@@ -225,7 +226,7 @@ def test__move_people_to_commute(sim: Simulator):
 
 def test__bury_the_dead(sim: Simulator):
     dummy_person = sim.world.people.members[0]
-    sim.infection_selector.infect_person_at_time(dummy_person, 0.0)
+    sim.infection_selectors.infect_person_at_time(dummy_person, 0.0)
     sim.bury_the_dead(sim.world, dummy_person)
     assert dummy_person in sim.world.cemeteries.members[0].people
     assert dummy_person.dead

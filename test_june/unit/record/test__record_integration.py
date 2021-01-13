@@ -21,7 +21,7 @@ from june.groups import (
 )
 from june.infection import SymptomTag
 from june.interaction import Interaction
-from june.infection.infection_selector import InfectionSelector
+from june.infection.infection_selector import InfectionSelectors, InfectionSelector
 from june.infection_seed import InfectionSeed
 from june.policy import Policies, Hospitalisation
 from june.simulator import Simulator
@@ -181,7 +181,7 @@ def create_sim(world, interaction, selector, seed=False):
     if not seed:
         n_cases = 2
         infection_seed.unleash_virus(
-            population=world.people, n_cases=n_cases, record=record
+            population=world.people, n_cases=n_cases, record=record, time=0
         )
     elif seed == "hospitalised":
         for person in world.people:
@@ -190,10 +190,11 @@ def create_sim(world, interaction, selector, seed=False):
         for person in world.people:
             infect_dead_person(person)
 
+    selectors = InfectionSelectors([selector])
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selector=selector,
+        infection_selectors=selectors,
         config_filename=test_config,
         policies=policies,
         record=record,

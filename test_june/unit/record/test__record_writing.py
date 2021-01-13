@@ -13,7 +13,7 @@ from june.activity import ActivityManager
 from june.demography import Person, Population
 from june.interaction import Interaction
 from june.infection import InfectionSelector, HealthIndexGenerator
-from june.infection_seed import InfectionSeed
+from june.infection_seed import InfectionSeed, InfectionSeeds
 from june.geography.geography import (
     Areas,
     SuperAreas,
@@ -26,6 +26,7 @@ from june.groups import Supergroup
 from june import World
 
 config_interaction = paths.configs_path / "tests/interaction.yaml"
+
 
 @pytest.fixture(name="dummy_world", scope="module")
 def create_dummy_world():
@@ -54,7 +55,14 @@ def create_dummy_world():
     areas = Areas(super_areas[0].areas + super_areas[1].areas + super_areas[2].areas)
     households = Households([Household(area=super_areas[0].areas[0])])
     hospitals = Hospitals(
-        [Hospital(n_beds=1, n_icu_beds=1, area=areas[5], coordinates=(0.0, 0.0),)]
+        [
+            Hospital(
+                n_beds=1,
+                n_icu_beds=1,
+                area=areas[5],
+                coordinates=(0.0, 0.0),
+            )
+        ]
     )
     care_homes = CareHomes([CareHome(area=super_areas[0].areas[0])])
     world = World()
@@ -91,6 +99,7 @@ def test__writing_infections():
             location_id=0,
             infected_ids=[0, 10, 20],
             infector_ids=[5, 15, 25],
+            infection_ids=[0, 0, 0],
         )
         record.events["infections"].record(hdf5_file=record.file, timestamp=timestamp)
         table = record.file.root.infections
@@ -107,6 +116,9 @@ def test__writing_infections():
     assert df.infector_ids[1] == 15
     assert df.infected_ids[2] == 20
     assert df.infector_ids[2] == 25
+    assert df.infection_ids[0] == 0
+    assert df.infection_ids[1] == 0
+    assert df.infection_ids[2] == 0
     del df
 
 
@@ -183,7 +195,10 @@ def test__writing_death():
 
 
 def test__static_people(dummy_world):
-    record = Record(record_path="results", record_static_data=True,)
+    record = Record(
+        record_path="results",
+        record_static_data=True,
+    )
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -214,7 +229,10 @@ def test__static_people(dummy_world):
 
 
 def test__static_location(dummy_world):
-    record = Record(record_path="results", record_static_data=True,)
+    record = Record(
+        record_path="results",
+        record_static_data=True,
+    )
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -244,7 +262,10 @@ def test__static_location(dummy_world):
 
 
 def test__static_geography(dummy_world):
-    record = Record(record_path="results", record_static_data=True,)
+    record = Record(
+        record_path="results",
+        record_static_data=True,
+    )
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -286,6 +307,7 @@ def test__sumarise_time_tep(dummy_world):
             location_id=dummy_world.care_homes[0].id,
             infected_ids=[2],
             infector_ids=[0],
+            infection_ids=[0],
         )
         record.accumulate(
             table_name="infections",
@@ -294,6 +316,7 @@ def test__sumarise_time_tep(dummy_world):
             location_id=dummy_world.households[0].id,
             infected_ids=[0],
             infector_ids=[5],
+            infection_ids=[0],
         )
         record.accumulate(
             table_name="hospital_admissions",
@@ -360,13 +383,15 @@ def test__meta_information():
     assert parameters["meta_information"]["number_of_cores"] == 20
 
 
-def test__parameters(dummy_world, selector):
+def test__parameters(dummy_world, selector, selectors):
     interaction = Interaction.from_file(config_filename=config_interaction)
     interaction.alpha_physical = 100.0
-    infection_selector = selector
     infection_seed = InfectionSeed(
-        world=None, infection_selector=infection_selector, seed_strength=0.0,
+        world=None,
+        infection_selector=selector,
+        seed_strength=0.0,
     )
+    infection_seeds = InfectionSeeds([infection_seed])
     infection_seed.min_date = datetime.datetime(2020, 10, 10)
     infection_seed.max_date = datetime.datetime(2020, 10, 11)
 
@@ -381,8 +406,8 @@ def test__parameters(dummy_world, selector):
     record = Record(record_path="results")
     record.parameters(
         interaction=interaction,
-        infection_seed=infection_seed,
-        infection_selector=infection_selector,
+        infection_seeds=infection_seeds,
+        infection_selectors=selectors,
         activity_manager=activity_manager,
     )
     with open(record.record_path / "config.yaml", "r") as file:
@@ -400,17 +425,13 @@ def test__parameters(dummy_world, selector):
             parameters["interaction"]["contact_matrices"][key], value
         )
 
-    assert parameters["infection_seed"]["seed_strength"] == infection_seed.seed_strength
-    assert parameters["infection_seed"]["min_date"] == infection_seed.min_date.strftime(
-        "%Y-%m-%d"
-    )
-    assert parameters["infection_seed"]["max_date"] == infection_seed.max_date.strftime(
-        "%Y-%m-%d"
-    )
-
-    assert (
-        parameters["infection"]["transmission_type"]
-        == infection_selector.transmission_type
-    )
+    assert "Covid19" in parameters["infection_seeds"]
+    seed_parameters = parameters["infection_seeds"]["Covid19"]
+    assert seed_parameters["seed_strength"] == infection_seed.seed_strength
+    assert seed_parameters["min_date"] == infection_seed.min_date.strftime("%Y-%m-%d")
+    assert seed_parameters["max_date"] == infection_seed.max_date.strftime("%Y-%m-%d")
+    assert "Covid19" in parameters["infections"]
+    inf_parameters = parameters["infections"]["Covid19"]
+    assert inf_parameters["transmission_type"] == selector.transmission_type
     for i, policy in enumerate(activity_manager.policies.policies):
         assert policies[i] == policy.__dict__

@@ -15,12 +15,6 @@ class TestTransmission:
 
         assert transmission.probability == 0.3
 
-    def test__object_from_config(self):
-
-        transission = trans.Transmission.object_from_config()
-
-        assert transission == trans.TransmissionConstant
-
 
 class TestTransmissionGamma:
     def test__update_probability_at_time(self):

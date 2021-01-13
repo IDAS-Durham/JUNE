@@ -91,6 +91,6 @@ def test__full_run(dummy_world, selector, test_results):
         record=record,
     )
     seed = InfectionSeed(world=sim.world, infection_selector=selector)
-    seed.unleash_virus(Population(sim.world.people), n_cases=1)
+    seed.unleash_virus(Population(sim.world.people), n_cases=1, time=0)
     sim.run()
 

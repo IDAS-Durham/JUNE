@@ -40,7 +40,7 @@ def days_to_infection(interaction, susceptible_person, group, people, n_students
             group.subgroups[1].append(person)
         for person in people[n_students:]:
             group.subgroups[0].append(person)
-        infected_ids, group_size = interaction.time_step_for_group(
+        infected_ids, _, _ = interaction.time_step_for_group(
             group=group, delta_time=delta_time
         )
         if infected_ids:
@@ -130,20 +130,20 @@ def test__average_time_to_infect(n_teachers, mode, selector):
     )
 
 
-def test__infection_is_isolated(selector):
+def test__infection_is_isolated(selectors):
     geography = Geography.from_file({"area": ["E00002559"]})
     world = generate_world_from_geography(geography, include_households=True)
     interaction = Interaction.from_file(config_filename=test_config)
-    infection_seed = InfectionSeed(world, selector)
+    infection_seed = InfectionSeed(world, selectors)
     n_cases = 5
     infection_seed.unleash_virus(
-        world.people, n_cases=n_cases
+        world.people, n_cases=n_cases, time=0
     )  # play around with the initial number of cases
     policies = Policies([])
     simulator = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selector=selector,
+        infection_selectors=selectors,
         config_filename=pathlib.Path(__file__).parent.absolute()
         / "interaction_test_config.yaml",
         leisure=None,
@@ -174,10 +174,11 @@ def test__assign_blame():
     interaction = Interaction.from_file(config_filename=test_config)
     transmission_weights = [1, 10, 2, 3, 4]
     transmission_ids = [0, 1, 4, 5, 6]
+    infection_ids = np.zeros(len(transmission_weights))
     total_wegiht = sum(transmission_weights)
     n_infections = 5000
-    culpables = interaction._assign_blame_for_infections(
-        n_infections, transmission_weights, transmission_ids
+    culpables, _ = interaction._assign_blame_for_infections(
+        n_infections, transmission_weights, transmission_ids, infection_ids
     )
     culpable_ids, culpable_counts = np.unique(culpables, return_counts=True)
     culpable_counts = {key: value for key, value in zip(culpable_ids, culpable_counts)}
@@ -204,7 +205,7 @@ def test__super_spreaders(selector):
     interaction = Interaction.from_file(config_filename=test_config)
     beta = interaction._get_interactive_group_beta(interactive_school)
     contact_matrix = interaction.contact_matrices["school"]
-    subgroup_infected_ids, to_blame_ids = interaction._time_step_for_subgroup(
+    subgroup_infected_ids, to_blame_ids, _ = interaction._time_step_for_subgroup(
         susceptible_subgroup_index=0,
         susceptible_subgroup_global_index=0,
         interactive_group=interactive_school,

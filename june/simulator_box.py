@@ -10,7 +10,7 @@ from june.activity import ActivityManagerBox
 from june.interaction import Interaction
 from june.simulator import Simulator
 from june.world import World
-from june.infection import InfectionSelector
+from june.infection import InfectionSelectors
 from june.policy import MedicalCarePolicies
 
 default_config_filename = paths.configs_path / "config_example.yaml"
@@ -31,8 +31,8 @@ class SimulatorBox(Simulator):
             interaction: Interaction,
             timer,
             activity_manager,
-            infection_selector: InfectionSelector = None,
-            infection_seed: Optional["InfectionSeed"] = None,
+            infection_selectors: InfectionSelectors = None,
+            infection_seeds: Optional["InfectionSeeds"] = None,
             checkpoint_save_dates: List[datetime.date] = None,
             record: "Record" = None,
             checkpoint_save_path: str = None,
@@ -65,8 +65,8 @@ class SimulatorBox(Simulator):
             interaction=interaction,
             timer=timer,
             activity_manager=activity_manager,
-            infection_selector=infection_selector,
-            infection_seed=infection_seed,
+            infection_selectors=infection_selectors,
+            infection_seeds=infection_seeds,
             record=record,
             checkpoint_save_dates=checkpoint_save_dates,
             checkpoint_save_path = checkpoint_save_path
