@@ -78,6 +78,7 @@ class Observed2Cases:
         self.symptoms_trajectories = symptoms_trajectories
         self.health_index_generator = health_index_generator
         self.regions = self.area_super_region_df["region"].unique()
+        # TODO: this are particularities of England that should not be here.
         if (
             n_observed_deaths is not None
             and "East Of England" in n_observed_deaths.columns
@@ -140,6 +141,7 @@ class Observed2Cases:
         n_observed_deaths.index = pd.to_datetime(n_observed_deaths.index)
         area_super_region_df = pd.read_csv(area_super_region_path, index_col=0)
         # Combine regions as in deaths dataset
+        # TODO: do this outside here for generality
         area_super_region_df = area_super_region_df.replace(
             {
                 "region": {
