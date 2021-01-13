@@ -1,15 +1,55 @@
-poisson_parameters:
-  male:
-    3-75: 0.05
-    75-80: 0.02
-  female:
-    3-75: 0.05
-    75-80: 0.02
+times_per_week:
+  weekday:
+    male:
+      0-9: 0.0
+      9-15: 0.027
+      15-19: 0.006
+      19-31: 0.016
+      31-51: 0.009
+      51-66: 0.009
+      66-86: 0.015
+      86-100: 0.0
+    female:
+      0-9: 0.112
+      9-15: 0.033
+      15-19: 0.099
+      19-31: 0.033
+      31-51: 0.014
+      51-66: 0.031
+      66-86: 0.008
+      86-100: 0.0
+  weekend:
+    male:
+      0-9: 0.019
+      9-15: 0.013
+      15-19: 0.0
+      19-31: 0.0
+      31-51: 0.009
+      51-66: 0.004
+      66-86: 0.01
+      86-100: 0.0
+    female:
+      0-9: 0.033
+      9-15: 0.014
+      15-19: 0.014
+      19-31: 0.012
+      31-51: 0.011
+      51-66: 0.01
+      66-86: 0.008
+      86-100: 0.0
+hours_per_day:
+  weekday:
+    male:
+      0-65: 3
+      65-100: 11
+    female:
+      0-65: 3
+      65-100: 11
+  weekend:
+    male:
+      0-100: 12
+    female:
+      0-100: 12
+drags_household_probability: 0
 neighbours_to_consider: 5
 maximum_distance: 15
-weekend_boost: 1
-drags_household_probability: 0.5
-
-# 2019: 176.1 million cinema visitors per year
-# (from https://www.cinemauk.org.uk/the-industry/facts-and-figures/uk-cinema-admissions-and-box-office/annual-admissions/)
-# age/gender distribution from https://www.statista.com/statistics/296240/age-and-gender-of-the-cinema-audience-uk/

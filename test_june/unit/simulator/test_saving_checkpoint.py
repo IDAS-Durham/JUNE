@@ -162,3 +162,51 @@ class TestCheckpoints:
         # clean up
         os.remove(checkpoint_folder / "checkpoint_2020-03-25.hdf5")
         # gotta delete, else it passes any time it should have failed...
+
+class TestCheckpointForReseeding:
+    """
+    These tests the situation in which we load from checkpoint and 
+    want all the infections reseted.
+    """
+    def test__checkpoints_are_saved(self, selector, test_results):
+        checkpoint_folder = Path(test_results / "checkpoint_tests")
+        checkpoint_folder.mkdir(exist_ok=True, parents=True)
+        sim = run_simulator(selector, test_results)
+        assert len(sim.world.people.infected) > 0
+        assert len(sim.world.people.recovered) > 0
+        assert len(sim.world.people.susceptible) > 0
+        assert len(sim.world.people.dead) > 0
+        fresh_world = create_world()
+        interaction = Interaction.from_file(config_filename=config_interaction)
+        policies = Policies([])
+        sim_recovered = Simulator.from_checkpoint(
+            world=fresh_world,
+            checkpoint_load_path=checkpoint_folder / "checkpoint_2020-03-25.hdf5",
+            interaction=interaction,
+            infection_selector=selector,
+            config_filename=test_config,
+            leisure=None,
+            travel=None,
+            policies=policies,
+            reset_infections=True,
+        )
+        # check timer is correct
+        assert sim_recovered.timer.initial_date == sim.timer.initial_date
+        assert sim_recovered.timer.final_date == sim.timer.final_date
+        assert sim_recovered.timer.now == sim.timer.now
+        assert sim_recovered.timer.date.date() == datetime.datetime(2020, 3, 26).date()
+        assert sim_recovered.timer.shift == sim.timer.shift
+        assert sim_recovered.timer.delta_time == sim.timer.delta_time
+        for person1, person2 in zip(sim.world.people, sim_recovered.world.people):
+            assert person1.id == person2.id
+            if person1.infection is not None:
+                assert person2.infection is None
+                continue
+            assert person1.susceptible == person2.susceptible
+            assert person1.infected == person2.infected
+            assert person1.recovered == person2.recovered
+            assert person1.susceptibility == person2.susceptibility
+            assert person1.dead == person2.dead
+        # clean up
+        os.remove(checkpoint_folder / "checkpoint_2020-03-25.hdf5")
+        # gotta delete, else it passes any time it should have failed...

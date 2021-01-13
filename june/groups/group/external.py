@@ -10,6 +10,9 @@ class ExternalGroup:
     def clear(self):
         pass
 
+    def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
+        return ExternalSubgroup(group=self, subgroup_type=subgroup_type)
+
 
 class ExternalSubgroup:
     external = True

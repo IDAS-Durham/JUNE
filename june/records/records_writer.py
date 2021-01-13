@@ -511,4 +511,4 @@ def prepend_checkpoint_summary(
     merged_summary.set_index(["region", "time_stamp"])
     merged_summary.sort_index(inplace=True)
     merged_summary.to_csv(merged_summary_path, index=True)
-    logger.info(f"Written merged summary to {merged_summary_path}")
+    logger.info(f"Written merged summary to {merged_summary_path}")    

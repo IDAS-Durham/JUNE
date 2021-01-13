@@ -12,6 +12,7 @@ from june.groups.leisure import Leisure
 from june.policy import Policies
 from june.infection import InfectionSelectors, Infection
 from june.infection_seed import InfectionSeeds
+from june.event import Events
 from june import paths
 from june.simulator import Simulator
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
@@ -152,13 +153,28 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
 
 
 def restore_simulator_to_checkpoint(
-    simulator, world: World, checkpoint_path: str, chunk_size: Optional[int] = 50000
+    simulator,
+    world: World,
+    checkpoint_path: str,
+    chunk_size: Optional[int] = 50000,
+    reset_infections=False,
 ):
     """
     Initializes the simulator from a saved checkpoint. The arguments are the same as the standard .from_file()
     initialisation but with the additional path to where the checkpoint pickle file is located.
     The checkpoint saves information about the infection status of all the people in the world as well as the timings.
     Note, nonetheless, that all the past infections / deaths will have the checkpoint date as date.
+
+    Parameters
+    ----------
+    simulator:
+        An instance of the Simulator class
+    checkpoint_path:
+        path to the hdf5 file containing the checkpoint data
+    chunk_size
+        chunk load size of the hdf5
+    reset_infected
+        whether to reset the current infected to 0. Useful for reseeding.
     """
     people_ids = set(world.people.people_ids)
     checkpoint_data = load_checkpoint_from_hdf5(checkpoint_path, chunk_size=chunk_size)
@@ -176,14 +192,15 @@ def restore_simulator_to_checkpoint(
             continue
         person = simulator.world.people.get_from_id(recovered_id)
         person.susceptibility = 0.0
-    for infected_id, infection in zip(
-        checkpoint_data["infected_id"], checkpoint_data["infection_list"]
-    ):
-        if infected_id not in people_ids:
-            continue
-        person = simulator.world.people.get_from_id(infected_id)
-        person.infection = infection
-        person.susceptibility = 0.0
+    if not reset_infections:
+        for infected_id, infection in zip(
+            checkpoint_data["infected_id"], checkpoint_data["infection_list"]
+        ):
+            if infected_id not in people_ids:
+                continue
+            person = simulator.world.people.get_from_id(infected_id)
+            person.infection = infection
+            person.susceptibility = 0.0
     # restore timer
     checkpoint_date = datetime.strptime(checkpoint_data["date"], "%Y-%m-%d")
     # we need to start the next day
@@ -202,9 +219,10 @@ def generate_simulator_from_checkpoint(
     infection_seeds: Optional[InfectionSeeds] = None,
     leisure: Optional[Leisure] = None,
     travel: Optional[Travel] = None,
+    events: Optional[Events] = None,
     config_filename: str = default_config_filename,
     record: "Record" = None,
-    # comment: Optional[str] = None,
+    reset_infections=False,
 ):
     simulator = Simulator.from_file(
         world=world,
@@ -214,10 +232,14 @@ def generate_simulator_from_checkpoint(
         infection_seeds=infection_seeds,
         leisure=leisure,
         travel=travel,
+        events=events,
         config_filename=config_filename,
         record=record,
-        # comment=comment,
     )
     return restore_simulator_to_checkpoint(
-        world=world, checkpoint_path=checkpoint_path, chunk_size=chunk_size, simulator=simulator
+        world=world,
+        checkpoint_path=checkpoint_path,
+        chunk_size=chunk_size,
+        simulator=simulator,
+        reset_infections=reset_infections,
     )

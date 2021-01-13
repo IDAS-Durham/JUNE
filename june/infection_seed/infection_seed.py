@@ -12,6 +12,7 @@ from june.demography import Population
 from june.geography import SuperAreas
 from june.infection.infection_selector import InfectionSelector
 from june.infection.health_index.health_index import HealthIndexGenerator
+from june.utils import parse_probabilities
 
 default_infection_seeds_config_file = (
     paths.configs_path / "default/infection/infection_seeds.yaml"
