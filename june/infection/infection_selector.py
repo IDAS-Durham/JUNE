@@ -289,3 +289,10 @@ class InfectionSelectors:
         """
         selector = self.infection_id_to_selector[infection_id]
         selector.infect_person_at_time(person=person, time=time)
+
+    def __iter__(self):
+        return iter(self._infection_selectors)
+
+    def __getitem__(self, item):
+        return self._infection_selectors[item]
+        

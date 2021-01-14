@@ -118,7 +118,6 @@ class InfectionSeed:
                         )
         else:
             for inf_id in ids_to_infect:
-                # if isinstance(self.world, Domain):
                 if box_mode:
                     person_to_infect = self.world.members[0].people[inf_id]
                 else:
@@ -264,3 +263,7 @@ class InfectionSeeds:
 
     def __iter__(self):
         return iter(self.infection_seeds)
+
+    def __getitem__(self, item):
+        return self.infection_seeds[item]
+        

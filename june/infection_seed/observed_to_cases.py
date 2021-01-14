@@ -36,7 +36,7 @@ class Observed2Cases:
         symptoms_trajectories: Optional["TrajectoryMaker"] = None,
         n_observed_deaths: Optional[pd.DataFrame] = None,
         area_super_region_df: Optional[pd.DataFrame] = None,
-        smoothing=False,
+        smoothing=True,
     ):
         """
         Class to convert observed deaths over time into predicted number of latent cases
