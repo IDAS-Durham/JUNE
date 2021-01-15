@@ -163,8 +163,10 @@ class InteractiveGroup:
             regional_compliance = 1
         try:
             lockdown_tier = self.super_area.region.policy["lockdown_tier"]
+            if lockdown_tier is None:
+                lockdown_tier = 1
         except:
-            lockdown_tier = None
+            lockdown_tier = 1
         if int(lockdown_tier) == 4:
             tier_reduction = 0.5
         else:
