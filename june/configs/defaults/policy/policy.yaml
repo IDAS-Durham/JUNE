@@ -23,8 +23,34 @@ regional_compliance:
 
 tiered_lockdown:
   1:
+    start_time: 2020-10-14
+    end_time: 2020-10-17
+    tiers_per_region:
+      London: 1.
+      South East: 1.
+      South West: 1.
+      West Midlands: 2. # becuase of Birmingham
+      East Midlands: 1.
+      East of England: 1.
+      North West: 2. # dicounting anomaly of Liverpool for now 
+      North East: 2.
+      Yorkshire and The Humber: 2. # because of Sheffield and Leeds etc.
+  2:
+    start_time: 2020-10-17
+    end_time: 2020-11-05 # breaking for the national lockdown
+    tiers_per_region:
+      London: 2.
+      South East: 1.
+      South West: 1.
+      West Midlands: 2. # becuase of Birmingham
+      East Midlands: 1.
+      East of England: 1.
+      North West: 2. # dicounting anomaly of Liverpool for now 
+      North East: 2.
+      Yorkshire and The Humber: 2. # because of Sheffield and Leeds etc.
+  3:
     start_time: 2020-12-03
-    end_time: 9999-12-01
+    end_time: 2020-12-19
     tiers_per_region:
       London: 2.
       South East: 2.
@@ -34,6 +60,45 @@ tiered_lockdown:
       East of England: 2.
       North West: 3. # becuase of Manchester
       North East: 3.
+      Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
+  4:
+    start_time: 2020-12-19
+    end_time: 2020-12-26
+    tiers_per_region:
+      London: 3.
+      South East: 3.
+      South West: 2.
+      West Midlands: 3. # becuase of Birmingham
+      East Midlands: 3.
+      East of England: 2.
+      North West: 3. # becuase of Manchester
+      North East: 3.
+      Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
+  5:
+    start_time: 2020-12-26
+    end_time: 2020-12-31
+    tiers_per_region:
+      London: 4.
+      South East: 4.
+      South West: 3.
+      West Midlands: 3. # becuase of Birmingham
+      East Midlands: 3.
+      East of England: 4.
+      North West: 3. 
+      North East: 3.
+      Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
+  6:
+    start_time: 2020-12-31
+    end_time: 2021-01-05 # after which the country went into a national lockdown
+    tiers_per_region:
+      London: 4.
+      South East: 4.
+      South West: 3.
+      West Midlands: 4. # becuase of Birmingham
+      East Midlands: 4.
+      East of England: 4.
+      North West: 4. 
+      North East: 4.
       Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
 
 limit_long_commute:
