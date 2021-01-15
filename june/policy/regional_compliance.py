@@ -52,7 +52,7 @@ class TieredLockdown(Policy):
                     region.policy["local_closed_venues"].update("household_visits")
                 elif lockdown_tier == 3:
                     region.policy["local_closed_venues"].update(set(("cinema", "household_visits")))
-                elif: lockdown_tier == 4.:
+                elif: lockdown_tier == 4:
                     region.policy["local_closed_venues"].update(set(("pub", "cinema", "household_visits")))
 
 class TieredLockdowns(PolicyCollection):
