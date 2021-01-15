@@ -371,8 +371,8 @@ class CloseCompanies(SkipActivity):
         Returns True if the activity is to be skipped, otherwise False
         """
 
-        # stop people going to work in Tier 3 regions if they don't work in the same region
-        # and if their region is not in Tier 3
+        # stop people going to work in Tier 3 or 4 regions if they don't work in the same region
+        # and if their region is not in Tier 3 or 4
         # subject to regional compliance
         if person.lockdown_status == "random":
             try:
@@ -390,13 +390,44 @@ class CloseCompanies(SkipActivity):
                         
             except AttributeError:
                 pass
-            # stop people going to work who are living in a Tier 3 region unless they work
+
+            try:
+                if (
+                    person.work_super_area.region != person.region
+                    and person.work_super_area.region.policy["lockdown_tier"] == 4
+                    and person.super_area.region.policy["lockdown_tier"] != 4
+                ):
+                    try:
+                        regional_compliance = person.region.regional_compliance
+                    except:
+                        regional_compliance = 1
+                        if random() < regional_compliance:
+                            return True
+                        
+            except AttributeError:
+                pass
+            
+            # stop people going to work who are living in a Tier 3 or 4 region unless they work
             # in that same region
             # subject to regional compliance
             try:
                 if (
                     person.work_super_area.region != person.super_area
                     and person.super_area.region.policy["lockdown_tier"] == 3
+                ):
+                    try:
+                        regional_compliance = person.region.regional_compliance
+                    except:
+                        regional_compliance = 1
+                        if random() < regional_compliance:
+                            return True
+            except AttributeError:
+                pass
+
+            try:
+                if (
+                    person.work_super_area.region != person.super_area
+                    and person.super_area.region.policy["lockdown_tier"] == 4
                 ):
                     try:
                         regional_compliance = person.region.regional_compliance
