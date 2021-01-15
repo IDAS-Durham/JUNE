@@ -167,7 +167,7 @@ class InteractiveGroup:
             lockdown_tier = None
         if int(lockdown_tier) == 4:
             tier_reduction = 0.5
-        else::
+        else:
             tier_reduction = 1.
             
         return beta * (1 + regional_compliance * tier_reduction * (beta_reduction - 1))
