@@ -123,7 +123,7 @@ quarantine:
         compliance: 0.95 # for the symptomatic individual - needs to be checked
         household_compliance: 0.9
         start_time: 2020-03-24
-        end_time: 2021-07-04
+        end_time: 9999-07-04
 
 shielding:
     1:
@@ -141,6 +141,11 @@ shielding:
         compliance: 0.7
         start_time: 2020-11-05
         end_time: 2020-12-03
+    4:
+        min_age: 70
+        compliance: 0.7
+        start_time: 2021-01-05
+        end_time: 2021-03-31
 
 
 close_companies:
@@ -244,7 +249,21 @@ close_companies:
         key_probability: 0.19
     15:
         start_time: 2020-12-03
-        end_time: 2021-12-01
+        end_time: 2021-01-05
+        full_closure: False 
+        avoid_work_probability: 0.135
+        furlough_probability: 0.34
+        key_probability: 0.19
+    16:
+        start_time: 2021-01-05
+        end_time: 2021-03-31
+        full_closure: False 
+        avoid_work_probability: 0.38
+        furlough_probability: 0.34
+        key_probability: 0.19
+    17:
+        start_time: 2021-01-31
+        end_time: 9999-12-01
         full_closure: False 
         avoid_work_probability: 0.135
         furlough_probability: 0.34
@@ -338,7 +357,41 @@ social_distancing:
 
     6:
         start_time: 2020-12-03
-        end_time: 2021-12-01
+        end_time: 2021-01-05
+        beta_factors:
+            box: 0.875
+            pub: 0.875
+            grocery: 0.875
+            cinema: 0.875
+            city_transport: 0.875
+            inter_city_transport: 0.875
+            hospital: 0.875
+            care_home: 0.875
+            company: 0.875
+            school: 0.875
+            household: 1.0
+            university: 0.875
+            household_visits: 0.5
+    7:
+        start_time: 2021-01-05
+        end_time: 2021-03-31
+        beta_factors:
+            box: 0.75
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            city_transport: 0.75
+            inter_city_transport: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
+            household_visits: 0.5
+    8:
+        start_time: 2021-03-31
+        end_time: 9999-01-05
         beta_factors:
             box: 0.875
             pub: 0.875
@@ -600,6 +653,10 @@ close_leisure_venue:
     2:
         start_time: 2020-11-05
         end_time: 2020-12-03 
+        venues_to_close: ['pub', 'cinema', 'care_home_visit']
+    3:
+        start_time: 2021-01-05
+        end_time: 2021-03-31 
         venues_to_close: ['pub', 'cinema', 'care_home_visit'] 
 
 change_leisure_probability:
@@ -833,6 +890,22 @@ change_leisure_probability:
     15:
         start_time: 2020-11-05
         end_time: 2020-12-03
+        leisure_poisson_parameters:
+            household_visits:
+                men: 
+                    0-64: 0.1
+                    65-100: 0.05
+                women: 
+                    0-64: 0.1
+                    65-100: 0.05
+            care_home_visits:
+                men:
+                    0-100: 0.05
+                women:
+                    0-100: 0.05
+    16:
+        start_time: 2021-01-05
+        end_time: 2021-03-31
         leisure_poisson_parameters:
             household_visits:
                 men: 
