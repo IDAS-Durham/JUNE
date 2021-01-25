@@ -90,9 +90,9 @@ trajectories:
       - symptom_tag: mild
         completion_time:
           type: lognormal
-          s: 0.8325
+          s: 0.55
           loc: 0.0
-          scale: 5.727
+          scale: 5.
 
 
       - symptom_tag: hospitalised
@@ -128,9 +128,9 @@ trajectories:
       - symptom_tag: mild
         completion_time:
           type: lognormal
-          s: 0.8325
+          s: 0.55
           loc: 0.0
-          scale: 5.727
+          scale: 5.
 
       - symptom_tag: hospitalised
         completion_time:
@@ -210,9 +210,9 @@ trajectories:
       - symptom_tag: mild
         completion_time:
           type: lognormal
-          s: 0.8325
+          s: 0.55
           loc: 0.0
-          scale: 5.727
+          scale: 5.
 
  
       
@@ -243,9 +243,9 @@ trajectories:
       - symptom_tag: mild
         completion_time:
           type: lognormal
-          s: 0.8325
+          s: 0.55
           loc: 0.0
-          scale: 5.727
+          scale: 5.
 
       - symptom_tag: hospitalised
         completion_time:

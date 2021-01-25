@@ -62,7 +62,7 @@ def make_policies():
     )
 
 
-@pytest.fixture(name="sim", scope="module")
+@pytest.fixture(name="sim")
 def setup_sim(dummy_world, selector):
     world = dummy_world
     for person in world.people:
@@ -89,7 +89,7 @@ def setup_sim(dummy_world, selector):
         policies=policies,
     )
     sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-        3, False, False
+        delta_time=3, working_hours=False, day_type="weekday" 
     )
     sim.clear_world()
     return sim
@@ -105,7 +105,7 @@ def create_health_index():
 
 def test__everyone_has_an_activity(sim: Simulator):
     for person in sim.world.people.members:
-        assert person.subgroups.iter().count(None) != len(person.subgroups)
+        assert person.subgroups.iter().count(None) != len(person.subgroups.__fields__)
 
 
 def test__apply_activity_hierarchy(sim: Simulator):

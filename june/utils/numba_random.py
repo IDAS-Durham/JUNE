@@ -5,7 +5,7 @@ from numba import jit
 from random import random
 import numpy as np
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True)
 def random_choice_numba(arr, prob):
     """
     Fast implementation of np.random.choice

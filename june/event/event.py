@@ -34,7 +34,7 @@ class Event(ABC):
     def initialise(self, world):
         raise NotImplementedError
 
-    def apply(self, world, activities, is_weekend):
+    def apply(self, world, activities, day_type):
         raise NotImplementedError
 
 
@@ -80,12 +80,12 @@ class Events:
         date,
         world,
         activities: List[str],
-        is_weekend: bool,
+        day_type: bool,
     ):
         for event in self.events:
             if event.is_active(date=date):
                 event.apply(
                     world=world,
                     activities=activities,
-                    is_weekend=is_weekend,
+                    day_type=day_type,
                 )

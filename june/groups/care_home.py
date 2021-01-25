@@ -23,12 +23,12 @@ class CareHomeError(BaseException):
 
 class CareHome(Group):
     """
-    The Carehome class represents a carehome and contains information about 
+    The Carehome class represents a carehome and contains information about
     its residents, workers and visitors.
     We assume three subgroups:
     0 - workers
-    1 - residents 
-    2 - visitors 
+    1 - residents
+    2 - visitors
     """
 
     __slots__ = (
@@ -55,11 +55,16 @@ class CareHome(Group):
         self.quarantine_starting_date = None
 
     def add(
-        self, person, subgroup_type=SubgroupType.residents, activity: str = "residence",
+        self,
+        person,
+        subgroup_type=SubgroupType.residents,
+        activity: str = "residence",
     ):
         if activity == "leisure":
             super().add(
-                person, subgroup_type=self.SubgroupType.visitors, activity="leisure",
+                person,
+                subgroup_type=self.SubgroupType.visitors,
+                activity="leisure",
             )
         else:
             super().add(person, subgroup_type=subgroup_type, activity=activity)
@@ -82,7 +87,7 @@ class CareHome(Group):
     @property
     def coordinates(self):
         return self.area.coordinates
- 
+
     @property
     def super_area(self):
         if self.area is None:
@@ -97,6 +102,9 @@ class CareHome(Group):
     @property
     def care_homes_to_visit(self):
         return None
+
+    def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
+        return self[self.SubgroupType.visitors]
 
 
 class CareHomes(Supergroup):

@@ -37,8 +37,20 @@ from june.utils.profiler import profile
 default_config_filename = paths.configs_path / "config_example.yaml"
 
 output_logger = logging.getLogger("simulator")
+mpi_logger = logging.getLogger("mpi")
+mpi_logger.propagate = False
+
 if mpi_rank > 0:
     output_logger.propagate = False
+
+
+def enable_mpi_debug(results_folder):
+    from june.logging import MPIFileHandler
+    logging_file = Path(results_folder) / "mpi.log"
+    with open(logging_file, "w") as f:
+        pass
+    mh = MPIFileHandler(logging_file)                                           
+    mpi_logger.addHandler(mh)
 
 
 def _read_checkpoint_dates(checkpoint_dates):
@@ -147,7 +159,9 @@ class Simulator:
                 )
                 activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
-        checkpoint_save_dates = _read_checkpoint_dates(config.get("checkpoint_save_dates", None))
+        checkpoint_save_dates = _read_checkpoint_dates(
+            config.get("checkpoint_save_dates", None)
+        )
         weekday_activities = [
             activity for activity in time_config["step_activities"]["weekday"].values()
         ]
@@ -204,7 +218,8 @@ class Simulator:
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
         record: Optional[Record] = None,
-        # comment: Optional[str] = None,
+        events: Optional[Events] = None,
+        reset_infections=False,
     ):
         from june.hdf5_savers.checkpoint_saver import generate_simulator_from_checkpoint
 
@@ -219,6 +234,8 @@ class Simulator:
             travel=travel,
             config_filename=config_filename,
             record=record,
+            events=events,
+            reset_infections=reset_infections,
         )
 
     def clear_world(self):
@@ -346,11 +363,6 @@ class Simulator:
         for person in self.world.people.infected:
             previous_tag = person.infection.tag
             new_status = person.infection.update_health_status(time, duration)
-            if (
-                previous_tag == SymptomTag.exposed
-                and person.infection.tag == SymptomTag.mild
-            ):
-                person.residence.group.quarantine_starting_date = time
             if self.record is not None:
                 if previous_tag != person.infection.tag:
                     self.record.accumulate(
@@ -436,6 +448,7 @@ class Simulator:
         output_logger.info(
             f"CMS: Infection COMS-v2 for rank {mpi_rank}/{mpi_size}({n_sending+n_receiving}) {tock-tick},{tockw-tickw} - {self.timer.date}"
         )
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},infection,{tock-tick}")
 
         for infection_data in people_to_infect:
             try:
@@ -476,6 +489,7 @@ class Simulator:
             n_people_going_abroad,
             # ) = self.activity_manager.do_timestep(regional_compliance=regional_compliance)
         ) = self.activity_manager.do_timestep()
+        tick_interaction = perf_counter()
 
         # get the supergroup instances that are active in this time step:
         active_super_groups = self.activity_manager.active_super_groups
@@ -517,6 +531,8 @@ class Simulator:
                     )
                     infected_ids += new_infected_ids
                     n_people += group_size
+        tock_interaction = perf_counter()
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},interaction,{tock_interaction-tick_interaction}")
 
         # infect the people that got exposed
         if self.infection_selector:
@@ -552,6 +568,7 @@ class Simulator:
         output_logger.info(
             f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick}, {tockw-tickw} - {self.timer.date}\n"
         )
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},timestep,{tock-tick}")
 
     def run(self):
         """
@@ -576,7 +593,9 @@ class Simulator:
                     >= self.infection_seed.min_date
                 ):
                     self.infection_seed.unleash_virus_per_day(
-                        self.timer.date, record=self.record
+                        self.timer.date,
+                        record=self.record,
+                        days_from_start=self.timer.now,
                     )
             self.do_timestep()
             if (
