@@ -105,7 +105,7 @@ def create_health_index():
 
 def test__everyone_has_an_activity(sim: Simulator):
     for person in sim.world.people.members:
-        assert person.subgroups.iter().count(None) != len(person.subgroups)
+        assert person.subgroups.iter().count(None) != len(person.subgroups.__fields__)
 
 
 def test__apply_activity_hierarchy(sim: Simulator):
