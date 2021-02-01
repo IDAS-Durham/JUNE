@@ -564,6 +564,10 @@ class TestSaveWorld:
             for h1, h2 in zip(sa1.closest_hospitals, sa2.closest_hospitals):
                 assert h1.id == h2.id
 
+    def test__socioeconomic_index(self, full_world, full_world_loaded):
+        for person1, person2 in zip(full_world.people, full_world_loaded.people):
+            assert person1.socioeconomic_index == person2.socioeconomic_index
+
     def test__social_venues(self, full_world, full_world_loaded):
         for area1, area2 in zip(full_world.areas, full_world_loaded.areas):
             for key in area1.social_venues.keys():
