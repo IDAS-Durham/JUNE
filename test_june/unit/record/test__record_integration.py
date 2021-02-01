@@ -372,6 +372,7 @@ def test__symptoms_transition(world, interaction, selector):
         df = pd.DataFrame.from_records(table.read())
     df["timestamp"] = df["timestamp"].str.decode("utf-8")
     df.set_index("timestamp", inplace=True)
+    df = df.loc[~df.new_symptoms.isin([5,6,7])]
     for timestamp in list(ids_transition.keys())[1:]:
         if ids_transition[timestamp]:
             if type(df.loc[timestamp]["infected_ids"]) is np.int32:

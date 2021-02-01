@@ -18,7 +18,6 @@ class Activities(dataobject):
     def iter(self):
         return [getattr(self, activity) for activity in self.__fields__]
 
-
 person_ids = count()
 
 

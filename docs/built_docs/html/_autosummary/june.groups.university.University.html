@@ -40,7 +40,7 @@
 <h1>june.groups.university.University<a class="headerlink" href="#june-groups-university-university" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">june.groups.university.</code><code class="sig-name descname">University</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_students_max</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_years</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">ukprn</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.groups.university.</code><code class="sig-name descname">University</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_students_max</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_years</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">ukprn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><p>A group of people such as in a hospital or a school.</p>
 <p>If a spec attribute is not defined in the child class then it is generated
 by converting the class name into snakecase.</p>
@@ -57,7 +57,7 @@ by converting the class name into snakecase.</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_students_max</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_years</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">ukprn</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_students_max</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_years</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">ukprn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><p>A group of people such as in a hospital or a school.</p>
 <p>If a spec attribute is not defined in the child class then it is generated
 by converting the class name into snakecase.</p>
@@ -129,6 +129,11 @@ from the subgroup to which they belong</p>
 <dl class="py method">
 <dt>
 <em class="property">property </em><code class="sig-name descname">dead</code></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">external</code><em class="property"> = False</em></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -217,6 +222,11 @@ the name fo the class with the id of the instance.</p>
 <dl class="py attribute">
 <dt>
 <code class="sig-name descname">subgroups</code></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">super_area</code></dt>
 <dd></dd></dl>
 
 <dl class="py method">

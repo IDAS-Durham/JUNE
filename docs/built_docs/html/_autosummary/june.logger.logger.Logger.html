@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="june.logger.read_logger.ReadLogger" href="june.logger.read_logger.ReadLogger.html" />
-    <link rel="prev" title="june.interaction.matrix_interaction.MatrixInteraction" href="june.interaction.matrix_interaction.MatrixInteraction.html" /> 
+    <link rel="prev" title="june.interaction.interactive_group.InteractiveGroup" href="june.interaction.interactive_group.InteractiveGroup.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
           <span>JUNE  documentation</span></a></h1>
@@ -25,7 +25,7 @@
       <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
-        «&#160;&#160;<a href="june.interaction.matrix_interaction.MatrixInteraction.html">june.interaction.matrix_interaction.MatrixInteraction</a>
+        «&#160;&#160;<a href="june.interaction.interactive_group.InteractiveGroup.html">june.interaction.interactive_group.InteractiveGroup</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -40,29 +40,33 @@
 <h1>june.logger.logger.Logger<a class="headerlink" href="#june-logger-logger-logger" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">june.logger.logger.</code><code class="sig-name descname">Logger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.logger.logger.</code><code class="sig-name descname">Logger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em>, <em class="sig-param"><span class="n">file_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'logger.0.hdf5'</span></em>, <em class="sig-param"><span class="n">rank</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">config</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Logger used by the simulator to store the relevant information.</p>
 <dl class="simple">
 <dt>save_path: </dt><dd><p>path to save file</p>
 </dd>
 <dt>file_name:</dt><dd><p>name of output hdf5 file</p>
+</dd>
+<dt>rank:</dt><dd><p>id of rank that will save population (for parallel mpi code)</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt>
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">save_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em>, <em class="sig-param"><span class="n">file_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'logger.0.hdf5'</span></em>, <em class="sig-param"><span class="n">rank</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">config</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Logger used by the simulator to store the relevant information.</p>
 <dl class="simple">
 <dt>save_path: </dt><dd><p>path to save file</p>
 </dd>
 <dt>file_name:</dt><dd><p>name of output hdf5 file</p>
+</dd>
+<dt>rank:</dt><dd><p>id of rank that will save population (for parallel mpi code)</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">accumulate_infection_location</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">location</span></em>, <em class="sig-param"><span class="n">n_infected</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">accumulate_infection_location</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">location</span></em>, <em class="sig-param"><span class="n">new_infected_ids</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Store where infections happend in a time step</p>
 <dl class="simple">
 <dt>location:</dt><dd><p>group type of the group in which the infection took place</p>
@@ -72,15 +76,13 @@
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">get_number_group_instances</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n">World</span></em>, <em class="sig-param"><span class="n">location</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Given the world and a location, find the number of instances of that location that exist in the world</p>
-<dl class="simple">
-<dt>world:</dt><dd><p>world instance</p>
-</dd>
-<dt>location:</dt><dd><p>location type</p>
-</dd>
-</dl>
-</dd></dl>
+<em class="property">static </em><code class="sig-name descname">get_username</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">log_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt>
@@ -106,16 +108,14 @@
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">log_infected</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime</span></em>, <em class="sig-param"><span class="n">infected_ids</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">symptoms</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n_secondary_infections</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Log relevant information of infected people per time step.</p>
+<code class="sig-name descname">log_infected</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date</span><span class="p">:</span> <span class="n">datetime</span></em>, <em class="sig-param"><span class="n">infected_ids</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">symptoms</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Log relevant information of infected people per super area and time step.</p>
 <dl class="simple">
 <dt>date:</dt><dd><p>datetime of time step to log</p>
 </dd>
-<dt>infected_ids:</dt><dd><p>list of IDs of everyone infected</p>
-</dd>
-<dt>symptoms:</dt><dd><p>list of symptoms of everyone infected</p>
-</dd>
-<dt>n_secondary_infections:</dt><dd><p>list of number of secondary infections for everyone infected</p>
+<dt>super_area_infections:</dt><dd><p>dictionary containing (per super area) the IDs of infected people, their symtpoms tag,
+and the number of secondary infections they produced.
+list of IDs of everyone infected</p>
 </dd>
 </dl>
 </dd></dl>
@@ -123,22 +123,19 @@
 <dl class="py method">
 <dt>
 <code class="sig-name descname">log_infection_location</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Log where did all infections in a time step happened, as a number count</p>
-<dl class="simple">
-<dt>time:</dt><dd><p>datetime to log</p>
-</dd>
-</dl>
+<dd><p>Log where did all infections in a time step happened
+Parameters
+———-
+time:</p>
+<blockquote>
+<div><p>datetime to log</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">log_number_of_locations</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">world</span><span class="p">:</span> <span class="n">World</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Log relevant information on where did people get infected</p>
-<dl class="simple">
-<dt>world:</dt><dd><p>world instance</p>
-</dd>
-</dl>
-</dd></dl>
+<code class="sig-name descname">log_meta_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">comment</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt>
@@ -147,7 +144,7 @@
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">log_population</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">population</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Population" title="june.demography.demography.Population">june.demography.demography.Population</a></span></em>, <em class="sig-param"><span class="n">light_logger</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">100000</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">log_population</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">population</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.demography.html#june.demography.demography.Population" title="june.demography.demography.Population">june.demography.demography.Population</a></span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">100000</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Saves the Population object to hdf5 format file <code class="docutils literal notranslate"><span class="pre">self.save_path</span></code>. Currently for each person,
 the following values are stored:
 - id, age, sex, super_area</p>
@@ -163,7 +160,22 @@ so keep the number below 1e6.</p>
 <dl class="py method">
 <dt>
 <code class="sig-name descname">unpack_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hdf5_obj</span></em>, <em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">base_path</span></em>, <em class="sig-param"><span class="n">depth</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">5</span></em><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
+<dd><p>Recursively unpack a nested dict of data into an hdf5 object, starting
+group name at base_path</p>
+<dl class="simple">
+<dt>hdf5_obj</dt><dd><p>The open hdf5_object</p>
+</dd>
+<dt>data</dt><dd><p>A (nested) dictionary of data: dict vals can be
+int, float, str, List[int,float], np.ndarray, datetime.datetime, pd.Timestamp.</p>
+</dd>
+<dt>base_path</dt><dd><p>the top-level location of the group data in the hdf5_obj.</p>
+</dd>
+<dt>depth</dt><dd><p>leave this at zero - keeps track of number of depth of recursion.</p>
+</dd>
+<dt>max_depth</dt><dd><p>breaks recursion if depth &gt; max_depth.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -174,7 +186,7 @@ so keep the number below 1e6.</p>
       <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
-        «&#160;&#160;<a href="june.interaction.matrix_interaction.MatrixInteraction.html">june.interaction.matrix_interaction.MatrixInteraction</a>
+        «&#160;&#160;<a href="june.interaction.interactive_group.InteractiveGroup.html">june.interaction.interactive_group.InteractiveGroup</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;

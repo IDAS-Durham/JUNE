@@ -34,7 +34,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Get JUNE data
-      run: bash get_data.sh
+      run: bash scripts/get_june_data.sh
       
     - name: Install simulation
       run: python setup.py install

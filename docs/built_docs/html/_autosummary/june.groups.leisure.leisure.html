@@ -56,8 +56,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt id="june.groups.leisure.leisure.Leisure.distribute_social_venues_to_households">
-<code class="sig-name descname">distribute_social_venues_to_households</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">households</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="june.groups.household.html#june.groups.household.Household" title="june.groups.household.Household">june.groups.household.Household</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.distribute_social_venues_to_households" title="Permalink to this definition">¶</a></dt>
+<dt id="june.groups.leisure.leisure.Leisure.distribute_social_venues_to_areas">
+<code class="sig-name descname">distribute_social_venues_to_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.Areas" title="june.geography.geography.Areas">june.geography.geography.Areas</a></span></em>, <em class="sig-param"><span class="n">super_areas</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.geography.geography.html#june.geography.geography.SuperAreas" title="june.geography.geography.SuperAreas">june.geography.geography.SuperAreas</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.distribute_social_venues_to_areas" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -67,19 +67,19 @@
 
 <dl class="py method">
 <dt id="june.groups.leisure.leisure.Leisure.generate_leisure_probabilities_for_timestep">
-<code class="sig-name descname">generate_leisure_probabilities_for_timestep</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">delta_time</span></em>, <em class="sig-param"><span class="n">is_weekend</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.generate_leisure_probabilities_for_timestep" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">generate_leisure_probabilities_for_timestep</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">delta_time</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">working_hours</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">is_weekend</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.generate_leisure_probabilities_for_timestep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="june.groups.leisure.leisure.Leisure.get_leisure_probability_for_age_and_sex">
-<code class="sig-name descname">get_leisure_probability_for_age_and_sex</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">age</span></em>, <em class="sig-param"><span class="n">sex</span></em>, <em class="sig-param"><span class="n">delta_time</span></em>, <em class="sig-param"><span class="n">is_weekend</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.get_leisure_probability_for_age_and_sex" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_leisure_probability_for_age_and_sex</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">age</span></em>, <em class="sig-param"><span class="n">sex</span></em>, <em class="sig-param"><span class="n">delta_time</span></em>, <em class="sig-param"><span class="n">is_weekend</span></em>, <em class="sig-param"><span class="n">working_hours</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.get_leisure_probability_for_age_and_sex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the probabilities of going to different leisure activities,
 and dragging the household with the person that does the activity.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="june.groups.leisure.leisure.Leisure.get_subgroup_for_person_and_housemates">
-<code class="sig-name descname">get_subgroup_for_person_and_housemates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.get_subgroup_for_person_and_housemates" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_subgroup_for_person_and_housemates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.demography.person.html#june.demography.person.Person" title="june.demography.person.Person">june.demography.person.Person</a></span></em>, <em class="sig-param"><span class="n">to_send_abroad</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.get_subgroup_for_person_and_housemates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Main function of the Leisure class. For every possible activity a person can do,
 we chech the Poisson parameter lambda = probability / day * deltat of that activty 
 taking place. We then sum up the Poisson parameters to decide whether a person
@@ -99,7 +99,7 @@ The function returns None if no activity takes place.</p>
 
 <dl class="py method">
 <dt id="june.groups.leisure.leisure.Leisure.send_household_with_person_if_necessary">
-<code class="sig-name descname">send_household_with_person_if_necessary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em>, <em class="sig-param"><span class="n">subgroup</span></em>, <em class="sig-param"><span class="n">probability</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.send_household_with_person_if_necessary" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">send_household_with_person_if_necessary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">person</span></em>, <em class="sig-param"><span class="n">subgroup</span></em>, <em class="sig-param"><span class="n">probability</span></em>, <em class="sig-param"><span class="n">to_send_abroad</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.Leisure.send_household_with_person_if_necessary" title="Permalink to this definition">¶</a></dt>
 <dd><p>When we know that the person does an activity in the social venue X,
 then we ask X whether the person needs to drag the household with
 him or her.</p>
@@ -140,12 +140,6 @@ list_of_leisure_groups</p>
 <dt id="june.groups.leisure.leisure.random">
 <code class="sig-prename descclassname">june.groups.leisure.leisure.</code><code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#june.groups.leisure.leisure.random" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="py function">
-<dt id="june.groups.leisure.leisure.random_choice_numba">
-<code class="sig-prename descclassname">june.groups.leisure.leisure.</code><code class="sig-name descname">random_choice_numba</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span></em>, <em class="sig-param"><span class="n">prob</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.groups.leisure.leisure.random_choice_numba" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fast implementation of np.random.choice</p>
-</dd></dl>
 
 <dl class="py function">
 <dt id="june.groups.leisure.leisure.roll_activity_dice">

@@ -15,7 +15,7 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="june.policy.individual_policies.IndividualPolicy" href="june.policy.individual_policies.IndividualPolicy.html" />
+    <link rel="next" title="june.logger.read_logger_legacy.ReadLoggerLegacy" href="june.logger.read_logger_legacy.ReadLoggerLegacy.html" />
     <link rel="prev" title="june.logger.logger.Logger" href="june.logger.logger.Logger.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
@@ -29,7 +29,7 @@
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.policy.individual_policies.IndividualPolicy.html">june.policy.individual_policies.IndividualPolicy</a>&#160;&#160;»
+        <a href="june.logger.read_logger_legacy.ReadLoggerLegacy.html">june.logger.read_logger_legacy.ReadLoggerLegacy</a>&#160;&#160;»
         </p>
 
       </div>
@@ -40,24 +40,40 @@
 <h1>june.logger.read_logger.ReadLogger<a class="headerlink" href="#june-logger-read-logger-readlogger" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">june.logger.read_logger.</code><code class="sig-name descname">ReadLogger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em>, <em class="sig-param"><span class="n">output_file_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'logger.hdf5'</span></em>, <em class="sig-param"><span class="n">light_logger</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">load_real</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">june.logger.read_logger.</code><code class="sig-name descname">ReadLogger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em>, <em class="sig-param"><span class="n">root_output_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'logger'</span></em>, <em class="sig-param"><span class="n">n_processes</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Read hdf5 file saved by the logger, and produce useful data frames</p>
 <dl class="simple">
 <dt>output_path:</dt><dd><p>path to simulation’s output</p>
 </dd>
-<dt>output_file_name:</dt><dd><p>name of file saved by simulation</p>
+<dt>root_output_path:</dt><dd><p>name of file saved by simulation</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt>
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em>, <em class="sig-param"><span class="n">output_file_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'logger.hdf5'</span></em>, <em class="sig-param"><span class="n">light_logger</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">load_real</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'results'</span></em>, <em class="sig-param"><span class="n">root_output_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'logger'</span></em>, <em class="sig-param"><span class="n">n_processes</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Read hdf5 file saved by the logger, and produce useful data frames</p>
 <dl class="simple">
 <dt>output_path:</dt><dd><p>path to simulation’s output</p>
 </dd>
-<dt>output_file_name:</dt><dd><p>name of file saved by simulation</p>
+<dt>root_output_path:</dt><dd><p>name of file saved by simulation</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_load_infected_data_for_rank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rank</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Load data on infected people over time and convert to a list of data frames 
+<code class="docutils literal notranslate"><span class="pre">self.infections_per_super_area</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_load_infection_location_for_rank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rank</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame</dt>
+<dd><p>Load data frame with informtion on where did people get infected</p>
+<blockquote>
+<div><p>data frame with infection locations, and average count of infections per group type</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
@@ -92,13 +108,13 @@ in a time window starting at a random time and recording for <code class="docuti
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">get_daily_updates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symptoms_df</span></em>, <em class="sig-param"><span class="n">lambda_to_filter</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">get_locations_infections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">end_date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame</dt>
-<dd><p>Get a data frame with the number of infection happening at each type of place, within the given time
+<code class="sig-name descname">get_location_infections_timeseries</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">end_date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Get a data frame timeseries with the number of infection happening at each type of place, within the given time
 period</p>
 <dl class="simple">
 <dt>start_date:</dt><dd><p>first date to count</p>
@@ -110,8 +126,36 @@ period</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">get_parameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parameters</span><span class="o">=</span><span class="default_value">['beta', 'alpha_physical']</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">8</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">get_locations_infections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">end_date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame</dt>
+<dd><p>Get a data frame with the number of infection happening at each type of place, 
+within the given time period</p>
+<dl class="simple">
+<dt>start_date:</dt><dd><p>first date to count</p>
+</dd>
+<dt>end_date:</dt><dd><p>last date to count</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_meta_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parameters</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_parameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parameters</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">8</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Get the parameters which are stored in the logger.</p>
+<dl class="simple">
+<dt>parameters:</dt><dd><p>which parameters to recover.
+default [“beta”, “alpha_physical”, “infection_seed”, “asyptomatic_ratio”].</p>
+</dd>
+<dt>max_depth:</dt><dd><p>maximum nested dictionary depth to stop searching. Default = 8.</p>
+</dd>
+<dt>Returns</dt><dd><p>nested dictionary of parameters the simulation was run with.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt>
@@ -121,21 +165,6 @@ period</p>
 <div><p>data frame with R value, date as index</p>
 </div></blockquote>
 </dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">infection_duration</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">load_confirmed_cases</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">load_estimated_cases</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt>
@@ -158,33 +187,18 @@ period</p>
 <dl class="py method">
 <dt>
 <code class="sig-name descname">load_infected_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Load data on infected people over time and convert to a data frame <code class="docutils literal notranslate"><span class="pre">self.infections_df</span></code></p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt>
 <code class="sig-name descname">load_infection_location</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame</dt>
-<dd><p>Load data frame with informtion on where did people get infected</p>
-<blockquote>
-<div><p>data frame with infection locations, and average count of infections per group type</p>
-</div></blockquote>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">load_population_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">light_logger</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">load_population_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
 <dd><p>Load data related to population (age, sex, …)</p>
 </dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">load_real_deaths</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">load_real_time_series</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt>
@@ -203,12 +217,32 @@ and hospitalised people</p>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">repack_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hdf5_obj</span></em>, <em class="sig-param"><span class="n">output_dict</span></em>, <em class="sig-param"><span class="n">base_path</span></em>, <em class="sig-param"><span class="n">output_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">depth</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">8</span></em><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
+<code class="sig-name descname">region_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame</dt>
+<dd><p>Generate a summary for regions, on how many people are recovered, dead, infected,
+susceptible, hospitalised or in intensive care, per time step.
+Returns
+——-
+A data frame whose index is the date recorded, and columns are regions, number of recovered,
+dead, infected…</p>
+</dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">subtract_previous</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">row</span></em>, <em class="sig-param"><span class="n">hospitalised_id</span></em>, <em class="sig-param"><span class="n">prev_hospitalised_id</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">repack_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hdf5_obj</span></em>, <em class="sig-param"><span class="n">output_dict</span></em>, <em class="sig-param"><span class="n">base_path</span></em>, <em class="sig-param"><span class="n">output_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">depth</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">8</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Pack datesets into a (nested) dictionary.</p>
+<dl class="simple">
+<dt>hdf5_obj</dt><dd><p>an open hdf5 object.</p>
+</dd>
+<dt>output_dict</dt><dd><p>an empty dictionary to store output data in</p>
+</dd>
+<dt>base_path</dt><dd><p>the path to start at</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">run_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -222,10 +256,16 @@ dead, infected…</p>
 
 <dl class="py method">
 <dt>
+<code class="sig-name descname">super_areas_to_region_mapping</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">super_areas</span></em>, <em class="sig-param"><span class="n">super_area_region_path</span><span class="o">=</span><span class="default_value">PosixPath('/home/sadie/JUNE/data/input/geography/area_super_area_region.csv')</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
 <code class="sig-name descname">world_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame</dt>
 <dd><p>Generate a summary at the world level, on how many people are recovered, dead, infected,
 susceptible, hospitalised or in intensive care, per time step.</p>
-<p>A data frame whose index is the date recorded, and columns are number of recovered, dead, infected…</p>
+<p>A data frame whose index is the date recorded, and columns are number of recovered, 
+dead, infected…</p>
 </dd></dl>
 
 </dd></dl>
@@ -241,7 +281,7 @@ susceptible, hospitalised or in intensive care, per time step.</p>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.policy.individual_policies.IndividualPolicy.html">june.policy.individual_policies.IndividualPolicy</a>&#160;&#160;»
+        <a href="june.logger.read_logger_legacy.ReadLoggerLegacy.html">june.logger.read_logger_legacy.ReadLoggerLegacy</a>&#160;&#160;»
         </p>
 
       </div>

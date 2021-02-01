@@ -15,8 +15,8 @@
     <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="june.distributors.carehome_distributor" href="june.distributors.carehome_distributor.html" />
-    <link rel="prev" title="june.demography.geography" href="june.demography.geography.html" /> 
+    <link rel="next" title="june.distributors.care_home_distributor" href="june.distributors.care_home_distributor.html" />
+    <link rel="prev" title="june.demography.demography" href="june.demography.demography.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
           <span>JUNE  documentation</span></a></h1>
@@ -25,11 +25,11 @@
       <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
-        «&#160;&#160;<a href="june.demography.geography.html">june.demography.geography</a>
+        «&#160;&#160;<a href="june.demography.demography.html">june.demography.demography</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.distributors.carehome_distributor.html">june.distributors.carehome_distributor</a>&#160;&#160;»
+        <a href="june.distributors.care_home_distributor.html">june.distributors.care_home_distributor</a>&#160;&#160;»
         </p>
 
       </div>
@@ -86,8 +86,8 @@
 
 <dl class="py class">
 <dt id="june.demography.person.Person">
-<em class="property">class </em><code class="sig-prename descclassname">june.demography.person.</code><code class="sig-name descname">Person</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">sex</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'f'</span></em>, <em class="sig-param"><span class="n">age</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">27</span></em>, <em class="sig-param"><span class="n">ethnicity</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">socioecon_index</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n">Area</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">work_super_area</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sector</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sub_sector</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">lockdown_status</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">comorbidity</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">home_city</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode_of_transport</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.commute.html#june.commute.ModeOfTransport" title="june.commute.ModeOfTransport">june.commute.ModeOfTransport</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">busy</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">subgroups</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#june.demography.person.Activities" title="june.demography.person.Activities">june.demography.person.Activities</a></span> <span class="o">=</span> <span class="default_value">Activities(residence=None, primary_activity=None, medical_facility=None, commute=None, rail_travel=None, leisure=None, box=None)</span></em>, <em class="sig-param"><span class="n">health_information</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.health_information.html#june.infection.health_information.HealthInformation" title="june.infection.health_information.HealthInformation">june.infection.health_information.HealthInformation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">susceptibility</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">dead</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.person.Person" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create new instance: Person(id, sex, age, ethnicity, socioecon_index, area, work_super_area, sector, sub_sector, lockdown_status, comorbidity, home_city, mode_of_transport, busy, subgroups, health_information, susceptibility, dead)</p>
+<em class="property">class </em><code class="sig-prename descclassname">june.demography.person.</code><code class="sig-name descname">Person</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">sex</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'f'</span></em>, <em class="sig-param"><span class="n">age</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">27</span></em>, <em class="sig-param"><span class="n">ethnicity</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">socioecon_index</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">area</span><span class="p">:</span> <span class="n">Area</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">work_super_area</span><span class="p">:</span> <span class="n">SuperArea</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sector</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sub_sector</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">lockdown_status</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">comorbidity</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode_of_transport</span><span class="p">:</span> <span class="n">ModeOfTransport</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">busy</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">subgroups</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#june.demography.person.Activities" title="june.demography.person.Activities">june.demography.person.Activities</a></span> <span class="o">=</span> <span class="default_value">Activities(residence=None, primary_activity=None, medical_facility=None, commute=None, rail_travel=None, leisure=None, box=None)</span></em>, <em class="sig-param"><span class="n">infection</span><span class="p">:</span> <span class="n"><a class="reference internal" href="june.infection.infection.html#june.infection.infection.Infection" title="june.infection.infection.Infection">june.infection.infection.Infection</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">susceptibility</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">dead</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.person.Person" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new instance: Person(id, sex, age, ethnicity, socioecon_index, area, work_super_area, sector, sub_sector, lockdown_status, comorbidity, mode_of_transport, busy, subgroups, infection, susceptibility, dead)</p>
 <dl class="py method">
 <dt id="june.demography.person.Person.find_guardian">
 <code class="sig-name descname">find_guardian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#june.demography.person.Person.find_guardian" title="Permalink to this definition">¶</a></dt>
@@ -143,14 +143,9 @@
 <code class="sig-name descname">ethnicity</code><em class="property">: str</em><a class="headerlink" href="#june.demography.person.Person.ethnicity" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt id="june.demography.person.Person.health_information">
-<code class="sig-name descname">health_information</code><em class="property">: <a class="reference internal" href="june.infection.health_information.html#june.infection.health_information.HealthInformation" title="june.infection.health_information.HealthInformation">june.infection.health_information.HealthInformation</a></em><a class="headerlink" href="#june.demography.person.Person.health_information" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
+<dl class="py method">
 <dt id="june.demography.person.Person.home_city">
-<code class="sig-name descname">home_city</code><em class="property">: str</em><a class="headerlink" href="#june.demography.person.Person.home_city" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">home_city</code><a class="headerlink" href="#june.demography.person.Person.home_city" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -173,9 +168,9 @@
 <em class="property">property </em><code class="sig-name descname">infected</code><a class="headerlink" href="#june.demography.person.Person.infected" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
+<dl class="py attribute">
 <dt id="june.demography.person.Person.infection">
-<em class="property">property </em><code class="sig-name descname">infection</code><a class="headerlink" href="#june.demography.person.Person.infection" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">infection</code><em class="property">: <a class="reference internal" href="june.infection.infection.html#june.infection.infection.Infection" title="june.infection.infection.Infection">june.infection.infection.Infection</a></em><a class="headerlink" href="#june.demography.person.Person.infection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -200,7 +195,7 @@
 
 <dl class="py attribute">
 <dt id="june.demography.person.Person.mode_of_transport">
-<code class="sig-name descname">mode_of_transport</code><em class="property">: <a class="reference internal" href="june.commute.html#june.commute.ModeOfTransport" title="june.commute.ModeOfTransport">june.commute.ModeOfTransport</a></em><a class="headerlink" href="#june.demography.person.Person.mode_of_transport" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">mode_of_transport</code><em class="property">: ModeOfTransport</em><a class="headerlink" href="#june.demography.person.Person.mode_of_transport" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -248,6 +243,11 @@
 <code class="sig-name descname">subgroups</code><em class="property">: <a class="reference internal" href="#june.demography.person.Activities" title="june.demography.person.Activities">june.demography.person.Activities</a></em><a class="headerlink" href="#june.demography.person.Person.subgroups" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt id="june.demography.person.Person.super_area">
+<em class="property">property </em><code class="sig-name descname">super_area</code><a class="headerlink" href="#june.demography.person.Person.super_area" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt id="june.demography.person.Person.susceptibility">
 <code class="sig-name descname">susceptibility</code><em class="property">: float</em><a class="headerlink" href="#june.demography.person.Person.susceptibility" title="Permalink to this definition">¶</a></dt>
@@ -263,9 +263,14 @@
 <em class="property">property </em><code class="sig-name descname">symptoms</code><a class="headerlink" href="#june.demography.person.Person.symptoms" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt id="june.demography.person.Person.work_city">
+<em class="property">property </em><code class="sig-name descname">work_city</code><a class="headerlink" href="#june.demography.person.Person.work_city" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt id="june.demography.person.Person.work_super_area">
-<code class="sig-name descname">work_super_area</code><em class="property">: str</em><a class="headerlink" href="#june.demography.person.Person.work_super_area" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">work_super_area</code><em class="property">: SuperArea</em><a class="headerlink" href="#june.demography.person.Person.work_super_area" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -277,11 +282,11 @@
       <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
-        «&#160;&#160;<a href="june.demography.geography.html">june.demography.geography</a>
+        «&#160;&#160;<a href="june.demography.demography.html">june.demography.demography</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="june.distributors.carehome_distributor.html">june.distributors.carehome_distributor</a>&#160;&#160;»
+        <a href="june.distributors.care_home_distributor.html">june.distributors.care_home_distributor</a>&#160;&#160;»
         </p>
 
       </div>

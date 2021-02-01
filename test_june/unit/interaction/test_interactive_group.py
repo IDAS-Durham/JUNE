@@ -17,7 +17,7 @@ from june.groups import (
     Household,
 )
 from june.interaction import Interaction
-from june.groups.school import _translate_school_subgroup, _get_contacts_in_school
+from june.groups.school import _translate_school_subgroup
 from june.groups.group.interactive import InteractiveGroup
 from june import paths
 
@@ -80,33 +80,36 @@ class TestInteractiveSchool:
         age_min = 3
         age_max = 7
         school_years = tuple(range(age_min, age_max + 1))
+        school = School()
+        int_school = InteractiveSchool(school)
+        int_school.school_years = school_years
         contact_matrix = interaction.contact_matrices["school"]
-        n_contacts_same_year = _get_contacts_in_school(
-            contact_matrix, school_years, 4, 4
+        n_contacts_same_year = int_school.get_contacts_between_subgroups(
+            contact_matrix, 4, 4
         )
         assert n_contacts_same_year == 2.875 * 3
 
-        n_contacts_year_above = _get_contacts_in_school(
-            contact_matrix, school_years, 4, 5
+        n_contacts_year_above = int_school.get_contacts_between_subgroups(
+            contact_matrix, 4, 5
         )
         assert n_contacts_year_above == xi * 2.875 * 3
 
-        n_contacts_teacher_teacher = _get_contacts_in_school(
-            contact_matrix, school_years, 0, 0
+        n_contacts_teacher_teacher = int_school.get_contacts_between_subgroups(
+            contact_matrix, 0, 0
         )
         assert n_contacts_teacher_teacher == 5.25 * 3
 
-        n_contacts_teacher_student = _get_contacts_in_school(
-            contact_matrix, school_years, 0, 4
+        n_contacts_teacher_student = int_school.get_contacts_between_subgroups(
+            contact_matrix, 0, 4
         )
         np.isclose(
             n_contacts_teacher_student, (16.2 * 3 / len(school_years)), rtol=1e-6
         )
 
-        n_contacts_student_teacher = _get_contacts_in_school(
-            contact_matrix, school_years, 4, 0
+        n_contacts_student_teacher = int_school.get_contacts_between_subgroups(
+            contact_matrix, 4, 0
         )
-        assert n_contacts_student_teacher == 0.81 * 3
+        assert n_contacts_student_teacher == 0.81 * 3 / len(school_years)
 
     def test__school_contact_matrices_different_classroom(self):
         interaction_instance = Interaction.from_file(config_filename=test_config)
@@ -114,11 +117,17 @@ class TestInteractiveSchool:
         age_min = 3
         age_max = 7
         school_years = (3, 4, 4, 5)
+        school = School()
+        int_school = InteractiveSchool(school)
+        int_school.school_years = school_years
         contact_matrix = interaction_instance.contact_matrices["school"]
-        n_contacts_same_year = _get_contacts_in_school(
-            contact_matrix, school_years, 2, 3
+        n_contacts_same_year = int_school.get_contacts_between_subgroups(
+            contact_matrix, 2, 3
         )
-        assert n_contacts_same_year == 0.0
+        n_contacts_same_class = int_school.get_contacts_between_subgroups(
+            contact_matrix, 2, 2
+        )
+        assert np.isclose(n_contacts_same_year, n_contacts_same_class / 4)
 
     def test__contact_matrix_full(self):
         xi = 0.3
@@ -193,7 +202,7 @@ class TestInteractiveHousehold:
         household = Household(area=area)
         person = Person.from_attributes()
         household.add(person)
-        betas = {"household": 1, "household_visits" : 2}
+        betas = {"household": 1, "household_visits": 2}
         beta_reductions = {"household": 0.5, "household_visits": 0.1}
         household.add(person)
         int_household = household.get_interactive_group()
