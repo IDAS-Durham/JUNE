@@ -69,9 +69,9 @@ def create_dummy_world():
     world.hospitals = hospitals
     world.care_homes = care_homes
     world.people = [
-        Person.from_attributes(id=0, age=0, ethnicity="A", socioecon_index=0),
-        Person.from_attributes(id=1, age=1, ethnicity="B", socioecon_index=1),
-        Person.from_attributes(id=2, age=2, sex="m", ethnicity="C", socioecon_index=2),
+        Person.from_attributes(id=0, age=0, ethnicity="A"),
+        Person.from_attributes(id=1, age=1, ethnicity="B"),
+        Person.from_attributes(id=2, age=2, sex="m", ethnicity="C"),
     ]
     world.people[0].area = super_areas[0].areas[0]  # household resident
     world.people[0].subgroups.primary_activity = hospitals[0].subgroups[0]
