@@ -40,16 +40,16 @@ def create_dummy_world():
     ]
     super_areas = SuperAreas(regions[0].super_areas + regions[1].super_areas)
     super_areas[0].areas = [
-        Area(name="area_1", coordinates=(0.0, 0.0), super_area=super_areas[0]),
-        Area(name="area_2", coordinates=(0.0, 0.0), super_area=super_areas[0]),
-        Area(name="area_3", coordinates=(0.0, 0.0), super_area=super_areas[0]),
+        Area(name="area_1", coordinates=(0.0, 0.0), super_area=super_areas[0], socioeconomic_index=0.01),
+        Area(name="area_2", coordinates=(0.0, 0.0), super_area=super_areas[0], socioeconomic_index=0.02),
+        Area(name="area_3", coordinates=(0.0, 0.0), super_area=super_areas[0], socioeconomic_index=0.03),
     ]
     super_areas[1].areas = [
-        Area(name="area_4", coordinates=(0.0, 0.0), super_area=super_areas[1]),
-        Area(name="area_5", coordinates=(0.0, 0.0), super_area=super_areas[1]),
+        Area(name="area_4", coordinates=(0.0, 0.0), super_area=super_areas[1], socioeconomic_index=0.11),
+        Area(name="area_5", coordinates=(0.0, 0.0), super_area=super_areas[1], socioeconomic_index=0.12),
     ]
     super_areas[2].areas = [
-        Area(name="area_6", coordinates=(5, 5), super_area=super_areas[2])
+        Area(name="area_6", coordinates=(5, 5), super_area=super_areas[2], socioeconomic_index=0.90)
     ]
     areas = Areas(super_areas[0].areas + super_areas[1].areas + super_areas[2].areas)
     households = Households([Household(area=super_areas[0].areas[0])])
@@ -65,9 +65,9 @@ def create_dummy_world():
     world.hospitals = hospitals
     world.care_homes = care_homes
     world.people = [
-        Person.from_attributes(id=0, age=0, ethnicity="A", socioecon_index=0),
-        Person.from_attributes(id=1, age=1, ethnicity="B", socioecon_index=1),
-        Person.from_attributes(id=2, age=2, sex="m", ethnicity="C", socioecon_index=2),
+        Person.from_attributes(id=0, age=0, ethnicity="A"),
+        Person.from_attributes(id=1, age=1, ethnicity="B"),
+        Person.from_attributes(id=2, age=2, sex="m", ethnicity="C"),
     ]
     world.people[0].area = super_areas[0].areas[0]  # household resident
     world.people[0].subgroups.primary_activity = hospitals[0].subgroups[0]
@@ -195,9 +195,6 @@ def test__static_people(dummy_world):
     assert df.loc[0, "age"] == 0
     assert df.loc[1, "age"] == 1
     assert df.loc[2, "age"] == 2
-    assert df.loc[0, "socioeconomic_index"] == 0
-    assert df.loc[1, "socioeconomic_index"] == 1
-    assert df.loc[2, "socioeconomic_index"] == 2
     assert df.loc[0, "primary_activity_type"] == "hospital"
     assert df.loc[0, "primary_activity_id"] == dummy_world.hospitals[0].id
     assert df.loc[1, "primary_activity_type"] == "None"
@@ -262,6 +259,7 @@ def test__static_geography(dummy_world):
             area.super_area.name
             == super_area_df.loc[area_df.loc[area.id].super_area_id, "name"].decode()
         )
+        assert np.isclose(area.socioeconomic_index, area_df.loc[area.id]["socioeconomic_index"])
 
     for super_area in dummy_world.super_areas:
         assert (

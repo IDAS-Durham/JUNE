@@ -54,8 +54,9 @@ def bin_deaths_dataframe(df, age_bins):
 
 
 class RatesPlotter:
-    def __init__(self, outputs_dict, age_bins=None):
+    def __init__(self, outputs_dict, colors, age_bins=None):
         self.rates = Data2Rates.from_file()
+        self.colors = colors
         if age_bins is None:
             self.age_bins = self.rates.care_home_deaths_by_age_sex_df.index
         else:
@@ -591,10 +592,11 @@ class RatesPlotter:
         ax = toplot.loc[:, ["JUNE male", "JUNE female", "JUNE average"]].plot.bar(
             capsize=4,
             ylabel="IFR [\%]",
-            xlabel="Age bin",
+            xlabel="Age group",
             width=0.8,
             alpha=0.7,
-            title="Infection Fatality Rates (IFR)",
+            color=[self.colors["general_1"], self.colors["general_2"], self.colors["general_3"], self.colors["general_4"]]
+            #title="Infection Fatality Rates (IFR)",
         )
         ax = toplot.loc[:, [data_name]].plot.bar(
             ax=ax,
