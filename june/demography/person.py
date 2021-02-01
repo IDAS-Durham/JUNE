@@ -186,3 +186,10 @@ class Person(dataobject):
         if (not self.dead) and (self.medical_facility is None) and (not self.busy):
             return True
         return False
+
+    @property
+    def socioeconomic_index(self):
+        try:
+            return self.area.socioeconomic_index
+        except:
+            return 
