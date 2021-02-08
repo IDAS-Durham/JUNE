@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import yaml
 import matplotlib.pyplot as plt
 
 from june import paths
@@ -9,12 +10,15 @@ from june.infection import HealthIndexGenerator, InfectionSelector, SymptomTag
 
 default_seroprev_filename = paths.data_path / "plotting/seroprev.dat"
 
-default_transmission = paths.configs_path / "defaults/transmission/XNExp.yaml"
+default_transmission = paths.configs_path / "defaults/transmission/nature.yaml"
 
 class HealthIndexPlots:
     """
     Class for plotting health index plots
     """
+
+    def __init__(self, colors):
+        self.colors = colors
 
     def sero_prevalence_plot(self, default_seroprev_filename=default_seroprev_filename):
         seroprev_data = pd.read_csv(default_seroprev_filename, skiprows=1, sep=" ")
@@ -26,9 +30,9 @@ class HealthIndexPlots:
             seroprev[age_min[index] : age_max[index]] = seroprev_by_age[index]
 
         f, ax = plt.subplots()
-        ax.plot(range(0, 105), seroprev * 100, linewidth=2, color="blue")
+        ax.plot(range(0, 105), seroprev * 100, linewidth=2, color=self.colors['general_4'])
         ax.set_xlabel("Age")
-        ax.set_ylabel("Prevalence" + r"$[\%]$")
+        ax.set_ylabel("Prevalence [\%]")
 
         return ax
 
@@ -55,11 +59,12 @@ class HealthIndexPlots:
             female_death_rate.append(female_probabilities[[5, 6, 7]].sum())
 
         f, ax = plt.subplots()
-        ax.set_xlabel("Age [yr]")
+        ax.set_xlabel("Age")
+        ax.set_ylabel("Ratio")
         ax.plot(
             ages,
             female_hospitalisation_rate,
-            color="blue",
+            color=self.colors['general_1'],
             linewidth=2,
             label=" HR female",
         )
@@ -67,27 +72,27 @@ class HealthIndexPlots:
             ages,
             male_hospitalisation_rate,
             linestyle="--",
-            color="blue",
+            color=self.colors['general_1'],
             linewidth=2,
             label=" HR male",
         )
 
-        ax.plot(ages, female_icu_rate, color="green", linewidth=3, label="ICUR female")
+        ax.plot(ages, female_icu_rate, color=self.colors['general_2'], linewidth=3, label="ITUR female")
         ax.plot(
             ages,
             male_icu_rate,
             linestyle="--",
             linewidth=2,
-            color="green",
-            label="ICUR male",
+            color=self.colors['general_2'],
+            label="ITUR male",
         )
 
-        ax.plot(ages, female_death_rate, color="red", linewidth=3, label="DR female")
+        ax.plot(ages, female_death_rate, color=self.colors['general_3'], linewidth=3, label="DR female")
         ax.plot(
             ages,
             male_death_rate,
             linestyle="--",
-            color="red",
+            color=self.colors['general_3'],
             linewidth=2,
             label="DR male",
         )
@@ -134,12 +139,13 @@ class HealthIndexPlots:
                 pass
 
         times, transmissions = self.get_infectiousness(random_person, 14.0)
-        ax.plot(times, transmissions, label="severe", linewidth=2)
+        ax.plot(times, transmissions, label="severe", linewidth=2, color=self.colors['general_1'])
         ax.plot(
             times,
             infection_selector.mild_infectious_factor.value * np.array(transmissions),
             label="mild",
             linewidth=2,
+            color=self.colors['general_2']
         )
         ax.plot(
             times,
@@ -147,6 +153,7 @@ class HealthIndexPlots:
             * np.array(transmissions),
             label="asymptomatic",
             linewidth=2,
+            color=self.colors['general_3']
         )
         ax.set_xlabel("Days from infection")
 
@@ -155,3 +162,76 @@ class HealthIndexPlots:
         f.subplots_adjust(top=0.80)
         
         return ax
+
+    def time_to_symptoms_onset(self,):
+        from june.infection.trajectory_maker import TrajectoryMaker
+        trajectories_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
+        with open(trajectories_path) as f:    
+            symptoms_trajectories = yaml.safe_load(f)["trajectories"]    
+            symptoms_trajectories = [    
+                TrajectoryMaker.from_dict(trajectory)    
+                for trajectory in symptoms_trajectories    
+            ]
+        time = np.linspace(0,15,60)
+        # incubation
+        median = symptoms_trajectories[3].stages[0].completion_time.distribution.median()
+        f, ax = plt.subplots()
+        ax.plot(time, 
+        symptoms_trajectories[3].stages[0].completion_time.distribution.pdf(time),
+                label=f'$\\bar{{t}}_{{incubation}} = {median:.2f}$',
+                linewidth=2,
+                color=self.colors["general_4"]
+
+        )
+        ax.legend()
+        ax.set_xlabel('Time [days]')
+        ax.set_ylabel('PDF [1/days]')
+        return ax
+
+    def time_in_hospital(self,):
+        from june.infection.trajectory_maker import TrajectoryMaker
+        trajectories_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
+        with open(trajectories_path) as f:    
+            symptoms_trajectories = yaml.safe_load(f)["trajectories"]    
+            symptoms_trajectories = [    
+                TrajectoryMaker.from_dict(trajectory)    
+                for trajectory in symptoms_trajectories    
+            ]
+        f, ax = plt.subplots()
+        time = np.linspace(0,30,60)
+
+        median = symptoms_trajectories[3].stages[2].completion_time.distribution.median()
+        ax.plot(time, 
+        symptoms_trajectories[3].stages[2].completion_time.distribution.pdf(time),
+                 label=f'$\\bar{{t}}_{{hosp|\mathrm{{recovers}}}} = {median:.2f}$',
+                 linewidth=2,
+                 color=self.colors["general_1"]
+        )
+        median = symptoms_trajectories[6].stages[2].completion_time.distribution.median()
+
+        ax.plot(time, 
+        symptoms_trajectories[6].stages[2].completion_time.distribution.pdf(time),
+                    label=f'$\\bar{{t}}_{{hosp|\mathrm{{dies}}}} = {median:.2f}$',
+                    linewidth=2,
+                    color=self.colors["general_2"]
+        )
+        median = symptoms_trajectories[4].stages[3].completion_time.distribution.median()
+        ax.plot(time, 
+        symptoms_trajectories[4].stages[3].completion_time.distribution.pdf(time),
+                 label=f'$\\bar{{t}}_{{icu|\mathrm{{recovers}}}} = {median:.2f}$',
+                 linewidth=2,
+                 color=self.colors["general_3"]
+        )
+        median = symptoms_trajectories[7].stages[3].completion_time.distribution.median()
+
+        ax.plot(time,
+        symptoms_trajectories[7].stages[3].completion_time.distribution.pdf(time),
+                 label=f'$\\bar{{t}}_{{icu|\mathrm{{dies}}}} = {median:.2f}$',
+                 linewidth=2,
+                 color=self.colors["general_4"]
+        )
+        ax.legend()
+        ax.set_xlabel('Time [days]')
+        ax.set_ylabel('PDF [1/days]')
+        return ax
+

@@ -126,31 +126,29 @@ def make_dummy_world(geog):
     )
     uni = University(coordinates=super_area.coordinates, n_students_max=2500,)
 
-    worker1 = Person.from_attributes(age=44, sex="f", ethnicity="A1", socioecon_index=5)
+    worker1 = Person.from_attributes(age=44, sex="f", ethnicity="A1")
     worker1.area = super_area.areas[0]
     household1.add(worker1, subgroup_type=household1.SubgroupType.adults)
     worker1.sector = "Q"
     company.add(worker1)
 
-    worker2 = Person.from_attributes(age=42, sex="m", ethnicity="B1", socioecon_index=5)
+    worker2 = Person.from_attributes(age=42, sex="m", ethnicity="B1")
     worker2.area = super_area.areas[0]
     household1.add(worker2, subgroup_type=household1.SubgroupType.adults)
     worker2.sector = "Q"
     company.add(worker2)
 
-    student1 = Person.from_attributes(
-        age=20, sex="f", ethnicity="A1", socioecon_index=5
-    )
+    student1 = Person.from_attributes(age=20, sex="f", ethnicity="A1")
     student1.area = super_area.areas[0]
     household1.add(student1, subgroup_type=household1.SubgroupType.adults)
     uni.add(student1)
 
-    pupil1 = Person.from_attributes(age=8, sex="m", ethnicity="C1", socioecon_index=5)
+    pupil1 = Person.from_attributes(age=8, sex="m", ethnicity="C1")
     pupil1.area = super_area.areas[0]
     household1.add(pupil1, subgroup_type=household1.SubgroupType.kids)
     # school.add(pupil1)
 
-    pupil2 = Person.from_attributes(age=5, sex="f", ethnicity="A1", socioecon_index=5)
+    pupil2 = Person.from_attributes(age=5, sex="f", ethnicity="A1")
     pupil2.area = super_area.areas[0]
     household1.add(pupil2, subgroup_type=household1.SubgroupType.kids)
     # school.add(pupil2)
@@ -374,6 +372,7 @@ def test__symptoms_transition(world, interaction, selector):
         df = pd.DataFrame.from_records(table.read())
     df["timestamp"] = df["timestamp"].str.decode("utf-8")
     df.set_index("timestamp", inplace=True)
+    df = df.loc[~df.new_symptoms.isin([5,6,7])]
     for timestamp in list(ids_transition.keys())[1:]:
         if ids_transition[timestamp]:
             if type(df.loc[timestamp]["infected_ids"]) is np.int32:

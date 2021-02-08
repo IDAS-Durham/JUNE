@@ -18,6 +18,13 @@ default_socioeconomic_index_filename = (
     paths.data_path / "input/demography/socioeconomic_index.csv"
 )
 
+default_area_to_super_area_filename = (
+    paths.data_path / "input/geography/area_super_area_region.csv"
+)
+default_population_area_filename = (
+    paths.data_path / "input/demography/age_structure_single_year.csv"
+)
+
 ethnicity_england = {
     "A": 45281142,
     "B": 1192879,
@@ -40,8 +47,9 @@ class DemographyPlots:
         Preloaded world which can also be passed from the master plotting script
     """
 
-    def __init__(self, world):
+    def __init__(self, world, colors):
         self.world = world
+        self.colors = colors
 
     def plot_age_distribution(self):
         "Plotting age pyramid"
@@ -88,13 +96,13 @@ class DemographyPlots:
         x_female = df["Female"]
 
         fig, ax = plt.subplots(ncols=2, sharey=True, figsize=(6, 4))
-        ax[0].barh(y, x_male, align="center", color="orange")
+        ax[0].barh(y, x_male, align="center", color=self.colors["male"])
         ax[0].set_ylabel("Ages")
-        ax[0].set_xlabel("\% of males")
+        ax[0].set_xlabel("Males [\%]")
         ax[0].set(yticks=y, yticklabels=df["Age"])
         ax[0].invert_xaxis()
-        ax[1].barh(y, x_female, align="center", color="maroon")
-        ax[1].set_xlabel("\% of females")
+        ax[1].barh(y, x_female, align="center", color=self.colors["female"])
+        ax[1].set_xlabel("Females [\%]")
         plt.subplots_adjust(wspace=0, hspace=0)
 
         return fig, ax
@@ -130,7 +138,7 @@ class DemographyPlots:
         population_area = super_area_population / area_km
 
         fig, ax = plt.subplots()
-        ax.hist(population_area, color="green", alpha=0.7)
+        ax.hist(population_area, color=self.colors["JUNE"])
         ax.set_xlabel("People per sq. km")
         ax.set_ylabel("Frequency")
 
@@ -144,16 +152,12 @@ class DemographyPlots:
         for key in ethnicities:
             ratios[key] = ethnicities[key] / ethnicity_england[key]
         fig, ax = plt.subplots()
-        ax.bar(
-            ratios.keys(),
-            ratios.values(),
-            alpha=1.0,
-        )
-        ax.set_title("Ethnicity distribution ratios compared to England average.")
+        ax.bar(ratios.keys(), ratios.values(), alpha=1.0, color=self.colors["JUNE"])
+        # ax.set_title("Ethnicity distribution ratios compared to England average.")
         ax.legend()
         ax.set_xlabel("Ethnicity")
         ax.set_ylabel("Ratio")
-        ax.axhline(1, linestyle="--")
+        ax.axhline(1, linestyle="--", color="black")
         return ax
 
     @staticmethod  # so can call on any set of super areas.
@@ -224,7 +228,42 @@ class DemographyPlots:
             legend=True,
             edgecolor="black",
             ax=ax,
-            linewidth=0.2,
+            linewidth=0.1,
         )
 
+        return ax
+
+    def plot_age_distribution_comparison(
+        self,
+        area_super_area_filename=default_area_to_super_area_filename,
+        population_filename=default_population_area_filename,
+    ):
+        area_to_super_area = pd.read_csv(area_super_area_filename)
+        area_to_super_area.set_index("region", inplace=True)
+        population = pd.read_csv(population_filename)
+        population.set_index("output_area", inplace=True)
+        regions_to_compare = ["London", "North East", "England"]
+        f, ax = plt.subplots(1, len(regions_to_compare), figsize=(7, 2), sharex=True, sharey=True)
+        colors = [self.colors[color] for color in ["general_1", "general_2", "general_3"]]
+        for i, region in enumerate(regions_to_compare):
+            if region == "England":
+                filt = population.index.str.startswith("E")
+                population_region = population.loc[filt]
+            else:
+                population_region = population.loc[
+                    area_to_super_area.loc[region].area.values
+                ]
+            population_region = population_region.sum(axis=0) 
+            keys = np.array(population_region.index, dtype=np.int)
+            values = np.array(population_region.values / np.sum(population_region.values) * 100, dtype=np.float)
+            ax[i].bar(
+                keys,
+                values,
+                width=1,
+                color = colors[i]
+            )
+            ax[i].set_xlabel("Age")
+            ax[i].set_title(region)
+        ax[0].set_ylabel("Frequency [\%]")
+        plt.subplots_adjust(wspace=0, hspace=0)
         return ax

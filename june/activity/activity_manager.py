@@ -27,6 +27,7 @@ from june.mpi_setup import (
 )
 
 logger = logging.getLogger("activity_manager")
+mpi_logger = logging.getLogger("mpi")
 if mpi_rank > 0:
     logger.propagate = False
 
@@ -133,7 +134,7 @@ class ActivityManager:
     def do_timestep(self):
         # get time data
         date = self.timer.date
-        is_weekend = self.timer.is_weekend
+        day_type = self.timer.day_type
         activities = self.apply_activity_hierarchy(self.timer.activities)
         delta_time = self.timer.duration
         # apply leisure policies
@@ -142,16 +143,13 @@ class ActivityManager:
                 self.policies.leisure_policies.apply(date=date, leisure=self.leisure)
             self.leisure.generate_leisure_probabilities_for_timestep(
                 delta_time=delta_time,
-                is_weekend=is_weekend,
+                day_type=day_type,
                 working_hours="primary_activity" in activities,
             )
         # apply events
         if self.events is not None:
             self.events.apply(
-                date=date,
-                world=self.world,
-                activities=activities,
-                is_weekend=is_weekend,
+                date=date, world=self.world, activities=activities, day_type=day_type
             )
         # move people to subgroups and get going abroad people
         to_send_abroad = self.move_people_to_active_subgroups(
@@ -162,7 +160,7 @@ class ActivityManager:
             n_people_from_abroad,
             n_people_going_abroad,
         ) = self.send_and_receive_people_from_abroad(to_send_abroad)
-        return people_from_abroad, n_people_from_abroad, n_people_going_abroad
+        return people_from_abroad, n_people_from_abroad, n_people_going_abroad, to_send_abroad
 
     def move_people_to_active_subgroups(
         self,
@@ -178,6 +176,7 @@ class ActivityManager:
         ----------
 
         """
+        tick = perf_counter()
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
         )
@@ -201,6 +200,8 @@ class ActivityManager:
             if external_subgroup is not None:
                 to_send_abroad.add_person(person, external_subgroup)
 
+        tock = perf_counter()
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},activity,{tock-tick}")
         return to_send_abroad
 
     def move_to_active_subgroup(
@@ -283,4 +284,5 @@ class ActivityManager:
         logger.info(
             f"CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw - tickw} - {self.timer.date}"
         )
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},people_comms,{tock-tick}")
         return movable_people.skinny_in, n_people_from_abroad, n_people_going_abroad

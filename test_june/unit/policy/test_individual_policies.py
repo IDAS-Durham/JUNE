@@ -32,6 +32,7 @@ from june.policy import (
     IndividualPolicies,
     Hospitalisation,
     LimitLongCommute,
+    SchoolQuarantine,
 )
 from june.simulator import Simulator
 from june.world import World
@@ -41,9 +42,11 @@ from june.utils.distances import haversine_distance
 def infect_person(person, selector, symptom_tag="mild"):
     selector.infect_person_at_time(person, 0.0)
     person.infection.symptoms.tag = getattr(SymptomTag, symptom_tag)
-    person.infection.symptoms.time_of_symptoms_onset = 5.3
     if symptom_tag != "asymptomatic":
+        person.infection.symptoms.time_of_symptoms_onset = 5.3
         person.residence.group.quarantine_starting_date = 5.3
+    else:
+        person.infection.symptoms.time_of_symptoms_onset = None
 
 
 class TestSevereSymptomsStayHome:
@@ -106,6 +109,7 @@ class TestSevereSymptomsStayHome:
         date = datetime(2019, 2, 1)
         assert pupil in pupil.primary_activity.people
         assert worker in worker.primary_activity.people
+        assert student in student.primary_activity.people
         sim.clear_world()
         infect_person(pupil, selector, "severe")
         sim.update_health_status(0.0, 0.0)
@@ -114,8 +118,12 @@ class TestSevereSymptomsStayHome:
             ["primary_activity", "residence"],
         )
         assert pupil in pupil.residence.people
-        assert worker in worker.residence.people
-        pupil.infection = None
+        has_guardian = False
+        for person in [worker, student]:
+            if person in person.residence.people:
+                has_guardian = True
+                break
+        assert has_guardian
         sim.clear_world()
 
 
@@ -124,7 +132,9 @@ class TestClosure:
         world, pupil, student, worker, sim = setup_policy_world
         super_area = world.super_areas[0]
         school_closure = CloseSchools(
-            start_time="2020-1-1", end_time="2020-10-1", years_to_close=[6],
+            start_time="2020-1-1",
+            end_time="2020-10-1",
+            years_to_close=[6],
         )
         policies = Policies([school_closure])
         sim.activity_manager.policies = policies
@@ -149,7 +159,9 @@ class TestClosure:
             person=pupil,
             activities=activities,
             days_from_start=0,
-        ) == ["residence",]
+        ) == [
+            "residence",
+        ]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy
         )
@@ -165,7 +177,10 @@ class TestClosure:
             person=pupil,
             activities=activities,
             days_from_start=0,
-        ) == ["primary_activity", "residence",]
+        ) == [
+            "primary_activity",
+            "residence",
+        ]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -194,7 +209,10 @@ class TestClosure:
             person=pupil,
             activities=activities,
             days_from_start=0,
-        ) == ["primary_activity", "residence",]
+        ) == [
+            "primary_activity",
+            "residence",
+        ]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy
         )
@@ -210,7 +228,10 @@ class TestClosure:
             person=pupil,
             activities=activities,
             days_from_start=0,
-        ) == ["primary_activity", "residence",]
+        ) == [
+            "primary_activity",
+            "residence",
+        ]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -222,7 +243,9 @@ class TestClosure:
         world, pupil, student, worker, sim = setup_policy_world
         super_area = world.super_areas[0]
         school_closure = CloseSchools(
-            start_time="2020-1-1", end_time="2020-10-1", attending_compliance=0.5,
+            start_time="2020-1-1",
+            end_time="2020-10-1",
+            attending_compliance=0.5,
         )
         policies = Policies([school_closure])
         sim.activity_manager.policies = policies
@@ -271,7 +294,10 @@ class TestClosure:
             person=pupil,
             activities=activities,
             days_from_start=0,
-        ) == ["primary_activity", "residence",]
+        ) == [
+            "primary_activity",
+            "residence",
+        ]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -324,7 +350,10 @@ class TestClosure:
             person=pupil,
             activities=activities,
             days_from_start=0,
-        ) == ["primary_activity", "residence",]
+        ) == [
+            "primary_activity",
+            "residence",
+        ]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -336,7 +365,8 @@ class TestClosure:
         world, pupil, student, worker, sim = setup_policy_world
         super_area = world.super_areas[0]
         university_closure = CloseUniversities(
-            start_time="2020-1-1", end_time="2020-10-1",
+            start_time="2020-1-1",
+            end_time="2020-10-1",
         )
         policies = Policies([university_closure])
         sim.activity_manager.policies = policies
@@ -358,7 +388,9 @@ class TestClosure:
             person=student,
             activities=activities,
             days_from_start=0,
-        ) == ["residence",]
+        ) == [
+            "residence",
+        ]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy
         )
@@ -368,12 +400,15 @@ class TestClosure:
         active_individual_policies = policies.individual_policies.get_active(
             date=time_after_policy
         )
-        assert policies.individual_policies.apply(
-            active_individual_policies,
-            person=student,
-            activities=activities,
-            days_from_start=0,
-        ) == ["primary_activity", "residence"]
+        assert (
+            policies.individual_policies.apply(
+                active_individual_policies,
+                person=student,
+                activities=activities,
+                days_from_start=0,
+            )
+            == ["primary_activity", "residence"]
+        )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -401,12 +436,15 @@ class TestClosure:
         active_individual_policies = policies.individual_policies.get_active(
             date=time_during_policy
         )
-        assert policies.individual_policies.apply(
-            active_individual_policies,
-            person=worker,
-            activities=activities,
-            days_from_start=0,
-        ) == ["residence"]
+        assert (
+            policies.individual_policies.apply(
+                active_individual_policies,
+                person=worker,
+                activities=activities,
+                days_from_start=0,
+            )
+            == ["residence"]
+        )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy
         )
@@ -417,12 +455,15 @@ class TestClosure:
         active_individual_policies = policies.individual_policies.get_active(
             date=time_after_policy
         )
-        assert policies.individual_policies.apply(
-            active_individual_policies,
-            person=worker,
-            activities=activities,
-            days_from_start=0,
-        ) == ["commute", "primary_activity", "residence"]
+        assert (
+            policies.individual_policies.apply(
+                active_individual_policies,
+                person=worker,
+                activities=activities,
+                days_from_start=0,
+            )
+            == ["commute", "primary_activity", "residence"]
+        )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -445,12 +486,15 @@ class TestClosure:
         active_individual_policies = policies.individual_policies.get_active(
             date=time_during_policy
         )
-        assert policies.individual_policies.apply(
-            active_individual_policies,
-            person=worker,
-            activities=activities,
-            days_from_start=0,
-        ) == ["commute", "primary_activity", "residence"]
+        assert (
+            policies.individual_policies.apply(
+                active_individual_policies,
+                person=worker,
+                activities=activities,
+                days_from_start=0,
+            )
+            == ["commute", "primary_activity", "residence"]
+        )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy
         )
@@ -461,12 +505,15 @@ class TestClosure:
         active_individual_policies = policies.individual_policies.get_active(
             date=time_after_policy
         )
-        assert policies.individual_policies.apply(
-            active_individual_policies,
-            person=worker,
-            activities=activities,
-            days_from_start=0,
-        ) == ["commute", "primary_activity", "residence"]
+        assert (
+            policies.individual_policies.apply(
+                active_individual_policies,
+                person=worker,
+                activities=activities,
+                days_from_start=0,
+            )
+            == ["commute", "primary_activity", "residence"]
+        )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -534,7 +581,11 @@ class TestClosure:
             person=worker,
             activities=activities,
             days_from_start=0,
-        ) == ["commute", "primary_activity", "residence",]
+        ) == [
+            "commute",
+            "primary_activity",
+            "residence",
+        ]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -621,7 +672,11 @@ class TestClosure:
             person=worker,
             activities=activities,
             days_from_start=0,
-        ) == ["commute", "primary_activity", "residence",]
+        ) == [
+            "commute",
+            "primary_activity",
+            "residence",
+        ]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -707,7 +762,11 @@ class TestClosure:
             person=worker,
             activities=activities,
             days_from_start=0,
-        ) == ["commute", "primary_activity", "residence",]
+        ) == [
+            "commute",
+            "primary_activity",
+            "residence",
+        ]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -913,7 +972,11 @@ class TestClosure:
             person=worker,
             activities=activities,
             days_from_start=0,
-        ) == ["commute", "primary_activity", "residence",]
+        ) == [
+            "commute",
+            "primary_activity",
+            "residence",
+        ]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -925,7 +988,9 @@ class TestClosure:
         world, pupil, student, worker, sim = setup_policy_world
         super_area = world.super_areas[0]
         company_closure = CloseCompanies(
-            start_time="2020-1-1", end_time="2020-10-1", full_closure=True,
+            start_time="2020-1-1",
+            end_time="2020-10-1",
+            full_closure=True,
         )
         policies = Policies([company_closure])
         sim.activity_manager.policies = policies
@@ -936,12 +1001,15 @@ class TestClosure:
         active_individual_policies = policies.individual_policies.get_active(
             date=time_during_policy
         )
-        assert policies.individual_policies.apply(
-            active_individual_policies,
-            person=worker,
-            activities=activities,
-            days_from_start=0,
-        ) == ["residence"]
+        assert (
+            policies.individual_policies.apply(
+                active_individual_policies,
+                person=worker,
+                activities=activities,
+                days_from_start=0,
+            )
+            == ["residence"]
+        )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy
         )
@@ -1005,7 +1073,10 @@ class TestQuarantine:
         world, pupil, student, worker, sim = setup_policy_world
         super_area = world.super_areas[0]
         quarantine = Quarantine(
-            start_time="2020-1-1", end_time="2020-1-30", n_days=7, n_days_household=14,
+            start_time="2020-1-1",
+            end_time="2020-1-30",
+            n_days=7,
+            n_days_household=14,
         )
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
@@ -1045,7 +1116,10 @@ class TestQuarantine:
         world, pupil, student, worker, sim = setup_policy_world
         super_area = world.super_areas[0]
         quarantine = Quarantine(
-            start_time="2020-1-1", end_time="2020-1-30", n_days=7, n_days_household=14,
+            start_time="2020-1-1",
+            end_time="2020-1-30",
+            n_days=7,
+            n_days_household=14,
         )
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
@@ -1070,7 +1144,10 @@ class TestQuarantine:
         world, pupil, student, worker, sim = setup_policy_world
         super_area = world.super_areas[0]
         quarantine = Quarantine(
-            start_time="2020-1-1", end_time="2020-1-30", n_days=7, n_days_household=14,
+            start_time="2020-1-1",
+            end_time="2020-1-30",
+            n_days=7,
+            n_days_household=14,
         )
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
@@ -1113,7 +1190,10 @@ class TestQuarantine:
         world, pupil, student, worker, sim = setup_policy_world
         super_area = world.super_areas[0]
         quarantine = Quarantine(
-            start_time="2020-1-1", end_time="2020-1-30", n_days=7, n_days_household=14,
+            start_time="2020-1-1",
+            end_time="2020-1-30",
+            n_days=7,
+            n_days_household=14,
         )
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
@@ -1276,10 +1356,12 @@ class TestLimitLongCommute:
         limit_long_commute = LimitLongCommute(
             apply_from_distance=150, going_to_work_probability=0.2
         )
-        assert set(limit_long_commute.activities_to_remove) == set([
-            "commute",
-            "primary_activity",
-        ])
+        assert set(limit_long_commute.activities_to_remove) == set(
+            [
+                "commute",
+                "primary_activity",
+            ]
+        )
         limit_long_commute.get_long_commuters([worker])
         skips = 0
         n = 5000
@@ -1288,3 +1370,57 @@ class TestLimitLongCommute:
             if ret:
                 skips += 1
         assert np.isclose(skips, 0.2 * n, rtol=0.1)
+
+
+class TestSchoolQuarantine:
+    def test__school_quarantine(self, selector):
+        kids = []
+        school = School()
+        household = Household()
+        for i in range(10):
+            for _ in range(100):
+                person = Person.from_attributes(age=i)
+                school.add(person)
+                household.add(person)
+                kids.append(person)
+        school_quarantine = SchoolQuarantine(
+            start_time="2020-1-1", end_time="2020-1-30", compliance=0.7, n_days=7
+        )
+        infected = kids[0]
+        infect_person(infected, selector=selector, symptom_tag="mild")
+        time = 0
+        checks = [False, False, False]
+        while True:
+            if time > 7 + infected.infection.time_of_symptoms_onset:
+                checks[0] = True
+                for person in kids:
+                    stays_home = school_quarantine.check_stay_home_condition(
+                        person=person, days_from_start=time
+                    )
+                    assert stays_home is False
+                break
+            if time < infected.infection.time_of_symptoms_onset:
+                checks[1] = True
+                for person in kids:
+                    stays_home = school_quarantine.check_stay_home_condition(
+                        person=person, days_from_start=time
+                    )
+                    assert stays_home is False
+                time += 1
+            else:
+                checks[2] = True
+                quarantined = 0
+                total = 0
+                for person in kids:
+                    stays_home = school_quarantine.check_stay_home_condition(
+                        person=person, days_from_start=time
+                    )
+                    if person.primary_activity == infected.primary_activity:
+                        total += 1
+                        if stays_home:
+                            quarantined += 1
+                    else:
+                        assert stays_home is False
+                assert np.isclose(quarantined / total, 0.7, rtol=0.15)
+                time += 1
+        assert min(checks) is True

@@ -35,7 +35,6 @@ class AgeSexGenerator:
         ethnicity_age_bins: list = None,
         ethnicity_groups: list = None,
         ethnicity_structure: list = None,
-        socioecon_index_value: int = None,
         max_age=99,
     ):
         """
@@ -57,8 +56,6 @@ class AgeSexGenerator:
                                           assigning here.
             ethnicity_structure = [[0,5,3],[2,3,0],...] in the first age bin, we assign people
                                           ethnicities A:B:C with probability 0:5:3, and so on.
-            socioecon_index = 6 means this area belongs to the 6th decile in the index
-                                of multiple deprivation.
         Given this information we initialize two generators for age and sex, that can be accessed
         through gen = AgeSexGenerator().age() and AgeSexGenerator().sex().
 
@@ -95,8 +92,6 @@ class AgeSexGenerator:
                     )
                 )
             self.ethnicity_iterator = iter(ethnicities)
-        if socioecon_index_value is not None:
-            self.socioecon_index_value = socioecon_index_value
 
     @classmethod
     def from_age_sex_bins(
@@ -151,9 +146,6 @@ class AgeSexGenerator:
             return next(self.ethnicity_iterator)
         except StopIteration:
             raise DemographyError("No more people living here!")
-
-    def socioecon_index(self) -> int:
-        return self.socioecon_index_value
 
 
 class Population:
@@ -253,7 +245,7 @@ class Demography:
         self.comorbidity_data = comorbidity_data
 
     def populate(
-        self, area_name: str, ethnicity=True, socioecon_index=True, comorbidity=True
+        self, area_name: str, ethnicity=True, comorbidity=True,
     ) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
@@ -277,15 +269,10 @@ class Demography:
                 ethnicity_value = age_and_sex_generator.ethnicity()
             else:
                 ethnicity_value = None
-            if socioecon_index:
-                socioecon_index_value = age_and_sex_generator.socioecon_index()
-            else:
-                socioecon_index_value = None
             person = Person.from_attributes(
                 age=age_and_sex_generator.age(),
                 sex=age_and_sex_generator.sex(),
                 ethnicity=ethnicity_value,
-                socioecon_index=socioecon_index_value,
             )
             if comorbidity:
                 person.comorbidity = comorbidity_generator.get_comorbidity(person)
@@ -368,15 +355,13 @@ class Demography:
         area_names = area_names
         age_structure_path = data_path / "age_structure_single_year.csv"
         female_fraction_path = data_path / "female_ratios_per_age_bin.csv"
-        ethnicity_structure_path = data_path / "ethnicity_broad_structure.csv"
-        socioecon_structure_path = data_path / "index_of_multiple_deprivation.csv"
+        ethnicity_structure_path = data_path / "ethnicity_structure.csv"
         m_comorbidity_path = data_path / "uk_male_comorbidities.csv"
         f_comorbidity_path = data_path / "uk_female_comorbidities.csv"
         age_sex_generators = _load_age_and_sex_generators(
             age_structure_path,
             female_fraction_path,
             ethnicity_structure_path,
-            socioecon_structure_path,
             area_names,
         )
         comorbidity_data = load_comorbidity_data(m_comorbidity_path, f_comorbidity_path)
@@ -391,12 +376,10 @@ def _load_age_and_sex_generators(
     age_structure_path: str,
     female_ratios_path: str,
     ethnicity_structure_path: str,
-    socioecon_structure_path: str,
     area_names: List[str],
 ) -> Dict[str, AgeSexGenerator]:
     """
-    A dictionary mapping area identifiers to a generator of age, sex, ethnicity,
-    and socio-economic index.
+    A dictionary mapping area identifiers to a generator of age, sex, ethnicity.
 
     Returns
     -------
@@ -420,22 +403,17 @@ def _load_age_and_sex_generators(
     ethnicity_structure_df.sort_index(level=0, inplace=True)
     ## "sort" is required as .loc slicing a multi_index df doesn't work as expected --
     ## it preserves original order, and ignoring "repeat slices".
-
-    socioecon_structure_df = pd.read_csv(socioecon_structure_path, index_col=0)
-    socioecon_structure_df = socioecon_structure_df.loc[area_names]
-    socioecon_structure_df.sort_index(inplace=True)
+    # TODO fix this to use proper complete indexing.
 
     ret = {}
     for (
         (_, age_structure),
         (index, female_ratios),
         (_, ethnicity_df),
-        socioecon_index,
     ) in zip(
         age_structure_df.iterrows(),
         female_ratios_df.iterrows(),
         ethnicity_structure_df.groupby(level=0),
-        socioecon_structure_df["iomd_decile"],
     ):
         ethnicity_structure = [ethnicity_df[col].values for col in ethnicity_df.columns]
         ret[index] = AgeSexGenerator(
@@ -445,7 +423,6 @@ def _load_age_and_sex_generators(
             ethnicity_df.columns,
             ethnicity_df.index.get_level_values(1),
             ethnicity_structure,
-            socioecon_index,
         )
 
     return ret

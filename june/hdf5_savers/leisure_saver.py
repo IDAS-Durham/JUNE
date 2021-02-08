@@ -10,14 +10,16 @@ from june.groups.leisure import (
     Groceries,
     Cinema,
     Cinemas,
+    Gym,
+    Gyms,
     SocialVenue,
     SocialVenues,
 )
 from june.world import World
 
 nan_integer = -999
-spec_to_group_dict = {"pubs": Pub, "cinemas": Cinema, "groceries": Grocery}
-spec_to_supergroup_dict = {"pubs": Pubs, "cinemas": Cinemas, "groceries": Groceries}
+spec_to_group_dict = {"pubs": Pub, "cinemas": Cinema, "groceries": Grocery, "gyms" : Gym}
+spec_to_supergroup_dict = {"pubs": Pubs, "cinemas": Cinemas, "groceries": Groceries, "gyms" : Gyms}
 
 
 def save_social_venues_to_hdf5(social_venues_list: List[SocialVenues], file_path: str):

@@ -20,7 +20,7 @@ scripts = glob("scripts/*.py") + glob("scripts/*.sh")
 
 setup(
         name="june",
-        version="1.0",
+        version="1.0.5",
         description="A framework for high resolution Agent Based Modelling.",
         url="https://github.com/idas-durham/june",
         long_description_content_type='text/markdown',
@@ -28,7 +28,7 @@ setup(
         scripts=scripts,
         author="IDAS-Durham",
         author_email='arnauq@protonmail.com',
-        license="MIT license",
+        license="GPLv3 license",
         install_requires=requirements,
         packages = find_packages(exclude=["docs"]),
         include_package_data=True

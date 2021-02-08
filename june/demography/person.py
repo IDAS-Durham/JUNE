@@ -20,7 +20,6 @@ class Activities(dataobject):
     def iter(self):
         return [getattr(self, activity) for activity in self.__fields__]
 
-
 person_ids = count()
 
 
@@ -30,7 +29,6 @@ class Person(dataobject):
     sex: str = "f"
     age: int = 27
     ethnicity: str = None
-    socioecon_index: str = None
     area: "Area" = None
     # work info
     work_super_area: "SuperArea" = None
@@ -59,7 +57,6 @@ class Person(dataobject):
         age=27,
             susceptibility = 1.,
         ethnicity=None,
-        socioecon_index=None,
         id=None,
         comorbidity=None,
     ):
@@ -70,7 +67,6 @@ class Person(dataobject):
             sex=sex,
             age=age,
             ethnicity=ethnicity,
-            socioecon_index=socioecon_index,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
             comorbidity=comorbidity,
@@ -204,3 +200,10 @@ class Person(dataobject):
         if (not self.dead) and (self.medical_facility is None) and (not self.busy):
             return True
         return False
+
+    @property
+    def socioeconomic_index(self):
+        try:
+            return self.area.socioeconomic_index
+        except:
+            return 

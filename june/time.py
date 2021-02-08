@@ -40,6 +40,14 @@ class Timer:
         if week_number < 5:
             return False
         return True
+    
+    @property
+    def day_type(self):
+        week_number = self.date.weekday()
+        if week_number < 5:
+            return "weekday"
+        else:
+            return "weekend"
 
     @property
     def now(self):
