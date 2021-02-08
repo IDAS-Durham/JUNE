@@ -46,10 +46,11 @@ if mpi_rank > 0:
 
 def enable_mpi_debug(results_folder):
     from june.logging import MPIFileHandler
+
     logging_file = Path(results_folder) / "mpi.log"
     with open(logging_file, "w") as f:
         pass
-    mh = MPIFileHandler(logging_file)                                           
+    mh = MPIFileHandler(logging_file)
     mpi_logger.addHandler(mh)
 
 
@@ -82,6 +83,7 @@ class Simulator:
         activity_manager: ActivityManager,
         infection_selectors: InfectionSelectors,
         infection_seeds: Optional[InfectionSeeds] = None,
+        events: Optional[Events] = None,
         record: Optional[Record] = None,
         checkpoint_save_dates: List[datetime.date] = None,
         checkpoint_save_path: str = None,
@@ -99,7 +101,10 @@ class Simulator:
         self.interaction = interaction
         self.infection_selectors = infection_selectors
         self.infection_seeds = infection_seeds
+        self.events = events
         self.timer = timer
+        if self.events is not None:
+            self.events.init_events(world=world)
         # self.comment = comment
         self.checkpoint_save_dates = _read_checkpoint_dates(checkpoint_save_dates)
         if self.checkpoint_save_dates:
@@ -187,7 +192,6 @@ class Simulator:
             world=world,
             all_activities=all_activities,
             activity_to_super_groups=activity_to_super_groups,
-            events=events,
             leisure=leisure,
             travel=travel,
             policies=policies,
@@ -197,6 +201,7 @@ class Simulator:
             world=world,
             interaction=interaction,
             timer=timer,
+            events=events,
             activity_manager=activity_manager,
             infection_selectors=infection_selectors,
             infection_seeds=infection_seeds,
@@ -494,7 +499,8 @@ class Simulator:
         tick, tickw = perf_counter(), wall_clock()
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
-                date=self.timer.date, interaction=self.interaction,
+                date=self.timer.date,
+                interaction=self.interaction,
             )
             self.activity_manager.policies.regional_compliance.apply(
                 date=self.timer.date, regions=self.world.regions
@@ -504,6 +510,15 @@ class Simulator:
                     self.world.people, date=self.timer.date
                 )
         activities = self.timer.activities
+        # apply events
+        if self.events is not None:
+            self.events.apply(
+                date=self.timer.date,
+                world=self.world,
+                activities=activities,
+                day_type=self.timer.day_type,
+                simulator=self,
+            )
         if not activities or len(activities) == 0:
             output_logger.info("==== do_timestep(): no active groups found. ====")
             return
@@ -511,7 +526,7 @@ class Simulator:
             people_from_abroad_dict,
             n_people_from_abroad,
             n_people_going_abroad,
-            to_send_abroad, # useful for knowing who's MPI-ing, so can send extra info as needed.
+            to_send_abroad,  # useful for knowing who's MPI-ing, so can send extra info as needed.
         ) = self.activity_manager.do_timestep()
         tick_interaction = perf_counter()
 
@@ -562,7 +577,9 @@ class Simulator:
                     infection_ids += new_infection_ids
                     n_people += group_size
         tock_interaction = perf_counter()
-        mpi_logger.info(f"{self.timer.date},{mpi_rank},interaction,{tock_interaction-tick_interaction}")
+        mpi_logger.info(
+            f"{self.timer.date},{mpi_rank},interaction,{tock_interaction-tick_interaction}"
+        )
 
         # infect the people that got exposed
         if self.infection_selectors:

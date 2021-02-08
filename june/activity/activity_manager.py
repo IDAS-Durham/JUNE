@@ -10,7 +10,6 @@ from time import time as wall_clock
 from june.demography import Person
 from june.exc import SimulatorError
 from june.groups import Subgroup
-from june.event import Events
 from june.groups.leisure import Leisure
 from june.groups.travel import Travel
 from june.policy import (
@@ -51,16 +50,12 @@ class ActivityManager:
         timer,
         all_activities,
         activity_to_super_groups: dict,
-        events: Optional[Events] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
     ):
         self.policies = policies
         if self.policies is not None:
             self.policies.init_policies(world=world)
-        self.events = events
-        if self.events is not None:
-            self.events.init_events(world=world)
         self.world = world
         self.timer = timer
         self.leisure = leisure
@@ -145,11 +140,6 @@ class ActivityManager:
                 delta_time=delta_time,
                 day_type=day_type,
                 working_hours="primary_activity" in activities,
-            )
-        # apply events
-        if self.events is not None:
-            self.events.apply(
-                date=date, world=self.world, activities=activities, day_type=day_type
             )
         # move people to subgroups and get going abroad people
         to_send_abroad = self.move_people_to_active_subgroups(

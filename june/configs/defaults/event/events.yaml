@@ -13,7 +13,7 @@ domestic_care:
 mutation:
   start_time: 2020-11-10
   end_time: 2020-11-11
-  mutation: Covid20
+  mutation_id: 170394200
   regional_probabilities:
     "South East": 0.16
     "East of England": 0.11
