@@ -79,18 +79,26 @@ class RecordReader:
         )
 
     def get_table_with_extras(
-        self, table_name, index, with_people=True, with_geography=True
+        self,
+        table_name,
+        index,
+        with_people=True,
+        with_geography=True,
+        people_df=None,
+        geography_df=None
     ):
         logger.info(f"Loading {table_name} table")
         df = self.table_to_df(table_name, index=index)
         if with_people:
             logger.info(f"Loading population table")
-            people_df = self.table_to_df("population", index="id")
+            if people_df is None:
+                people_df = self.table_to_df("population", index="id")
             logger.info(f"Merging infection and population tables")
             df = df.merge(people_df, how="inner", left_index=True, right_index=True)
             if with_geography:
                 logger.info(f"Loading geography table")
-                geography_df = self.get_geography_df()
+                if geography_df is None:
+                    geography_df = self.get_geography_df()
                 logger.info(f"Mergeing infection and geography tables")
                 df = df.merge(
                     geography_df.drop_duplicates(),
