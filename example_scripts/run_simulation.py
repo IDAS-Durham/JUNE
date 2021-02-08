@@ -170,4 +170,3 @@ if __name__ == "__main__":
     mpi_comm.Barrier()
     if mpi_rank == 0:
         combine_records(save_path)
-        

@@ -2,6 +2,8 @@ from itertools import count
 from random import choice
 from recordclass import dataobject
 import numpy as np
+from datetime import datetime
+from typing import Optional
 
 from june.infection import Infection
 
@@ -33,6 +35,10 @@ class Person(dataobject):
     sector: str = None
     sub_sector: str = None
     lockdown_status: str = None
+    # vaccine
+    vaccine_plan: "VaccinePlan" = None
+    vaccinated: bool = False
+    # comorbidity
     comorbidity: str = None
     # commute
     mode_of_transport: "ModeOfTransport" = None
@@ -49,6 +55,7 @@ class Person(dataobject):
         cls,
         sex="f",
         age=27,
+            susceptibility = 1.,
         ethnicity=None,
         id=None,
         comorbidity=None,
@@ -63,6 +70,7 @@ class Person(dataobject):
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
             comorbidity=comorbidity,
+            susceptibility=susceptibility,
             subgroups=Activities(None, None, None, None, None, None, None),
         )
 
@@ -180,6 +188,12 @@ class Person(dataobject):
         if self.work_super_area is None:
             return None
         return self.work_super_area.city
+
+    @property
+    def should_be_vaccinated(self):
+        if self.vaccine_plan is None and not self.vaccinated:
+            return True
+        return False
 
     @property
     def available(self):

@@ -101,6 +101,7 @@ tiered_lockdown:
       North East: 4.
       Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
 
+
 limit_long_commute:
   # prevents people that have their workplace
   # far away from their homes of commuting daily.
@@ -108,6 +109,90 @@ limit_long_commute:
   end_time: 9999-01-01
   apply_from_distance: 100
   going_to_work_probability: 0.2 # once a week
+
+vaccine_distribution:
+    # Groups 1-4 Pfizer/BioNTech
+    1:
+        start_time: 2020-12-08 
+        end_time: 2020-02-15 
+        group_by: 'residence'
+        group_type: 'care_home'
+        group_coverage: 0.5
+        first_dose_efficacy: 0.52 # FDA - primary efficacy endpoint
+        second_dose_efficacy: 0.95 # FDA + Pfizer > 55=0.94
+        second_dose_compliance: 0.95 # assumption
+        mean_time_delay: 14 # 21-7 from FDA monitoring - to be changed
+        std_time_delay: 5 # based on Pfizer trials - to be changed
+        effective_after_first_dose: 12 # FDA monitoring
+        effective_after_second_dose: 7 # FDA monitoring
+    2:
+        start_time: 2020-01-01 
+        end_time: 2020-02-15 
+        group_by: 'age'
+        group_type: '70-100'
+        group_coverage: 0.5
+        first_dose_efficacy: 0.52 # FDA - primary efficacy endpoint
+        second_dose_efficacy: 0.95 # FDA + Pfizer > 55=0.94
+        second_dose_compliance: 0.95 # assumption
+        mean_time_delay: 14 # 21-7 from FDA monitoring
+        std_time_delay: 5 # based on Pfizer trials
+        effective_after_first_dose: 12 # FDA monitoring
+        effective_after_second_dose: 7 # FDA monitoring
+    3:
+        start_time: 2020-01-01 
+        end_time: 2020-02-15 
+        group_by: 'primary_activity'
+        group_type: 'care_home'
+        group_coverage: 0.5
+        first_dose_efficacy: 0.52 # FDA - primary efficacy endpoint
+        second_dose_efficacy: 0.95 # FDA + Pfizer > 55=0.94
+        second_dose_compliance: 0.95 # assumption
+        mean_time_delay: 14 # 21-7 from FDA monitoring
+        std_time_delay: 5 # based on Pfizer trials
+        effective_after_first_dose: 12 # FDA monitoring
+        effective_after_second_dose: 7 # FDA monitoring
+
+    # Groups 1-4 Oxford/AstraZeneca
+    4:
+        start_time: 2020-01-03
+        end_time: 2020-02-15 
+        group_by: 'residence'
+        group_type: 'care_home'
+        group_coverage: 0.5
+        first_dose_efficacy: 0.4 # assumption
+        second_dose_efficacy: 0.60 # Lancet UK SD/SD
+        second_dose_compliance: 0.95 # assumption
+        mean_time_delay: 36 # roughly from Lancet trials
+        std_time_delay: 10 # roughly from Lancet trials
+        effective_after_first_dose: 12 # Taken as Pfizer - unknown
+        effective_after_second_dose: 14 # Lancet trials
+    5:
+        start_time: 2020-01-03
+        end_time: 2020-02-15 
+        group_by: 'age'
+        group_type: '70-100'
+        group_coverage: 0.5
+        first_dose_efficacy: 0.4 # assumption
+        second_dose_efficacy: 0.60 # Lancet UK SD/SD
+        second_dose_compliance: 0.95 # assumption
+        mean_time_delay: 36 # roughly from Lancet trials
+        std_time_delay: 10 # roughly from Lancet trials
+        effective_after_first_dose: 12 # Taken as Pfizer - unknown
+        effective_after_second_dose: 14 # Lancet trials
+    6:
+        start_time: 2020-01-03
+        end_time: 2020-02-15 
+        group_by: 'primary_activity'
+        group_type: 'care_home'
+        group_coverage: 0.5
+        first_dose_efficacy: 0.4 # assumption
+        second_dose_efficacy: 0.60 # Lancet UK SD/SD
+        second_dose_compliance: 0.95 # assumption
+        mean_time_delay: 36 # roughly from Lancet trials
+        std_time_delay: 10 # roughly from Lancet trials
+        effective_after_first_dose: 12 # Taken as Pfizer - unknown
+        effective_after_second_dose: 14 # Lancet trials
+
 
 quarantine:
     1:

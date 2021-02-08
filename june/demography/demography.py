@@ -220,6 +220,9 @@ class Population:
     def dead(self):
         return [person for person in self.people if person.dead]
 
+    @property
+    def vaccinated(self):
+        return [person for person in self.people if person.vaccinated]
 
 class Demography:
     def __init__(

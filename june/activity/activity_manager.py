@@ -180,8 +180,12 @@ class ActivityManager:
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
         )
+        active_vaccine_policies = self.policies.vaccine_distribution.get_active(date=date)
         to_send_abroad = MovablePeople()
+
         for person in self.world.people:
+            self.policies.vaccine_distribution.apply(person=person,date=date,
+                    active_policies=active_vaccine_policies)
             if person.dead or person.busy:
                 continue
             allowed_activities = self.policies.individual_policies.apply(
