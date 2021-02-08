@@ -47,7 +47,7 @@ class DomesticCare(Event):
     def initialise(self, world):
         self._link_carers_to_households(world=world)
 
-    def apply(self, world, activities, day_type):
+    def apply(self, world, activities, day_type, simulator=None):
         """
         When a household is reponsible for caring of another housheold,
         a random person is sent during leisure to take care of that household.

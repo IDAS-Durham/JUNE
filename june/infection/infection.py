@@ -22,7 +22,6 @@ class Infection:
     time step, according to an infectivity profile.
     """
     __slots__ = (
-        "number_of_infected",
         "start_time",
         "transmission",
         "symptoms",
@@ -46,7 +45,6 @@ class Infection:
         self.start_time = start_time
         self.transmission = transmission
         self.symptoms = symptoms
-        self.number_of_infected = 0.0
         self.time_of_testing = None
 
     @classmethod # this could be a property but it is complicated (needs meta classes)
