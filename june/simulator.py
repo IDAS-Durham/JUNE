@@ -494,12 +494,15 @@ class Simulator:
         tick, tickw = perf_counter(), wall_clock()
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
-                date=self.timer.date,
-                interaction=self.interaction,
+                date=self.timer.date, interaction=self.interaction,
             )
             self.activity_manager.policies.regional_compliance.apply(
                 date=self.timer.date, regions=self.world.regions
             )
+            if self.activity_manager.policies.vaccine_distribution is not None:
+                self.activity_manager.policies.vaccine_distribution.update_susceptibility_of_vaccinated(
+                    self.world.people, date=self.timer.date
+                )
         activities = self.timer.activities
         if not activities or len(activities) == 0:
             output_logger.info("==== do_timestep(): no active groups found. ====")
@@ -508,6 +511,7 @@ class Simulator:
             people_from_abroad_dict,
             n_people_from_abroad,
             n_people_going_abroad,
+            to_send_abroad, # useful for knowing who's MPI-ing, so can send extra info as needed.
         ) = self.activity_manager.do_timestep()
         tick_interaction = perf_counter()
 

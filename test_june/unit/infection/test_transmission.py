@@ -15,7 +15,6 @@ class TestTransmission:
 
         assert transmission.probability == 0.3
 
-
 class TestTransmissionGamma:
     def test__update_probability_at_time(self):
         max_infectiousness = 4.0

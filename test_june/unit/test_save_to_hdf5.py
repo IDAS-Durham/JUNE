@@ -353,6 +353,7 @@ class TestSaveWorld:
         assert len(full_world.areas) == len(full_world_loaded.areas)
         for area1, area2 in zip(full_world.areas, full_world_loaded.areas):
             assert area1.id == area2.id
+            assert area1.socioeconomic_index == area2.socioeconomic_index
             assert area1.super_area.id == area2.super_area.id
             assert area1.super_area.name == area2.super_area.name
             assert area1.name == area2.name
@@ -371,6 +372,7 @@ class TestSaveWorld:
             sa2_areas = [super_area2.areas[idx] for idx in np.argsort(area2_ids)]
             for area1, area2 in zip(sa1_areas, sa2_areas):
                 assert area1.id == area2.id
+                assert area1.socioeconomic_index == area2.socioeconomic_index
                 assert area1.super_area.id == area2.super_area.id
                 assert area1.super_area.name == area2.super_area.name
                 assert area1.name == area2.name
@@ -561,6 +563,10 @@ class TestSaveWorld:
             assert len(sa1.closest_hospitals) == len(sa2.closest_hospitals)
             for h1, h2 in zip(sa1.closest_hospitals, sa2.closest_hospitals):
                 assert h1.id == h2.id
+
+    def test__socioeconomic_index(self, full_world, full_world_loaded):
+        for person1, person2 in zip(full_world.people, full_world_loaded.people):
+            assert person1.socioeconomic_index == person2.socioeconomic_index
 
     def test__social_venues(self, full_world, full_world_loaded):
         for area1, area2 in zip(full_world.areas, full_world_loaded.areas):

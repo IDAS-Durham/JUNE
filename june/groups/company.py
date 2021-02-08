@@ -13,7 +13,7 @@ from june.geography import Geography, SuperArea
 from june.groups import Group, Supergroup
 from june.groups.group.interactive import InteractiveGroup
 
-default_size_nr_file = paths.data_path / "input/companies/company_size_2019.csv"
+default_size_nr_file = paths.data_path / "input/companies/company_size_2011.csv"
 default_sector_nr_per_msoa_file = (
     paths.data_path / "input/companies/company_sector_2011.csv"
 )

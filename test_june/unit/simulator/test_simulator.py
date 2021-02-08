@@ -108,7 +108,6 @@ def test__everyone_has_an_activity(sim: Simulator):
     for person in sim.world.people.members:
         assert person.subgroups.iter().count(None) != len(person.subgroups.iter())
 
-
 def test__apply_activity_hierarchy(sim: Simulator):
     unordered_activities = random.sample(activity_hierarchy, len(activity_hierarchy))
     ordered_activities = sim.activity_manager.apply_activity_hierarchy(

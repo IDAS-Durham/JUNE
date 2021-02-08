@@ -226,7 +226,8 @@ def test__cases_from_observation_per_super_area(oc_multiple_super_areas):
     assert super_area_weights.loc["super_3"]["weights"] == pytest.approx(0.33, rel=0.05)
     n_expected_per_super_area_df = (
         oc_multiple_super_areas.convert_regional_cases_to_super_area(
-            n_expected_per_region_df, starting_date="2020-04-10"
+            n_expected_per_region_df,
+            starting_date="2020-04-10",
         )
     )
 

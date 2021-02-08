@@ -167,7 +167,18 @@ class InteractiveGroup:
             regional_compliance = self.super_area.region.regional_compliance
         except AttributeError:
             regional_compliance = 1
-        return beta * (1 + regional_compliance * (beta_reduction - 1))
+        try:
+            lockdown_tier = self.super_area.region.policy["lockdown_tier"]
+            if lockdown_tier is None:
+                lockdown_tier = 1
+        except:
+            lockdown_tier = 1
+        if int(lockdown_tier) == 4:
+            tier_reduction = 0.5
+        else:
+            tier_reduction = 1.
+            
+        return beta * (1 + regional_compliance * tier_reduction * (beta_reduction - 1))
 
     def get_contacts_between_subgroups(
         self, contact_matrix, subgroup_1_idx, subgroup_2_idx

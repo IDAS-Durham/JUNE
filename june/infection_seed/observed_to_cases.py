@@ -36,7 +36,7 @@ class Observed2Cases:
         symptoms_trajectories: Optional["TrajectoryMaker"] = None,
         n_observed_deaths: Optional[pd.DataFrame] = None,
         area_super_region_df: Optional[pd.DataFrame] = None,
-        smoothing=True,
+        smoothing=False,
     ):
         """
         Class to convert observed deaths over time into predicted number of latent cases
@@ -399,8 +399,14 @@ class Observed2Cases:
             regional_cases_to_seed = n_cases_per_region_df[region].iloc[
                 : regional_index + 1
             ]
-            target_cases = self.regional_infections_per_hundred_thousand * people_per_region.loc[region] / 100_000
-            remaining_cases = np.round(max(0, target_cases - regional_cases_to_seed.iloc[:-1].sum()))
+            target_cases = (
+                self.regional_infections_per_hundred_thousand
+                * people_per_region.loc[region]
+                / 100_000
+            )
+            remaining_cases = np.round(
+                max(0, target_cases - regional_cases_to_seed.iloc[:-1].sum())
+            )
             regional_cases_to_seed.iloc[-1] = remaining_cases
             regional_series.append(regional_cases_to_seed)
         return pd.concat(regional_series, axis=1).fillna(0.0)
@@ -426,7 +432,8 @@ class Observed2Cases:
         data frame with the number of cases by super area, indexed by date
         """
         n_cases_per_region_df = self.limit_cases_per_region(
-            n_cases_per_region_df=n_cases_per_region_df, starting_date=starting_date,
+            n_cases_per_region_df=n_cases_per_region_df,
+            starting_date=starting_date,
         )
         n_cases_per_super_area_df = pd.DataFrame(
             0,

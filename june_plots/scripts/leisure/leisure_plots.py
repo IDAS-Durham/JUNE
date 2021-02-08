@@ -25,7 +25,6 @@ config_files_leisure = list(
 
 _sex_dict = {"male": "m", "female": "f"}
 
-
 def _reverse_interval(interval):
     return f"{interval.left}-{interval.right}"
 
