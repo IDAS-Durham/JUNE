@@ -47,7 +47,7 @@ def save_infections_to_hdf5(
             hdf5_file_path=hdf5_file_path,
             chunk_size=chunk_size,
         )
-        attributes_to_save = ["start_time", "number_of_infected"]
+        attributes_to_save = ["start_time"]
         n_chunks = int(np.ceil(n_infections / chunk_size))
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
