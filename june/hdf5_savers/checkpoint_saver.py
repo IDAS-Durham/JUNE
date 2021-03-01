@@ -205,7 +205,7 @@ def restore_simulator_to_checkpoint(
     checkpoint_date = datetime.strptime(checkpoint_data["date"], "%Y-%m-%d")
     # we need to start the next day
     checkpoint_date += timedelta(days=1)
-    simulator.timer.date = checkpoint_date
+    simulator.timer.reset_to_new_date(checkpoint_date)
     return simulator
 
 

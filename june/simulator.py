@@ -646,13 +646,11 @@ class Simulator:
                 and (self.timer.now + self.timer.duration).is_integer()
             ):  # this saves in the last time step of the day
                 saving_date = self.timer.date.date()
-                next(self.timer)  # we want to save at the next time step so that
                 # we can resume consistenly
                 output_logger.info(
                     f"Saving simulation checkpoint at {self.timer.date.date()}"
                 )
                 self.save_checkpoint(saving_date)
-                continue
             next(self.timer)
 
     def save_checkpoint(self, saving_date):
