@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import List
 
 from june.hdf5_savers.utils import read_dataset, write_dataset
-from june.infection import Infection
+from june.infection import Infection, Covid19
 from .symptoms_saver import save_symptoms_to_hdf5, load_symptoms_from_hdf5
 from .transmission_saver import save_transmissions_to_hdf5, load_transmissions_from_hdf5
 
@@ -109,7 +109,7 @@ def load_infections_from_hdf5(hdf5_file_path: str, chunk_size=50000):
                     infections_group[attribute_name], idx1, idx2
                 )
             for index in range(idx2 - idx1):
-                infection = Infection(
+                infection = Covid19(
                     transmission=transmissions[trans_symp_index],
                     symptoms=symptoms_list[trans_symp_index],
                 )
