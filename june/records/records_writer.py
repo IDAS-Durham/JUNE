@@ -426,6 +426,8 @@ def prepend_checkpoint_hdf5(
     merged_record_path=None,
     checkpoint_date: str = None,
 ):
+    pre_checkpoint_record_path = Path(pre_checkpoint_record_path)
+    post_checkpoint_record_path = Path(post_checkpoint_record_path)
     if merged_record_path is None:
         merged_record_path = (
             post_checkpoint_record_path.parent / "merged_checkpoint_june_record.h5"
@@ -489,6 +491,9 @@ def prepend_checkpoint_summary(
     merged_summary_path=None,
     checkpoint_date=None,
 ):
+    pre_checkpoint_summary_path = Path(pre_checkpoint_summary_path)
+    post_checkpoint_summary_path = Path(post_checkpoint_summary_path)
+
     if merged_summary_path is None:
         merged_summary_path = (
             post_checkpoint_summary_path.parent / "merged_checkpoint_summary.csv"
@@ -504,7 +509,7 @@ def prepend_checkpoint_summary(
     else:
         if min_date != checkpoint_date:
             print(
-                "Provided date {checkpoint_date} does not match the earliest date in the summary!"
+                f"Provided date {checkpoint_date} does not match the earliest date in the summary!"
             )
     pre_summary = pre_summary[pre_summary["time_stamp"] < min_date]
     merged_summary = pd.concat([pre_summary, post_summary], ignore_index=True)
