@@ -77,7 +77,7 @@ class TestSusceptibilityHasAnEffect:
         n_infected_adults_list = []
         n_infected_kids_list = []
         for _ in range(1000):
-            infected_ids, group_size = interaction.time_step_for_group(
+            infected_ids, _, group_size = interaction.time_step_for_group(
                 group=group, delta_time=10
             )
             n_infected_adults = len(

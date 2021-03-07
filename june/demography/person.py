@@ -2,6 +2,8 @@ from itertools import count
 from random import choice
 from recordclass import dataobject
 import numpy as np
+from datetime import datetime
+from typing import Optional
 
 from june.infection import Infection
 
@@ -18,7 +20,6 @@ class Activities(dataobject):
     def iter(self):
         return [getattr(self, activity) for activity in self.__fields__]
 
-
 person_ids = count()
 
 
@@ -28,13 +29,16 @@ class Person(dataobject):
     sex: str = "f"
     age: int = 27
     ethnicity: str = None
-    socioecon_index: str = None
     area: "Area" = None
     # work info
     work_super_area: "SuperArea" = None
     sector: str = None
     sub_sector: str = None
     lockdown_status: str = None
+    # vaccine
+    vaccine_plan: "VaccinePlan" = None
+    vaccinated: bool = False
+    # comorbidity
     comorbidity: str = None
     # commute
     mode_of_transport: "ModeOfTransport" = None
@@ -51,8 +55,8 @@ class Person(dataobject):
         cls,
         sex="f",
         age=27,
+            susceptibility = 1.,
         ethnicity=None,
-        socioecon_index=None,
         id=None,
         comorbidity=None,
     ):
@@ -63,10 +67,10 @@ class Person(dataobject):
             sex=sex,
             age=age,
             ethnicity=ethnicity,
-            socioecon_index=socioecon_index,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
             comorbidity=comorbidity,
+            susceptibility=susceptibility,
             subgroups=Activities(None, None, None, None, None, None, None),
         )
 
@@ -186,7 +190,20 @@ class Person(dataobject):
         return self.work_super_area.city
 
     @property
+    def should_be_vaccinated(self):
+        if self.vaccine_plan is None and not self.vaccinated:
+            return True
+        return False
+
+    @property
     def available(self):
         if (not self.dead) and (self.medical_facility is None) and (not self.busy):
             return True
         return False
+
+    @property
+    def socioeconomic_index(self):
+        try:
+            return self.area.socioeconomic_index
+        except:
+            return 

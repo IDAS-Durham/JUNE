@@ -1,12 +1,13 @@
 from enum import IntEnum
 
 import numpy as np
+from itertools import count
 import yaml
 
 from june import paths
 from june.infection.health_index.health_index import HealthIndexGenerator
 from june.infection.health_index import Data2Rates
-from june.infection import Infection
+from june.infection import Infection, Covid19
 from june.infection.symptoms import Symptoms, SymptomTag
 from june.infection.trajectory_maker import TrajectoryMakers
 from june.infection.transmission import TransmissionConstant, TransmissionGamma
@@ -14,7 +15,7 @@ from june.infection.transmission_xnexp import TransmissionXNExp
 from june.infection.trajectory_maker import CompletionTime
 
 default_transmission_config_path = (
-    paths.configs_path / "defaults/transmission/nature.yaml"
+    paths.configs_path / "defaults/transmission/covid19.yaml"
 )
 default_trajectories_config_path = (
     paths.configs_path / "defaults/symptoms/trajectories.yaml"
@@ -26,6 +27,7 @@ class InfectionSelector:
     def __init__(
         self,
         transmission_config_path: str = default_transmission_config_path,
+        infection_class: Infection = Covid19,
         trajectory_maker=TrajectoryMakers.from_file(default_trajectories_config_path),
         health_index_generator: HealthIndexGenerator = None,
     ):
@@ -37,6 +39,7 @@ class InfectionSelector:
         transmission_config_path:
             path to transmission config file
         """
+        self.infection_class = infection_class
         self.transmission_config_path = transmission_config_path
         self.trajectory_maker = trajectory_maker
         self.health_index_generator = health_index_generator
@@ -45,6 +48,7 @@ class InfectionSelector:
     @classmethod
     def from_file(
         cls,
+        infection_class: Infection = Covid19,
         transmission_config_path: str = default_transmission_config_path,
         trajectories_config_path: str = default_trajectories_config_path,
         rates_file: str = default_rates_file,
@@ -64,6 +68,7 @@ class InfectionSelector:
         health_index_generator = HealthIndexGenerator.from_file(rates_file=rates_file)
         trajectory_maker = TrajectoryMakers.from_file(trajectories_config_path)
         return InfectionSelector(
+            infection_class=infection_class,
             transmission_config_path=transmission_config_path,
             trajectory_maker=trajectory_maker,
             health_index_generator=health_index_generator,
@@ -100,7 +105,9 @@ class InfectionSelector:
             time_to_symptoms_onset=time_to_symptoms_onset,
             max_symptoms_tag=symptoms.max_tag.name,
         )
-        return Infection(transmission=transmission, symptoms=symptoms, start_time=time)
+        return self.infection_class(
+            transmission=transmission, symptoms=symptoms, start_time=time
+        )
 
     def _load_transmission(self):
         """
@@ -244,3 +251,48 @@ class InfectionSelector:
         """
         health_index = self.health_index_generator(person)
         return Symptoms(health_index=health_index)
+
+
+class InfectionSelectors:
+    def __init__(self, infection_selectors: list = None):
+        self._infection_selectors = infection_selectors
+        self.infection_id_to_selector = self.make_dict() 
+
+    def make_dict(self):
+        """
+        Makes two dicts:
+        infection_type_id -> infection_class (needed for easier MPI comms)
+        infection_class -> infection_selector (needed to map infection to 
+                            the class that creates infections)
+        """
+        if not self._infection_selectors:
+            return {Covid19.infection_id(): InfectionSelector.from_file()}
+        ret = {}
+        for i, selector in enumerate(self._infection_selectors):
+            ret[selector.infection_class.infection_id()] = selector
+        return ret
+
+    def infect_person_at_time(
+        self, person: "Person", time: float, infection_id: int = Covid19.infection_id()
+    ):
+        """
+        Infects a person at a given time with the given infection_class.
+
+        Parameters
+        ----------
+        infection_class:
+            type of infection to create
+        person:
+            person that will be infected
+        time:
+            time at which infection happens
+        """
+        selector = self.infection_id_to_selector[infection_id]
+        selector.infect_person_at_time(person=person, time=time)
+
+    def __iter__(self):
+        return iter(self._infection_selectors)
+
+    def __getitem__(self, item):
+        return self._infection_selectors[item]
+        

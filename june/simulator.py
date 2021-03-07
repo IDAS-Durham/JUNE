@@ -4,7 +4,7 @@ import numpy as np
 import pickle
 import yaml
 from itertools import chain
-from typing import Optional, List
+from typing import Optional, List, Dict, Union
 from pathlib import Path
 from time import perf_counter
 from time import time as wall_clock
@@ -19,8 +19,8 @@ from june.groups import MedicalFacilities
 from june.groups.travel import Travel
 from june.groups.group.interactive import InteractiveGroup
 from june.infection.symptom_tag import SymptomTag
-from june.infection import InfectionSelector
-from june.infection_seed import InfectionSeed
+from june.infection import InfectionSelectors
+from june.infection_seed import InfectionSeeds
 from june.interaction import Interaction
 from june.policy import (
     Policies,
@@ -37,8 +37,21 @@ from june.utils.profiler import profile
 default_config_filename = paths.configs_path / "config_example.yaml"
 
 output_logger = logging.getLogger("simulator")
+mpi_logger = logging.getLogger("mpi")
+mpi_logger.propagate = False
+
 if mpi_rank > 0:
     output_logger.propagate = False
+
+
+def enable_mpi_debug(results_folder):
+    from june.logging import MPIFileHandler
+
+    logging_file = Path(results_folder) / "mpi.log"
+    with open(logging_file, "w") as f:
+        pass
+    mh = MPIFileHandler(logging_file)
+    mpi_logger.addHandler(mh)
 
 
 def _read_checkpoint_dates(checkpoint_dates):
@@ -68,8 +81,9 @@ class Simulator:
         interaction: Interaction,
         timer: Timer,
         activity_manager: ActivityManager,
-        infection_selector: InfectionSelector = None,
-        infection_seed: Optional["InfectionSeed"] = None,
+        infection_selectors: InfectionSelectors,
+        infection_seeds: Optional[InfectionSeeds] = None,
+        events: Optional[Events] = None,
         record: Optional[Record] = None,
         checkpoint_save_dates: List[datetime.date] = None,
         checkpoint_save_path: str = None,
@@ -85,9 +99,12 @@ class Simulator:
         self.activity_manager = activity_manager
         self.world = world
         self.interaction = interaction
-        self.infection_selector = infection_selector
-        self.infection_seed = infection_seed
+        self.infection_selectors = infection_selectors
+        self.infection_seeds = infection_seeds
+        self.events = events
         self.timer = timer
+        if self.events is not None:
+            self.events.init_events(world=world)
         # self.comment = comment
         self.checkpoint_save_dates = _read_checkpoint_dates(checkpoint_save_dates)
         if self.checkpoint_save_dates:
@@ -103,10 +120,10 @@ class Simulator:
         cls,
         world: World,
         interaction: Interaction,
-        infection_selector=None,
+        infection_selectors: InfectionSelectors,
         policies: Optional[Policies] = None,
         events: Optional[Events] = None,
-        infection_seed: Optional[InfectionSeed] = None,
+        infection_seeds: Optional[InfectionSeeds] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
@@ -120,7 +137,7 @@ class Simulator:
         Parameters
         ----------
         leisure
-        infection_seed
+        infection_seeds
         policies
         interaction
         world
@@ -147,7 +164,9 @@ class Simulator:
                 )
                 activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
-        checkpoint_save_dates = _read_checkpoint_dates(config.get("checkpoint_save_dates", None))
+        checkpoint_save_dates = _read_checkpoint_dates(
+            config.get("checkpoint_save_dates", None)
+        )
         weekday_activities = [
             activity for activity in time_config["step_activities"]["weekday"].values()
         ]
@@ -173,7 +192,6 @@ class Simulator:
             world=world,
             all_activities=all_activities,
             activity_to_super_groups=activity_to_super_groups,
-            events=events,
             leisure=leisure,
             travel=travel,
             policies=policies,
@@ -183,9 +201,10 @@ class Simulator:
             world=world,
             interaction=interaction,
             timer=timer,
+            events=events,
             activity_manager=activity_manager,
-            infection_selector=infection_selector,
-            infection_seed=infection_seed,
+            infection_selectors=infection_selectors,
+            infection_seeds=infection_seeds,
             record=record,
             checkpoint_save_dates=checkpoint_save_dates,
             checkpoint_save_path=checkpoint_save_path,
@@ -197,14 +216,15 @@ class Simulator:
         world: World,
         checkpoint_load_path: str,
         interaction: Interaction,
-        infection_selector=None,
+        infection_selectors=None,
         policies: Optional[Policies] = None,
-        infection_seed: Optional[InfectionSeed] = None,
+        infection_seeds: Optional[InfectionSeeds] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
         record: Optional[Record] = None,
-        # comment: Optional[str] = None,
+        events: Optional[Events] = None,
+        reset_infections=False,
     ):
         from june.hdf5_savers.checkpoint_saver import generate_simulator_from_checkpoint
 
@@ -212,13 +232,15 @@ class Simulator:
             world=world,
             checkpoint_path=checkpoint_load_path,
             interaction=interaction,
-            infection_selector=infection_selector,
+            infection_selectors=infection_selectors,
             policies=policies,
-            infection_seed=infection_seed,
+            infection_seeds=infection_seeds,
             leisure=leisure,
             travel=travel,
             config_filename=config_filename,
             record=record,
+            events=events,
+            reset_infections=reset_infections,
         )
 
     def clear_world(self):
@@ -346,11 +368,6 @@ class Simulator:
         for person in self.world.people.infected:
             previous_tag = person.infection.tag
             new_status = person.infection.update_health_status(time, duration)
-            if (
-                previous_tag == SymptomTag.exposed
-                and person.infection.tag == SymptomTag.mild
-            ):
-                person.residence.group.quarantine_starting_date = time
             if self.record is not None:
                 if previous_tag != person.infection.tag:
                     self.record.accumulate(
@@ -370,21 +387,25 @@ class Simulator:
             elif new_status == "dead":
                 self.bury_the_dead(self.world, person)
 
-    def infect_people(self, infected_ids, people_from_abroad_dict):
+    def infect_people(self, infected_ids, infection_ids, people_from_abroad_dict):
         """
         Given a list of infected ids, it initialises an infection object for them
         and sets it to person.infection. For the people who do not live in this domain
         a dictionary with their ids and domains is prepared to be sent through MPI.
         """
         foreign_ids = []
-        for inf_id in infected_ids:
-            if inf_id in self.world.people.people_dict:
-                person = self.world.people.get_from_id(inf_id)
-                self.infection_selector.infect_person_at_time(person, self.timer.now)
+        foreign_infection_ids = []
+        for person_id, infection_id in zip(infected_ids, infection_ids):
+            if person_id in self.world.people.people_ids:
+                person = self.world.people.get_from_id(person_id)
+                self.infection_selectors.infect_person_at_time(
+                    person=person, time=self.timer.now, infection_id=infection_id
+                )
             else:
-                foreign_ids.append(inf_id)
-        infect_in_domains = {}
+                foreign_ids.append(person_id)
+                foreign_infection_ids.append(infection_id)
 
+        infect_in_domains = {}
         if foreign_ids:
             people_ids = []
             people_domains = []
@@ -395,15 +416,24 @@ class Simulator:
                             people_from_abroad_dict[spec][group][subgroup].keys()
                         )
                         people_ids += p_ids
-                        people_domains += [
-                            people_from_abroad_dict[spec][group][subgroup][id]["dom"]
-                            for id in p_ids
-                        ]
+                        for id in p_ids:
+                            people_domains.append(
+                                people_from_abroad_dict[spec][group][subgroup][id][
+                                    "dom"
+                                ]
+                            )
+            infection_counter = 0
             for id, domain in zip(people_ids, people_domains):
                 if id in foreign_ids:
                     if domain not in infect_in_domains:
-                        infect_in_domains[domain] = []
-                    infect_in_domains[domain].append(id)
+                        infect_in_domains[domain] = {}
+                        infect_in_domains[domain]["id"] = []
+                        infect_in_domains[domain]["inf_id"] = []
+                    infect_in_domains[domain]["id"].append(id)
+                    infect_in_domains[domain]["inf_id"].append(
+                        foreign_infection_ids[infection_counter]
+                    )
+                    infection_counter += 1
         return infect_in_domains
 
     def tell_domains_to_infect(self, infect_in_domains):
@@ -424,25 +454,34 @@ class Simulator:
         # we want to make sure we transfer something for every domain.
         # (we have an np.concatenate which doesn't work on empty arrays)
 
-        toinfect = [empty for x in range(mpi_size)]
+        people_ids = [empty for x in range(mpi_size)]
+        infection_ids = [empty for x in range(mpi_size)]
 
         # FIXME: domain id should not be floats! Origin is well upstream!
         for x in infect_in_domains:
-            toinfect[int(x)] = np.array(infect_in_domains[x], dtype=np.uint32)
+            people_ids[int(x)] = np.array(infect_in_domains[x]["id"], dtype=np.uint32)
+            infection_ids[int(x)] = np.array(
+                infect_in_domains[x]["inf_id"], dtype=np.uint32
+            )
 
-        people_to_infect, n_sending, n_receiving = move_info(toinfect)
+        people_to_infect, n_sending, n_receiving = move_info(people_ids)
+        infection_to_infect, n_sending, n_receiving = move_info(infection_ids)
 
         tock, tockw = perf_counter(), wall_clock()
         output_logger.info(
-            f"CMS: Infection COMS-v2 for rank {mpi_rank}/{mpi_size}({n_sending+n_receiving}) {tock-tick},{tockw-tickw} - {self.timer.date}"
+            f"CMS: Infection COMS-v2 for rank {mpi_rank}/{mpi_size}({n_sending+n_receiving})"
+            f"{tock-tick},{tockw-tickw} - {self.timer.date}"
         )
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},infection,{tock-tick}")
 
-        for infection_data in people_to_infect:
+        for person_id, infection_id in zip(people_to_infect, infection_to_infect):
             try:
-                person = self.world.people.get_from_id(infection_data)
-                self.infection_selector.infect_person_at_time(person, self.timer.now)
+                person = self.world.people.get_from_id(person_id)
+                self.infection_selectors.infect_person_at_time(
+                    person=person, time=self.timer.now, infection_id=infection_id
+                )
             except:
-                if infection_data == invalid_id:
+                if person_id == invalid_id:
                     continue
                 raise
 
@@ -466,7 +505,20 @@ class Simulator:
             self.activity_manager.policies.regional_compliance.apply(
                 date=self.timer.date, regions=self.world.regions
             )
+            if self.activity_manager.policies.vaccine_distribution is not None:
+                self.activity_manager.policies.vaccine_distribution.update_susceptibility_of_vaccinated(
+                    self.world.people, date=self.timer.date
+                )
         activities = self.timer.activities
+        # apply events
+        if self.events is not None:
+            self.events.apply(
+                date=self.timer.date,
+                world=self.world,
+                activities=activities,
+                day_type=self.timer.day_type,
+                simulator=self,
+            )
         if not activities or len(activities) == 0:
             output_logger.info("==== do_timestep(): no active groups found. ====")
             return
@@ -474,8 +526,9 @@ class Simulator:
             people_from_abroad_dict,
             n_people_from_abroad,
             n_people_going_abroad,
-            # ) = self.activity_manager.do_timestep(regional_compliance=regional_compliance)
+            to_send_abroad,  # useful for knowing who's MPI-ing, so can send extra info as needed.
         ) = self.activity_manager.do_timestep()
+        tick_interaction = perf_counter()
 
         # get the supergroup instances that are active in this time step:
         active_super_groups = self.activity_manager.active_super_groups
@@ -500,7 +553,8 @@ class Simulator:
         )
 
         # main interaction loop
-        infected_ids = []
+        infected_ids = []  # ids of the newly infected people
+        infection_ids = []  # ids of the viruses they got
         for super_group in super_group_instances:
             for group in super_group:
                 if group.external:
@@ -509,19 +563,29 @@ class Simulator:
                     people_from_abroad = people_from_abroad_dict.get(
                         group.spec, {}
                     ).get(group.id, None)
-                    new_infected_ids, group_size = self.interaction.time_step_for_group(
+                    (
+                        new_infected_ids,
+                        new_infection_ids,
+                        group_size,
+                    ) = self.interaction.time_step_for_group(
                         group=group,
                         people_from_abroad=people_from_abroad,
                         delta_time=self.timer.duration,
                         record=self.record,
                     )
                     infected_ids += new_infected_ids
+                    infection_ids += new_infection_ids
                     n_people += group_size
+        tock_interaction = perf_counter()
+        mpi_logger.info(
+            f"{self.timer.date},{mpi_rank},interaction,{tock_interaction-tick_interaction}"
+        )
 
         # infect the people that got exposed
-        if self.infection_selector:
+        if self.infection_selectors:
             infect_in_domains = self.infect_people(
                 infected_ids=infected_ids,
+                infection_ids=infection_ids,
                 people_from_abroad_dict=people_from_abroad_dict,
             )
             to_infect = self.tell_domains_to_infect(infect_in_domains)
@@ -550,47 +614,43 @@ class Simulator:
         self.clear_world()
         tock, tockw = perf_counter(), wall_clock()
         output_logger.info(
-            f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick}, {tockw-tickw} - {self.timer.date}\n"
+            f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick},"
+            f"{tockw-tickw} - {self.timer.date}\n"
         )
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},timestep,{tock-tick}")
 
     def run(self):
         """
         Run simulation with n_seed initial infections
         """
         output_logger.info(
-            f"Starting simulation for {self.timer.total_days} days at day {self.timer.date}, to run for {self.timer.total_days} days"
+            f"Starting simulation for {self.timer.total_days} days at day {self.timer.date},"
+            f"to run for {self.timer.total_days} days"
         )
         self.clear_world()
         if self.record is not None:
             self.record.parameters(
                 interaction=self.interaction,
-                infection_seed=self.infection_seed,
-                infection_selector=self.infection_selector,
+                infection_seeds=self.infection_seeds,
+                infection_selectors=self.infection_selectors,
                 activity_manager=self.activity_manager,
             )
         while self.timer.date < self.timer.final_date:
-            if self.infection_seed:
-                if (
-                    self.infection_seed.max_date
-                    >= self.timer.date
-                    >= self.infection_seed.min_date
-                ):
-                    self.infection_seed.unleash_virus_per_day(
-                        self.timer.date, record=self.record
-                    )
+            if self.infection_seeds:
+                self.infection_seeds.unleash_virus_per_day(
+                    self.timer.date, record=self.record
+                )
             self.do_timestep()
             if (
                 self.timer.date.date() in self.checkpoint_save_dates
                 and (self.timer.now + self.timer.duration).is_integer()
             ):  # this saves in the last time step of the day
                 saving_date = self.timer.date.date()
-                next(self.timer)  # we want to save at the next time step so that
                 # we can resume consistenly
                 output_logger.info(
                     f"Saving simulation checkpoint at {self.timer.date.date()}"
                 )
                 self.save_checkpoint(saving_date)
-                continue
             next(self.timer)
 
     def save_checkpoint(self, saving_date):

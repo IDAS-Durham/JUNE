@@ -19,7 +19,7 @@ from june.groups import (
 )
 from june.infection import SymptomTag
 from june.interaction import Interaction
-from june.infection.infection_selector import InfectionSelector
+from june.infection.infection_selector import InfectionSelector, InfectionSelectors
 from june.infection_seed import InfectionSeed
 from june.policy import Policies, Hospitalisation
 from june.simulator import Simulator
@@ -117,31 +117,29 @@ def make_dummy_world(geog):
     )
     uni = University(coordinates=super_area.coordinates, n_students_max=2500,)
 
-    worker1 = Person.from_attributes(age=44, sex="f", ethnicity="A1", socioecon_index=5)
+    worker1 = Person.from_attributes(age=44, sex="f", ethnicity="A1")
     worker1.area = super_area.areas[0]
     household1.add(worker1, subgroup_type=household1.SubgroupType.adults)
     worker1.sector = "Q"
     company.add(worker1)
 
-    worker2 = Person.from_attributes(age=42, sex="m", ethnicity="B1", socioecon_index=5)
+    worker2 = Person.from_attributes(age=42, sex="m", ethnicity="B1")
     worker2.area = super_area.areas[0]
     household1.add(worker2, subgroup_type=household1.SubgroupType.adults)
     worker2.sector = "Q"
     company.add(worker2)
 
-    student1 = Person.from_attributes(
-        age=20, sex="f", ethnicity="A1", socioecon_index=5
-    )
+    student1 = Person.from_attributes(age=20, sex="f", ethnicity="A1")
     student1.area = super_area.areas[0]
     household1.add(student1, subgroup_type=household1.SubgroupType.adults)
     uni.add(student1)
 
-    pupil1 = Person.from_attributes(age=8, sex="m", ethnicity="C1", socioecon_index=5)
+    pupil1 = Person.from_attributes(age=8, sex="m", ethnicity="C1")
     pupil1.area = super_area.areas[0]
     household1.add(pupil1, subgroup_type=household1.SubgroupType.kids)
     # school.add(pupil1)
 
-    pupil2 = Person.from_attributes(age=5, sex="f", ethnicity="A1", socioecon_index=5)
+    pupil2 = Person.from_attributes(age=5, sex="f", ethnicity="A1")
     pupil2.area = super_area.areas[0]
     household1.add(pupil2, subgroup_type=household1.SubgroupType.kids)
     # school.add(pupil2)
@@ -171,7 +169,7 @@ def create_sim(world, interaction, selector, seed=False):
     if not seed:
         n_cases = 2
         infection_seed.unleash_virus(
-            population=world.people, n_cases=n_cases, record=record
+            population=world.people, n_cases=n_cases, record=record, time=0
         )
     elif seed == "hospitalised":
         for person in world.people:
@@ -180,10 +178,11 @@ def create_sim(world, interaction, selector, seed=False):
         for person in world.people:
             infect_dead_person(person)
 
+    selectors = InfectionSelectors([selector])
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selector=selector,
+        infection_selectors=selectors,
         config_filename=test_config,
         policies=policies,
         record=record,

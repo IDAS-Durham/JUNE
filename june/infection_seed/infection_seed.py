@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from random import shuffle
 import datetime
-from collections import Counter
+from collections import Counter, defaultdict
 from june import paths
 from typing import List, Optional
 
@@ -12,6 +12,11 @@ from june.demography import Population
 from june.geography import SuperAreas
 from june.infection.infection_selector import InfectionSelector
 from june.infection.health_index.health_index import HealthIndexGenerator
+from june.utils import parse_probabilities
+
+default_infection_seeds_config_file = (
+    paths.configs_path / "default/infection/infection_seeds.yaml"
+)
 
 
 class InfectionSeed:
@@ -47,12 +52,13 @@ class InfectionSeed:
         if self.daily_super_area_cases is not None:
             self.min_date = self.daily_super_area_cases.index.min()
             self.max_date = self.daily_super_area_cases.index.max()
-        self.dates_seeded = []
+        self.dates_seeded = set()
 
     def unleash_virus(
         self,
         population: "Population",
         n_cases: int,
+        time: float,
         mpi_rank: int = 0,
         mpi_comm: Optional["MPI.COMM_WORLD"] = None,
         mpi_size: Optional[int] = None,
@@ -62,7 +68,7 @@ class InfectionSeed:
         """
         Infects ```n_cases``` people in ```population```
 
-        Parameters 
+        Parameters
         ----------
         population:
             population to infect
@@ -85,7 +91,9 @@ class InfectionSeed:
             n_cases = round(self.seed_strength * n_cases)
             if self.age_profile is None:
                 ids_to_infect = np.random.choice(
-                    susceptible_ids, n_cases, replace=False,
+                    susceptible_ids,
+                    n_cases,
+                    replace=False,
                 )
             else:
                 ids_to_infect = self.select_susceptiles_by_age(susceptible_ids, n_cases)
@@ -97,32 +105,35 @@ class InfectionSeed:
             for inf_id in ids_to_infect:
                 if inf_id in self.world.people.people_dict:
                     person = self.world.people.get_from_id(inf_id)
-                    self.infection_selector.infect_person_at_time(person, 0.0)
+                    self.infection_selector.infect_person_at_time(person, time=time)
                     if record is not None:
                         record.accumulate(
-                            table_name='infections',
+                            table_name="infections",
                             location_spec="infection_seed",
                             region_name=person.super_area.region.name,
                             location_id=0,
                             infected_ids=[person.id],
                             infector_ids=[person.id],
+                            infection_ids=[person.infection.infection_id()],
                         )
         else:
             for inf_id in ids_to_infect:
-                # if isinstance(self.world, Domain):
                 if box_mode:
                     person_to_infect = self.world.members[0].people[inf_id]
                 else:
                     person_to_infect = self.world.people.get_from_id(inf_id)
-                self.infection_selector.infect_person_at_time(person_to_infect, 0.0)
+                self.infection_selector.infect_person_at_time(
+                    person_to_infect, time=time
+                )
                 if record is not None:
                     record.accumulate(
-                        table_name='infections',
+                        table_name="infections",
                         location_spec="infection_seed",
                         region_name=person_to_infect.super_area.region.name,
                         location_id=0,
                         infected_ids=[person_to_infect.id],
                         infector_ids=[person_to_infect.id],
+                        infection_ids=[person_to_infect.infection.infection_id()],
                     )
 
     def select_susceptiles_by_age(
@@ -185,7 +196,10 @@ class InfectionSeed:
         return choices
 
     def infect_super_areas(
-        self, n_cases_per_super_area: pd.DataFrame, record: Optional["Record"] = None
+        self,
+        n_cases_per_super_area: pd.DataFrame,
+        time: float = 0,
+        record: Optional[Record] = None,
     ):
         """
         Infect super areas with numer of cases given by data frame
@@ -199,25 +213,57 @@ class InfectionSeed:
             try:
                 n_cases = int(n_cases_per_super_area[super_area.name])
                 self.unleash_virus(
-                    Population(super_area.people), n_cases=n_cases, record=record
+                    Population(super_area.people),
+                    n_cases=n_cases,
+                    record=record,
+                    time=time,
                 )
-            except KeyError as e:
-                raise KeyError("There is no data on cases for super area: %s" % str(e))
+            except KeyError:
+                continue
 
-    def unleash_virus_per_day(self, date: "datetime", record: Optional[Record]=None):
+    def unleash_virus_per_day(
+        self, date: datetime, time: float = 0, record: Optional[Record] = None
+    ):
         """
         Infect super areas at a given ```date```
 
         Parameters
         ----------
         date:
-            datetime object 
+            datetime object
         """
-        date_str = date.strftime("%Y-%m-%d")
-        date = date.date()
-        if (
-            date not in self.dates_seeded
+        is_seeding_date = self.max_date >= date >= self.min_date
+        date_str = date.date().strftime("%Y-%m-%d")
+        not_yet_seeded_date = (
+            date_str not in self.dates_seeded
             and date_str in self.daily_super_area_cases.index
-        ):
-            self.infect_super_areas(self.daily_super_area_cases.loc[date_str], record=record)
-            self.dates_seeded.append(date)
+        )
+        if is_seeding_date and not_yet_seeded_date:
+            self.infect_super_areas(
+                n_cases_per_super_area=self.daily_super_area_cases.loc[date_str],
+                time=time,
+                record=record,
+            )
+            self.dates_seeded.add(date_str)
+
+
+class InfectionSeeds:
+    """
+    Groups infection seeds and applies them sequentially.
+    """
+
+    def __init__(self, infection_seeds: List[InfectionSeed]):
+        self.infection_seeds = infection_seeds
+
+    def unleash_virus_per_day(
+        self, date: datetime, time: float = 0, record: Optional[Record] = None
+    ):
+        for seed in self.infection_seeds:
+            seed.unleash_virus_per_day(date=date, record=record, time=time)
+
+    def __iter__(self):
+        return iter(self.infection_seeds)
+
+    def __getitem__(self, item):
+        return self.infection_seeds[item]
+        

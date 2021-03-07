@@ -107,8 +107,8 @@ class ExponentialCompletionTime(DistributionCompletionTime):
             loc=loc,
             scale=scale
         )
-        self.loc = loc
-        self.scale = scale
+        #self.loc = loc
+        #self.scale = scale
 
 
 class BetaCompletionTime(DistributionCompletionTime):
@@ -126,10 +126,10 @@ class BetaCompletionTime(DistributionCompletionTime):
             loc=loc,
             scale=scale
         )
-        self.a = a
-        self.b = b
-        self.loc = loc
-        self.scale = scale
+        #self.a = a
+        #self.b = b
+        #self.loc = loc
+        #self.scale = scale
 
 class LognormalCompletionTime(DistributionCompletionTime):
     def __init__(
@@ -144,9 +144,9 @@ class LognormalCompletionTime(DistributionCompletionTime):
             loc=loc,
             scale=scale
         )
-        self.s = s
-        self.loc = loc
-        self.scale = scale
+        #self.s = s
+        #self.loc = loc
+        #self.scale = scale
 
 class NormalCompletionTime(DistributionCompletionTime):
     def __init__(
@@ -159,8 +159,8 @@ class NormalCompletionTime(DistributionCompletionTime):
             loc=loc,
             scale=scale
         )
-        self.loc = loc
-        self.scale = scale
+        #self.loc = loc
+        #self.scale = scale
 
 
 class ExponweibCompletionTime(DistributionCompletionTime):
@@ -178,10 +178,10 @@ class ExponweibCompletionTime(DistributionCompletionTime):
             loc=loc,
             scale=scale
         )
-        self.a = a
-        self.c = c
-        self.loc = loc
-        self.scale = scale
+        #self.a = a
+        #self.c = c
+        #self.loc = loc
+        #self.scale = scale
 
 
 class Stage:

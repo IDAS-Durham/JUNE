@@ -43,20 +43,21 @@ class MovablePeople:
             view = [
                 person.id,
                 person.infection.transmission.probability,
+                person.infection.infection_id(),
                 0.0,
                 mpi_rank,
                 True,
             ]
         else:
-            view = [person.id, 0.0, person.susceptibility, mpi_rank, True]
+            view = [person.id, 0.0, 0, person.susceptibility, mpi_rank, True]
 
         self.skinny_out[domain_id][group_spec][group_id][subgroup_type][
             person.id
         ] = view
 
     def delete_person(self, person, external_subgroup):
-        """ Remove a person from the external subgroup. For now we actually do it. Later
-        we may flag them. """
+        """Remove a person from the external subgroup. For now we actually do it. Later
+        we may flag them."""
         domain_id = external_subgroup.domain_id
         group_spec = external_subgroup.spec
         group_id = external_subgroup.group_id
@@ -99,7 +100,7 @@ class MovablePeople:
         return keys, outbound, outbound.shape[0]
 
     def update(self, rank, keys, rank_data):
-        """ Update the information we have about people coming into our domain
+        """Update the information we have about people coming into our domain
         :param rank: domain of origin
         :param keys: dictionary keys for the group structure
         :param rank_data: numpy array of all the person data
@@ -120,8 +121,14 @@ class MovablePeople:
             try:
                 self.skinny_in[group_spec][group_id][subgroup_type].update(
                     {
-                        int(k): {"inf_prob": i, "susc": s, "dom": d, "active": a}
-                        for k, i, s, d, a in data
+                        int(k): {
+                            "inf_prob": i,
+                            "inf_id": t,
+                            "susc": s,
+                            "dom": d,
+                            "active": a,
+                        }
+                        for k, i, t, s, d, a in data
                     }
                 )
             except:
@@ -133,7 +140,7 @@ def move_info(info2move):
     """
     Send a list of arrays of uint32 integers to all ranks,
     and receive arrays from all ranks.
-    
+
     """
     # flatten list of uneven vectors of data, ensure correct type
     assert len(info2move) == mpi_size

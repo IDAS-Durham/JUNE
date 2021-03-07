@@ -2,6 +2,7 @@ from enum import IntEnum
 
 import numpy as np
 import yaml
+from zlib import adler32
 
 from june import paths
 from june.infection.health_index.health_index import HealthIndexGenerator
@@ -11,12 +12,6 @@ from june.infection.transmission import TransmissionConstant, TransmissionGamma
 from june.infection.transmission_xnexp import TransmissionXNExp
 from june.infection.trajectory_maker import CompletionTime
 
-default_transmission_config_path = (
-    paths.configs_path / "defaults/transmission/nature.yaml"
-)
-default_trajectories_config_path = (
-    paths.configs_path / "defaults/symptoms/trajectories.yaml"
-)
 
 
 class Infection:
@@ -26,14 +21,13 @@ class Infection:
     infected, which is useful to compute R0. The infection probability is updated at every 
     time step, according to an infectivity profile.
     """
-
     __slots__ = (
-        "number_of_infected",
         "start_time",
         "transmission",
         "symptoms",
         "time_of_testing",
     )
+    _infection_id = None
 
     def __init__(
         self, transmission: "Transmission", symptoms: "Symptoms", start_time: float = -1
@@ -51,8 +45,14 @@ class Infection:
         self.start_time = start_time
         self.transmission = transmission
         self.symptoms = symptoms
-        self.number_of_infected = 0.0
         self.time_of_testing = None
+
+    @classmethod # this could be a property but it is complicated (needs meta classes)
+    def infection_id(cls):
+        # this creates a unique id for each inherited class
+        if not cls._infection_id:
+            cls._infection_id = adler32(cls.__name__.encode("ascii"))
+        return cls._infection_id
 
     def update_health_status(self, time, delta_time):
         """
@@ -128,3 +128,9 @@ class Infection:
     @property
     def infection_probability(self):
         return self.transmission.probability
+
+class Covid19(Infection):
+    pass
+
+class Covid20(Infection):
+    pass

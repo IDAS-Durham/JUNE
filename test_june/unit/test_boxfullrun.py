@@ -8,6 +8,11 @@ from june.demography import Population
 
 
 def test_box_full_run(simulator_box, selector):
-    seed = InfectionSeed(simulator_box.world.boxes, selector, )
-    seed.unleash_virus(Population(simulator_box.world.people), 10, box_mode=True)
+    seed = InfectionSeed(
+        simulator_box.world.boxes,
+        selector,
+    )
+    seed.unleash_virus(
+        Population(simulator_box.world.people), 10, box_mode=True, time=0
+    )
     simulator_box.run()

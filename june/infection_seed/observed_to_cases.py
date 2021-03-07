@@ -16,7 +16,7 @@ default_area_super_region_path = (
     paths.data_path / "input/geography/area_super_area_region.csv"
 )
 default_observed_deaths_path = (
-    paths.data_path / "input/infection_seed/hospital_deaths_per_region_per_date_old.csv"
+    paths.data_path / "input/infection_seed/hospital_deaths_per_region_per_date.csv"
 )
 default_age_per_area_path = (
     paths.data_path / "input/demography/age_structure_single_year.csv"
@@ -31,6 +31,7 @@ class Observed2Cases:
         self,
         age_per_area_df: pd.DataFrame,
         female_fraction_per_area_df: pd.DataFrame,
+        regional_infections_per_hundred_thousand=100,
         health_index_generator: "HealthIndexGenerator" = None,
         symptoms_trajectories: Optional["TrajectoryMaker"] = None,
         n_observed_deaths: Optional[pd.DataFrame] = None,
@@ -66,6 +67,9 @@ class Observed2Cases:
             the expected number of cases (therefore the estimates becomes less
             dependent on spikes in the data)
         """
+        self.regional_infections_per_hundred_thousand = (
+            regional_infections_per_hundred_thousand
+        )
         self.area_super_region_df = area_super_region_df
         self.age_per_area_df = age_per_area_df
         (
@@ -78,6 +82,7 @@ class Observed2Cases:
         self.symptoms_trajectories = symptoms_trajectories
         self.health_index_generator = health_index_generator
         self.regions = self.area_super_region_df["region"].unique()
+        # TODO: this are particularities of England that should not be here.
         if (
             n_observed_deaths is not None
             and "East Of England" in n_observed_deaths.columns
@@ -93,6 +98,7 @@ class Observed2Cases:
     def from_file(
         cls,
         health_index_generator,
+        regional_infections_per_hundred_thousand=100,
         age_per_area_path: str = default_age_per_area_path,
         female_fraction_per_area_path: str = default_female_fraction_per_area_path,
         trajectories_path: str = default_trajectories_path,
@@ -140,6 +146,7 @@ class Observed2Cases:
         n_observed_deaths.index = pd.to_datetime(n_observed_deaths.index)
         area_super_region_df = pd.read_csv(area_super_region_path, index_col=0)
         # Combine regions as in deaths dataset
+        # TODO: do this outside here for generality
         area_super_region_df = area_super_region_df.replace(
             {
                 "region": {
@@ -151,6 +158,7 @@ class Observed2Cases:
             }
         )
         return cls(
+            regional_infections_per_hundred_thousand=regional_infections_per_hundred_thousand,
             age_per_area_df=age_per_area_df,
             female_fraction_per_area_df=female_fraction_per_area_df,
             health_index_generator=health_index_generator,
@@ -374,10 +382,39 @@ class Observed2Cases:
         )
         return people_per_super_aera_and_region[["weights", "region"]]
 
+    def limit_cases_per_region(self, n_cases_per_region_df, starting_date="2020-02-24"):
+        people_per_region = self.females_per_age_region_df.sum(
+            axis=1
+        ) + self.males_per_age_region_df.sum(axis=1)
+        n_cases_per_region_df = n_cases_per_region_df.loc[starting_date:]
+        cummulative_infections_hundred_thousand = (
+            n_cases_per_region_df.cumsum() / people_per_region * 100_000
+        )
+        regional_series = []
+        for region in n_cases_per_region_df.columns:
+            regional_index = np.searchsorted(
+                cummulative_infections_hundred_thousand[region].values,
+                self.regional_infections_per_hundred_thousand,
+            )
+            regional_cases_to_seed = n_cases_per_region_df[region].iloc[
+                : regional_index + 1
+            ]
+            target_cases = (
+                self.regional_infections_per_hundred_thousand
+                * people_per_region.loc[region]
+                / 100_000
+            )
+            remaining_cases = np.round(
+                max(0, target_cases - regional_cases_to_seed.iloc[:-1].sum())
+            )
+            regional_cases_to_seed.iloc[-1] = remaining_cases
+            regional_series.append(regional_cases_to_seed)
+        return pd.concat(regional_series, axis=1).fillna(0.0)
+
     def convert_regional_cases_to_super_area(
         self,
         n_cases_per_region_df: pd.DataFrame,
-        dates: Union[List[str], Dict[str, List]],
+        starting_date: str,
     ) -> pd.DataFrame:
         """
         Converts regional cases to cases by super area by weighting each super area
@@ -394,17 +431,10 @@ class Observed2Cases:
         -------
         data frame with the number of cases by super area, indexed by date
         """
-        if type(dates) == dict:
-            n_cases_per_region_asynchronised = {}
-            for region, dates in dates.items():
-                n_cases_per_region_asynchronised[region] = n_cases_per_region_df.loc[
-                    dates[0] : dates[1], region
-                ]
-            n_cases_per_region_df = pd.DataFrame.from_dict(
-                n_cases_per_region_asynchronised
-            ).fillna(0)
-        else:
-            n_cases_per_region_df = n_cases_per_region_df.loc[dates[0] : dates[-1]]
+        n_cases_per_region_df = self.limit_cases_per_region(
+            n_cases_per_region_df=n_cases_per_region_df,
+            starting_date=starting_date,
+        )
         n_cases_per_super_area_df = pd.DataFrame(
             0,
             index=n_cases_per_region_df.index,

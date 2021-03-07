@@ -100,7 +100,7 @@ class TestDomesticCare:
 
     def test__send_carers_during_leisure(self, domestic_care, world):
         # leisure only go weekdays leisure
-        domestic_care.apply(world=world, activities=["leisure"], is_weekend=False)
+        domestic_care.apply(world=world, activities=["leisure"], day_type="weekday")
         for household in world.households:
             if household.household_to_care:
                 has_active = False
@@ -117,7 +117,7 @@ class TestDomesticCare:
 
     def test__carers_dont_go_weekends(self, domestic_care, world):
         # leisure only go weekdays leisure
-        domestic_care.apply(world=world, activities=["leisure"], is_weekend=True)
+        domestic_care.apply(world=world, activities=["leisure"], day_type="weekend")
         for household in world.households:
             if household.household_to_care:
                 for person in household.residents:
@@ -127,7 +127,7 @@ class TestDomesticCare:
     def test__carers_dont_go_outside_leisure(self, domestic_care, world):
         # leisure only go weekdays leisure
         domestic_care.apply(
-            world=world, activities=["primary_activity"], is_weekend=False
+            world=world, activities=["primary_activity"], day_type="weekday"
         )
         for household in world.households:
             if household.household_to_care:
@@ -136,7 +136,7 @@ class TestDomesticCare:
                     assert not person.busy
 
     def test__residents_stay_home(self, domestic_care, world):
-        domestic_care.apply(world=world, activities=["leisure"], is_weekend=False)
+        domestic_care.apply(world=world, activities=["leisure"], day_type="weekday")
         active = False
         for household in world.households:
             if household.household_to_care:
@@ -148,7 +148,7 @@ class TestDomesticCare:
         assert active
 
     def test__care_beta(self, domestic_care, world):
-        domestic_care.apply(world=world, activities=["leisure"], is_weekend=False)
+        domestic_care.apply(world=world, activities=["leisure"], day_type="weekday")
         for household in world.households:
             if household.household_to_care:
                 household_to_care = household.household_to_care

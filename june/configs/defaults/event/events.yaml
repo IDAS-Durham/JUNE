@@ -10,3 +10,17 @@ domestic_care:
     85-100: 0.72 #0.36
     # source : https://www.ageuk.org.uk/globalassets/age-uk/documents/reports-and-publications/reports-and-briefings/health--wellbeing/age_uk_briefing_state_of_health_and_care_of_older_people_july2019.pdf
 
+mutation:
+  start_time: 2020-11-10
+  end_time: 2020-11-11
+  mutation_id: 170394200
+  regional_probabilities:
+    "South East": 0.16
+    "East of England": 0.11
+    "London": 0.11
+    "South West" : 0.05
+    "East Midlands" : 0.01
+    "West Midlands" : 0.01
+    "North West" : 0.01
+    "Yorkshire and The Humber": 0.01
+    "North East" : 0.01
