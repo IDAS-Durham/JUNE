@@ -82,6 +82,7 @@ class Observed2Cases:
         self.symptoms_trajectories = symptoms_trajectories
         self.health_index_generator = health_index_generator
         self.regions = self.area_super_region_df["region"].unique()
+        # TODO: this are particularities of England that should not be here.
         if (
             n_observed_deaths is not None
             and "East Of England" in n_observed_deaths.columns
@@ -145,6 +146,7 @@ class Observed2Cases:
         n_observed_deaths.index = pd.to_datetime(n_observed_deaths.index)
         area_super_region_df = pd.read_csv(area_super_region_path, index_col=0)
         # Combine regions as in deaths dataset
+        # TODO: do this outside here for generality
         area_super_region_df = area_super_region_df.replace(
             {
                 "region": {
@@ -397,8 +399,14 @@ class Observed2Cases:
             regional_cases_to_seed = n_cases_per_region_df[region].iloc[
                 : regional_index + 1
             ]
-            target_cases = self.regional_infections_per_hundred_thousand * people_per_region.loc[region] / 100_000
-            remaining_cases = np.round(max(0, target_cases - regional_cases_to_seed.iloc[:-1].sum()))
+            target_cases = (
+                self.regional_infections_per_hundred_thousand
+                * people_per_region.loc[region]
+                / 100_000
+            )
+            remaining_cases = np.round(
+                max(0, target_cases - regional_cases_to_seed.iloc[:-1].sum())
+            )
             regional_cases_to_seed.iloc[-1] = remaining_cases
             regional_series.append(regional_cases_to_seed)
         return pd.concat(regional_series, axis=1).fillna(0.0)
@@ -424,7 +432,8 @@ class Observed2Cases:
         data frame with the number of cases by super area, indexed by date
         """
         n_cases_per_region_df = self.limit_cases_per_region(
-            n_cases_per_region_df=n_cases_per_region_df, starting_date=starting_date,
+            n_cases_per_region_df=n_cases_per_region_df,
+            starting_date=starting_date,
         )
         n_cases_per_super_area_df = pd.DataFrame(
             0,

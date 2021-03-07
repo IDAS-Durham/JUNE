@@ -34,7 +34,7 @@ class Event(ABC):
     def initialise(self, world):
         raise NotImplementedError
 
-    def apply(self, world, activities, day_type):
+    def apply(self, world, simulator, activities, day_type):
         raise NotImplementedError
 
 
@@ -79,6 +79,7 @@ class Events:
         self,
         date,
         world,
+        simulator,
         activities: List[str],
         day_type: bool,
     ):
@@ -86,6 +87,7 @@ class Events:
             if event.is_active(date=date):
                 event.apply(
                     world=world,
+                    simulator=simulator,
                     activities=activities,
                     day_type=day_type,
                 )

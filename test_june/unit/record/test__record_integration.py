@@ -21,7 +21,7 @@ from june.groups import (
 )
 from june.infection import SymptomTag
 from june.interaction import Interaction
-from june.infection.infection_selector import InfectionSelector
+from june.infection.infection_selector import InfectionSelectors, InfectionSelector
 from june.infection_seed import InfectionSeed
 from june.policy import Policies, Hospitalisation
 from june.simulator import Simulator
@@ -46,7 +46,6 @@ def clean_world(world):
         hospital.icu_ids = set()
 
 
-
 class MockHealthIndexGenerator:
     def __init__(self, desired_symptoms):
         self.index = desired_symptoms
@@ -59,7 +58,9 @@ class MockHealthIndexGenerator:
         return hi
 
 
-def make_selector(desired_symptoms,):
+def make_selector(
+    desired_symptoms,
+):
     health_index_generator = MockHealthIndexGenerator(desired_symptoms)
     selector = InfectionSelector(
         health_index_generator=health_index_generator,
@@ -69,7 +70,10 @@ def make_selector(desired_symptoms,):
 
 def infect_hospitalised_person(person):
     max_symptom_tag = random.choice(
-        [SymptomTag.hospitalised, SymptomTag.intensive_care,]
+        [
+            SymptomTag.hospitalised,
+            SymptomTag.intensive_care,
+        ]
     )
     selector = make_selector(desired_symptoms=max_symptom_tag)
     selector.infect_person_at_time(person, 0.0)
@@ -87,7 +91,7 @@ def infect_dead_person(person):
 def create_selector(health_index_generator):
     selector = InfectionSelector(
         paths.configs_path / "defaults/transmission/XNExp.yaml",
-        health_index_generator=health_index_generator
+        health_index_generator=health_index_generator,
     )
     selector.recovery_rate = 1.0
     selector.transmission_probability = 1.0
@@ -124,7 +128,10 @@ def make_dummy_world(geog):
         area=geog.areas.members[0],
         coordinates=super_area.coordinates,
     )
-    uni = University(coordinates=super_area.coordinates, n_students_max=2500,)
+    uni = University(
+        coordinates=super_area.coordinates,
+        n_students_max=2500,
+    )
 
     worker1 = Person.from_attributes(age=44, sex="f", ethnicity="A1")
     worker1.area = super_area.areas[0]
@@ -179,7 +186,7 @@ def create_sim(world, interaction, selector, seed=False):
     if not seed:
         n_cases = 2
         infection_seed.unleash_virus(
-            population=world.people, n_cases=n_cases, record=record
+            population=world.people, n_cases=n_cases, record=record, time=0
         )
     elif seed == "hospitalised":
         for person in world.people:
@@ -188,10 +195,11 @@ def create_sim(world, interaction, selector, seed=False):
         for person in world.people:
             infect_dead_person(person)
 
+    selectors = InfectionSelectors([selector])
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selector=selector,
+        infection_selectors=selectors,
         config_filename=test_config,
         policies=policies,
         record=record,
@@ -306,6 +314,7 @@ def test__log_hospital_admissions(world, interaction, selector):
                 )
     clean_world(world)
 
+
 def test__log_icu_admissions(world, interaction, selector):
     clean_world(world)
     sim = create_sim(world, interaction, selector, seed="hospitalised")
@@ -318,7 +327,10 @@ def test__log_icu_admissions(world, interaction, selector):
         daily_icu_ids = []
         sim.update_health_status(sim.timer.now, sim.timer.duration)
         for person in world.people.infected:
-            if person.infection.symptoms.tag == SymptomTag.intensive_care and person.id not in saved_ids:
+            if (
+                person.infection.symptoms.tag == SymptomTag.intensive_care
+                and person.id not in saved_ids
+            ):
                 daily_icu_ids.append(person.id)
                 saved_ids.append(person.id)
         icu_admissions[timer] = daily_icu_ids
@@ -342,8 +354,6 @@ def test__log_icu_admissions(world, interaction, selector):
                     icu_admissions[timestamp]
                 )
     clean_world(world)
-
-
 
 
 def test__symptoms_transition(world, interaction, selector):

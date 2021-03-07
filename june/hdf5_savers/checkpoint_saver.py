@@ -10,9 +10,9 @@ from june.world import World
 from june.interaction import Interaction
 from june.groups.leisure import Leisure
 from june.policy import Policies
+from june.infection import InfectionSelectors, Infection
+from june.infection_seed import InfectionSeeds
 from june.event import Events
-from june.infection import InfectionSelector, Infection
-from june.infection_seed import InfectionSeed
 from june import paths
 from june.simulator import Simulator
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
@@ -205,7 +205,7 @@ def restore_simulator_to_checkpoint(
     checkpoint_date = datetime.strptime(checkpoint_data["date"], "%Y-%m-%d")
     # we need to start the next day
     checkpoint_date += timedelta(days=1)
-    simulator.timer.date = checkpoint_date
+    simulator.timer.reset_to_new_date(checkpoint_date)
     return simulator
 
 
@@ -214,9 +214,9 @@ def generate_simulator_from_checkpoint(
     checkpoint_path: str,
     interaction: Interaction,
     chunk_size: Optional[int] = 50000,
-    infection_selector: Optional[InfectionSelector] = None,
+    infection_selectors: Optional[InfectionSelectors] = None,
     policies: Optional[Policies] = None,
-    infection_seed: Optional[InfectionSeed] = None,
+    infection_seeds: Optional[InfectionSeeds] = None,
     leisure: Optional[Leisure] = None,
     travel: Optional[Travel] = None,
     events: Optional[Events] = None,
@@ -227,9 +227,9 @@ def generate_simulator_from_checkpoint(
     simulator = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selector=infection_selector,
+        infection_selectors=infection_selectors,
         policies=policies,
-        infection_seed=infection_seed,
+        infection_seeds=infection_seeds,
         leisure=leisure,
         travel=travel,
         events=events,

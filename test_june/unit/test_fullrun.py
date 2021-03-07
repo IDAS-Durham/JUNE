@@ -10,7 +10,7 @@ from june.time import Timer
 from june.geography import Geography
 from june.demography import Demography, Person, Population
 from june.interaction import Interaction
-from june.infection import InfectionSelector
+from june.infection import InfectionSelectors
 from june.groups.travel import ModeOfTransport, Travel
 from june import World
 from june.world import generate_world_from_geography
@@ -44,10 +44,11 @@ def test__full_run(dummy_world, selector, test_results):
         record_path=test_results / "results",
     )
     policies = Policies.from_file()
+    selectors = InfectionSelectors([selector])
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selector=selector,
+        infection_selectors=selectors,
         config_filename=test_config,
         leisure=leisure,
         travel=travel,
@@ -55,7 +56,7 @@ def test__full_run(dummy_world, selector, test_results):
         record=record,
     )
     seed = InfectionSeed(world=sim.world, infection_selector=selector)
-    seed.unleash_virus(Population(sim.world.people), n_cases=1)
+    seed.unleash_virus(Population(sim.world.people), n_cases=1, time=0)
     sim.run()
     for region in world.regions:
         region.policy["local_closed_venues"] = set()

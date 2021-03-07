@@ -162,9 +162,11 @@ class Population:
         """
         if people is None:
             self.people_dict = {}
+            self.people_ids = set()
             self.people = []
         else:
             self.people_dict = {person.id: person for person in people}
+            self.people_ids = set(self.people_dict.keys())
             self.people = people
 
     def __len__(self):
@@ -179,11 +181,13 @@ class Population:
     def __add__(self, population: "Population"):
         self.people.extend(population.people)
         self.people_dict = {**self.people_dict, **population.people_dict}
+        self.people_ids = set(self.people_dict.keys())
         return self
 
     def add(self, person):
         self.people_dict[person.id] = person
         self.people.append(person)
+        self.people_ids.add(person.id)
 
     def extend(self, people):
         for person in people:
@@ -195,10 +199,6 @@ class Population:
     @property
     def members(self):
         return self.people
-
-    @property
-    def people_ids(self):
-        return list(self.people_dict.keys())
 
     @property
     def total_people(self):

@@ -160,7 +160,6 @@ class TestInfectionSavers:
         for infection, infection_recovered in zip(infections, infections_recovered):
             for attribute_name in [
                 "start_time",
-                "number_of_infected",
             ]:
                 assert getattr(infection, attribute_name) == getattr(
                     infection_recovered, attribute_name

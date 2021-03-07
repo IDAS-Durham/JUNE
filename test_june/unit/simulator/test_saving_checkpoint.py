@@ -93,31 +93,30 @@ def create_world():
     return world
 
 
-def run_simulator(selector, test_results):
+def run_simulator(selectors, test_results):
     world = create_world()
     interaction = Interaction.from_file(config_filename=config_interaction)
     policies = Policies([])
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selector=selector,
+        infection_selectors=selectors,
         config_filename=test_config,
         leisure=None,
         policies=policies,
         checkpoint_save_path=test_results / "checkpoint_tests",
     )
-    print(sim.checkpoint_save_dates)
-    seed = InfectionSeed(sim.world, selector)
-    seed.unleash_virus(sim.world.people, n_cases=50)
+    seed = InfectionSeed(sim.world, selectors)
+    seed.unleash_virus(sim.world.people, n_cases=50, time=0)
     sim.run()
     return sim
 
 
 class TestCheckpoints:
-    def test__checkpoints_are_saved(self, selector, test_results):
+    def test__checkpoints_are_saved(self, selectors, test_results):
         checkpoint_folder = Path(test_results / "checkpoint_tests")
         checkpoint_folder.mkdir(exist_ok=True, parents=True)
-        sim = run_simulator(selector, test_results)
+        sim = run_simulator(selectors, test_results)
         assert len(sim.world.people.infected) > 0
         assert len(sim.world.people.recovered) > 0
         assert len(sim.world.people.susceptible) > 0
@@ -129,7 +128,7 @@ class TestCheckpoints:
             world=fresh_world,
             checkpoint_load_path=checkpoint_folder / "checkpoint_2020-03-25.hdf5",
             interaction=interaction,
-            infection_selector=selector,
+            infection_selectors=selectors,
             config_filename=test_config,
             leisure=None,
             travel=None,
@@ -148,9 +147,9 @@ class TestCheckpoints:
                 assert person2.infection is not None
                 inf1 = person1.infection
                 inf2 = person2.infection
+                assert inf1.infection_id() == inf2.infection_id()
                 assert inf1.start_time == inf1.start_time
                 assert inf1.infection_probability == inf2.infection_probability
-                assert inf1.number_of_infected == inf2.number_of_infected
                 assert inf1.transmission.probability == inf2.transmission.probability
                 assert inf1.symptoms.tag == inf2.symptoms.tag
                 assert inf1.symptoms.stage == inf2.symptoms.stage
@@ -169,10 +168,10 @@ class TestCheckpointForReseeding:
     These tests the situation in which we load from checkpoint and 
     want all the infections reseted.
     """
-    def test__checkpoints_are_saved(self, selector, test_results):
+    def test__checkpoints_are_saved(self, selectors, test_results):
         checkpoint_folder = Path(test_results / "checkpoint_tests")
         checkpoint_folder.mkdir(exist_ok=True, parents=True)
-        sim = run_simulator(selector, test_results)
+        sim = run_simulator(selectors, test_results)
         assert len(sim.world.people.infected) > 0
         assert len(sim.world.people.recovered) > 0
         assert len(sim.world.people.susceptible) > 0
@@ -184,7 +183,7 @@ class TestCheckpointForReseeding:
             world=fresh_world,
             checkpoint_load_path=checkpoint_folder / "checkpoint_2020-03-25.hdf5",
             interaction=interaction,
-            infection_selector=selector,
+            infection_selectors=selectors,
             config_filename=test_config,
             leisure=None,
             travel=None,

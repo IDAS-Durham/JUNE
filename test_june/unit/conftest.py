@@ -32,7 +32,7 @@ from june.groups.leisure import *
 from june.groups.travel import Travel
 from june.demography import Person, Population
 from june.infection import Infection, Symptoms, TrajectoryMakers
-from june.infection.infection_selector import InfectionSelector
+from june.infection.infection_selector import InfectionSelector, InfectionSelectors
 from june.infection import transmission as trans
 from june.simulator import Simulator
 from june.simulator_box import SimulatorBox
@@ -160,14 +160,19 @@ def make_selector(health_index_generator):
     )
 
 
+@pytest.fixture(name="selectors", scope="session")
+def make_selectors(selector):
+    return InfectionSelectors([selector])
+
+
 @pytest.fixture(name="simulator_box", scope="session")
-def create_simulator_box(world_box, interaction, selector):
+def create_simulator_box(world_box, interaction, selectors):
     config_file = paths.configs_path / "config_boxmode_example.yaml"
     return SimulatorBox.from_file(
         world=world_box,
         interaction=interaction,
         config_filename=config_file,
-        infection_selector=selector,
+        infection_selectors=selectors,
     )
 
 
@@ -286,13 +291,13 @@ def make_dummy_world():
 
 
 @pytest.fixture(name="policy_simulator")
-def make_policy_simulator(dummy_world, interaction, selector):
+def make_policy_simulator(dummy_world, interaction, selectors):
     config_name = paths.configs_path / "tests/test_simulator_simple.yaml"
     travel = Travel()
     sim = Simulator.from_file(
         dummy_world,
         interaction,
-        infection_selector=selector,
+        infection_selectors=selectors,
         config_filename=config_name,
         record=None,
         travel=travel,
