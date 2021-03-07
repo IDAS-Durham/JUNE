@@ -12,6 +12,7 @@ from june.simulator import Simulator
 from june.world import World
 from june.infection import InfectionSelectors
 from june.policy import MedicalCarePolicies
+from june.event import Events
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -32,6 +33,7 @@ class SimulatorBox(Simulator):
             timer,
             activity_manager,
             infection_selectors: InfectionSelectors = None,
+            events: Optional[Events] = None,
             infection_seeds: Optional["InfectionSeeds"] = None,
             checkpoint_save_dates: List[datetime.date] = None,
             record: "Record" = None,
@@ -97,7 +99,6 @@ class SimulatorBox(Simulator):
             new_status = person.infection.update_health_status(time, duration)
             ids.append(person.id)
             symptoms.append(person.infection.tag.value)
-            n_secondary_infections.append(person.infection.number_of_infected)
             # Take actions on new symptoms
             if self.activity_manager.policies is not None:
                 medical_care_policies.apply(person=person)

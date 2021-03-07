@@ -147,9 +147,9 @@ class TestCheckpoints:
                 assert person2.infection is not None
                 inf1 = person1.infection
                 inf2 = person2.infection
+                assert inf1.infection_id() == inf2.infection_id()
                 assert inf1.start_time == inf1.start_time
                 assert inf1.infection_probability == inf2.infection_probability
-                assert inf1.number_of_infected == inf2.number_of_infected
                 assert inf1.transmission.probability == inf2.transmission.probability
                 assert inf1.symptoms.tag == inf2.symptoms.tag
                 assert inf1.symptoms.stage == inf2.symptoms.stage

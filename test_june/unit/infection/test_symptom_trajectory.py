@@ -61,8 +61,8 @@ class TestParse:
             {"type": "exponential", "loc": 1.0, "scale": 2.0}
         )
         assert isinstance(exponential, ExponentialCompletionTime)
-        assert exponential.loc == 1.0
-        assert exponential.scale == 2.0
+        assert exponential.kwargs["loc"] == 1.0
+        assert exponential.kwargs["scale"] == 2.0
 
     def test_parse_stage(self, stage_dict):
         stage = Stage.from_dict(stage_dict)
@@ -94,9 +94,10 @@ class TestTrajectoryMaker:
         mild_trajectory = trajectories.trajectories[SymptomTag.mild]
         infected = mild_trajectory.stages[0]
         assert infected.symptoms_tag == june.infection.symptom_tag.SymptomTag.exposed
-        assert infected.completion_time.a == 2.29
-        assert infected.completion_time.b == 19.05
-        assert infected.completion_time.scale == 39.8
+        assert infected.completion_time.args[0] == 2.29
+        assert infected.completion_time.args[1] == 19.05
+        assert infected.completion_time.kwargs["scale"] == 39.8
+        assert infected.completion_time.kwargs["loc"] == 0.39
 
         recovered = mild_trajectory.stages[-1]
         assert recovered.symptoms_tag == june.infection.symptom_tag.SymptomTag.recovered
