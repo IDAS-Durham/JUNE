@@ -8,6 +8,7 @@ from typing import List
 from collections import defaultdict
 
 from june.geography import SuperArea
+from june.hdf5_savers import load_data_for_domain_decomposition
 from june import paths
 
 default_super_area_centroids = (
@@ -15,6 +16,7 @@ default_super_area_centroids = (
 )
 
 logger = logging.getLogger("domain")
+
 
 class DomainSplitter:
     """
@@ -25,7 +27,7 @@ class DomainSplitter:
     def __init__(
         self,
         number_of_domains: int,
-        world_path: str,
+        super_area_data: dict,
         super_area_centroids: List[List[float]] = None,
     ):
         """
@@ -40,10 +42,7 @@ class DomainSplitter:
         super_area_key
             column name of the shape file that contains the super area identifiers.
         """
-        with h5py.File(world_path, "r") as f:
-            self.super_area_names = [
-                super_area.decode() for super_area in f["geography"]["super_area_name"]
-            ]
+        self.super_area_names = list(super_area_data.keys())
         self.number_of_domains = number_of_domains
         self.super_area_centroids = super_area_centroids
         if self.super_area_centroids is None:
@@ -53,45 +52,56 @@ class DomainSplitter:
         if self.super_area_names is None:
             self.super_area_names = self.super_area_centroids.index.values
         self.super_area_centroids = self.super_area_centroids.loc[self.super_area_names]
-        self.score_per_super_area = self.get_scores_per_super_area(world_path)
+        self.score_per_super_area = self.get_scores_per_super_area(super_area_data)
         self.average_score_per_domain = (
             sum(self.score_per_super_area.values()) / number_of_domains
         )
         self.super_areas_sorted = self._sort_super_areas_by_score()
 
-    def get_scores_per_super_area(self, world_path):
+    @classmethod
+    def generate_world_split(
+        cls,
+        number_of_domains: int,
+        world_path: str,
+        super_area_centroids: List[List[float]] = None,
+        niter=20,
+    ):
+        super_area_data = load_data_for_domain_decomposition(world_path)
+        ds = cls(
+            number_of_domains=number_of_domains,
+            super_area_data=super_area_data,
+            super_area_centroids=super_area_centroids,
+        )
+        return ds.generate_domain_split(niter=niter)
+
+    def get_scores_per_super_area(
+        self,
+        super_area_data,
+        population_weight=3,
+        workers_pupils_weight=1,
+        commute_weight=2,
+    ):
         """
-        Given a world path, loads the world and computes the score per super area.
+        Calculates the score per super area
         The score is calculated as:
-        score = people_weight * n_people + workers_weight * n_workers + commute_weight * n_commuters
+        score = population_weight * n_people + 
+            workers_pupils_weight * (n_workers + n_pupils) + commute_weight * n_commuters
+
+        Parameters
+        ----------
+        super_area_data
+            dictionary with the super area names as keys and as values the number of people, 
+            workers, pupils, and commuters per super area.
         """
-        people_weight = 3
-        workers_weight = 1
+        workers_pupils_weight = 1
         commute_weight = 2
         ret = defaultdict(float)
-        with h5py.File(world_path, "r") as f:
-            geography_dset = f["geography"]
-            super_area_names = geography_dset["super_area_name"][:]
-            super_area_ids = geography_dset["super_area_id"][:]
-            super_area_names = [name.decode() for name in super_area_names]
-            super_area_id_to_name = {
-                key: value for key, value in zip(super_area_ids, super_area_names)
-            }
-            stations_dset = f["stations"]
-            for station_super_area, station_commuters in zip(
-                stations_dset["super_area"], stations_dset["commuters"]
-            ):
-                ret[super_area_id_to_name[station_super_area]] += commute_weight * len(
-                    station_commuters
-                )
-            for super_area_name, n_people, n_workers in zip(
-                geography_dset["super_area_name"],
-                geography_dset["super_area_n_people"],
-                geography_dset["super_area_n_workers"],
-            ):
-                ret[super_area_name.decode()] += (
-                    people_weight * n_people + workers_weight * n_workers
-                )
+        for super_area, data in super_area_data.items():
+            ret[super_area] = (
+                population_weight * data["n_people"]
+                + workers_pupils_weight * (data["n_workers"] + data["n_pupils"])
+                + commute_weight * data["n_commuters"]
+            )
         return ret
 
     def _sort_super_areas_by_score(self):
@@ -132,12 +142,15 @@ class DomainSplitter:
         return kdtree
 
     def _get_closest_centroid_id(self, kdtree, coordinates):
-        closest_centroid_ids = kdtree.query(coordinates.reshape(1, -1), k=1,)[1][0][0]
+        closest_centroid_ids = kdtree.query(coordinates.reshape(1, -1), k=1,)[1][
+            0
+        ][0]
         return closest_centroid_ids
 
     def _get_closest_centroid_ids(self, kdtree, coordinates, centroids):
         closest_centroid_ids = kdtree.query(
-            coordinates.reshape(1, -1), k=len(centroids),
+            coordinates.reshape(1, -1),
+            k=len(centroids),
         )[1][0]
         return closest_centroid_ids
 
@@ -201,9 +214,13 @@ class DomainSplitter:
         for i in range(niter):
             if i % 5 == 0:
                 logger.info(f"Domain splitter -- iteration {i+1} of {niter}")
-            super_areas_per_domain = self.assign_super_areas_to_centroids(domain_centroids)
+            super_areas_per_domain = self.assign_super_areas_to_centroids(
+                domain_centroids
+            )
             domain_centroids = self._domain_split_iteration(super_areas_per_domain)
-            unbalance_score = self.compute_decomposition_unbalance(super_areas_per_domain)
+            unbalance_score = self.compute_decomposition_unbalance(
+                super_areas_per_domain
+            )
             if unbalance_score < best_candidate_score:
                 best_candidate_score = unbalance_score
                 best_centroids = domain_centroids
@@ -236,4 +253,3 @@ class DomainSplitter:
         domain_centroids = self.iterate_domain_split(initial_centroids, niter=niter)
         super_areas_per_domain = self.generate_split_from_centroids(domain_centroids)
         return super_areas_per_domain
-

@@ -241,7 +241,7 @@ def generate_domain_from_hdf5(
     """
     logger.info(f"loading domain {domain_id} from HDF5")
     # import here to avoid recurisve imports
-    from june.domain import Domain
+    from june.domains import Domain
 
     # get the super area ids of this domain
     super_area_ids = set()
