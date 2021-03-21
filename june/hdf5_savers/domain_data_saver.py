@@ -1,20 +1,23 @@
 import h5py
 import numpy as np
 from collections import defaultdict
+from june.world import World
 
 from .utils import read_dataset
 
 
-def get_commuters_per_super_area(world):
+def get_commuters_per_super_area(world: World):
     ret = defaultdict(int)
-    for station in world.stations:
-        ret[station.super_area.name] += len(station.commuter_ids)
-    for city in world.cities:
-        ret[city.super_area.name] += len(city.internal_commuter_ids)
+    if world.stations:
+        for station in world.stations:
+            ret[station.super_area.name] += len(station.commuter_ids)
+    if world.cities:
+        for city in world.cities:
+            ret[city.super_area.name] += len(city.internal_commuter_ids)
     return ret
 
 
-def save_data_for_domain_decomposition(world, file_path: str):
+def save_data_for_domain_decomposition(world: World, file_path: str):
     """
     Saves data required to generate a domain decomposition. For each super area,
     we save:
