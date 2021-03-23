@@ -6,7 +6,8 @@ alpha_physical: 2.
 
 betas:
  box: 1
- pub: 0.42941 
+ pub: 0.42941
+ gym: 0.42941 
  grocery: 0.04137
  cinema: 0.157461
  city_transport: 0.107969 
@@ -56,6 +57,11 @@ contact_matrices:
     characteristic_time: 12
   
   pub:
+    contacts: [[3]]
+    proportion_physical: [[0.12]]
+    characteristic_time: 3
+
+  gym:
     contacts: [[3]]
     proportion_physical: [[0.12]]
     characteristic_time: 3
