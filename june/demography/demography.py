@@ -112,7 +112,10 @@ class AgeSexGenerator:
             age1, age2 = parse_age_bin(key_man)
             total_people = value_man + value_woman
             sex_bins.append(age1)
-            female_fractions.append(value_woman / total_people)
+            if total_people == 0:
+                female_fractions.append(0)
+            else:
+                female_fractions.append(value_woman / total_people)
             if age2 == 99:
                 exp_values = np.exp(-np.arange(0, age2 - age1 + 1) / exponential_decay)
                 p = exp_values / exp_values.sum()
