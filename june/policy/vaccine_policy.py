@@ -65,7 +65,7 @@ class VaccinePlan:
     def susceptibility(self, date):
         if self.second_dose_date is None and date > self.first_dose_effective_date:
             return self.first_dose_susceptibility
-        elif date < self.first_dose_effective_date:
+        elif date <= self.first_dose_effective_date:
             n_days = (date - self.first_dose_date).days
             return self.straight_line(
                 n_days,
