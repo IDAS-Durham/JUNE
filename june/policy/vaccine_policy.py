@@ -180,8 +180,8 @@ class VaccineDistribution(Policy):
         )
         # second dose
         if random() < self.second_dose_compliance:
-            second_dose_lag = np.random.lognormal(
-                mean=self.mean_time_delay, sigma=self.std_time_delay
+            second_dose_lag = np.random.normal(
+                loc=self.mean_time_delay, scale=self.std_time_delay
             )
             second_dose_date = first_dose_effective_date + datetime.timedelta(
                 days=int(second_dose_lag)
