@@ -13,7 +13,14 @@ def get_commuters_per_super_area(world: World):
             ret[station.super_area.name] += len(station.commuter_ids)
     if world.cities:
         for city in world.cities:
-            ret[city.super_area.name] += len(city.internal_commuter_ids)
+            n_internal_commuters = len(city.internal_commuter_ids)
+            if n_internal_commuters == 0:
+                continue
+            city_stations = city.city_stations
+            n_stations = len(city_stations)
+            n_commuters_per_station = n_internal_commuters / n_stations
+            for station in city_stations:
+                ret[station.super_area.name] += n_commuters_per_station
     return ret
 
 

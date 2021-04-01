@@ -17,6 +17,7 @@ default_super_area_centroids = (
 
 logger = logging.getLogger("domain")
 
+default_weights = {"population" : 1, "workers": 0.3, "commuters" : 0.3}
 
 class DomainSplitter:
     """
@@ -29,6 +30,7 @@ class DomainSplitter:
         number_of_domains: int,
         super_area_data: dict,
         super_area_centroids: List[List[float]] = None,
+        weights = default_weights,
     ):
         """
         Parameters
@@ -52,7 +54,7 @@ class DomainSplitter:
         if self.super_area_names is None:
             self.super_area_names = self.super_area_centroids.index.values
         self.super_area_centroids = self.super_area_centroids.loc[self.super_area_names]
-        self.score_per_super_area = self.get_scores_per_super_area(super_area_data)
+        self.score_per_super_area = self.get_scores_per_super_area(super_area_data, weights=weights)
         self.average_score_per_domain = (
             sum(self.score_per_super_area.values()) / number_of_domains
         )
@@ -76,10 +78,8 @@ class DomainSplitter:
 
     def get_scores_per_super_area(
         self,
-        super_area_data,
-        population_weight=3,
-        workers_pupils_weight=1,
-        commute_weight=2,
+        super_area_data:dict,
+        weights: dict,
     ):
         """
         Calculates the score per super area
@@ -98,9 +98,9 @@ class DomainSplitter:
         ret = defaultdict(float)
         for super_area, data in super_area_data.items():
             ret[super_area] = (
-                population_weight * data["n_people"]
-                + workers_pupils_weight * (data["n_workers"] + data["n_pupils"])
-                + commute_weight * data["n_commuters"]
+                weights["population"] * data["n_people"]
+                + weights["workers"] * (data["n_workers"] + data["n_pupils"])
+                + weights["commuters"] * data["n_commuters"]
             )
         return ret
 
