@@ -150,7 +150,12 @@ class ActivityManager:
             n_people_from_abroad,
             n_people_going_abroad,
         ) = self.send_and_receive_people_from_abroad(to_send_abroad)
-        return people_from_abroad, n_people_from_abroad, n_people_going_abroad, to_send_abroad
+        return (
+            people_from_abroad,
+            n_people_from_abroad,
+            n_people_going_abroad,
+            to_send_abroad,
+        )
 
     def move_people_to_active_subgroups(
         self,
@@ -170,12 +175,15 @@ class ActivityManager:
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
         )
-        active_vaccine_policies = self.policies.vaccine_distribution.get_active(date=date)
+        active_vaccine_policies = self.policies.vaccine_distribution.get_active(
+            date=date
+        )
         to_send_abroad = MovablePeople()
 
         for person in self.world.people:
-            self.policies.vaccine_distribution.apply(person=person,date=date,
-                    active_policies=active_vaccine_policies)
+            self.policies.vaccine_distribution.apply(
+                person=person, date=date, active_policies=active_vaccine_policies
+            )
             if person.dead or person.busy:
                 continue
             allowed_activities = self.policies.individual_policies.apply(
@@ -238,6 +246,7 @@ class ActivityManager:
         """
         n_people_going_abroad = 0
         n_people_from_abroad = 0
+        mpi_comm.Barrier()
         tick, tickw = perf_counter(), wall_clock()
         reqs = []
 
