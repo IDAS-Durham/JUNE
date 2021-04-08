@@ -1,7 +1,7 @@
 import logging
 import pandas as pd
 from typing import List
-from score_clustering import Point, get_cluster_split
+from score_clustering import Point, ScoreClustering
 
 from june import paths
 from june.hdf5_savers import load_data_for_domain_decomposition
@@ -78,7 +78,8 @@ class DomainSplitter:
                 lambda row: Point(row["X"], row["Y"], row["score"], row.name), axis=1
             ).values
         )
-        clusters = get_cluster_split(points, self.number_of_domains, niter)
+        sc = ScoreClustering(n_clusters=self.number_of_domains)
+        clusters = sc.fit(points, niter=niter)
         super_areas_per_domain = {}
         for (i, cluster) in enumerate(clusters):
             super_areas_per_domain[i] = [point.name for point in cluster.points]
