@@ -27,8 +27,9 @@ from june.mpi_setup import (
 
 logger = logging.getLogger("activity_manager")
 mpi_logger = logging.getLogger("mpi")
+rank_logger = logging.getLogger("rank")
 if mpi_rank > 0:
-    logger.propagate = False
+    logger.propagate = True
 
 activity_hierarchy = [
     "box",
@@ -128,6 +129,7 @@ class ActivityManager:
 
     def do_timestep(self):
         # get time data
+        tick_interaction_timestep = perf_counter()
         date = self.timer.date
         day_type = self.timer.day_type
         activities = self.apply_activity_hierarchy(self.timer.activities)
@@ -144,6 +146,16 @@ class ActivityManager:
         # move people to subgroups and get going abroad people
         to_send_abroad = self.move_people_to_active_subgroups(
             activities=activities, date=date, days_from_start=self.timer.now
+        )
+        tock_interaction_timestep = perf_counter()
+        rank_logger.info(
+            f"Rank {mpi_rank} -- move_people -- {tock_interaction_timestep-tick_interaction_timestep}"
+        )
+        tick_waiting = perf_counter()
+        mpi_comm.Barrier()
+        tock_waiting = perf_counter()
+        rank_logger.info(
+            f"Rank {mpi_rank} -- move_people_waiting -- {tock_waiting-tick_waiting}"
         )
         (
             people_from_abroad,
@@ -246,7 +258,6 @@ class ActivityManager:
         """
         n_people_going_abroad = 0
         n_people_from_abroad = 0
-        mpi_comm.Barrier()
         tick, tickw = perf_counter(), wall_clock()
         reqs = []
 

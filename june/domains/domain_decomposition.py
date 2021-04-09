@@ -81,6 +81,8 @@ class DomainSplitter:
         sc = ScoreClustering(n_clusters=self.number_of_domains)
         clusters = sc.fit(points, niter=niter)
         super_areas_per_domain = {}
+        score_per_domain = {}
         for (i, cluster) in enumerate(clusters):
             super_areas_per_domain[i] = [point.name for point in cluster.points]
-        return super_areas_per_domain
+            score_per_domain[i] = cluster.score
+        return super_areas_per_domain, score_per_domain
