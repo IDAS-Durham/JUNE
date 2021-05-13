@@ -132,5 +132,5 @@ class Infection:
 class Covid19(Infection):
     pass
 
-class Covid20(Infection):
+class B117(Infection):
     pass

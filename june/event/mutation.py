@@ -2,7 +2,7 @@ import datetime
 from typing import Union, Dict
 from random import random
 
-from june.infection import Covid20
+from june.infection import B117
 from .event import Event
 
 
@@ -28,7 +28,7 @@ class Mutation(Event):
         unique id of the new mutation. These are generated with an adler32 encoding on
         the name.
         Covid19: 170852960
-        Covid20: 170394200
+        B117: 170394200
     """
 
     def __init__(
@@ -36,7 +36,7 @@ class Mutation(Event):
         start_time: Union[str, datetime.datetime],
         end_time: Union[str, datetime.datetime],
         regional_probabilities: Dict[str, float],
-        mutation_id=Covid20.infection_id(),
+        mutation_id=B117.infection_id(),
     ):
         super().__init__(start_time=start_time, end_time=end_time)
         self.regional_probabilities = regional_probabilities
