@@ -54,6 +54,13 @@ class Infection:
             cls._infection_id = adler32(cls.__name__.encode("ascii"))
         return cls._infection_id
 
+    @classmethod
+    def immunity_ids(cls):
+        """
+        Ids of the infections that upon recovery this infection gives immunity to.
+        """
+        return (cls.infection_id(), )
+
     def update_health_status(self, time, delta_time):
         """
         Updates the infection probability and symptoms of the person's infection
@@ -130,7 +137,11 @@ class Infection:
         return self.transmission.probability
 
 class Covid19(Infection):
-    pass
+    @classmethod
+    def immunity_ids(cls):
+        return (cls.infection_id(), B117.infection_id())
 
 class B117(Infection):
-    pass
+    @classmethod
+    def immunity_ids(cls):
+        return (cls.infection_id(), Covid19.infection_id())

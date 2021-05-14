@@ -5,13 +5,19 @@ from pathlib import Path
 
 from june import paths
 import june.infection.symptoms
-from june.demography import person
+from june.demography import Person
 from june.infection import transmission
 from june.infection.symptom_tag import SymptomTag
 from june.infection import symptoms_trajectory as symtraj
 from june.infection import transmission_xnexp as transxnexp
 from june.infection.infection_selector import default_transmission_config_path
-from june.infection import Infection, InfectionSelector, Covid19, InfectionSelectors
+from june.infection import (
+    Infection,
+    InfectionSelector,
+    Covid19,
+    B117,
+    InfectionSelectors,
+)
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
@@ -69,7 +75,7 @@ class TestInfection:
         selector = InfectionSelector(
             health_index_generator=MockHealthIndexGenerator("severe")
         )
-        victim = person.Person(sex="f", age=26)
+        victim = Person.from_attributes(sex="f", age=26)
         selector.infect_person_at_time(person=victim, time=0.2)
 
         assert victim.infection.start_time == 0.2
@@ -106,7 +112,7 @@ class TestInfectionSelector:
         assert selector.transmission_type == "constant"
 
     def test__position_max_infectivity(self):
-        dummy = person.Person.from_attributes(sex="f", age=26)
+        dummy = Person.from_attributes(sex="f", age=26)
         infection, _ = infect_person(person=dummy, max_symptom_tag="severe")
         true_max_t = infection.transmission.time_at_maximum_infectivity
         infectivity = []
@@ -120,7 +126,7 @@ class TestInfectionSelector:
         assert max_t == pytest.approx(true_max_t, rel=0.01)
 
     def test__avg_peak_value(self):
-        dummy = person.Person.from_attributes(sex="f", age=26)
+        dummy = Person.from_attributes(sex="f", age=26)
         infection, selector = infect_person(
             person=dummy,
             max_symptom_tag="severe",
@@ -159,7 +165,7 @@ class TestInfectionSelector:
 
         avg_gamma.update_infection_probability(avg_gamma.time_at_maximum_infectivity)
         true_avg_peak_infectivity = avg_gamma.probability
-        dummy = person.Person.from_attributes(sex="f", age=26)
+        dummy = Person.from_attributes(sex="f", age=26)
         norms, maxprobs = [], []
         for i in range(1_000):
             infection = selector._make_infection(time=0.1, person=dummy)
@@ -192,7 +198,7 @@ class TestInfectionSelector:
         avg_gamma.update_infection_probability(avg_gamma.time_at_maximum_infectivity)
         true_avg_peak_infectivity = avg_gamma.probability
 
-        dummy = person.Person(sex="f", age=26)
+        dummy = Person.from_attributes(sex="f", age=26)
         infection, selector = infect_person(
             person=dummy,
             max_symptom_tag="asymptomatic",
@@ -215,7 +221,7 @@ class TestInfectionSelector:
         )
         avg_gamma.update_infection_probability(avg_gamma.time_at_maximum_infectivity)
         true_avg_peak_infectivity = avg_gamma.probability
-        dummy = person.Person(sex="f", age=26)
+        dummy = Person.from_attributes(sex="f", age=26)
         infection, selector = infect_person(
             person=dummy,
             max_symptom_tag="mild",
@@ -250,7 +256,7 @@ class TestMultipleVirus:
             health_index_generator=health_index_generator,
             transmission_config_path=default_transmission_config_path,
         )
-        p = person.Person(sex="f", age=26)
+        p = Person.from_attributes(sex="f", age=26)
         infection = selector1._make_infection(person=p, time=0)
         assert isinstance(infection, Covid19)
         selector2 = InfectionSelector(
@@ -264,3 +270,19 @@ class TestMultipleVirus:
         assert set(infection_selectors.infection_id_to_selector.values()) == set(
             [selector1, selector2]
         )
+
+    def test__immunity_multiple_virus(self):
+        selector = InfectionSelector.from_file()
+        person = Person.from_attributes()
+        selector.infect_person_at_time(person, 0.0)
+        assert person.immunity.recovered_infections_ids == set(
+            (Covid19.infection_id(), B117.infection_id())
+        )
+        assert person.infected
+        person.infection = None
+        assert not person.infected
+        selector.infect_person_at_time(person, 0.0)
+        assert not person.infected
+        selector2 = InfectionSelector.from_file(infection_class=B117)
+        selector2.infect_person_at_time(person, 0.0)
+        assert not person.infected

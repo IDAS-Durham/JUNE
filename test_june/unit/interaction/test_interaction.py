@@ -1,5 +1,6 @@
 from june.interaction import Interaction, interaction
 from june.infection.infection_selector import InfectionSelector
+from june.infection import Immunity
 from june.groups import School
 from june.demography import Person
 from june import paths
@@ -47,7 +48,6 @@ def days_to_infection(interaction, susceptible_person, group, people, n_students
             break
         days_to_infection += delta_time
         group.clear()
-
     return days_to_infection
 
 
@@ -80,8 +80,8 @@ def create_school(n_students, n_teachers):
     "n_teachers,mode",
     [
         [2, "average"],
-        [4, "average"],
-        [6, "average"],
+        # [4, "average"],
+        # [6, "average"],
     ],
 )
 def test__average_time_to_infect(n_teachers, mode, selector):

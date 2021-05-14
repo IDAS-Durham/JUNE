@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 from typing import Optional
 
-from june.infection import Infection
+from june.infection import Infection, Immunity
 
 
 class Activities(dataobject):
@@ -46,6 +46,7 @@ class Person(dataobject):
     busy: bool = False
     subgroups: Activities = Activities(None, None, None, None, None, None, None)
     infection: Infection = None
+    immunity: Immunity()
     # infection
     susceptibility: float = 1.0
     dead: bool = False
@@ -69,6 +70,7 @@ class Person(dataobject):
             ethnicity=ethnicity,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
+            immunity = Immunity(),
             comorbidity=comorbidity,
             susceptibility=susceptibility,
             subgroups=Activities(None, None, None, None, None, None, None),

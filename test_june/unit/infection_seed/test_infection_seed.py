@@ -6,6 +6,7 @@ from june.geography import Geography, SuperArea, SuperAreas, Area
 from june.demography import Demography, Person, Population
 from june import World
 from june.infection_seed import InfectionSeed
+from june.infection import Immunity
 from pathlib import Path
 from june.time import Timer
 
@@ -39,6 +40,7 @@ def create_world():
 def clean_world(world):
     for person in world.people:
         person.infection = None
+        person.immunity = Immunity()
         person.susceptibility = 1.0
 
 

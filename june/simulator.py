@@ -346,11 +346,13 @@ class Simulator:
         time:
             time (in days), at which the person recovers
         """
-        person.infection = None
         if self.record is not None:
             self.record.accumulate(
-                table_name="recoveries", recovered_person_id=person.id
+                table_name="recoveries",
+                recovered_person_id=person.id,
+                infection_id=person.infection.infection_id(),
             )
+        person.infection = None
 
     def update_health_status(self, time: float, duration: float):
         """
@@ -374,6 +376,7 @@ class Simulator:
                         table_name="symptoms",
                         infected_id=person.id,
                         symptoms=person.infection.tag.value,
+                        infection_id=person.infection.infection_id()
                     )
             # Take actions on new symptoms
             self.activity_manager.policies.medical_care_policies.apply(

@@ -74,6 +74,10 @@ class InfectionSelector:
             health_index_generator=health_index_generator,
         )
 
+    @property
+    def infection_id(self):
+        return self.infection_class.infection_id()
+
     def infect_person_at_time(self, person: "Person", time: float):
         """
         Infects a person at a given time.
@@ -85,8 +89,11 @@ class InfectionSelector:
         time:
             time at which infection happens
         """
+        infection_id = self.infection_id
+        if person.immunity.is_immune(infection_id):
+            return
         person.infection = self._make_infection(person, time)
-        person.susceptibility = 0.0
+        person.immunity.recovered_infections_ids.update(person.infection.immunity_ids())
 
     def _make_infection(self, person: "Person", time: float):
         """
