@@ -56,7 +56,7 @@ class Person(dataobject):
         cls,
         sex="f",
         age=27,
-            susceptibility = 1.,
+        susceptibility = 1.,
         ethnicity=None,
         id=None,
         comorbidity=None,

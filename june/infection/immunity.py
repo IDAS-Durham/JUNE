@@ -6,8 +6,7 @@ class Immunity:
 
     __slots__ = "susceptibility", "recovered_infections_ids"
 
-    def __init__(self, susceptibility=1.0):
-        self.susceptibility = susceptibility
+    def __init__(self):
         self.recovered_infections_ids = set()
 
     def add_immunity(self, infection_id):

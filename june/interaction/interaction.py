@@ -334,6 +334,7 @@ class Interaction:
             ]
             infector_weights += subgroup_transmission_exponent_list
             transmission_exponent += sum(subgroup_transmission_exponent_list)
+        print(transmission_exponent)
         return (
             transmission_exponent * delta_time * beta,
             infector_weights,

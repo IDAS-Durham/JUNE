@@ -49,10 +49,10 @@ def test__substract_information_from_group(selector):
         == person1.infection.transmission.probability
     )
     assert len(interactive_group.susceptible_ids) == 2
-    assert interactive_group.susceptible_ids[0][0] == person2.id
+    assert person2.id in interactive_group.susceptible_ids[0]
     assert interactive_group.susceptible_ids[1][0] == person4.id
-    assert interactive_group.susceptible_susceptibilities[0][0] == 2
-    assert interactive_group.susceptible_susceptibilities[1][0] == 4
+    assert 2 in interactive_group.susceptible_susceptibilities[0]
+    assert 4 in interactive_group.susceptible_susceptibilities[1]
 
 
 class TestDispatchOnGroupSpec:
