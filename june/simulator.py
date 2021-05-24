@@ -506,7 +506,7 @@ class Simulator:
                 date=self.timer.date, regions=self.world.regions
             )
             if self.activity_manager.policies.vaccine_distribution is not None:
-                self.activity_manager.policies.vaccine_distribution.update_susceptibility_of_vaccinated(
+                self.activity_manager.policies.vaccine_distribution.update_vaccinated(
                     self.world.people, date=self.timer.date
                 )
         activities = self.timer.activities

@@ -14,6 +14,8 @@ from june.exc import InteractionError
 from june.utils import (
     parse_age_probabilities,
     parse_prevalence_comorbidities_in_reference_population,
+    read_comorbidity_csv,
+    convert_comorbidities_prevalence_to_dict,
 )
 from june.groups.group.interactive import InteractiveGroup
 from june.groups import InteractiveSchool, InteractiveCompany, InteractiveHousehold
@@ -107,7 +109,7 @@ class Interaction:
         else:
             susceptibilities_by_age = None
         if comorbidity_multipliers_path is not None:
-            with open(multipliers_path) as f:
+            with open(comorbidity_multipliers_path) as f:
                 comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
             female_prevalence = read_comorbidity_csv(
                 female_comorbidity_reference_prevalence_path
