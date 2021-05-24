@@ -5,7 +5,6 @@ from typing import Optional, List
 
 from june.infection.symptom_tag import SymptomTag
 from june import paths
-from june.utils.parse_probabilities import parse_age_probabilities
 from . import Data2Rates
 
 _sex_short_to_long = {"m": "male", "f": "female"}
@@ -56,17 +55,9 @@ class HealthIndexGenerator:
         self.rates_df = rates_df
         self.age_bins = self.rates_df.index
         self.probabilities = self._get_probabilities(max_age)
-        self.use_comorbidities = use_comorbidities
-        if self.use_comorbidities:
-            self.max_mild_symptom_tag = {
-                value: key for key, value in index_to_maximum_symptoms_tag.items()
-            }["severe"]
-            self.comorbidity_multipliers = comorbidity_multipliers
-            self.comorbidity_prevalence_reference_population = (
-                self._parse_prevalence_comorbidities_in_reference_population(
-                    comorbidity_prevalence_reference_population
-                )
-            )
+        self.max_mild_symptom_tag = {
+            value: key for key, value in index_to_maximum_symptoms_tag.items()
+        }["severe"]
 
     @classmethod
     def from_file(
@@ -97,44 +88,9 @@ class HealthIndexGenerator:
         else:
             population = "gp"
         probabilities = self.probabilities[population][person.sex][person.age]
-        if self.use_comorbidities and person.comorbidity is not None:
-            probabilities = self.adjust_for_comorbidities(
-                probabilities=probabilities,
-                comorbidity=person.comorbidity,
-                age=person.age,
-                sex=person.sex,
-            )
+        if person.effective_multiplier != 1.:
+            probabilities = self.apply_effective_multiplier(probabilities, person.effective_multiplier)
         return np.cumsum(probabilities)
-
-    def adjust_for_comorbidities(
-        self, probabilities: List[float], comorbidity: str, age: int, sex: str
-    ):
-        """
-        Compute adjusted probabilities for a person with given comorbidity, age and sex.
-        Parameters
-        ----------
-        probabilities:
-            list with probability values for the 8 different outcomes (has len 7, but 8th value
-            can be inferred from 1 - probabilities.sum())
-        comorbidity:
-            comorbidty type that the person has
-        age:
-            age group to compute average multiplier
-        sex:
-            sex group to compute average multiplier
-        Returns
-        -------
-            probabilities adjusted for comorbidity
-        """
-
-        multiplier = self.comorbidity_multipliers.get(comorbidity, 1.0)
-        reference_weighted_multiplier = self.get_multiplier_from_reference_prevalence(
-            age=age, sex=sex
-        )
-        effective_multiplier = multiplier / reference_weighted_multiplier
-        return self.apply_effective_multiplier(
-            probabilities=probabilities, effective_multiplier=effective_multiplier
-        )
 
     def apply_effective_multiplier(self, probabilities, effective_multiplier):
         probabilities_with_comorbidity = np.zeros_like(probabilities)
