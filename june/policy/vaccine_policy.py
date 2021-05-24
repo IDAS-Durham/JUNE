@@ -102,6 +102,7 @@ class VaccineDistribution(Policy):
         std_time_delay: int = 1,
         effective_after_first_dose: int = 7,
         effective_after_second_dose: int = 7,
+        full_protection: bool = True,
     ):
         """
         Policy to apply a vaccinated tag to people based on certain attributes with a given probability
@@ -121,6 +122,8 @@ class VaccineDistribution(Policy):
         std_time_delay: std time delat of the second dose being administered
         effective_after_first_dose: number of days for the first dose to become effective
         effective_after_second_dose: number of days for second dose to become effective
+        sterilizing_vaccine: If True, the vaccinated agent will be less susceptible to the disease. 
+        Otherwise, they will be less likely to show symptoms
 
         Assumptions
         -----------
@@ -144,8 +147,10 @@ class VaccineDistribution(Policy):
         self.std_time_delay = std_time_delay
         self.effective_after_first_dose = effective_after_first_dose
         self.effective_after_second_dose = effective_after_second_dose
-        self.first_susceptibility = 1.0 - first_dose_efficacy
-        self.second_susceptibility = 1.0 - second_dose_efficacy
+        self.sterilizing_vaccine = sterilizing_vaccine
+        if self.sterilizing_vaccine:
+            self.first_susceptibility = 1.0 - first_dose_efficacy
+            self.second_susceptibility = 1.0 - second_dose_efficacy
         self.vaccinated_ids = set()
 
     def process_group_description(self, group_by, group_type):

@@ -48,6 +48,7 @@ class Person(dataobject):
     infection: Infection = None
     # infection
     susceptibility: float = 1.0
+    effective_multiplier: float = 1.0
     dead: bool = False
 
     @classmethod
