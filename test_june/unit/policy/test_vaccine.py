@@ -127,3 +127,31 @@ class TestVaccination:
         assert young_person.id not in vaccine_policy.vaccinated_ids
         assert young_person.susceptibility == 0.5
         assert young_person.effective_multiplier == 1.
+
+    def test_vaccinate_inmune(self,):
+        young_person = Person.from_attributes(age=30, sex="f")
+        young_person.susceptibility = 0.
+        vaccine_policy = VaccineDistribution(
+            group_by='age',
+            group_type='20-40',
+            first_dose_sterilisation_efficacy=0.5,
+            second_dose_sterilisation_efficacy=1.0,
+            first_dose_symptomatic_efficacy=0.,
+            second_dose_symptomatic_efficacy=0.,
+
+        )
+        people = Population([young_person])
+        for person in people:
+            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
+        young_person.vaccine_plan.second_dose_date = None
+        vaccine_policy.update_vaccinated(
+            people=people, date=datetime.datetime(2100, 12, 31)
+        )
+
+        assert young_person.susceptibility == 0.0
+        assert young_person.effective_multiplier == 1.
+        vaccine_policy.update_vaccinated(
+            people=people, date=datetime.datetime(2100, 12, 31)
+        )
+        assert young_person.id not in vaccine_policy.vaccinated_ids
+        assert young_person.susceptibility == 0.0
