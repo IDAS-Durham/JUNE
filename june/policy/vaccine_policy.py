@@ -6,6 +6,7 @@ from june.demography.person import Person
 from .policy import Policy, PolicyCollection, Policies, read_date
 from june import paths
 
+
 class VaccinePlan:
     __slots__ = (
         "first_dose_date",
@@ -55,10 +56,13 @@ class VaccinePlan:
         return self.second_dose_date + datetime.timedelta(
             days=self.second_dose_effective_days
         )
+
     def is_finished(self, date):
         if self.second_dose_date is None and date > self.first_dose_effective_date:
             return True
-        elif self.second_dose_date is not None and date > self.second_dose_effective_date:
+        elif (
+            self.second_dose_date is not None and date > self.second_dose_effective_date
+        ):
             return True
         return False
 
@@ -71,25 +75,25 @@ class VaccinePlan:
         self, date, first_dose_efficacy, second_dose_efficacy, original_value
     ):
         if self.second_dose_date is None and date > self.first_dose_effective_date:
-            return 1. - first_dose_efficacy
+            return 1.0 - first_dose_efficacy
         elif date <= self.first_dose_effective_date:
             n_days = (date - self.first_dose_date).days
             return self.straight_line(
                 n_days,
                 p0=(0, original_value),
-                p1=(self.first_dose_effective_days, 1.-first_dose_efficacy),
+                p1=(self.first_dose_effective_days, 1.0 - first_dose_efficacy),
             )
         elif self.first_dose_effective_date <= date < self.second_dose_date:
-            return 1. - first_dose_efficacy
+            return 1.0 - first_dose_efficacy
         elif date < self.second_dose_effective_date:
             n_days = (date - self.second_dose_date).days
             return self.straight_line(
                 n_days,
-                p0=(0, 1.-first_dose_efficacy),
-                p1=(self.second_dose_effective_days, 1.-second_dose_efficacy),
+                p0=(0, 1.0 - first_dose_efficacy),
+                p1=(self.second_dose_effective_days, 1.0 - second_dose_efficacy),
             )
         else:
-            return 1. - second_dose_efficacy
+            return 1.0 - second_dose_efficacy
 
     def get_updated_vaccine_effect(self, date):
         updated_susceptibility = self.update_original_value(
@@ -118,9 +122,9 @@ class VaccineDistribution(Policy):
         group_type: str = "50-100",
         group_coverage: float = 1.0,
         first_dose_sterilisation_efficacy: float = 0.5,
-        second_dose_sterilisation_efficacy: float = 1.,
-        first_dose_symptomatic_efficacy: float = 0.,
-        second_dose_symptomatic_efficacy: float = 0.,
+        second_dose_sterilisation_efficacy: float = 1.0,
+        first_dose_symptomatic_efficacy: float = 0.0,
+        second_dose_symptomatic_efficacy: float = 0.0,
         second_dose_compliance: float = 1.0,
         mean_time_delay: int = 1,
         std_time_delay: int = 1,
