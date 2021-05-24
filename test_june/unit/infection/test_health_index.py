@@ -6,7 +6,10 @@ from june.groups import CareHome, Household
 from june.infection.symptom_tag import SymptomTag
 from june.demography import Person, Population
 from june.infection.health_index import Data2Rates
-from june.infection.health_index.health_index import HealthIndexGenerator, index_to_maximum_symptoms_tag
+from june.infection.health_index.health_index import (
+    HealthIndexGenerator,
+    index_to_maximum_symptoms_tag,
+)
 from june.interaction import Interaction
 
 
@@ -28,11 +31,17 @@ class TestHealthIndex:
 
 
 class TestMultipliers:
-    def test__apply_multiplier(self,):
+    def test__apply_multiplier(
+        self,
+    ):
         pass
+
     def test__comorbidities_effect(self):
         comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
-        dummy = Person.from_attributes(sex="f", age=60,)
+        dummy = Person.from_attributes(
+            sex="f",
+            age=60,
+        )
         feo = Person.from_attributes(sex="f", age=60, comorbidity="feo")
         guapo = Person.from_attributes(sex="f", age=60, comorbidity="guapo")
 
@@ -64,7 +73,9 @@ class TestMultipliers:
             population=population,
         )
         health_index = HealthIndexGenerator.from_file()
-        health_index.max_mild_symptom_tag = {value: key for key, value in index_to_maximum_symptoms_tag.items()}['severe']
+        health_index.max_mild_symptom_tag = {
+            value: key for key, value in index_to_maximum_symptoms_tag.items()
+        }["severe"]
         dummy_health = health_index(dummy)
         feo_health = health_index(feo)
         guapo_health = health_index(guapo)
@@ -82,13 +93,17 @@ class TestMultipliers:
             1
             - comorbidity_multipliers["feo"]
             / mean_multiplier_uk
-            * dummy_probabilities[2:].sum() / comorbidity_multipliers['no_condition']*mean_multiplier_uk,
+            * dummy_probabilities[2:].sum()
+            / comorbidity_multipliers["no_condition"]
+            * mean_multiplier_uk,
         )
         np.testing.assert_allclose(
             feo_probabilities[2:].sum(),
             comorbidity_multipliers["feo"]
             / mean_multiplier_uk
-            * dummy_probabilities[2:].sum() / comorbidity_multipliers['no_condition']*mean_multiplier_uk,
+            * dummy_probabilities[2:].sum()
+            / comorbidity_multipliers["no_condition"]
+            * mean_multiplier_uk,
         )
 
         np.testing.assert_allclose(
@@ -96,24 +111,32 @@ class TestMultipliers:
             1
             - comorbidity_multipliers["guapo"]
             / mean_multiplier_uk
-            * dummy_probabilities[2:].sum() / comorbidity_multipliers['no_condition']*mean_multiplier_uk,
+            * dummy_probabilities[2:].sum()
+            / comorbidity_multipliers["no_condition"]
+            * mean_multiplier_uk,
         )
         np.testing.assert_allclose(
             guapo_probabilities[2:].sum(),
             comorbidity_multipliers["guapo"]
             / mean_multiplier_uk
-            * dummy_probabilities[2:].sum() / comorbidity_multipliers['no_condition']*mean_multiplier_uk,
+            * dummy_probabilities[2:].sum()
+            / comorbidity_multipliers["no_condition"]
+            * mean_multiplier_uk,
         )
         np.testing.assert_allclose(
             guapo_probabilities[:2].sum(),
             1
             - comorbidity_multipliers["guapo"]
             / mean_multiplier_uk
-            * dummy_probabilities[2:].sum() / comorbidity_multipliers['no_condition']*mean_multiplier_uk,
+            * dummy_probabilities[2:].sum()
+            / comorbidity_multipliers["no_condition"]
+            * mean_multiplier_uk,
         )
         np.testing.assert_allclose(
             guapo_probabilities[2:].sum(),
             comorbidity_multipliers["guapo"]
             / mean_multiplier_uk
-            * dummy_probabilities[2:].sum() / comorbidity_multipliers['no_condition']*mean_multiplier_uk,
+            * dummy_probabilities[2:].sum()
+            / comorbidity_multipliers["no_condition"]
+            * mean_multiplier_uk,
         )
