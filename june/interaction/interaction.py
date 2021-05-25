@@ -3,7 +3,7 @@ import yaml
 import numba as nb
 from numpy.random import choice
 from random import random
-from typing import List, Dict
+from typing import List, Dict, Optional
 from itertools import chain
 from typing import TYPE_CHECKING
 
@@ -11,7 +11,12 @@ if TYPE_CHECKING:
     from june.demography import Population
 
 from june.exc import InteractionError
-from june.utils import parse_age_probabilities
+from june.utils import (
+    parse_age_probabilities,
+    parse_prevalence_comorbidities_in_reference_population,
+    read_comorbidity_csv,
+    convert_comorbidities_prevalence_to_dict,
+)
 from june.groups.group.interactive import InteractiveGroup
 from june.groups import InteractiveSchool, InteractiveCompany, InteractiveHousehold
 from june.records import Record
@@ -52,6 +57,8 @@ class Interaction:
         contact_matrices: dict,
         susceptibilities_by_age: Dict[str, int] = None,
         population: "Population" = None,
+        multiplier_by_comorbidity: Optional[dict] = None,
+        comorbidity_prevalence_reference_population: Optional[dict] = None,
     ):
         self.alpha_physical = alpha_physical
         self.betas = betas or {}
@@ -70,6 +77,18 @@ class Interaction:
             self.set_population_susceptibilities(
                 susceptibilities_by_age=susceptibilities_by_age, population=population
             )
+        self.multiplier_by_comorbidity = multiplier_by_comorbidity
+        if self.multiplier_by_comorbidity is not None:
+            if population is None:
+                raise InteractionError(
+                    f"Need to pass population to apply comorbidities effective multipliers."
+                )
+            self.set_population_effective_multipliers(
+                multiplier_by_comorbidity=self.multiplier_by_comorbidity,
+                comorbidity_prevalence_reference_population=comorbidity_prevalence_reference_population,
+                population=population,
+            )
+
         # This dict is to keep track of beta reductions introduced by policies:
         self.beta_reductions = {}
 
@@ -78,6 +97,9 @@ class Interaction:
         cls,
         config_filename: str = default_config_filename,
         population: "Population" = None,
+        comorbidity_multipliers_path: Optional[str] = None,
+        male_comorbidity_reference_prevalence_path: Optional[str] = None,
+        female_comorbidity_reference_prevalence_path: Optional[str] = None,
     ) -> "Interaction":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -86,12 +108,31 @@ class Interaction:
             susceptibilities_by_age = config["susceptibilities"]
         else:
             susceptibilities_by_age = None
+        if comorbidity_multipliers_path is not None:
+            with open(comorbidity_multipliers_path) as f:
+                comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
+            female_prevalence = read_comorbidity_csv(
+                female_comorbidity_reference_prevalence_path
+            )
+            male_prevalence = read_comorbidity_csv(
+                male_comorbidity_reference_prevalence_path
+            )
+            comorbidity_prevalence_reference_population = (
+                convert_comorbidities_prevalence_to_dict(
+                    female_prevalence, male_prevalence
+                )
+            )
+        else:
+            comorbidity_multipliers = None
+            comorbidity_prevalence_reference_population = None
         return Interaction(
             alpha_physical=config["alpha_physical"],
             betas=config["betas"],
             contact_matrices=contact_matrices,
             susceptibilities_by_age=susceptibilities_by_age,
             population=population,
+            multiplier_by_comorbidity=comorbidity_multipliers,
+            comorbidity_prevalence_reference_population=comorbidity_prevalence_reference_population,
         )
 
     def set_population_susceptibilities(
@@ -106,6 +147,68 @@ class Interaction:
                 person.susceptibility = susceptibilities_array[-1]
             else:
                 person.susceptibility = susceptibilities_array[person.age]
+
+    def get_multiplier_from_reference_prevalence(self, age, sex):
+        """
+        Compute mean comorbidity multiplier given the prevalence of the different comorbidities
+        in the reference population (for example the UK). It will be used to remove effect of
+        comorbidities in the reference population
+
+        Parameters
+        ----------
+        age:
+            age group to compute average multiplier
+        sex:
+            sex group to compute average multiplier
+        Returns
+        -------
+            weighted_multiplier:
+                weighted mean of the multipliers given prevalence
+        """
+        weighted_multiplier = 0.0
+        for comorbidity in self.comorbidity_prevalence_reference_population.keys():
+            weighted_multiplier += (
+                self.multiplier_by_comorbidity[comorbidity]
+                * self.comorbidity_prevalence_reference_population[comorbidity][sex][
+                    age
+                ]
+            )
+        return weighted_multiplier
+
+    def get_weighted_multipliers_by_age_sex(
+        self,
+    ):
+        reference_multipliers = {"m": [], "f": []}
+        for sex in ("m", "f"):
+            for age in range(100):
+                reference_multipliers[sex].append(
+                    self.get_multiplier_from_reference_prevalence(age=age, sex=sex)
+                )
+        return reference_multipliers
+
+    def set_population_effective_multipliers(
+        self,
+        multiplier_by_comorbidity: dict,
+        comorbidity_prevalence_reference_population: dict,
+        population: "Population",
+    ):
+        """
+        Adjusts effective multipliers that control probability of severe infection,
+        depending on the person's comorbidity
+        """
+        self.comorbidity_prevalence_reference_population = (
+            parse_prevalence_comorbidities_in_reference_population(
+                comorbidity_prevalence_reference_population
+            )
+        )
+
+        reference_weighted_multipliers = self.get_weighted_multipliers_by_age_sex()
+        for person in population:
+            multiplier = multiplier_by_comorbidity.get(person.comorbidity, 1.0)
+            refeerence_multiplier = reference_weighted_multipliers[person.sex][
+                person.age
+            ]
+            person.effective_multiplier = multiplier / refeerence_multiplier
 
     def process_contact_matrices(
         self, groups: List[str], input_contact_matrices: dict, alpha_physical: float
