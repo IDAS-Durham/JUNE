@@ -1,4 +1,5 @@
 import datetime
+import pytest
 
 from june.groups import CareHome
 from june.demography import Person, Population
@@ -225,3 +226,26 @@ class TestVaccination:
         assert young_person.id not in vaccine_policy.vaccinated_ids
         assert young_person.effective_multiplier == 1.0
         assert young_person.susceptibility == 1.0
+
+    def test_both_vaccines_update(
+        self,
+    ):
+        young_person = Person.from_attributes(age=30, sex="f")
+        old_person = Person.from_attributes(age=80, sex="f")
+        vaccine_policy = VaccineDistribution(
+            group_by="age",
+            group_type="20-40",
+            first_dose_sterilisation_efficacy=0.3,
+            second_dose_sterilisation_efficacy=0.7,
+            first_dose_symptomatic_efficacy=0.2,
+            second_dose_symptomatic_efficacy=0.8,
+        )
+        people = Population([young_person, old_person])
+        for person in people:
+            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
+        vaccine_policy.update_vaccinated(
+            people=people, date=datetime.datetime(2100, 12, 3)
+        )
+        assert young_person.id not in vaccine_policy.vaccinated_ids
+        assert young_person.effective_multiplier == pytest.approx(0.2,0.001)
+        assert young_person.susceptibility== pytest.approx(0.3,0.001)
