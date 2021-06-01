@@ -90,11 +90,11 @@ class InfectionSelector:
             time at which infection happens
         """
         infection_id = self.infection_id
-        if person.immunity.is_immune(infection_id):
-            return
+        #if person.immunity.is_immune(infection_id):
+        #    return
         #person.immunity.susceptibility = 0.0
         person.infection = self._make_infection(person, time)
-        person.immunity.recovered_infections_ids.update(person.infection.immunity_ids())
+        person.immunity.add_immunity(person.infection.immunity_ids())
 
     def _make_infection(self, person: "Person", time: float):
         """

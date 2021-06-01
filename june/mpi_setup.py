@@ -141,11 +141,11 @@ class MovablePeople:
                             "inf_id": t,
                             "susc": s,
                             "immunity_inf_ids": iids,
-                            "immunity_suscs": is,
+                            "immunity_suscs": iis,
                             "dom": d,
                             "active": a,
                         }
-                        for k, i, t, s, iids, is, d, a in data
+                        for k, i, t, s, iids, iis, d, a in data
                     }
                 )
             except:

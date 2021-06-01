@@ -1,3 +1,4 @@
+from collections import defaultdict
 import numpy as np
 import numba as nb
 
@@ -45,19 +46,12 @@ class InteractiveGroup:
         """
         people_from_abroad = people_from_abroad or {}
         self.group = group
-
-        #self.infector_ids = []
-        #self.infector_transmission_probabilities = []
-        self.infector_dicts = []
-        self.susceptible_susceptibilities = []
-        self.subgroups_with_infectors = []
-        self.subgroups_with_infectors_sizes = []
-        # self.infector_infection_ids = []
-        # self.susceptible_ids = []
-        # self.subgroups_with_susceptible = []
-
-        has_susceptible = False
-        has_infector = False
+        self.infectors_per_infection_per_subgroup = defaultdict(
+            lambda: defaultdict(lambda: defaultdict(list))
+        )  # maps virus variant -> subgroup -> infectors -> {infector ids, transmission probs}
+        self.susceptibles_per_subgroup = defaultdict(
+            dict
+        )  # maps subgroup -> susceptible id -> {variant -> susceptibility}
         group_size = 0
 
         for subgroup_index, subgroup in enumerate(group.subgroups):
@@ -73,19 +67,15 @@ class InteractiveGroup:
                 continue
             group_size += subgroup_size
 
-            # get susceptible people in subgroup
-            local_subgroup_susceptible_people = [
-                person for person in subgroup if not person.infected
-            ]
-            subgroup_susceptible_dicts= [
-                person.immunity.susceptibility_dict
-                for person in local_subgroup_susceptible_people
-            ]
-            external_susceptible_ids = [
-                id for id in people_abroad_ids if people_abroad_data[id]["susc"]
-            ]
-            # add immunity for people from abroad
-            for id in external_susceptible_ids:
+            # Get susceptible people
+            # local
+            for person in subgroup:
+                if not person.infected:
+                    self.susceptibles_per_subgroup[subgroup_index][
+                        person.id
+                    ] = person.immunity.susceptibility_dict
+            # from abroad
+            for id in people_abroad_ids:
                 if people_abroad_data[id]["susc"]:
                     dd = defaultdict(lambda: 1.0)
                     for key, value in zip(
@@ -93,78 +83,33 @@ class InteractiveGroup:
                         people_abroad_data[id]["immunity_suscs"],
                     ):
                         dd[key] = value
-                    subgroup_susceptible_dicts.append(dd)
-            subgroup_susceptible_ids = [
-               person.id for person in local_subgroup_susceptible_people
-            ] += external_susceptible_ids
+                    self.susceptibles_per_subgroup[subgroup_index][id] = dd
 
-            if subgroup_susceptible_ids:
-                # store subgroup id and susceptibilities
-                has_susceptible = True
-                self.subgroups_with_susceptible.append(subgroup_index)
-                self.susceptible_ids.append(subgroup_susceptible_ids)
-                #subgroup_susceptibilities = [
-                #    person.susceptibility
-                #    for person in local_subgroup_susceptible_people
-                #]
-                #subgroup_susceptibilities += [
-                #    people_abroad_data[id]["susc"]
-                #    for id in people_abroad_ids
-                #    if people_abroad_data[id]["susc"] > 0.0
-                #]
-                #self.susceptible_ids.append(subgroup_susceptible_ids)
-                #self.susceptible_susceptibilities.append(subgroup_susceptibilities)
-
-            # get infectious people in subgroup
-            subgroup_infectors_dict = defaultdict(lambda: defaultdict(list))
+            # Get infectors
             for person in subgroup:
                 if person.infection is not None:
-                    subgroup_infectors_dict[person.infection.infection_id()]["ids"].append(person.id)
-                    subgroup_infectors_dict[person.infection.infection_id()]["trans_probs"].append(person.infection.transmission.probability)
+                    infection_id = person.infection.infection_id()
+                    self.infectors_per_infection_per_subgroup[infection_id][
+                        subgroup_index
+                    ]["ids"].append(person.id)
+                    self.infectors_per_infection_per_subgroup[infection_id][
+                        subgroup_index
+                    ]["trans_probs"].append(
+                        person.infection.transmission.probability / subgroup_size
+                    )
             for id in people_abroad_ids:
                 if people_abroad_data[id]["inf_id"] != 0:
                     infection_id = people_abroad_data[id]["inf_id"]
-                    subgroup_infectors_dict[infection_id]["ids"].append(id)
-                    subgroup_infectors_dict[infection_id]["trans_probs"].append(people_abroad_data[id]["inf_prob"])
+                    self.infectors_per_infection_per_subgroup[infection_id][
+                        subgroup_index
+                    ]["ids"].append(id)
+                    self.infectors_per_infection_per_subgroup[infection_id][
+                        subgroup_index
+                    ]["trans_probs"].append(
+                        people_abroad_data[id]["inf_prob"] / subgroup_size
+                    )
 
-            #local_subgroup_infectors = [
-            #    person
-            #    for person in subgroup
-            #    if person.infection is not None
-            #    and person.infection.transmission.probability > 0
-            #]
-            #subgroup_infector_ids = [person.id for person in local_subgroup_infectors]
-            #subgroup_infector_ids += [
-            #    id for id in people_abroad_ids if people_abroad_data[id]["inf_prob"] > 0.0
-            #]
-            if subgroup_infectors_dict:
-                # has infected
-                has_infector = True
-                self.subgroups_with_infectors.append(subgroup_index)
-                #subgroup_infector_trans_prob = [
-                #    person.infection.transmission.probability
-                #    for person in local_subgroup_infectors
-                #]
-                #subgroup_infector_infection_ids = [
-                #    person.infection.infection_id()
-                #    for person in local_subgroup_infectors
-                #]
-                #for id in people_abroad_ids:
-                #    if people_abroad_data[id]["inf_prob"] > 0:
-                #        subgroup_infector_trans_prob.append(
-                #            people_abroad_data[id]["inf_prob"]
-                #        )
-                #        subgroup_infector_infection_ids.append(
-                #            people_abroad_data[id]["inf_id"]
-                        )
-                #self.infector_transmission_probabilities.append(
-                #    subgroup_infector_trans_prob
-                #)
-                #self.infector_infection_ids.append(subgroup_infector_infection_ids)
-                #self.infector_ids.append(subgroup_infector_ids)
-                self.infector_dicts.append(subgroup_infectors_dict)
-                self.subgroups_with_infectors_sizes.append(subgroup_size)
-        self.must_timestep = has_susceptible and has_infector
+        self.must_timestep = self.has_susceptible and self.has_infectors
         self.size = group_size
 
     @classmethod
@@ -228,3 +173,11 @@ class InteractiveGroup:
     @property
     def regional_compliance(self):
         return self.group.super_area.region.regional_compliance
+
+    @property
+    def has_susceptible(self):
+        return bool(self.susceptibles_per_subgroup)
+
+    @property
+    def has_infectors(self):
+        return bool(self.infectors_per_infection_per_subgroup)

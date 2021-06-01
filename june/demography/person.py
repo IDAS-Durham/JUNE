@@ -55,7 +55,7 @@ class Person(dataobject):
         cls,
         sex="f",
         age=27,
-        susceptibility = 1.,
+        susceptibility_dict: dict = None,
         ethnicity=None,
         id=None,
         comorbidity=None,
@@ -69,7 +69,7 @@ class Person(dataobject):
             ethnicity=ethnicity,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
-            immunity = Immunity(susceptibility=susceptibility),
+            immunity = Immunity(susceptibility_dict=susceptibility_dict),
             comorbidity=comorbidity,
             subgroups=Activities(None, None, None, None, None, None, None),
         )
