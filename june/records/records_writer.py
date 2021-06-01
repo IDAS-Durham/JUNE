@@ -76,7 +76,8 @@ class Record:
             self.record_path / self.summary_filename, "w", newline=""
         ) as summary_file:
             writer = csv.writer(summary_file)
-            fields = ["infected", "recovered", "hospitalised", "intensive_care"]
+            #fields = ["infected", "recovered", "hospitalised", "intensive_care"]
+            fields = ["infected", "hospitalised", "intensive_care"]
             header = ["time_stamp", "region"]
             for field in fields:
                 header.append("current_" + field)
@@ -145,16 +146,16 @@ class Record:
             )
         return daily_infections, current_infected
 
-    def summarise_recoveries(self, world="World"):
-        daily_recovered, current_recovered = defaultdict(int), defaultdict(int)
-        for person_id in self.events["recoveries"].recovered_person_ids:
-            region = world.people.get_from_id(person_id).super_area.region.name
-            daily_recovered[region] += 1
-        for region in world.regions:
-            current_recovered[region.name] = len(
-                [person for person in region.people if person.recovered]
-            )
-        return daily_recovered, current_recovered
+    #def summarise_recoveries(self, world="World"):
+    #    daily_recovered, current_recovered = defaultdict(int), defaultdict(int)
+    #    for person_id in self.events["recoveries"].recovered_person_ids:
+    #        region = world.people.get_from_id(person_id).super_area.region.name
+    #        daily_recovered[region] += 1
+    #    for region in world.regions:
+    #        current_recovered[region.name] = len(
+    #            [person for person in region.people if person.recovered]
+    #        )
+    #    return daily_recovered, current_recovered
 
     def summarise_deaths(self, world="World"):
         daily_deaths, daily_deaths_in_hospital = defaultdict(int), defaultdict(int)
@@ -169,7 +170,7 @@ class Record:
 
     def summarise_time_step(self, timestamp: str, world: "World"):
         daily_infected, current_infected = self.summarise_infections(world=world)
-        daily_recovered, current_recovered = self.summarise_recoveries(world=world)
+        #daily_recovered, current_recovered = self.summarise_recoveries(world=world)
         (
             daily_hospitalised,
             daily_intensive_care,
@@ -189,8 +190,8 @@ class Record:
                 data = [
                     current_infected.get(region, 0),
                     daily_infected.get(region, 0),
-                    current_recovered.get(region, 0),
-                    daily_recovered.get(region, 0),
+                    #current_recovered.get(region, 0),
+                    #daily_recovered.get(region, 0),
                     current_hospitalised.get(region, 0),
                     daily_hospitalised.get(region, 0),
                     current_intensive_care.get(region, 0),

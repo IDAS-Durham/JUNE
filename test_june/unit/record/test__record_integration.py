@@ -19,7 +19,7 @@ from june.groups import (
     Universities,
     Cemeteries,
 )
-from june.infection import SymptomTag
+from june.infection import SymptomTag, Immunity
 from june.interaction import Interaction
 from june.infection.infection_selector import InfectionSelectors, InfectionSelector
 from june.infection_seed import InfectionSeed
@@ -39,7 +39,7 @@ def clean_world(world):
     for person in world.people:
         person.infection = None
         person.dead = False
-        person.susceptibility = 1.0
+        person.immunity = Immunity()
         person.subgroups.medical_facility = None
     for hospital in world.hospitals:
         hospital.ward_ids = set()
@@ -382,7 +382,7 @@ def test__symptoms_transition(world, interaction, selector):
         df = pd.DataFrame.from_records(table.read())
     df["timestamp"] = df["timestamp"].str.decode("utf-8")
     df.set_index("timestamp", inplace=True)
-    df = df.loc[~df.new_symptoms.isin([5,6,7])]
+    df = df.loc[~df.new_symptoms.isin([5, 6, 7])]
     for timestamp in list(ids_transition.keys())[1:]:
         if ids_transition[timestamp]:
             if type(df.loc[timestamp]["infected_ids"]) is np.int32:

@@ -67,7 +67,7 @@ def make_policies():
 def setup_sim(dummy_world, selectors):
     world = dummy_world
     for person in world.people:
-        person.susceptibility = 1.0
+        person.immunity.susceptibility = 1.0
         person.infection = None
         person.subgroups.medical_facility = None
         person.dead = False

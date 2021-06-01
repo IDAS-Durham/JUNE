@@ -44,12 +44,27 @@ class MovablePeople:
                 person.id,
                 person.infection.transmission.probability,
                 person.infection.infection_id(),
-                0.0,
+                False,
+                np.array([], dtype=np.int),
+                np.array([], dtype=np.float),
                 mpi_rank,
                 True,
             ]
         else:
-            view = [person.id, 0.0, 0, person.susceptibility, mpi_rank, True]
+            (
+                susceptibility_inf_ids,
+                susceptibility_inf_suscs,
+            ) = person.immunity.serialize()
+            view = [
+                person.id,
+                0.0,
+                0,
+                True,
+                np.array(susceptibility_inf_ids, dtype=np.int),
+                np.array(susceptibility_inf_suscs, dtype=np.float),
+                mpi_rank,
+                True,
+            ]
 
         self.skinny_out[domain_id][group_spec][group_id][subgroup_type][
             person.id
@@ -125,10 +140,12 @@ class MovablePeople:
                             "inf_prob": i,
                             "inf_id": t,
                             "susc": s,
+                            "immunity_inf_ids": iids,
+                            "immunity_suscs": is,
                             "dom": d,
                             "active": a,
                         }
-                        for k, i, t, s, d, a in data
+                        for k, i, t, s, iids, is, d, a in data
                     }
                 )
             except:

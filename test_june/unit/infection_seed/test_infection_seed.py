@@ -41,7 +41,6 @@ def clean_world(world):
     for person in world.people:
         person.infection = None
         person.immunity = Immunity()
-        person.susceptibility = 1.0
 
 
 def test__simplest_seed(world, selector):

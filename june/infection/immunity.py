@@ -1,16 +1,24 @@
+from collections import defaultdict
+
+
 class Immunity:
     """
     This class stores the "medical record" of the person,
     indicating which infections the person has recovered from.
     """
 
-    __slots__ = "susceptibility", "recovered_infections_ids"
+    __slots__ = "susceptibility_dict"
 
-    def __init__(self):
-        self.recovered_infections_ids = set()
+    def __init__(self, susceptibility_dict: dict = None):
+        self.susceptibility_dict = defaultdict(lambda: 1.0)
+        if susceptibility_dict:
+            for key, value in susceptibility_dict.items():
+                self.susceptibility_dict[key] = value
 
     def add_immunity(self, infection_id):
-        self.recovered_infections_ids.add(infection_id)
+        self.susceptibility_dict[infection_id] = 0.0
 
-    def is_immune(self, infection_id):
-        return infection_id in self.recovered_infections_ids
+    def serialize(self):
+        return list(self.susceptibility_dict.keys()), list(
+            self.susceptibility_dict.values()
+        )

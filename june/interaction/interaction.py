@@ -103,9 +103,9 @@ class Interaction:
         susceptibilities_array = parse_age_probabilities(susceptibilities_by_age)
         for person in population:
             if person.age >= len(susceptibilities_array):
-                person.susceptibility = susceptibilities_array[-1]
+                person.immunity.susceptibility = susceptibilities_array[-1]
             else:
-                person.susceptibility = susceptibilities_array[person.age]
+                person.immunity.susceptibility = susceptibilities_array[person.age]
 
     def process_contact_matrices(
         self, groups: List[str], input_contact_matrices: dict, alpha_physical: float
@@ -334,7 +334,6 @@ class Interaction:
             ]
             infector_weights += subgroup_transmission_exponent_list
             transmission_exponent += sum(subgroup_transmission_exponent_list)
-        print(transmission_exponent)
         return (
             transmission_exponent * delta_time * beta,
             infector_weights,

@@ -48,7 +48,6 @@ class Person(dataobject):
     infection: Infection = None
     immunity: Immunity()
     # infection
-    susceptibility: float = 1.0
     dead: bool = False
 
     @classmethod
@@ -70,9 +69,8 @@ class Person(dataobject):
             ethnicity=ethnicity,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
-            immunity = Immunity(),
+            immunity = Immunity(susceptibility=susceptibility),
             comorbidity=comorbidity,
-            susceptibility=susceptibility,
             subgroups=Activities(None, None, None, None, None, None, None),
         )
 
@@ -81,12 +79,20 @@ class Person(dataobject):
         return self.infection is not None
 
     @property
-    def susceptible(self):
-        return self.susceptibility > 0.0
+    def susceptibility(self):
+        if self.infection is not None:
+            return 0.0
+        return self.immunity.susceptibility
 
-    @property
-    def recovered(self):
-        return not (self.dead or self.susceptible or self.infected)
+    #@property
+    #def susceptible(self):
+    #    if self.infection is not None:
+    #        return False
+    #    return self.immunity.susceptibility > 0.0
+
+    #@property
+    #def recovered(self):
+    #    return not (self.dead or self.susceptible or self.infected)
 
     @property
     def residence(self):

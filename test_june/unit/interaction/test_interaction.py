@@ -44,7 +44,7 @@ def days_to_infection(interaction, susceptible_person, group, people, n_students
         infected_ids, _, _ = interaction.time_step_for_group(
             group=group, delta_time=delta_time
         )
-        if infected_ids:
+        if susceptible_person.id in infected_ids:
             break
         days_to_infection += delta_time
         group.clear()
@@ -80,8 +80,8 @@ def create_school(n_students, n_teachers):
     "n_teachers,mode",
     [
         [2, "average"],
-        # [4, "average"],
-        #[6, "average"],
+        [4, "average"],
+        [6, "average"],
     ],
 )
 def test__average_time_to_infect(n_teachers, mode, selector):

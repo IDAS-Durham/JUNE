@@ -17,7 +17,7 @@ from june.groups import (
     Universities,
     Cemeteries,
 )
-from june.infection import SymptomTag
+from june.infection import SymptomTag, Immunity
 from june.interaction import Interaction
 from june.infection.infection_selector import InfectionSelector, InfectionSelectors
 from june.infection_seed import InfectionSeed
@@ -35,7 +35,7 @@ interaction_config = paths.configs_path / "tests/interaction.yaml"
 def clean_world(world):
     for person in world.people:
         person.infection = None
-        person.susceptibility = 1.0
+        person.immunity = Immunity()
 
 
 class MockHealthIndexGenerator:
