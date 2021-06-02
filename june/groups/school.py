@@ -431,7 +431,7 @@ class InteractiveSchool(InteractiveGroup):
         self.school_years = group.years
 
     @classmethod
-    def get_processed_contact_matrix(
+    def get_raw_contact_matrix(
         cls, contact_matrix, alpha_physical, proportion_physical, characteristic_time
     ):
         """
@@ -457,33 +457,21 @@ class InteractiveSchool(InteractiveGroup):
         )
         physical_ratios = np.zeros((n_subgroups_max, n_subgroups_max))
         physical_ratios[0, 0] = proportion_physical[0][0]
-        physical_ratios[0, 1:] = proportion_physical[0][1]
-        physical_ratios[1:, 0] = proportion_physical[1][0]
+        physical_ratios[0, 1:] = proportion_physical[0][1] / (n_subgroups_max - 1)
+        physical_ratios[1:, 0] = proportion_physical[1][0] / (n_subgroups_max - 1)
         physical_ratios[1:, 1:] = proportion_physical[1][1]
         # add physical contacts
         processed_contact_matrix = processed_contact_matrix * (
             1.0 + (alpha_physical - 1.0) * physical_ratios
         )
         processed_contact_matrix *= 24 / characteristic_time
+        # If same age but different class room, reduce contacts
+        for i in range(1, n_subgroups_max):
+            processed_contact_matrix[i, i] /= 4
         return processed_contact_matrix
 
-    def get_contacts_between_subgroups(
-        self, contact_matrix, subgroup_1_idx, subgroup_2_idx
+    def get_processed_contact_matrix(
+        self, contact_matrix
     ):
-        susceptibles_idx = subgroup_1_idx
-        infecters_idx = subgroup_2_idx
-        n_contacts = contact_matrix[
-            _translate_school_subgroup(susceptibles_idx, self.school_years)
-        ][_translate_school_subgroup(infecters_idx, self.school_years)]
-        if (susceptibles_idx == 0 or infecters_idx == 0) and (
-            susceptibles_idx != infecters_idx
-        ):
-            n_contacts /= len(self.school_years)
-        elif (
-            _translate_school_subgroup(susceptibles_idx, self.school_years)
-            == _translate_school_subgroup(infecters_idx, self.school_years)
-            and susceptibles_idx != infecters_idx
-        ):
-            # If same age but different class room, reduce contacts
-            n_contacts /= 4
-        return n_contacts
+        n_school_years = len(self.school_years)
+        return contact_matrix[:n_school_years+1, :n_school_years+1]

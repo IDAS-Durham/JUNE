@@ -52,6 +52,7 @@ class InteractiveGroup:
         self.susceptibles_per_subgroup = defaultdict(
             dict
         )  # maps subgroup -> susceptible id -> {variant -> susceptibility}
+        self.subgroup_sizes = {}
         group_size = 0
 
         for subgroup_index, subgroup in enumerate(group.subgroups):
@@ -65,6 +66,7 @@ class InteractiveGroup:
                 people_abroad_ids = []
             if subgroup_size == 0:
                 continue
+            self.subgroup_sizes[subgroup_index] = subgroup_size
             group_size += subgroup_size
 
             # Get susceptible people
@@ -94,9 +96,7 @@ class InteractiveGroup:
                     ]["ids"].append(person.id)
                     self.infectors_per_infection_per_subgroup[infection_id][
                         subgroup_index
-                    ]["trans_probs"].append(
-                        person.infection.transmission.probability / subgroup_size
-                    )
+                    ]["trans_probs"].append(person.infection.transmission.probability)
             for id in people_abroad_ids:
                 if people_abroad_data[id]["inf_id"] != 0:
                     infection_id = people_abroad_data[id]["inf_id"]
@@ -105,10 +105,7 @@ class InteractiveGroup:
                     ]["ids"].append(id)
                     self.infectors_per_infection_per_subgroup[infection_id][
                         subgroup_index
-                    ]["trans_probs"].append(
-                        people_abroad_data[id]["inf_prob"] / subgroup_size
-                    )
-
+                    ]["trans_probs"].append(people_abroad_data[id]["inf_prob"])
         self.must_timestep = self.has_susceptible and self.has_infectors
         self.size = group_size
 
@@ -153,16 +150,6 @@ class InteractiveGroup:
 
     def get_processed_contact_matrix(self, contact_matrix):
         return contact_matrix
-    #def get_contacts_between_subgroups(
-    #    self, contact_matrix, subgroup_1_idx, subgroup_2_idx
-    #):
-    #    """
-    #    Returns the number of contacts between subgroup 1 and 2,
-    #    with their indices given as input. By default, this just
-    #    indexes the contact matrix, but for specific groups like schools,
-    #    this is used to handle interaction between classes of same year groups.
-    #    """
-    #    return contact_matrix[subgroup_1_idx][subgroup_2_idx]
 
     @property
     def spec(self):

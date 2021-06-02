@@ -85,18 +85,18 @@ class InfectionSeed:
             whether to run on box mode
         """
         if mpi_rank == 0:
-            susceptible_ids = [
-                person.id for person in population.people if person.susceptible
+            people_ids = [
+                person.id for person in population.people
             ]
             n_cases = round(self.seed_strength * n_cases)
             if self.age_profile is None:
                 ids_to_infect = np.random.choice(
-                    susceptible_ids,
+                    people_ids,
                     n_cases,
                     replace=False,
                 )
             else:
-                ids_to_infect = self.select_susceptiles_by_age(susceptible_ids, n_cases)
+                ids_to_infect = self.select_people_by_age(people_ids, n_cases)
         if mpi_comm is not None:
             for rank_receiving in range(1, mpi_size):
                 mpi_comm.send(ids_to_infect, est=rank_receiving, tag=0)
@@ -136,16 +136,16 @@ class InfectionSeed:
                         infection_ids=[person_to_infect.infection.infection_id()],
                     )
 
-    def select_susceptiles_by_age(
-        self, susceptible_ids: List[int], n_cases: int
+    def select_people_by_age(
+        self, people_ids: List[int], n_cases: int
     ) -> List[int]:
         """
         Select cases according to an age profile
 
         Parameters
         ----------
-        susceptible_ids:
-            list of ids of susceptible people to select from
+        people_ids:
+            list of ids of people to select from
         n_cases:
             number of cases
 
@@ -155,11 +155,11 @@ class InfectionSeed:
             ids of people to infect, following the age profile given
         """
         n_per_age_group = n_cases * np.array(list(self.age_profile.values()))
-        shuffle(susceptible_ids)
+        shuffle(people_ids)
         choices = []
         for idx, age_group in enumerate(self.age_profile.keys()):
             age_choices = self.get_people_from_age_group(
-                susceptible_ids, int(round(n_per_age_group[idx])), age_group
+                people_ids, int(round(n_per_age_group[idx])), age_group
             )
             choices.extend(age_choices)
         return choices
