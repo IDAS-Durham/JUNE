@@ -24,13 +24,78 @@ default_sector_beta_filename = (
 )
 
 
-def test__contact_matrices_from_default():
-    interaction = Interaction.from_file(config_filename=test_config)
-    np.testing.assert_allclose(
-        interaction.contact_matrices["pub"],
-        np.array([[3 * (1 + 0.12) * 24 / 3]]),
-        rtol=0.05,
-    )
+class TestInteractionFunctions:
+    def test__contact_matrices_from_default(self):
+        interaction = Interaction.from_file(config_filename=test_config)
+        np.testing.assert_allclose(
+            interaction.contact_matrices["pub"],
+            np.array([[3 * (1 + 0.12) * 24 / 3]]),
+            rtol=0.05,
+        )
+
+    def test__create_infector_tensor(self):
+        infectors_per_infection_per_subgroup = {
+            1: {2: {"ids": [1, 2, 3], "trans_probs": [0.1, 0.2, 0.3]}},
+            2: {
+                0: {"ids": [4, 5], "trans_probs": [0.4, 0.5]},
+                1: {"ids": [6], "trans_probs": [0.8]},
+            },
+        }
+        interaction = Interaction.from_file(config_filename=test_config)
+        contact_matrix = np.array([[1, 0, 1], [1, 1, 1], [0, 1, 0]])
+        infector_tensor = interaction.create_infector_tensor(
+            infectors_per_infection_per_subgroup, contact_matrix
+        )
+        expected = np.array([[0, 0, 0.6], [0, 0, 0.6], [0.0, 0.0, 0.0]])
+        assert np.allclose(infector_tensor[1], expected)
+        expected = np.array([[0.9, 0, 0], [0.9, 0.8, 0], [0, 0.8, 0]])
+        assert np.allclose(infector_tensor[2], expected)
+
+    def test__gets_infected(self):
+        interaction = Interaction.from_file(config_filename=test_config)
+        probs = np.array([0.1, 0.2, 0.3])
+        possible_infections = [1, 2, 3]
+        infections = []
+        misses = 0
+        n = 10000
+        for _ in range(n):
+            infection = interaction._gets_infected(probs, possible_infections)
+            if infection is None:
+                misses += 1
+                continue
+            infections.append(infection)
+        infections = np.array(infections)
+        misses_exp = np.exp(-0.6)
+        assert np.isclose(misses, misses_exp * n, rtol=0.1)
+        assert np.isclose(
+            len(infections[infections == 1]), 0.1 / 0.6 * n * (1 - misses_exp), rtol=0.1
+        )
+        assert np.isclose(
+            len(infections[infections == 2]), 0.2 / 0.6 * n * (1 - misses_exp), rtol=0.1
+        )
+        assert np.isclose(
+            len(infections[infections == 3]), 0.3 / 0.6 * n * (1 - misses_exp), rtol=0.1
+        )
+
+    def test__blame_subgroup(self):
+        interaction = Interaction.from_file(config_filename=test_config)
+        probs = np.array([20, 30, 100])
+        blames = []
+        n = 10000
+        for _ in range(n):
+            blame = interaction._blame_subgroup(probs)
+            blames.append(blame)
+        blames = np.array(blames)
+        assert np.isclose(len(blames[blames == 0]), 20 / 150 * n, rtol=0.1)
+        assert np.isclose(len(blames[blames == 1]), 30 / 150 * n, rtol=0.1)
+        assert np.isclose(len(blames[blames == 2]), 100 / 150 * n, rtol=0.1)
+
+    def test__blame_individuals(self):
+        interaction = Interaction.from_file(config_filename=test_config)
+        infector_tensor = {
+            "a": np.array([[0, 1], [3, 0]]),
+            "b": np.array([[2, 1], [3, 4]]),
+        }
 
 
 def days_to_infection(interaction, susceptible_person, group, people, n_students):

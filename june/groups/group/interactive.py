@@ -113,7 +113,7 @@ class InteractiveGroup:
         self.size = group_size
 
     @classmethod
-    def get_processed_contact_matrix(
+    def get_raw_contact_matrix(
         cls, contact_matrix, alpha_physical, proportion_physical, characteristic_time
     ):
         """
@@ -151,16 +151,18 @@ class InteractiveGroup:
 
         return beta * (1 + regional_compliance * tier_reduction * (beta_reduction - 1))
 
-    def get_contacts_between_subgroups(
-        self, contact_matrix, subgroup_1_idx, subgroup_2_idx
-    ):
-        """
-        Returns the number of contacts between subgroup 1 and 2,
-        with their indices given as input. By default, this just
-        indexes the contact matrix, but for specific groups like schools,
-        this is used to handle interaction between classes of same year groups.
-        """
-        return contact_matrix[subgroup_1_idx][subgroup_2_idx]
+    def get_processed_contact_matrix(self, contact_matrix):
+        return contact_matrix
+    #def get_contacts_between_subgroups(
+    #    self, contact_matrix, subgroup_1_idx, subgroup_2_idx
+    #):
+    #    """
+    #    Returns the number of contacts between subgroup 1 and 2,
+    #    with their indices given as input. By default, this just
+    #    indexes the contact matrix, but for specific groups like schools,
+    #    this is used to handle interaction between classes of same year groups.
+    #    """
+    #    return contact_matrix[subgroup_1_idx][subgroup_2_idx]
 
     @property
     def spec(self):
