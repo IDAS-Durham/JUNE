@@ -21,7 +21,12 @@ from june.infection.transmission_xnexp import TransmissionXNExp
 from june.hdf5_savers.utils import read_dataset, write_dataset
 from june.demography import Population
 from june.demography.person import Activities, Person
-from june.hdf5_savers import save_infections_to_hdf5, load_infections_from_hdf5
+from june.hdf5_savers import (
+    save_infections_to_hdf5,
+    load_infections_from_hdf5,
+    save_immunities_to_hdf5,
+    load_immunities_from_hdf5,
+)
 from june.groups.travel import Travel
 import june.simulator as june_simulator_module
 
@@ -48,18 +53,22 @@ def save_checkpoint_to_hdf5(
         hdf5 chunk_size to write data
     """
     dead_people_ids = [person.id for person in population if person.dead]
+    people_ids = []
     infected_people_ids = []
     infection_list = []
-    for person in population.infected:
-        infected_people_ids.append(person.id)
-        infection_list.append(person.infection)
+    for person in population:
+        people_ids.append(person.id)
+        if person.infected:
+            infected_people_ids.append(person.id)
+            infection_list.append(person.infection)
     with h5py.File(hdf5_file_path, "w") as f:
         f.create_group("time")
         f["time"].attrs["date"] = date
         f.create_group("people_data")
         for name, data in zip(
-            ["infected_id", "dead_id"],
+            ["people_id", "infected_id", "dead_id"],
             [
+                people_ids,
                 infected_people_ids,
                 dead_people_ids,
             ],
@@ -74,6 +83,8 @@ def save_checkpoint_to_hdf5(
         infections=infection_list,
         chunk_size=chunk_size,
     )
+    immunities = [person.immunity for person in population]
+    save_immunities_to_hdf5(hdf5_file_path=hdf5_file_path, immunities=immunities)
 
 
 def load_checkpoint_from_hdf5(hdf5_file_path: str, chunk_size=50000, load_date=True):
@@ -91,10 +102,14 @@ def load_checkpoint_from_hdf5(hdf5_file_path: str, chunk_size=50000, load_date=T
     ret["infection_list"] = load_infections_from_hdf5(
         hdf5_file_path, chunk_size=chunk_size
     )
+    ret["immunity_list"] = load_immunities_from_hdf5(
+        hdf5_file_path, chunk_size=chunk_size
+    )
     with h5py.File(hdf5_file_path, "r") as f:
         people_group = f["people_data"]
         ret["infected_id"] = people_group["infected_id"][:]
         ret["dead_id"] = people_group["dead_id"][:]
+        ret["people_id"] = people_group["people_id"][:]
         if load_date:
             ret["date"] = f["time"].attrs["date"]
     return ret
@@ -133,7 +148,7 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
         f.create_group("time")
         f["time"].attrs["date"] = ret["date"]
         f.create_group("people_data")
-        for name in ["infected_id", "dead_id"]:
+        for name in ["people_id", "infected_id", "dead_id"]:
             write_dataset(
                 group=f["people_data"],
                 dataset_name=name,
@@ -143,6 +158,10 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
         hdf5_file_path=unified_checkpoint_path,
         infections=ret["infection_list"],
         chunk_size=1000000,
+    )
+    save_immunities_to_hdf5(
+        hdf5_file_path=unified_checkpoint_path,
+        immunities=ret["immunity_list"],
     )
 
 
@@ -180,10 +199,6 @@ def restore_simulator_to_checkpoint(
         cemetery = world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.subgroups = Activities(None, None, None, None, None, None, None)
-    for recovered_id in checkpoint_data["recovered_id"]:
-        if recovered_id not in people_ids:
-            continue
-        person = simulator.world.people.get_from_id(recovered_id)
     if not reset_infections:
         for infected_id, infection in zip(
             checkpoint_data["infected_id"], checkpoint_data["infection_list"]
@@ -192,6 +207,10 @@ def restore_simulator_to_checkpoint(
                 continue
             person = simulator.world.people.get_from_id(infected_id)
             person.infection = infection
+    # restore immunities
+    for person_id, immunity in zip(checkpoint_data["people_id"], checkpoint_data["immunity_list"]):
+        person = world.people.get_from_id(person_id)
+        person.immunity = immunity
     # restore timer
     checkpoint_date = datetime.strptime(checkpoint_data["date"], "%Y-%m-%d")
     # we need to start the next day

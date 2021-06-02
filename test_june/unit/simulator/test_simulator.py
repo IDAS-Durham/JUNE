@@ -9,7 +9,7 @@ from june.world import World
 from june.groups import Hospitals, Schools, Companies, CareHomes, Universities
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.groups.travel import ModeOfTransport, Travel
-from june.infection import InfectionSelector, SymptomTag, InfectionSelectors
+from june.infection import InfectionSelector, SymptomTag, InfectionSelectors, Immunity
 from june.interaction import Interaction
 from june.policy import (
     Policies,
@@ -67,7 +67,7 @@ def make_policies():
 def setup_sim(dummy_world, selectors):
     world = dummy_world
     for person in world.people:
-        person.immunity.susceptibility = 1.0
+        person.immunity = Immunity()
         person.infection = None
         person.subgroups.medical_facility = None
         person.dead = False

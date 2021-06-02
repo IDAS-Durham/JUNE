@@ -78,11 +78,11 @@ class Person(dataobject):
     def infected(self):
         return self.infection is not None
 
-    @property
-    def susceptibility(self):
-        if self.infection is not None:
-            return 0.0
-        return self.immunity.susceptibility
+    #@property
+    #def susceptibility(self):
+    #    if self.infection is not None:
+    #        return 0.0
+    #    return self.immunity.susceptibility
 
     #@property
     #def susceptible(self):

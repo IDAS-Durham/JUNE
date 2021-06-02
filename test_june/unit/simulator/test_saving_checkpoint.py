@@ -118,8 +118,6 @@ class TestCheckpoints:
         checkpoint_folder.mkdir(exist_ok=True, parents=True)
         sim = run_simulator(selectors, test_results)
         assert len(sim.world.people.infected) > 0
-        assert len(sim.world.people.recovered) > 0
-        assert len(sim.world.people.susceptible) > 0
         assert len(sim.world.people.dead) > 0
         fresh_world = create_world()
         interaction = Interaction.from_file(config_filename=config_interaction)
@@ -154,10 +152,8 @@ class TestCheckpoints:
                 assert inf1.symptoms.tag == inf2.symptoms.tag
                 assert inf1.symptoms.stage == inf2.symptoms.stage
                 continue
-            assert person1.susceptible == person2.susceptible
             assert person1.infected == person2.infected
-            assert person1.recovered == person2.recovered
-            assert person1.susceptibility == person2.susceptibility
+            assert person1.immunity.susceptibility_dict == person2.immunity.susceptibility_dict
             assert person1.dead == person2.dead
         # clean up
         os.remove(checkpoint_folder / "checkpoint_2020-03-25.hdf5")
@@ -173,8 +169,6 @@ class TestCheckpointForReseeding:
         checkpoint_folder.mkdir(exist_ok=True, parents=True)
         sim = run_simulator(selectors, test_results)
         assert len(sim.world.people.infected) > 0
-        assert len(sim.world.people.recovered) > 0
-        assert len(sim.world.people.susceptible) > 0
         assert len(sim.world.people.dead) > 0
         fresh_world = create_world()
         interaction = Interaction.from_file(config_filename=config_interaction)
@@ -202,11 +196,9 @@ class TestCheckpointForReseeding:
             if person1.infection is not None:
                 assert person2.infection is None
                 continue
-            assert person1.susceptible == person2.susceptible
             assert person1.infected == person2.infected
-            assert person1.recovered == person2.recovered
-            assert person1.susceptibility == person2.susceptibility
             assert person1.dead == person2.dead
+            assert person1.immunity.susceptibility_dict == person2.immunity.susceptibility_dict
         # clean up
         os.remove(checkpoint_folder / "checkpoint_2020-03-25.hdf5")
         # gotta delete, else it passes any time it should have failed...

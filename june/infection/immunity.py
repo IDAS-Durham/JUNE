@@ -15,8 +15,9 @@ class Immunity:
             for key, value in susceptibility_dict.items():
                 self.susceptibility_dict[key] = value
 
-    def add_immunity(self, infection_id):
-        self.susceptibility_dict[infection_id] = 0.0
+    def add_immunity(self, infection_ids):
+        for infection_id in infection_ids:
+            self.susceptibility_dict[infection_id] = 0.0
 
     def serialize(self):
         return list(self.susceptibility_dict.keys()), list(
