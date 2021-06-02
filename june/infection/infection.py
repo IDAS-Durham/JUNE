@@ -13,14 +13,14 @@ from june.infection.transmission_xnexp import TransmissionXNExp
 from june.infection.trajectory_maker import CompletionTime
 
 
-
 class Infection:
     """
     The infection class combines the transmission (infectiousness profile) of the infected
     person, and their symptoms trajectory. We also keep track of how many people someone has
-    infected, which is useful to compute R0. The infection probability is updated at every 
+    infected, which is useful to compute R0. The infection probability is updated at every
     time step, according to an infectivity profile.
     """
+
     __slots__ = (
         "start_time",
         "transmission",
@@ -47,7 +47,7 @@ class Infection:
         self.symptoms = symptoms
         self.time_of_testing = None
 
-    @classmethod # this could be a property but it is complicated (needs meta classes)
+    @classmethod  # this could be a property but it is complicated (needs meta classes)
     def infection_id(cls):
         # this creates a unique id for each inherited class
         if not cls._infection_id:
@@ -59,7 +59,7 @@ class Infection:
         """
         Ids of the infections that upon recovery this infection gives immunity to.
         """
-        return (cls.infection_id(), )
+        return (cls.infection_id(),)
 
     def update_health_status(self, time, delta_time):
         """
@@ -136,10 +136,12 @@ class Infection:
     def infection_probability(self):
         return self.transmission.probability
 
+
 class Covid19(Infection):
     @classmethod
     def immunity_ids(cls):
         return (cls.infection_id(), B117.infection_id())
+
 
 class B117(Infection):
     @classmethod

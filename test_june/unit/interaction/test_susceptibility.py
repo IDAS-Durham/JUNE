@@ -23,24 +23,24 @@ class TestInteractionChangesSusceptibility:
             else:
                 assert susceptibilities_parsed[i] == 1.0
 
-    def test__interaction_changes_susceptibility(self, susceptibility_dict):
-        population = Population([])
-        for i in range(105):
-            population.add(Person.from_attributes(age=i))
-        for person in population:
-            assert person.susceptibility == 1.0
-        interaction = Interaction(
-            betas=None,
-            alpha_physical=None,
-            contact_matrices=None,
-            susceptibilities_by_age=susceptibility_dict,
-            population=population,
-        )
-        for person in population:
-            if person.age < 13:
-                assert person.susceptibility == 0.5
-            else:
-                assert person.susceptibility == 1.0
+    # def test__interaction_changes_susceptibility(self, susceptibility_dict):
+    #    population = Population([])
+    #    for i in range(105):
+    #        population.add(Person.from_attributes(age=i))
+    #    for person in population:
+    #        assert person.susceptibility == 1.0
+    #    interaction = Interaction(
+    #        betas=None,
+    #        alpha_physical=None,
+    #        contact_matrices=None,
+    #        susceptibilities_by_age=susceptibility_dict,
+    #        population=population,
+    #    )
+    #    for person in population:
+    #        if person.age < 13:
+    #            assert person.susceptibility == 0.5
+    #        else:
+    #            assert person.susceptibility == 1.0
 
 
 class TestSusceptibilityHasAnEffect:
@@ -122,9 +122,10 @@ class TestSusceptibilityHasAnEffect:
             betas={"company": 1},
             alpha_physical=1.0,
             contact_matrices=None,
-            susceptibilities_by_age=susceptibility_dict,
-            population=population,
         )
+        for person in population:
+            if person.age < 13:
+                person.immunity.susceptibility_dict[Infection.infection_id()] = 0.5
         n_kids_inf, n_adults_inf = self.run_interaction(
             interaction=interaction, simulation_setup=simulation_setup
         )
