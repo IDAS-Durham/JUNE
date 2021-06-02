@@ -47,9 +47,7 @@ def save_checkpoint_to_hdf5(
     chunk_size
         hdf5 chunk_size to write data
     """
-    recovered_people_ids = [person.id for person in population if person.recovered]
     dead_people_ids = [person.id for person in population if person.dead]
-    susceptible_people_ids = [person.id for person in population if person.susceptible]
     infected_people_ids = []
     infection_list = []
     for person in population.infected:
@@ -60,12 +58,10 @@ def save_checkpoint_to_hdf5(
         f["time"].attrs["date"] = date
         f.create_group("people_data")
         for name, data in zip(
-            ["infected_id", "dead_id", "recovered_id", "susceptible_id"],
+            ["infected_id", "dead_id"],
             [
                 infected_people_ids,
                 dead_people_ids,
-                recovered_people_ids,
-                susceptible_people_ids,
             ],
         ):
             write_dataset(
@@ -98,8 +94,6 @@ def load_checkpoint_from_hdf5(hdf5_file_path: str, chunk_size=50000, load_date=T
     with h5py.File(hdf5_file_path, "r") as f:
         people_group = f["people_data"]
         ret["infected_id"] = people_group["infected_id"][:]
-        ret["susceptible_id"] = people_group["susceptible_id"][:]
-        ret["recovered_id"] = people_group["recovered_id"][:]
         ret["dead_id"] = people_group["dead_id"][:]
         if load_date:
             ret["date"] = f["time"].attrs["date"]
@@ -139,7 +133,7 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
         f.create_group("time")
         f["time"].attrs["date"] = ret["date"]
         f.create_group("people_data")
-        for name in ["infected_id", "dead_id", "recovered_id", "susceptible_id"]:
+        for name in ["infected_id", "dead_id"]:
             write_dataset(
                 group=f["people_data"],
                 dataset_name=name,
@@ -183,7 +177,6 @@ def restore_simulator_to_checkpoint(
             continue
         person = simulator.world.people.get_from_id(dead_id)
         person.dead = True
-        person.susceptibility = 0.0
         cemetery = world.cemeteries.get_nearest(person)
         cemetery.add(person)
         person.subgroups = Activities(None, None, None, None, None, None, None)
@@ -191,7 +184,6 @@ def restore_simulator_to_checkpoint(
         if recovered_id not in people_ids:
             continue
         person = simulator.world.people.get_from_id(recovered_id)
-        person.susceptibility = 0.0
     if not reset_infections:
         for infected_id, infection in zip(
             checkpoint_data["infected_id"], checkpoint_data["infection_list"]
@@ -200,7 +192,6 @@ def restore_simulator_to_checkpoint(
                 continue
             person = simulator.world.people.get_from_id(infected_id)
             person.infection = infection
-            person.susceptibility = 0.0
     # restore timer
     checkpoint_date = datetime.strptime(checkpoint_data["date"], "%Y-%m-%d")
     # we need to start the next day

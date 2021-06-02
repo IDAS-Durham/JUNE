@@ -10,7 +10,7 @@ from june.time import Timer
 from june.geography import Geography
 from june.demography import Demography, Person, Population
 from june.interaction import Interaction
-from june.infection import InfectionSelectors
+from june.infection import InfectionSelectors, Immunity
 from june.groups.travel import ModeOfTransport, Travel
 from june import World
 from june.world import generate_world_from_geography
@@ -32,7 +32,7 @@ def test__full_run(dummy_world, selector, test_results):
     # restore health status of people
     for person in world.people:
         person.infection = None
-        person.susceptibility = 1.0
+        person.immunity = Immunity()
         person.dead = False
         print(person.residence.group.residences_to_visit)
     travel = Travel()

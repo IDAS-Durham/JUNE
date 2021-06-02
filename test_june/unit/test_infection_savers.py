@@ -105,7 +105,7 @@ class TestTransmissionSavers:
                     transmission_recovered, attribute
                 )
 
-    def test__save_gamma(self, gamma_transmissions):
+    def test__save_gamma(self, gamma_transmissions, test_results):
         with h5py.File(test_results / "checkpoint_tests.hdf5", "w") as f:
             pass
         save_transmissions_to_hdf5(test_results / "checkpoint_tests.hdf5", gamma_transmissions, chunk_size=1)
@@ -205,12 +205,11 @@ class TestImmunitySavers:
             pass
         immunities = []
         for i in range(100):
-            imm = Immunity(i)
-            imm.recovered_infections_ids = set((i+1, i-1))
+            susc_dict = {i: i / 10}
+            imm = Immunity(susc_dict)
             immunities.append(imm)
         save_immunities_to_hdf5(test_results / "checkpoint_tests.hdf5", immunities)
         immunities_recovered = load_immunities_from_hdf5(test_results / "checkpoint_tests.hdf5", chunk_size = 2)
         assert len(immunities) == len(immunities_recovered)
         for imm, immr in zip(immunities, immunities_recovered):
-            assert imm.susceptibility == immr.susceptibility
-            assert imm.recovered_infections_ids == immr.recovered_infections_ids
+            assert imm.susceptibility_dict == immr.susceptibility_dict
