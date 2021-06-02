@@ -457,8 +457,8 @@ class InteractiveSchool(InteractiveGroup):
         )
         physical_ratios = np.zeros((n_subgroups_max, n_subgroups_max))
         physical_ratios[0, 0] = proportion_physical[0][0]
-        physical_ratios[0, 1:] = proportion_physical[0][1] / (n_subgroups_max - 1)
-        physical_ratios[1:, 0] = proportion_physical[1][0] / (n_subgroups_max - 1)
+        physical_ratios[0, 1:] = proportion_physical[0][1]
+        physical_ratios[1:, 0] = proportion_physical[1][0]
         physical_ratios[1:, 1:] = proportion_physical[1][1]
         # add physical contacts
         processed_contact_matrix = processed_contact_matrix * (
@@ -466,12 +466,31 @@ class InteractiveSchool(InteractiveGroup):
         )
         processed_contact_matrix *= 24 / characteristic_time
         # If same age but different class room, reduce contacts
-        for i in range(1, n_subgroups_max):
-            processed_contact_matrix[i, i] /= 4
         return processed_contact_matrix
 
-    def get_processed_contact_matrix(
-        self, contact_matrix
-    ):
+    def get_processed_contact_matrix(self, contact_matrix):
         n_school_years = len(self.school_years)
-        return contact_matrix[:n_school_years+1, :n_school_years+1]
+        n_subgroups = n_school_years + 1
+        print(self.school_years)
+        print(n_subgroups)
+        ret = np.zeros((n_subgroups, n_subgroups))
+        for i in range(0, n_subgroups):
+            for j in range(0, n_subgroups):
+                if i == j:
+                    if i != 0:
+                        ret[i, j] = contact_matrix[1, 1]
+                    else:
+                        ret[0, 0] = contact_matrix[0, 0]
+                else:
+                    if i == 0:
+                        ret[0, j] = contact_matrix[0][1] / n_school_years
+                    elif j == 0:
+                        ret[i, 0] = contact_matrix[1][0] / n_school_years
+                    else:
+                        year_idx_i = _translate_school_subgroup(i, self.school_years)
+                        year_idx_j = _translate_school_subgroup(j, self.school_years)
+                        if year_idx_i == year_idx_j:
+                            ret[i, j] = contact_matrix[year_idx_i, year_idx_j] / 4
+                        else:
+                            ret[i, j] = contact_matrix[year_idx_i, year_idx_j]
+        return ret

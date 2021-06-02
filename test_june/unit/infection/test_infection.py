@@ -275,14 +275,6 @@ class TestMultipleVirus:
         selector = InfectionSelector.from_file()
         person = Person.from_attributes()
         selector.infect_person_at_time(person, 0.0)
-        assert person.immunity.recovered_infections_ids == set(
-            (Covid19.infection_id(), B117.infection_id())
-        )
+        assert person.immunity.is_immune(Covid19.infection_id())
+        assert person.immunity.is_immune(B117.infection_id())
         assert person.infected
-        person.infection = None
-        assert not person.infected
-        selector.infect_person_at_time(person, 0.0)
-        assert not person.infected
-        selector2 = InfectionSelector.from_file(infection_class=B117)
-        selector2.infect_person_at_time(person, 0.0)
-        assert not person.infected

@@ -51,7 +51,7 @@ class TestInteractiveGroup:
         ][0]["ids"] == [person1.id]
         assert interactive_group.infectors_per_infection_per_subgroup[
             person1.infection.infection_id()
-        ][0]["trans_probs"] == [person1.infection.transmission.probability / 2]
+        ][0]["trans_probs"] == [person1.infection.transmission.probability]
         assert len(interactive_group.susceptibles_per_subgroup[0]) == 1
         assert interactive_group.susceptibles_per_subgroup[0][person2.id][2] == 0.2
         assert len(interactive_group.susceptibles_per_subgroup[1]) == 1
@@ -114,35 +114,27 @@ class TestInteractiveSchool:
         age_min = 3
         age_max = 7
         school_years = tuple(range(age_min, age_max + 1))
-        school = School()
+        school = School(age_min=age_min, age_max=age_max)
         int_school = InteractiveSchool(school)
         int_school.school_years = school_years
         contact_matrix = interaction.contact_matrices["school"]
-        n_contacts_same_year = int_school.get_contacts_between_subgroups(
-            contact_matrix, 4, 4
-        )
+        contact_matrix = int_school.get_processed_contact_matrix(contact_matrix)
+        n_contacts_same_year = contact_matrix[4, 4]
         assert n_contacts_same_year == 2.875 * 3
 
-        n_contacts_year_above = int_school.get_contacts_between_subgroups(
-            contact_matrix, 4, 5
-        )
+        n_contacts_year_above = contact_matrix[4, 5]
         assert n_contacts_year_above == xi * 2.875 * 3
 
-        n_contacts_teacher_teacher = int_school.get_contacts_between_subgroups(
-            contact_matrix, 0, 0
-        )
+        n_contacts_teacher_teacher = contact_matrix[0, 0]
         assert n_contacts_teacher_teacher == 5.25 * 3
 
-        n_contacts_teacher_student = int_school.get_contacts_between_subgroups(
-            contact_matrix, 0, 4
-        )
+        n_contacts_teacher_student = contact_matrix[0, 4]
+
         np.isclose(
             n_contacts_teacher_student, (16.2 * 3 / len(school_years)), rtol=1e-6
         )
 
-        n_contacts_student_teacher = int_school.get_contacts_between_subgroups(
-            contact_matrix, 4, 0
-        )
+        n_contacts_student_teacher = contact_matrix[4, 0]
         assert n_contacts_student_teacher == 0.81 * 3 / len(school_years)
 
     def test__school_contact_matrices_different_classroom(self):
@@ -151,16 +143,14 @@ class TestInteractiveSchool:
         age_min = 3
         age_max = 7
         school_years = (3, 4, 4, 5)
-        school = School()
+        school = School(age_min=age_min, age_max=age_max)
+        school.years = school_years
         int_school = InteractiveSchool(school)
         int_school.school_years = school_years
         contact_matrix = interaction_instance.contact_matrices["school"]
-        n_contacts_same_year = int_school.get_contacts_between_subgroups(
-            contact_matrix, 2, 3
-        )
-        n_contacts_same_class = int_school.get_contacts_between_subgroups(
-            contact_matrix, 2, 2
-        )
+        contact_matrix = int_school.get_processed_contact_matrix(contact_matrix)
+        n_contacts_same_year = contact_matrix[2, 3]
+        n_contacts_same_class = contact_matrix[2, 2]
         assert np.isclose(n_contacts_same_year, n_contacts_same_class / 4)
 
     def test__contact_matrix_full(self):

@@ -23,3 +23,6 @@ class Immunity:
         return list(self.susceptibility_dict.keys()), list(
             self.susceptibility_dict.values()
         )
+
+    def is_immune(self, infection_id):
+        return self.susceptibility_dict[infection_id] == 0.0
