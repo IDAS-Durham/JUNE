@@ -3,10 +3,10 @@ import pytest
 from june.groups import CareHome
 from june import paths
 from june.groups import CareHome, Household
-from june.infection.symptom_tag import SymptomTag
+from june.epidemiology.infection.symptom_tag import SymptomTag
 from june.demography import Person
-from june.infection.health_index import Data2Rates
-from june.infection.health_index.health_index import HealthIndexGenerator, index_to_maximum_symptoms_tag
+from june.epidemiology.infection.health_index import Data2Rates
+from june.epidemiology.infection.health_index.health_index import HealthIndexGenerator, index_to_maximum_symptoms_tag
 
 
 @pytest.fixture(name="health_index", scope="module")

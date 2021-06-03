@@ -31,9 +31,9 @@ from june.groups.leisure import generate_leisure_for_config
 #from june.groups.group import Group, Subgroup
 from june.interaction import Interaction
 #from june.interaction.interaction import _get_contacts_in_school
-#from june.infection import HealthIndexGenerator
-#from june.infection_seed import InfectionSeed, Observed2Cases
-#from june.infection import InfectionSelector, HealthIndexGenerator
+#from june.epidemiology.infection.import HealthIndexGenerator
+#from june.epidemiology.infection.seed import InfectionSeed, Observed2Cases
+#from june.epidemiology.infection.import InfectionSelector, HealthIndexGenerator
 from june.groups.travel import Travel
 from june.policy import Policies
 from june.records import Record

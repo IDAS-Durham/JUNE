@@ -7,17 +7,18 @@ from june.geography import Geography
 
 from june.groups import Hospital, Hospitals
 from june.demography import Person
-from june.infection import SymptomTag
-from june.infection import InfectionSelector, Infection
-from june.paths import data_path 
+from june.epidemiology.infection import SymptomTag, InfectionSelector, Infection
+from june.paths import data_path
 
 from pathlib import Path
+
 path_pwd = Path(__file__)
-dir_pwd  = path_pwd.parent
+dir_pwd = path_pwd.parent
+
 
 @pytest.fixture(name="hospitals", scope="module")
 def create_hospitals():
-    return Hospitals.from_file(filename=data_path / 'input/hospitals/trusts.csv')
+    return Hospitals.from_file(filename=data_path / "input/hospitals/trusts.csv")
 
 
 @pytest.fixture(name="hospitals_df", scope="module")
@@ -40,26 +41,25 @@ def test__given_hospital_finds_itself_as_closest(hospitals, hospitals_df, index)
     assert hospitals.members[closest_hospital_idx] == hospitals.members[index]
 
 
-@pytest.fixture(name='selector', scope='module')
+@pytest.fixture(name="selector", scope="module")
 def create_selector():
     selector = InfectionSelector.from_file()
-    selector.recovery_rate            = 0.05
+    selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
     return selector
-
 
 
 class MockArea:
     def __init__(self, coordinates):
         self.coordinates = coordinates
 
+
 def test__initialize_hospitals_from_geography():
     geography = Geography.from_file({"super_area": ["E02003282", "E02005560"]})
     hospitals = Hospitals.for_geography(geography)
     assert len(hospitals.members) == 2
-    assert hospitals.members[1].super_area.name == 'E02005560' 
-    assert hospitals.members[0].super_area.name == 'E02003282' 
-    assert hospitals.members[1].n_beds + hospitals.members[1].n_icu_beds == 468 + 41 
-    assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 2115 + 296 
-    assert hospitals.members[0].trust_code == 'RAJ' 
-
+    assert hospitals.members[1].super_area.name == "E02005560"
+    assert hospitals.members[0].super_area.name == "E02003282"
+    assert hospitals.members[1].n_beds + hospitals.members[1].n_icu_beds == 468 + 41
+    assert hospitals.members[0].n_beds + hospitals.members[0].n_icu_beds == 2115 + 296
+    assert hospitals.members[0].trust_code == "RAJ"

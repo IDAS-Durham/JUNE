@@ -1,4 +1,4 @@
-from june.infection import transmission as trans
+from june.epidemiology.infection import transmission as trans
 from june import paths
 import scipy.stats
 import numpy as np

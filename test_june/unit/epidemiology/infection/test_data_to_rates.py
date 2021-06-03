@@ -1,5 +1,5 @@
 from june import paths
-from june.infection.health_index.data_to_rates import (
+from june.epidemiology.infection.health_index.data_to_rates import (
     read_comorbidity_csv,
     convert_comorbidities_prevalence_to_dict,
 )

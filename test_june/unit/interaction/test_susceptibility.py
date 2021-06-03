@@ -6,7 +6,8 @@ from june.utils import parse_age_probabilities
 from june.interaction import Interaction
 from june.demography import Population, Person
 from june.groups import Company
-from june.infection import Infection, TransmissionConstant
+from june.epidemiology.infection import Infection, TransmissionConstant
+
 
 class TestSusceptibilityHasAnEffect:
     @pytest.fixture(name="simulation_setup")
@@ -81,7 +82,7 @@ class TestSusceptibilityHasAnEffect:
         assert n_adults_inf > 0
         assert np.isclose(n_kids_inf, n_adults_inf, rtol=0.05)
 
-    def test__run_different_susceptibility(self, simulation_setup, susceptibility_dict):
+    def test__run_different_susceptibility(self, simulation_setup):
         group, population = simulation_setup
         interaction = Interaction(
             betas={"company": 1},

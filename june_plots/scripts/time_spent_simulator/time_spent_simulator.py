@@ -27,9 +27,9 @@ from june.groups.school import _get_contacts_in_school
 from june.groups import InteractiveSchool, InteractiveCompany, InteractiveHousehold
 from june.groups import Group, Subgroup
 
-#from june.infection import HealthIndexGenerator
-#from june.infection_seed import InfectionSeed, Observed2Cases
-#from june.infection import InfectionSelector, HealthIndexGenerator
+#from june.epidemiology.infection.import HealthIndexGenerator
+#from june.epidemiology.infection.seed import InfectionSeed, Observed2Cases
+#from june.epidemiology.infection.import InfectionSelector, HealthIndexGenerator
 from june.groups.travel import Travel
 from june.policy import Policies
 from june.records import Record, RecordReader

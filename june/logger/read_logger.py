@@ -8,7 +8,7 @@ from itertools import chain
 from pathlib import Path
 from typing import List
 
-from june.infection import SymptomTag
+from june.epidemiology.infection import SymptomTag
 from june import paths
 import time
 

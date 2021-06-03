@@ -1,11 +1,9 @@
 import pytest
 
 from june import paths
-import june.infection.symptom_tag
+from june.epidemiology.infection import SymptomTag, InfectionSelector
 from june.demography.person import Person
-from june.infection import InfectionSelector, SymptomTag
-from june.infection import symptoms as sym
-from june.infection.trajectory_maker import (
+from june.epidemiology.infection.trajectory_maker import (
     Stage,
     CompletionTime,
     ConstantCompletionTime,
@@ -93,14 +91,14 @@ class TestTrajectoryMaker:
         assert len(trajectories.trajectories) == 8
         mild_trajectory = trajectories.trajectories[SymptomTag.mild]
         infected = mild_trajectory.stages[0]
-        assert infected.symptoms_tag == june.infection.symptom_tag.SymptomTag.exposed
+        assert infected.symptoms_tag == SymptomTag.exposed
         assert infected.completion_time.args[0] == 2.29
         assert infected.completion_time.args[1] == 19.05
         assert infected.completion_time.kwargs["scale"] == 39.8
         assert infected.completion_time.kwargs["loc"] == 0.39
 
         recovered = mild_trajectory.stages[-1]
-        assert recovered.symptoms_tag == june.infection.symptom_tag.SymptomTag.recovered
+        assert recovered.symptoms_tag == SymptomTag.recovered
         assert recovered.completion_time.value == 0.0
 
     def test_most_severe_symptoms(self, trajectories):
@@ -118,19 +116,19 @@ class TestSymptoms:
             symptoms_trajectories._compute_time_from_infection_to_symptoms()
         )
         assert symptoms_trajectories.trajectory == [
-            (0.0, june.infection.symptom_tag.SymptomTag.exposed),
-            (pytest.approx(3.4, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
+            (0.0, SymptomTag.exposed),
+            (pytest.approx(3.4, rel=0.5), SymptomTag.mild),
             (
                 pytest.approx(6.8, rel=0.5),
-                june.infection.symptom_tag.SymptomTag.hospitalised,
+                SymptomTag.hospitalised,
             ),
             (
                 pytest.approx(6.8, rel=0.5),
-                june.infection.symptom_tag.SymptomTag.intensive_care,
+                SymptomTag.intensive_care,
             ),
             (
                 pytest.approx(20, rel=0.5),
-                june.infection.symptom_tag.SymptomTag.dead_icu,
+                SymptomTag.dead_icu,
             ),
         ]
         assert (
@@ -146,24 +144,24 @@ class TestSymptoms:
             symptoms_trajectories._compute_time_from_infection_to_symptoms()
         )
         assert symptoms_trajectories.trajectory == [
-            (0.0, june.infection.symptom_tag.SymptomTag.exposed),
-            (pytest.approx(10, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
+            (0.0, SymptomTag.exposed),
+            (pytest.approx(10, rel=0.5), SymptomTag.mild),
             (
                 pytest.approx(13, rel=0.5),
-                june.infection.symptom_tag.SymptomTag.hospitalised,
+                SymptomTag.hospitalised,
             ),
             (
                 pytest.approx(15, rel=0.5),
-                june.infection.symptom_tag.SymptomTag.intensive_care,
+                SymptomTag.intensive_care,
             ),
             (
                 pytest.approx(20, rel=0.5),
-                june.infection.symptom_tag.SymptomTag.hospitalised,
+                SymptomTag.hospitalised,
             ),
-            (pytest.approx(34, rel=0.5), june.infection.symptom_tag.SymptomTag.mild),
+            (pytest.approx(34, rel=0.5), SymptomTag.mild),
             (
                 pytest.approx(40, rel=0.5),
-                june.infection.symptom_tag.SymptomTag.recovered,
+                SymptomTag.recovered,
             ),
         ]
         assert (
@@ -195,30 +193,30 @@ class TestSymptoms:
             health_index
         )
         max_tag = infection.symptoms.max_tag
-        assert max_tag == june.infection.symptom_tag.SymptomTag.hospitalised
+        assert max_tag == SymptomTag.hospitalised
         assert infection.symptoms.trajectory == [
-            (0.0, june.infection.symptom_tag.SymptomTag.exposed),
-            (pytest.approx(5, 2.5), june.infection.symptom_tag.SymptomTag.mild),
+            (0.0, SymptomTag.exposed),
+            (pytest.approx(5, 2.5), SymptomTag.mild),
             (
                 pytest.approx(5, rel=5),
-                june.infection.symptom_tag.SymptomTag.hospitalised,
+                SymptomTag.hospitalised,
             ),
-            (pytest.approx(13, rel=5), june.infection.symptom_tag.SymptomTag.mild),
-            (pytest.approx(30, rel=5), june.infection.symptom_tag.SymptomTag.recovered),
+            (pytest.approx(13, rel=5), SymptomTag.mild),
+            (pytest.approx(30, rel=5), SymptomTag.recovered),
         ]
         hospitalised_time = infection.symptoms.trajectory[2][0]
 
         infection.update_symptoms_and_transmission(float(1.0))
-        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.exposed
+        assert infection.symptoms.tag == SymptomTag.exposed
         infection.update_symptoms_and_transmission(float(1.0))
-        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.exposed
+        assert infection.symptoms.tag == SymptomTag.exposed
         infection.update_symptoms_and_transmission(float(6.0))
-        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.mild
+        assert infection.symptoms.tag == SymptomTag.mild
         infection.update_symptoms_and_transmission(hospitalised_time + 8.0)
         assert (
-            infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.hospitalised
+            infection.symptoms.tag == SymptomTag.hospitalised
         )
         infection.update_symptoms_and_transmission(float(40.0))
-        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.mild
+        assert infection.symptoms.tag == SymptomTag.mild
         infection.update_symptoms_and_transmission(float(50.0))
-        assert infection.symptoms.tag == june.infection.symptom_tag.SymptomTag.recovered
+        assert infection.symptoms.tag == SymptomTag.recovered

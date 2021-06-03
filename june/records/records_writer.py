@@ -267,10 +267,12 @@ class Record:
     def parameters(
         self,
         interaction: "Interaction" = None,
-        infection_seeds: "InfectionSeeds" = None,
-        infection_selectors: "InfectionSelector" = None,
+        epidemiology: "Epidemiology" = None,
         activity_manager: "ActivityManager" = None,
     ):
+        if epidemiology:
+            infection_seeds = epidemiology.infection_seeds
+            infection_selectors = epidemiology.infection_selectors
         if self.mpi_rank is None or self.mpi_rank == 0:
             self.parameters_interaction(interaction=interaction)
             self.parameters_seed(infection_seeds=infection_seeds)

@@ -10,11 +10,12 @@ from june.time import Timer
 from june.geography import Geography
 from june.demography import Demography, Person, Population
 from june.interaction import Interaction
-from june.infection import InfectionSelectors, Immunity
+from june.epidemiology.infection import InfectionSelectors, Immunity
+from june.epidemiology.infection_seed import InfectionSeed
+from june.epidemiology.epidemiology import Epidemiology
 from june.groups.travel import ModeOfTransport, Travel
 from june import World
 from june.world import generate_world_from_geography
-from june.infection_seed import InfectionSeed
 from june.policy import Policies
 from june.records import Record
 from june.groups.leisure import generate_leisure_for_config
@@ -45,10 +46,12 @@ def test__full_run(dummy_world, selector, test_results):
     )
     policies = Policies.from_file()
     selectors = InfectionSelectors([selector])
+    epidemiology = Epidemiology(infection_selectors=selectors)
+
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selectors=selectors,
+        epidemiology=epidemiology,
         config_filename=test_config,
         leisure=leisure,
         travel=travel,

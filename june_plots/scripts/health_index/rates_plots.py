@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.backends.backend_pdf import PdfPages
 
-from june.infection.health_index.data_to_rates import (
+from june.epidemiology.infection.health_index.data_to_rates import (
     convert_to_intervals,
     Data2Rates,
     get_outputs_df,

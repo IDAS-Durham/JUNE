@@ -11,7 +11,7 @@ import cProfile
 
 from june.hdf5_savers import generate_world_from_hdf5, load_population_from_hdf5
 from june.interaction import Interaction
-from june.infection import (
+from june.epidemiology.infection import (
     Infection,
     InfectionSelector,
     HealthIndexGenerator,
@@ -21,7 +21,7 @@ from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Ce
 from june.groups.travel import Travel
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
 from june.simulator import Simulator
-from june.infection_seed import InfectionSeed, Observed2Cases
+from june.epidemiology.infection_seed import InfectionSeed, Observed2Cases
 from june.policy import Policies
 from june.event import Events
 from june import paths

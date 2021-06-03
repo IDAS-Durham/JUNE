@@ -5,7 +5,7 @@ from copy import deepcopy
 from june.groups import Group
 from june.geography import Area, SuperArea, Region
 from june.demography.person import Person
-from june.infection.infection_selector import InfectionSelector
+from june.epidemiology.infection.infection_selector import InfectionSelector
 from june.groups import (
     Hospital,
     School,

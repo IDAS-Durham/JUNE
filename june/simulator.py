@@ -15,17 +15,11 @@ from june.activity import ActivityManager, activity_hierarchy
 from june.demography import Person, Activities
 from june.exc import SimulatorError
 from june.groups.leisure import Leisure
-from june.groups import MedicalFacilities
 from june.groups.travel import Travel
 from june.groups.group.interactive import InteractiveGroup
-from june.epidemiology.infection import SymptomTag, InfectionSelectors
-from june.epidemiology.infection_seed import InfectionSeeds
+from june.epidemiology.epidemiology import Epidemiology
 from june.interaction import Interaction
-from june.policy import (
-    Policies,
-    MedicalCarePolicies,
-    InteractionPolicies,
-)
+from june.policy import Policies
 from june.event import Events
 from june.time import Timer
 from june.records import Record
@@ -51,6 +45,12 @@ def enable_mpi_debug(results_folder):
         pass
     mh = MPIFileHandler(logging_file)
     mpi_logger.addHandler(mh)
+
+
+def _read_checkpoint_dates_from_file(config_filename):
+    with open(config_filename) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    return _read_checkpoint_dates(config.get("checkpoint_save_dates", None))
 
 
 def _read_checkpoint_dates(checkpoint_dates):
@@ -80,8 +80,7 @@ class Simulator:
         interaction: Interaction,
         timer: Timer,
         activity_manager: ActivityManager,
-        infection_selectors: InfectionSelectors,
-        infection_seeds: Optional[InfectionSeeds] = None,
+        epidemiology: Epidemiology,
         events: Optional[Events] = None,
         record: Optional[Record] = None,
         checkpoint_save_dates: List[datetime.date] = None,
@@ -98,10 +97,14 @@ class Simulator:
         self.activity_manager = activity_manager
         self.world = world
         self.interaction = interaction
-        self.infection_selectors = infection_selectors
-        self.infection_seeds = infection_seeds
         self.events = events
         self.timer = timer
+        self.epidemiology = epidemiology
+        if self.epidemiology:
+            self.epidemiology.set_medical_care(
+                world=world, activity_manager=activity_manager
+            )
+            self.epidemiology.set_susceptibilities(self.world.people)
         if self.events is not None:
             self.events.init_events(world=world)
         # self.comment = comment
@@ -111,7 +114,6 @@ class Simulator:
                 checkpoint_save_path = "results/checkpoints"
             self.checkpoint_save_path = Path(checkpoint_save_path)
             self.checkpoint_save_path.mkdir(parents=True, exist_ok=True)
-        self.medical_facilities = self._get_medical_facilities()
         self.record = record
 
     @classmethod
@@ -119,10 +121,9 @@ class Simulator:
         cls,
         world: World,
         interaction: Interaction,
-        infection_selectors: InfectionSelectors,
         policies: Optional[Policies] = None,
         events: Optional[Events] = None,
-        infection_seeds: Optional[InfectionSeeds] = None,
+        epidemiology: Optional[Epidemiology] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
@@ -136,7 +137,6 @@ class Simulator:
         Parameters
         ----------
         leisure
-        infection_seeds
         policies
         interaction
         world
@@ -149,48 +149,11 @@ class Simulator:
         -------
         A Simulator
         """
-        with open(config_filename) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
-        if world.box_mode:
-            activity_to_super_groups = None
-        else:
-            try:
-                activity_to_super_groups = config["activity_to_super_groups"]
-            except:
-                output_logger.warning(
-                    "Activity to groups in config is deprecated"
-                    "please change it to activity_to_super_groups"
-                )
-                activity_to_super_groups = config["activity_to_groups"]
-        time_config = config["time"]
-        checkpoint_save_dates = _read_checkpoint_dates(
-            config.get("checkpoint_save_dates", None)
-        )
-        weekday_activities = [
-            activity for activity in time_config["step_activities"]["weekday"].values()
-        ]
-        weekend_activities = [
-            activity for activity in time_config["step_activities"]["weekend"].values()
-        ]
-        all_activities = set(
-            chain.from_iterable(weekday_activities + weekend_activities)
-        )
-
-        cls.check_inputs(time_config)
-
-        timer = Timer(
-            initial_day=time_config["initial_day"],
-            total_days=time_config["total_days"],
-            weekday_step_duration=time_config["step_duration"]["weekday"],
-            weekend_step_duration=time_config["step_duration"]["weekend"],
-            weekday_activities=time_config["step_activities"]["weekday"],
-            weekend_activities=time_config["step_activities"]["weekend"],
-        )
-
-        activity_manager = cls.ActivityManager(
+        checkpoint_save_dates = _read_checkpoint_dates_from_file(config_filename)
+        timer = Timer.from_file(config_filename=config_filename)
+        activity_manager = cls.ActivityManager.from_file(
+            config_filename=config_filename,
             world=world,
-            all_activities=all_activities,
-            activity_to_super_groups=activity_to_super_groups,
             leisure=leisure,
             travel=travel,
             policies=policies,
@@ -202,8 +165,7 @@ class Simulator:
             timer=timer,
             events=events,
             activity_manager=activity_manager,
-            infection_selectors=infection_selectors,
-            infection_seeds=infection_seeds,
+            epidemiology=epidemiology,
             record=record,
             checkpoint_save_dates=checkpoint_save_dates,
             checkpoint_save_path=checkpoint_save_path,
@@ -215,9 +177,8 @@ class Simulator:
         world: World,
         checkpoint_load_path: str,
         interaction: Interaction,
-        infection_selectors=None,
+        epidemiology: Optional[Epidemiology] = None,
         policies: Optional[Policies] = None,
-        infection_seeds: Optional[InfectionSeeds] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
@@ -231,9 +192,8 @@ class Simulator:
             world=world,
             checkpoint_path=checkpoint_load_path,
             interaction=interaction,
-            infection_selectors=infection_selectors,
             policies=policies,
-            infection_seeds=infection_seeds,
+            epidemiology=epidemiology,
             leisure=leisure,
             travel=travel,
             config_filename=config_filename,
@@ -258,234 +218,6 @@ class Simulator:
         for person in self.world.people.members:
             person.busy = False
             person.subgroups.leisure = None
-
-    def _get_medical_facilities(self):
-        medical_facilities = []
-        for group_name in self.activity_manager.all_super_groups:
-            if "visits" in group_name:
-                continue
-            grouptype = getattr(self.world, group_name)
-            if grouptype is not None:
-                if isinstance(grouptype, MedicalFacilities):
-                    medical_facilities.append(grouptype)
-        return medical_facilities
-
-    @staticmethod
-    def check_inputs(time_config: dict):
-        """
-        Check that the iput time configuration is correct, i.e., activities are among allowed activities
-        and days have 24 hours.
-
-        Parameters
-        ----------
-        time_config:
-            dictionary with time steps configuration
-        """
-
-        try:
-            assert sum(time_config["step_duration"]["weekday"].values()) == 24
-            assert sum(time_config["step_duration"]["weekend"].values()) == 24
-        except AssertionError:
-            raise SimulatorError(
-                "Daily activity durations in config do not add to 24 hours."
-            )
-
-        # Check that all groups given in time_config file are in the valid group hierarchy
-        all_super_groups = activity_hierarchy
-        try:
-            for step, activities in time_config["step_activities"]["weekday"].items():
-                assert all(group in all_super_groups for group in activities)
-
-            for step, activities in time_config["step_activities"]["weekend"].items():
-                assert all(group in all_super_groups for group in activities)
-        except AssertionError:
-            raise SimulatorError("Config file contains unsupported activity name.")
-
-    def bury_the_dead(self, world: World, person: "Person"):
-        """
-        When someone dies, send them to cemetery.
-        ZOMBIE ALERT!!
-
-        Parameters
-        ----------
-        time
-        person:
-            person to send to cemetery
-        """
-        if self.record is not None:
-            if person.medical_facility is not None:
-                death_location = person.medical_facility.group
-            else:
-                death_location = person.residence.group
-            self.record.accumulate(
-                table_name="deaths",
-                location_spec=death_location.spec,
-                location_id=death_location.id,
-                dead_person_id=person.id,
-            )
-        person.dead = True
-        person.infection = None
-        cemetery = world.cemeteries.get_nearest(person)
-        cemetery.add(person)
-        if person.residence.group.spec == "household":
-            household = person.residence.group
-            person.residence.residents = tuple(
-                mate for mate in household.residents if mate != person
-            )
-        person.subgroups = Activities(None, None, None, None, None, None, None)
-
-    def recover(self, person: "Person"):
-        """
-        When someone recovers, erase the health information they carry and change their susceptibility.
-
-        Parameters
-        ----------
-        person:
-            person to recover
-        time:
-            time (in days), at which the person recovers
-        """
-        if self.record is not None:
-            self.record.accumulate(
-                table_name="recoveries",
-                recovered_person_id=person.id,
-                infection_id=person.infection.infection_id(),
-            )
-        person.infection = None
-
-    def update_health_status(self, time: float, duration: float):
-        """
-        Update symptoms and health status of infected people.
-        Send them to hospital if necessary, or bury them if they
-        have died.
-
-        Parameters
-        ----------
-        time:
-            time now
-        duration:
-            duration of time step
-        """
-        for person in self.world.people.infected:
-            previous_tag = person.infection.tag
-            new_status = person.infection.update_health_status(time, duration)
-            if self.record is not None:
-                if previous_tag != person.infection.tag:
-                    self.record.accumulate(
-                        table_name="symptoms",
-                        infected_id=person.id,
-                        symptoms=person.infection.tag.value,
-                        infection_id=person.infection.infection_id()
-                    )
-            # Take actions on new symptoms
-            self.activity_manager.policies.medical_care_policies.apply(
-                person=person,
-                medical_facilities=self.medical_facilities,
-                days_from_start=time,
-                record=self.record,
-            )
-            if new_status == "recovered":
-                self.recover(person)
-            elif new_status == "dead":
-                self.bury_the_dead(self.world, person)
-
-    def infect_people(self, infected_ids, infection_ids, people_from_abroad_dict):
-        """
-        Given a list of infected ids, it initialises an infection object for them
-        and sets it to person.infection. For the people who do not live in this domain
-        a dictionary with their ids and domains is prepared to be sent through MPI.
-        """
-        foreign_ids = []
-        foreign_infection_ids = []
-        for person_id, infection_id in zip(infected_ids, infection_ids):
-            if person_id in self.world.people.people_ids:
-                person = self.world.people.get_from_id(person_id)
-                self.infection_selectors.infect_person_at_time(
-                    person=person, time=self.timer.now, infection_id=infection_id
-                )
-            else:
-                foreign_ids.append(person_id)
-                foreign_infection_ids.append(infection_id)
-
-        infect_in_domains = {}
-        if foreign_ids:
-            people_ids = []
-            people_domains = []
-            for spec in people_from_abroad_dict:
-                for group in people_from_abroad_dict[spec]:
-                    for subgroup in people_from_abroad_dict[spec][group]:
-                        p_ids = list(
-                            people_from_abroad_dict[spec][group][subgroup].keys()
-                        )
-                        people_ids += p_ids
-                        for id in p_ids:
-                            people_domains.append(
-                                people_from_abroad_dict[spec][group][subgroup][id][
-                                    "dom"
-                                ]
-                            )
-            infection_counter = 0
-            for id, domain in zip(people_ids, people_domains):
-                if id in foreign_ids:
-                    if domain not in infect_in_domains:
-                        infect_in_domains[domain] = {}
-                        infect_in_domains[domain]["id"] = []
-                        infect_in_domains[domain]["inf_id"] = []
-                    infect_in_domains[domain]["id"].append(id)
-                    infect_in_domains[domain]["inf_id"].append(
-                        foreign_infection_ids[infection_counter]
-                    )
-                    infection_counter += 1
-        return infect_in_domains
-
-    def tell_domains_to_infect(self, infect_in_domains):
-        """
-        Sends information about the people who got infected in this domain to the other domains.
-        """
-        mpi_comm.Barrier()
-        tick, tickw = perf_counter(), wall_clock()
-
-        invalid_id = 4294967295  # largest possible uint32
-        empty = np.array(
-            [
-                invalid_id,
-            ],
-            dtype=np.uint32,
-        )
-
-        # we want to make sure we transfer something for every domain.
-        # (we have an np.concatenate which doesn't work on empty arrays)
-
-        people_ids = [empty for x in range(mpi_size)]
-        infection_ids = [empty for x in range(mpi_size)]
-
-        # FIXME: domain id should not be floats! Origin is well upstream!
-        for x in infect_in_domains:
-            people_ids[int(x)] = np.array(infect_in_domains[x]["id"], dtype=np.uint32)
-            infection_ids[int(x)] = np.array(
-                infect_in_domains[x]["inf_id"], dtype=np.uint32
-            )
-
-        people_to_infect, n_sending, n_receiving = move_info(people_ids)
-        infection_to_infect, n_sending, n_receiving = move_info(infection_ids)
-
-        tock, tockw = perf_counter(), wall_clock()
-        output_logger.info(
-            f"CMS: Infection COMS-v2 for rank {mpi_rank}/{mpi_size}({n_sending+n_receiving})"
-            f"{tock-tick},{tockw-tickw} - {self.timer.date}"
-        )
-        mpi_logger.info(f"{self.timer.date},{mpi_rank},infection,{tock-tick}")
-
-        for person_id, infection_id in zip(people_to_infect, infection_to_infect):
-            try:
-                person = self.world.people.get_from_id(person_id)
-                self.infection_selectors.infect_person_at_time(
-                    person=person, time=self.timer.now, infection_id=infection_id
-                )
-            except:
-                if person_id == invalid_id:
-                    continue
-                raise
 
     def do_timestep(self):
         """
@@ -582,15 +314,14 @@ class Simulator:
         mpi_logger.info(
             f"{self.timer.date},{mpi_rank},interaction,{tock_interaction-tick_interaction}"
         )
-
-        # infect the people that got exposed
-        if self.infection_selectors:
-            infect_in_domains = self.infect_people(
-                infected_ids=infected_ids,
-                infection_ids=infection_ids,
-                people_from_abroad_dict=people_from_abroad_dict,
-            )
-            to_infect = self.tell_domains_to_infect(infect_in_domains)
+        self.epidemiology.do_timestep(
+            world=self.world,
+            timer=self.timer,
+            record=self.record,
+            infected_ids=infected_ids,
+            infection_ids=infection_ids,
+            people_from_abroad_dict=people_from_abroad_dict,
+        )
 
         # recount people active to check people conservation
         people_active = (
@@ -605,12 +336,6 @@ class Simulator:
                 f"People coming from abroad {n_people_from_abroad}\n"
                 f"Current rank {mpi_rank}\n"
             )
-
-        # update the health status of the population
-        self.update_health_status(time=self.timer.now, duration=self.timer.duration)
-        if self.record is not None:
-            self.record.summarise_time_step(timestamp=self.timer.date, world=self.world)
-            self.record.time_step(timestamp=self.timer.date)
 
         # remove everyone from their active groups
         self.clear_world()
@@ -633,14 +358,13 @@ class Simulator:
         if self.record is not None:
             self.record.parameters(
                 interaction=self.interaction,
-                infection_seeds=self.infection_seeds,
-                infection_selectors=self.infection_selectors,
+                epidemiology=self.epidemiology,
                 activity_manager=self.activity_manager,
             )
         while self.timer.date < self.timer.final_date:
-            if self.infection_seeds:
-                self.infection_seeds.unleash_virus_per_day(
-                    self.timer.date, record=self.record
+            if self.epidemiology:
+                self.epidemiology.infection_seeds_timestep(
+                    self.timer, record=self.record
                 )
             self.do_timestep()
             if (

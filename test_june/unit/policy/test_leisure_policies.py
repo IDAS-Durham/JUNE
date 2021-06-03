@@ -24,8 +24,8 @@ from june.groups.leisure import (
     generate_leisure_for_config,
     generate_leisure_for_world,
 )
-from june.infection import SymptomTag
-from june.infection.infection_selector import InfectionSelector
+from june.epidemiology.infection import SymptomTag
+from june.epidemiology.infection.infection_selector import InfectionSelector
 from june.interaction import Interaction
 from june.policy import (
     Policy,

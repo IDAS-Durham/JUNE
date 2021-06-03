@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from june.demography import Person
-from june.infection import B117, Covid19, InfectionSelector, InfectionSelectors
+from june.epidemiology.infection import B117, Covid19, InfectionSelector, InfectionSelectors
 from june.event import Mutation
 
 

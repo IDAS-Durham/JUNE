@@ -3,10 +3,10 @@ import pytest
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from june.infection_seed import Observed2Cases
+from june.epidemiology.infection_seed import Observed2Cases
 from june.demography import Person
 from june.geography import Area, SuperArea, SuperAreas
-from june.infection.trajectory_maker import TrajectoryMaker
+from june.epidemiology.infection.trajectory_maker import TrajectoryMaker
 from june import paths
 
 

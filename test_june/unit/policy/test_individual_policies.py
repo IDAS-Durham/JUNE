@@ -18,8 +18,8 @@ from june.groups import (
     Cemeteries,
 )
 from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub
-from june.infection import SymptomTag
-from june.infection.infection_selector import InfectionSelector
+from june.epidemiology.infection import SymptomTag
+from june.epidemiology.infection.infection_selector import InfectionSelector
 from june.policy import (
     Policy,
     SevereSymptomsStayHome,
@@ -55,6 +55,7 @@ class TestSevereSymptomsStayHome:
         permanent_policy = SevereSymptomsStayHome()
         policies = Policies([permanent_policy])
         sim.activity_manager.policies = policies
+        sim.epidemiology.set_medical_care(world, sim.activity_manager)
         sim.clear_world()
         sim.activity_manager.move_people_to_active_subgroups(
             ["primary_activity", "residence"],
@@ -64,7 +65,7 @@ class TestSevereSymptomsStayHome:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         infect_person(worker, selector, "severe")
-        sim.update_health_status(0.0, 0.0)
+        sim.epidemiology.update_health_status(world, 0.0, 0.0)
         sim.activity_manager.move_people_to_active_subgroups(
             ["primary_activity", "residence"],
         )
@@ -79,6 +80,7 @@ class TestSevereSymptomsStayHome:
         hospitalisation = Hospitalisation()
         policies = Policies([permanent_policy, hospitalisation])
         sim.activity_manager.policies = policies
+        sim.epidemiology.set_medical_care(world, sim.activity_manager)
         sim.clear_world()
         sim.activity_manager.move_people_to_active_subgroups(
             ["medical_facility", "primary_activity", "residence"],
@@ -88,7 +90,7 @@ class TestSevereSymptomsStayHome:
         assert pupil in pupil.primary_activity.people
         sim.clear_world()
         infect_person(worker, selector, "hospitalised")
-        sim.update_health_status(0.0, 0.0)
+        sim.epidemiology.update_health_status(world, 0.0, 0.0)
         sim.activity_manager.move_people_to_active_subgroups(
             ["medical_facility", "primary_activity", "residence"],
         )
@@ -102,6 +104,7 @@ class TestSevereSymptomsStayHome:
         permanent_policy = SevereSymptomsStayHome()
         policies = Policies([permanent_policy])
         sim.activity_manager.policies = policies
+        sim.epidemiology.set_medical_care(world, sim.activity_manager)
         sim.clear_world()
         sim.activity_manager.move_people_to_active_subgroups(
             ["primary_activity", "residence"],
@@ -112,7 +115,7 @@ class TestSevereSymptomsStayHome:
         assert student in student.primary_activity.people
         sim.clear_world()
         infect_person(pupil, selector, "severe")
-        sim.update_health_status(0.0, 0.0)
+        sim.epidemiology.update_health_status(world, 0.0, 0.0)
         assert pupil.infection.tag == SymptomTag.severe
         sim.activity_manager.move_people_to_active_subgroups(
             ["primary_activity", "residence"],
@@ -138,6 +141,7 @@ class TestClosure:
         )
         policies = Policies([school_closure])
         sim.activity_manager.policies = policies
+        sim.epidemiology.set_medical_care(world, sim.activity_manager)
 
         # non key worker
         worker.lockdown_status = "furlough"
@@ -1081,7 +1085,7 @@ class TestQuarantine:
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
         infect_person(worker, selector, "mild")
-        sim.update_health_status(0.0, 0.0)
+        sim.epidemiology.update_health_status(world, 0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 1, 2)
@@ -1124,7 +1128,7 @@ class TestQuarantine:
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
         infect_person(worker, selector, "asymptomatic")
-        sim.update_health_status(0.0, 0.0)
+        sim.epidemiology.update_health_status(world, 0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 1, 2)
@@ -1152,7 +1156,7 @@ class TestQuarantine:
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
         infect_person(worker, selector, "mild")
-        sim.update_health_status(0.0, 0.0)
+        sim.epidemiology.update_health_status(world, 0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 1, 2)
@@ -1198,7 +1202,7 @@ class TestQuarantine:
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
         infect_person(worker, selector, "asymptomatic")
-        sim.update_health_status(0.0, 0.0)
+        sim.epidemiology.update_health_status(world, 0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 1, 2)
@@ -1234,7 +1238,7 @@ class TestQuarantine:
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
         infect_person(worker, selector, "mild")
-        sim.update_health_status(0.0, 0.0)
+        sim.epidemiology.update_health_status(world, 0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 1, 2)
@@ -1278,7 +1282,7 @@ class TestQuarantine:
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
         infect_person(worker, selector, "mild")
-        sim.update_health_status(0.0, 0.0)
+        sim.epidemiology.update_health_status(world, 0.0, 0.0)
         activities = ["primary_activity", "residence"]
         sim.clear_world()
         time_during_policy = datetime(2020, 1, 2)

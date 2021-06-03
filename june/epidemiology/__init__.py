@@ -1,2 +1,1 @@
-#from .infection import *
-#from .infection_seed import *
+#from .epidemiology import Epidemiology

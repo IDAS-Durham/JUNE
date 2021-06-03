@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from pytest import fixture
 
-from june.infection_seed import CasesDistributor
+from june.epidemiology.infection_seed import CasesDistributor
 
 
 class TestCasesDistributor:

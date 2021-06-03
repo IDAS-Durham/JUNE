@@ -30,7 +30,7 @@ from june.groups import InteractiveSchool, InteractiveCompany, InteractiveHouseh
 from june.groups import Group, Subgroup
 
 #from june.infection import HealthIndexGenerator
-#from june.infection_seed import InfectionSeed, Observed2Cases
+#from june.epidemiology.infection_seed import InfectionSeed, Observed2Cases
 #from june.infection import InfectionSelector, HealthIndexGenerator
 from june.groups.travel import Travel
 from june.policy import Policies

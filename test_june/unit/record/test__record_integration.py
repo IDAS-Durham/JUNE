@@ -19,10 +19,15 @@ from june.groups import (
     Universities,
     Cemeteries,
 )
-from june.infection import SymptomTag, Immunity
+from june.epidemiology.infection import (
+    SymptomTag,
+    Immunity,
+    InfectionSelectors,
+    InfectionSelector,
+)
 from june.interaction import Interaction
-from june.infection.infection_selector import InfectionSelectors, InfectionSelector
-from june.infection_seed import InfectionSeed
+from june.epidemiology.epidemiology import Epidemiology
+from june.epidemiology.infection_seed import InfectionSeed
 from june.policy import Policies, Hospitalisation
 from june.simulator import Simulator
 from june.world import World
@@ -196,10 +201,11 @@ def create_sim(world, interaction, selector, seed=False):
             infect_dead_person(person)
 
     selectors = InfectionSelectors([selector])
+    epidemiology = Epidemiology(infection_selectors=selectors)
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selectors=selectors,
+        epidemiology=epidemiology,
         config_filename=test_config,
         policies=policies,
         record=record,
@@ -263,7 +269,9 @@ def test__log_hospital_admissions(world, interaction, selector):
     while counter < 50:
         timer = sim.timer.date.strftime("%Y-%m-%d")
         daily_hosps_ids, daily_discharges_ids = [], []
-        sim.update_health_status(sim.timer.now, sim.timer.duration)
+        sim.epidemiology.update_health_status(
+            sim.world, sim.timer.now, sim.timer.duration, record=sim.record
+        )
         for person in world.people.infected:
             if person.medical_facility is not None and person.id not in saved_ids:
                 daily_hosps_ids.append(person.id)
@@ -325,7 +333,9 @@ def test__log_icu_admissions(world, interaction, selector):
     while counter < 50:
         timer = sim.timer.date.strftime("%Y-%m-%d")
         daily_icu_ids = []
-        sim.update_health_status(sim.timer.now, sim.timer.duration)
+        sim.epidemiology.update_health_status(
+            sim.world, sim.timer.now, sim.timer.duration, record=sim.record
+        )
         for person in world.people.infected:
             if (
                 person.infection.symptoms.tag == SymptomTag.intensive_care
@@ -364,8 +374,10 @@ def test__symptoms_transition(world, interaction, selector):
     symptoms = defaultdict(int)
     while counter < 20:
         timer = sim.timer.date.strftime("%Y-%m-%d")
-        sim.update_health_status(sim.timer.now, sim.timer.duration)
         daily_transitions_ids, daily_transitions_symptoms = [], []
+        sim.epidemiology.update_health_status(
+            sim.world, sim.timer.now, sim.timer.duration, record=sim.record
+        )
         for person in world.people.infected:
             symptoms_tag = person.infection.symptoms.tag.value
             if symptoms_tag != symptoms[person.id]:
@@ -414,7 +426,12 @@ def test__log_deaths(world, interaction, selector):
     while counter < 50:
         timer = sim.timer.date.strftime("%Y-%m-%d")
         daily_deaths_ids = []
-        sim.update_health_status(sim.timer.now, sim.timer.duration)
+        sim.epidemiology.update_health_status(
+            sim.world,
+            sim.timer.now,
+            sim.timer.duration,
+            record=sim.record,
+        )
         for person in world.people:
             if person.dead and person.id not in saved_ids:
                 daily_deaths_ids.append(person.id)

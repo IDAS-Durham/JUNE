@@ -92,11 +92,11 @@ class VaccineDistribution(Policy):
         self,
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
-        group_by: str = 'age', #'residence',
-        group_type: str = '50-100',
+        group_by: str = "age",  #'residence',
+        group_type: str = "50-100",
         group_coverage: float = 1.0,
         first_dose_efficacy: float = 0.5,
-            second_dose_efficacy: float = 1.0,
+        second_dose_efficacy: float = 1.0,
         second_dose_compliance: float = 1.0,
         mean_time_delay: int = 1,
         std_time_delay: int = 1,
@@ -135,7 +135,7 @@ class VaccineDistribution(Policy):
 
         super().__init__(start_time=start_time, end_time=end_time)
         self.group_attribute, self.group_value = self.process_group_description(
-           group_by, group_type 
+            group_by, group_type
         )
         self.total_days = (self.end_time - self.start_time).days
         self.group_coverage = group_coverage
@@ -150,9 +150,9 @@ class VaccineDistribution(Policy):
 
     def process_group_description(self, group_by, group_type):
         if group_by in ("residence", "primary_activity"):
-            return f'{group_by}.group.spec', group_type
+            return f"{group_by}.group.spec", group_type
         elif group_by == "age":
-            return f'{group_by}', group_type
+            return f"{group_by}", group_type
 
     def is_target_group(self, person):
         if self.group_attribute != "age":
@@ -203,7 +203,7 @@ class VaccineDistribution(Policy):
 
     def daily_vaccine_probability(self, days_passed):
         return self.group_coverage * (
-            1 / (self.total_days - days_passed*self.group_coverage)
+            1 / (self.total_days - days_passed * self.group_coverage)
         )
 
     def apply(self, person: Person, date: datetime):
@@ -236,7 +236,7 @@ class VaccineDistributions(PolicyCollection):
             policy.apply(person=person, date=date)
 
     def is_active(self, date: datetime):
-        if self.get_active(date): 
+        if self.get_active(date):
             return True
         return False
 

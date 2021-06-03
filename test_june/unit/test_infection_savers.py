@@ -2,10 +2,10 @@ import h5py
 import pytest
 import numpy as np
 
-from june.infection.transmission_xnexp import TransmissionXNExp
-from june.infection.transmission import TransmissionGamma
-from june.infection.symptoms import Symptoms, SymptomTag
-from june.infection import Infection, Immunity
+from june.epidemiology.infection.transmission_xnexp import TransmissionXNExp
+from june.epidemiology.infection.transmission import TransmissionGamma
+from june.epidemiology.infection.symptoms import Symptoms, SymptomTag
+from june.epidemiology.infection import Infection, Immunity
 from june.hdf5_savers.infection_savers import (
     save_transmissions_to_hdf5,
     load_transmissions_from_hdf5,

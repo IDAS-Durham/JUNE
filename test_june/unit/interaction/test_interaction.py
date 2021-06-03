@@ -1,6 +1,6 @@
 from june.interaction import Interaction, interaction
-from june.infection.infection_selector import InfectionSelector
-from june.infection import Immunity
+from june.epidemiology.infection.infection_selector import InfectionSelector
+from june.epidemiology.infection import Immunity
 from june.groups import School
 from june.demography import Person
 from june import paths
@@ -8,7 +8,7 @@ from june.geography import Geography
 from june.groups.group.interactive import InteractiveGroup
 from june.world import generate_world_from_geography
 from june.groups import Hospital, Hospitals
-from june.infection_seed import InfectionSeed
+from june.epidemiology.infection_seed import InfectionSeed
 from june.policy import Policies
 from june.simulator import Simulator
 
@@ -218,7 +218,7 @@ def test__average_time_to_infect(n_teachers, mode, selector):
     )
 
 
-def test__infection_is_isolated(selectors):
+def test__infection_is_isolated(epidemiology, selectors):
     geography = Geography.from_file({"area": ["E00002559"]})
     world = generate_world_from_geography(geography, include_households=True)
     interaction = Interaction.from_file(config_filename=test_config)
@@ -231,7 +231,7 @@ def test__infection_is_isolated(selectors):
     simulator = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selectors=selectors,
+        epidemiology=epidemiology,
         config_filename=pathlib.Path(__file__).parent.absolute()
         / "interaction_test_config.yaml",
         leisure=None,
@@ -255,7 +255,7 @@ def test__infection_is_isolated(selectors):
         if person.residence is None:
             assert person.dead
         elif not (person.residence.group in infected_households):
-            assert not person.infected 
+            assert not person.infected
 
 
 def test__super_spreaders(selector):

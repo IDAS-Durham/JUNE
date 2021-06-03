@@ -9,7 +9,8 @@ from june.world import World
 from june.groups import Hospitals, Schools, Companies, CareHomes, Universities
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.groups.travel import ModeOfTransport, Travel
-from june.infection import InfectionSelector, SymptomTag, InfectionSelectors, Immunity
+from june.epidemiology.infection import InfectionSelector, SymptomTag, InfectionSelectors, Immunity
+from june.epidemiology.epidemiology import Epidemiology
 from june.interaction import Interaction
 from june.policy import (
     Policies,
@@ -79,10 +80,11 @@ def setup_sim(dummy_world, selectors):
     )
     interaction = Interaction.from_file(config_filename=interaction_config)
     policies = Policies.from_file()
+    epidemiology = Epidemiology(infection_selectors=selectors)
     travel = Travel()
     sim = Simulator.from_file(
         world=world,
-        infection_selectors=selectors,
+        epidemiology=epidemiology,
         interaction=interaction,
         config_filename=test_config,
         leisure=leisure_instance,
@@ -225,8 +227,8 @@ def test__move_people_to_commute(sim: Simulator):
 
 def test__bury_the_dead(sim: Simulator):
     dummy_person = sim.world.people.members[0]
-    sim.infection_selectors.infect_person_at_time(dummy_person, 0.0)
-    sim.bury_the_dead(sim.world, dummy_person)
+    sim.epidemiology.infection_selectors.infect_person_at_time(dummy_person, 0.0)
+    sim.epidemiology.bury_the_dead(sim.world, dummy_person)
     assert dummy_person in sim.world.cemeteries.members[0].people
     assert dummy_person.dead
     assert dummy_person.infection is None

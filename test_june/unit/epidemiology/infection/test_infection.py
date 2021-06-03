@@ -4,19 +4,19 @@ import numpy as np
 from pathlib import Path
 
 from june import paths
-import june.infection.symptoms
+import june.epidemiology.infection.symptoms
 from june.demography import Person
-from june.infection import transmission
-from june.infection.symptom_tag import SymptomTag
-from june.infection import symptoms_trajectory as symtraj
-from june.infection import transmission_xnexp as transxnexp
-from june.infection.infection_selector import default_transmission_config_path
-from june.infection import (
+from june.epidemiology.infection import symptoms_trajectory as symtraj
+from june.epidemiology.infection import transmission_xnexp as transxnexp
+from june.epidemiology.infection.infection_selector import default_transmission_config_path
+from june.epidemiology.infection import (
     Infection,
     InfectionSelector,
     Covid19,
     B117,
     InfectionSelectors,
+    transmission,
+    SymptomTag
 )
 
 path_pwd = Path(__file__)
@@ -81,7 +81,7 @@ class TestInfection:
         assert victim.infection.start_time == 0.2
         assert isinstance(
             victim.infection.symptoms,
-            june.infection.symptoms.Symptoms,
+            june.epidemiology.infection.symptoms.Symptoms,
         )
         assert isinstance(
             victim.infection.transmission,

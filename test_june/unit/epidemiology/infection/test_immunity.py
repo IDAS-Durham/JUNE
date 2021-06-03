@@ -1,4 +1,4 @@
-from june.infection import Immunity
+from june.epidemiology.infection import Immunity
 
 class TestImmunity:
     def test_immunity(self):
