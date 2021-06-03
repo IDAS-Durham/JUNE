@@ -443,7 +443,7 @@ class InteractiveSchool(InteractiveGroup):
         """
         xi = 0.3
         age_min = 0
-        age_max = 20
+        age_max = 30
         n_subgroups_max = (age_max - age_min) + 2  # adding teachers
         age_differences = np.subtract.outer(
             range(age_min, age_max + 1), range(age_min, age_max + 1)
@@ -471,8 +471,6 @@ class InteractiveSchool(InteractiveGroup):
     def get_processed_contact_matrix(self, contact_matrix):
         n_school_years = len(self.school_years)
         n_subgroups = n_school_years + 1
-        print(self.school_years)
-        print(n_subgroups)
         ret = np.zeros((n_subgroups, n_subgroups))
         for i in range(0, n_subgroups):
             for j in range(0, n_subgroups):

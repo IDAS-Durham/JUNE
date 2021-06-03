@@ -22,7 +22,8 @@ from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Ce
 from june.groups.travel import Travel
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
 from june.simulator import Simulator
-from june.epidemiology.infection_seed import InfectionSeed, Observed2Cases
+from june.epidemiology.epidemiology import Epidemiology
+from june.epidemiology.infection_seed import InfectionSeed, Observed2Cases, InfectionSeeds
 from june.policy import Policies
 from june.event import Events
 from june import paths
@@ -76,7 +77,7 @@ def generate_simulator():
             super_area_name_to_id = {
                 name.decode(): id for name, id in zip(super_area_names, super_area_ids)
             }
-        super_areas_per_domain = DomainSplitter.generate_world_split(
+        super_areas_per_domain, score_per_domain = DomainSplitter.generate_world_split(
             number_of_domains=mpi_size, world_path=world_file
         )
         super_area_names_to_domain_dict = {}
@@ -114,7 +115,8 @@ def generate_simulator():
     )
     daily_cases_per_region = oc.get_regional_latent_cases()
     daily_cases_per_super_area = oc.convert_regional_cases_to_super_area(
-        daily_cases_per_region, starting_date="2020-02-28",
+        daily_cases_per_region,
+        starting_date="2020-02-28",
     )
     infection_seed = InfectionSeed(
         world=domain,
@@ -122,10 +124,14 @@ def generate_simulator():
         daily_super_area_cases=daily_cases_per_super_area,
         seed_strength=100,
     )
+    epidemiology = Epidemiology(
+        infection_selectors=InfectionSelectors([infection_selector]),
+        infection_seeds=InfectionSeeds([infection_seed]),
+    )
 
     # interaction
     interaction = Interaction.from_file(
-        config_filename="./config_interaction.yaml", population=domain.people
+        config_filename="./config_interaction.yaml"
     )
     # policies
     policies = Policies.from_file()
@@ -143,13 +149,13 @@ def generate_simulator():
         interaction=interaction,
         leisure=leisure,
         travel=travel,
-        infection_selectors=InfectionSelectors([infection_selector]),
-        infection_seeds=InfectionSeeds([infection_seed]),
+        epidemiology=epidemiology,
         config_filename=config_path,
         record=record,
     )
     print("simulator ready to go")
     return simulator
+
 
 def run_simulator(simulator):
 

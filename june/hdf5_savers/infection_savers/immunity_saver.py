@@ -99,7 +99,6 @@ def load_immunities_from_hdf5(hdf5_file_path: str, chunk_size=50000):
                             susc_infection_ids[k], susc_susceptibilities[k]
                         )
                     }
-                    print(susceptibilities_dict)
                     immunity = Immunity(susceptibilities_dict)
                 immunities.append(immunity)
     return immunities

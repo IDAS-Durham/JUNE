@@ -7,7 +7,7 @@ from june import paths
 from typing import List, Optional
 
 from june.records import Record
-from june.domain import Domain
+from june.domains import Domain
 from june.demography import Population
 from june.geography import SuperAreas
 from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator

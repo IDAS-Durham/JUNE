@@ -11,7 +11,7 @@ from june.demography import Person
 from june.epidemiology.infection.symptom_tag import SymptomTag
 from june.epidemiology.infection.trajectory_maker import TrajectoryMaker
 
-default_trajectories_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
+default_trajectories_path = paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
 default_area_super_region_path = (
     paths.data_path / "input/geography/area_super_area_region.csv"
 )

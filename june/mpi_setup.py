@@ -9,7 +9,6 @@ mpi_comm = MPI.COMM_WORLD
 mpi_rank = mpi_comm.Get_rank()
 mpi_size = mpi_comm.Get_size()
 
-
 class MovablePeople:
     """
     Holds information about people who might be present in a domain, but may or may not be be,
@@ -111,7 +110,7 @@ class MovablePeople:
                             subgroup_type
                         ].items()
                     ]
-        outbound = np.array(data)
+        outbound = np.array(data, dtype=object)
         return keys, outbound, outbound.shape[0]
 
     def update(self, rank, keys, rank_data):
