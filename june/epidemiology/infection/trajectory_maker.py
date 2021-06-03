@@ -7,7 +7,7 @@ from scipy.stats import expon, beta, lognorm, norm, expon, exponweib
 from june import paths
 from .symptom_tag import SymptomTag
 
-default_config_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
+default_config_path = paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
 
 
 class CompletionTime(ABC):

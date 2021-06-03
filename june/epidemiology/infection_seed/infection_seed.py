@@ -13,11 +13,6 @@ from june.geography import SuperAreas
 from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
 from june.utils import parse_probabilities
 
-default_infection_seeds_config_file = (
-    paths.configs_path / "default/infection/infection_seeds.yaml"
-)
-
-
 class InfectionSeed:
     def __init__(
         self,

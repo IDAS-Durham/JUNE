@@ -33,6 +33,8 @@ from june.hdf5_savers import (
     save_universities_to_hdf5,
     save_social_venues_to_hdf5,
     generate_world_from_hdf5,
+    save_data_for_domain_decomposition,
+    load_data_for_domain_decomposition
 )
 from june.hdf5_savers import (
     load_geography_from_hdf5,
@@ -589,3 +591,32 @@ class TestSaveWorld:
                 for residence1, residence2 in zip(value1, value2):
                     assert residence1.id == residence2.id
                     assert residence1.spec == residence2.spec
+
+
+class TestSaveDataDomainDecomposition:
+    def test__save_data(self, full_world, test_results):
+        save_data_for_domain_decomposition(full_world, test_results / "test.hdf5")
+        data_recovered = load_data_for_domain_decomposition(test_results / "test.hdf5")
+        n_people_sa = {}
+        n_workers_sa = {}
+        n_pupils_sa = {}
+        for super_area in full_world.super_areas:
+            n_people_sa[super_area.name] = len(super_area.people)
+            n_workers_sa[super_area.name] = len(super_area.workers)
+            n_pupils_sa[super_area.name] = sum(
+                len(school.people)
+                for area in super_area.areas
+                for school in area.schools
+            )
+        total_commuters = sum([len(station.commuter_ids) for station in full_world.stations])
+        total_commuters += sum([len(city.internal_commuter_ids) for city in full_world.cities])
+        total_commuters_recovered = 0
+        checks = False
+        for super_area in n_pupils_sa.keys():
+            assert data_recovered[super_area]["n_people"] == n_people_sa[super_area]
+            assert data_recovered[super_area]["n_workers"] == n_workers_sa[super_area]
+            assert data_recovered[super_area]["n_pupils"] == n_pupils_sa[super_area]
+            total_commuters_recovered += data_recovered[super_area]["n_commuters"]
+            checks = True
+        assert total_commuters_recovered == total_commuters
+        assert checks

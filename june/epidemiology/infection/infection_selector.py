@@ -15,10 +15,10 @@ from .transmission_xnexp import TransmissionXNExp
 from .trajectory_maker import CompletionTime
 
 default_transmission_config_path = (
-    paths.configs_path / "defaults/transmission/covid19.yaml"
+    paths.configs_path / "defaults/epidemiology/infection/transmission/covid19.yaml"
 )
 default_trajectories_config_path = (
-    paths.configs_path / "defaults/symptoms/trajectories.yaml"
+    paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
 )
 default_rates_file = paths.data_path / "input/health_index/infection_outcome_rates.csv"
 

@@ -14,6 +14,7 @@ from june.interaction import Interaction
 from june.epidemiology.infection import (
     Infection,
     InfectionSelector,
+    InfectionSelectors,
     HealthIndexGenerator,
     SymptomTag,
 )
@@ -27,7 +28,7 @@ from june.event import Events
 from june import paths
 from june.records import Record
 from june.records.records_writer import combine_records
-from june.domain import Domain, DomainSplitter
+from june.domains import Domain, DomainSplitter
 from june.mpi_setup import mpi_comm, mpi_rank, mpi_size
 
 
@@ -67,22 +68,17 @@ else:
 
 
 def generate_simulator():
-    record = Record(
-        record_path=save_path, record_static_data=True, mpi_rank=mpi_rank
-    )
+    record = Record(record_path=save_path, record_static_data=True, mpi_rank=mpi_rank)
     if mpi_rank == 0:
         with h5py.File(world_file, "r") as f:
-            super_area_names = f["geography"]["super_area_name"][:]
-            super_area_ids = f["geography"]["super_area_id"][:]
-        super_area_names = [name.decode() for name in super_area_names]
-        super_area_name_to_id = {
-            key: value for key, value in zip(super_area_names, super_area_ids)
-        }
-        # make dictionary super_area_id -> domain
-        domain_splitter = DomainSplitter(
+            super_area_ids = f["geography"]["super_area_id"]
+            super_area_names = f["geography"]["super_area_name"]
+            super_area_name_to_id = {
+                name.decode(): id for name, id in zip(super_area_names, super_area_ids)
+            }
+        super_areas_per_domain = DomainSplitter.generate_world_split(
             number_of_domains=mpi_size, world_path=world_file
         )
-        super_areas_per_domain = domain_splitter.generate_domain_split(niter=20)
         super_area_names_to_domain_dict = {}
         super_area_ids_to_domain_dict = {}
         for domain, super_areas in super_areas_per_domain.items():
@@ -91,7 +87,6 @@ def generate_simulator():
                 super_area_ids_to_domain_dict[
                     int(super_area_name_to_id[super_area])
                 ] = domain
-
         with open("super_area_ids_to_domain.json", "w") as f:
             json.dump(super_area_ids_to_domain_dict, f)
         with open("super_area_names_to_domain.json", "w") as f:
@@ -119,7 +114,7 @@ def generate_simulator():
     )
     daily_cases_per_region = oc.get_regional_latent_cases()
     daily_cases_per_super_area = oc.convert_regional_cases_to_super_area(
-        daily_cases_per_region, dates=["2020-02-28", "2020-03-02"]
+        daily_cases_per_region, starting_date="2020-02-28",
     )
     infection_seed = InfectionSeed(
         world=domain,
@@ -148,8 +143,8 @@ def generate_simulator():
         interaction=interaction,
         leisure=leisure,
         travel=travel,
-        infection_selector=infection_selector,
-        infection_seed=infection_seed,
+        infection_selectors=InfectionSelectors([infection_selector]),
+        infection_seeds=InfectionSeeds([infection_seed]),
         config_filename=config_path,
         record=record,
     )

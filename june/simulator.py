@@ -31,10 +31,11 @@ default_config_filename = paths.configs_path / "config_example.yaml"
 
 output_logger = logging.getLogger("simulator")
 mpi_logger = logging.getLogger("mpi")
+rank_logger = logging.getLogger("rank")
 mpi_logger.propagate = False
-
 if mpi_rank > 0:
     output_logger.propagate = False
+    mpi_logger.propagate = False
 
 
 def enable_mpi_debug(results_folder):
@@ -44,7 +45,7 @@ def enable_mpi_debug(results_folder):
     with open(logging_file, "w") as f:
         pass
     mh = MPIFileHandler(logging_file)
-    mpi_logger.addHandler(mh)
+    rank_logger.addHandler(mh)
 
 
 def _read_checkpoint_dates_from_file(config_filename):
@@ -311,8 +312,11 @@ class Simulator:
                     infection_ids += new_infection_ids
                     n_people += group_size
         tock_interaction = perf_counter()
-        mpi_logger.info(
-            f"{self.timer.date},{mpi_rank},interaction,{tock_interaction-tick_interaction}"
+        # mpi_logger.info(
+        #    f"{self.timer.date},{mpi_rank},interaction,{tock_interaction-tick_interaction}"
+        # )
+        rank_logger.info(
+            f"Rank {mpi_rank} -- interaction -- {tock_interaction-tick_interaction}"
         )
         self.epidemiology.do_timestep(
             world=self.world,
@@ -322,6 +326,10 @@ class Simulator:
             infection_ids=infection_ids,
             people_from_abroad_dict=people_from_abroad_dict,
         )
+        tick, tickw = perf_counter(), wall_clock()
+        mpi_comm.Barrier()
+        tock, tockw = perf_counter(), wall_clock()
+        rank_logger.info(f"Rank {mpi_rank} -- interaction_waiting -- {tock-tick}")
 
         # recount people active to check people conservation
         people_active = (
@@ -366,6 +374,9 @@ class Simulator:
                 self.epidemiology.infection_seeds_timestep(
                     self.timer, record=self.record
                 )
+            mpi_comm.Barrier()
+            if mpi_rank == 0:
+                rank_logger.info("Next timestep")
             self.do_timestep()
             if (
                 self.timer.date.date() in self.checkpoint_save_dates
