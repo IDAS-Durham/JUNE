@@ -5,14 +5,14 @@ from itertools import count
 import yaml
 
 from june import paths
-from june.infection.health_index.health_index import HealthIndexGenerator
-from june.infection.health_index import Data2Rates
-from june.infection import Infection, Covid19
-from june.infection.symptoms import Symptoms, SymptomTag
-from june.infection.trajectory_maker import TrajectoryMakers
-from june.infection.transmission import TransmissionConstant, TransmissionGamma
-from june.infection.transmission_xnexp import TransmissionXNExp
-from june.infection.trajectory_maker import CompletionTime
+from .health_index.health_index import HealthIndexGenerator
+from .health_index import Data2Rates
+from . import Infection, Covid19
+from .symptoms import Symptoms, SymptomTag
+from .trajectory_maker import TrajectoryMakers
+from .transmission import TransmissionConstant, TransmissionGamma
+from .transmission_xnexp import TransmissionXNExp
+from .trajectory_maker import CompletionTime
 
 default_transmission_config_path = (
     paths.configs_path / "defaults/transmission/covid19.yaml"

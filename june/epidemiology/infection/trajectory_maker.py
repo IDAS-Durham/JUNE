@@ -5,7 +5,7 @@ import yaml
 from scipy.stats import expon, beta, lognorm, norm, expon, exponweib
 
 from june import paths
-from june.infection.symptom_tag import SymptomTag
+from .symptom_tag import SymptomTag
 
 default_config_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
 

@@ -4,7 +4,7 @@ import datetime
 from random import random
 import june.policy
 
-from june.infection.symptom_tag import SymptomTag
+from june.epidemiology.infection import SymptomTag
 from june.demography.person import Person
 from june.policy import Policy, PolicyCollection
 from june.mpi_setup import mpi_rank, mpi_size

@@ -5,7 +5,7 @@ import sys
 from typing import Optional
 from math import gamma
 
-from june.infection.trajectory_maker import CompletionTime
+from .trajectory_maker import CompletionTime
 from june import paths
 
 default_config_path = (

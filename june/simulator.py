@@ -18,9 +18,8 @@ from june.groups.leisure import Leisure
 from june.groups import MedicalFacilities
 from june.groups.travel import Travel
 from june.groups.group.interactive import InteractiveGroup
-from june.infection.symptom_tag import SymptomTag
-from june.infection import InfectionSelectors
-from june.infection_seed import InfectionSeeds
+from june.epidemiology.infection import SymptomTag, InfectionSelectors
+from june.epidemiology.infection_seed import InfectionSeeds
 from june.interaction import Interaction
 from june.policy import (
     Policies,

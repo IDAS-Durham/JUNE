@@ -2,7 +2,7 @@ import datetime
 from typing import Union, Dict
 from random import random
 
-from june.infection import B117
+from june.epidemiology.infection import B117
 from .event import Event
 
 

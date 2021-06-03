@@ -1,8 +1,8 @@
 from random import random
 
 import numpy as np
-from june.infection.symptom_tag import SymptomTag
-from june.infection.trajectory_maker import TrajectoryMakers
+from .symptom_tag import SymptomTag
+from .trajectory_maker import TrajectoryMakers
 
 dead_tags = (SymptomTag.dead_home, SymptomTag.dead_hospital, SymptomTag.dead_icu)
 

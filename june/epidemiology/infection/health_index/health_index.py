@@ -3,7 +3,7 @@ import pandas as pd
 import yaml
 from typing import Optional, List
 
-from june.infection.symptom_tag import SymptomTag
+from june.epidemiology.infection.symptom_tag import SymptomTag
 from june import paths
 from june.utils.parse_probabilities import parse_age_probabilities
 from . import Data2Rates

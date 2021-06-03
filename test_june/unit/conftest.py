@@ -6,7 +6,6 @@ import pytest
 import h5py
 from pathlib import Path
 
-import june.infection.symptoms
 from june.interaction import Interaction
 from june import paths
 from june.geography import (
@@ -31,9 +30,14 @@ from june.groups import *
 from june.groups.leisure import *
 from june.groups.travel import Travel
 from june.demography import Person, Population
-from june.infection import Infection, Symptoms, TrajectoryMakers
-from june.infection.infection_selector import InfectionSelector, InfectionSelectors
-from june.infection import transmission as trans
+from june.epidemiology.infection import (
+    Infection,
+    Symptoms,
+    TrajectoryMakers,
+    InfectionSelector,
+    InfectionSelectors,
+)
+from june.epidemiology.infection import transmission as trans
 from june.simulator import Simulator
 from june.simulator_box import SimulatorBox
 from june.world import generate_world_from_geography, World
@@ -177,7 +181,7 @@ def create_simulator_box(world_box, interaction, selectors):
 
 
 # policy dummy world
-@pytest.fixture(name="dummy_world")#, scope="session")
+@pytest.fixture(name="dummy_world")  # , scope="session")
 def make_dummy_world():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     super_area = g.super_areas.members[0]

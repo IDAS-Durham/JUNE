@@ -10,7 +10,7 @@ from june.activity import ActivityManagerBox
 from june.interaction import Interaction
 from june.simulator import Simulator
 from june.world import World
-from june.infection import InfectionSelectors
+from june.epidemiology.infection import InfectionSelectors
 from june.policy import MedicalCarePolicies
 from june.event import Events
 

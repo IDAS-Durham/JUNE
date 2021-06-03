@@ -7,7 +7,6 @@ from june import paths
 from . import demography
 from . import distributors
 from . import groups
-from . import infection
 from . import interaction
 from . import simulator
 from . import activity

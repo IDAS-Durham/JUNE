@@ -11,7 +11,7 @@ import yaml
 from june import paths
 from june.demography.person import Person
 from june.groups.leisure import Leisure
-from june.infection.symptom_tag import SymptomTag
+from june.epidemiology.infection import SymptomTag
 from june.interaction import Interaction
 from june.utils import read_date, str_to_class
 

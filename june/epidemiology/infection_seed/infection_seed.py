@@ -10,8 +10,7 @@ from june.records import Record
 from june.domain import Domain
 from june.demography import Population
 from june.geography import SuperAreas
-from june.infection.infection_selector import InfectionSelector
-from june.infection.health_index.health_index import HealthIndexGenerator
+from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
 from june.utils import parse_probabilities
 
 default_infection_seeds_config_file = (
@@ -85,9 +84,7 @@ class InfectionSeed:
             whether to run on box mode
         """
         if mpi_rank == 0:
-            people_ids = [
-                person.id for person in population.people
-            ]
+            people_ids = [person.id for person in population.people]
             n_cases = round(self.seed_strength * n_cases)
             if self.age_profile is None:
                 ids_to_infect = np.random.choice(
@@ -136,9 +133,7 @@ class InfectionSeed:
                         infection_ids=[person_to_infect.infection.infection_id()],
                     )
 
-    def select_people_by_age(
-        self, people_ids: List[int], n_cases: int
-    ) -> List[int]:
+    def select_people_by_age(self, people_ids: List[int], n_cases: int) -> List[int]:
         """
         Select cases according to an age profile
 
@@ -266,4 +261,3 @@ class InfectionSeeds:
 
     def __getitem__(self, item):
         return self.infection_seeds[item]
-        

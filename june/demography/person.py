@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 from typing import Optional
 
-from june.infection import Infection, Immunity
+from june.epidemiology.infection import Infection, Immunity
 
 
 class Activities(dataobject):

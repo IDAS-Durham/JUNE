@@ -8,8 +8,8 @@ from scipy.ndimage import gaussian_filter1d
 
 from june import paths
 from june.demography import Person
-from june.infection.symptom_tag import SymptomTag
-from june.infection.trajectory_maker import TrajectoryMaker
+from june.epidemiology.infection.symptom_tag import SymptomTag
+from june.epidemiology.infection.trajectory_maker import TrajectoryMaker
 
 default_trajectories_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
 default_area_super_region_path = (

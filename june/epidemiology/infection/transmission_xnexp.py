@@ -1,6 +1,6 @@
-from june.infection.transmission import Transmission
-from june.infection.trajectory_maker import CompletionTime
-from june.infection.symptom_tag import SymptomTag
+from .transmission import Transmission
+from .trajectory_maker import CompletionTime
+from .symptom_tag import SymptomTag
 from june import paths
 import yaml
 import numpy as np
