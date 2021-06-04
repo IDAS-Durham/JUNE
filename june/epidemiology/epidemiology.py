@@ -129,7 +129,8 @@ class Epidemiology:
             person.residence.residents = tuple(
                 mate for mate in household.residents if mate != person
             )
-        person.subgroups = Activities(None, None, None, None, None, None, None)
+        person.subgroups = Activities(None, None, None, None, None, None)
+
 
     def recover(self, person: "Person", record: Record = None):
         """

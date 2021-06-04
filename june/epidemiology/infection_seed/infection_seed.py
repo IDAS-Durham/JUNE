@@ -13,6 +13,7 @@ from june.geography import SuperAreas
 from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
 from june.utils import parse_probabilities
 
+
 class InfectionSeed:
     def __init__(
         self,
@@ -79,7 +80,7 @@ class InfectionSeed:
             whether to run on box mode
         """
         if mpi_rank == 0:
-            people_ids = [person.id for person in population.people]
+            people_ids = [person.id for person in population.people if not person.dead]
             n_cases = round(self.seed_strength * n_cases)
             if self.age_profile is None:
                 ids_to_infect = np.random.choice(

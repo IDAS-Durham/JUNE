@@ -17,6 +17,7 @@ from june.epidemiology.infection import (
     InfectionSelectors,
     HealthIndexGenerator,
     SymptomTag,
+    SusceptibilitySetter
 )
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.groups.travel import Travel
@@ -124,9 +125,12 @@ def generate_simulator():
         daily_super_area_cases=daily_cases_per_super_area,
         seed_strength=100,
     )
+    #susceptibility_setter = SusceptibilitySetter()
+
     epidemiology = Epidemiology(
         infection_selectors=InfectionSelectors([infection_selector]),
         infection_seeds=InfectionSeeds([infection_seed]),
+        #susceptibility_setter=susceptibility_setter,
     )
 
     # interaction

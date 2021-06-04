@@ -439,7 +439,7 @@ def restore_population_properties_from_hdf5(
                             )
                 # restore groups and subgroups
                 subgroups_instances = Activities(
-                    None, None, None, None, None, None, None
+                    None, None, None, None, None, None
                 )
                 for (
                     i,

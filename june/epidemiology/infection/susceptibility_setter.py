@@ -1,5 +1,10 @@
 from june.utils import parse_age_probabilities
+from . import Covid19, B117
 
+default_susceptibility_dict = {
+    Covid19.infection_id(): {"0-13": 0.5, "13-100": 1.0},
+    B117.infection_id(): {"0-13": 0.5, "13-100": 1.0},
+}
 
 class SusceptibilitySetter:
     """
@@ -13,7 +18,7 @@ class SusceptibilitySetter:
         susceptibility_dict = {"123" : {"0-50" : 0.5, "50-100" : 0.2}}
     """
 
-    def __init__(self, susceptibility_dict: dict = None):
+    def __init__(self, susceptibility_dict: dict = default_susceptibility_dict):
         if susceptibility_dict is None:
             self.susceptibility_dict = {}
         else:

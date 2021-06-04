@@ -192,6 +192,11 @@ class Population:
         self.people.append(person)
         self.people_ids.add(person.id)
 
+    def remove(self, person):
+        del self.people_dict[person.id]
+        self.people.remove(person)
+        self.people_ids.remove(person.id)
+
     def extend(self, people):
         for person in people:
             self.add(person)
@@ -210,14 +215,6 @@ class Population:
     @property
     def infected(self):
         return [person for person in self.people if person.infected]
-
-    @property
-    def susceptible(self):
-        return [person for person in self.people if person.susceptible]
-
-    @property
-    def recovered(self):
-        return [person for person in self.people if person.recovered]
 
     @property
     def dead(self):
