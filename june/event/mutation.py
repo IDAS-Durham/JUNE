@@ -46,7 +46,7 @@ class Mutation(Event):
         pass
 
     def apply(self, world, simulator, activities=None, day_type=None):
-        selector = simulator.infection_selectors.infection_id_to_selector[
+        selector = simulator.epidemiology.infection_selectors.infection_id_to_selector[
             self.mutation_id
         ]
         for person in world.people:

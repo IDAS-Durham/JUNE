@@ -1,4 +1,4 @@
-from .infection import Infection, Covid19, B117
+from .infection import Infection, Covid19, B117, B16172
 from .immunity import Immunity
 from .infection_selector import InfectionSelector, InfectionSelectors
 from .trajectory_maker import TrajectoryMakers

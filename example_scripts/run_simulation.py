@@ -17,7 +17,9 @@ from june.epidemiology.infection import (
     InfectionSelectors,
     HealthIndexGenerator,
     SymptomTag,
-    SusceptibilitySetter
+    SusceptibilitySetter,
+    Covid19,
+    B16172
 )
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.groups.travel import Travel
@@ -108,9 +110,15 @@ def generate_simulator():
     #
     # health index and infection selecctor
     health_index_generator = HealthIndexGenerator.from_file()
-    infection_selector = InfectionSelector(
+    selector_c19 = InfectionSelector(
+        infection_class=Covid19,
         health_index_generator=health_index_generator
     )
+    selector_indian = InfectionSelector(
+        infection_class=B16172,
+        health_index_generator=health_index_generator
+    )
+    inf_selectors = InfectionSelectors([selector_c19, selector_indian])
     oc = Observed2Cases.from_file(
         health_index_generator=health_index_generator, smoothing=True
     )
@@ -121,14 +129,14 @@ def generate_simulator():
     )
     infection_seed = InfectionSeed(
         world=domain,
-        infection_selector=infection_selector,
+        infection_selector=selector_c19,
         daily_super_area_cases=daily_cases_per_super_area,
         seed_strength=100,
     )
     #susceptibility_setter = SusceptibilitySetter()
 
     epidemiology = Epidemiology(
-        infection_selectors=InfectionSelectors([infection_selector]),
+        infection_selectors=inf_selectors,
         infection_seeds=InfectionSeeds([infection_seed]),
         #susceptibility_setter=susceptibility_setter,
     )
