@@ -493,10 +493,7 @@ class ComorbidityGenerator:
                 self.comorbidities_idx,
                 self.female_comorbidities_probabilities[age_index],
             )
-        comorbidity = self.comorbidities[comorbidity_idx]
-        if comorbidity == "no_condition":
-            return None
-        return comorbidity
+        return self.comorbidities[comorbidity_idx]
 
 
 def generate_comorbidity(person, comorbidity_data):
@@ -516,23 +513,16 @@ def generate_comorbidity(person, comorbidity_data):
             column_index += 1
 
         if person.sex == "m":
-            comorbidity = random_choice_numba(
+            return random_choice_numba(
                 male_co.index.values.astype(str),
                 male_co[male_co.columns[column_index]].values,
             )
-            if comorbidity == "no_condition":
-                comorbidity = None
-            return comorbidity
 
         elif person.sex == "f":
-            comorbidity = random_choice_numba(
+            return random_choice_numba(
                 female_co.index.values.astype(str),
                 female_co[female_co.columns[column_index]].values,
             )
-            if comorbidity == "no_condition":
-                comorbidity = None
-            return comorbidity
-
     else:
         return None
 
