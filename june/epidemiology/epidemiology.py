@@ -3,7 +3,7 @@ from time import perf_counter
 from time import time as wall_clock
 import logging
 
-from .infection import InfectionSelectors, SusceptibilitySetter
+from .infection import InfectionSelectors, SusceptibilitySetter, EffectiveMultiplierSetter
 from .infection_seed import InfectionSeeds
 from june.demography import Population, Activities
 from june.policy import MedicalCarePolicies
@@ -44,18 +44,24 @@ class Epidemiology:
         infection_selectors: InfectionSelectors = None,
         infection_seeds: InfectionSeeds = None,
         susceptibility_setter: SusceptibilitySetter = None,
+        effective_multiplier_setter: EffectiveMultiplierSetter = None,
         medical_care_policies: MedicalCarePolicies = None,
         medical_facilities: MedicalFacilities = None,
     ):
         self.infection_selectors = infection_selectors
         self.infection_seeds = infection_seeds
         self.susceptibility_setter = susceptibility_setter
+        self.effective_multiplier_setter = effective_multiplier_setter
         self.medical_care_policies = medical_care_policies
         self.medical_facilities = medical_facilities
 
     def set_susceptibilities(self, population):
         if self.susceptibility_setter:
             self.susceptibility_setter.set_susceptibilities(population)
+
+    def set_effective_multipliers(self, population):
+        if self.effective_multiplier_setter:
+            self.effective_multiplier_setter.set_multipliers(population)
 
     def set_medical_care(self, world, activity_manager):
         self.medical_facilities = _get_medical_facilities(
