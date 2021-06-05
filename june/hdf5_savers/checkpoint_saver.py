@@ -203,7 +203,7 @@ def restore_simulator_to_checkpoint(
         person.dead = True
         cemetery = world.cemeteries.get_nearest(person)
         cemetery.add(person)
-        person.subgroups = Activities(None, None, None, None, None, None, None)
+        person.subgroups = Activities(None, None, None, None, None, None)
     if not reset_infections:
         for infected_id, infection in zip(
             checkpoint_data["infected_id"], checkpoint_data["infection_list"]

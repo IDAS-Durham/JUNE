@@ -2,7 +2,13 @@ import pytest
 import numpy as np
 
 from june.demography import Person
-from june.epidemiology.infection import B117, Covid19, InfectionSelector, InfectionSelectors
+from june.epidemiology.infection import (
+    B117,
+    Covid19,
+    InfectionSelector,
+    InfectionSelectors,
+)
+from june.epidemiology.epidemiology import Epidemiology
 from june.event import Mutation
 
 
@@ -13,7 +19,8 @@ class MockRegion:
 
 class MockArea:
     def __init__(self, super_area):
-        self.super_area = super_area  
+        self.super_area = super_area
+
 
 class MockSuperArea:
     def __init__(self, region):
@@ -21,8 +28,8 @@ class MockSuperArea:
 
 
 class MockSimulator:
-    def __init__(self, selectors):
-        self.infection_selectors = selectors
+    def __init__(self, epidemiology):
+        self.epidemiology = epidemiology
 
 
 class MockWorld:
@@ -67,7 +74,8 @@ class TestMutations:
 
     def test_mutation(self, people, c19_selector, c20_selector):
         infection_selectors = InfectionSelectors([c19_selector, c20_selector])
-        simulator = MockSimulator(infection_selectors)
+        epidemiology = Epidemiology(infection_selectors=infection_selectors)
+        simulator = MockSimulator(epidemiology)
         world = MockWorld(people=people)
         mutation = Mutation(
             start_time="2020-11-01",

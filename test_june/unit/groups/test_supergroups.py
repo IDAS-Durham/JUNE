@@ -19,9 +19,9 @@ class MockGroup(Group):
     def __init__(self):
         super().__init__()
         person = Person()
-        self.add(Person(), "box", self.SubgroupType.type1)
+        self.add(Person(), "primary_activity", self.SubgroupType.type1)
         person = Person()
-        self.add(person, "box", self.SubgroupType.type2)
+        self.add(person, "primary_activity", self.SubgroupType.type2)
 
 
 @pytest.fixture(name="super_group", scope="module")

@@ -95,7 +95,7 @@ def infect_dead_person(person):
 @pytest.fixture(name="selector", scope="module")
 def create_selector(health_index_generator):
     selector = InfectionSelector(
-        paths.configs_path / "defaults/transmission/XNExp.yaml",
+        paths.configs_path / "defaults/epidemiology/infection/transmission/XNExp.yaml",
         health_index_generator=health_index_generator,
     )
     selector.recovery_rate = 1.0
@@ -416,7 +416,7 @@ def test__symptoms_transition(world, interaction, selector):
 def test__log_deaths(world, interaction, selector):
     for person in world.people:
         person.subgroups = Activities(
-            world.households[0].subgroups[0], None, None, None, None, None, None
+            world.households[0].subgroups[0], None, None, None, None, None
         )
     sim = create_sim(world, interaction, selector, seed="dead")
     sim.timer.reset()

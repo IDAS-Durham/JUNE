@@ -28,7 +28,10 @@ def get_oc(health_index_generator):
     female_fraction_per_area_df = pd.DataFrame(
         female_fraction_per_area_dict, index=["beautiful"]
     )
-    with open(paths.configs_path / "defaults/symptoms/trajectories.yaml") as f:
+    with open(
+        paths.configs_path
+        / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
+    ) as f:
         trajectories = yaml.safe_load(f)["trajectories"]
     symptoms_trajectories = [
         TrajectoryMaker.from_dict(trajectory) for trajectory in trajectories

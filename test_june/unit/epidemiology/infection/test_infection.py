@@ -8,7 +8,9 @@ import june.epidemiology.infection.symptoms
 from june.demography import Person
 from june.epidemiology.infection import symptoms_trajectory as symtraj
 from june.epidemiology.infection import transmission_xnexp as transxnexp
-from june.epidemiology.infection.infection_selector import default_transmission_config_path
+from june.epidemiology.infection.infection_selector import (
+    default_transmission_config_path,
+)
 from june.epidemiology.infection import (
     Infection,
     InfectionSelector,
@@ -16,13 +18,14 @@ from june.epidemiology.infection import (
     B117,
     InfectionSelectors,
     transmission,
-    SymptomTag
+    SymptomTag,
 )
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = (
-    dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionConstant.yaml"
+    dir_pwd.parent.parent.parent
+    / "configs/defaults/epidemiology/infection/InfectionConstant.yaml"
 )
 
 

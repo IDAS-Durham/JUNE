@@ -87,7 +87,7 @@ def infect_dead_person(person):
 @pytest.fixture(name="selector", scope="module")
 def create_selector(health_index_generator):
     selector = InfectionSelector(
-        paths.configs_path / "defaults/transmission/XNExp.yaml",
+        paths.configs_path / "defaults/epidemiology/infection/transmission/XNExp.yaml",
         health_index_generator=health_index_generator,
     )
     selector.recovery_rate = 1.0
