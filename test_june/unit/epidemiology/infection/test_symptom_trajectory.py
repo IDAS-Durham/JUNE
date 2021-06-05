@@ -109,8 +109,8 @@ class TestTrajectoryMaker:
 class TestSymptoms:
     def test__construct__trajectory__from__maxseverity(self, symptoms_trajectories):
         symptoms_trajectories.max_severity = 0.9
-        symptoms_trajectories.trajectory = symptoms_trajectories._make_symptom_trajectory(
-            health_index
+        symptoms_trajectories.trajectory = (
+            symptoms_trajectories._make_symptom_trajectory(health_index)
         )
         symptoms_trajectories.time_of_symptoms_onset = (
             symptoms_trajectories._compute_time_from_infection_to_symptoms()
@@ -137,8 +137,8 @@ class TestSymptoms:
         )
         assert symptoms_trajectories.time_of_symptoms_onset > 0
         symptoms_trajectories.max_severity = 0.45
-        symptoms_trajectories.trajectory = symptoms_trajectories._make_symptom_trajectory(
-            health_index
+        symptoms_trajectories.trajectory = (
+            symptoms_trajectories._make_symptom_trajectory(health_index)
         )
         symptoms_trajectories.time_of_symptoms_onset = (
             symptoms_trajectories._compute_time_from_infection_to_symptoms()
@@ -170,8 +170,8 @@ class TestSymptoms:
         )
         assert symptoms_trajectories.time_of_symptoms_onset > 0
         symptoms_trajectories.max_severity = 0.05
-        symptoms_trajectories.trajectory = symptoms_trajectories._make_symptom_trajectory(
-            health_index
+        symptoms_trajectories.trajectory = (
+            symptoms_trajectories._make_symptom_trajectory(health_index)
         )
         symptoms_trajectories.time_of_symptoms_onset = (
             symptoms_trajectories._compute_time_from_infection_to_symptoms()
@@ -180,9 +180,9 @@ class TestSymptoms:
 
     def test__symptoms_progression(self, health_index_generator):
         selector = InfectionSelector(
-            health_index_generator=health_index_generator, 
+            health_index_generator=health_index_generator,
             transmission_config_path=paths.configs_path
-            / "defaults/transmission/TransmissionConstant.yaml"
+            / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml",
         )
         dummy = Person(sex="f", age=65)
         health_index = selector.health_index_generator(dummy)
@@ -213,9 +213,7 @@ class TestSymptoms:
         infection.update_symptoms_and_transmission(float(6.0))
         assert infection.symptoms.tag == SymptomTag.mild
         infection.update_symptoms_and_transmission(hospitalised_time + 8.0)
-        assert (
-            infection.symptoms.tag == SymptomTag.hospitalised
-        )
+        assert infection.symptoms.tag == SymptomTag.hospitalised
         infection.update_symptoms_and_transmission(float(40.0))
         assert infection.symptoms.tag == SymptomTag.mild
         infection.update_symptoms_and_transmission(float(50.0))

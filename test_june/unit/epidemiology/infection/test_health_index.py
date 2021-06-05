@@ -2,9 +2,13 @@ import numpy as np
 import pytest
 from june.groups import CareHome
 from june import paths
+from june.interaction import Interaction
 from june.groups import CareHome, Household
 from june.epidemiology.infection.symptom_tag import SymptomTag
-from june.epidemiology.infection.health_index.health_index import HealthIndexGenerator, index_to_maximum_symptoms_tag
+from june.epidemiology.infection.health_index.health_index import (
+    HealthIndexGenerator,
+    index_to_maximum_symptoms_tag,
+)
 from june.demography import Person, Population
 
 
