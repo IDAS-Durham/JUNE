@@ -89,9 +89,9 @@ class TestMultipliers:
         health_index.max_mild_symptom_tag = {
             value: key for key, value in index_to_maximum_symptoms_tag.items()
         }["severe"]
-        dummy_health = health_index(dummy)
-        feo_health = health_index(feo)
-        guapo_health = health_index(guapo)
+        dummy_health = health_index(dummy, dummy.infection.infection_id())
+        feo_health = health_index(feo, feo.infection.infection_id())
+        guapo_health = health_index(guapo, guapo.infection.infection_id())
 
         mean_multiplier_uk = multiplier_setter.get_multiplier_from_reference_prevalence(
             dummy.age, dummy.sex
