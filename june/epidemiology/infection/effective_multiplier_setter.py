@@ -1,3 +1,4 @@
+from typing import Optional
 from june.utils import (
     parse_age_probabilities,
     parse_prevalence_comorbidities_in_reference_population,
@@ -41,9 +42,15 @@ class EffectiveMultiplierSetter:
         else:
             self.multiplier_dict = multiplier_dict
         self.multiplier_by_comorbidity = multiplier_by_comorbidity
-        self.comorbidity_prevalence_reference_population = (
-            comorbidity_prevalence_reference_population
-        )
+        if comorbidity_prevalence_reference_population is not None:
+            self.comorbidity_prevalence_reference_population = (
+                parse_prevalence_comorbidities_in_reference_population(
+                    comorbidity_prevalence_reference_population
+                )
+            )
+        else:
+            self.comorbidity_prevalence_reference_population = None
+
 
     @classmethod
     def from_file_with_comorbidities(
@@ -119,11 +126,6 @@ class EffectiveMultiplierSetter:
             and self.comorbidity_prevalence_reference_population is not None
         ):
             set_comorbidity_multipliers = True
-            self.comorbidity_prevalence_reference_population = (
-                parse_prevalence_comorbidities_in_reference_population(
-                    self.comorbidity_prevalence_reference_population
-                )
-            )
             reference_weighted_multipliers = self.get_weighted_multipliers_by_age_sex()
         else:
             set_comorbidity_multipliers = False
@@ -133,10 +135,10 @@ class EffectiveMultiplierSetter:
                     inf_id
                 ] = self.multiplier_dict[inf_id]
                 if set_comorbidity_multipliers:
-                    multiplier = multiplier_by_comorbidity.get(person.comorbidity, 1.0)
+                    multiplier = self.multiplier_by_comorbidity.get(person.comorbidity, 1.0)
                     reference_multiplier = reference_weighted_multipliers[person.sex][
                         person.age
                     ]
                     person.immunity.effective_multiplier_dict[inf_id] += (
                         multiplier / reference_multiplier
-                    )
+                    ) - 1.
