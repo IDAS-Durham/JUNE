@@ -69,12 +69,13 @@ class HealthIndexGenerator:
             care_home_min_age=care_home_min_age,
                     )
 
-    def __call__(self, person, infection_id):
+    def __call__(self, person: "Person", infection_id: int):
         """
         Computes the probability of having all 8 posible outcomes for all ages between 0 and 100,
              self.max_mild_symptom_tag = [
                 tag.value for tag in SymptomTag if tag.name == "severe"
             ][0]       for male and female
+        Given the person and the id of the infection responsible for the symptoms
         """
         if (
             person.residence is not None
