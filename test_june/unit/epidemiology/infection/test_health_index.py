@@ -31,10 +31,22 @@ class TestHealthIndex:
 
 
 class TestMultipliers:
-    def test__apply_multiplier(
-        self,
+
+    @pytest.mark.parametrize("multiplier",[1.5,0.5])
+    def test__apply_large_multiplier(
+        self, multiplier
     ):
-        pass
+        health_index = HealthIndexGenerator.from_file()
+        probabilities = np.array([1./8]*8)
+        modified_probabilities = health_index.apply_effective_multiplier(
+                probabilities=probabilities,
+                effective_multiplier=multiplier
+        )
+        assert modified_probabilities[0] == (1 - 6./8.*multiplier)/2.
+        assert modified_probabilities[1] == (1 - 6./8.*multiplier)/2.
+        for i in range(2,8):
+            assert modified_probabilities[i] == 1./8.*multiplier
+
 
     def test__comorbidities_effect(self):
         comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
