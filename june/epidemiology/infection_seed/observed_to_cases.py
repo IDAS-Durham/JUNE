@@ -246,7 +246,7 @@ class Observed2Cases:
         for sex in ("m", "f"):
             for age in np.arange(100):
                 symptoms_rates_dict[sex][age] = np.diff(
-                    self.health_index_generator(Person(sex=sex, age=age), infeciton_id=None),
+                    self.health_index_generator(Person(sex=sex, age=age), infection_id=None),
                     prepend=0.0,
                     append=1.0,
                 )  # need np.diff because health index is cummulative
