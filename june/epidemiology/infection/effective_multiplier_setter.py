@@ -51,7 +51,6 @@ class EffectiveMultiplierSetter:
         else:
             self.comorbidity_prevalence_reference_population = None
 
-
     @classmethod
     def from_file_with_comorbidities(
         cls,
@@ -135,10 +134,12 @@ class EffectiveMultiplierSetter:
                     inf_id
                 ] = self.multiplier_dict[inf_id]
                 if set_comorbidity_multipliers:
-                    multiplier = self.multiplier_by_comorbidity.get(person.comorbidity, 1.0)
+                    multiplier = self.multiplier_by_comorbidity.get(
+                        person.comorbidity, 1.0
+                    )
                     reference_multiplier = reference_weighted_multipliers[person.sex][
                         person.age
                     ]
                     person.immunity.effective_multiplier_dict[inf_id] += (
                         multiplier / reference_multiplier
-                    ) - 1.
+                    ) - 1.0
