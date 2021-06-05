@@ -7,13 +7,17 @@ class Immunity:
     indicating which infections the person has recovered from.
     """
 
-    __slots__ = "susceptibility_dict"
+    __slots__ = "susceptibility_dict", "effective_multiplier_dict"
 
-    def __init__(self, susceptibility_dict: dict = None):
+    def __init__(self, susceptibility_dict: dict = None, effective_multiplier_dict: dict=None):
         self.susceptibility_dict = defaultdict(lambda: 1.0)
         if susceptibility_dict:
             for key, value in susceptibility_dict.items():
                 self.susceptibility_dict[key] = value
+        self.effective_multiplier_dict = defaultdict(lambda: 1.0)
+        if effective_multiplier_dict:
+            for key, value in effective_multiplier_dict.items():
+                self.effective_multiplier_dict[key] = value
 
     def add_immunity(self, infection_ids):
         for infection_id in infection_ids:

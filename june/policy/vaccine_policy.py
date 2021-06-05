@@ -2,6 +2,7 @@ import operator
 from random import random
 import numpy as np
 import datetime
+from typing import List
 from june.demography.person import Person
 from .policy import Policy, PolicyCollection, Policies, read_date
 from june import paths
@@ -19,6 +20,7 @@ class VaccinePlan:
         "first_dose_symptomatic_efficacy",
         "second_dose_symptomatic_efficacy",
         "original_effective_multiplier",
+        "infection_ids",
     )
 
     def __init__(
@@ -33,6 +35,7 @@ class VaccinePlan:
         first_dose_symptomatic_efficacy,
         second_dose_symptomatic_efficacy,
         original_effective_multiplier,
+        infection_ids,
     ):
         self.first_dose_date = first_dose_date
         self.first_dose_effective_days = first_dose_effective_days
@@ -44,6 +47,7 @@ class VaccinePlan:
         self.second_dose_symptomatic_efficacy = second_dose_symptomatic_efficacy
         self.original_susceptibility = original_susceptibility
         self.original_effective_multiplier = original_effective_multiplier
+        self.infection_ids = infection_ids
 
     @property
     def first_dose_effective_date(self):
@@ -96,18 +100,20 @@ class VaccinePlan:
             return 1.0 - second_dose_efficacy
 
     def get_updated_vaccine_effect(self, date):
-        updated_susceptibility = self.update_original_value(
-            date,
-            self.first_dose_sterilisation_efficacy,
-            self.second_dose_sterilisation_efficacy,
-            self.original_susceptibility,
-        )
-        updated_effective_multiplier = self.update_original_value(
-            date,
-            self.first_dose_symptomatic_efficacy,
-            self.second_dose_symptomatic_efficacy,
-            self.original_effective_multiplier,
-        )
+        updated_susceptibility, updated_effective_multiplier = {}, {}
+        for idx in self.infection_ids:
+            updated_susceptibility[idx] = self.update_original_value(
+                date,
+                self.first_dose_sterilisation_efficacy[idx],
+                self.second_dose_sterilisation_efficacy[idx],
+                self.original_susceptibility[idx],
+            )
+            updated_effective_multiplier[idx] = self.update_original_value(
+                date,
+                self.first_dose_symptomatic_efficacy[idx],
+                self.second_dose_symptomatic_efficacy[idx],
+                self.original_effective_multiplier[idx],
+            )
         return (updated_susceptibility, updated_effective_multiplier)
 
 
@@ -130,6 +136,7 @@ class VaccineDistribution(Policy):
         std_time_delay: int = 1,
         effective_after_first_dose: int = 7,
         effective_after_second_dose: int = 7,
+        infection_ids: List[int] = [0],
     ):
         """
         Policy to apply a vaccinated tag to people based on certain attributes with a given probability
@@ -177,6 +184,7 @@ class VaccineDistribution(Policy):
         self.second_dose_symptomatic_efficacy = second_dose_symptomatic_efficacy
         self.first_dose_sterilisation_efficacy = first_dose_sterilisation_efficacy
         self.second_dose_sterilisation_efficacy = second_dose_sterilisation_efficacy
+        self.infection_ids = infection_ids
         self.vaccinated_ids = set()
 
     def process_group_description(self, group_by, group_type):
@@ -230,8 +238,9 @@ class VaccineDistribution(Policy):
             second_dose_effective_days=second_dose_effective_days,
             second_dose_symptomatic_efficacy=self.second_dose_symptomatic_efficacy,
             second_dose_sterilisation_efficacy=self.second_dose_sterilisation_efficacy,
-            original_susceptibility=person.susceptibility,
-            original_effective_multiplier=person.effective_multiplier,
+            original_susceptibility=person.immunity.susceptibility_dict,
+            original_effective_multiplier=person.immunity.effective_multiplier_dict,
+            infection_ids = self.infection_ids,
         )
         self.vaccinated_ids.add(person.id)
 
@@ -251,10 +260,11 @@ class VaccineDistribution(Policy):
             updated_susceptibility,
             updated_effective_multiplier,
         ) = person.vaccine_plan.get_updated_vaccine_effect(date=date)
-        person.susceptibility = min(person.susceptibility, updated_susceptibility)
-        person.effective_multiplier = min(
-            person.effective_multiplier, updated_effective_multiplier
-        )
+        for idx in person.vaccine_plan.infection_ids:
+            person.immunity.susceptibility_dict[idx] = min(person.immunity.susceptibility_dict[idx], updated_susceptibility[idx])
+            person.immunity.effective_multiplier_dict[idx] = min(
+                person.immunity.effective_multiplier_dict[idx], updated_effective_multiplier[idx]
+            )
 
     def update_vaccinated(self, people, date):
         if self.vaccinated_ids:
