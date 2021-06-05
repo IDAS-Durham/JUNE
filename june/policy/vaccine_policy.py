@@ -35,7 +35,6 @@ class VaccinePlan:
         first_dose_symptomatic_efficacy,
         second_dose_symptomatic_efficacy,
         original_effective_multiplier,
-        infection_ids,
     ):
         self.first_dose_date = first_dose_date
         self.first_dose_effective_days = first_dose_effective_days
@@ -47,7 +46,7 @@ class VaccinePlan:
         self.second_dose_symptomatic_efficacy = second_dose_symptomatic_efficacy
         self.original_susceptibility = original_susceptibility
         self.original_effective_multiplier = original_effective_multiplier
-        self.infection_ids = infection_ids
+        self.infection_ids = list(self.first_dose_sterilisation_efficacy.keys())
 
     @property
     def first_dose_effective_date(self):
@@ -127,16 +126,15 @@ class VaccineDistribution(Policy):
         group_by: str = "age",  #'residence',
         group_type: str = "50-100",
         group_coverage: float = 1.0,
-        first_dose_sterilisation_efficacy: float = 0.5,
-        second_dose_sterilisation_efficacy: float = 1.0,
-        first_dose_symptomatic_efficacy: float = 0.0,
-        second_dose_symptomatic_efficacy: float = 0.0,
+        first_dose_sterilisation_efficacy: dict = {0:0.5},
+        second_dose_sterilisation_efficacy: dict = {0:1.0},
+        first_dose_symptomatic_efficacy: dict = {0:0.0},
+        second_dose_symptomatic_efficacy: dict = {0:0.0},
         second_dose_compliance: float = 1.0,
         mean_time_delay: int = 1,
         std_time_delay: int = 1,
         effective_after_first_dose: int = 7,
         effective_after_second_dose: int = 7,
-        infection_ids: List[int] = [0],
     ):
         """
         Policy to apply a vaccinated tag to people based on certain attributes with a given probability
@@ -184,7 +182,7 @@ class VaccineDistribution(Policy):
         self.second_dose_symptomatic_efficacy = second_dose_symptomatic_efficacy
         self.first_dose_sterilisation_efficacy = first_dose_sterilisation_efficacy
         self.second_dose_sterilisation_efficacy = second_dose_sterilisation_efficacy
-        self.infection_ids = infection_ids
+        self.infection_ids = list(self.first_dose_sterilisation_efficacy.keys())
         self.vaccinated_ids = set()
 
     def process_group_description(self, group_by, group_type):
@@ -240,7 +238,6 @@ class VaccineDistribution(Policy):
             second_dose_sterilisation_efficacy=self.second_dose_sterilisation_efficacy,
             original_susceptibility=person.immunity.susceptibility_dict,
             original_effective_multiplier=person.immunity.effective_multiplier_dict,
-            infection_ids = self.infection_ids,
         )
         self.vaccinated_ids.add(person.id)
 

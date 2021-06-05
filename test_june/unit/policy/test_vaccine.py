@@ -253,3 +253,32 @@ class TestVaccination:
         assert young_person.id not in vaccine_policy.vaccinated_ids
         assert young_person.immunity.effective_multiplier_dict[0] == pytest.approx(0.2,0.001)
         assert young_person.immunity.susceptibility_dict[0] == pytest.approx(0.3,0.001)
+
+    def test_several_infections_update(
+        self,
+    ):
+        young_person = Person.from_attributes(age=30, sex="f")
+        old_person = Person.from_attributes(age=80, sex="f")
+        vaccine_policy = VaccineDistribution(
+            group_by="age",
+            group_type="20-40",
+            first_dose_sterilisation_efficacy={0:0.3, 1: 0.2},
+            second_dose_sterilisation_efficacy={0:0.7, 1: 0.3},
+            first_dose_symptomatic_efficacy={0:0.3, 1: 0.2},
+            second_dose_symptomatic_efficacy={0:0.7, 1: 0.3},
+        )
+
+        people = Population([young_person, old_person])
+        for person in people:
+            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
+        vaccine_policy.update_vaccinated(
+            people=people, date=datetime.datetime(2100, 12, 3)
+        )
+        assert young_person.id not in vaccine_policy.vaccinated_ids
+        assert young_person.immunity.susceptibility_dict[0] == pytest.approx(0.3,0.001)
+        assert young_person.immunity.susceptibility_dict[1] == pytest.approx(0.7,0.001)
+        assert young_person.immunity.effective_multiplier_dict[0] == pytest.approx(0.3,0.001)
+        assert young_person.immunity.effective_multiplier_dict[1] == pytest.approx(0.7,0.01)
+
+
+
