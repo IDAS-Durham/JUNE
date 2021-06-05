@@ -97,7 +97,7 @@ def create_symptoms(symptoms_trajectories):
 
 @pytest.fixture(name="health_index_generator", scope="session")
 def make_hi():
-    return lambda person: [0.4, 0.5, 0.7, 0.74, 0.85, 0.90, 0.95]
+    return lambda person, infection_id: [0.4, 0.5, 0.7, 0.74, 0.85, 0.90, 0.95]
 
 
 @pytest.fixture(name="symptoms_trajectories", scope="session")
