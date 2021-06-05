@@ -69,7 +69,7 @@ class HealthIndexGenerator:
             care_home_min_age=care_home_min_age,
                     )
 
-    def __call__(self, person):
+    def __call__(self, person, infection_id):
         """
         Computes the probability of having all 8 posible outcomes for all ages between 0 and 100,
              self.max_mild_symptom_tag = [
@@ -85,7 +85,7 @@ class HealthIndexGenerator:
         else:
             population = "gp"
         probabilities = self.probabilities[population][person.sex][person.age]
-        effective_multiplier = person.immunity.effective_multiplier_dict[person.infection.infection_id()]
+        effective_multiplier = person.immunity.effective_multiplier_dict[infection_id]
         if effective_multiplier != 1.:
             probabilities = self.apply_effective_multiplier(probabilities, effective_multiplier)
         return np.cumsum(probabilities)

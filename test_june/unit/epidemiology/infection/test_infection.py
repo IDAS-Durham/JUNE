@@ -37,7 +37,7 @@ class MockHealthIndexGenerator:
     def __init__(self, desired_symptoms):
         self.index = {"asymptomatic": -1, "mild": 0, "severe": 1}[desired_symptoms]
 
-    def __call__(self, person):
+    def __call__(self, person, infection_id):
         hi = np.ones(3)
         if self.index >= 0:
             hi[self.index] = 0
@@ -110,7 +110,7 @@ class TestInfectionSelector:
     def test__constant_filename(self):
         selector = InfectionSelector(
             transmission_config_path=paths.configs_path
-            / "defaults/transmission/TransmissionConstant.yaml",
+            / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml",
         )
         assert selector.transmission_type == "constant"
 

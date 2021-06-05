@@ -253,8 +253,10 @@ class InfectionSelector:
         ----------
         person:
             person that will be infected
+        infection_id:
+            infection id
         """
-        health_index = self.health_index_generator(person)
+        health_index = self.health_index_generator(person, infection_id=self.infection_id)
         return Symptoms(health_index=health_index)
 
 
