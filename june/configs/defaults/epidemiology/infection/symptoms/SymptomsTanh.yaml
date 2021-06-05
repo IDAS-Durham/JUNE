@@ -1,0 +1,15 @@
+max_time:
+  distribution: constant
+  parameters:
+    value: 2  
+
+onset_time:
+  distribution: constant
+  parameters:
+    value: 0.5 
+
+end_time:
+  distribution: constant
+  parameters:
+    value: 15
+ 

@@ -1,0 +1,23 @@
+type:
+        'gamma'
+max_infectiousness:
+        type: lognormal
+        s: 0.5 
+        loc: 0.0
+        scale: 1. 
+shape:
+        type: constant  
+        value : 97.2 
+rate:
+        type: constant 
+        value : 3.72
+shift:
+        type: constant 
+        value: -25.6
+asymptomatic_infectious_factor:
+        type: constant
+        value: 0.5
+mild_infectious_factor:
+        type: constant
+        value: 1.
+

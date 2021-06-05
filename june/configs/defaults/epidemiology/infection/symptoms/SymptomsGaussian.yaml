@@ -1,0 +1,9 @@
+mean_time:
+  distribution: constant
+  parameters:
+    value: 1  
+
+sigma_time:
+  distribution: constant
+  parameters:
+    value: 3 
