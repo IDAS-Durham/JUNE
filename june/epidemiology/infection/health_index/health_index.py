@@ -35,9 +35,6 @@ class HealthIndexGenerator:
         rates_df: pd.DataFrame,
         care_home_min_age: int = 50,
         max_age=99,
-        use_comorbidities: bool = False,
-        comorbidity_multipliers: Optional[dict] = None,
-        comorbidity_prevalence_reference_population: Optional[dict] = None,
     ):
         """
         A Generator to determine the final outcome of an infection.
@@ -88,29 +85,30 @@ class HealthIndexGenerator:
         else:
             population = "gp"
         probabilities = self.probabilities[population][person.sex][person.age]
-        if person.effective_multiplier != 1.:
-            probabilities = self.apply_effective_multiplier(probabilities, person.effective_multiplier)
+        effective_multiplier = person.immunity.effective_multiplier_dict[person.infection.infection_id()]
+        if effective_multiplier != 1.:
+            probabilities = self.apply_effective_multiplier(probabilities, effective_multiplier)
         return np.cumsum(probabilities)
 
     def apply_effective_multiplier(self, probabilities, effective_multiplier):
-        probabilities_with_comorbidity = np.zeros_like(probabilities)
-        p_mild = probabilities[: self.max_mild_symptom_tag].sum()
-        p_severe = probabilities[self.max_mild_symptom_tag :].sum() + (
+        modified_probabilities = np.zeros_like(probabilities)
+        probability_mild = probabilities[: self.max_mild_symptom_tag].sum()
+        probability_severe = probabilities[self.max_mild_symptom_tag :].sum() + (
             1 - probabilities.sum()
         )
-        p_severe_with_comorbidity = p_severe * effective_multiplier
-        p_mild_with_comorbidity = 1 - p_severe_with_comorbidity
-        probabilities_with_comorbidity[: self.max_mild_symptom_tag] = (
+        modified_probability_severe = probability_severe * effective_multiplier
+        modified_probability_mild = 1. - modified_probability_severe 
+        modified_probabilities[: self.max_mild_symptom_tag] = (
             probabilities[: self.max_mild_symptom_tag]
-            * p_mild_with_comorbidity
-            / p_mild
+            * modified_probability_mild 
+            / probability_mild 
         )
-        probabilities_with_comorbidity[self.max_mild_symptom_tag :] = (
+        modified_probabilities[self.max_mild_symptom_tag :] = (
             probabilities[self.max_mild_symptom_tag :]
-            * p_severe_with_comorbidity
-            / p_severe
+            * modified_probability_severe 
+            / probability_severe 
         )
-        return probabilities_with_comorbidity
+        return modified_probabilities
 
     def _set_probability_per_age_bin(self, p, age_bin, sex, population):
         _sex = _sex_short_to_long[sex]

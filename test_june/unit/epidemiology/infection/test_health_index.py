@@ -10,6 +10,7 @@ from june.epidemiology.infection.health_index.health_index import (
     index_to_maximum_symptoms_tag,
 )
 from june.demography import Person, Population
+from june.epidemiology.infection import Covid19, B117, EffectiveMultiplierSetter
 
 
 @pytest.fixture(name="health_index", scope="module")
@@ -41,8 +42,11 @@ class TestMultipliers:
             sex="f",
             age=60,
         )
+        dummy.infection = Covid19(None,None)
         feo = Person.from_attributes(sex="f", age=60, comorbidity="feo")
+        feo.infection = Covid19(None,None)
         guapo = Person.from_attributes(sex="f", age=60, comorbidity="guapo")
+        guapo.infection = Covid19(None,None)
 
         population = Population([])
         population.add(dummy)
@@ -63,14 +67,12 @@ class TestMultipliers:
                 "m": {"0-10": 0.35, "10-100": 0.3},
             },
         }
-        interaction = Interaction(
-            betas=None,
-            alpha_physical=None,
-            contact_matrices=None,
-            multiplier_by_comorbidity=comorbidity_multipliers,
+        multiplier_setter = EffectiveMultiplierSetter(
+            multiplier_by_comorbidity = comorbidity_multipliers,
             comorbidity_prevalence_reference_population=prevalence_reference_population,
-            population=population,
         )
+        multiplier_setter.set_multipliers(population)
+
         health_index = HealthIndexGenerator.from_file()
         health_index.max_mild_symptom_tag = {
             value: key for key, value in index_to_maximum_symptoms_tag.items()
@@ -79,7 +81,7 @@ class TestMultipliers:
         feo_health = health_index(feo)
         guapo_health = health_index(guapo)
 
-        mean_multiplier_uk = interaction.get_multiplier_from_reference_prevalence(
+        mean_multiplier_uk = multiplier_setter.get_multiplier_from_reference_prevalence(
             dummy.age, dummy.sex
         )
 
