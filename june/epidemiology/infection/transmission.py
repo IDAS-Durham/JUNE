@@ -9,9 +9,9 @@ from .trajectory_maker import CompletionTime
 from june import paths
 
 default_config_path = (
-    paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+    paths.configs_path / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml"
 )
-default_gamma_config_path = paths.configs_path / "defaults/transmission/nature.yaml"
+default_gamma_config_path = paths.configs_path / "defaults/epidemiology/infection/transmission/nature.yaml"
 
 
 class Transmission:

@@ -42,7 +42,7 @@ from june.epidemiology.infection import transmission as trans
 from june.simulator import Simulator
 from june.world import generate_world_from_geography, World
 
-constant_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+constant_config = paths.configs_path / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml"
 interaction_config = paths.configs_path / "tests/interaction.yaml"
 
 import logging

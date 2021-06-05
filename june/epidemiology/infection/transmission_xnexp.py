@@ -6,7 +6,7 @@ import yaml
 import numpy as np
 import numba as nb
 
-default_config_path = paths.configs_path / "defaults/transmission/XNExp.yaml"
+default_config_path = paths.configs_path / "defaults/epidemiology/infection/transmission/XNExp.yaml"
 
 
 @nb.jit(nopython=True)

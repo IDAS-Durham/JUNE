@@ -9,7 +9,7 @@ from june.utils import (
 from june.interaction import Interaction
 from june.demography import Population, Person
 from june.groups import Company
-from june.infection import Infection, TransmissionConstant
+from june.epidemiology.infection import Infection, TransmissionConstant
 
 
 class TestInteractionChangesMultipliers:
