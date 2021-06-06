@@ -55,7 +55,7 @@ class MockHealthIndexGenerator:
     def __init__(self, desired_symptoms):
         self.index = desired_symptoms
 
-    def __call__(self, person):
+    def __call__(self, person, infection_id):
         hi = np.ones(8)
         for h in range(len(hi)):
             if h < self.index:

@@ -185,7 +185,7 @@ class TestSymptoms:
             / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml",
         )
         dummy = Person(sex="f", age=65)
-        health_index = selector.health_index_generator(dummy)
+        health_index = selector.health_index_generator(dummy, 0)
         fixed_severity = 0.72
         infection = selector._make_infection(person=dummy, time=0.1)
         infection.symptoms.max_severity = fixed_severity

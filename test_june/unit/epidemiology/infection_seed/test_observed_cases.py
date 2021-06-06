@@ -93,7 +93,7 @@ def test__avg_rates_by_age_and_sex(oc):
         avg_death_rate["magnificient"],
         np.array(
             np.diff(
-                oc.health_index_generator(Person(age=50, sex="f")),
+                oc.health_index_generator(Person(age=50, sex="f"), infection_id=0),
                 prepend=0.0,
                 append=1.0,
             )
