@@ -133,12 +133,12 @@ def generate_simulator():
         daily_super_area_cases=daily_cases_per_super_area,
         seed_strength=100,
     )
-    #susceptibility_setter = SusceptibilitySetter()
+    susceptibility_setter = SusceptibilitySetter()
 
     epidemiology = Epidemiology(
         infection_selectors=inf_selectors,
         infection_seeds=InfectionSeeds([infection_seed]),
-        #susceptibility_setter=susceptibility_setter,
+        susceptibility_setter=susceptibility_setter,
     )
 
     # interaction
