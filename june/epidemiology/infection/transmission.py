@@ -9,9 +9,12 @@ from .trajectory_maker import CompletionTime
 from june import paths
 
 default_config_path = (
-    paths.configs_path / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml"
+    paths.configs_path
+    / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml"
 )
-default_gamma_config_path = paths.configs_path / "defaults/epidemiology/infection/transmission/nature.yaml"
+default_gamma_config_path = (
+    paths.configs_path / "defaults/epidemiology/infection/transmission/nature.yaml"
+)
 
 
 class Transmission:
@@ -22,6 +25,7 @@ class Transmission:
 
     def update_infection_probability(self, time_from_infection):
         raise NotImplementedError()
+
 
 class TransmissionConstant(Transmission):
     def __init__(self, probability=0.3):
@@ -51,7 +55,7 @@ def gamma_pdf(x: float, a: float, loc: float, scale: float) -> float:
     x:
         x variable
     a:
-        shape factor 
+        shape factor
     loc:
         denominator in exponential
     scale:
@@ -59,7 +63,7 @@ def gamma_pdf(x: float, a: float, loc: float, scale: float) -> float:
 
     Returns
     -------
-        evaluation fo gamma pdf 
+        evaluation fo gamma pdf
     """
     if x < loc:
         return 0.0
@@ -82,7 +86,7 @@ def gamma_pdf_vectorized(x: float, a: float, loc: float, scale: float) -> float:
     x:
         x variable
     a:
-        shape factor 
+        shape factor
     loc:
         denominator in exponential
     scale:
@@ -90,7 +94,7 @@ def gamma_pdf_vectorized(x: float, a: float, loc: float, scale: float) -> float:
 
     Returns
     -------
-        evaluation fo gamma pdf 
+        evaluation fo gamma pdf
     """
     return np.where(
         x < loc,
@@ -285,7 +289,7 @@ class TransmissionGamma(Transmission):
     ):
         """
         Lowers the infectiousness of asymptomatic and mild cases, by modifying
-        the norm of the distribution 
+        the norm of the distribution
 
         Parameters
         ----------
