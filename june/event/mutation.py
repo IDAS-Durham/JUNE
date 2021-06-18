@@ -28,7 +28,7 @@ class Mutation(Event):
         unique id of the new mutation. These are generated with an adler32 encoding on
         the name.
         Covid19: 170852960
-        B117: 170394200
+        B117: 37224668
     """
 
     def __init__(
