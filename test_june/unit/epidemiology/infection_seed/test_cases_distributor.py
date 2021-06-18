@@ -43,11 +43,11 @@ class TestCasesDistributor:
         cases_per_super_area = cd.cases_per_super_area
         assert np.allclose(
             cases_per_super_area.loc[:, "a1"].values,
-            np.array([200, 400], dtype=np.float),
+            np.array([200, 400], dtype=np.float64),
             rtol=0.25,
         )
         assert np.allclose(
             cases_per_super_area.loc[:, "a2"].values,
-            np.array([400, 800], dtype=np.float),
+            np.array([400, 800], dtype=np.float64),
             rtol=0.25,
         )

@@ -304,7 +304,7 @@ class Hospitals(Supergroup, MedicalFacilities):
     def create_hospital_from_df_row(
         cls, area, row,
     ):
-        coordinates = row[["latitude", "longitude"]].values.astype(np.float)
+        coordinates = row[["latitude", "longitude"]].values.astype(np.float64)
         n_beds = row["beds"]
         n_icu_beds = row["icu_beds"]
         trust_code = row["code"]
@@ -332,7 +332,7 @@ class Hospitals(Supergroup, MedicalFacilities):
             n_beds = row["beds"]
             n_icu_beds = row["icu_beds"]
             trust_code = row["code"]
-            coordinates = row[["latitude", "longitude"]].values.astype(np.float)
+            coordinates = row[["latitude", "longitude"]].values.astype(np.float64)
             hospital = Hospital(
                 coordinates=coordinates,
                 n_beds=n_beds,

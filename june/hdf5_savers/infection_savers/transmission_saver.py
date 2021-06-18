@@ -69,7 +69,7 @@ def save_transmissions_to_hdf5(
                         attribute_dict[attribute_name].append(attribute)
             for attribute_name in attributes_to_save:
                 attribute_dict[attribute_name] = np.array(
-                    attribute_dict[attribute_name], dtype=np.float
+                    attribute_dict[attribute_name], dtype=np.float64
                 )
             for attribute_name in attributes_to_save:
                 write_dataset(

@@ -81,12 +81,12 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
                     sexes.append(person.sex.encode("ascii", "ignore"))
                     super_areas.append(person.area.super_area.name)
 
-                ids = np.array(ids, dtype=np.int)
-                ages = np.array(ages, dtype=np.int16)
+                ids = np.array(ids, dtype=np.int64)
+                ages = np.array(ages, dtype=np.int6416)
                 sexes = np.array(sexes, dtype="S10")
                 super_areas = np.array(super_areas, dtype="S10")
                 ethnicities = np.array(ethnicities, dtype="S10")
-                socioeconomic_indcs = np.array(socioeconomic_indcs, dtype=np.int8)
+                socioeconomic_indcs = np.array(socioeconomic_indcs, dtype=np.int648)
 
                 if chunk == 0:
                     people_dset.create_dataset(
@@ -153,7 +153,7 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
             infection_dset = f.require_group("infection")
             time_dset = infection_dset.create_group(time_stamp)
             ids = np.array(infected_ids, dtype=np.int64)
-            symptoms = np.array(symptoms, dtype=np.int16)
+            symptoms = np.array(symptoms, dtype=np.int6416)
             time_dset.create_dataset("id", compression="gzip", data=ids)
             time_dset.create_dataset("symptoms", compression="gzip", data=symptoms)
 
@@ -193,11 +193,11 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
                 super_area_dict = super_area_hospitals[super_area]
                 super_area_dset = f.require_group(super_area)
                 hospital_dset = super_area_dset.require_group("hospitals")
-                coordinates = np.array(super_area_dict["coordinates"], dtype=np.float16)
+                coordinates = np.array(super_area_dict["coordinates"], dtype=np.float6416)
                 hospital_dset.create_dataset("coordinates", data=coordinates)
-                n_beds = np.array(super_area_dict["n_beds"], dtype=np.int)
+                n_beds = np.array(super_area_dict["n_beds"], dtype=np.int64)
                 hospital_dset.create_dataset("n_beds", data=n_beds)
-                n_icu_beds = np.array(super_area_dict["n_icu_beds"], dtype=np.int)
+                n_icu_beds = np.array(super_area_dict["n_icu_beds"], dtype=np.int64)
                 hospital_dset.create_dataset("n_icu_beds", data=n_icu_beds)
                 trust_code = np.array(super_area_dict["trust_code"], dtype="S10")
                 hospital_dset.create_dataset("trust_code", data=trust_code)
@@ -233,10 +233,10 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
                 super_area_dset = f.require_group(super_area)
                 hospital_dset = super_area_dset.require_group("hospitals")
                 time_dset = hospital_dset.create_group(time_stamp)
-                ids = np.array(super_area_dict["id"], dtype=np.int)
-                n_patients = np.array(super_area_dict["n_patients"], dtype=np.int)
+                ids = np.array(super_area_dict["id"], dtype=np.int64)
+                n_patients = np.array(super_area_dict["n_patients"], dtype=np.int64)
                 n_patients_icu = np.array(
-                    super_area_dict["n_patients_icu"], dtype=np.int
+                    super_area_dict["n_patients_icu"], dtype=np.int64
                 )
                 time_dset.create_dataset("id", data=ids)
                 time_dset.create_dataset("n_patients", data=n_patients)
@@ -264,7 +264,7 @@ self, save_path: str = "results", file_name: str = "logger.0.hdf5", rank: int = 
         """
         time_stamp = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
         infection_location = np.array(self.infection_location, dtype="S20")
-        new_infected_ids = np.array(self.new_infected_ids, dtype=np.int)
+        new_infected_ids = np.array(self.new_infected_ids, dtype=np.int64)
         with h5py.File(self.file_path, "a", libver="latest") as f:
             locations_dset = f.require_group("locations")
             time_dset = locations_dset.create_group(time_stamp)

@@ -103,7 +103,7 @@ class AgeSexGenerator:
         men_age_dict = {"0-2" : 10, "2-99": 50}. If the bin contains the 99 value at the end,
         the age will be sampled with an exponential decay of the form e^(-x/exponential_decay).
         """
-        age_counts = np.zeros(99, dtype=np.int)
+        age_counts = np.zeros(99, dtype=np.int64)
         sex_bins = []
         female_fractions = []
         for (key_man, value_man), (_, value_woman) in zip(
@@ -462,10 +462,10 @@ def load_comorbidity_data(m_comorbidity_path=None, f_comorbidity_path=None):
 class ComorbidityGenerator:
     def __init__(self, comorbidity_data):
         self.male_comorbidities_probabilities = np.array(
-            comorbidity_data[0].values.T, dtype=np.float
+            comorbidity_data[0].values.T, dtype=np.float64
         )
         self.female_comorbidities_probabilities = np.array(
-            comorbidity_data[1].values.T, dtype=np.float
+            comorbidity_data[1].values.T, dtype=np.float64
         )
         self.ages = np.array(comorbidity_data[0].columns).astype(int)
         self.comorbidities = np.array(comorbidity_data[0].index).astype(str)

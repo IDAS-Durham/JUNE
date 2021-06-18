@@ -93,7 +93,7 @@ def save_population_to_hdf5(
                 if person.work_super_area is not None:
                     work_super_areas.append(person.work_super_area.id)
                     work_super_area_coords.append(
-                        np.array(person.work_super_area.coordinates, dtype=np.float)
+                        np.array(person.work_super_area.coordinates, dtype=np.float64)
                     )
                     if person.work_super_area.city is not None:
                         work_super_areas_cities.append(person.work_super_area.city.id)
@@ -103,7 +103,7 @@ def save_population_to_hdf5(
                     work_super_areas.append(nan_integer)
                     work_super_areas_cities.append(nan_integer)
                     work_super_area_coords.append(
-                        np.array([nan_integer, nan_integer], dtype=np.float)
+                        np.array([nan_integer, nan_integer], dtype=np.float64)
                     )
                 if person.sector is None:
                     sectors.append(" ".encode("ascii", "ignore"))
@@ -138,9 +138,9 @@ def save_population_to_hdf5(
                         else:
                             group_super_areas_temp.append(subgroup.group.super_area.id)
                 group_specs.append(np.array(specs, dtype="S20"))
-                group_ids.append(np.array(gids, dtype=np.int))
-                subgroup_types.append(np.array(stypes, dtype=np.int))
-                group_super_areas.append(np.array(group_super_areas_temp, dtype=np.int))
+                group_ids.append(np.array(gids, dtype=np.int64))
+                subgroup_types.append(np.array(stypes, dtype=np.int64))
+                group_super_areas.append(np.array(group_super_areas_temp, dtype=np.int64))
                 if person.mode_of_transport == None:
                     mode_of_transport_description.append(" ".encode("ascii", "ignore"))
                     mode_of_transport_is_public.append(False)
@@ -152,27 +152,27 @@ def save_population_to_hdf5(
                         person.mode_of_transport.is_public
                     )
 
-            ids = np.array(ids, dtype=np.int)
-            ages = np.array(ages, dtype=np.int)
+            ids = np.array(ids, dtype=np.int64)
+            ages = np.array(ages, dtype=np.int64)
             sexes = np.array(sexes, dtype="S10")
             ethns = np.array(ethns, dtype="S10")
-            # home_city = np.array(home_city, dtype=np.int)
-            areas = np.array(areas, dtype=np.int)
-            super_areas = np.array(super_areas, dtype=np.int)
-            work_super_areas = np.array(work_super_areas, dtype=np.int)
-            work_super_areas_cities = np.array(work_super_areas_cities, dtype=np.int)
-            work_super_area_coords = np.array(work_super_area_coords, dtype=np.float)
-            group_ids = np.array(group_ids, dtype=np.int)
-            subgroup_types = np.array(subgroup_types, dtype=np.int)
+            # home_city = np.array(home_city, dtype=np.int64)
+            areas = np.array(areas, dtype=np.int64)
+            super_areas = np.array(super_areas, dtype=np.int64)
+            work_super_areas = np.array(work_super_areas, dtype=np.int64)
+            work_super_areas_cities = np.array(work_super_areas_cities, dtype=np.int64)
+            work_super_area_coords = np.array(work_super_area_coords, dtype=np.float64)
+            group_ids = np.array(group_ids, dtype=np.int64)
+            subgroup_types = np.array(subgroup_types, dtype=np.int64)
             group_specs = np.array(group_specs, dtype="S20")
-            group_super_areas = np.array(group_super_areas, dtype=np.int)
+            group_super_areas = np.array(group_super_areas, dtype=np.int64)
             sectors = np.array(sectors, dtype="S30")
             sub_sectors = np.array(sub_sectors, dtype="S30")
             mode_of_transport_description = np.array(
                 mode_of_transport_description, dtype="S100"
             )
             mode_of_transport_is_public = np.array(
-                mode_of_transport_is_public, dtype=np.bool
+                mode_of_transport_is_public, dtype=bool
             )
             lockdown_status = np.array(lockdown_status, dtype="S20")
 

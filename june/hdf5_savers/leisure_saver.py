@@ -33,14 +33,14 @@ def save_social_venues_to_hdf5(social_venues_list: List[SocialVenues], file_path
             areas = []
             for sv in social_venues:
                 ids.append(sv.id)
-                coordinates.append(np.array(sv.coordinates, dtype=np.float))
+                coordinates.append(np.array(sv.coordinates, dtype=np.float64))
                 if sv.super_area is None:
                     areas.append(nan_integer)
                 else:
                     areas.append(sv.area.id)
-            ids = np.array(ids, dtype=np.int)
-            coordinates = np.array(coordinates, dtype=np.float)
-            areas = np.array(areas, dtype=np.int)
+            ids = np.array(ids, dtype=np.int64)
+            coordinates = np.array(coordinates, dtype=np.float64)
+            areas = np.array(areas, dtype=np.int64)
             social_venues_dset.attrs["n"] = n_svs
             social_venues_dset.create_dataset("id", data=ids)
             social_venues_dset.create_dataset("coordinates", data=coordinates)

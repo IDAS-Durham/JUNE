@@ -44,8 +44,8 @@ class MovablePeople:
                 person.infection.transmission.probability,
                 person.infection.infection_id(),
                 False,
-                np.array([], dtype=np.int),
-                np.array([], dtype=np.float),
+                np.array([], dtype=np.int64),
+                np.array([], dtype=np.float64),
                 mpi_rank,
                 True,
             ]
@@ -59,8 +59,8 @@ class MovablePeople:
                 0.0,
                 0,
                 True,
-                np.array(susceptibility_inf_ids, dtype=np.int),
-                np.array(susceptibility_inf_suscs, dtype=np.float),
+                np.array(susceptibility_inf_ids, dtype=np.int64),
+                np.array(susceptibility_inf_suscs, dtype=np.float64),
                 mpi_rank,
                 True,
             ]

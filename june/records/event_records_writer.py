@@ -45,7 +45,7 @@ class EventRecord:
             ]
             + [np.array(getattr(self, name), dtype=np.int32) for name in self.int_names]
             + [
-                np.array(getattr(self, name), dtype=np.float32)
+                np.array(getattr(self, name), dtype=np.float6432)
                 for name in self.float_names
             ]
             + [np.array(getattr(self, name), dtype="S20") for name in self.str_names]

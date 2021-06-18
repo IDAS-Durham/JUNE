@@ -62,15 +62,15 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 n_classrooms.append(school.n_classrooms)
                 years.append(np.array(school.years))
 
-            ids = np.array(ids, dtype=np.int)
-            n_pupils_max = np.array(n_pupils_max, dtype=np.int)
-            age_min = np.array(age_min, dtype=np.int)
-            age_max = np.array(age_max, dtype=np.int)
+            ids = np.array(ids, dtype=np.int64)
+            n_pupils_max = np.array(n_pupils_max, dtype=np.int64)
+            age_min = np.array(age_min, dtype=np.int64)
+            age_max = np.array(age_max, dtype=np.int64)
             sectors = np.array(sectors, dtype="S20")
-            areas = np.array(areas, dtype=np.int)
-            super_areas = np.array(super_areas, dtype=np.int)
-            coordinates = np.array(coordinates, dtype=np.float)
-            n_classrooms = np.array(n_classrooms, dtype=np.int)
+            areas = np.array(areas, dtype=np.int64)
+            super_areas = np.array(super_areas, dtype=np.int64)
+            coordinates = np.array(coordinates, dtype=np.float64)
+            n_classrooms = np.array(n_classrooms, dtype=np.int64)
             years = np.array(years, dtype=int_vlen_type)
             if chunk == 0:
                 schools_dset.attrs["n_schools"] = n_schools

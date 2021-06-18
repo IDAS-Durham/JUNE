@@ -254,8 +254,8 @@ class DemographyPlots:
                     area_to_super_area.loc[region].area.values
                 ]
             population_region = population_region.sum(axis=0) 
-            keys = np.array(population_region.index, dtype=np.int)
-            values = np.array(population_region.values / np.sum(population_region.values) * 100, dtype=np.float)
+            keys = np.array(population_region.index, dtype=np.int64)
+            values = np.array(population_region.values / np.sum(population_region.values) * 100, dtype=np.float64)
             ax[i].bar(
                 keys,
                 values,

@@ -125,7 +125,7 @@ class Interaction:
     ):
         ret = {}
         for inf_id in infectors_per_infection_per_subgroup:
-            infector_matrix = np.zeros_like(contact_matrix, dtype=np.float)
+            infector_matrix = np.zeros_like(contact_matrix, dtype=np.float64)
             for subgroup_id in infectors_per_infection_per_subgroup[inf_id]:
                 subgroup_trans_prob = sum(
                     infectors_per_infection_per_subgroup[inf_id][subgroup_id][

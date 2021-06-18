@@ -44,8 +44,8 @@ def save_immunities_to_hdf5(hdf5_file_path: str, immunities: List[Immunity]):
             if len(inf_ids) == 0:
                 inf_ids = [nan_integer]
                 suscs = [nan_float]
-            susc_infection_ids.append(np.array(inf_ids, dtype=np.int))
-            susc_susceptibilities.append(np.array(suscs, dtype=np.float))
+            susc_infection_ids.append(np.array(inf_ids, dtype=np.int64))
+            susc_susceptibilities.append(np.array(suscs, dtype=np.float64))
             lengths.append(len(suscs))
         if len(np.unique(lengths)) > 1:
             susc_infection_ids = np.array(susc_infection_ids, dtype=int_vlen_type)
@@ -53,8 +53,8 @@ def save_immunities_to_hdf5(hdf5_file_path: str, immunities: List[Immunity]):
                 susc_susceptibilities, dtype=float_vlen_type
             )
         else:
-            susc_infection_ids = np.array(susc_infection_ids, dtype=np.int)
-            susc_susceptibilities = np.array(susc_susceptibilities, dtype=np.float)
+            susc_infection_ids = np.array(susc_infection_ids, dtype=np.int64)
+            susc_susceptibilities = np.array(susc_susceptibilities, dtype=np.float64)
         g.create_dataset(
             "susc_infection_ids",
             data=susc_infection_ids,

@@ -76,7 +76,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         area_ids.append(area.id)
         area_super_areas.append(area.super_area.id)
         area_names.append(area.name.encode("ascii", "ignore"))
-        area_coordinates.append(np.array(area.coordinates, dtype=np.float))
+        area_coordinates.append(np.array(area.coordinates, dtype=np.float64))
         area_socioeconomic_indices.append(area.socioeconomic_index)
         social_venues_ids = []
         social_venues_specs = []
@@ -87,13 +87,13 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
                 social_venues_ids.append(social_venue.id)
                 social_venues_sas.append(social_venue.super_area.id)
         social_venues_specs_list.append(np.array(social_venues_specs, dtype="S20"))
-        social_venues_ids_list.append(np.array(social_venues_ids, dtype=np.int))
-        social_venues_super_areas.append(np.array(social_venues_sas, dtype=np.int))
+        social_venues_ids_list.append(np.array(social_venues_ids, dtype=np.int64))
+        social_venues_super_areas.append(np.array(social_venues_sas, dtype=np.int64))
         social_venues_lengths.append(len(social_venues_specs))
     if len(np.unique(social_venues_lengths)) == 1:
         social_venues_specs_list = np.array(social_venues_specs_list, dtype="S20")
-        social_venues_ids_list = np.array(social_venues_ids_list, dtype=np.int)
-        social_venues_super_areas = np.array(social_venues_super_areas, dtype=np.int)
+        social_venues_ids_list = np.array(social_venues_ids_list, dtype=np.int64)
+        social_venues_super_areas = np.array(social_venues_super_areas, dtype=np.int64)
     else:
         social_venues_specs_list = np.array(
             social_venues_specs_list, dtype=str_vlen_type
@@ -114,16 +114,16 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
             sum([len(school.people) for area in super_area.areas for school in area.schools])
         )
         if super_area.closest_hospitals is None:
-            closest_hospitals_ids.append(np.array([nan_integer], dtype=np.int))
-            closest_hospitals_super_areas.append(np.array([nan_integer], dtype=np.int))
+            closest_hospitals_ids.append(np.array([nan_integer], dtype=np.int64))
+            closest_hospitals_super_areas.append(np.array([nan_integer], dtype=np.int64))
             hospital_lengths.append(1)
         else:
             hospital_ids = np.array(
-                [hospital.id for hospital in super_area.closest_hospitals], dtype=np.int
+                [hospital.id for hospital in super_area.closest_hospitals], dtype=np.int64
             )
             hospital_sas = np.array(
                 [hospital.super_area.id for hospital in super_area.closest_hospitals],
-                dtype=np.int,
+                dtype=np.int64,
             )
             closest_hospitals_ids.append(hospital_ids)
             closest_hospitals_super_areas.append(hospital_sas)
@@ -147,37 +147,37 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
             len(super_area.closest_inter_city_station_for_city)
         )
 
-    area_ids = np.array(area_ids, dtype=np.int)
+    area_ids = np.array(area_ids, dtype=np.int64)
     area_names = np.array(area_names, dtype="S20")
-    area_super_areas = np.array(area_super_areas, dtype=np.int)
-    area_coordinates = np.array(area_coordinates, dtype=np.float)
-    area_socioeconomic_indices = np.array(area_socioeconomic_indices, dtype=np.float)
-    super_area_ids = np.array(super_area_ids, dtype=np.int)
+    area_super_areas = np.array(area_super_areas, dtype=np.int64)
+    area_coordinates = np.array(area_coordinates, dtype=np.float64)
+    area_socioeconomic_indices = np.array(area_socioeconomic_indices, dtype=np.float64)
+    super_area_ids = np.array(super_area_ids, dtype=np.int64)
     super_area_names = np.array(super_area_names, dtype="S20")
-    super_area_coordinates = np.array(super_area_coordinates, dtype=np.float)
-    super_area_regions = np.array(super_area_regions, dtype=np.int)
-    super_area_n_people = np.array(super_area_n_people, dtype=np.int)
-    super_area_n_workers = np.array(super_area_n_workers, dtype=np.int)
-    super_area_n_pupils = np.array(super_area_n_pupils, dtype=np.int)
-    region_ids = np.array(region_ids, dtype=np.int)
+    super_area_coordinates = np.array(super_area_coordinates, dtype=np.float64)
+    super_area_regions = np.array(super_area_regions, dtype=np.int64)
+    super_area_n_people = np.array(super_area_n_people, dtype=np.int64)
+    super_area_n_workers = np.array(super_area_n_workers, dtype=np.int64)
+    super_area_n_pupils = np.array(super_area_n_pupils, dtype=np.int64)
+    region_ids = np.array(region_ids, dtype=np.int64)
     region_names = np.array(region_names, dtype="S50")
     if len(np.unique(hospital_lengths)) == 1:
-        closest_hospitals_ids = np.array(closest_hospitals_ids, dtype=np.int)
+        closest_hospitals_ids = np.array(closest_hospitals_ids, dtype=np.int64)
         closest_hospitals_super_areas = np.array(
-            closest_hospitals_super_areas, dtype=np.int
+            closest_hospitals_super_areas, dtype=np.int64
         )
     else:
         closest_hospitals_ids = np.array(closest_hospitals_ids, dtype=int_vlen_type)
         closest_hospitals_super_areas = np.array(
             closest_hospitals_super_areas, dtype=int_vlen_type
         )
-    super_area_city = np.array(super_area_city, dtype=np.int)
+    super_area_city = np.array(super_area_city, dtype=np.int64)
     if len(np.unique(super_area_closest_stations_lengths)) == 1:
         super_area_closest_stations_cities = np.array(
             super_area_closest_stations_cities, dtype="S40"
         )
         super_area_closest_stations_stations = np.array(
-            super_area_closest_stations_stations, dtype=np.int
+            super_area_closest_stations_stations, dtype=np.int64
         )
     else:
         super_area_closest_stations_cities = np.array(

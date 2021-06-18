@@ -62,11 +62,11 @@ def save_households_to_hdf5(
                     types.append(household.type.encode("ascii", "ignore"))
                 max_sizes.append(household.max_size)
 
-            ids = np.array(ids, dtype=np.int)
-            areas = np.array(areas, dtype=np.int)
-            super_areas = np.array(super_areas, dtype=np.int)
+            ids = np.array(ids, dtype=np.int64)
+            areas = np.array(areas, dtype=np.int64)
+            super_areas = np.array(super_areas, dtype=np.int64)
             types = np.array(types, dtype="S20")
-            max_sizes = np.array(max_sizes, dtype=np.float)
+            max_sizes = np.array(max_sizes, dtype=np.float64)
             if chunk == 0:
                 households_dset.attrs["n_households"] = n_households
                 households_dset.create_dataset("id", data=ids, maxshape=(None,))
@@ -98,9 +98,9 @@ def save_households_to_hdf5(
         for household in households:
             if not household.residences_to_visit:
                 residences_to_visit_specs.append(np.array(["none"], dtype="S20"))
-                residences_to_visit_ids.append(np.array([nan_integer], dtype=np.int))
+                residences_to_visit_ids.append(np.array([nan_integer], dtype=np.int64))
                 residences_to_visit_super_areas.append(
-                    np.array([nan_integer], dtype=np.int)
+                    np.array([nan_integer], dtype=np.int64)
                 )
             else:
                 to_visit_ids = []
@@ -114,9 +114,9 @@ def save_households_to_hdf5(
                         to_visit_ids.append(residence_to_visit.id)
                         to_visit_super_areas.append(residence_to_visit.super_area.id)
                 residences_to_visit_specs.append(np.array(to_visit_specs, dtype="S20"))
-                residences_to_visit_ids.append(np.array(to_visit_ids, dtype=np.int))
+                residences_to_visit_ids.append(np.array(to_visit_ids, dtype=np.int64))
                 residences_to_visit_super_areas.append(
-                    np.array(to_visit_super_areas, dtype=np.int)
+                    np.array(to_visit_super_areas, dtype=np.int64)
                 )
 
         if len(np.unique(list(chain(*residences_to_visit_ids)))) > 1:
@@ -130,10 +130,10 @@ def save_households_to_hdf5(
                 residences_to_visit_super_areas, dtype=int_vlen_type
             )
         else:
-            residences_to_visit_ids = np.array(residences_to_visit_ids, dtype=np.int)
+            residences_to_visit_ids = np.array(residences_to_visit_ids, dtype=np.int64)
             residences_to_visit_specs = np.array(residences_to_visit_specs, dtype="S20")
             residences_to_visit_super_areas = np.array(
-                residences_to_visit_super_areas, dtype=np.int
+                residences_to_visit_super_areas, dtype=np.int64
             )
         households_dset.create_dataset(
             "residences_to_visit_ids",
