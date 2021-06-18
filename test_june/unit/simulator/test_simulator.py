@@ -9,7 +9,13 @@ from june.world import World
 from june.groups import Hospitals, Schools, Companies, CareHomes, Universities
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.groups.travel import ModeOfTransport, Travel
-from june.infection import InfectionSelector, SymptomTag, InfectionSelectors
+from june.epidemiology.infection import (
+    InfectionSelector,
+    SymptomTag,
+    InfectionSelectors,
+    Immunity,
+)
+from june.epidemiology.epidemiology import Epidemiology
 from june.interaction import Interaction
 from june.policy import (
     Policies,
@@ -38,7 +44,10 @@ from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub, Grocery, Gr
 from june.simulator import Simulator, activity_hierarchy
 from june.world import generate_world_from_geography
 
-constant_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+constant_config = (
+    paths.configs_path
+    / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml"
+)
 interaction_config = paths.configs_path / "tests/interaction.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
 
@@ -67,7 +76,7 @@ def make_policies():
 def setup_sim(dummy_world, selectors):
     world = dummy_world
     for person in world.people:
-        person.susceptibility = 1.0
+        person.immunity = Immunity()
         person.infection = None
         person.subgroups.medical_facility = None
         person.dead = False
@@ -79,10 +88,11 @@ def setup_sim(dummy_world, selectors):
     )
     interaction = Interaction.from_file(config_filename=interaction_config)
     policies = Policies.from_file()
+    epidemiology = Epidemiology(infection_selectors=selectors)
     travel = Travel()
     sim = Simulator.from_file(
         world=world,
-        infection_selectors=selectors,
+        epidemiology=epidemiology,
         interaction=interaction,
         config_filename=test_config,
         leisure=leisure_instance,
@@ -90,7 +100,7 @@ def setup_sim(dummy_world, selectors):
         policies=policies,
     )
     sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-        delta_time=3, working_hours=False, day_type="weekday" 
+        delta_time=3, working_hours=False, day_type="weekday"
     )
     sim.clear_world()
     return sim
@@ -107,6 +117,7 @@ def create_health_index():
 def test__everyone_has_an_activity(sim: Simulator):
     for person in sim.world.people.members:
         assert person.subgroups.iter().count(None) != len(person.subgroups.iter())
+
 
 def test__apply_activity_hierarchy(sim: Simulator):
     unordered_activities = random.sample(activity_hierarchy, len(activity_hierarchy))
@@ -225,8 +236,8 @@ def test__move_people_to_commute(sim: Simulator):
 
 def test__bury_the_dead(sim: Simulator):
     dummy_person = sim.world.people.members[0]
-    sim.infection_selectors.infect_person_at_time(dummy_person, 0.0)
-    sim.bury_the_dead(sim.world, dummy_person)
+    sim.epidemiology.infection_selectors.infect_person_at_time(dummy_person, 0.0)
+    sim.epidemiology.bury_the_dead(sim.world, dummy_person)
     assert dummy_person in sim.world.cemeteries.members[0].people
     assert dummy_person.dead
     assert dummy_person.infection is None

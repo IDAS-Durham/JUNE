@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 from typing import Optional
 
-from june.infection import Infection
+from june.epidemiology.infection import Infection, Immunity
 
 
 class Activities(dataobject):
@@ -15,7 +15,6 @@ class Activities(dataobject):
     commute: None
     rail_travel: None
     leisure: None
-    box: None
 
     def iter(self):
         return [getattr(self, activity) for activity in self.__fields__]
@@ -44,11 +43,10 @@ class Person(dataobject):
     mode_of_transport: "ModeOfTransport" = None
     # activities
     busy: bool = False
-    subgroups: Activities = Activities(None, None, None, None, None, None, None)
+    subgroups: Activities = Activities(None, None, None, None, None, None)
     infection: Infection = None
+    immunity: Immunity()
     # infection
-    susceptibility: float = 1.0
-    effective_multiplier: float = 1.0
     dead: bool = False
 
     @classmethod
@@ -56,7 +54,7 @@ class Person(dataobject):
         cls,
         sex="f",
         age=27,
-            susceptibility = 1.,
+        susceptibility_dict: dict = None,
         ethnicity=None,
         id=None,
         comorbidity=None,
@@ -70,22 +68,14 @@ class Person(dataobject):
             ethnicity=ethnicity,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
+            immunity = Immunity(susceptibility_dict=susceptibility_dict),
             comorbidity=comorbidity,
-            susceptibility=susceptibility,
-            subgroups=Activities(None, None, None, None, None, None, None),
+            subgroups=Activities(None, None, None, None, None, None),
         )
 
     @property
     def infected(self):
         return self.infection is not None
-
-    @property
-    def susceptible(self):
-        return self.susceptibility > 0.0
-
-    @property
-    def recovered(self):
-        return not (self.dead or self.susceptible or self.infected)
 
     @property
     def residence(self):
@@ -110,10 +100,6 @@ class Person(dataobject):
     @property
     def leisure(self):
         return self.subgroups.leisure
-
-    @property
-    def box(self):
-        return self.subgroups.box
 
     @property
     def hospitalised(self):

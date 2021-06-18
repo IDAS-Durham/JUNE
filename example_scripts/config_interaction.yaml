@@ -1,12 +1,9 @@
-susceptibilities:
-  0-13 : 0.5
-  13-100: 1.0
-
 alpha_physical: 2.
 
 betas:
  box: 1
  pub: 0.62941 
+ gym: 0.62941 
  grocery: 0.14137
  cinema: 0.257461
  city_transport: 0.207969 

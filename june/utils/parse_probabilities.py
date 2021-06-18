@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from itertools import chain
 
-def parse_age_probabilities(age_dict: dict):
+def parse_age_probabilities(age_dict: dict, fill_value=0):
     """
     Parses the age probability dictionaries into an array.
     """
@@ -25,9 +25,9 @@ def parse_age_probabilities(age_dict: dict):
     probabilities = np.array(probabilities)[sorting_idx]
     probabilities_binned = []
     for prob in probabilities:
-        probabilities_binned.append(0.0)
+        probabilities_binned.append(fill_value)
         probabilities_binned.append(prob)
-    probabilities_binned.append(0.0)
+    probabilities_binned.append(fill_value)
     probabilities_per_age = []
     for age in range(100):
         idx = np.searchsorted(bins, age + 1)  # we do +1 to include the lower boundary

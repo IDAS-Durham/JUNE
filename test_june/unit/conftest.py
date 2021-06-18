@@ -6,7 +6,6 @@ import pytest
 import h5py
 from pathlib import Path
 
-import june.infection.symptoms
 from june.interaction import Interaction
 from june import paths
 from june.geography import (
@@ -31,14 +30,19 @@ from june.groups import *
 from june.groups.leisure import *
 from june.groups.travel import Travel
 from june.demography import Person, Population
-from june.infection import Infection, Symptoms, TrajectoryMakers
-from june.infection.infection_selector import InfectionSelector, InfectionSelectors
-from june.infection import transmission as trans
+from june.epidemiology.epidemiology import Epidemiology
+from june.epidemiology.infection import (
+    Infection,
+    Symptoms,
+    TrajectoryMakers,
+    InfectionSelector,
+    InfectionSelectors,
+)
+from june.epidemiology.infection import transmission as trans
 from june.simulator import Simulator
-from june.simulator_box import SimulatorBox
 from june.world import generate_world_from_geography, World
 
-constant_config = paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
+constant_config = paths.configs_path / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml"
 interaction_config = paths.configs_path / "tests/interaction.yaml"
 
 import logging
@@ -93,7 +97,7 @@ def create_symptoms(symptoms_trajectories):
 
 @pytest.fixture(name="health_index_generator", scope="session")
 def make_hi():
-    return lambda person: [0.4, 0.5, 0.7, 0.74, 0.85, 0.90, 0.95]
+    return lambda person, infection_id: [0.4, 0.5, 0.7, 0.74, 0.85, 0.90, 0.95]
 
 
 @pytest.fixture(name="symptoms_trajectories", scope="session")
@@ -146,12 +150,6 @@ def create_world(geography):
     return world
 
 
-@pytest.fixture(name="world_box", scope="session")
-def create_box_world():
-    geography = Geography.from_file({"area": ["E00000697"]})
-    return generate_world_from_geography(geography, box_mode=True)
-
-
 @pytest.fixture(name="selector", scope="session")
 def make_selector(health_index_generator):
     return InfectionSelector(
@@ -164,20 +162,13 @@ def make_selector(health_index_generator):
 def make_selectors(selector):
     return InfectionSelectors([selector])
 
-
-@pytest.fixture(name="simulator_box", scope="session")
-def create_simulator_box(world_box, interaction, selectors):
-    config_file = paths.configs_path / "config_boxmode_example.yaml"
-    return SimulatorBox.from_file(
-        world=world_box,
-        interaction=interaction,
-        config_filename=config_file,
-        infection_selectors=selectors,
-    )
+@pytest.fixture(name="epidemiology", scope="session")
+def make_epidemiology(selectors):
+    return Epidemiology(infection_selectors=selectors)
 
 
 # policy dummy world
-@pytest.fixture(name="dummy_world")#, scope="session")
+@pytest.fixture(name="dummy_world")  # , scope="session")
 def make_dummy_world():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     super_area = g.super_areas.members[0]
@@ -291,13 +282,13 @@ def make_dummy_world():
 
 
 @pytest.fixture(name="policy_simulator")
-def make_policy_simulator(dummy_world, interaction, selectors):
+def make_policy_simulator(dummy_world, interaction, epidemiology):
     config_name = paths.configs_path / "tests/test_simulator_simple.yaml"
     travel = Travel()
     sim = Simulator.from_file(
         dummy_world,
         interaction,
-        infection_selectors=selectors,
+        epidemiology=epidemiology,
         config_filename=config_name,
         record=None,
         travel=travel,

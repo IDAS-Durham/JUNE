@@ -76,13 +76,15 @@ class Record:
             self.record_path / self.summary_filename, "w", newline=""
         ) as summary_file:
             writer = csv.writer(summary_file)
-            fields = ["infected", "recovered", "hospitalised", "intensive_care"]
+            #fields = ["infected", "recovered", "hospitalised", "intensive_care"]
+            fields = ["infected", "hospitalised", "intensive_care"]
             header = ["time_stamp", "region"]
             for field in fields:
                 header.append("current_" + field)
                 header.append("daily_" + field)
             header.extend(
-                ["current_susceptible", "daily_hospital_deaths", "daily_deaths"]
+                #["current_susceptible", "daily_hospital_deaths", "daily_deaths"]
+                ["daily_hospital_deaths", "daily_deaths"]
             )
             writer.writerow(header)
         description = {
@@ -127,14 +129,6 @@ class Record:
             current_intensive_care,
         )
 
-    def summarise_susceptibles(self, world="World"):
-        current_susceptible = {}
-        for region in world.regions:
-            current_susceptible[region.name] = len(
-                [person for person in region.people if person.susceptible]
-            )
-        return current_susceptible
-
     def summarise_infections(self, world="World"):
         daily_infections, current_infected = defaultdict(int), defaultdict(int)
         for region in self.events["infections"].region_names:
@@ -144,17 +138,6 @@ class Record:
                 [person for person in region.people if person.infected]
             )
         return daily_infections, current_infected
-
-    def summarise_recoveries(self, world="World"):
-        daily_recovered, current_recovered = defaultdict(int), defaultdict(int)
-        for person_id in self.events["recoveries"].recovered_person_ids:
-            region = world.people.get_from_id(person_id).super_area.region.name
-            daily_recovered[region] += 1
-        for region in world.regions:
-            current_recovered[region.name] = len(
-                [person for person in region.people if person.recovered]
-            )
-        return daily_recovered, current_recovered
 
     def summarise_deaths(self, world="World"):
         daily_deaths, daily_deaths_in_hospital = defaultdict(int), defaultdict(int)
@@ -169,14 +152,12 @@ class Record:
 
     def summarise_time_step(self, timestamp: str, world: "World"):
         daily_infected, current_infected = self.summarise_infections(world=world)
-        daily_recovered, current_recovered = self.summarise_recoveries(world=world)
         (
             daily_hospitalised,
             daily_intensive_care,
             current_hospitalised,
             current_intensive_care,
         ) = self.summarise_hospitalisations(world=world)
-        current_susceptible = self.summarise_susceptibles(world=world)
         daily_deaths, daily_deaths_in_hospital = self.summarise_deaths(world=world)
         all_hospital_regions = [hospital.region_name for hospital in world.hospitals]
         all_world_regions = [region.name for region in world.regions]
@@ -189,13 +170,10 @@ class Record:
                 data = [
                     current_infected.get(region, 0),
                     daily_infected.get(region, 0),
-                    current_recovered.get(region, 0),
-                    daily_recovered.get(region, 0),
                     current_hospitalised.get(region, 0),
                     daily_hospitalised.get(region, 0),
                     current_intensive_care.get(region, 0),
                     daily_intensive_care.get(region, 0),
-                    current_susceptible.get(region, 0),
                     daily_deaths_in_hospital.get(region, 0),
                     daily_deaths.get(region, 0),
                 ]
@@ -235,9 +213,6 @@ class Record:
             interaction_dict["contact_matrices"] = {}
             for key, values in interaction.contact_matrices.items():
                 interaction_dict["contact_matrices"][key] = values.tolist()
-            interaction_dict[
-                "susceptibilities_by_age"
-            ] = interaction.susceptibilities_by_age
             self.append_dict_to_configs(config_dict={"interaction": interaction_dict})
 
     def parameters_seed(
@@ -292,10 +267,12 @@ class Record:
     def parameters(
         self,
         interaction: "Interaction" = None,
-        infection_seeds: "InfectionSeeds" = None,
-        infection_selectors: "InfectionSelector" = None,
+        epidemiology: "Epidemiology" = None,
         activity_manager: "ActivityManager" = None,
     ):
+        if epidemiology:
+            infection_seeds = epidemiology.infection_seeds
+            infection_selectors = epidemiology.infection_selectors
         if self.mpi_rank is None or self.mpi_rank == 0:
             self.parameters_interaction(interaction=interaction)
             self.parameters_seed(infection_seeds=infection_seeds)

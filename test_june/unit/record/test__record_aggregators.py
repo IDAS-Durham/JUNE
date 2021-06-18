@@ -14,8 +14,8 @@ from june.policy import Policies
 from june.activity import ActivityManager
 from june.demography import Person, Population
 from june.interaction import Interaction
-from june.infection import InfectionSelector, HealthIndexGenerator
-from june.infection_seed import InfectionSeed
+from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
+from june.epidemiology.infection_seed import InfectionSeed
 from june.geography.geography import (
     Areas,
     SuperAreas,
@@ -30,6 +30,7 @@ from june import World
 from june.records.records_writer import prepend_checkpoint_hdf5
 
 config_interaction = paths.configs_path / "tests/interaction.yaml"
+
 
 @pytest.fixture(name="dummy_world", scope="module")
 def create_dummy_world():
@@ -58,7 +59,14 @@ def create_dummy_world():
     areas = Areas(super_areas[0].areas + super_areas[1].areas + super_areas[2].areas)
     households = Households([Household(area=super_areas[0].areas[0])])
     hospitals = Hospitals(
-        [Hospital(n_beds=1, n_icu_beds=1, area=areas[5], coordinates=(0.0, 0.0),)]
+        [
+            Hospital(
+                n_beds=1,
+                n_icu_beds=1,
+                area=areas[5],
+                coordinates=(0.0, 0.0),
+            )
+        ]
     )
     care_homes = CareHomes([CareHome(area=super_areas[0].areas[0])])
     world = World()
@@ -85,18 +93,18 @@ def create_dummy_world():
 
 def test__prepend_checkpoint_hdf5(dummy_world):
 
-    pre_checkpoint_record_path = Path("./pre_checkpoint_results/june_record.h5")    
+    pre_checkpoint_record_path = Path("./pre_checkpoint_results/june_record.h5")
     pre_checkpoint_record = Record(
         record_path="pre_checkpoint_results", record_static_data=True
     )
     pre_checkpoint_record.static_data(dummy_world)
-    for i in range(1,15):
+    for i in range(1, 15):
         timestamp = datetime.datetime(2020, 3, i)
         ## everyone from the second record should have an EVEN id.
-        infected_ids = [i*1000 + 500 + 0  + 2*x for x in range(3)]
-        infector_ids = [i*1000 + 500 + 10 + 2*x for x in range(3)]
-        dead_ids     = [i*1000 + 500 + 20 + 2*x for x in range(3)]
-        infection_ids = [i*1000 + 500 + 20 + 2*x for x in range(3)]
+        infected_ids = [i * 1000 + 500 + 0 + 2 * x for x in range(3)]
+        infector_ids = [i * 1000 + 500 + 10 + 2 * x for x in range(3)]
+        dead_ids = [i * 1000 + 500 + 20 + 2 * x for x in range(3)]
+        infection_ids = [i * 1000 + 500 + 20 + 2 * x for x in range(3)]
         with open_file(pre_checkpoint_record_path, mode="a") as f:
             pre_checkpoint_record.file = f
             pre_checkpoint_record.accumulate(
@@ -113,8 +121,8 @@ def test__prepend_checkpoint_hdf5(dummy_world):
                     table_name="deaths",
                     location_id=0,
                     location_spec="pre_check_location",
-                    dead_person_id=dead_id
-                )        
+                    dead_person_id=dead_id,
+                )
             pre_checkpoint_record.time_step(timestamp)
 
     post_checkpoint_record_path = Path("./post_checkpoint_results/june_record.h5")
@@ -122,14 +130,14 @@ def test__prepend_checkpoint_hdf5(dummy_world):
         record_path="post_checkpoint_results", record_static_data=True
     )
     post_checkpoint_record.static_data(dummy_world)
-    for i in range(11,21):
+    for i in range(11, 21):
         timestamp = datetime.datetime(2020, 3, i)
         ## everyone from the second record should have an ODD id.
-        infected_ids = [i*1000 + 500 + 0  + 2*x + 1 for x in range(3)]
-        infector_ids = [i*1000 + 500 + 10 + 2*x + 1 for x in range(3)]
-        dead_ids     = [i*1000 + 500 + 20 + 2*x + 1 for x in range(3)]
-        infection_ids = [i*1000 + 500 + 20 + 2*x + 1 for x in range(3)]
-        
+        infected_ids = [i * 1000 + 500 + 0 + 2 * x + 1 for x in range(3)]
+        infector_ids = [i * 1000 + 500 + 10 + 2 * x + 1 for x in range(3)]
+        dead_ids = [i * 1000 + 500 + 20 + 2 * x + 1 for x in range(3)]
+        infection_ids = [i * 1000 + 500 + 20 + 2 * x + 1 for x in range(3)]
+
         with open_file(post_checkpoint_record_path, mode="a") as f:
             post_checkpoint_record.file = f
             post_checkpoint_record.accumulate(
@@ -146,32 +154,34 @@ def test__prepend_checkpoint_hdf5(dummy_world):
                     table_name="deaths",
                     location_id=0,
                     location_spec="pre_check_location",
-                    dead_person_id=dead_id
-                )        
+                    dead_person_id=dead_id,
+                )
             post_checkpoint_record.time_step(timestamp)
 
-    merged_record_path = Path("./post_checkpoint_results/merged_checkpoint_record.h5")    
+    merged_record_path = Path("./post_checkpoint_results/merged_checkpoint_record.h5")
     prepend_checkpoint_hdf5(
         pre_checkpoint_record_path,
         post_checkpoint_record_path,
-        merged_record_path = merged_record_path,
-        checkpoint_date=datetime.datetime(2020,3,11)
+        merged_record_path=merged_record_path,
+        checkpoint_date=datetime.datetime(2020, 3, 11),
     )
 
     with open_file(merged_record_path) as merged_record:
-        unique_infection_dates = np.unique([
-            datetime.datetime.strptime(x.decode("utf-8"), "%Y-%m-%d")
-            for x in merged_record.root.infections[:]["timestamp"]
-        ])
+        unique_infection_dates = np.unique(
+            [
+                datetime.datetime.strptime(x.decode("utf-8"), "%Y-%m-%d")
+                for x in merged_record.root.infections[:]["timestamp"]
+            ]
+        )
 
         assert len(unique_infection_dates) == 20
-        assert len(merged_record.root.infections[:]) == 3*20
+        assert len(merged_record.root.infections[:]) == 3 * 20
 
         for row in merged_record.root.infections[:]:
             timestamp = datetime.datetime.strptime(
                 row["timestamp"].decode("utf-8"), "%Y-%m-%d"
             )
-            if timestamp < datetime.datetime(2020,3,11):
+            if timestamp < datetime.datetime(2020, 3, 11):
                 assert row["infected_ids"] % 2 == 0
                 assert row["infector_ids"] % 2 == 0
             else:
@@ -182,21 +192,7 @@ def test__prepend_checkpoint_hdf5(dummy_world):
             timestamp = datetime.datetime.strptime(
                 row["timestamp"].decode("utf-8"), "%Y-%m-%d"
             )
-            if timestamp < datetime.datetime(2020,3,11):
+            if timestamp < datetime.datetime(2020, 3, 11):
                 assert row["dead_person_ids"] % 2 == 0
             else:
                 assert row["dead_person_ids"] % 2 == 1
-
-
-
-
-
-
-
-
-
-
-
-
-
-

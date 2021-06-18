@@ -2,7 +2,13 @@ import pytest
 import numpy as np
 
 from june.demography import Person
-from june.infection import Covid20, Covid19, InfectionSelector, InfectionSelectors
+from june.epidemiology.infection import (
+    B117,
+    Covid19,
+    InfectionSelector,
+    InfectionSelectors,
+)
+from june.epidemiology.epidemiology import Epidemiology
 from june.event import Mutation
 
 
@@ -13,7 +19,8 @@ class MockRegion:
 
 class MockArea:
     def __init__(self, super_area):
-        self.super_area = super_area  
+        self.super_area = super_area
+
 
 class MockSuperArea:
     def __init__(self, region):
@@ -21,8 +28,8 @@ class MockSuperArea:
 
 
 class MockSimulator:
-    def __init__(self, selectors):
-        self.infection_selectors = selectors
+    def __init__(self, epidemiology):
+        self.epidemiology = epidemiology
 
 
 class MockWorld:
@@ -41,7 +48,7 @@ def covid19_selector(health_index_generator):
 @pytest.fixture(name="c20_selector")
 def covid20_selector(health_index_generator):
     return InfectionSelector(
-        infection_class=Covid20,
+        infection_class=B117,
         health_index_generator=health_index_generator,
     )
 
@@ -67,12 +74,13 @@ class TestMutations:
 
     def test_mutation(self, people, c19_selector, c20_selector):
         infection_selectors = InfectionSelectors([c19_selector, c20_selector])
-        simulator = MockSimulator(infection_selectors)
+        epidemiology = Epidemiology(infection_selectors=infection_selectors)
+        simulator = MockSimulator(epidemiology)
         world = MockWorld(people=people)
         mutation = Mutation(
             start_time="2020-11-01",
             end_time="2020-11-02",
-            mutation_id=Covid20.infection_id(),
+            mutation_id=B117.infection_id(),
             regional_probabilities={"London": 0.5, "North East": 0.01},
         )
         mutation.initialise()
@@ -90,8 +98,8 @@ class TestMutations:
                     assert person.region.name == "North East"
                     c19_ne += 1
             else:
-                assert person.infection.infection_id() == Covid20.infection_id()
-                assert person.infection.__class__.__name__ == "Covid20"
+                assert person.infection.infection_id() == B117.infection_id()
+                assert person.infection.__class__.__name__ == "B117"
                 if person.region.name == "London":
                     c20_london += 1
                 else:

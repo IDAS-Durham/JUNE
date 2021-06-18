@@ -169,13 +169,14 @@ class RecoveriesRecord(EventRecord):
         super().__init__(
             hdf5_file=hdf5_file,
             table_name="recoveries",
-            int_names=["recovered_person_ids"],
+            int_names=["recovered_person_ids", "infection_ids"],
             float_names=[],
             str_names=[],
         )
 
-    def accumulate(self, recovered_person_id):
+    def accumulate(self, recovered_person_id, infection_id):
         self.recovered_person_ids.append(recovered_person_id)
+        self.infection_ids.append(infection_id)
 
 
 class SymptomsRecord(EventRecord):
@@ -186,11 +187,12 @@ class SymptomsRecord(EventRecord):
         super().__init__(
             hdf5_file=hdf5_file,
             table_name="symptoms",
-            int_names=["infected_ids", "new_symptoms"],
+            int_names=["infected_ids", "new_symptoms", "infection_ids"],
             float_names=[],
             str_names=[],
         )
 
-    def accumulate(self, infected_id, symptoms):
+    def accumulate(self, infected_id, symptoms, infection_id):
         self.infected_ids.append(infected_id)
         self.new_symptoms.append(symptoms)
+        self.infection_ids.append(infection_id)

@@ -12,8 +12,9 @@ from june.policy import Policies
 from june.activity import ActivityManager
 from june.demography import Person, Population
 from june.interaction import Interaction
-from june.infection import InfectionSelector, HealthIndexGenerator
-from june.infection_seed import InfectionSeed, InfectionSeeds
+from june.epidemiology.epidemiology import Epidemiology
+from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
+from june.epidemiology.infection_seed import InfectionSeed, InfectionSeeds
 from june.geography.geography import (
     Areas,
     SuperAreas,
@@ -41,16 +42,46 @@ def create_dummy_world():
     ]
     super_areas = SuperAreas(regions[0].super_areas + regions[1].super_areas)
     super_areas[0].areas = [
-        Area(name="area_1", coordinates=(0.0, 0.0), super_area=super_areas[0], socioeconomic_index=0.01),
-        Area(name="area_2", coordinates=(0.0, 0.0), super_area=super_areas[0], socioeconomic_index=0.02),
-        Area(name="area_3", coordinates=(0.0, 0.0), super_area=super_areas[0], socioeconomic_index=0.03),
+        Area(
+            name="area_1",
+            coordinates=(0.0, 0.0),
+            super_area=super_areas[0],
+            socioeconomic_index=0.01,
+        ),
+        Area(
+            name="area_2",
+            coordinates=(0.0, 0.0),
+            super_area=super_areas[0],
+            socioeconomic_index=0.02,
+        ),
+        Area(
+            name="area_3",
+            coordinates=(0.0, 0.0),
+            super_area=super_areas[0],
+            socioeconomic_index=0.03,
+        ),
     ]
     super_areas[1].areas = [
-        Area(name="area_4", coordinates=(0.0, 0.0), super_area=super_areas[1], socioeconomic_index=0.11),
-        Area(name="area_5", coordinates=(0.0, 0.0), super_area=super_areas[1], socioeconomic_index=0.12),
+        Area(
+            name="area_4",
+            coordinates=(0.0, 0.0),
+            super_area=super_areas[1],
+            socioeconomic_index=0.11,
+        ),
+        Area(
+            name="area_5",
+            coordinates=(0.0, 0.0),
+            super_area=super_areas[1],
+            socioeconomic_index=0.12,
+        ),
     ]
     super_areas[2].areas = [
-        Area(name="area_6", coordinates=(5, 5), super_area=super_areas[2], socioeconomic_index=0.90)
+        Area(
+            name="area_6",
+            coordinates=(5, 5),
+            super_area=super_areas[2],
+            socioeconomic_index=0.90,
+        )
     ]
     areas = Areas(super_areas[0].areas + super_areas[1].areas + super_areas[2].areas)
     households = Households([Household(area=super_areas[0].areas[0])])
@@ -280,7 +311,9 @@ def test__static_geography(dummy_world):
             area.super_area.name
             == super_area_df.loc[area_df.loc[area.id].super_area_id, "name"].decode()
         )
-        assert np.isclose(area.socioeconomic_index, area_df.loc[area.id]["socioeconomic_index"])
+        assert np.isclose(
+            area.socioeconomic_index, area_df.loc[area.id]["socioeconomic_index"]
+        )
 
     for super_area in dummy_world.super_areas:
         assert (
@@ -402,10 +435,12 @@ def test__parameters(dummy_world, selector, selectors):
         activity_to_super_groups={"residence": ["household"]},
     )
     record = Record(record_path="results")
+    epidemiology = Epidemiology(
+        infection_seeds=infection_seeds, infection_selectors=selectors
+    )
     record.parameters(
         interaction=interaction,
-        infection_seeds=infection_seeds,
-        infection_selectors=selectors,
+        epidemiology=epidemiology,
         activity_manager=activity_manager,
     )
     with open(record.record_path / "config.yaml", "r") as file:
@@ -415,7 +450,7 @@ def test__parameters(dummy_world, selector, selectors):
         policies = file.read()
         policies = policies.replace("array", "np.array")
         policies = eval(policies)
-    interaction_attributes = ["betas", "alpha_physical", "susceptibilities_by_age"]
+    interaction_attributes = ["betas", "alpha_physical"]
     for attribute in interaction_attributes:
         assert parameters["interaction"][attribute] == getattr(interaction, attribute)
     for key, value in interaction.contact_matrices.items():

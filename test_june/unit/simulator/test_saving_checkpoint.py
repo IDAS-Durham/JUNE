@@ -22,10 +22,9 @@ from june.groups.travel import Travel
 from june.policy import Policies
 from june.interaction import Interaction
 from june.simulator import Simulator
-from june.infection.symptoms import SymptomTag
-from june.infection_seed import InfectionSeed
-from june.infection.transmission_xnexp import TransmissionXNExp
-from june.infection.transmission import TransmissionGamma
+from june.epidemiology.epidemiology import Epidemiology
+from june.epidemiology.infection import SymptomTag, TransmissionXNExp, TransmissionGamma
+from june.epidemiology.infection_seed import InfectionSeed
 from june import paths
 
 test_config = paths.configs_path / "tests/test_checkpoint_config.yaml"
@@ -97,10 +96,11 @@ def run_simulator(selectors, test_results):
     world = create_world()
     interaction = Interaction.from_file(config_filename=config_interaction)
     policies = Policies([])
+    epidemiology = Epidemiology(infection_selectors=selectors)
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selectors=selectors,
+        epidemiology=epidemiology,
         config_filename=test_config,
         leisure=None,
         policies=policies,
@@ -118,17 +118,16 @@ class TestCheckpoints:
         checkpoint_folder.mkdir(exist_ok=True, parents=True)
         sim = run_simulator(selectors, test_results)
         assert len(sim.world.people.infected) > 0
-        assert len(sim.world.people.recovered) > 0
-        assert len(sim.world.people.susceptible) > 0
         assert len(sim.world.people.dead) > 0
         fresh_world = create_world()
         interaction = Interaction.from_file(config_filename=config_interaction)
         policies = Policies([])
+        epidemiology = Epidemiology(infection_selectors=selectors)
         sim_recovered = Simulator.from_checkpoint(
             world=fresh_world,
             checkpoint_load_path=checkpoint_folder / "checkpoint_2020-03-25.hdf5",
             interaction=interaction,
-            infection_selectors=selectors,
+            epidemiology=epidemiology,
             config_filename=test_config,
             leisure=None,
             travel=None,
@@ -154,28 +153,30 @@ class TestCheckpoints:
                 assert inf1.symptoms.tag == inf2.symptoms.tag
                 assert inf1.symptoms.stage == inf2.symptoms.stage
                 continue
-            assert person1.susceptible == person2.susceptible
             assert person1.infected == person2.infected
-            assert person1.recovered == person2.recovered
-            assert person1.susceptibility == person2.susceptibility
+            assert (
+                person1.immunity.susceptibility_dict
+                == person2.immunity.susceptibility_dict
+            )
             assert person1.dead == person2.dead
         # clean up
         os.remove(checkpoint_folder / "checkpoint_2020-03-25.hdf5")
         # gotta delete, else it passes any time it should have failed...
 
+
 class TestCheckpointForReseeding:
     """
-    These tests the situation in which we load from checkpoint and 
+    These tests the situation in which we load from checkpoint and
     want all the infections reseted.
     """
+
     def test__checkpoints_are_saved(self, selectors, test_results):
         checkpoint_folder = Path(test_results / "checkpoint_tests")
         checkpoint_folder.mkdir(exist_ok=True, parents=True)
         sim = run_simulator(selectors, test_results)
         assert len(sim.world.people.infected) > 0
-        assert len(sim.world.people.recovered) > 0
-        assert len(sim.world.people.susceptible) > 0
         assert len(sim.world.people.dead) > 0
+        epidemiology = Epidemiology(infection_selectors=selectors)
         fresh_world = create_world()
         interaction = Interaction.from_file(config_filename=config_interaction)
         policies = Policies([])
@@ -183,7 +184,7 @@ class TestCheckpointForReseeding:
             world=fresh_world,
             checkpoint_load_path=checkpoint_folder / "checkpoint_2020-03-25.hdf5",
             interaction=interaction,
-            infection_selectors=selectors,
+            epidemiology=epidemiology,
             config_filename=test_config,
             leisure=None,
             travel=None,
@@ -202,11 +203,12 @@ class TestCheckpointForReseeding:
             if person1.infection is not None:
                 assert person2.infection is None
                 continue
-            assert person1.susceptible == person2.susceptible
             assert person1.infected == person2.infected
-            assert person1.recovered == person2.recovered
-            assert person1.susceptibility == person2.susceptibility
             assert person1.dead == person2.dead
+            assert (
+                person1.immunity.susceptibility_dict
+                == person2.immunity.susceptibility_dict
+            )
         # clean up
         os.remove(checkpoint_folder / "checkpoint_2020-03-25.hdf5")
         # gotta delete, else it passes any time it should have failed...

@@ -9,7 +9,6 @@ mpi_comm = MPI.COMM_WORLD
 mpi_rank = mpi_comm.Get_rank()
 mpi_size = mpi_comm.Get_size()
 
-
 class MovablePeople:
     """
     Holds information about people who might be present in a domain, but may or may not be be,
@@ -44,12 +43,27 @@ class MovablePeople:
                 person.id,
                 person.infection.transmission.probability,
                 person.infection.infection_id(),
-                0.0,
+                False,
+                np.array([], dtype=np.int),
+                np.array([], dtype=np.float),
                 mpi_rank,
                 True,
             ]
         else:
-            view = [person.id, 0.0, 0, person.susceptibility, mpi_rank, True]
+            (
+                susceptibility_inf_ids,
+                susceptibility_inf_suscs,
+            ) = person.immunity.serialize()
+            view = [
+                person.id,
+                0.0,
+                0,
+                True,
+                np.array(susceptibility_inf_ids, dtype=np.int),
+                np.array(susceptibility_inf_suscs, dtype=np.float),
+                mpi_rank,
+                True,
+            ]
 
         self.skinny_out[domain_id][group_spec][group_id][subgroup_type][
             person.id
@@ -96,7 +110,7 @@ class MovablePeople:
                             subgroup_type
                         ].items()
                     ]
-        outbound = np.array(data)
+        outbound = np.array(data, dtype=object)
         return keys, outbound, outbound.shape[0]
 
     def update(self, rank, keys, rank_data):
@@ -125,10 +139,12 @@ class MovablePeople:
                             "inf_prob": i,
                             "inf_id": t,
                             "susc": s,
+                            "immunity_inf_ids": iids,
+                            "immunity_suscs": iis,
                             "dom": d,
                             "active": a,
                         }
-                        for k, i, t, s, d, a in data
+                        for k, i, t, s, iids, iis, d, a in data
                     }
                 )
             except:

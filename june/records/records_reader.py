@@ -34,8 +34,9 @@ class RecordReader:
 
     def get_regional_summary(self, summary_path):
         df = pd.read_csv(summary_path)
+        cols = [col for col in df.columns if col not in  ["time_stamp", "region"]]
         self.aggregator = {
-            col: np.mean if "current" in col else sum for col in df.columns[2:]
+            col: np.mean if "current" in col else sum for col in cols
         }
         df = df.groupby(["region", "time_stamp"], as_index=False).agg(self.aggregator)
         df.set_index("time_stamp", inplace=True)

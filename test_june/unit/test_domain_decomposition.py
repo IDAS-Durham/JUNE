@@ -1,6 +1,6 @@
 import pytest
 
-from june.domain import Domain
+from june.domains import Domain
 from june.groups import Subgroup, ExternalSubgroup, ExternalGroup
 from june.geography.station import CityStation, InterCityStation
 

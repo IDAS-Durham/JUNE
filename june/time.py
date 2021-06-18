@@ -1,5 +1,6 @@
 import calendar
 import datetime
+import yaml
 from typing import List
 
 SECONDS_PER_DAY = 24 * 60 * 60
@@ -33,6 +34,20 @@ class Timer:
         self.date = datetime.datetime(*[int(value) for value in initial_day.split("-")])
         self.shift = 0
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
+
+    @classmethod
+    def from_file(cls, config_filename):
+        with open(config_filename) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        time_config = config["time"]
+        return cls(
+            initial_day=time_config["initial_day"],
+            total_days=time_config["total_days"],
+            weekday_step_duration=time_config["step_duration"]["weekday"],
+            weekend_step_duration=time_config["step_duration"]["weekend"],
+            weekday_activities=time_config["step_activities"]["weekday"],
+            weekend_activities=time_config["step_activities"]["weekend"],
+        )
 
     @property
     def is_weekend(self):

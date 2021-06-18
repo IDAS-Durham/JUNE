@@ -17,10 +17,15 @@ from june.groups import (
     Universities,
     Cemeteries,
 )
-from june.infection import SymptomTag
 from june.interaction import Interaction
-from june.infection.infection_selector import InfectionSelector, InfectionSelectors
-from june.infection_seed import InfectionSeed
+from june.epidemiology.epidemiology import Epidemiology
+from june.epidemiology.infection import (
+    InfectionSelector,
+    InfectionSelectors,
+    SymptomTag,
+    Immunity,
+)
+from june.epidemiology.infection_seed import InfectionSeed
 from june.policy import Policies, Hospitalisation
 from june.simulator import Simulator
 from june.world import World
@@ -35,14 +40,14 @@ interaction_config = paths.configs_path / "tests/interaction.yaml"
 def clean_world(world):
     for person in world.people:
         person.infection = None
-        person.susceptibility = 1.0
+        person.immunity = Immunity()
 
 
 class MockHealthIndexGenerator:
     def __init__(self, desired_symptoms):
         self.index = desired_symptoms
 
-    def __call__(self, person):
+    def __call__(self, person, infection_id):
         hi = np.ones(8)
         for h in range(len(hi)):
             if h < self.index:
@@ -50,7 +55,9 @@ class MockHealthIndexGenerator:
         return hi
 
 
-def make_selector(desired_symptoms,):
+def make_selector(
+    desired_symptoms,
+):
     health_index_generator = MockHealthIndexGenerator(desired_symptoms)
     selector = InfectionSelector(
         health_index_generator=health_index_generator,
@@ -60,7 +67,10 @@ def make_selector(desired_symptoms,):
 
 def infect_hospitalised_person(person):
     max_symptom_tag = random.choice(
-        [SymptomTag.hospitalised, SymptomTag.intensive_care,]
+        [
+            SymptomTag.hospitalised,
+            SymptomTag.intensive_care,
+        ]
     )
     selector = make_selector(desired_symptoms=max_symptom_tag)
     selector.infect_person_at_time(person, 0.0)
@@ -77,7 +87,7 @@ def infect_dead_person(person):
 @pytest.fixture(name="selector", scope="module")
 def create_selector(health_index_generator):
     selector = InfectionSelector(
-        paths.configs_path / "defaults/transmission/XNExp.yaml",
+        paths.configs_path / "defaults/epidemiology/infection/transmission/XNExp.yaml",
         health_index_generator=health_index_generator,
     )
     selector.recovery_rate = 1.0
@@ -115,7 +125,10 @@ def make_dummy_world(geog):
         area=geog.areas.members[0],
         coordinates=super_area.coordinates,
     )
-    uni = University(coordinates=super_area.coordinates, n_students_max=2500,)
+    uni = University(
+        coordinates=super_area.coordinates,
+        n_students_max=2500,
+    )
 
     worker1 = Person.from_attributes(age=44, sex="f", ethnicity="A1")
     worker1.area = super_area.areas[0]
@@ -179,10 +192,11 @@ def create_sim(world, interaction, selector, seed=False):
             infect_dead_person(person)
 
     selectors = InfectionSelectors([selector])
+    epidemiology = Epidemiology(infection_selectors=selectors)
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selectors=selectors,
+        epidemiology=epidemiology,
         config_filename=test_config,
         policies=policies,
         record=record,
@@ -229,7 +243,9 @@ def test__log_hospital_admissions(world, interaction, selector):
     while counter < 15:
         timer = sim.timer.date.strftime("%Y-%m-%d")
         daily_hosps_ids = []
-        sim.update_health_status(sim.timer.now, sim.timer.duration)
+        sim.epidemiology.update_health_status(
+            sim.world, sim.timer.now, sim.timer.duration, sim.record
+        )
         for person in world.people.infected:
             if person.medical_facility is not None and person.id not in saved_ids:
                 daily_hosps_ids.append(person.id)
@@ -260,7 +276,9 @@ def test__log_deaths(world, interaction, selector):
     while counter < 50:
         timer = sim.timer.date.strftime("%Y-%m-%d")
         daily_deaths_ids = []
-        sim.update_health_status(sim.timer.now, sim.timer.duration)
+        sim.epidemiology.update_health_status(
+            sim.world, sim.timer.now, sim.timer.duration, sim.record
+        )
         for person in world.people:
             if person.dead and person.id not in saved_ids:
                 daily_deaths_ids.append(person.id)

@@ -431,7 +431,7 @@ class InteractiveSchool(InteractiveGroup):
         self.school_years = group.years
 
     @classmethod
-    def get_processed_contact_matrix(
+    def get_raw_contact_matrix(
         cls, contact_matrix, alpha_physical, proportion_physical, characteristic_time
     ):
         """
@@ -443,7 +443,7 @@ class InteractiveSchool(InteractiveGroup):
         """
         xi = 0.3
         age_min = 0
-        age_max = 20
+        age_max = 30
         n_subgroups_max = (age_max - age_min) + 2  # adding teachers
         age_differences = np.subtract.outer(
             range(age_min, age_max + 1), range(age_min, age_max + 1)
@@ -465,25 +465,30 @@ class InteractiveSchool(InteractiveGroup):
             1.0 + (alpha_physical - 1.0) * physical_ratios
         )
         processed_contact_matrix *= 24 / characteristic_time
+        # If same age but different class room, reduce contacts
         return processed_contact_matrix
 
-    def get_contacts_between_subgroups(
-        self, contact_matrix, subgroup_1_idx, subgroup_2_idx
-    ):
-        susceptibles_idx = subgroup_1_idx
-        infecters_idx = subgroup_2_idx
-        n_contacts = contact_matrix[
-            _translate_school_subgroup(susceptibles_idx, self.school_years)
-        ][_translate_school_subgroup(infecters_idx, self.school_years)]
-        if (susceptibles_idx == 0 or infecters_idx == 0) and (
-            susceptibles_idx != infecters_idx
-        ):
-            n_contacts /= len(self.school_years)
-        elif (
-            _translate_school_subgroup(susceptibles_idx, self.school_years)
-            == _translate_school_subgroup(infecters_idx, self.school_years)
-            and susceptibles_idx != infecters_idx
-        ):
-            # If same age but different class room, reduce contacts
-            n_contacts /= 4
-        return n_contacts
+    def get_processed_contact_matrix(self, contact_matrix):
+        n_school_years = len(self.school_years)
+        n_subgroups = n_school_years + 1
+        ret = np.zeros((n_subgroups, n_subgroups))
+        for i in range(0, n_subgroups):
+            for j in range(0, n_subgroups):
+                if i == j:
+                    if i != 0:
+                        ret[i, j] = contact_matrix[1, 1]
+                    else:
+                        ret[0, 0] = contact_matrix[0, 0]
+                else:
+                    if i == 0:
+                        ret[0, j] = contact_matrix[0][1] / n_school_years
+                    elif j == 0:
+                        ret[i, 0] = contact_matrix[1][0] / n_school_years
+                    else:
+                        year_idx_i = _translate_school_subgroup(i, self.school_years)
+                        year_idx_j = _translate_school_subgroup(j, self.school_years)
+                        if year_idx_i == year_idx_j:
+                            ret[i, j] = contact_matrix[year_idx_i, year_idx_j] / 4
+                        else:
+                            ret[i, j] = contact_matrix[year_idx_i, year_idx_j]
+        return ret

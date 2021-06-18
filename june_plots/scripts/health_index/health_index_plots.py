@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from june import paths
 from june.demography import Person
-from june.infection import HealthIndexGenerator, InfectionSelector, SymptomTag
+from june.epidemiology.infection.import HealthIndexGenerator, InfectionSelector, SymptomTag
 
 
 default_seroprev_filename = paths.data_path / "plotting/seroprev.dat"
@@ -164,7 +164,7 @@ class HealthIndexPlots:
         return ax
 
     def time_to_symptoms_onset(self,):
-        from june.infection.trajectory_maker import TrajectoryMaker
+        from june.epidemiology.infection.trajectory_maker import TrajectoryMaker
         trajectories_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
         with open(trajectories_path) as f:    
             symptoms_trajectories = yaml.safe_load(f)["trajectories"]    
@@ -189,7 +189,7 @@ class HealthIndexPlots:
         return ax
 
     def time_in_hospital(self,):
-        from june.infection.trajectory_maker import TrajectoryMaker
+        from june.epidemiology.infection.trajectory_maker import TrajectoryMaker
         trajectories_path = paths.configs_path / "defaults/symptoms/trajectories.yaml"
         with open(trajectories_path) as f:    
             symptoms_trajectories = yaml.safe_load(f)["trajectories"]    

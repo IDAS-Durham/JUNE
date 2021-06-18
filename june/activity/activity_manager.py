@@ -1,4 +1,5 @@
 import logging
+import yaml
 from datetime import datetime
 from itertools import chain
 from typing import List, Optional
@@ -27,8 +28,9 @@ from june.mpi_setup import (
 
 logger = logging.getLogger("activity_manager")
 mpi_logger = logging.getLogger("mpi")
+rank_logger = logging.getLogger("rank")
 if mpi_rank > 0:
-    logger.propagate = False
+    logger.propagate = True
 
 activity_hierarchy = [
     "box",
@@ -80,6 +82,81 @@ class ActivityManager:
                 "rail_travel": activity_to_super_groups.get("rail_travel", []),
             }
 
+    @classmethod
+    def from_file(
+        cls,
+        config_filename,
+        world,
+        policies,
+        timer,
+        leisure: Optional[Leisure] = None,
+        travel: Optional[Travel] = None,
+    ):
+        with open(config_filename) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        if world.box_mode:
+            activity_to_super_groups = None
+        else:
+            try:
+                activity_to_super_groups = config["activity_to_super_groups"]
+            except:
+                logger.warning(
+                    "Activity to groups in config is deprecated"
+                    "please change it to activity_to_super_groups"
+                )
+                activity_to_super_groups = config["activity_to_groups"]
+        time_config = config["time"]
+        cls.check_inputs(time_config)
+        weekday_activities = [
+            activity for activity in time_config["step_activities"]["weekday"].values()
+        ]
+        weekend_activities = [
+            activity for activity in time_config["step_activities"]["weekend"].values()
+        ]
+        all_activities = set(
+            chain.from_iterable(weekday_activities + weekend_activities)
+        )
+        return cls(
+            world=world,
+            policies=policies,
+            timer=timer,
+            all_activities=all_activities,
+            activity_to_super_groups=activity_to_super_groups,
+            leisure=leisure,
+            travel=travel,
+        )
+
+    @staticmethod
+    def check_inputs(time_config: dict):
+        """
+        Check that the iput time configuration is correct, i.e., activities are among allowed activities
+        and days have 24 hours.
+
+        Parameters
+        ----------
+        time_config:
+            dictionary with time steps configuration
+        """
+
+        try:
+            assert sum(time_config["step_duration"]["weekday"].values()) == 24
+            assert sum(time_config["step_duration"]["weekend"].values()) == 24
+        except AssertionError:
+            raise SimulatorError(
+                "Daily activity durations in config do not add to 24 hours."
+            )
+
+        # Check that all groups given in time_config file are in the valid group hierarchy
+        all_super_groups = activity_hierarchy
+        try:
+            for step, activities in time_config["step_activities"]["weekday"].items():
+                assert all(group in all_super_groups for group in activities)
+
+            for step, activities in time_config["step_activities"]["weekend"].items():
+                assert all(group in all_super_groups for group in activities)
+        except AssertionError:
+            raise SimulatorError("Config file contains unsupported activity name.")
+
     @property
     def all_super_groups(self):
         return self.activities_to_super_groups(self.all_activities)
@@ -128,6 +205,7 @@ class ActivityManager:
 
     def do_timestep(self):
         # get time data
+        tick_interaction_timestep = perf_counter()
         date = self.timer.date
         day_type = self.timer.day_type
         activities = self.apply_activity_hierarchy(self.timer.activities)
@@ -145,12 +223,27 @@ class ActivityManager:
         to_send_abroad = self.move_people_to_active_subgroups(
             activities=activities, date=date, days_from_start=self.timer.now
         )
+        tock_interaction_timestep = perf_counter()
+        rank_logger.info(
+            f"Rank {mpi_rank} -- move_people -- {tock_interaction_timestep-tick_interaction_timestep}"
+        )
+        tick_waiting = perf_counter()
+        mpi_comm.Barrier()
+        tock_waiting = perf_counter()
+        rank_logger.info(
+            f"Rank {mpi_rank} -- move_people_waiting -- {tock_waiting-tick_waiting}"
+        )
         (
             people_from_abroad,
             n_people_from_abroad,
             n_people_going_abroad,
         ) = self.send_and_receive_people_from_abroad(to_send_abroad)
-        return people_from_abroad, n_people_from_abroad, n_people_going_abroad, to_send_abroad
+        return (
+            people_from_abroad,
+            n_people_from_abroad,
+            n_people_going_abroad,
+            to_send_abroad,
+        )
 
     def move_people_to_active_subgroups(
         self,
@@ -170,12 +263,15 @@ class ActivityManager:
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
         )
-        active_vaccine_policies = self.policies.vaccine_distribution.get_active(date=date)
+        active_vaccine_policies = self.policies.vaccine_distribution.get_active(
+            date=date
+        )
         to_send_abroad = MovablePeople()
 
         for person in self.world.people:
-            self.policies.vaccine_distribution.apply(person=person,date=date,
-                    active_policies=active_vaccine_policies)
+            self.policies.vaccine_distribution.apply(
+                person=person, date=date, active_policies=active_vaccine_policies
+            )
             if person.dead or person.busy:
                 continue
             allowed_activities = self.policies.individual_policies.apply(
