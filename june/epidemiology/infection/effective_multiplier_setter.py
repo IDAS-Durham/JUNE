@@ -5,11 +5,12 @@ from june.utils import (
     read_comorbidity_csv,
     convert_comorbidities_prevalence_to_dict,
 )
-from . import Covid19, B117
+from . import Covid19, B117, B16172
 
 default_multiplier_dict = {
     Covid19.infection_id(): 1.0,
     B117.infection_id(): 1.5,
+    B16172.infection_id(): 1.5,
 }
 
 
