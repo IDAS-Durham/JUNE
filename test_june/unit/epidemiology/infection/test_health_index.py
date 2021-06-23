@@ -10,7 +10,7 @@ from june.epidemiology.infection.health_index.health_index import (
     index_to_maximum_symptoms_tag,
 )
 from june.demography import Person, Population
-from june.epidemiology.infection import Covid19, B117, EffectiveMultiplierSetter
+from june.epidemiology.infection import Covid19, B117, ImmunitySetter 
 
 
 @pytest.fixture(name="health_index", scope="module")
@@ -79,7 +79,7 @@ class TestMultipliers:
                 "m": {"0-10": 0.35, "10-100": 0.3},
             },
         }
-        multiplier_setter = EffectiveMultiplierSetter(
+        multiplier_setter = ImmunitySetter(
             multiplier_by_comorbidity = comorbidity_multipliers,
             comorbidity_prevalence_reference_population=prevalence_reference_population,
         )
