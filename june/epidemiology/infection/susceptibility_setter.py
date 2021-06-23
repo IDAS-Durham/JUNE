@@ -1,9 +1,10 @@
 from june.utils import parse_age_probabilities
-from . import Covid19, B117
+from . import Covid19, B117, B16172
 
 default_susceptibility_dict = {
     Covid19.infection_id(): {"0-13": 0.5, "13-100": 1.0},
     B117.infection_id(): {"0-13": 0.5, "13-100": 1.0},
+    B16172.infection_id(): {"0-13": 0.5, "13-100": 1.0},
 }
 
 class SusceptibilitySetter:
