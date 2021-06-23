@@ -105,8 +105,7 @@ class Simulator:
             self.epidemiology.set_medical_care(
                 world=world, activity_manager=activity_manager
             )
-            self.epidemiology.set_susceptibilities(self.world.people)
-            self.epidemiology.set_effective_multipliers(self.world.people)
+            self.epidemiology.set_immunity(self.world.people)
         if self.events is not None:
             self.events.init_events(world=world)
         # self.comment = comment
