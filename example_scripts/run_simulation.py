@@ -17,7 +17,7 @@ from june.epidemiology.infection import (
     InfectionSelectors,
     HealthIndexGenerator,
     SymptomTag,
-    SusceptibilitySetter,
+    ImmunitySetter,
     Covid19,
     B16172
 )
@@ -133,12 +133,12 @@ def generate_simulator():
         daily_super_area_cases=daily_cases_per_super_area,
         seed_strength=100,
     )
-    susceptibility_setter = SusceptibilitySetter()
+    immunity_setter = ImmunitySetter()
 
     epidemiology = Epidemiology(
         infection_selectors=inf_selectors,
         infection_seeds=InfectionSeeds([infection_seed]),
-        susceptibility_setter=susceptibility_setter,
+        immunity_setter=immunity_setter,
     )
 
     # interaction
