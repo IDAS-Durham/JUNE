@@ -10,18 +10,24 @@ class Immunity:
     __slots__ = "susceptibility_dict", "effective_multiplier_dict"
 
     def __init__(self, susceptibility_dict: dict = None, effective_multiplier_dict: dict=None):
-        self.susceptibility_dict = defaultdict(lambda: 1.0)
         if susceptibility_dict:
-            for key, value in susceptibility_dict.items():
-                self.susceptibility_dict[key] = value
-        self.effective_multiplier_dict = defaultdict(lambda: 1.0)
+            self.susceptibility_dict = susceptibility_dict
+        else
+            self.susceptibility_dict = {}
         if effective_multiplier_dict:
-            for key, value in effective_multiplier_dict.items():
-                self.effective_multiplier_dict[key] = value
+            self.effective_multiplier_dict = effective_multiplier_dict
+        else:
+            self.effective_multiplier_dict = dict()
 
     def add_immunity(self, infection_ids):
         for infection_id in infection_ids:
             self.susceptibility_dict[infection_id] = 0.0
+
+    def get_susceptibility(self, infection_id):
+        return self.susceptibility_dict.get(infection_id, 1.0)
+
+    def get_effective_multiplier(self, infection_id):
+        return self.effective_multiplier_dict.get(infection_id, 1.0)
 
     def serialize(self):
         return list(self.susceptibility_dict.keys()), list(
@@ -29,4 +35,4 @@ class Immunity:
         )
 
     def is_immune(self, infection_id):
-        return self.susceptibility_dict[infection_id] == 0.0
+        return self.susceptibility_dict.get(infection_id, 1.0) == 0.0
