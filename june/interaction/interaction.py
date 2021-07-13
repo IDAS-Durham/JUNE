@@ -241,7 +241,7 @@ class Interaction:
         for susceptible_id, susceptibility_dict in subgroup_susceptibles.items():
             infection_transmission_parameters = []
             for infection_id in infector_tensor:
-                susceptibility = susceptibility_dict[infection_id]
+                susceptibility = susceptibility_dict.get(infection_id, 1.0)
                 infector_transmission = infector_tensor[infection_id][
                     susceptible_subgroup_id
                 ].sum()

@@ -79,12 +79,13 @@ class InteractiveGroup:
             # from abroad
             for id in people_abroad_ids:
                 if people_abroad_data[id]["susc"]:
-                    dd = defaultdict(lambda: 1.0)
-                    for key, value in zip(
-                        people_abroad_data[id]["immunity_inf_ids"],
-                        people_abroad_data[id]["immunity_suscs"],
-                    ):
-                        dd[key] = value
+                    dd = {
+                        key: value
+                        for key, value in zip(
+                            people_abroad_data[id]["immunity_inf_ids"],
+                            people_abroad_data[id]["immunity_suscs"],
+                        )
+                    }
                     self.susceptibles_per_subgroup[subgroup_index][id] = dd
 
             # Get infectors

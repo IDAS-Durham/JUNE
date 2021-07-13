@@ -12,7 +12,7 @@ class Immunity:
     def __init__(self, susceptibility_dict: dict = None, effective_multiplier_dict: dict=None):
         if susceptibility_dict:
             self.susceptibility_dict = susceptibility_dict
-        else
+        else:
             self.susceptibility_dict = {}
         if effective_multiplier_dict:
             self.effective_multiplier_dict = effective_multiplier_dict
