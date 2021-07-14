@@ -123,7 +123,7 @@ def test__prepend_checkpoint_hdf5(dummy_world):
                     location_spec="pre_check_location",
                     dead_person_id=dead_id,
                 )
-            pre_checkpoint_record.time_step(timestamp)
+        pre_checkpoint_record.time_step(timestamp)
 
     post_checkpoint_record_path = Path("./post_checkpoint_results/june_record.h5")
     post_checkpoint_record = Record(
@@ -156,7 +156,7 @@ def test__prepend_checkpoint_hdf5(dummy_world):
                     location_spec="pre_check_location",
                     dead_person_id=dead_id,
                 )
-            post_checkpoint_record.time_step(timestamp)
+        post_checkpoint_record.time_step(timestamp)
 
     merged_record_path = Path("./post_checkpoint_results/merged_checkpoint_record.h5")
     prepend_checkpoint_hdf5(

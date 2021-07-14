@@ -360,28 +360,28 @@ def test__sumarise_time_tep(dummy_world):
             patient_id=1,
         )
         record.summarise_time_step(timestamp, dummy_world)
-        record.time_step(timestamp)
-        timestamp = datetime.datetime(2020, 4, 5)
-        record.accumulate(
-            table_name="deaths",
-            location_spec="care_home",
-            location_id=dummy_world.care_homes[0].id,
-            dead_person_id=2,
-        )
-        record.accumulate(
-            table_name="deaths",
-            location_spec="household",
-            location_id=dummy_world.households[0].id,
-            dead_person_id=0,
-        )
-        record.accumulate(
-            table_name="deaths",
-            location_spec="hospital",
-            location_id=dummy_world.hospitals[0].id,
-            dead_person_id=1,
-        )
-        record.summarise_time_step(timestamp, dummy_world)
-        record.time_step(timestamp)
+    record.time_step(timestamp)
+    timestamp = datetime.datetime(2020, 4, 5)
+    record.accumulate(
+        table_name="deaths",
+        location_spec="care_home",
+        location_id=dummy_world.care_homes[0].id,
+        dead_person_id=2,
+    )
+    record.accumulate(
+        table_name="deaths",
+        location_spec="household",
+        location_id=dummy_world.households[0].id,
+        dead_person_id=0,
+    )
+    record.accumulate(
+        table_name="deaths",
+        location_spec="hospital",
+        location_id=dummy_world.hospitals[0].id,
+        dead_person_id=1,
+    )
+    record.summarise_time_step(timestamp, dummy_world)
+    record.time_step(timestamp)
     summary_df = pd.read_csv(record.record_path / "summary.csv", index_col=0)
     region_1 = summary_df[summary_df["region"] == "region_1"]
     region_2 = summary_df[summary_df["region"] == "region_2"]
