@@ -17,7 +17,7 @@ class Immunity:
         if effective_multiplier_dict:
             self.effective_multiplier_dict = effective_multiplier_dict
         else:
-            self.effective_multiplier_dict = dict()
+            self.effective_multiplier_dict = {}
 
     def add_immunity(self, infection_ids):
         for infection_id in infection_ids:
