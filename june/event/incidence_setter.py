@@ -4,8 +4,6 @@ from random import sample, choices
 
 from .event import Event
 
-
-
 class IncidenceSetter(Event):
     """
     This Event is used to set a specific incidence per region at some point in the code.
@@ -21,6 +19,9 @@ class IncidenceSetter(Event):
     ):
         super().__init__(start_time=start_time, end_time=end_time)
         self.incidence_per_region = incidence_per_region
+
+    def initialise(self, world):
+        pass
 
     def apply(self, world, simulator, activities=None, day_type=None):
         selectors = simulator.epidemiology.infection_selectors
