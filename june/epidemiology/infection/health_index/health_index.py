@@ -87,7 +87,7 @@ class HealthIndexGenerator:
             population = "gp"
         probabilities = self.probabilities[population][person.sex][person.age]
         if infection_id is not None:
-            effective_multiplier = person.immunity.effective_multiplier_dict[infection_id]
+            effective_multiplier = person.immunity.get_effective_multiplier(infection_id)
             if effective_multiplier != 1.:
                 probabilities = self.apply_effective_multiplier(probabilities, effective_multiplier)
         return np.cumsum(probabilities)

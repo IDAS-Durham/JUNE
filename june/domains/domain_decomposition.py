@@ -18,7 +18,7 @@ default_super_area_centroids_path = (
 
 logger = logging.getLogger("domain")
 
-default_weights = {"population": 1, "workers": 1.0, "commuters": 1.0}
+default_weights = {"population": 5.0, "workers": 1.0, "commuters": 1.0}
 
 
 class DomainSplitter:

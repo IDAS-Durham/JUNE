@@ -47,15 +47,16 @@ class TestSusceptibilitySetter:
 
         for person in population:
             if person.age < 13:
-                assert person.immunity.susceptibility_dict[c19_id] == 0.5
+                assert person.immunity.get_susceptibility(c19_id) == 0.5
             else:
-                assert person.immunity.susceptibility_dict[c19_id] == 1.0
+                assert person.immunity.get_susceptibility(c19_id) == 1.0
             if person.age < 20:
-                assert person.immunity.susceptibility_dict[b117_id] == 1.0
+                assert person.immunity.get_susceptibility(b117_id) == 1.0
             elif person.age < 40:
-                assert person.immunity.susceptibility_dict[b117_id] == 0.25
+                assert person.immunity.get_susceptibility(b117_id) == 0.25
             else:
-                assert person.immunity.susceptibility_dict[b117_id] == 1.0
+                assert person.immunity.get_susceptibility(b117_id) == 1.0
+
 @pytest.fixture(name="multiplier_dict")
 def make_multiplier():
     return {
@@ -76,8 +77,8 @@ class TestMultiplierSetter:
         b117_id = B117.infection_id()
 
         for person in population:
-            assert person.immunity.effective_multiplier_dict[c19_id] == 1.
-            assert person.immunity.effective_multiplier_dict[b117_id] == 1.5
+            assert person.immunity.get_effective_multiplier(c19_id) == 1.
+            assert person.immunity.get_effective_multiplier(b117_id) == 1.5
 
     def test__mean_multiplier_reference(
         self,
@@ -126,8 +127,8 @@ class TestMultiplierSetter:
         for comorbidity in comorbidity_multipliers.keys():
             population.add(Person.from_attributes(age=40,comorbidity=comorbidity))
         for person in population:
-            assert person.immunity.effective_multiplier_dict[c19_id] == 1.
-            assert person.immunity.effective_multiplier_dict[b117_id] == 1.
+            assert person.immunity.get_effective_multiplier(c19_id) == 1.
+            assert person.immunity.get_effective_multiplier(b117_id) == 1.
         comorbidity_prevalence_reference_population = {
             "guapo": {
                 "f": {"0-100": 0.},
