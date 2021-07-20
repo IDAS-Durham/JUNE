@@ -1,4 +1,5 @@
 from typing import Optional
+from random import random
 from june.utils import (
     parse_age_probabilities,
     parse_prevalence_comorbidities_in_reference_population,
@@ -20,7 +21,6 @@ default_multiplier_dict = {
 }
 
 
-
 class ImmunitySetter:
     """
     Sets immnuity parameters to different viruses.
@@ -32,11 +32,14 @@ class ImmunitySetter:
        Example:
         susceptibility_dict = {"123" : {"0-50" : 0.5, "50-100" : 0.2}}
     """
-    def __init__(self, 
+
+    def __init__(
+        self,
         susceptibility_dict: dict = default_susceptibility_dict,
         multiplier_dict: dict = default_multiplier_dict,
         multiplier_by_comorbidity: Optional[dict] = None,
         comorbidity_prevalence_reference_population: Optional[dict] = None,
+        susceptibility_mode="average",
     ):
         if susceptibility_dict is None:
             self.susceptibility_dict = {}
@@ -57,6 +60,7 @@ class ImmunitySetter:
             )
         else:
             self.comorbidity_prevalence_reference_population = None
+        self.susceptibility_mode = susceptibility_mode
 
     @classmethod
     def from_file_with_comorbidities(
@@ -161,6 +165,14 @@ class ImmunitySetter:
         return ret
 
     def set_susceptibilities(self, population):
+        if self.susceptibility_mode == "average":
+            self._set_susceptibilities_avg(population)
+        elif self.susceptibility_mode == "individual":
+            self._set_susceptibilities_individual(population)
+        else:
+            raise NotImplementedError()
+
+    def _set_susceptibilities_avg(self, population):
         for person in population:
             for inf_id in self.susceptibility_dict:
                 if person.age >= len(self.susceptibility_dict[inf_id]):
@@ -168,6 +180,15 @@ class ImmunitySetter:
                 person.immunity.susceptibility_dict[inf_id] = self.susceptibility_dict[
                     inf_id
                 ][person.age]
+
+    def _set_susceptibilities_individual(self, population):
+        for person in population:
+            for inf_id in self.susceptibility_dict:
+                if person.age >= len(self.susceptibility_dict[inf_id]):
+                    continue
+                fraction = self.susceptibility_dict[inf_id][person.age]
+                if random() > fraction:
+                    person.immunity.susceptibility_dict[inf_id] = 0.0
 
     def set_immunity(self, population):
         if self.multiplier_dict is not None:
