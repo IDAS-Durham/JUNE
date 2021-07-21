@@ -147,4 +147,10 @@ class CasesDistributor:
             :, ["super_area", "region"]
         ].drop_duplicates()
 
+        return cls.from_national_cases(
+                cases_per_day=n_cases_per_day,
+                super_area_to_region=super_area_to_region,
+                residents_per_super_area=residents_per_super_area,
+        )
+
 
