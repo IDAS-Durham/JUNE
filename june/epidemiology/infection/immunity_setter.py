@@ -248,7 +248,6 @@ class ImmunitySetter:
                 vaccine_type.append(vaccine)
             else:
                 vaccine_type.append('none')
-        
         if self.record is not None:
             self.record.statics['people'].extra_str_data['vaccine_type'] = vaccine_type
 

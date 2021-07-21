@@ -11,7 +11,7 @@ default_residents_per_super_area_file = (
 )
 
 
-def get_super_area_population_weights(
+def get_super_area_population_weights_by_region(
     super_area_to_region: pd.DataFrame, residents_per_super_area: pd.DataFrame
 ) -> pd.DataFrame:
     """
@@ -23,9 +23,7 @@ def get_super_area_population_weights(
     data frame indexed by super area, with weights and region
     """
     people_per_super_area_and_region = pd.merge(
-        residents_per_super_area,
-        super_area_to_region,
-        on="super_area",
+        residents_per_super_area, super_area_to_region, on="super_area",
     )
     people_per_region = people_per_super_area_and_region.groupby("region").sum()[
         "n_residents"
@@ -38,6 +36,23 @@ def get_super_area_population_weights(
     ret = people_per_super_area_and_region.loc[:, ["super_area", "weights"]]
     ret = ret.set_index("super_area")
     return ret
+
+
+def get_super_area_population_weights(
+    residents_per_super_area: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Compute the weight in population that a super area has over its whole region, used
+    to convert regional cases to cases by super area by population density
+
+    Returns
+    -------
+    data frame indexed by super area, with weights and region
+    """
+    residents_per_super_area.set_index("super_area", inplace=True)
+
+    percent = residents_per_super_area / residents_per_super_area["n_residents"].sum()
+    return percent
 
 
 class CasesDistributor:
@@ -71,7 +86,7 @@ class CasesDistributor:
         """
         residents_per_super_area.set_index("super_area", inplace=True)
         ret = pd.DataFrame(index=cases_per_day_region.index)
-        weights_per_super_area = get_super_area_population_weights(
+        weights_per_super_area = get_super_area_population_weights_by_region(
             super_area_to_region=super_area_to_region,
             residents_per_super_area=residents_per_super_area,
         )
@@ -82,7 +97,9 @@ class CasesDistributor:
             ]
             ret.loc[:, region_super_areas] = 0
             for date, n_cases in region_cases.iteritems():
-                weights = weights_per_super_area.loc[region_super_areas].values.flatten()
+                weights = weights_per_super_area.loc[
+                    region_super_areas
+                ].values.flatten()
                 cases_distributed = np.random.choice(
                     region_super_areas, size=n_cases, p=weights, replace=True
                 )
@@ -115,19 +132,19 @@ class CasesDistributor:
         cases_per_day: pd.DataFrame,
         super_area_to_region: pd.DataFrame,
         residents_per_super_area: pd.DataFrame,
-
     ):
         ret = pd.DataFrame(index=cases_per_day.index)
         weights_per_super_area = get_super_area_population_weights(
-                super_area_to_region=super_area_to_region,
-                residents_per_super_area=residents_per_super_area,
-            )
+            residents_per_super_area=residents_per_super_area,
+        )
         for date, n_cases in cases_per_day.iterrows():
             weights = weights_per_super_area.values.flatten()
             cases_distributed = np.random.choice(
-                    list(weights_per_super_area.index),
-                    size=n_cases.values[0], p=weights, replace=True
-                )
+                list(weights_per_super_area.index),
+                size=n_cases.values[0],
+                p=weights,
+                replace=True,
+            )
             super_areas, cases = np.unique(cases_distributed, return_counts=True)
             ret.loc[date, super_areas] = cases
         return cls(ret)
@@ -147,9 +164,7 @@ class CasesDistributor:
         ].drop_duplicates()
 
         return cls.from_national_cases(
-                cases_per_day=cases_per_day,
-                super_area_to_region=super_area_to_region,
-                residents_per_super_area=residents_per_super_area,
+            cases_per_day=cases_per_day,
+            super_area_to_region=super_area_to_region,
+            residents_per_super_area=residents_per_super_area,
         )
-
-
