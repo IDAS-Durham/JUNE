@@ -116,7 +116,7 @@ class Simulator:
             self.checkpoint_save_path = Path(checkpoint_save_path)
             self.checkpoint_save_path.mkdir(parents=True, exist_ok=True)
         self.record = record
-        if self.record.record_static_data:
+        if self.record is not None and self.record.record_static_data:
             self.record.static_data(world=world)
 
     @classmethod
