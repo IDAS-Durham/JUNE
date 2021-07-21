@@ -108,3 +108,43 @@ class CasesDistributor:
             super_area_to_region=super_area_to_region,
             residents_per_super_area=residents_per_super_area,
         )
+
+    @classmethod
+    def from_national_cases(
+        cls,
+        cases_per_day: pd.DataFrame,
+        super_area_to_region: pd.DataFrame,
+        residents_per_super_area: pd.DataFrame,
+
+    ):
+        ret = pd.DataFrame(index=cases_per_day.index)
+        weights_per_super_area = get_super_area_population_weights(
+                super_area_to_region=super_area_to_region,
+                residents_per_super_area=residents_per_super_area,
+            )
+        for date, n_cases in cases_per_day.iterrows():
+            weights = weights_per_super_area.values.flatten()
+            cases_distributed = np.random.choice(
+                    list(weights_per_super_area.index),
+                    size=n_cases.values[0], p=weights, replace=True
+                )
+            super_areas, cases = np.unique(cases_distributed, return_counts=True)
+            ret.loc[date, super_areas] = cases
+        return cls(ret)
+
+    @classmethod
+    def from_national_cases_file(
+        cls,
+        n_cases_per_day,
+        cases_per_day_region_file: str,
+        super_area_to_region_file: str = default_super_area_to_region_file,
+        residents_per_super_area_file: str = default_residents_per_super_area_file,
+    ):
+        ret = pd.DataFrame(index=n_cases_per_day.index)
+        residents_per_super_area = pd.read_csv(residents_per_super_area_file)
+        super_area_to_region = pd.read_csv(super_area_to_region_file)
+        super_area_to_region = super_area_to_region.loc[
+            :, ["super_area", "region"]
+        ].drop_duplicates()
+
+
