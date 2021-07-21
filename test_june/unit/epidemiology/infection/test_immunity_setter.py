@@ -353,6 +353,8 @@ class TestVaccinationSetter:
                 assert row['vaccine_type'] == 'sputnik'
             else:
                 assert row['vaccine_type'] == 'none'
+        print(people_df)
+        assert 1 == 0
 
 
 
