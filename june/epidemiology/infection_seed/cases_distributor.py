@@ -135,12 +135,12 @@ class CasesDistributor:
     @classmethod
     def from_national_cases_file(
         cls,
-        n_cases_per_day,
+        cases_per_day_file,
         cases_per_day_region_file: str,
         super_area_to_region_file: str = default_super_area_to_region_file,
         residents_per_super_area_file: str = default_residents_per_super_area_file,
     ):
-        ret = pd.DataFrame(index=n_cases_per_day.index)
+        cases_per_day = pd.read_csv(cases_per_day_file, index_col=0)
         residents_per_super_area = pd.read_csv(residents_per_super_area_file)
         super_area_to_region = pd.read_csv(super_area_to_region_file)
         super_area_to_region = super_area_to_region.loc[
@@ -148,7 +148,7 @@ class CasesDistributor:
         ].drop_duplicates()
 
         return cls.from_national_cases(
-                cases_per_day=n_cases_per_day,
+                cases_per_day=cases_per_day,
                 super_area_to_region=super_area_to_region,
                 residents_per_super_area=residents_per_super_area,
         )
