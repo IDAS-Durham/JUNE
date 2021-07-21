@@ -136,7 +136,6 @@ class CasesDistributor:
     def from_national_cases_file(
         cls,
         cases_per_day_file,
-        cases_per_day_region_file: str,
         super_area_to_region_file: str = default_super_area_to_region_file,
         residents_per_super_area_file: str = default_residents_per_super_area_file,
     ):
