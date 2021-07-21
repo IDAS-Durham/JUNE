@@ -241,9 +241,9 @@ class ImmunitySetter:
                 vdata = self.vaccination_dict[vaccine]
                 for inf_id, inf_data in vdata["infections"].items():
                     person.immunity.add_multiplier(
-                        inf_id, inf_data["symptomatic_efficacy"][age]
+                        inf_id, 1. - inf_data["symptomatic_efficacy"][age]
                     )
-                    if random() > inf_data["sterilisation_efficacy"][age]:
+                    if random() < inf_data["sterilisation_efficacy"][age]:
                         person.immunity.susceptibility_dict[inf_id] = 0.0
                 vaccine_type.append(vaccine)
             else:

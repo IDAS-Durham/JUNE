@@ -288,7 +288,7 @@ class TestVaccinationSetter:
                     assert person.immunity.get_susceptibility(b117id) == 0.0
                     under30_sputnik += 1
                 if b117id in person.immunity.effective_multiplier_dict:
-                    assert person.immunity.get_effective_multiplier(b117id) == 0.8
+                    assert pytest.approx(person.immunity.get_effective_multiplier(b117id)) == 0.2
                     under30_sputnik_not += 1
             if person.age > 30:
                 if b117id in person.immunity.susceptibility_dict:
@@ -315,7 +315,7 @@ class TestVaccinationSetter:
         over30 = len([person for person in population if person.age >= 30])
         under50 = len([person for person in population if person.age < 50])
         over50 = len([person for person in population if person.age >= 50])
-        assert np.isclose(under30_sputnik / under30, 0.3 * 0.2, rtol=1e-1)
+        assert np.isclose(under30_sputnik / under30, 0.3 * 0.8, rtol=1e-1)
         assert np.isclose(under30_sputnik_not / under30, 0.3, rtol=1e-1)
         assert np.isclose(under50_pfizer / under50, 0.7 * 0.5, rtol=1e-1)
         assert np.isclose(under50_pfizer_not / under50, 0.7, rtol=1e-1)
