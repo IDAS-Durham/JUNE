@@ -255,6 +255,54 @@ def test__static_people(dummy_world):
     assert df.loc[0, "sex"] == "f"
     assert df.loc[2, "sex"] == "m"
 
+def test__static_with_extras_people(dummy_world):
+    record = Record(
+        record_path="results",
+        record_static_data=True,
+    )
+    tonto = [0.1,1.3,5.]
+    listo = [0.9,0.7,0.]
+    vaccine_type = [0,1,2]
+    vaccine_name = ['astra','pfizer','moderna']
+    record.statics['people'].extra_float_data['tonto'] = tonto
+    record.statics['people'].extra_float_data['listo'] = listo  
+    record.statics['people'].extra_int_data['vaccine_type'] = vaccine_type
+    record.statics['people'].extra_str_data['vaccine_name'] = vaccine_name
+    record.static_data(world=dummy_world)
+    with open_file(record.record_path / record.filename, mode="a") as f:
+        record.file = f
+        table = record.file.root.population
+        df = pd.DataFrame.from_records(table.read(), index="id")
+    str_cols = record.statics["people"].str_names
+    for col in str_cols:
+        df[col] = df[col].str.decode("utf-8")
+    assert df.loc[0, "age"] == 0
+    assert df.loc[1, "age"] == 1
+    assert df.loc[2, "age"] == 2
+    assert df.loc[0, "primary_activity_type"] == "hospital"
+    assert df.loc[0, "primary_activity_id"] == dummy_world.hospitals[0].id
+    assert df.loc[1, "primary_activity_type"] == "None"
+    assert df.loc[1, "primary_activity_id"] == 0
+    assert df.loc[1, "residence_type"] == "household"
+    assert df.loc[1, "residence_id"] == dummy_world.households[0].id
+    assert df.loc[2, "residence_type"] == "care_home"
+    assert df.loc[2, "residence_id"] == dummy_world.care_homes[0].id
+    assert df.loc[0, "ethnicity"] == "A"
+    assert df.loc[1, "ethnicity"] == "B"
+    assert df.loc[2, "ethnicity"] == "C"
+    assert df.loc[0, "sex"] == "f"
+    assert df.loc[2, "sex"] == "m"
+    assert len(df['tonto'].values) == len(tonto)
+    assert all([pytest.approx(a) == b for a, b in zip(df['tonto'].values, tonto)])
+    assert len(df['listo'].values) == len(listo)
+    assert all([pytest.approx(a) == b for a, b in zip(df['listo'].values, listo)])
+    assert len(df['vaccine_type'].values) == len(vaccine_type)
+    assert all([pytest.approx(a) == b for a, b in zip(df['vaccine_type'].values, vaccine_type)])
+    assert len(df['vaccine_name'].values) == len(vaccine_name)
+    assert all([pytest.approx(a) == b for a, b in zip(df['vaccine_name'].values, vaccine_name)])
+
+
+
 
 def test__static_location(dummy_world):
     record = Record(

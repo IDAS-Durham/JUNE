@@ -1,4 +1,5 @@
 import tables
+from tables import open_file
 import numpy as np
 
 from june.records.helper_records_writer import _get_description_for_event
@@ -13,22 +14,28 @@ class StaticRecord:
             raise TypeError("hdf5_file must be an open HDF5 file (use tables.openFile)")
         self.file = hdf5_file
         self.table_name = table_name
+        self.int_names = int_names
+        self.float_names = float_names
         self.str_names = str_names
-        self._create_table(int_names, float_names, str_names, expectedrows)
+        self.expectedrows = expectedrows
+        self.extra_int_data = {}
+        self.extra_float_data = {}
+        self.extra_str_data = {}
 
     def _create_table(self, int_names, float_names, str_names, expectedrows):
-        table_description = _get_description_for_event(
-            int_names=int_names,
-            float_names=float_names,
-            str_names=str_names,
-            timestamp=False,
-        )
-        self.table = self.file.create_table(
-            self.file.root,
-            self.table_name,
-            table_description,
-            expectedrows=expectedrows,
-        )
+        with open_file(self.file.filename, mode="a") as file:
+            table_description = _get_description_for_event(
+                int_names=int_names,
+                float_names=float_names,
+                str_names=str_names,
+                timestamp=False,
+            )
+            self.table = file.create_table(
+                file.root,
+                self.table_name,
+                table_description,
+                expectedrows=expectedrows,
+            )
 
     def _record(self, hdf5_file, int_data, float_data, str_data):
         data = np.rec.fromarrays(
@@ -45,6 +52,19 @@ class StaticRecord:
 
     def record(self, hdf5_file, world):
         int_data, float_data, str_data = self.get_data(world=world)
+        if self.extra_int_data is not None:
+            self.int_names += list(self.extra_int_data.keys())
+            for value in self.extra_int_data.values():
+                int_data += [value]
+        if self.extra_float_data is not None:
+            self.float_names += list(self.extra_float_data.keys())
+            for value in self.extra_float_data.values():
+                float_data += [value]
+        if self.extra_str_data is not None:
+            self.str_names += list(self.extra_str_data.keys())
+            for value in self.extra_str_data.values():
+                str_data += [value]
+        self._create_table(self.int_names, self.float_names, self.str_names, self.expectedrows)
         self._record(
             hdf5_file=hdf5_file,
             int_data=int_data,
@@ -69,6 +89,10 @@ class PeopleRecord(StaticRecord):
             str_names=["sex", "ethnicity", "primary_activity_type", "residence_type",],
             expectedrows=1_000_000,
         )
+
+        self.extra_float_data = {}
+        self.extra_int_data = {}
+        self.extra_str_data = {}
 
     def get_data(self, world):
         (

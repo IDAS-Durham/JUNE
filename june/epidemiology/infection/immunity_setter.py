@@ -37,6 +37,7 @@ class ImmunitySetter:
         multiplier_dict: dict = default_multiplier_dict,
         multiplier_by_comorbidity: Optional[dict] = None,
         comorbidity_prevalence_reference_population: Optional[dict] = None,
+        record: "Record" = None,
     ):
         if susceptibility_dict is None:
             self.susceptibility_dict = {}
@@ -49,6 +50,7 @@ class ImmunitySetter:
         else:
             self.multiplier_dict = multiplier_dict
         self.multiplier_by_comorbidity = multiplier_by_comorbidity
+        self.record = record
         if comorbidity_prevalence_reference_population is not None:
             self.comorbidity_prevalence_reference_population = (
                 parse_prevalence_comorbidities_in_reference_population(
@@ -160,7 +162,7 @@ class ImmunitySetter:
             )
         return ret
 
-    def set_susceptibilities(self, population):
+    def set_susceptibilities(self, population, record=None):
         for person in population:
             for inf_id in self.susceptibility_dict:
                 if person.age >= len(self.susceptibility_dict[inf_id]):
@@ -168,9 +170,12 @@ class ImmunitySetter:
                 person.immunity.susceptibility_dict[inf_id] = self.susceptibility_dict[
                     inf_id
                 ][person.age]
+                #if record is not None:
+                #    #TODO: APPEND TO EXTRA DATA DICTIONARIES FOR INT/STR
+                #    record.statics['people'].
 
     def set_immunity(self, population):
         if self.multiplier_dict is not None:
             self.set_multipliers(population)
         if self.susceptibility_dict is not None:
-            self.set_susceptibilities(population)
+            self.set_susceptibilities(population, record=self.record)
