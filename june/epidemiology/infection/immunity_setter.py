@@ -20,6 +20,8 @@ default_multiplier_dict = {
     B16172.infection_id(): 1.5,
 }
 
+#TODO: Add flag so that prevaccinated
+
 
 class ImmunitySetter:
     """
