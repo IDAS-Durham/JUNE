@@ -1,4 +1,5 @@
 from typing import Optional
+import numpy as np
 from random import random
 from june.utils import (
     parse_age_probabilities,
@@ -90,6 +91,14 @@ class ImmunitySetter:
             multiplier_by_comorbidity=comorbidity_multipliers,
             comorbidity_prevalence_reference_population=comorbidity_prevalence_reference_population,
         )
+
+    def set_immunity(self, population):
+        if self.multiplier_dict:
+            self.set_multipliers(population)
+        if self.susceptibility_dict:
+            self.set_susceptibilities(population)
+        if self.vaccination_dict:
+            self.set_vaccinations(population)
 
     def get_multiplier_from_reference_prevalence(self, age, sex):
         """
@@ -207,8 +216,29 @@ class ImmunitySetter:
                 if random() > fraction:
                     person.immunity.susceptibility_dict[inf_id] = 0.0
 
-    def set_immunity(self, population):
-        if self.multiplier_dict is not None:
-            self.set_multipliers(population)
-        if self.susceptibility_dict is not None:
-            self.set_susceptibilities(population)
+    def set_vaccinations(self, population):
+        if not self.vaccination_dict:
+            return
+        vaccines = list(self.vaccination_dict.keys())
+        for person in population:
+            if person.age > 99:
+                age = 99
+            else:
+                age = person.age
+            vaccination_rates = np.array(
+                [
+                    self.vaccination_dict[vaccine]["percentage_vaccinated"][age]
+                    for vaccine in vaccines
+                ]
+            )
+            total_vacc_rate = np.sum(vaccination_rates)
+            if random() < total_vacc_rate:
+                vaccination_rates /= total_vacc_rate
+                vaccine = np.random.choice(vaccines, p=vaccination_rates)
+                vdata = self.vaccination_dict[vaccine]
+                for inf_id, inf_data in vdata["infections"].items():
+                    person.immunity.add_multiplier(
+                        inf_id, inf_data["symptomatic_efficacy"][age]
+                    )
+                    if random() > inf_data["sterilisation_efficacy"][age]:
+                        person.immunity.susceptibility_dict[inf_id] = 0.0
