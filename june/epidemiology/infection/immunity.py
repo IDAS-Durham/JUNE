@@ -23,6 +23,9 @@ class Immunity:
         for infection_id in infection_ids:
             self.susceptibility_dict[infection_id] = 0.0
 
+    def add_multiplier(self, infection_id, multiplier):
+        self.effective_multiplier_dict[infection_id] = multiplier
+
     def get_susceptibility(self, infection_id):
         return self.susceptibility_dict.get(infection_id, 1.0)
 

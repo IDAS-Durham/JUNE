@@ -126,10 +126,10 @@ class VaccineDistribution(Policy):
         group_by: str = "age",  #'residence',
         group_type: str = "50-100",
         group_coverage: float = 1.0,
-        first_dose_sterilisation_efficacy: dict = {0:0.5},
-        second_dose_sterilisation_efficacy: dict = {0:1.0},
-        first_dose_symptomatic_efficacy: dict = {0:0.0},
-        second_dose_symptomatic_efficacy: dict = {0:0.0},
+        first_dose_sterilisation_efficacy: dict = {0: 0.5},
+        second_dose_sterilisation_efficacy: dict = {0: 1.0},
+        first_dose_symptomatic_efficacy: dict = {0: 0.0},
+        second_dose_symptomatic_efficacy: dict = {0: 0.0},
         second_dose_compliance: float = 1.0,
         mean_time_delay: int = 1,
         std_time_delay: int = 1,
@@ -258,9 +258,12 @@ class VaccineDistribution(Policy):
             updated_effective_multiplier,
         ) = person.vaccine_plan.get_updated_vaccine_effect(date=date)
         for idx in person.vaccine_plan.infection_ids:
-            person.immunity.susceptibility_dict[idx] = min(person.immunity.get_susceptibility(idx), updated_susceptibility[idx])
+            person.immunity.susceptibility_dict[idx] = min(
+                person.immunity.get_susceptibility(idx), updated_susceptibility[idx]
+            )
             person.immunity.effective_multiplier_dict[idx] = min(
-                person.immunity.get_effective_multiplier(idx), updated_effective_multiplier[idx]
+                person.immunity.get_effective_multiplier(idx),
+                updated_effective_multiplier[idx],
             )
 
     def update_vaccinated(self, people, date):

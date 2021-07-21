@@ -42,7 +42,7 @@ class ImmunitySetter:
         multiplier_by_comorbidity: Optional[dict] = None,
         comorbidity_prevalence_reference_population: Optional[dict] = None,
         susceptibility_mode="average",
-		record:"Record" = None,
+        record:"Record" = None,
     ):
         self.susceptibility_dict = self._read_susceptibility_dict(susceptibility_dict)
         if multiplier_dict is None:
@@ -60,7 +60,7 @@ class ImmunitySetter:
         else:
             self.comorbidity_prevalence_reference_population = None
         self.susceptibility_mode = susceptibility_mode
-		self.record = record
+        self.record = record
 
     @classmethod
     def from_file_with_comorbidities(
@@ -219,7 +219,7 @@ class ImmunitySetter:
                     person.immunity.susceptibility_dict[inf_id] = 0.0
 
     def set_vaccinations(self, population):
-		vaccine_type =  []	
+        vaccine_type =  []  
         if not self.vaccination_dict:
             return
         vaccines = list(self.vaccination_dict.keys())
@@ -245,10 +245,10 @@ class ImmunitySetter:
                     )
                     if random() > inf_data["sterilisation_efficacy"][age]:
                         person.immunity.susceptibility_dict[inf_id] = 0.0
-				vaccine_type.append(vaccine)
-			else:
-				vaccine_type.append('none')
-		
-		if self.record is not None:
-			self.record['people'].extra_str_data['vaccine_type'] = vaccine_type
+                vaccine_type.append(vaccine)
+            else:
+                vaccine_type.append('none')
+        
+        if self.record is not None:
+            self.record.statics['people'].extra_str_data['vaccine_type'] = vaccine_type
 

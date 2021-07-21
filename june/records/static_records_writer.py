@@ -125,7 +125,7 @@ class PeopleRecord(StaticRecord):
             residence_id.append(
                 person.residence.group.id if person.residence is not None else 0
             )
-            area_id.append(person.area.id)
+            area_id.append(person.area.id if person.area is not None else 0)
             sex.append(person.sex)
             ethnicity.append(person.ethnicity if person.ethnicity is not None else "None")
         int_data = [
@@ -204,13 +204,14 @@ class AreaRecord(StaticRecord):
             socioeconomic_index, 
             area_name
         ) = ([], [], [], [], [], [])
-        for area in world.areas:
-            area_id.append(area.id)
-            super_area_id.append(area.super_area.id)
-            latitude.append(area.coordinates[0])
-            longitude.append(area.coordinates[1])
-            socioeconomic_index.append(area.socioeconomic_index)
-            area_name.append(area.name)
+        if world.areas is not None:
+            for area in world.areas:
+                area_id.append(area.id)
+                super_area_id.append(area.super_area.id)
+                latitude.append(area.coordinates[0])
+                longitude.append(area.coordinates[1])
+                socioeconomic_index.append(area.socioeconomic_index)
+                area_name.append(area.name)
         int_data = [area_id, super_area_id]
         float_data = [latitude, longitude, socioeconomic_index]
         str_data = [area_name]
@@ -236,12 +237,13 @@ class SuperAreaRecord(StaticRecord):
             [],
             [],
         )
-        for super_area in world.super_areas:
-            super_area_id.append(super_area.id)
-            region_id.append(super_area.region.id)
-            latitude.append(super_area.coordinates[0])
-            longitude.append(super_area.coordinates[1])
-            super_area_name.append(super_area.name)
+        if world.super_areas is not None:
+            for super_area in world.super_areas:
+                super_area_id.append(super_area.id)
+                region_id.append(super_area.region.id)
+                latitude.append(super_area.coordinates[0])
+                longitude.append(super_area.coordinates[1])
+                super_area_name.append(super_area.name)
         int_data = [super_area_id, region_id]
         float_data = [latitude, longitude]
         str_data = [super_area_name]
@@ -261,9 +263,10 @@ class RegionRecord(StaticRecord):
 
     def get_data(self, world):
         region_id, region_name = [], []
-        for region in world.regions:
-            region_id.append(region.id)
-            region_name.append(region.name)
+        if world.regions is not None:
+            for region in world.regions:
+                region_id.append(region.id)
+                region_name.append(region.name)
         int_data = [region_id]
         float_data = []
         str_data = [region_name]
