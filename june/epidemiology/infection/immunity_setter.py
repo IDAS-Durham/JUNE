@@ -37,20 +37,17 @@ class ImmunitySetter:
         self,
         susceptibility_dict: dict = default_susceptibility_dict,
         multiplier_dict: dict = default_multiplier_dict,
+        vaccination_dict: dict = None,
         multiplier_by_comorbidity: Optional[dict] = None,
         comorbidity_prevalence_reference_population: Optional[dict] = None,
         susceptibility_mode="average",
     ):
-        if susceptibility_dict is None:
-            self.susceptibility_dict = {}
-        else:
-            self.susceptibility_dict = self._read_susceptibility_dict(
-                susceptibility_dict
-            )
+        self.susceptibility_dict = self._read_susceptibility_dict(susceptibility_dict)
         if multiplier_dict is None:
             self.multiplier_dict = {}
         else:
             self.multiplier_dict = multiplier_dict
+        self.vaccination_dict = self._read_vaccination_dict(vaccination_dict)
         self.multiplier_by_comorbidity = multiplier_by_comorbidity
         if comorbidity_prevalence_reference_population is not None:
             self.comorbidity_prevalence_reference_population = (
@@ -157,11 +154,31 @@ class ImmunitySetter:
                     ) - 1.0
 
     def _read_susceptibility_dict(self, susceptibility_dict):
+        if susceptibility_dict is None:
+            return {}
         ret = {}
         for inf_id in susceptibility_dict:
             ret[inf_id] = parse_age_probabilities(
                 susceptibility_dict[inf_id], fill_value=1.0
             )
+        return ret
+
+    def _read_vaccination_dict(self, vaccination_dict):
+        if vaccination_dict is None:
+            return {}
+        ret = {}
+        for vaccine, vdata in vaccination_dict.items():
+            ret[vaccine] = {}
+            ret[vaccine]["percentage_vaccinated"] = parse_age_probabilities(
+                vdata["percentage_vaccinated"]
+            )
+            ret[vaccine]["infections"] = {}
+            for inf_id in vdata["infections"]:
+                ret[vaccine]["infections"][inf_id] = {}
+                for key in vdata["infections"][inf_id]:
+                    ret[vaccine]["infections"][inf_id][key] = parse_age_probabilities(
+                        vdata["infections"][inf_id][key], fill_value=0.0
+                    )
         return ret
 
     def set_susceptibilities(self, population):

@@ -19,6 +19,30 @@ def make_susc():
     }
 
 
+@pytest.fixture(name="vaccination_dict")
+def make_vacc():
+    return {
+        "pfizer": {
+            "percentage_vaccinated": {"0-50": 0.7, "50-100": 1.0},
+            "infections": {
+                Covid19.infection_id(): {
+                    "sterilisation_efficacy": {"0-100": 0.5},
+                    "symptomatic_efficacy": {"0-100": 0.5},
+                },
+            },
+        },
+        "sputnik": {
+            "percentage_vaccinated": {"0-30": 0.3, "30-100": 0.0},
+            "infections": {
+                B117.infection_id(): {
+                    "sterilisation_efficacy": {"0-100": 0.8},
+                    "symptomatic_efficacy": {"0-100": 0.8},
+                },
+            },
+        },
+    }
+
+
 class TestSusceptibilitySetter:
     def test__susceptibility_parser(self, susceptibility_dict):
         susc_setter = ImmunitySetter(susceptibility_dict)
@@ -36,6 +60,48 @@ class TestSusceptibilitySetter:
                 assert susceptibilities_parsed[b117_id][i] == 0.25
             else:
                 assert susceptibilities_parsed[b117_id][i] == 1.0
+
+    def test__vaccination_parser(self, vaccination_dict):
+        susc_setter = ImmunitySetter(vaccination_dict=vaccination_dict)
+        vp = susc_setter.vaccination_dict
+        c19_id = Covid19.infection_id()
+        b117_id = B117.infection_id()
+        for age in range(0, 100):
+            # pfizer
+            if age < 50:
+                assert vp["pfizer"]["percentage_vaccinated"][age] == 0.7
+            else:
+                assert vp["pfizer"]["percentage_vaccinated"][age] == 1.0
+            assert (
+                vp["pfizer"]["infections"][Covid19.infection_id()][
+                    "sterilisation_efficacy"
+                ][age]
+                == 0.5
+            )
+            assert (
+                vp["pfizer"]["infections"][Covid19.infection_id()][
+                    "symptomatic_efficacy"
+                ][age]
+                == 0.5
+            )
+
+            # sputnik
+            if age < 30:
+                assert vp["sputnik"]["percentage_vaccinated"][age] == 0.3
+            else:
+                assert vp["sputnik"]["percentage_vaccinated"][age] == 0.0
+            assert (
+                vp["sputnik"]["infections"][B117.infection_id()][
+                    "sterilisation_efficacy"
+                ][age]
+                == 0.8
+            )
+            assert (
+                vp["sputnik"]["infections"][B117.infection_id()][
+                    "symptomatic_efficacy"
+                ][age]
+                == 0.8
+            )
 
     def test__susceptiblity_setter_average(self, susceptibility_dict):
         population = Population([])
