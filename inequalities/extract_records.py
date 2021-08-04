@@ -20,14 +20,14 @@ def parse():
 
     parser.add_argument(
         "--record_path",
-        dest = "record_path"
-        help = "path to record"
+        dest = "record_path",
+        help = "path to record",
     )
 
     parser.add_argument(
         "--save_path",
-        dest = "save_path"
-        help = "path to save extracted data"
+        dest = "save_path",
+        help = "path to save extracted data",
         default = None
     )
 
