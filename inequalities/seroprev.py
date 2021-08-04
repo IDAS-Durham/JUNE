@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -43,16 +44,24 @@ def parse():
         default = None
     )
 
+    parser.add_argument(
+        "--plots_path",
+        dest = "plots_path",
+        help = "path to where plots are to be saved",
+        default = None
+    )
+
     args = parser.parse_args()
 
     return args
 
 class SeroPrevalence:
 
-    def __init__(self, record_path, records_path=None):
+    def __init__(self, record_path, records_path=None, plots_path=None):
 
         self.record_path = record_path
         self.records_path = records_path
+        self.plots_path = plots_path
 
         if self.record_path is None and self.records_path is None:
             raise ValueError("Both record_path and records_path cannont be None simultaneously")
@@ -83,7 +92,36 @@ class SeroPrevalence:
         prevalence_socio = 100*infected_by_socio.unstack(level=0).cumsum()/n_by_socio
 
         return prevalence_socio
-    
+
+    def compare_seroprevalence(self):
+
+        if self.records_path is not None:
+
+            prevalence_ethnicities = []
+            prevalence_socios = []
+            for i in os.listdir(self.records_path):
+                self.record_path = self.records_path + "/" + i
+                prevalence_ethnicity = self.prevalence_ethnicity()
+                prevalence_socio = self.prevalence_socio()
+
+                # todo - work out exactly what is being appended here - currently it is the DataFrame but you don't want this
+                prevalence_ethnicities.append(prevalence_ethnicity)
+                prevalence_socios.append(prevalence_socio)
+
+            # todo - check axes on mean and std operation
+            prevalence_ethnicity_mean = np.mean(prevalence_ethnicities, axis=1)
+            prevalence_socio_mean = np.mean(prevalence_socio, axis=1)
+            prevalence_ethnicity_std = np.std(prevalence_ethnicities, axis=1, ddof=1)
+            prevalence_socio_std = np.std(prevalence_socio, axis=1, ddof=1)
+
+        else:
+            prevalence_ethnicity_mean = self.prevalence_ethnicity()
+            prevalence_socio_mean = self.prevalence_socio()
+            prevalence_ethnicity_std = 0.
+            prevalence_socio_std = 0.
+
+        # todo - plotting against Ward 
+            
 
 if __name__ == "__main__":
 
