@@ -50,6 +50,7 @@ class Record:
             self.filename = f"june_record.h5"
             self.summary_filename = f"summary.csv"
         self.configs_filename = f"config.yaml"
+        self.record_static_data = record_static_data
         try:
             os.remove(self.record_path / self.filename)
         except OSError:
@@ -64,7 +65,7 @@ class Record:
                 "recoveries": RecoveriesRecord(hdf5_file=self.file),
                 "symptoms": SymptomsRecord(hdf5_file=self.file),
             }
-            if record_static_data:
+            if self.record_static_data:
                 self.statics = {
                     "people": PeopleRecord(hdf5_file=self.file),
                     "locations": LocationRecord(hdf5_file=self.file),
