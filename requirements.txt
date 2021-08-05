@@ -20,4 +20,5 @@ matplotlib==3.4.2
 plotly==4.14.3
 PyYAML==5.4.1
 responses==0.13.3
+SciencePlots==1.0.8
 scikit_learn==0.24.2
