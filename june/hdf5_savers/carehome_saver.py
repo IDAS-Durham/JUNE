@@ -53,10 +53,10 @@ def save_care_homes_to_hdf5(
                 n_residents.append(carehome.n_residents)
                 n_workers.append(carehome.n_workers)
 
-            ids = np.array(ids, dtype=np.int)
-            areas = np.array(areas, dtype=np.int)
-            n_residents = np.array(n_residents, dtype=np.float)
-            n_workers = np.array(n_workers, dtype=np.float)
+            ids = np.array(ids, dtype=np.int64)
+            areas = np.array(areas, dtype=np.int64)
+            n_residents = np.array(n_residents, dtype=np.float64)
+            n_workers = np.array(n_workers, dtype=np.float64)
             if chunk == 0:
                 care_homes_dset.attrs["n_care_homes"] = n_care_homes
                 care_homes_dset.create_dataset("id", data=ids, maxshape=(None,))

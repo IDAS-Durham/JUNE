@@ -98,22 +98,22 @@ def test__prepend_checkpoint_hdf5(dummy_world):
         dead_ids     = [i*1000 + 500 + 20 + 2*x for x in range(3)]
         with open_file(pre_checkpoint_record_path, mode="a") as f:
             pre_checkpoint_record.file = f
+        pre_checkpoint_record.accumulate(
+            table_name="infections",
+            location_spec="pre_check_location",
+            region_name="over_here",
+            location_id=0,
+            infected_ids=infected_ids,
+            infector_ids=infector_ids,
+        )
+        for dead_id in dead_ids:
             pre_checkpoint_record.accumulate(
-                table_name="infections",
-                location_spec="pre_check_location",
-                region_name="over_here",
+                table_name="deaths",
                 location_id=0,
-                infected_ids=infected_ids,
-                infector_ids=infector_ids,
-            )
-            for dead_id in dead_ids:
-                pre_checkpoint_record.accumulate(
-                    table_name="deaths",
-                    location_id=0,
-                    location_spec="pre_check_location",
-                    dead_person_id=dead_id
-                )        
-            pre_checkpoint_record.time_step(timestamp)
+                location_spec="pre_check_location",
+                dead_person_id=dead_id
+            )        
+        pre_checkpoint_record.time_step(timestamp)
 
     post_checkpoint_record_path = Path("./post_checkpoint_results/june_record.h5")
     post_checkpoint_record = Record(
@@ -129,22 +129,22 @@ def test__prepend_checkpoint_hdf5(dummy_world):
         
         with open_file(post_checkpoint_record_path, mode="a") as f:
             post_checkpoint_record.file = f
+        post_checkpoint_record.accumulate(
+            table_name="infections",
+            location_spec="post_check_location",
+            region_name="way_over_there",
+            location_id=0,
+            infected_ids=infected_ids,
+            infector_ids=infector_ids,
+        )
+        for dead_id in dead_ids:
             post_checkpoint_record.accumulate(
-                table_name="infections",
-                location_spec="post_check_location",
-                region_name="way_over_there",
+                table_name="deaths",
                 location_id=0,
-                infected_ids=infected_ids,
-                infector_ids=infector_ids,
-            )
-            for dead_id in dead_ids:
-                post_checkpoint_record.accumulate(
-                    table_name="deaths",
-                    location_id=0,
-                    location_spec="pre_check_location",
-                    dead_person_id=dead_id
-                )        
-            post_checkpoint_record.time_step(timestamp)
+                location_spec="pre_check_location",
+                dead_person_id=dead_id
+            )        
+        post_checkpoint_record.time_step(timestamp)
 
     merged_record_path = Path("./post_checkpoint_results/merged_checkpoint_record.h5")    
     prepend_checkpoint_hdf5(

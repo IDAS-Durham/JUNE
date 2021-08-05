@@ -70,7 +70,7 @@ def save_checkpoint_to_hdf5(
             write_dataset(
                 group=f["people_data"],
                 dataset_name=name,
-                data=np.array(data, dtype=np.int),
+                data=np.array(data, dtype=np.int64),
             )
     save_infections_to_hdf5(
         hdf5_file_path=hdf5_file_path,
@@ -142,7 +142,7 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
             write_dataset(
                 group=f["people_data"],
                 dataset_name=name,
-                data=np.array(ret[name], dtype=np.int),
+                data=np.array(ret[name], dtype=np.int64),
             )
     save_infections_to_hdf5(
         hdf5_file_path=unified_checkpoint_path,

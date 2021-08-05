@@ -57,14 +57,14 @@ def save_hospitals_to_hdf5(
                 coordinates.append(np.array(hospital.coordinates))
                 trust_code.append(hospital.trust_code)
 
-            ids = np.array(ids, dtype=np.int)
-            areas = np.array(areas, dtype=np.int)
-            super_areas = np.array(super_areas, dtype=np.int)
+            ids = np.array(ids, dtype=np.int64)
+            areas = np.array(areas, dtype=np.int64)
+            super_areas = np.array(super_areas, dtype=np.int64)
             region_names = np.array(region_names, dtype="S50")
             trust_code = np.array(trust_code, dtype="S10")
-            n_beds = np.array(n_beds, dtype=np.int)
-            n_icu_beds = np.array(n_icu_beds, dtype=np.int)
-            coordinates = np.array(coordinates, dtype=np.float)
+            n_beds = np.array(n_beds, dtype=np.int64)
+            n_icu_beds = np.array(n_icu_beds, dtype=np.int64)
+            coordinates = np.array(coordinates, dtype=np.float64)
             if chunk == 0:
                 hospitals_dset.attrs["n_hospitals"] = n_hospitals
                 hospitals_dset.create_dataset("id", data=ids, maxshape=(None,))

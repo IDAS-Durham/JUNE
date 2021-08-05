@@ -58,10 +58,10 @@ def save_companies_to_hdf5(
                 sectors.append(company.sector.encode("ascii", "ignore"))
                 n_workers_max.append(company.n_workers_max)
 
-            ids = np.array(ids, dtype=np.int)
-            super_areas = np.array(super_areas, dtype=np.int)
+            ids = np.array(ids, dtype=np.int64)
+            super_areas = np.array(super_areas, dtype=np.int64)
             sectors = np.array(sectors, dtype="S10")
-            n_workers_max = np.array(n_workers_max, dtype=np.float)
+            n_workers_max = np.array(n_workers_max, dtype=np.float64)
             if chunk == 0:
                 companies_dset.attrs["n_companies"] = n_companies
                 companies_dset.create_dataset("id", data=ids, maxshape=(None,))
