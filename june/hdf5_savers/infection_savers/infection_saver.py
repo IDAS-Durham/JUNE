@@ -62,7 +62,7 @@ def save_infections_to_hdf5(
                     else:
                         attribute_dict[attribute_name].append(attribute)
             for attribute_name in attributes_to_save:
-                data = np.array(attribute_dict[attribute_name], dtype=np.float)
+                data = np.array(attribute_dict[attribute_name], dtype=np.float64)
                 write_dataset(
                     group=f["infections"],
                     dataset_name=attribute_name,

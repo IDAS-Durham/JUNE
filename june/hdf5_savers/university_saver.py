@@ -36,19 +36,19 @@ def save_universities_to_hdf5(universities: Universities, file_path: str):
             ids.append(university.id)
             n_students_max.append(university.n_students_max)
             n_years.append(university.n_years)
-            coordinates.append(np.array(university.coordinates, dtype=np.float))
+            coordinates.append(np.array(university.coordinates, dtype=np.float64))
             ukprns.append(university.ukprn)
             if university.area is None:
                 areas.append(nan_integer)
             else:
                 areas.append(university.area.id)
 
-        ids = np.array(ids, dtype=np.int)
-        n_students_max = np.array(n_students_max, dtype=np.int)
-        n_years = np.array(n_years, dtype=np.int)
-        ukprns = np.array(ukprns, dtype=np.int)
-        areas = np.array(areas, dtype=np.int)
-        coordinates = np.array(coordinates, dtype=np.float)
+        ids = np.array(ids, dtype=np.int64)
+        n_students_max = np.array(n_students_max, dtype=np.int64)
+        n_years = np.array(n_years, dtype=np.int64)
+        ukprns = np.array(ukprns, dtype=np.int64)
+        areas = np.array(areas, dtype=np.int64)
+        coordinates = np.array(coordinates, dtype=np.float64)
         universities_dset.attrs["n_universities"] = n_universities
         universities_dset.create_dataset("id", data=ids)
         universities_dset.create_dataset("n_students_max", data=n_students_max)

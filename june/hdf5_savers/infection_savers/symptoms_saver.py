@@ -51,12 +51,12 @@ def save_symptoms_to_hdf5(
                 max_severity_list.append(symptoms.max_severity)
                 stage_list.append(symptoms.stage)
                 time_of_symptoms_onset_list.append(symptoms.time_of_symptoms_onset)
-            attribute_dict["max_tag"] = np.array(max_tag_list, dtype=np.int)
-            attribute_dict["tag"] = np.array(tag_list, dtype=np.int)
-            attribute_dict["max_severity"] = np.array(max_severity_list, dtype=np.float)
-            attribute_dict["stage"] = np.array(stage_list, dtype=np.int)
+            attribute_dict["max_tag"] = np.array(max_tag_list, dtype=np.int64)
+            attribute_dict["tag"] = np.array(tag_list, dtype=np.int64)
+            attribute_dict["max_severity"] = np.array(max_severity_list, dtype=np.float64)
+            attribute_dict["stage"] = np.array(stage_list, dtype=np.int64)
             attribute_dict["time_of_symptoms_onset"] = np.array(
-                time_of_symptoms_onset_list, dtype=np.float
+                time_of_symptoms_onset_list, dtype=np.float64
             )
             for attribute_name, attribute_value in attribute_dict.items():
                 write_dataset(
@@ -75,8 +75,8 @@ def save_symptoms_to_hdf5(
             for time, symp in symptoms.trajectory:
                 times.append(time)
                 symps.append(symp.value)
-            trajectory_times_list.append(np.array(times, dtype=np.float))
-            trajectory_symptom_list.append(np.array(symps, dtype=np.int))
+            trajectory_times_list.append(np.array(times, dtype=np.float64))
+            trajectory_symptom_list.append(np.array(symps, dtype=np.int64))
             trajectory_lengths.append(len(times))
         if len(np.unique(trajectory_lengths)) == 1:
             write_dataset(

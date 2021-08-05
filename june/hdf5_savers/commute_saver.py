@@ -53,7 +53,7 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
             internal_commuters = [
                 person_id for person_id in list(city.internal_commuter_ids)
             ]
-            internal_commuters_list.append(np.array(internal_commuters, dtype=np.int))
+            internal_commuters_list.append(np.array(internal_commuters, dtype=np.int64))
             internal_commuters_list_lengths.append(len(internal_commuters))
             super_areas = np.array(
                 [
@@ -64,48 +64,48 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
             )
             super_areas_list.append(super_areas)
             super_areas_list_lengths.append(len(super_areas))
-            coordinates.append(np.array(city.coordinates, dtype=np.float))
+            coordinates.append(np.array(city.coordinates, dtype=np.float64))
             if city.super_area is None:
                 city_super_area_list.append(nan_integer)
             else:
                 city_super_area_list.append(city.super_area.id)
             # stations
             city_stations_ids = np.array(
-                [station.id for station in city.city_stations], dtype=np.int
+                [station.id for station in city.city_stations], dtype=np.int64
             )
             inter_city_stations_ids = np.array(
-                [station.id for station in city.inter_city_stations], dtype=np.int
+                [station.id for station in city.inter_city_stations], dtype=np.int64
             )
             city_station_ids_lengths.append(len(city_stations_ids))
             inter_city_station_ids_lengths.append(len(inter_city_stations_ids))
             city_stations_id_list.append(city_stations_ids)
             inter_city_stations_id_list.append(inter_city_stations_ids)
 
-        ids = np.array(ids, dtype=np.int)
+        ids = np.array(ids, dtype=np.int64)
         names = np.array(names, dtype="S30")
         if len(np.unique(super_areas_list_lengths)) == 1:
             super_areas_list = np.array(super_areas_list, dtype="S15")
         else:
             super_areas_list = np.array(super_areas_list, dtype=string_15_vlen_type)
         if len(np.unique(city_station_ids_lengths)) == 1:
-            city_stations_id_list = np.array(city_stations_id_list, dtype=np.int)
+            city_stations_id_list = np.array(city_stations_id_list, dtype=np.int64)
         else:
             city_stations_id_list = np.array(city_stations_id_list, dtype=int_vlen_type)
         if len(np.unique(city_station_ids_lengths)) == 1:
             inter_city_stations_id_list = np.array(
-                inter_city_stations_id_list, dtype=np.int
+                inter_city_stations_id_list, dtype=np.int64
             )
         else:
             inter_city_stations_id_list = np.array(
                 inter_city_stations_id_list, dtype=int_vlen_type
             )
         if len(np.unique(internal_commuters_list_lengths)) == 1:
-            internal_commuters_list = np.array(internal_commuters_list, dtype=np.int)
+            internal_commuters_list = np.array(internal_commuters_list, dtype=np.int64)
         else:
             internal_commuters_list = np.array(
                 internal_commuters_list, dtype=int_vlen_type
             )
-        city_super_area_list = np.array(city_super_area_list, dtype=np.int)
+        city_super_area_list = np.array(city_super_area_list, dtype=np.int64)
 
         cities_dset.attrs["n_cities"] = n_cities
         cities_dset.create_dataset("id", data=ids)
@@ -187,7 +187,7 @@ def save_stations_to_hdf5(stations: Stations, file_path: str):
             station_commuters.append(
                 np.array(
                     [person_id for person_id in list(station.commuter_ids)],
-                    dtype=np.int,
+                    dtype=np.int64,
                 )
             )
             if isinstance(station, CityStation):
@@ -199,18 +199,18 @@ def save_stations_to_hdf5(stations: Stations, file_path: str):
                     transport.id for transport in station.inter_city_transports
                 ]
             station_transport_ids_list.append(
-                np.array(station_transport_ids, dtype=np.int)
+                np.array(station_transport_ids, dtype=np.int64)
             )
             station_transport_ids_list_lengths.append(len(station_transport_ids))
             station_cities.append(station.city.encode("ascii", "ignore"))
-        station_ids = np.array(station_ids, dtype=np.int)
-        station_super_areas = np.array(station_super_areas, dtype=np.int)
+        station_ids = np.array(station_ids, dtype=np.int64)
+        station_super_areas = np.array(station_super_areas, dtype=np.int64)
         station_commuters = np.array(station_commuters, dtype=int_vlen_type)
         station_cities = np.array(station_cities, dtype="S30")
         station_types = np.array(station_types, dtype="S10")
         if len(np.unique(station_transport_ids_list_lengths)) == 1:
             station_transport_ids_list = np.array(
-                station_transport_ids_list, dtype=np.int
+                station_transport_ids_list, dtype=np.int64
             )
         else:
             station_transport_ids_list = np.array(

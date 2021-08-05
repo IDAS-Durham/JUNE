@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6]
+        python-version: [3.9]
 
     steps:
     - uses: actions/checkout@v2
@@ -44,6 +44,7 @@ jobs:
         cd test_june
         pytest
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v2
       with:
-        env_vars: OS,PYTHON
+        files: ./coverage.xml
+

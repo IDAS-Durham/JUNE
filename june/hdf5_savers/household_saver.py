@@ -61,11 +61,11 @@ def save_households_to_hdf5(
                     types.append(household.type.encode("ascii", "ignore"))
                 max_sizes.append(household.max_size)
 
-            ids = np.array(ids, dtype=np.int)
-            areas = np.array(areas, dtype=np.int)
-            super_areas = np.array(super_areas, dtype=np.int)
+            ids = np.array(ids, dtype=np.int64)
+            areas = np.array(areas, dtype=np.int64)
+            super_areas = np.array(super_areas, dtype=np.int64)
             types = np.array(types, dtype="S20")
-            max_sizes = np.array(max_sizes, dtype=np.float)
+            max_sizes = np.array(max_sizes, dtype=np.float64)
             if chunk == 0:
                 households_dset.attrs["n_households"] = n_households
                 households_dset.create_dataset("id", data=ids, maxshape=(None,))
@@ -99,24 +99,24 @@ def save_households_to_hdf5(
                 "household" not in household.residences_to_visit 
                 or len(household.residences_to_visit["household"]) == 0
             ):
-                households_to_visit.append(np.array([nan_integer], dtype=np.int))
+                households_to_visit.append(np.array([nan_integer], dtype=np.int64))
             else:
                 households_to_visit.append(
                     np.array(
                         [household.id for household in household.residences_to_visit["household"]],
-                        dtype=np.int,
+                        dtype=np.int64,
                     )
                 )
             if (
                 "care_home" not in household.residences_to_visit
                 or len(household.residences_to_visit["care_home"]) == 0
             ):
-                care_homes_to_visit.append(np.array([nan_integer], dtype=np.int))
+                care_homes_to_visit.append(np.array([nan_integer], dtype=np.int64))
             else:
                 care_homes_to_visit.append(
                     np.array(
                         [care_home.id for care_home in household.residences_to_visit["care_home"]],
-                        dtype=np.int,
+                        dtype=np.int64,
                     )
                 )
         care_homes_to_visit = np.array(care_homes_to_visit, dtype=int_vlen_type)
