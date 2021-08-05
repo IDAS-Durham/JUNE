@@ -27,6 +27,7 @@ class Household(Group):
     __slots__ = (
         "area",
         "type",
+        "composition_type",
         "max_size",
         "residents",
         "quarantine_starting_date",
@@ -42,7 +43,7 @@ class Household(Group):
         adults = 2
         old_adults = 3
 
-    def __init__(self, type=None, area=None, max_size=np.inf):
+    def __init__(self, type=None, area=None, max_size=np.inf, composition_type=None):
         """
         Type should be on of ["family", "student", "young_adults", "old", "other", "nokids", "ya_parents", "communal"].
         Relatives is a list of people that are related to the family living in the household
@@ -57,6 +58,7 @@ class Household(Group):
         self.household_to_care = None
         self.being_visited = False  # this is True when people from other households have been added to the group
         self.receiving_care = False
+        self.composition_type = composition_type
 
     def _get_leisure_subgroup_for_person(self, person):
         if person.age < 18:
