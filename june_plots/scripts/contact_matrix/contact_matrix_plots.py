@@ -106,9 +106,9 @@ class ContactMatrixPlots():
         "Calculate contact matrices for all locations."
         # set up age binning arrays for each location
         self.location_arrays = {}
-        self.location_arrays['household'] = np.zeros((len(self.world.households), 19), dtype=np.int)
-        self.location_arrays['school'] = np.zeros((len(self.world.schools), 19), dtype=np.int)
-        self.location_arrays['company'] = np.zeros((len(self.world.companies), 19), dtype=np.int)
+        self.location_arrays['household'] = np.zeros((len(self.world.households), 19), dtype=np.int64)
+        self.location_arrays['school'] = np.zeros((len(self.world.schools), 19), dtype=np.int64)
+        self.location_arrays['company'] = np.zeros((len(self.world.companies), 19), dtype=np.int64)
 
         # set up interaction arrays for each location
         self.interaction_arrays = {}
@@ -201,7 +201,7 @@ class ContactMatrixPlots():
 
     def calculate_contact_matrix(self, interaction_array):
         "From BBC paper: c_ij = 0.5*(m_ij + m_ji * (w_i/w_j))"
-        contact_matrix = np.zeros((19, 19), dtype=np.float)
+        contact_matrix = np.zeros((19, 19), dtype=np.float64)
         for i in range(0, 19):
             for j in range(0, 19):
                 ni = self.age_array[i]
