@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pickle
 import matplotlib.pyplot as plt
 from datetime import datetime
 from tqdm import tqdm
@@ -63,12 +64,14 @@ class DeathCox:
 
         self.people_cox_df = self.people_df[["age", "sex", "ethnicity", "died", "days"]]
 
+        print ("Data processed")
+
     def train_cox_ethnicity(self):
 
-        people_cox_b = people_cox_df[people_cox_df["ethnicity"].isin([0,1])]
-        people_cox_c = people_cox_df[people_cox_df["ethnicity"].isin([0,2])]
-        people_cox_d = people_cox_df[people_cox_df["ethnicity"].isin([0,3])]
-        people_cox_e = people_cox_df[people_cox_df["ethnicity"].isin([0,4])]
+        people_cox_b = self.people_cox_df[people_cox_df["ethnicity"].isin([0,1])]
+        people_cox_c = self.people_cox_df[people_cox_df["ethnicity"].isin([0,2])]
+        people_cox_d = self.people_cox_df[people_cox_df["ethnicity"].isin([0,3])]
+        people_cox_e = self.people_cox_df[people_cox_df["ethnicity"].isin([0,4])]
 
         people_cox_c.loc[people_cox_c["ethnicity"] == 2, "ethnicity"] = 1
         people_cox_d.loc[people_cox_d["ethnicity"] == 3, "ethnicity"] = 1
@@ -76,14 +79,22 @@ class DeathCox:
         
         cph_b = CoxPHFitter()
         cph_b.fit(people_cox_b, duration_col="days", event_col="died", show_progress=True)
+        with open(self.record_path + "cph_b.pickle", 'wb') as f:
+            pickle.dump(cph_b, f)
 
         cph_c = CoxPHFitter()
         cph_c.fit(people_cox_c, duration_col="days", event_col="died", show_progress=True)
+        with open(self.record_path + "cph_c.pickle", 'wb') as f:
+            pickle.dump(cph_c, f)
 
         cph_d = CoxPHFitter()
         cph_d.fit(people_cox_d, duration_col="days", event_col="died", show_progress=True)
+        with open(self.record_path + "cph_d.pickle", 'wb') as f:
+            pickle.dump(cph_d, f)
 
         cph_e = CoxPHFitter()
         cph_e.fit(people_cox_e, duration_col="days", event_col="died", show_progress=True)
+        with open(self.record_path + "cph_e.pickle", 'wb') as f:
+            pickle.dump(cph_e, f)
 
         
