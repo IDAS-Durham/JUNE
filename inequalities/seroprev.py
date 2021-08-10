@@ -80,7 +80,7 @@ class SeroPrevalence:
         self.infections_df = pd.read_csv(self.record_path + "/infections.csv")
         self.infections_df = self.infections_df.rename(columns={"Unnamed: 0": "id"})
         self.infections_df.set_index("id", inplace=True)
-        print ("Infection DataFrame loaded")
+        print ("Infections DataFrame loaded")
 
     def prevalence_ethnicity(self):
 
