@@ -71,12 +71,16 @@ class SeroPrevalence:
 
     def load_data(self):
 
+        print ("Loading data from: {}".format(self.record_path))
+
         self.people_df = pd.read_csv(self.record_path + "/people.csv")
         self.people_df.set_index('id', inplace=True)
+        print ("People DataFrame loaded")
 
         self.infections_df = pd.read_csv(self.record_path + "/infections.csv")
         self.infections_df = infections_df.rename(columns={"Unnamed: 0": "id"})
         self.infections_df.set_index("id", inplace=True)
+        print ("Infection DataFrame loaded")
 
     def prevalence_ethnicity(self):
 
@@ -99,6 +103,7 @@ class SeroPrevalence:
     def compare_seroprevalence_ethnicity(self):
 
         if self.records_path is not None:
+            print ("Looping over records")
 
             prevalence_ethnicities = []
             prevalence_socios = []
@@ -121,6 +126,8 @@ class SeroPrevalence:
             prevalence_socio_mean = self.prevalence_socio()
             prevalence_ethnicity_std = 0.
             prevalence_socio_std = 0.
+
+        print ("Plotting ethnicity seroprevalence comparison")
 
         fig = plt.figure()
             
@@ -150,11 +157,12 @@ class SeroPrevalence:
         plt.legend()
 
         if self.plots_path is not None:
+            print ("Saving out plots")
             plt.savefig(self.plots_path + "/ethnicities.png", dpi=150)
         
     def compare_seroprevalence(self):
 
-        self.compare_seroprevalence_ethnicity()x
+        self.compare_seroprevalence_ethnicity()
 
             
 if __name__ == "__main__":
