@@ -155,3 +155,8 @@ class SeroPrevalence:
 if __name__ == "__main__":
 
     args = parse()
+
+    seroprev = SeroPrevalence(args.record_path, args.records_path, args.plots_path)
+    seroprev.compare_seroprevalence()
+
+    
