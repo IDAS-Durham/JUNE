@@ -116,9 +116,9 @@ class SeroPrevalence:
                 prevalence_socios.append(prevalence_socio)
 
             prevalence_ethnicity_mean = np.mean(prevalence_ethnicities, axis=0)
-            prevalence_socio_mean = np.mean(prevalence_socio, axis=0)
+            prevalence_socio_mean = np.mean(prevalence_socios, axis=0)
             prevalence_ethnicity_std = np.std(prevalence_ethnicities, axis=0, ddof=1)
-            prevalence_socio_std = np.std(prevalence_socio, axis=0, ddof=1)
+            prevalence_socio_std = np.std(prevalence_socios, axis=0, ddof=1)
 
         else:
             self.load_data()
@@ -135,8 +135,8 @@ class SeroPrevalence:
             y = np.arange(len(ward_prevalence_ethnicity)),
             x = [prev[1] for eth, prev in ward_prevalence_ethnicity.items()],
             xerr = [
-                [prev[1]-prev[0] for age, prev in ward_prevalence_ethnicity.items()],
-                [prev[2]-prev[1] for age, prev in ward_prevalence_ethnicity.items()]
+                [prev[1]-prev[0] for eth, prev in ward_prevalence_ethnicity.items()],
+                [prev[2]-prev[1] for eth, prev in ward_prevalence_ethnicity.items()]
             ],
             fmt = "o",
             label = "Ward et al.",
@@ -167,8 +167,8 @@ class SeroPrevalence:
             y = [1,3,5,7,9],
             x = [prev[1] for eth, prev in ward_prevalence_socio.items()],
             xerr = [
-                [prev[1]-prev[0] for age, prev in ward_prevalence_socio.items()],
-                [prev[2]-prev[1] for age, prev in ward_prevalence_socio.items()]
+                [prev[1]-prev[0] for socio, prev in ward_prevalence_socio.items()],
+                [prev[2]-prev[1] for socio, prev in ward_prevalence_socio.items()]
             ],
             fmt = "o",
             label = "Ward et al.",
@@ -184,7 +184,7 @@ class SeroPrevalence:
             capsize = 5
         )
 
-        plt.yticks(np.arange(len(ward_prevalence_socio)), labels = ward_prevalence_socio.keys())
+        plt.yticks(np.arange(len(prevalence_socio_mean)), labels = np.arange(len(prevalence_socio_mean)))
         plt.xlabel("Prevalence in group [%]")
         plt.ylabel("Socioeconomic index")
         plt.legend()
