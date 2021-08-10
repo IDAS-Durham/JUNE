@@ -76,22 +76,26 @@ class DeathCox:
         people_cox_c.loc[people_cox_c["ethnicity"] == 2, "ethnicity"] = 1
         people_cox_d.loc[people_cox_d["ethnicity"] == 3, "ethnicity"] = 1
         people_cox_e.loc[people_cox_e["ethnicity"] == 4, "ethnicity"] = 1
-        
+
+        print ("Training Cox model on ethnicity: B")
         cph_b = CoxPHFitter()
         cph_b.fit(people_cox_b, duration_col="days", event_col="died", show_progress=True)
         with open(self.record_path + "cph_b.pickle", 'wb') as f:
             pickle.dump(cph_b, f)
 
+        print ("Training Cox model on ethnicity: C")
         cph_c = CoxPHFitter()
         cph_c.fit(people_cox_c, duration_col="days", event_col="died", show_progress=True)
         with open(self.record_path + "cph_c.pickle", 'wb') as f:
             pickle.dump(cph_c, f)
 
+        print ("Training Cox model on ethnicity: D")
         cph_d = CoxPHFitter()
         cph_d.fit(people_cox_d, duration_col="days", event_col="died", show_progress=True)
         with open(self.record_path + "cph_d.pickle", 'wb') as f:
             pickle.dump(cph_d, f)
-
+            
+        print ("Training Cox model on ethnicity: E")
         cph_e = CoxPHFitter()
         cph_e.fit(people_cox_e, duration_col="days", event_col="died", show_progress=True)
         with open(self.record_path + "cph_e.pickle", 'wb') as f:
