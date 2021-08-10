@@ -119,7 +119,36 @@ class SeroPrevalence:
             prevalence_ethnicity_std = 0.
             prevalence_socio_std = 0.
 
-        # todo - plotting against Ward 
+        fig = plt.figure()
+            
+        plt.errorbar(
+            y = np.arange(len(ward_prevalence_ethnicity)),
+            x = [prev[1] for eth, prev in ward_prevalence_ethnicity.items()],
+            xerr = [
+                [prev[1]-prev[0] for age, prev in ward_prevalence_ethnicity.items()],
+                [prev[2]-prev[1] for age, prev in ward_prevalence_ethnicity.items()]
+            ],
+            fmt = "o",
+            label = "Ward et al.",
+            capsize = 5
+        )
+
+        plt.errorbar(
+            y = np.arange(len(ward_prevalence_ethnicity)),
+            x = prevalence_ethnicity_mean,
+            xerr = prevalence_ethnicity_std,
+            fmt = "o",
+            label = "JUNE",
+            capsize = 5
+        )
+
+        plt.yticks(np.arange(len(ward_prevalence_ethnicity)), labels = ward_prevalence_ethnicity.keys())
+        plt.xlabel("Prevalence in group [%]")
+        plt.legend()
+
+        if self.plots_path is not None:
+            plt.savefig(self.plots_path + "/ethnicities.png", dpi=150)
+        
             
 
 if __name__ == "__main__":
