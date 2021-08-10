@@ -96,7 +96,7 @@ class SeroPrevalence:
 
         return list(prevalence_socio.loc[study_date])
 
-    def compare_seroprevalence(self):
+    def compare_seroprevalence_ethnicity(self):
 
         if self.records_path is not None:
 
@@ -104,6 +104,7 @@ class SeroPrevalence:
             prevalence_socios = []
             for i in os.listdir(self.records_path):
                 self.record_path = self.records_path + "/" + i
+                self.load_data()
                 prevalence_ethnicity = self.prevalence_ethnicity()
                 prevalence_socio = self.prevalence_socio()
                 prevalence_ethnicities.append(prevalence_ethnicity)
@@ -115,6 +116,7 @@ class SeroPrevalence:
             prevalence_socio_std = np.std(prevalence_socio, axis=1, ddof=0)
 
         else:
+            self.load_data()
             prevalence_ethnicity_mean = self.prevalence_ethnicity()
             prevalence_socio_mean = self.prevalence_socio()
             prevalence_ethnicity_std = 0.
@@ -150,8 +152,11 @@ class SeroPrevalence:
         if self.plots_path is not None:
             plt.savefig(self.plots_path + "/ethnicities.png", dpi=150)
         
-            
+    def compare_seroprevalence(self):
 
+        self.compare_seroprevalence_ethnicity()x
+
+            
 if __name__ == "__main__":
 
     args = parse()
