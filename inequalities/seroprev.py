@@ -100,7 +100,7 @@ class SeroPrevalence:
 
         return list(prevalence_socio.loc[study_date])
 
-    def compare_seroprevalence_ethnicity(self):
+    def compare_seroprevalence(self):
 
         if self.records_path is not None:
             print ("Looping over records")
@@ -159,10 +159,39 @@ class SeroPrevalence:
         if self.plots_path is not None:
             print ("Saving out plots")
             plt.savefig(self.plots_path + "/ethnicities.png", dpi=150)
-        
-    def compare_seroprevalence(self):
 
-        self.compare_seroprevalence_ethnicity()
+
+        fig = plt.figure()
+            
+        plt.errorbar(
+            y = [1,3,5,7,9],
+            x = [prev[1] for eth, prev in ward_prevalence_socio.items()],
+            xerr = [
+                [prev[1]-prev[0] for age, prev in ward_prevalence_socio.items()],
+                [prev[2]-prev[1] for age, prev in ward_prevalence_socio.items()]
+            ],
+            fmt = "o",
+            label = "Ward et al.",
+            capsize = 5
+        )
+
+        plt.errorbar(
+            y = np.arange(len(prevalence_socio_mean)),
+            x = prevalence_socio_mean,
+            xerr = prevalence_socio_std,
+            fmt = "o",
+            label = "JUNE",
+            capsize = 5
+        )
+
+        plt.yticks(np.arange(len(ward_prevalence_socio)), labels = ward_prevalence_socio.keys())
+        plt.xlabel("Prevalence in group [%]")
+        plt.ylabel("Socioeconomic index")
+        plt.legend()
+
+        if self.plots_path is not None:
+            print ("Saving out plots")
+            plt.savefig(self.plots_path + "/socioeconomic.png", dpi=150)
 
             
 if __name__ == "__main__":
