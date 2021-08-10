@@ -190,8 +190,15 @@ class SeroPrevalence:
         plt.legend()
 
         if self.plots_path is not None:
-            print ("Saving out plots")
+            print ("Saving out plots to: {}".format(self.plots_path))
             plt.savefig(self.plots_path + "/socioeconomic.png", dpi=150)
+        elif self.records_path is not None:
+            print ("Saving out plots to: {}".format(self.records_path))
+            plt.savefig(self.records_path + "/socioeconomic.png", dpi=150)
+        else:
+            print ("Saving out plots to: {}".format(self.record_path))
+            plt.savefig(self.record_path + "/socioeconomic.png", dpi=150)
+            
 
             
 if __name__ == "__main__":
