@@ -4,20 +4,22 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 ward_prevalence_ethnicity = {
-    'White': [4.8,5.,5.2],
-    'Mixed': [7.1,8.9,11.1],
-    'Asian': [11.0,11.9,12.8],
-    'Black': [15.8,17.3,19.0],
-    'Other': [10.2,12.3,14.7]
+    "White": [4.8,5.,5.2],
+    "Mixed": [7.1,8.9,11.1],
+    "Asian": [11.0,11.9,12.8],
+    "Black": [15.8,17.3,19.0],
+    "Other": [10.2,12.3,14.7]
 }
 
 ward_prevalence_socio = {
-    '1': [6.8,7.3,7.7],
-    '2': [6.0,6.4,6.8],
-    '3': [5.5,5.9,6.3],
-    '4': [4.9,5.2,5.6],
-    '5': [4.6,5.,5.4]
+    "1": [6.8,7.3,7.7],
+    "2": [6.0,6.4,6.8],
+    "3": [5.5,5.9,6.3],
+    "4": [4.9,5.2,5.6],
+    "5": [4.6,5.,5.4]
 }
+
+study_date = "2020-07-13"
 
 def parse():
     """
@@ -81,8 +83,8 @@ class SeroPrevalence:
         n_by_ethnicity = self.people_df.groupby('ethnicity').size()
 
         prevalence_ethnicity = 100*infected_by_ethnicity.unstack(level=0).cumsum()/n_by_ethnicity
-
-        return prevalence_ethnicity
+                                   
+        return list(prevalence_ethnicity.loc[study_date])
 
     def prevalence_socio(self):
 
@@ -91,7 +93,7 @@ class SeroPrevalence:
 
         prevalence_socio = 100*infected_by_socio.unstack(level=0).cumsum()/n_by_socio
 
-        return prevalence_socio
+        return list(prevalence_socio.loc[study_date])
 
     def compare_seroprevalence(self):
 
@@ -103,16 +105,13 @@ class SeroPrevalence:
                 self.record_path = self.records_path + "/" + i
                 prevalence_ethnicity = self.prevalence_ethnicity()
                 prevalence_socio = self.prevalence_socio()
-
-                # todo - work out exactly what is being appended here - currently it is the DataFrame but you don't want this
                 prevalence_ethnicities.append(prevalence_ethnicity)
                 prevalence_socios.append(prevalence_socio)
 
-            # todo - check axes on mean and std operation
-            prevalence_ethnicity_mean = np.mean(prevalence_ethnicities, axis=1)
-            prevalence_socio_mean = np.mean(prevalence_socio, axis=1)
-            prevalence_ethnicity_std = np.std(prevalence_ethnicities, axis=1, ddof=1)
-            prevalence_socio_std = np.std(prevalence_socio, axis=1, ddof=1)
+            prevalence_ethnicity_mean = np.mean(prevalence_ethnicities, axis=0)
+            prevalence_socio_mean = np.mean(prevalence_socio, axis=0)
+            prevalence_ethnicity_std = np.std(prevalence_ethnicities, axis=1, ddof=0)
+            prevalence_socio_std = np.std(prevalence_socio, axis=1, ddof=0)
 
         else:
             prevalence_ethnicity_mean = self.prevalence_ethnicity()
