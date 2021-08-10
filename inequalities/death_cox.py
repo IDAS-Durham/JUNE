@@ -82,23 +82,43 @@ class DeathCox:
         cph_b.fit(people_cox_b, duration_col="days", event_col="died", show_progress=True)
         with open(self.record_path + "cph_b.pickle", 'wb') as f:
             pickle.dump(cph_b, f)
+        print ("Model saved")
 
         print ("Training Cox model on ethnicity: C")
         cph_c = CoxPHFitter()
         cph_c.fit(people_cox_c, duration_col="days", event_col="died", show_progress=True)
         with open(self.record_path + "cph_c.pickle", 'wb') as f:
             pickle.dump(cph_c, f)
+        print ("Model saved")
 
         print ("Training Cox model on ethnicity: D")
         cph_d = CoxPHFitter()
         cph_d.fit(people_cox_d, duration_col="days", event_col="died", show_progress=True)
         with open(self.record_path + "cph_d.pickle", 'wb') as f:
             pickle.dump(cph_d, f)
+        print ("Model saved")
             
         print ("Training Cox model on ethnicity: E")
         cph_e = CoxPHFitter()
         cph_e.fit(people_cox_e, duration_col="days", event_col="died", show_progress=True)
         with open(self.record_path + "cph_e.pickle", 'wb') as f:
             pickle.dump(cph_e, f)
+        print ("Model saved")
+
+    def train_all(self):
+
+         if self.records_path is not None:
+            print ("Looping over records")
+
+            for i in os.listdir(self.records_path):
+                self.record_path = self.records_path + "/" + i
+                self.load_data()
+                self.process_data()
+                self.train_cox_ethnicity()
+
+         else:
+             self.load_data()
+             self.process_data()
+             self.train_cox_ethnicity()
 
         
