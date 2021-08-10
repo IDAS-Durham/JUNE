@@ -78,7 +78,7 @@ class SeroPrevalence:
         print ("People DataFrame loaded")
 
         self.infections_df = pd.read_csv(self.record_path + "/infections.csv")
-        self.infections_df = infections_df.rename(columns={"Unnamed: 0": "id"})
+        self.infections_df = self.infections_df.rename(columns={"Unnamed: 0": "id"})
         self.infections_df.set_index("id", inplace=True)
         print ("Infection DataFrame loaded")
 
@@ -117,8 +117,8 @@ class SeroPrevalence:
 
             prevalence_ethnicity_mean = np.mean(prevalence_ethnicities, axis=0)
             prevalence_socio_mean = np.mean(prevalence_socio, axis=0)
-            prevalence_ethnicity_std = np.std(prevalence_ethnicities, axis=1, ddof=0)
-            prevalence_socio_std = np.std(prevalence_socio, axis=1, ddof=0)
+            prevalence_ethnicity_std = np.std(prevalence_ethnicities, axis=0, ddof=1)
+            prevalence_socio_std = np.std(prevalence_socio, axis=0, ddof=1)
 
         else:
             self.load_data()
