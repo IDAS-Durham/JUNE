@@ -89,7 +89,7 @@ class SeroPrevalence:
 
         prevalence_ethnicity = 100*infected_by_ethnicity.unstack(level=0).cumsum()/n_by_ethnicity
                                    
-        return list(prevalence_ethnicity.loc[study_date])
+        return list(n_by_ethnicity), list(prevalence_ethnicity.loc[study_date])
 
     def prevalence_socio(self):
 
@@ -98,7 +98,7 @@ class SeroPrevalence:
 
         prevalence_socio = 100*infected_by_socio.unstack(level=0).cumsum()/n_by_socio
 
-        return list(prevalence_socio.loc[study_date])
+        return list(n_by_socio), list(prevalence_socio.loc[study_date])
 
     def compare_seroprevalence(self):
 
@@ -110,8 +110,8 @@ class SeroPrevalence:
             for i in os.listdir(self.records_path):
                 self.record_path = self.records_path + "/" + i
                 self.load_data()
-                prevalence_ethnicity = self.prevalence_ethnicity()
-                prevalence_socio = self.prevalence_socio()
+                _, prevalence_ethnicity = self.prevalence_ethnicity()
+                _, prevalence_socio = self.prevalence_socio()
                 prevalence_ethnicities.append(prevalence_ethnicity)
                 prevalence_socios.append(prevalence_socio)
 
@@ -122,8 +122,8 @@ class SeroPrevalence:
 
         else:
             self.load_data()
-            prevalence_ethnicity_mean = self.prevalence_ethnicity()
-            prevalence_socio_mean = self.prevalence_socio()
+            _, prevalence_ethnicity_mean = self.prevalence_ethnicity()
+            _, prevalence_socio_mean = self.prevalence_socio()
             prevalence_ethnicity_std = 0.
             prevalence_socio_std = 0.
 
