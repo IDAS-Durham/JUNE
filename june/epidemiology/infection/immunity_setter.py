@@ -28,7 +28,7 @@ class ImmunitySetter:
         susceptibility_dict: dict = default_susceptibility_dict,
         multiplier_dict: dict = default_multiplier_dict,
         vaccination_dict: dict = None,
-        previous_infection_dict = None,
+        previous_infections_dict = None,
         multiplier_by_comorbidity: Optional[dict] = None,
         comorbidity_prevalence_reference_population: Optional[dict] = None,
         susceptibility_mode="average",
@@ -70,10 +70,10 @@ class ImmunitySetter:
                         },
                     },
                 }
-            previous_infection_dict:
+            previous_infections_dict:
                 A dictionary specifying the current seroprevalence per region and age.
                 Example:
-                    previous_infection_dict = {
+                    previous_infections_dict = {
                         "infections": {
                             Covid19.infection_id(): {
                                 "sterilisation_efficacy": 0.5,
@@ -96,7 +96,7 @@ class ImmunitySetter:
         else:
             self.multiplier_dict = multiplier_dict
         self.vaccination_dict = self._read_vaccination_dict(vaccination_dict)
-        self.previous_infection_dict = self._read_previous_infection_dict(previous_infection_dict)
+        self.previous_infections_dict = self._read_previous_infections_dict(previous_infections_dict)
         self.multiplier_by_comorbidity = multiplier_by_comorbidity
         if comorbidity_prevalence_reference_population is not None:
             self.comorbidity_prevalence_reference_population = (
@@ -146,10 +146,10 @@ class ImmunitySetter:
             self.set_multipliers(population)
         if self.susceptibility_dict:
             self.set_susceptibilities(population)
+        if self.previous_infections_dict:
+            self.set_previous_infections(population)
         if self.vaccination_dict:
             self.set_vaccinations(population)
-        if self.previous_infection_dict:
-            self.set_previous_infections(population)
 
     def get_multiplier_from_reference_prevalence(self, age, sex):
         """
@@ -241,13 +241,13 @@ class ImmunitySetter:
                     )
         return ret
 
-    def _read_previous_infection_dict(self, previous_infection_dict):
-        if previous_infection_dict is None:
+    def _read_previous_infections_dict(self, previous_infections_dict):
+        if previous_infections_dict is None:
             return {}
         ret = {}
-        ret["infections"] = previous_infection_dict["infections"]
+        ret["infections"] = previous_infections_dict["infections"]
         ret["ratios"] = {}
-        for region, region_ratios in previous_infection_dict["ratios"].items():
+        for region, region_ratios in previous_infections_dict["ratios"].items():
             ret["ratios"][region] = parse_age_probabilities(region_ratios)
         return ret
 
@@ -318,11 +318,11 @@ class ImmunitySetter:
         Sets previous infections on the starting population.
         """
         for person in population:
-            if person.region.name not in self.previous_infection_dict["ratios"]:
+            if person.region.name not in self.previous_infections_dict["ratios"]:
                 continue
-            ratio = self.previous_infection_dict["ratios"][person.region.name][person.age]
+            ratio = self.previous_infections_dict["ratios"][person.region.name][person.age]
             if random() < ratio:
-                for inf_id, inf_data in self.previous_infection_dict["infections"].items():
+                for inf_id, inf_data in self.previous_infections_dict["infections"].items():
                     person.immunity.add_multiplier(inf_id, inf_data["symptomatic_efficacy"])
                     if random() < inf_data["sterilisation_efficacy"]:
                         person.immunity.add_immunity([inf_id])

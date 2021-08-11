@@ -360,7 +360,7 @@ class TestVaccinationSetter:
 
 
 class TestPreviousInfectionSetter:
-    @pytest.fixture(name="previous_infection_dict")
+    @pytest.fixture(name="previous_infections_dict")
     def make_prev_inf_dict(self):
         dd = {
             "infections": {
@@ -380,7 +380,7 @@ class TestPreviousInfectionSetter:
         }
         return dd
 
-    def test__setting_prev_infections(self, previous_infection_dict):
+    def test__setting_prev_infections(self, previous_infections_dict):
         ne = Region(name="North East")
         ne_super_area = SuperArea(region=ne)
         ne_area = Area(super_area=ne_super_area)
@@ -396,7 +396,7 @@ class TestPreviousInfectionSetter:
                     p = Person.from_attributes(age=age)
                     p.area = area
                     population.add(p)
-        immunity = ImmunitySetter(previous_infection_dict=previous_infection_dict)
+        immunity = ImmunitySetter(previous_infections_dict=previous_infections_dict)
         immunity.set_previous_infections(population)
         results = {
             "London": {
