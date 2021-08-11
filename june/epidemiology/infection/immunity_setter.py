@@ -23,33 +23,80 @@ default_multiplier_dict = {
 
 
 class ImmunitySetter:
-    """
-    Sets immnuity parameters to different viruses.
-
-    Parameters
-    ----------
-    susceptibility_dict
-       A dictionary mapping infection_id -> susceptibility by age.
-       Example:
-        susceptibility_dict = {"123" : {"0-50" : 0.5, "50-100" : 0.2}}
-    """
-
     def __init__(
         self,
         susceptibility_dict: dict = default_susceptibility_dict,
         multiplier_dict: dict = default_multiplier_dict,
         vaccination_dict: dict = None,
+        previous_infection_dict = None,
         multiplier_by_comorbidity: Optional[dict] = None,
         comorbidity_prevalence_reference_population: Optional[dict] = None,
         susceptibility_mode="average",
         record:"Record" = None,
     ):
+        """
+        Sets immnuity parameters to different viruses.
+
+        Parameters
+        ----------
+        susceptibility_dict:
+           A dictionary mapping infection_id -> susceptibility by age.
+           Example:
+            susceptibility_dict = {"123" : {"0-50" : 0.5, "50-100" : 0.2}}
+        multiplier_dict:
+           A dictionary mapping infection_id -> symptoms reduction by age.
+           Example:
+            multiplier_dict = {"123" : {"0-50" : 0.5, "50-100" : 0.2}}
+        vaccination_dict:
+            A dictionary specifying the starting vaccination status of the population.
+            Example:
+                vaccination_dict = {
+                    "pfizer": {
+                        "percentage_vaccinated": {"0-50": 0.7, "50-100": 1.0},
+                        "infections": {
+                            Covid19.infection_id(): {
+                                "sterilisation_efficacy": {"0-100": 0.5},
+                                "symptomatic_efficacy": {"0-100": 0.5},
+                            },
+                        },
+                    },
+                    "sputnik": {
+                        "percentage_vaccinated": {"0-30": 0.3, "30-100": 0.0},
+                        "infections": {
+                            B117.infection_id(): {
+                                "sterilisation_efficacy": {"0-100": 0.8},
+                                "symptomatic_efficacy": {"0-100": 0.8},
+                            },
+                        },
+                    },
+                }
+            previous_infection_dict:
+                A dictionary specifying the current seroprevalence per region and age.
+                Example:
+                    previous_infection_dict = {
+                        "infections": {
+                            Covid19.infection_id(): {
+                                "sterilisation_efficacy": 0.5,
+                                "symptomatic_efficacy": 0.6,
+                            },
+                            B117.infection_id(): {
+                                "sterilisation_efficacy": 0.2,
+                                "symptomatic_efficacy": 0.3,
+                            },
+                        },
+                        "ratios": {
+                            "London": {"0-50": 0.5, "50-100": 0.2},
+                            "North East": {"0-70": 0.3, "70-100": 0.8},
+                        },
+                    }
+        """
         self.susceptibility_dict = self._read_susceptibility_dict(susceptibility_dict)
         if multiplier_dict is None:
             self.multiplier_dict = {}
         else:
             self.multiplier_dict = multiplier_dict
         self.vaccination_dict = self._read_vaccination_dict(vaccination_dict)
+        self.previous_infection_dict = self._read_previous_infection_dict(previous_infection_dict)
         self.multiplier_by_comorbidity = multiplier_by_comorbidity
         if comorbidity_prevalence_reference_population is not None:
             self.comorbidity_prevalence_reference_population = (
@@ -101,6 +148,8 @@ class ImmunitySetter:
             self.set_susceptibilities(population)
         if self.vaccination_dict:
             self.set_vaccinations(population)
+        if self.previous_infection_dict:
+            self.set_previous_infections(population)
 
     def get_multiplier_from_reference_prevalence(self, age, sex):
         """
@@ -192,6 +241,16 @@ class ImmunitySetter:
                     )
         return ret
 
+    def _read_previous_infection_dict(self, previous_infection_dict):
+        if previous_infection_dict is None:
+            return {}
+        ret = {}
+        ret["infections"] = previous_infection_dict["infections"]
+        ret["ratios"] = {}
+        for region, region_ratios in previous_infection_dict["ratios"].items():
+            ret["ratios"][region] = parse_age_probabilities(region_ratios)
+        return ret
+
     def set_susceptibilities(self, population):
         if self.susceptibility_mode == "average":
             self._set_susceptibilities_avg(population)
@@ -219,6 +278,9 @@ class ImmunitySetter:
                     person.immunity.susceptibility_dict[inf_id] = 0.0
 
     def set_vaccinations(self, population):
+        """
+        Sets previous vaccination on the starting population.
+        """
         vaccine_type =  []  
         if not self.vaccination_dict:
             return
@@ -250,4 +312,20 @@ class ImmunitySetter:
                 vaccine_type.append('none')
         if self.record is not None:
             self.record.statics['people'].extra_str_data['vaccine_type'] = vaccine_type
+
+    def set_previous_infections(self, population):
+        """
+        Sets previous infections on the starting population.
+        """
+        for person in population:
+            if person.region.name not in self.previous_infection_dict["ratios"]:
+                continue
+            ratio = self.previous_infection_dict["ratios"][person.region.name][person.age]
+            if random() < ratio:
+                for inf_id, inf_data in self.previous_infection_dict["infections"].items():
+                    person.immunity.add_multiplier(inf_id, inf_data["symptomatic_efficacy"])
+                    if random() < inf_data["sterilisation_efficacy"]:
+                        person.immunity.add_immunity([inf_id])
+
+
 
