@@ -307,6 +307,7 @@ class ImmunitySetter:
                     )
                     if random() < inf_data["sterilisation_efficacy"][age]:
                         person.immunity.susceptibility_dict[inf_id] = 0.0
+                person.vaccinated = True 
                 vaccine_type.append(vaccine)
             else:
                 vaccine_type.append('none')
