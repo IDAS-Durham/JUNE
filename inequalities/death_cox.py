@@ -13,9 +13,10 @@ study_duration = (study_end - study_start).days
 
 class DeathCox:
 
-    def __init__(self, record_path, records_path=None, save_path=None):
+    def __init__(self, record_path, se_control=False, records_path=None, save_path=None):
 
         self.record_path = record_path
+        self.se_control = se_control
         self.records_path = records_path
         self.save_path = save_path
 
@@ -62,7 +63,10 @@ class DeathCox:
         self.people_df.loc[self.people_df["ethnicity"] == "D", "ethnicity"] = 3
         self.people_df.loc[self.people_df["ethnicity"] == "E", "ethnicity"] = 4
 
-        self.people_cox_df = self.people_df[["age", "sex", "ethnicity", "died", "days"]]
+        if self.se_control:
+            self.people_cox_df = self.people_df[["age", "sex", "ethnicity", "socioeconomic_index", "died", "days"]]
+        else:
+            self.people_cox_df = self.people_df[["age", "sex", "ethnicity", "died", "days"]]
 
         print ("Data processed")
 
