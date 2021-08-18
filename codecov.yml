@@ -22,4 +22,5 @@ comment:
 ignore:
   - "june/visualization/plotter.py"
   - "june/visualizer.py"
-  - "june/interaction/contact_sampling.py"
+  - "june_plots/*"
+  - "june_tests/*"

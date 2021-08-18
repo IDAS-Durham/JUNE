@@ -132,6 +132,7 @@ class Quarantine(StayHome):
         n_days_household: int = 14,
         compliance: float = 1.0,
         household_compliance: float = 1.0,
+        vaccinated_household_compliance: float = 1.0
     ):
         """
         This policy forces people to stay at home for ```n_days``` days after they show symtpoms, and for ```n_days_household``` if someone else in their household shows symptoms
@@ -150,12 +151,16 @@ class Quarantine(StayHome):
             percentage of symptomatic people that will adhere to the quarantine policy
         household_compliance:
             percentage of people that will adhere to the hoseuhold quarantine policy
+        vaccinated_household_compliance:
+            over 18s don't quarantine up to household compliance
+            those fully vaccinated don't quarantine up to household compliance
         """
         super().__init__(start_time, end_time)
         self.n_days = n_days
         self.n_days_household = n_days_household
         self.compliance = compliance
         self.household_compliance = household_compliance
+        self.vaccinated_household_compliance = vaccinated_household_compliance
 
     def check_stay_home_condition(self, person: Person, days_from_start):
         try:
@@ -173,11 +178,21 @@ class Quarantine(StayHome):
                     if 0 < release_day - days_from_start < self.n_days:
                         if random() < self.compliance * regional_compliance:
                             return True
-        housemates_quarantine = person.residence.group.quarantine(
-            time=days_from_start,
-            quarantine_days=self.n_days_household,
-            household_compliance=self.household_compliance * regional_compliance,
-        )
+
+        if (person.vaccinated and person.vaccine_plan is None) or person.age < 18:
+            housemates_quarantine = person.residence.group.quarantine(
+                time=days_from_start,
+                quarantine_days=self.n_days_household,
+                household_compliance=self.vaccinated_household_compliance * self.household_compliance * regional_compliance,
+            )
+
+        else:
+            housemates_quarantine = person.residence.group.quarantine(
+                time=days_from_start,
+                quarantine_days=self.n_days_household,
+                household_compliance=self.household_compliance * regional_compliance,
+            )
+            
         return housemates_quarantine
 
 
