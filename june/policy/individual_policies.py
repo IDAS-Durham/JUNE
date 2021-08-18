@@ -193,7 +193,6 @@ class Quarantine(StayHome):
                 household_compliance=self.household_compliance * regional_compliance,
             )
             
-            
         return housemates_quarantine
 
 
