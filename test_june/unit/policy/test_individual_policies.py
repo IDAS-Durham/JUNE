@@ -1313,6 +1313,99 @@ class TestQuarantine:
         worker.infection = None
         sim.clear_world()
 
+    def test__quarantine_vaccinated_are_free(self, setup_policy_world, selector):
+        world, pupil, student, worker, sim = setup_policy_world
+        super_area = world.super_areas[0]
+        quarantine = Quarantine(
+            start_time="2020-1-1",
+            end_time="2020-1-30",
+            n_days=7,
+            n_days_household=14,
+            household_compliance=1.0,
+            vaccinated_household_compliance=0.0
+        )
+        pupil.age = 19 # such that they aren't caught in the under 18 rule
+        pupil.vaccinated = True
+        policies = Policies([quarantine])
+        sim.activity_manager.policies = policies
+        infect_person(worker, selector, "mild")
+        sim.epidemiology.update_health_status(world, 0.0, 0.0)
+        activities = ["primary_activity", "residence"]
+        sim.clear_world()
+        time_during_policy = datetime(2020, 1, 2)
+        active_individual_policies = policies.individual_policies.get_active(
+            date=time_during_policy
+        )
+        # before symptoms onset
+        assert "primary_activity" in policies.individual_policies.apply(
+            active_individual_policies,
+            person=pupil,
+            activities=activities,
+            days_from_start=4.0,
+        )
+        # after symptoms onset
+        assert "primary_activity" in policies.individual_policies.apply(
+            active_individual_policies,
+            person=pupil,
+            activities=activities,
+            days_from_start=8.0,
+        )
+        # more thatn two weeks after symptoms onset
+        assert "primary_activity" in policies.individual_policies.apply(
+            active_individual_policies,
+            person=pupil,
+            activities=activities,
+            days_from_start=25,
+        )
+        worker.infection = None
+        sim.clear_world()
+
+    def test__quarantine_children_are_free(self, setup_policy_world, selector):
+        world, pupil, student, worker, sim = setup_policy_world
+        super_area = world.super_areas[0]
+        quarantine = Quarantine(
+            start_time="2020-1-1",
+            end_time="2020-1-30",
+            n_days=7,
+            n_days_household=14,
+            household_compliance=1.0,
+            vaccinated_household_compliance=0.0
+        )
+        pupil.age = 17 
+        policies = Policies([quarantine])
+        sim.activity_manager.policies = policies
+        infect_person(worker, selector, "mild")
+        sim.epidemiology.update_health_status(world, 0.0, 0.0)
+        activities = ["primary_activity", "residence"]
+        sim.clear_world()
+        time_during_policy = datetime(2020, 1, 2)
+        active_individual_policies = policies.individual_policies.get_active(
+            date=time_during_policy
+        )
+        # before symptoms onset
+        assert "primary_activity" in policies.individual_policies.apply(
+            active_individual_policies,
+            person=pupil,
+            activities=activities,
+            days_from_start=4.0,
+        )
+        # after symptoms onset
+        assert "primary_activity" in policies.individual_policies.apply(
+            active_individual_policies,
+            person=pupil,
+            activities=activities,
+            days_from_start=8.0,
+        )
+        # more thatn two weeks after symptoms onset
+        assert "primary_activity" in policies.individual_policies.apply(
+            active_individual_policies,
+            person=pupil,
+            activities=activities,
+            days_from_start=25,
+        )
+        worker.infection = None
+        sim.clear_world()
+
 
 def test__kid_at_home_is_supervised(setup_policy_world, selector):
     world, pupil, student, worker, sim = setup_policy_world
