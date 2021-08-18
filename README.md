@@ -10,7 +10,7 @@ Please cite our paper as follows:
 ```
 @article{doi:10.1098/rsos.210506,
   author = {Aylett-Bullock, Joseph  and Cuesta-Lazaro, Carolina  and Quera-Bofarull, Arnau  and Icaza-Lizaola, Miguel  and Sedgewick, Aidan  and Truong, Henry  and Curran, Aoife  and Elliott, Edward  and Caulfield, Tristan  and Fong, Kevin  and Vernon, Ian  and Williams, Julian  and Bower, Richard  and Krauss, Frank },
-  title = {J<span class="smallcaps smallerCapital">une</span>: open-source individual-based epidemiology simulation},
+  title = {June: open-source individual-based epidemiology simulation},
   journal = {Royal Society Open Science},
   volume = {8},
   number = {7},
