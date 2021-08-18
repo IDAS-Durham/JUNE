@@ -11,14 +11,49 @@ study_start = datetime(2020, 2, 1, 0, 0)
 study_end = datetime(2020, 5, 16, 0, 0)
 study_duration = (study_end - study_start).days
 
+def parse():
+    """
+    Parse arguments
+    """
+
+    parser = argparse.ArgumentParser(description=
+                                     """
+                                     Train Cox regression hazard models for deaths by ethnicity and socioeconomic index
+                                     """
+    )
+
+    parser.add_argument(
+        "--record_path",
+        dest = "record_path",
+        help = "path to individual record",
+        default = None,
+    )
+
+    parser.add_argument(
+        "--records_path",
+        dest = "records_path",
+        help = "path to directory containing records",
+        default = None
+    )
+
+    parser.add_argument(
+        "--se_control",
+        dest = "se_control",
+        help = "control for socioeconomic index in ethnicity models",
+        default = False
+    )
+
+    args = parser.parse_args()
+
+    return args
+
 class DeathCox:
 
-    def __init__(self, record_path, se_control=False, records_path=None, save_path=None):
+    def __init__(self, record_path, records_path=None, se_control=False):
 
         self.record_path = record_path
-        self.se_control = se_control
         self.records_path = records_path
-        self.save_path = save_path
+        self.se_control = se_control
 
         if self.record_path is None and self.records_path is None:
             raise ValueError("Both record_path and records_path cannont be None simultaneously")
@@ -84,28 +119,48 @@ class DeathCox:
         print ("Training Cox model on ethnicity: B")
         cph_b = CoxPHFitter()
         cph_b.fit(people_cox_b, duration_col="days", event_col="died", show_progress=True)
-        with open(self.record_path + "/cph_b.pickle", 'wb') as f:
+
+        if self.se_control:
+            save_path = self.record_path + "/cph_b_se_control.pickle"
+        else:
+            save_path = self.record_path + "/cph_b.pickle"
+        with open(save_path, 'wb') as f:
             pickle.dump(cph_b, f)
         print ("Model saved")
 
         print ("Training Cox model on ethnicity: C")
         cph_c = CoxPHFitter()
         cph_c.fit(people_cox_c, duration_col="days", event_col="died", show_progress=True)
-        with open(self.record_path + "/cph_c.pickle", 'wb') as f:
+
+        if self.se_control:
+            save_path = self.record_path + "/cph_c_se_control.pickle"
+        else:
+            save_path = self.record_path + "/cph_c.pickle"
+        with open(save_path, 'wb') as f:
             pickle.dump(cph_c, f)
         print ("Model saved")
 
         print ("Training Cox model on ethnicity: D")
         cph_d = CoxPHFitter()
         cph_d.fit(people_cox_d, duration_col="days", event_col="died", show_progress=True)
-        with open(self.record_path + "/cph_d.pickle", 'wb') as f:
+
+        if self.se_control:
+            save_path = self.record_path + "/cph_d_se_control.pickle"
+        else:
+            save_path = self.record_path + "/cph_d.pickle"
+        with open(save_path, 'wb') as f:
             pickle.dump(cph_d, f)
         print ("Model saved")
             
         print ("Training Cox model on ethnicity: E")
         cph_e = CoxPHFitter()
         cph_e.fit(people_cox_e, duration_col="days", event_col="died", show_progress=True)
-        with open(self.record_path + "/cph_e.pickle", 'wb') as f:
+
+        if self.se_control:
+            save_path = self.record_path + "/cph_e_se_control.pickle"
+        else:
+            save_path = self.record_path + "/cph_e.pickle"
+        with open(save_path, 'wb') as f:
             pickle.dump(cph_e, f)
         print ("Model saved")
 
@@ -126,3 +181,9 @@ class DeathCox:
              self.train_cox_ethnicity()
 
         
+if __name__ == "__main__":
+
+    args = parse()
+
+    death_cox = DeathCox(args.record_path, args.records_path, args.se_control)
+    death_cox.train_all()
