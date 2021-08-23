@@ -247,10 +247,8 @@ class SchoolQuarantine(StayHome):
             # days before it is actually applied (during incubation time).
             time_of_symptoms_onset = person.infection.time_of_symptoms_onset
             if time_of_symptoms_onset is not None:
-                person.primary_activity.quarantine_starting_date = max(
-                    time_of_symptoms_onset,
-                    person.primary_activity.quarantine_starting_date,
-                )
+                if (days_from_start - person.primary_activity.quarantine_starting_date) > self.n_days:
+                    person.primary_activity.quarantine_starting_date = time_of_symptoms_onset
         if (
             0
             < (days_from_start - person.primary_activity.quarantine_starting_date)
