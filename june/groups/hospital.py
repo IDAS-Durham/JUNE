@@ -208,7 +208,6 @@ class Hospitals(Supergroup, MedicalFacilities):
         self,
         hospitals: List["Hospital"],
         neighbour_hospitals: int = 5,
-        box_mode: bool = False,
         ball_tree=True,
     ):
         """
@@ -224,22 +223,12 @@ class Hospitals(Supergroup, MedicalFacilities):
             list of hospitals to aggrupate
         neighbour_hospitals:
             number of closest hospitals to look for
-        box_mode:
-            whether to run in single box mode, or full simulation
         """
         super().__init__(members=hospitals)
-        self.box_mode = box_mode
         self.neighbour_hospitals = neighbour_hospitals
         if ball_tree and self.members:
             coordinates = np.array([hospital.coordinates for hospital in hospitals])
             self.init_trees(coordinates)
-
-    @classmethod
-    def for_box_mode(cls):
-        hospitals = []
-        hospitals.append(Hospital(coordinates=None, n_beds=10, n_icu_beds=2,))
-        hospitals.append(Hospital(coordinates=None, n_beds=5000, n_icu_beds=5000,))
-        return cls(hospitals, neighbour_hospitals=None, box_mode=True, ball_tree=False)
 
     @classmethod
     def from_file(
@@ -298,7 +287,7 @@ class Hospitals(Supergroup, MedicalFacilities):
                         hospitals.append(hospital)
                 if len(hospitals) == total_hospitals:
                     break
-        return cls(hospitals, neighbour_hospitals, False)
+        return cls(hospitals=hospitals, neighbour_hospitals=neighbour_hospitals, ball_tree=True)
 
     @classmethod
     def create_hospital_from_df_row(
