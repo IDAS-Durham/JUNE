@@ -45,7 +45,7 @@ class EventRecord:
             ]
             + [np.array(getattr(self, name), dtype=np.int32) for name in self.int_names]
             + [
-                np.array(getattr(self, name), dtype=np.float32)
+                np.array(getattr(self, name), dtype=np.float6432)
                 for name in self.float_names
             ]
             + [np.array(getattr(self, name), dtype="S20") for name in self.str_names]
@@ -60,29 +60,38 @@ class EventRecord:
 
 class InfectionRecord(EventRecord):
     def __init__(
-        self, hdf5_file,
+        self,
+        hdf5_file,
     ):
         super().__init__(
             hdf5_file=hdf5_file,
             table_name="infections",
-            int_names=["location_ids", "infector_ids", "infected_ids"],
+            int_names=["location_ids", "infector_ids", "infected_ids", "infection_ids"],
             float_names=[],
             str_names=["location_specs", "region_names"],
         )
 
     def accumulate(
-        self, location_spec, location_id, region_name, infector_ids, infected_ids
+        self,
+        location_spec,
+        location_id,
+        region_name,
+        infector_ids,
+        infected_ids,
+        infection_ids,
     ):
         self.location_specs.extend([location_spec] * len(infected_ids))
         self.location_ids.extend([location_id] * len(infected_ids))
         self.region_names.extend([region_name] * len(infected_ids))
         self.infector_ids.extend(infector_ids)
         self.infected_ids.extend(infected_ids)
+        self.infection_ids.extend(infection_ids)
 
 
 class HospitalAdmissionsRecord(EventRecord):
     def __init__(
-        self, hdf5_file,
+        self,
+        hdf5_file,
     ):
         super().__init__(
             hdf5_file=hdf5_file,
@@ -99,7 +108,8 @@ class HospitalAdmissionsRecord(EventRecord):
 
 class ICUAdmissionsRecord(EventRecord):
     def __init__(
-        self, hdf5_file,
+        self,
+        hdf5_file,
     ):
         super().__init__(
             hdf5_file=hdf5_file,
@@ -116,7 +126,8 @@ class ICUAdmissionsRecord(EventRecord):
 
 class DischargesRecord(EventRecord):
     def __init__(
-        self, hdf5_file,
+        self,
+        hdf5_file,
     ):
         super().__init__(
             hdf5_file=hdf5_file,
@@ -133,7 +144,8 @@ class DischargesRecord(EventRecord):
 
 class DeathsRecord(EventRecord):
     def __init__(
-        self, hdf5_file,
+        self,
+        hdf5_file,
     ):
         super().__init__(
             hdf5_file=hdf5_file,
@@ -151,32 +163,36 @@ class DeathsRecord(EventRecord):
 
 class RecoveriesRecord(EventRecord):
     def __init__(
-        self, hdf5_file,
+        self,
+        hdf5_file,
     ):
         super().__init__(
             hdf5_file=hdf5_file,
             table_name="recoveries",
-            int_names=["recovered_person_ids"],
+            int_names=["recovered_person_ids", "infection_ids"],
             float_names=[],
             str_names=[],
         )
 
-    def accumulate(self, recovered_person_id):
+    def accumulate(self, recovered_person_id, infection_id):
         self.recovered_person_ids.append(recovered_person_id)
+        self.infection_ids.append(infection_id)
 
 
 class SymptomsRecord(EventRecord):
     def __init__(
-        self, hdf5_file,
+        self,
+        hdf5_file,
     ):
         super().__init__(
             hdf5_file=hdf5_file,
             table_name="symptoms",
-            int_names=["infected_ids", "new_symptoms"],
+            int_names=["infected_ids", "new_symptoms", "infection_ids"],
             float_names=[],
             str_names=[],
         )
 
-    def accumulate(self, infected_id, symptoms):
+    def accumulate(self, infected_id, symptoms, infection_id):
         self.infected_ids.append(infected_id)
         self.new_symptoms.append(symptoms)
+        self.infection_ids.append(infection_id)

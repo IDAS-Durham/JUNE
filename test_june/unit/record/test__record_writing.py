@@ -12,8 +12,9 @@ from june.policy import Policies
 from june.activity import ActivityManager
 from june.demography import Person, Population
 from june.interaction import Interaction
-from june.infection import InfectionSelector, HealthIndexGenerator
-from june.infection_seed import InfectionSeed
+from june.epidemiology.epidemiology import Epidemiology
+from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
+from june.epidemiology.infection_seed import InfectionSeed, InfectionSeeds
 from june.geography.geography import (
     Areas,
     SuperAreas,
@@ -26,6 +27,7 @@ from june.groups import Supergroup
 from june import World
 
 config_interaction = paths.configs_path / "tests/interaction.yaml"
+
 
 @pytest.fixture(name="dummy_world", scope="module")
 def create_dummy_world():
@@ -40,21 +42,58 @@ def create_dummy_world():
     ]
     super_areas = SuperAreas(regions[0].super_areas + regions[1].super_areas)
     super_areas[0].areas = [
-        Area(name="area_1", coordinates=(0.0, 0.0), super_area=super_areas[0]),
-        Area(name="area_2", coordinates=(0.0, 0.0), super_area=super_areas[0]),
-        Area(name="area_3", coordinates=(0.0, 0.0), super_area=super_areas[0]),
+        Area(
+            name="area_1",
+            coordinates=(0.0, 0.0),
+            super_area=super_areas[0],
+            socioeconomic_index=0.01,
+        ),
+        Area(
+            name="area_2",
+            coordinates=(0.0, 0.0),
+            super_area=super_areas[0],
+            socioeconomic_index=0.02,
+        ),
+        Area(
+            name="area_3",
+            coordinates=(0.0, 0.0),
+            super_area=super_areas[0],
+            socioeconomic_index=0.03,
+        ),
     ]
     super_areas[1].areas = [
-        Area(name="area_4", coordinates=(0.0, 0.0), super_area=super_areas[1]),
-        Area(name="area_5", coordinates=(0.0, 0.0), super_area=super_areas[1]),
+        Area(
+            name="area_4",
+            coordinates=(0.0, 0.0),
+            super_area=super_areas[1],
+            socioeconomic_index=0.11,
+        ),
+        Area(
+            name="area_5",
+            coordinates=(0.0, 0.0),
+            super_area=super_areas[1],
+            socioeconomic_index=0.12,
+        ),
     ]
     super_areas[2].areas = [
-        Area(name="area_6", coordinates=(5, 5), super_area=super_areas[2])
+        Area(
+            name="area_6",
+            coordinates=(5, 5),
+            super_area=super_areas[2],
+            socioeconomic_index=0.90,
+        )
     ]
     areas = Areas(super_areas[0].areas + super_areas[1].areas + super_areas[2].areas)
     households = Households([Household(area=super_areas[0].areas[0])])
     hospitals = Hospitals(
-        [Hospital(n_beds=1, n_icu_beds=1, area=areas[5], coordinates=(0.0, 0.0),)]
+        [
+            Hospital(
+                n_beds=1,
+                n_icu_beds=1,
+                area=areas[5],
+                coordinates=(0.0, 0.0),
+            )
+        ]
     )
     care_homes = CareHomes([CareHome(area=super_areas[0].areas[0])])
     world = World()
@@ -65,9 +104,9 @@ def create_dummy_world():
     world.hospitals = hospitals
     world.care_homes = care_homes
     world.people = [
-        Person.from_attributes(id=0, age=0, ethnicity="A", socioecon_index=0),
-        Person.from_attributes(id=1, age=1, ethnicity="B", socioecon_index=1),
-        Person.from_attributes(id=2, age=2, sex="m", ethnicity="C", socioecon_index=2),
+        Person.from_attributes(id=0, age=0, ethnicity="A"),
+        Person.from_attributes(id=1, age=1, ethnicity="B"),
+        Person.from_attributes(id=2, age=2, sex="m", ethnicity="C"),
     ]
     world.people[0].area = super_areas[0].areas[0]  # household resident
     world.people[0].subgroups.primary_activity = hospitals[0].subgroups[0]
@@ -91,6 +130,7 @@ def test__writing_infections():
             location_id=0,
             infected_ids=[0, 10, 20],
             infector_ids=[5, 15, 25],
+            infection_ids=[0, 0, 0],
         )
         record.events["infections"].record(hdf5_file=record.file, timestamp=timestamp)
         table = record.file.root.infections
@@ -107,6 +147,9 @@ def test__writing_infections():
     assert df.infector_ids[1] == 15
     assert df.infected_ids[2] == 20
     assert df.infector_ids[2] == 25
+    assert df.infection_ids[0] == 0
+    assert df.infection_ids[1] == 0
+    assert df.infection_ids[2] == 0
     del df
 
 
@@ -183,7 +226,10 @@ def test__writing_death():
 
 
 def test__static_people(dummy_world):
-    record = Record(record_path="results", record_static_data=True,)
+    record = Record(
+        record_path="results",
+        record_static_data=True,
+    )
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -195,9 +241,6 @@ def test__static_people(dummy_world):
     assert df.loc[0, "age"] == 0
     assert df.loc[1, "age"] == 1
     assert df.loc[2, "age"] == 2
-    assert df.loc[0, "socioeconomic_index"] == 0
-    assert df.loc[1, "socioeconomic_index"] == 1
-    assert df.loc[2, "socioeconomic_index"] == 2
     assert df.loc[0, "primary_activity_type"] == "hospital"
     assert df.loc[0, "primary_activity_id"] == dummy_world.hospitals[0].id
     assert df.loc[1, "primary_activity_type"] == "None"
@@ -212,9 +255,60 @@ def test__static_people(dummy_world):
     assert df.loc[0, "sex"] == "f"
     assert df.loc[2, "sex"] == "m"
 
+def test__static_with_extras_people(dummy_world):
+    record = Record(
+        record_path="results",
+        record_static_data=True,
+    )
+    tonto = [0.1,1.3,5.]
+    listo = [0.9,0.7,0.]
+    vaccine_type = [0,1,2]
+    vaccine_name = ['astra','pfizer','moderna']
+    record.statics['people'].extra_float_data['tonto'] = tonto
+    record.statics['people'].extra_float_data['listo'] = listo  
+    record.statics['people'].extra_int_data['vaccine_type'] = vaccine_type
+    record.statics['people'].extra_str_data['vaccine_name'] = vaccine_name
+    record.static_data(world=dummy_world)
+    with open_file(record.record_path / record.filename, mode="a") as f:
+        record.file = f
+        table = record.file.root.population
+        df = pd.DataFrame.from_records(table.read(), index="id")
+    str_cols = record.statics["people"].str_names
+    for col in str_cols:
+        df[col] = df[col].str.decode("utf-8")
+    assert df.loc[0, "age"] == 0
+    assert df.loc[1, "age"] == 1
+    assert df.loc[2, "age"] == 2
+    assert df.loc[0, "primary_activity_type"] == "hospital"
+    assert df.loc[0, "primary_activity_id"] == dummy_world.hospitals[0].id
+    assert df.loc[1, "primary_activity_type"] == "None"
+    assert df.loc[1, "primary_activity_id"] == 0
+    assert df.loc[1, "residence_type"] == "household"
+    assert df.loc[1, "residence_id"] == dummy_world.households[0].id
+    assert df.loc[2, "residence_type"] == "care_home"
+    assert df.loc[2, "residence_id"] == dummy_world.care_homes[0].id
+    assert df.loc[0, "ethnicity"] == "A"
+    assert df.loc[1, "ethnicity"] == "B"
+    assert df.loc[2, "ethnicity"] == "C"
+    assert df.loc[0, "sex"] == "f"
+    assert df.loc[2, "sex"] == "m"
+    assert len(df['tonto'].values) == len(tonto)
+    assert all([pytest.approx(a) == b for a, b in zip(df['tonto'].values, tonto)])
+    assert len(df['listo'].values) == len(listo)
+    assert all([pytest.approx(a) == b for a, b in zip(df['listo'].values, listo)])
+    assert len(df['vaccine_type'].values) == len(vaccine_type)
+    assert all([pytest.approx(a) == b for a, b in zip(df['vaccine_type'].values, vaccine_type)])
+    assert len(df['vaccine_name'].values) == len(vaccine_name)
+    assert all([pytest.approx(a) == b for a, b in zip(df['vaccine_name'].values, vaccine_name)])
+
+
+
 
 def test__static_location(dummy_world):
-    record = Record(record_path="results", record_static_data=True,)
+    record = Record(
+        record_path="results",
+        record_static_data=True,
+    )
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -244,7 +338,10 @@ def test__static_location(dummy_world):
 
 
 def test__static_geography(dummy_world):
-    record = Record(record_path="results", record_static_data=True,)
+    record = Record(
+        record_path="results",
+        record_static_data=True,
+    )
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -261,6 +358,9 @@ def test__static_geography(dummy_world):
         assert (
             area.super_area.name
             == super_area_df.loc[area_df.loc[area.id].super_area_id, "name"].decode()
+        )
+        assert np.isclose(
+            area.socioeconomic_index, area_df.loc[area.id]["socioeconomic_index"]
         )
 
     for super_area in dummy_world.super_areas:
@@ -279,33 +379,35 @@ def test__sumarise_time_tep(dummy_world):
     timestamp = datetime.datetime(2020, 4, 4)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
-    record.accumulate(
-        table_name="infections",
-        location_spec="care_home",
-        region_name="region_1",
-        location_id=dummy_world.care_homes[0].id,
-        infected_ids=[2],
-        infector_ids=[0],
-    )
-    record.accumulate(
-        table_name="infections",
-        location_spec="household",
-        region_name="region_1",
-        location_id=dummy_world.households[0].id,
-        infected_ids=[0],
-        infector_ids=[5],
-    )
-    record.accumulate(
-        table_name="hospital_admissions",
-        hospital_id=dummy_world.hospitals[0].id,
-        patient_id=1,
-    )
-    record.accumulate(
-        table_name="icu_admissions",
-        hospital_id=dummy_world.hospitals[0].id,
-        patient_id=1,
-    )
-    record.summarise_time_step(timestamp, dummy_world)
+        record.accumulate(
+            table_name="infections",
+            location_spec="care_home",
+            region_name="region_1",
+            location_id=dummy_world.care_homes[0].id,
+            infected_ids=[2],
+            infector_ids=[0],
+            infection_ids=[0],
+        )
+        record.accumulate(
+            table_name="infections",
+            location_spec="household",
+            region_name="region_1",
+            location_id=dummy_world.households[0].id,
+            infected_ids=[0],
+            infector_ids=[5],
+            infection_ids=[0],
+        )
+        record.accumulate(
+            table_name="hospital_admissions",
+            hospital_id=dummy_world.hospitals[0].id,
+            patient_id=1,
+        )
+        record.accumulate(
+            table_name="icu_admissions",
+            hospital_id=dummy_world.hospitals[0].id,
+            patient_id=1,
+        )
+        record.summarise_time_step(timestamp, dummy_world)
     record.time_step(timestamp)
     timestamp = datetime.datetime(2020, 4, 5)
     record.accumulate(
@@ -360,13 +462,15 @@ def test__meta_information():
     assert parameters["meta_information"]["number_of_cores"] == 20
 
 
-def test__parameters(dummy_world, selector):
+def test__parameters(dummy_world, selector, selectors):
     interaction = Interaction.from_file(config_filename=config_interaction)
     interaction.alpha_physical = 100.0
-    infection_selector = selector
     infection_seed = InfectionSeed(
-        world=None, infection_selector=infection_selector, seed_strength=0.0,
+        world=None,
+        infection_selector=selector,
+        seed_strength=0.0,
     )
+    infection_seeds = InfectionSeeds([infection_seed])
     infection_seed.min_date = datetime.datetime(2020, 10, 10)
     infection_seed.max_date = datetime.datetime(2020, 10, 11)
 
@@ -379,10 +483,12 @@ def test__parameters(dummy_world, selector):
         activity_to_super_groups={"residence": ["household"]},
     )
     record = Record(record_path="results")
+    epidemiology = Epidemiology(
+        infection_seeds=infection_seeds, infection_selectors=selectors
+    )
     record.parameters(
         interaction=interaction,
-        infection_seed=infection_seed,
-        infection_selector=infection_selector,
+        epidemiology=epidemiology,
         activity_manager=activity_manager,
     )
     with open(record.record_path / "config.yaml", "r") as file:
@@ -392,7 +498,7 @@ def test__parameters(dummy_world, selector):
         policies = file.read()
         policies = policies.replace("array", "np.array")
         policies = eval(policies)
-    interaction_attributes = ["betas", "alpha_physical", "susceptibilities_by_age"]
+    interaction_attributes = ["betas", "alpha_physical"]
     for attribute in interaction_attributes:
         assert parameters["interaction"][attribute] == getattr(interaction, attribute)
     for key, value in interaction.contact_matrices.items():
@@ -400,17 +506,13 @@ def test__parameters(dummy_world, selector):
             parameters["interaction"]["contact_matrices"][key], value
         )
 
-    assert parameters["infection_seed"]["seed_strength"] == infection_seed.seed_strength
-    assert parameters["infection_seed"]["min_date"] == infection_seed.min_date.strftime(
-        "%Y-%m-%d"
-    )
-    assert parameters["infection_seed"]["max_date"] == infection_seed.max_date.strftime(
-        "%Y-%m-%d"
-    )
-
-    assert (
-        parameters["infection"]["transmission_type"]
-        == infection_selector.transmission_type
-    )
+    assert "Covid19" in parameters["infection_seeds"]
+    seed_parameters = parameters["infection_seeds"]["Covid19"]
+    assert seed_parameters["seed_strength"] == infection_seed.seed_strength
+    assert seed_parameters["min_date"] == infection_seed.min_date.strftime("%Y-%m-%d")
+    assert seed_parameters["max_date"] == infection_seed.max_date.strftime("%Y-%m-%d")
+    assert "Covid19" in parameters["infections"]
+    inf_parameters = parameters["infections"]["Covid19"]
+    assert inf_parameters["transmission_type"] == selector.transmission_type
     for i, policy in enumerate(activity_manager.policies.policies):
         assert policies[i] == policy.__dict__

@@ -1,13 +1,6 @@
-import numpy as np
-import pandas as pd
-import yaml
-from typing import List
-
-from .social_venue import SocialVenue, SocialVenues, SocialVenueError
+from .social_venue import SocialVenue, SocialVenues
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
-from june.geography import Geography
-from june.geography import Area, Areas, SuperArea, SuperAreas
 
 default_pub_coordinates_filename = data_path / "input/leisure/pubs_per_super_area.csv"
 default_config_filename = configs_path / "defaults/groups/leisure/pubs.yaml"

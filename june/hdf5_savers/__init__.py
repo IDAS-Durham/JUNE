@@ -50,9 +50,17 @@ from .leisure_saver import (
     load_social_venues_from_hdf5,
     restore_social_venues_properties_from_hdf5,
 )
+from .domain_data_saver import (
+    save_data_for_domain_decomposition,
+    load_data_for_domain_decomposition,
+)
+
+from .infection_savers import *
+
+# important this needs to be last:
 from .world_saver import (
     generate_world_from_hdf5,
     save_world_to_hdf5,
     generate_domain_from_hdf5,
 )
-from .infection_savers import *
+

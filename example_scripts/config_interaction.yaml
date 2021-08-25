@@ -1,23 +1,20 @@
-susceptibilities:
-  0-13 : 0.5
-  13-100: 1.0
-
 alpha_physical: 2.
 
 betas:
  box: 1
- pub: 0.42941 
- grocery: 0.04137
- cinema: 0.157461
- city_transport: 0.107969 
- inter_city_transport: 0.3830 
+ pub: 0.62941 
+ gym: 0.62941 
+ grocery: 0.14137
+ cinema: 0.257461
+ city_transport: 0.207969 
+ inter_city_transport: 0.5830 
  hospital: 0.1168
- care_home: 0.28
- company: 0.371
- school: 0.070 
- household: 0.208 
- care_visits: 0.408
+ care_home: 0.48
+ company: 0.471
+ school: 0.170 
+ household: 0.408 
  household_visits: 0.408 
+ care_visits: 0.408 
  university: 0.306
 
 contact_matrices:

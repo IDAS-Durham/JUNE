@@ -10,40 +10,15 @@ from june.time import Timer
 from june.geography import Geography
 from june.demography import Demography, Person, Population
 from june.interaction import Interaction
-from june.infection import InfectionSelector
+from june.epidemiology.infection import InfectionSelectors, Immunity
+from june.epidemiology.infection_seed import InfectionSeed
+from june.epidemiology.epidemiology import Epidemiology
 from june.groups.travel import ModeOfTransport, Travel
-from june.groups import (
-    Hospitals,
-    Schools,
-    Companies,
-    CareHomes,
-    Cemeteries,
-    Universities,
-)
-from june.groups import (
-    Hospital,
-    School,
-    Company,
-    Household,
-    University,
-    CareHome,
-)
-from june.groups import (
-    Hospitals,
-    Schools,
-    Companies,
-    Households,
-    Universities,
-    Cemeteries,
-)
-from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
-from june.infection import transmission as trans
-from june.infection import symptoms as sym
 from june import World
 from june.world import generate_world_from_geography
-from june.infection_seed import InfectionSeed
 from june.policy import Policies
 from june.records import Record
+from june.groups.leisure import generate_leisure_for_config
 from june import paths
 
 from pathlib import Path
@@ -58,38 +33,35 @@ def test__full_run(dummy_world, selector, test_results):
     # restore health status of people
     for person in world.people:
         person.infection = None
-        person.susceptibility = 1.0
+        person.immunity = Immunity()
         person.dead = False
-    leisure_instance = leisure.generate_leisure_for_world(
-        world=world,
-        list_of_leisure_groups=[
-            "pubs",
-            "cinemas",
-            "groceries",
-            "household_visits",
-            "care_home_visits",
-        ],
-    )
-    leisure_instance.distribute_social_venues_to_areas(
-        areas=world.areas, super_areas=world.super_areas
-    )
+        print(person.residence.group.residences_to_visit)
     travel = Travel()
+    leisure = generate_leisure_for_config(
+        world=dummy_world, config_filename=test_config
+    )
     interaction = Interaction.from_file(config_filename=interaction_config)
     record = Record(
-            record_path = test_results / 'results',
+        record_path=test_results / "results",
     )
     policies = Policies.from_file()
+    selectors = InfectionSelectors([selector])
+    epidemiology = Epidemiology(infection_selectors=selectors)
+
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selector=selector,
+        epidemiology=epidemiology,
         config_filename=test_config,
-        leisure=leisure_instance,
+        leisure=leisure,
         travel=travel,
         policies=policies,
         record=record,
     )
     seed = InfectionSeed(world=sim.world, infection_selector=selector)
-    seed.unleash_virus(Population(sim.world.people), n_cases=1)
+    seed.unleash_virus(Population(sim.world.people), n_cases=1, time=0)
     sim.run()
+    for region in world.regions:
+        region.policy["local_closed_venues"] = set()
+        region.policy["global_closed_venues"] = set()
 

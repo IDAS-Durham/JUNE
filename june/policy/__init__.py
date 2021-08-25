@@ -14,6 +14,7 @@ from .leisure_policies import (
     LeisurePolicies,
     CloseLeisureVenue,
     ChangeLeisureProbability,
+    ChangeVisitsProbability,
 )
 from .individual_policies import (
     IndividualPolicy,
@@ -21,6 +22,7 @@ from .individual_policies import (
     StayHome,
     SevereSymptomsStayHome,
     Quarantine,
+    SchoolQuarantine,
     Shielding,
     CloseCompanies,
     CloseSchools,
@@ -38,5 +40,7 @@ from .regional_compliance import (
     RegionalCompliance,
     RegionalCompliances,
     TieredLockdown,
-    TieredLockdowns
+    TieredLockdowns,
 )
+
+from .vaccine_policy import VaccineDistribution, VaccineDistributions

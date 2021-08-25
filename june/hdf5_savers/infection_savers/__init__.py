@@ -1,3 +1,4 @@
 from .transmission_saver import save_transmissions_to_hdf5, load_transmissions_from_hdf5
 from .symptoms_saver import save_symptoms_to_hdf5, load_symptoms_from_hdf5
 from .infection_saver import save_infections_to_hdf5, load_infections_from_hdf5 
+from .immunity_saver import save_immunities_to_hdf5, load_immunities_from_hdf5

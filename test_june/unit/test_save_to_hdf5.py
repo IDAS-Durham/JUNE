@@ -33,6 +33,8 @@ from june.hdf5_savers import (
     save_universities_to_hdf5,
     save_social_venues_to_hdf5,
     generate_world_from_hdf5,
+    save_data_for_domain_decomposition,
+    load_data_for_domain_decomposition
 )
 from june.hdf5_savers import (
     load_geography_from_hdf5,
@@ -51,6 +53,7 @@ from june.hdf5_savers import (
 from june import paths
 
 from pytest import fixture
+
 
 @pytest.fixture(autouse=True)
 def remove_hdf5(test_results):
@@ -250,9 +253,7 @@ class TestSaveTravel:
         city_transports = full_world.city_transports
         assert len(cities) > 0
         save_cities_to_hdf5(cities, test_results / "test.hdf5")
-        cities_recovered = load_cities_from_hdf5(
-            test_results / "test.hdf5"
-        )
+        cities_recovered = load_cities_from_hdf5(test_results / "test.hdf5")
         assert len(cities) == len(cities_recovered)
         for city, city_recovered in zip(cities, cities_recovered):
             assert city.name == city_recovered.name
@@ -331,6 +332,7 @@ class TestSaveLeisure:
                 full_world.pubs,
                 full_world.groceries,
                 full_world.cinemas,
+                full_world.gyms,
             ],
             file_path=test_results / "test.hdf5",
         )
@@ -353,6 +355,7 @@ class TestSaveWorld:
         assert len(full_world.areas) == len(full_world_loaded.areas)
         for area1, area2 in zip(full_world.areas, full_world_loaded.areas):
             assert area1.id == area2.id
+            assert area1.socioeconomic_index == area2.socioeconomic_index
             assert area1.super_area.id == area2.super_area.id
             assert area1.super_area.name == area2.super_area.name
             assert area1.name == area2.name
@@ -371,6 +374,7 @@ class TestSaveWorld:
             sa2_areas = [super_area2.areas[idx] for idx in np.argsort(area2_ids)]
             for area1, area2 in zip(sa1_areas, sa2_areas):
                 assert area1.id == area2.id
+                assert area1.socioeconomic_index == area2.socioeconomic_index
                 assert area1.super_area.id == area2.super_area.id
                 assert area1.super_area.name == area2.super_area.name
                 assert area1.name == area2.name
@@ -438,8 +442,14 @@ class TestSaveWorld:
                 assert p1.work_super_area == p1.primary_activity.group.super_area
                 assert p2.work_super_area == p2.primary_activity.group.super_area
                 assert p1.work_super_area.id == p2.primary_activity.group.super_area.id
-                assert p1.work_super_area.coordinates[0] == p2.work_super_area.coordinates[0]
-                assert p1.work_super_area.coordinates[1] == p2.work_super_area.coordinates[1]
+                assert (
+                    p1.work_super_area.coordinates[0]
+                    == p2.work_super_area.coordinates[0]
+                )
+                assert (
+                    p1.work_super_area.coordinates[1]
+                    == p2.work_super_area.coordinates[1]
+                )
                 if p1.work_super_area.city is None:
                     assert p2.work_super_area.city is None
                 else:
@@ -556,6 +566,10 @@ class TestSaveWorld:
             for h1, h2 in zip(sa1.closest_hospitals, sa2.closest_hospitals):
                 assert h1.id == h2.id
 
+    def test__socioeconomic_index(self, full_world, full_world_loaded):
+        for person1, person2 in zip(full_world.people, full_world_loaded.people):
+            assert person1.socioeconomic_index == person2.socioeconomic_index
+
     def test__social_venues(self, full_world, full_world_loaded):
         for area1, area2 in zip(full_world.areas, full_world_loaded.areas):
             for key in area1.social_venues.keys():
@@ -568,31 +582,41 @@ class TestSaveWorld:
                 )
                 assert np.array_equal(social_venues_id, social_venues_recovered_id)
         for h1, h2 in zip(full_world.households, full_world_loaded.households):
-            if "household" not in h1.residences_to_visit:
-                assert "household" not in h2.residences_to_visit
-                continue
-            assert len(h1.residences_to_visit["household"]) == len(
-                h2.residences_to_visit["household"]
+            assert h1.id == h2.id
+            assert len(h1.residences_to_visit) == len(h2.residences_to_visit)
+            for (key1, value1), (key2, value2) in zip(
+                h1.residences_to_visit.items(), h2.residences_to_visit.items()
+            ):
+                assert key1 == key2
+                for residence1, residence2 in zip(value1, value2):
+                    assert residence1.id == residence2.id
+                    assert residence1.spec == residence2.spec
+
+
+class TestSaveDataDomainDecomposition:
+    def test__save_data(self, full_world, test_results):
+        save_data_for_domain_decomposition(full_world, test_results / "test.hdf5")
+        data_recovered = load_data_for_domain_decomposition(test_results / "test.hdf5")
+        n_people_sa = {}
+        n_workers_sa = {}
+        n_pupils_sa = {}
+        for super_area in full_world.super_areas:
+            n_people_sa[super_area.name] = len(super_area.people)
+            n_workers_sa[super_area.name] = len(super_area.workers)
+            n_pupils_sa[super_area.name] = sum(
+                len(school.people)
+                for area in super_area.areas
+                for school in area.schools
             )
-            if "care_home" not in h1.residences_to_visit:
-                assert "care_home" not in h2.residences_to_visit
-                continue
-            assert len(h1.residences_to_visit["care_home"]) == len(
-                h2.residences_to_visit["care_home"]
-            )
-            if len(h1.residences_to_visit["household"]) > 0:
-                h1ids = np.sort(
-                    [relative.id for relative in h1.residences_to_visit["household"]]
-                )
-                h2ids = np.sort(
-                    [relative.id for relative in h2.residences_to_visit["household"]]
-                )
-                assert np.array_equal(h1ids, h2ids)
-            if len(h1.residences_to_visit["care_home"]) > 0:
-                h1ids = np.sort(
-                    [relative.id for relative in h1.residences_to_visit["care_home"]]
-                )
-                h2ids = np.sort(
-                    [relative.id for relative in h2.residences_to_visit["care_home"]]
-                )
-                assert np.array_equal(h1ids, h2ids)
+        total_commuters = sum([len(station.commuter_ids) for station in full_world.stations])
+        total_commuters += sum([len(city.internal_commuter_ids) for city in full_world.cities])
+        total_commuters_recovered = 0
+        checks = False
+        for super_area in n_pupils_sa.keys():
+            assert data_recovered[super_area]["n_people"] == n_people_sa[super_area]
+            assert data_recovered[super_area]["n_workers"] == n_workers_sa[super_area]
+            assert data_recovered[super_area]["n_pupils"] == n_pupils_sa[super_area]
+            total_commuters_recovered += data_recovered[super_area]["n_commuters"]
+            checks = True
+        assert total_commuters_recovered == total_commuters
+        assert checks

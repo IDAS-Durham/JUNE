@@ -22,4 +22,3 @@ comment:
 ignore:
   - "june_plots/**/*"
   - "june_tests/**/*"
-

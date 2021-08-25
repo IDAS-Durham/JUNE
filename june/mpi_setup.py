@@ -9,7 +9,6 @@ mpi_comm = MPI.COMM_WORLD
 mpi_rank = mpi_comm.Get_rank()
 mpi_size = mpi_comm.Get_size()
 
-
 class MovablePeople:
     """
     Holds information about people who might be present in a domain, but may or may not be be,
@@ -43,20 +42,36 @@ class MovablePeople:
             view = [
                 person.id,
                 person.infection.transmission.probability,
-                0.0,
+                person.infection.infection_id(),
+                False,
+                np.array([], dtype=np.int64),
+                np.array([], dtype=np.float64),
                 mpi_rank,
                 True,
             ]
         else:
-            view = [person.id, 0.0, person.susceptibility, mpi_rank, True]
+            (
+                susceptibility_inf_ids,
+                susceptibility_inf_suscs,
+            ) = person.immunity.serialize()
+            view = [
+                person.id,
+                0.0,
+                0,
+                True,
+                np.array(susceptibility_inf_ids, dtype=np.int64),
+                np.array(susceptibility_inf_suscs, dtype=np.float64),
+                mpi_rank,
+                True,
+            ]
 
         self.skinny_out[domain_id][group_spec][group_id][subgroup_type][
             person.id
         ] = view
 
     def delete_person(self, person, external_subgroup):
-        """ Remove a person from the external subgroup. For now we actually do it. Later
-        we may flag them. """
+        """Remove a person from the external subgroup. For now we actually do it. Later
+        we may flag them."""
         domain_id = external_subgroup.domain_id
         group_spec = external_subgroup.spec
         group_id = external_subgroup.group_id
@@ -95,11 +110,11 @@ class MovablePeople:
                             subgroup_type
                         ].items()
                     ]
-        outbound = np.array(data)
+        outbound = np.array(data, dtype=object)
         return keys, outbound, outbound.shape[0]
 
     def update(self, rank, keys, rank_data):
-        """ Update the information we have about people coming into our domain
+        """Update the information we have about people coming into our domain
         :param rank: domain of origin
         :param keys: dictionary keys for the group structure
         :param rank_data: numpy array of all the person data
@@ -120,8 +135,16 @@ class MovablePeople:
             try:
                 self.skinny_in[group_spec][group_id][subgroup_type].update(
                     {
-                        int(k): {"inf_prob": i, "susc": s, "dom": d, "active": a}
-                        for k, i, s, d, a in data
+                        int(k): {
+                            "inf_prob": i,
+                            "inf_id": t,
+                            "susc": s,
+                            "immunity_inf_ids": iids,
+                            "immunity_suscs": iis,
+                            "dom": d,
+                            "active": a,
+                        }
+                        for k, i, t, s, iids, iis, d, a in data
                     }
                 )
             except:
@@ -133,7 +156,7 @@ def move_info(info2move):
     """
     Send a list of arrays of uint32 integers to all ranks,
     and receive arrays from all ranks.
-    
+
     """
     # flatten list of uneven vectors of data, ensure correct type
     assert len(info2move) == mpi_size

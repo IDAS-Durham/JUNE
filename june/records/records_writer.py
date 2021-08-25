@@ -50,6 +50,7 @@ class Record:
             self.filename = f"june_record.h5"
             self.summary_filename = f"summary.csv"
         self.configs_filename = f"config.yaml"
+        self.record_static_data = record_static_data
         try:
             os.remove(self.record_path / self.filename)
         except OSError:
@@ -64,7 +65,7 @@ class Record:
                 "recoveries": RecoveriesRecord(hdf5_file=self.file),
                 "symptoms": SymptomsRecord(hdf5_file=self.file),
             }
-            if record_static_data:
+            if self.record_static_data:
                 self.statics = {
                     "people": PeopleRecord(hdf5_file=self.file),
                     "locations": LocationRecord(hdf5_file=self.file),
@@ -76,13 +77,15 @@ class Record:
             self.record_path / self.summary_filename, "w", newline=""
         ) as summary_file:
             writer = csv.writer(summary_file)
-            fields = ["infected", "recovered", "hospitalised", "intensive_care"]
+            #fields = ["infected", "recovered", "hospitalised", "intensive_care"]
+            fields = ["infected", "hospitalised", "intensive_care"]
             header = ["time_stamp", "region"]
             for field in fields:
                 header.append("current_" + field)
                 header.append("daily_" + field)
             header.extend(
-                ["current_susceptible", "daily_hospital_deaths", "daily_deaths"]
+                #["current_susceptible", "daily_hospital_deaths", "daily_deaths"]
+                ["daily_hospital_deaths", "daily_deaths"]
             )
             writer.writerow(header)
         description = {
@@ -127,14 +130,6 @@ class Record:
             current_intensive_care,
         )
 
-    def summarise_susceptibles(self, world="World"):
-        current_susceptible = {}
-        for region in world.regions:
-            current_susceptible[region.name] = len(
-                [person for person in region.people if person.susceptible]
-            )
-        return current_susceptible
-
     def summarise_infections(self, world="World"):
         daily_infections, current_infected = defaultdict(int), defaultdict(int)
         for region in self.events["infections"].region_names:
@@ -144,17 +139,6 @@ class Record:
                 [person for person in region.people if person.infected]
             )
         return daily_infections, current_infected
-
-    def summarise_recoveries(self, world="World"):
-        daily_recovered, current_recovered = defaultdict(int), defaultdict(int)
-        for person_id in self.events["recoveries"].recovered_person_ids:
-            region = world.people.get_from_id(person_id).super_area.region.name
-            daily_recovered[region] += 1
-        for region in world.regions:
-            current_recovered[region.name] = len(
-                [person for person in region.people if person.recovered]
-            )
-        return daily_recovered, current_recovered
 
     def summarise_deaths(self, world="World"):
         daily_deaths, daily_deaths_in_hospital = defaultdict(int), defaultdict(int)
@@ -169,14 +153,12 @@ class Record:
 
     def summarise_time_step(self, timestamp: str, world: "World"):
         daily_infected, current_infected = self.summarise_infections(world=world)
-        daily_recovered, current_recovered = self.summarise_recoveries(world=world)
         (
             daily_hospitalised,
             daily_intensive_care,
             current_hospitalised,
             current_intensive_care,
         ) = self.summarise_hospitalisations(world=world)
-        current_susceptible = self.summarise_susceptibles(world=world)
         daily_deaths, daily_deaths_in_hospital = self.summarise_deaths(world=world)
         all_hospital_regions = [hospital.region_name for hospital in world.hospitals]
         all_world_regions = [region.name for region in world.regions]
@@ -189,13 +171,10 @@ class Record:
                 data = [
                     current_infected.get(region, 0),
                     daily_infected.get(region, 0),
-                    current_recovered.get(region, 0),
-                    daily_recovered.get(region, 0),
                     current_hospitalised.get(region, 0),
                     daily_hospitalised.get(region, 0),
                     current_intensive_care.get(region, 0),
                     daily_intensive_care.get(region, 0),
-                    current_susceptible.get(region, 0),
                     daily_deaths_in_hospital.get(region, 0),
                     daily_deaths.get(region, 0),
                 ]
@@ -235,36 +214,37 @@ class Record:
             interaction_dict["contact_matrices"] = {}
             for key, values in interaction.contact_matrices.items():
                 interaction_dict["contact_matrices"][key] = values.tolist()
-            interaction_dict[
-                "susceptibilities_by_age"
-            ] = interaction.susceptibilities_by_age
             self.append_dict_to_configs(config_dict={"interaction": interaction_dict})
 
     def parameters_seed(
         self,
-        infection_seed: "InfectionSeed" = None,
+        infection_seeds: "InfectionSeeds" = None,
     ):
-        if infection_seed is not None:
-            infection_seed_dict = {}
-            infection_seed_dict["seed_strength"] = infection_seed.seed_strength
-            infection_seed_dict["min_date"] = infection_seed.min_date.strftime(
-                "%Y-%m-%d"
-            )
-            infection_seed_dict["max_date"] = infection_seed.max_date.strftime(
-                "%Y-%m-%d"
-            )
+        if infection_seeds is not None:
+            infection_seeds_dict = {}
+            for infection_seed in infection_seeds:
+                inf_seed_dict = {}
+                inf_seed_dict["seed_strength"] = infection_seed.seed_strength
+                inf_seed_dict["min_date"] = infection_seed.min_date.strftime("%Y-%m-%d")
+                inf_seed_dict["max_date"] = infection_seed.max_date.strftime("%Y-%m-%d")
+                infection_seeds_dict[
+                    infection_seed.infection_selector.infection_class.__name__
+                ] = inf_seed_dict
             self.append_dict_to_configs(
-                config_dict={"infection_seed": infection_seed_dict}
+                config_dict={"infection_seeds": infection_seeds_dict}
             )
 
     def parameters_infection(
         self,
-        infection_selector: "InfectionSelector" = None,
+        infection_selectors: "InfectionSelectors" = None,
     ):
-        if infection_selector is not None:
-            infection_dict = {}
-            infection_dict["transmission_type"] = infection_selector.transmission_type
-            self.append_dict_to_configs(config_dict={"infection": infection_dict})
+        if infection_selectors is not None:
+            save_dict = {}
+            for selector in infection_selectors._infection_selectors:
+                class_name = selector.infection_class.__name__
+                save_dict[class_name] = {}
+                save_dict[class_name]["transmission_type"] = selector.transmission_type
+            self.append_dict_to_configs(config_dict={"infections": save_dict})
 
     def parameters_policies(
         self,
@@ -288,14 +268,16 @@ class Record:
     def parameters(
         self,
         interaction: "Interaction" = None,
-        infection_seed: "InfectionSeed" = None,
-        infection_selector: "InfectionSelector" = None,
+        epidemiology: "Epidemiology" = None,
         activity_manager: "ActivityManager" = None,
     ):
+        if epidemiology:
+            infection_seeds = epidemiology.infection_seeds
+            infection_selectors = epidemiology.infection_selectors
         if self.mpi_rank is None or self.mpi_rank == 0:
             self.parameters_interaction(interaction=interaction)
-            self.parameters_seed(infection_seed=infection_seed)
-            self.parameters_infection(infection_selector=infection_selector)
+            self.parameters_seed(infection_seeds=infection_seeds)
+            self.parameters_infection(infection_selectors=infection_selectors)
             self.parameters_policies(activity_manager=activity_manager)
 
     def meta_information(
@@ -406,34 +388,48 @@ def combine_records(record_path, remove_left_overs=False, save_dir=None):
     )
     combine_hdf5s(record_path, remove_left_overs=remove_left_overs, save_dir=save_dir)
 
+
 def prepend_checkpoint_hdf5(
-    pre_checkpoint_record_path, 
+    pre_checkpoint_record_path,
     post_checkpoint_record_path,
     tables_to_merge=(
-        "deaths", "discharges", "hospital_admissions", "icu_admissions", "infections", 
-        "recoveries", "symptoms"
+        "deaths",
+        "discharges",
+        "hospital_admissions",
+        "icu_admissions",
+        "infections",
+        "recoveries",
+        "symptoms",
     ),
     merged_record_path=None,
-    checkpoint_date: str=None,
+    checkpoint_date: str = None,
 ):
+    pre_checkpoint_record_path = Path(pre_checkpoint_record_path)
+    post_checkpoint_record_path = Path(post_checkpoint_record_path)
     if merged_record_path is None:
-        merged_record_path = post_checkpoint_record_path.parent / "merged_checkpoint_june_record.h5"  
+        merged_record_path = (
+            post_checkpoint_record_path.parent / "merged_checkpoint_june_record.h5"
+        )
 
     with tables.open_file(merged_record_path, "w") as merged_record:
         with tables.open_file(pre_checkpoint_record_path, "r") as pre_record:
             with tables.open_file(post_checkpoint_record_path, "r") as post_record:
-                post_infection_dates = np.array([
-                    datetime.strptime(x.decode("utf-8"), "%Y-%m-%d") 
-                    for x in post_record.root["infections"][:]["timestamp"]
-                ])
+                post_infection_dates = np.array(
+                    [
+                        datetime.strptime(x.decode("utf-8"), "%Y-%m-%d")
+                        for x in post_record.root["infections"][:]["timestamp"]
+                    ]
+                )
                 min_date = min(post_infection_dates)
                 if checkpoint_date is None:
                     print("provide the date you expect the checkpoint to start at!")
                 else:
                     if checkpoint_date != checkpoint_date:
-                        print(f"provided date {checkpoint_date} does not match min date {min_date}")
-                        
-                for dataset in post_record.root._f_list_nodes(): 
+                        print(
+                            f"provided date {checkpoint_date} does not match min date {min_date}"
+                        )
+
+                for dataset in post_record.root._f_list_nodes():
                     description = getattr(post_record.root, dataset.name).description
                     if dataset.name not in tables_to_merge:
                         arr_data = dataset[:]
@@ -446,13 +442,15 @@ def prepend_checkpoint_hdf5(
                             table.flush()
                     else:
                         pre_arr_data = pre_record.root[dataset.name][:]
-                        pre_dates = np.array([
-                            datetime.strptime(x.decode("utf-8"), "%Y-%m-%d") 
-                            for x in pre_arr_data["timestamp"]
-                        ])
-                        pre_arr_data = pre_arr_data[ pre_dates < min_date ]
+                        pre_dates = np.array(
+                            [
+                                datetime.strptime(x.decode("utf-8"), "%Y-%m-%d")
+                                for x in pre_arr_data["timestamp"]
+                            ]
+                        )
+                        pre_arr_data = pre_arr_data[pre_dates < min_date]
                         post_arr_data = dataset[:]
-                                               
+
                         merged_record.create_table(
                             merged_record.root, dataset.name, description=description
                         )
@@ -464,14 +462,20 @@ def prepend_checkpoint_hdf5(
                         table.flush()
     logger.info(f"written prepended record to {merged_record_path}")
 
+
 def prepend_checkpoint_summary(
     pre_checkpoint_summary_path,
     post_checkpoint_summary_path,
     merged_summary_path=None,
     checkpoint_date=None,
 ):
+    pre_checkpoint_summary_path = Path(pre_checkpoint_summary_path)
+    post_checkpoint_summary_path = Path(post_checkpoint_summary_path)
+
     if merged_summary_path is None:
-        merged_summary_path = post_checkpoint_summary_path.parent / "merged_checkpoint_summary.csv"
+        merged_summary_path = (
+            post_checkpoint_summary_path.parent / "merged_checkpoint_summary.csv"
+        )
 
     pre_summary = pd.read_csv(pre_checkpoint_summary_path)
     post_summary = pd.read_csv(post_checkpoint_summary_path)
@@ -482,19 +486,12 @@ def prepend_checkpoint_summary(
         print("Provide the checkpoint date you expect the post-summary to start at!")
     else:
         if min_date != checkpoint_date:
-            print("Provided date {checkpoint_date} does not match the earliest date in the summary!")
-    pre_summary = pre_summary[ pre_summary["time_stamp"] < min_date ]
+            print(
+                f"Provided date {checkpoint_date} does not match the earliest date in the summary!"
+            )
+    pre_summary = pre_summary[pre_summary["time_stamp"] < min_date]
     merged_summary = pd.concat([pre_summary, post_summary], ignore_index=True)
     merged_summary.set_index(["region", "time_stamp"])
     merged_summary.sort_index(inplace=True)
     merged_summary.to_csv(merged_summary_path, index=True)
     logger.info(f"Written merged summary to {merged_summary_path}")    
-
-    
-
-
-
-
-
-
-

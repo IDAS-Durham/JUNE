@@ -24,7 +24,7 @@ class SocialVenue(Group):
     max_size = np.inf
 
     class SubgroupType(IntEnum):
-        default = 0
+        leisure = 0
 
     def __init__(self, area=None):
         super().__init__()
@@ -37,6 +37,9 @@ class SocialVenue(Group):
     @property
     def super_area(self):
         return self.area.super_area
+
+    def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
+        return self[self.SubgroupType.leisure]
 
 
 class SocialVenues(Supergroup):
@@ -85,7 +88,9 @@ class SocialVenues(Supergroup):
 
     @classmethod
     def for_super_areas(
-        cls, super_areas: List[SuperArea], coordinates_filename: str = None,
+        cls,
+        super_areas: List[SuperArea],
+        coordinates_filename: str = None,
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
@@ -94,7 +99,9 @@ class SocialVenues(Supergroup):
 
     @classmethod
     def for_areas(
-        cls, areas: Areas, coordinates_filename: str = None,
+        cls,
+        areas: Areas,
+        coordinates_filename: str = None,
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
@@ -103,7 +110,9 @@ class SocialVenues(Supergroup):
 
     @classmethod
     def for_geography(
-        cls, geography: Geography, coordinates_filename: str = None,
+        cls,
+        geography: Geography,
+        coordinates_filename: str = None,
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
@@ -124,9 +133,9 @@ class SocialVenues(Supergroup):
         areas
             list of areas to generate the venues in
         venues_per_capita
-            number of venues per person in each area. 
+            number of venues per person in each area.
         venues_per_area
-            number of venues in each area. 
+            number of venues in each area.
         """
         if venues_per_area is not None and venues_per_capita is not None:
             raise SocialVenueError(
@@ -259,3 +268,6 @@ class SocialVenues(Supergroup):
             return None
         social_venues = self.members
         return [social_venues[idx] for idx in venue_idxs]
+
+    def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
+        return self[subgroup_type]

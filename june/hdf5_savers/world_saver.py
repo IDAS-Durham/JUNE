@@ -31,6 +31,7 @@ from . import (
     save_care_homes_to_hdf5,
     save_social_venues_to_hdf5,
     save_households_to_hdf5,
+    save_data_for_domain_decomposition,
     restore_population_properties_from_hdf5,
     restore_households_properties_from_hdf5,
     restore_care_homes_properties_from_hdf5,
@@ -98,7 +99,7 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     if world.universities is not None:
         logger.info("saving universities...")
         save_universities_to_hdf5(world.universities, file_path)
-    social_venue_possible_specs = ["pubs", "groceries", "cinemas"]  # TODO: generalise
+    social_venue_possible_specs = ["pubs", "groceries", "cinemas", "gyms"]  # TODO: generalise
     social_venues_list = []
     for spec in social_venue_possible_specs:
         if hasattr(world, spec) and getattr(world, spec) is not None:
@@ -106,6 +107,9 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     if social_venues_list:
         logger.info(f"saving social venues...")
         save_social_venues_to_hdf5(social_venues_list, file_path)
+    logger.info("Saving domain decomposition data...")
+    save_data_for_domain_decomposition(world, file_path)
+
 
 
 def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
@@ -237,7 +241,7 @@ def generate_domain_from_hdf5(
     """
     logger.info(f"loading domain {domain_id} from HDF5")
     # import here to avoid recurisve imports
-    from june.domain import Domain
+    from june.domains import Domain
 
     # get the super area ids of this domain
     super_area_ids = set()
@@ -347,6 +351,7 @@ def generate_domain_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
+            super_areas_to_domain_dict=super_areas_to_domain_dict
         )
     if "care_homes" in f_keys:
         logger.info("restoring care homes...")

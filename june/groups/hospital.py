@@ -10,7 +10,7 @@ from sklearn.neighbors import BallTree
 
 from june.groups import Group, Supergroup, ExternalGroup, ExternalSubgroup
 from june.geography import SuperArea
-from june.infection import SymptomTag
+from june.epidemiology.infection import SymptomTag
 from june.exc import HospitalError
 
 logger = logging.getLogger("hospitals")
