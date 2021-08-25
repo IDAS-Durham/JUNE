@@ -107,17 +107,10 @@ def test__prepend_checkpoint_hdf5(dummy_world):
         infection_ids = [i * 1000 + 500 + 20 + 2 * x for x in range(3)]
         with open_file(pre_checkpoint_record_path, mode="a") as f:
             pre_checkpoint_record.file = f
-        pre_checkpoint_record.accumulate(
-            table_name="infections",
-            location_spec="pre_check_location",
-            region_name="over_here",
-            location_id=0,
-            infected_ids=infected_ids,
-            infector_ids=infector_ids,
-        )
-        for dead_id in dead_ids:
             pre_checkpoint_record.accumulate(
-                table_name="deaths",
+                table_name="infections",
+                location_spec="pre_check_location",
+                region_name="over_here",
                 location_id=0,
                 infected_ids=infected_ids,
                 infector_ids=infector_ids,
@@ -144,20 +137,12 @@ def test__prepend_checkpoint_hdf5(dummy_world):
         infector_ids = [i * 1000 + 500 + 10 + 2 * x + 1 for x in range(3)]
         dead_ids = [i * 1000 + 500 + 20 + 2 * x + 1 for x in range(3)]
         infection_ids = [i * 1000 + 500 + 20 + 2 * x + 1 for x in range(3)]
-
         with open_file(post_checkpoint_record_path, mode="a") as f:
             post_checkpoint_record.file = f
-        post_checkpoint_record.accumulate(
-            table_name="infections",
-            location_spec="post_check_location",
-            region_name="way_over_there",
-            location_id=0,
-            infected_ids=infected_ids,
-            infector_ids=infector_ids,
-        )
-        for dead_id in dead_ids:
             post_checkpoint_record.accumulate(
-                table_name="deaths",
+                table_name="infections",
+                location_spec="post_check_location",
+                region_name="way_over_there",
                 location_id=0,
                 infected_ids=infected_ids,
                 infector_ids=infector_ids,

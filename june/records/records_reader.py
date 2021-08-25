@@ -27,7 +27,7 @@ class RecordReader:
             self.record_name = record_name
 
     def decode_bytes_columns(self, df):
-        str_df = df.select_dtypes([np.object])
+        str_df = df.select_dtypes([object])
         for col in str_df:
             df[col] = str_df[col].str.decode("utf-8")
         return df
