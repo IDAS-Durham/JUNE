@@ -245,7 +245,7 @@ class SchoolQuarantine(StayHome):
             # infected people set quarantine date to the school.
             # there is no problem in order as this will activate
             # days before it is actually applied (during incubation time).
-            time_of_symptoms_onset = person.infection.time_of_symptoms_onset
+            time_of_symptoms_onset = person.infection.start_time #person.infection.time_of_symptoms_onset
             if time_of_symptoms_onset is not None:
                 if (days_from_start - person.primary_activity.quarantine_starting_date) > self.n_days:
                     person.primary_activity.quarantine_starting_date = time_of_symptoms_onset
@@ -332,7 +332,7 @@ class CloseSchools(SkipActivity):
         full_closure=None,
     ):
         super().__init__(
-            start_time, end_time, activities_to_remove=["primary_activity"]
+            start_time, end_time, activities_to_remove=("primary_activity")
         )
         self.full_closure = full_closure
         self.years_to_close = years_to_close
@@ -382,7 +382,7 @@ class CloseUniversities(SkipActivity):
         end_time: str,
     ):
         super().__init__(
-            start_time, end_time, activities_to_remove=["primary_activity"]
+            start_time, end_time, activities_to_remove=("primary_activity")
         )
 
     def check_skips_activity(self, person: "Person") -> bool:
@@ -654,7 +654,7 @@ class LimitLongCommute(SkipActivity):
         going_to_work_probability: float = 0.2,
     ):
         super().__init__(
-            start_time, end_time, activities_to_remove=["primary_activity", "commute"]
+            start_time, end_time, activities_to_remove=("primary_activity", "commute")
         )
         self.going_to_work_probability = going_to_work_probability
         self.__class__.apply_from_distance = apply_from_distance
