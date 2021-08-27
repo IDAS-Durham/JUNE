@@ -50,7 +50,7 @@ london_areas = np.concatenate(
 
 t1 = time.time()
 
-london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[55:60]
+#london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[50:55]
 
 # default config path
 config_path = "./config_simulation.yaml"

@@ -248,12 +248,16 @@ class SchoolQuarantine(StayHome):
             # there is no problem in order as this will activate
             # days before it is actually applied (during incubation time).
             if self.isolate_on == "infection":
-                time_of_symptoms_onset = person.infection.start_time #person.infection.time_of_symptoms_onset
+                time_start_quarantine = person.infection.start_time #person.infection.time_of_symptoms_onset
             else:
-                time_of_symptoms_onset = person.infection.time_of_symptoms_onset
-            if time_of_symptoms_onset is not None:
+                time_start_quarantine = person.infection.time_of_symptoms_onset
+            if time_start_quarantine is not None:
+                if time_start_quarantine < person.primary_activity.quarantine_starting_date:
+                    # If the agent will show symptoms earlier than the quarantine time, update it.
+                    person.primary_activity.quarantine_starting_date = time_start_quarantine
                 if (days_from_start - person.primary_activity.quarantine_starting_date) > self.n_days:
-                    person.primary_activity.quarantine_starting_date = time_of_symptoms_onset
+                    # If it's been more than n_days since last quarantine
+                    person.primary_activity.quarantine_starting_date = time_start_quarantine
         if (
             0
             < (days_from_start - person.primary_activity.quarantine_starting_date)
