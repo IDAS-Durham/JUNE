@@ -203,6 +203,7 @@ class SchoolQuarantine(StayHome):
         end_time: Union[str, datetime.datetime] = "2100-01-01",
         compliance: float = 1.0,
         n_days: int = 7,
+        isolate_on: str = "symptoms"
     ):
         """
         This policy forces kids to stay at home if there is a symptomatic case of covid in their classroom.
@@ -226,6 +227,7 @@ class SchoolQuarantine(StayHome):
         super().__init__(start_time, end_time)
         self.compliance = compliance
         self.n_days = n_days
+        self.isolate_on = isolate_on
 
     def check_stay_home_condition(self, person: Person, days_from_start):
         try:
@@ -245,7 +247,10 @@ class SchoolQuarantine(StayHome):
             # infected people set quarantine date to the school.
             # there is no problem in order as this will activate
             # days before it is actually applied (during incubation time).
-            time_of_symptoms_onset = person.infection.start_time #person.infection.time_of_symptoms_onset
+            if self.isolate_on == "infection":
+                time_of_symptoms_onset = person.infection.start_time #person.infection.time_of_symptoms_onset
+            else:
+                time_of_symptoms_onset = person.infection.time_of_symptoms_onset
             if time_of_symptoms_onset is not None:
                 if (days_from_start - person.primary_activity.quarantine_starting_date) > self.n_days:
                     person.primary_activity.quarantine_starting_date = time_of_symptoms_onset
