@@ -5,7 +5,6 @@ susceptibilities:
 alpha_physical: 2.
 
 betas:
- box: 1
  pub: 0.42941
  gym: 0.42941 
  grocery: 0.04137

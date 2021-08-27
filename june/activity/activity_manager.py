@@ -33,7 +33,6 @@ if mpi_rank > 0:
     logger.propagate = True
 
 activity_hierarchy = [
-    "box",
     "medical_facility",
     "rail_travel_out",
     "rail_travel_back",
@@ -64,23 +63,18 @@ class ActivityManager:
         self.travel = travel
         self.all_activities = all_activities
 
-        if self.world.box_mode:
-            self.activity_to_super_group_dict = {
-                "box": ["boxes"],
-            }
-        else:
-            self.activity_to_super_group_dict = {
-                "medical_facility": activity_to_super_groups.get(
-                    "medical_facility", []
-                ),
-                "primary_activity": activity_to_super_groups.get(
-                    "primary_activity", []
-                ),
-                "leisure": activity_to_super_groups.get("leisure", []),
-                "residence": activity_to_super_groups.get("residence", []),
-                "commute": activity_to_super_groups.get("commute", []),
-                "rail_travel": activity_to_super_groups.get("rail_travel", []),
-            }
+        self.activity_to_super_group_dict = {
+            "medical_facility": activity_to_super_groups.get(
+                "medical_facility", []
+            ),
+            "primary_activity": activity_to_super_groups.get(
+                "primary_activity", []
+            ),
+            "leisure": activity_to_super_groups.get("leisure", []),
+            "residence": activity_to_super_groups.get("residence", []),
+            "commute": activity_to_super_groups.get("commute", []),
+            "rail_travel": activity_to_super_groups.get("rail_travel", []),
+        }
 
     @classmethod
     def from_file(
@@ -94,17 +88,14 @@ class ActivityManager:
     ):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        if world.box_mode:
-            activity_to_super_groups = None
-        else:
-            try:
-                activity_to_super_groups = config["activity_to_super_groups"]
-            except:
-                logger.warning(
-                    "Activity to groups in config is deprecated"
-                    "please change it to activity_to_super_groups"
-                )
-                activity_to_super_groups = config["activity_to_groups"]
+        try:
+            activity_to_super_groups = config["activity_to_super_groups"]
+        except:
+            logger.warning(
+                "Activity to groups in config is deprecated"
+                "please change it to activity_to_super_groups"
+            )
+            activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
         cls.check_inputs(time_config)
         weekday_activities = [

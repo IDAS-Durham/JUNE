@@ -83,7 +83,10 @@ except FileNotFoundError:
         "I couldn't find any data folder, do you want me to download it for you? (y/N) "
     )
     if answer == "y":
-        subprocess.call(["get_june_data.sh"])
+        script_path = Path(__file__).parent.parent / "scripts" / "get_june_data.sh"
+        with open(script_path, 'rb') as file:
+            script = file.read()
+        rc = subprocess.call(script, shell=True)
     data_path = path_for_name("data", look_in_package=True)
 
 configs_path = path_for_name("configs")

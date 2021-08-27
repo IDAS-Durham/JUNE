@@ -57,7 +57,6 @@ class InfectionSeed:
         mpi_rank: int = 0,
         mpi_comm: Optional["MPI.COMM_WORLD"] = None,
         mpi_size: Optional[int] = None,
-        box_mode=False,
         record: Optional["Record"] = None,
     ):
         """
@@ -76,8 +75,6 @@ class InfectionSeed:
             different processes
         mpi_size:
             number of processes
-        box_mode:
-            whether to run on box mode
         """
         if mpi_rank == 0:
             people_ids = [person.id for person in population.people if not person.dead]
@@ -111,10 +108,7 @@ class InfectionSeed:
                         )
         else:
             for inf_id in ids_to_infect:
-                if box_mode:
-                    person_to_infect = self.world.members[0].people[inf_id]
-                else:
-                    person_to_infect = self.world.people.get_from_id(inf_id)
+                person_to_infect = self.world.people.get_from_id(inf_id)
                 self.infection_selector.infect_person_at_time(
                     person_to_infect, time=time
                 )

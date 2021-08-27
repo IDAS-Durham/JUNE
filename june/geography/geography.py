@@ -21,9 +21,6 @@ default_superarea_coord_filename = (
 default_area_socioeconomic_index_filename = (
     paths.data_path / "input/geography/socioeconomic_index.csv"
 )
-default_logging_config_filename = (
-    paths.configs_path / "config_world_creation_logger.yaml"
-)
 
 logger = logging.getLogger(__name__)
 

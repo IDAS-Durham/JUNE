@@ -71,7 +71,6 @@ def save_population_to_hdf5(
             group_specs = []
             group_super_areas = []
             subgroup_types = []
-            # home_city = []
             mode_of_transport_description = []
             mode_of_transport_is_public = []
             lockdown_status = []
@@ -156,7 +155,6 @@ def save_population_to_hdf5(
             ages = np.array(ages, dtype=np.int64)
             sexes = np.array(sexes, dtype="S10")
             ethns = np.array(ethns, dtype="S10")
-            # home_city = np.array(home_city, dtype=np.int64)
             areas = np.array(areas, dtype=np.int64)
             super_areas = np.array(super_areas, dtype=np.int64)
             work_super_areas = np.array(work_super_areas, dtype=np.int64)

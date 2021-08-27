@@ -78,7 +78,3 @@ class Supergroup:
         raise NotImplementedError(
             "From file initialization not available for this supergroup."
         )
-
-    @classmethod
-    def for_box_mode(cls):
-        raise NotImplementedError("Supergroup not available in box mode")
