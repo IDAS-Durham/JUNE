@@ -278,7 +278,6 @@ class InfectionSeed:
             )
             if record:
                 # record past infections and deaths.
-                record.summarise_time_step(timestamp=past_date, world=world)
                 record.time_step(timestamp=past_date)
 
 class InfectionSeeds:
