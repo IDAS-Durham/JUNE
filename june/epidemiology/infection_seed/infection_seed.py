@@ -66,6 +66,7 @@ class InfectionSeed:
         )
         self.dates_seeded = set()
         self.past_infections_seeded = not (seed_past_infections)
+        self.seed_strength = seed_strength
 
     def _parse_input_dataframe(self, df, seed_strength=1.0):
         """

@@ -1,4 +1,5 @@
 import pytest
+import pandas as pd
 import h5py
 import numpy as np
 import datetime
@@ -36,7 +37,7 @@ def _populate_areas(areas: Areas):
     k = 0
     for area in areas:
         for i in range(12):
-            ages = np.arange(0, 120, 10)
+            ages = np.arange(0, 99, 5)
             person = Person.from_attributes(sex="f", age=ages[i], id=k)
             person.area = area
             k += 1
@@ -106,8 +107,8 @@ def run_simulator(selectors, test_results):
         policies=policies,
         checkpoint_save_path=test_results / "checkpoint_tests",
     )
-    seed = InfectionSeed(sim.world, selectors)
-    seed.unleash_virus(sim.world.people, n_cases=50, time=0)
+    seed = InfectionSeed.from_uniform_cases(sim.world, selectors[0], cases_per_capita = 50 / len(world.people), date="2020-03-01")
+    seed.unleash_virus_per_day(time=0, date=pd.to_datetime("2020-03-01"))
     sim.run()
     return sim
 

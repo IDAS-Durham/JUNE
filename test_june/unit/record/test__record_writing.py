@@ -465,10 +465,12 @@ def test__meta_information():
 def test__parameters(dummy_world, selector, selectors):
     interaction = Interaction.from_file(config_filename=config_interaction)
     interaction.alpha_physical = 100.0
-    infection_seed = InfectionSeed(
+    infection_seed = InfectionSeed.from_uniform_cases(
         world=None,
         infection_selector=selector,
         seed_strength=0.0,
+        cases_per_capita=0,
+        date="2020-03-01"
     )
     infection_seeds = InfectionSeeds([infection_seed])
     infection_seed.min_date = datetime.datetime(2020, 10, 10)
