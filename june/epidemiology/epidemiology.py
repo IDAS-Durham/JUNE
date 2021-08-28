@@ -4,7 +4,6 @@ from time import time as wall_clock
 import logging
 
 from .infection import InfectionSelectors, ImmunitySetter
-from .infection_seed import InfectionSeeds
 from june.demography import Population, Activities
 from june.policy import MedicalCarePolicies
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
@@ -42,7 +41,7 @@ class Epidemiology:
     def __init__(
         self,
         infection_selectors: InfectionSelectors = None,
-        infection_seeds: InfectionSeeds = None,
+        infection_seeds: "InfectionSeeds" = None,
         immunity_setter: ImmunitySetter = None,
         medical_care_policies: MedicalCarePolicies = None,
         medical_facilities: MedicalFacilities = None,
@@ -102,7 +101,8 @@ class Epidemiology:
             record.summarise_time_step(timestamp=timer.date, world=world)
             record.time_step(timestamp=timer.date)
 
-    def bury_the_dead(self, world: World, person: "Person", record: Record = None):
+    @staticmethod
+    def bury_the_dead(world: World, person: "Person", record: Record = None):
         """
         When someone dies, send them to cemetery.
         ZOMBIE ALERT!!
@@ -136,7 +136,8 @@ class Epidemiology:
         person.subgroups = Activities(None, None, None, None, None, None)
 
 
-    def recover(self, person: "Person", record: Record = None):
+    @staticmethod
+    def recover(person: "Person", record: Record = None):
         """
         When someone recovers, erase the health information they carry and change their susceptibility.
 

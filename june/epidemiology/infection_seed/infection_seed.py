@@ -11,6 +11,7 @@ from june.domains import Domain
 from june.demography import Population
 from june.geography import SuperAreas
 from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
+from june.epidemiology.epidemiology import Epidemiology
 from june.utils import parse_age_probabilities
 
 
@@ -73,7 +74,8 @@ class InfectionSeed:
         Parses ages by expanding the intervals.
         """
         multi_index = pd.MultiIndex.from_product(
-            [df.index.get_level_values("date").unique(), range(0, 100)], names=["date", "age"]
+            [df.index.get_level_values("date").unique(), range(0, 100)],
+            names=["date", "age"],
         )
         ret = pd.DataFrame(index=multi_index, columns=df.columns, dtype=float)
         for date in df.index.get_level_values("date"):
@@ -83,7 +85,6 @@ class InfectionSeed:
                 )
                 ret.loc[date, region] = np.array(cases_per_age)
         ret *= seed_strength
-        print(ret)
         return ret
 
     @classmethod
@@ -109,7 +110,9 @@ class InfectionSeed:
             [daily_cases_per_region.index.values, age_profile.keys()],
             names=["date", "age"],
         )
-        df = pd.DataFrame(index=multi_index, columns=daily_cases_per_region.columns, dtype=float)
+        df = pd.DataFrame(
+            index=multi_index, columns=daily_cases_per_region.columns, dtype=float
+        )
         for region in daily_cases_per_region.columns:
             for age_key, age_value in age_profile.items():
                 df.loc[(daily_cases_per_region.index, age_key), region] = (
@@ -170,6 +173,15 @@ class InfectionSeed:
                         infector_ids=[person.id],
                         infection_ids=[person.infection.infection_id()],
                     )
+                if time < 0:
+                    # Need to check if the person has already recovered or died
+                    if -time > person.infection.symptoms.trajectory[-1][0]:
+                        if "dead" in person.infection.symptoms.trajectory[-1][1].name:
+                            Epidemiology.bury_the_dead(world=self.world, person=person, record=record)
+                        elif "recovered" == person.infection.symptoms.trajectory[-1][1].name:
+                            Epidemiology.recover(person=person, record=record)
+                        else:
+                            raise(KeyError)
 
     def infect_super_areas(
         self,
@@ -245,24 +257,29 @@ class InfectionSeed:
             self.dates_seeded.add(date_str)
 
     def _seed_past_infections(self, date, time, record):
-        past_dates = (
-            self.daily_cases_per_capita_per_age_per_region.loc[:date]
-            .index.get_level_values("date")
-            .unique()
-            .values[:-1]
-        )
+        past_dates = []
+        for (
+            past_date
+        ) in self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
+            "date"
+        ).unique():
+            if past_date.date() < date.date():
+                past_dates.append(past_date)
         for past_date in past_dates:
-            time = (date - past_date).days
+            past_time = (past_date.date() - date.date()).days
             past_date_str = past_date.date().strftime("%Y-%m-%d")
             self.dates_seeded.add(past_date_str)
             self.infect_super_areas(
                 cases_per_capita_per_age_per_region=self.daily_cases_per_capita_per_age_per_region.loc[
-                    date
+                    past_date
                 ],
-                time=time,
+                time=past_time,
                 record=record,
             )
-
+            if record:
+                # record past infections and deaths.
+                record.summarise_time_step(timestamp=past_date, world=world)
+                record.time_step(timestamp=past_date)
 
 class InfectionSeeds:
     """

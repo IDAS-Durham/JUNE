@@ -9,6 +9,7 @@ from june.epidemiology.infection_seed import InfectionSeed
 from june.epidemiology.infection import Immunity
 from pathlib import Path
 from june.time import Timer
+from june.groups import Cemeteries, Household
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
@@ -20,10 +21,13 @@ constant_config = (
 
 @pytest.fixture(name="world", scope="module")
 def create_world():
+    household = Household()
     people = [
         Person.from_attributes(age=np.random.randint(0, 100), sex="f")
         for i in range(5000)
     ]
+    for person in people:
+        household.add(person)
     world = World()
     region1 = Region(name="London")
     region2 = Region(name="North East")
@@ -40,6 +44,7 @@ def create_world():
     )
     world.super_areas = SuperAreas([super_area_1, super_area_2])
     world.regions = Regions([region1, region2])
+    world.cemeteries = Cemeteries()
     return world
 
 
@@ -241,3 +246,47 @@ def test__ignore_previously_infected(world, selector):
     )
     assert np.isclose(infected_people, 0.1 * n_people, rtol=1e-1)
     assert np.isclose(immune_people, (0.1 + 0.5) * n_people, rtol=1e-1)
+
+
+def test__seed_past_days(world, selector):
+    clean_world(world)
+    cases_per_region_df = pd.DataFrame(
+        {
+            "date": ["2019-02-01", "2020-03-31", "2020-04-01"],
+            "London": [0.5, 0.1, 0.2],
+            "North East": [0.3, 0.2, 0.3],
+        }
+    )
+    cases_per_region_df.set_index("date", inplace=True)
+    cases_per_region_df.index = pd.to_datetime(cases_per_region_df.index)
+    seed = InfectionSeed.from_global_age_profile(
+        world=world,
+        infection_selector=selector,
+        daily_cases_per_region=cases_per_region_df,
+    )
+    timer = Timer(
+        initial_day="2020-04-01",
+        total_days=7,
+    )
+    seed.unleash_virus_per_day(timer.date)
+    recovered = 0
+    infected_1 = 0
+    infected_2 = 0
+    for person in world.people:
+        if person.infected:
+            if person.infection.start_time == -1:
+                infected_1 += 1
+            elif person.infection.start_time == 0:
+                infected_2 += 1
+            else:
+                assert False
+        else:
+            if person.immunity.is_immune(selector.infection_class.infection_id()):
+                recovered += 1
+    n_people = len(world.people)
+    expected_recovered = (0.5 * 0.5 + 0.5 * 0.3) * n_people
+    expected_inf1 = (0.5 * 0.1 + 0.5 * 0.2) * n_people
+    expected_inf2 = (0.5 * 0.2 + 0.5 * 0.3) * n_people
+    assert np.isclose(infected_1, expected_inf1, rtol=1e-1)
+    assert np.isclose(infected_2, expected_inf2, rtol=1e-1)
+    assert np.isclose(recovered, expected_recovered, rtol=1e-1)
