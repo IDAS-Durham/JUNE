@@ -53,7 +53,7 @@ def test__full_run(dummy_world, selector, test_results):
         policies=policies,
         record=record,
     )
-    seed = InfectionSeed(world=sim.world, infection_selector=selector)
+    seed = InfectionSeed.from_uniform_cases(world=sim.world, infection_selector=selector, cases_per_capita=0.01, date=sim.timer.date_str)
     seed.unleash_virus(Population(sim.world.people), n_cases=1, time=0)
     sim.run()
     for region in world.regions:

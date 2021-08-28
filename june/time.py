@@ -70,6 +70,10 @@ class Timer:
         return difference.total_seconds() / SECONDS_PER_DAY
 
     @property
+    def date_str(self):
+        return self.date.date().strftime("%Y-%m-%d")
+
+    @property
     def duration(self):
         return self.delta_time.total_seconds() / SECONDS_PER_DAY
 
