@@ -149,39 +149,39 @@ class InfectionSeed:
         self, super_area, cases_per_capita_per_age, time, record=None
     ):
         people = super_area.people
-        n_people = len(people)
         infection_id = self.infection_selector.infection_class.infection_id()
-        susceptible_people = [
-            person
-            for person in people
-            if person.immunity.get_susceptibility(infection_id) > 0
-        ]
-        n_susceptible = len(susceptible_people)
-        rescaling = n_people / n_susceptible
-        for person in susceptible_people:
+        n_people_by_age = defaultdict(int)
+        susceptible_people_by_age = defaultdict(list)
+        for person in people:
+            n_people_by_age[person.age] += 1
+            if person.immunity.get_susceptibility(infection_id) > 0:
+                susceptible_people_by_age[person.age].append(person)
+        for age, susceptible in susceptible_people_by_age.items():
             # Need to rescale to number of susceptible people in the simulation.
-            prob = cases_per_capita_per_age.loc[person.age] * rescaling
-            if random() < prob:
-                self.infection_selector.infect_person_at_time(person=person, time=time)
-                if record:
-                    record.accumulate(
-                        table_name="infections",
-                        location_spec="infection_seed",
-                        region_name=person.super_area.region.name,
-                        location_id=0,
-                        infected_ids=[person.id],
-                        infector_ids=[person.id],
-                        infection_ids=[person.infection.infection_id()],
-                    )
-                if time < 0:
-                    # Need to check if the person has already recovered or died
-                    if -time > person.infection.symptoms.trajectory[-1][0]:
-                        if "dead" in person.infection.symptoms.trajectory[-1][1].name:
-                            Epidemiology.bury_the_dead(world=self.world, person=person, record=record)
-                        elif "recovered" == person.infection.symptoms.trajectory[-1][1].name:
-                            Epidemiology.recover(person=person, record=record)
-                        else:
-                            raise(KeyError)
+            rescaling = n_people_by_age[age] / len(susceptible_people_by_age[age])
+            for person in susceptible:
+                prob = cases_per_capita_per_age.loc[age] * rescaling
+                if random() < prob:
+                    self.infection_selector.infect_person_at_time(person=person, time=time)
+                    if record:
+                        record.accumulate(
+                            table_name="infections",
+                            location_spec="infection_seed",
+                            region_name=person.super_area.region.name,
+                            location_id=0,
+                            infected_ids=[person.id],
+                            infector_ids=[person.id],
+                            infection_ids=[person.infection.infection_id()],
+                        )
+                    if time < 0:
+                        # Need to check if the person has already recovered or died
+                        if -time > person.infection.symptoms.trajectory[-1][0]:
+                            if "dead" in person.infection.symptoms.trajectory[-1][1].name:
+                                Epidemiology.bury_the_dead(world=self.world, person=person, record=record)
+                            elif "recovered" == person.infection.symptoms.trajectory[-1][1].name:
+                                Epidemiology.recover(person=person, record=record)
+                            else:
+                                raise(KeyError)
 
     def infect_super_areas(
         self,
