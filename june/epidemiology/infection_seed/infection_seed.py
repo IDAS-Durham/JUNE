@@ -174,14 +174,24 @@ class InfectionSeed:
                             infection_ids=[person.infection.infection_id()],
                         )
                     if time < 0:
+                        time_from_infection = -time
+                        # Update transmission probability
+                        person.infection.transmission.update_infection_probability(
+                            time_from_infection=time_from_infection
+                        )
+                        # Need to update trajectories to current stage
+                        symptoms = person.symptoms
+                        while time_from_infection > symptoms.trajectory[symptoms.stage+1][0]:
+                            symptoms.stage += 1
+                            symptoms.tag = symptoms.trajectory[symptoms.stage][1]
+                            if symptoms.stage == len(symptoms.trajectory)-1:
+                                break
                         # Need to check if the person has already recovered or died
-                        if -time > person.infection.symptoms.trajectory[-1][0]:
-                            if "dead" in person.infection.symptoms.trajectory[-1][1].name:
-                                Epidemiology.bury_the_dead(world=self.world, person=person, record=record)
-                            elif "recovered" == person.infection.symptoms.trajectory[-1][1].name:
-                                Epidemiology.recover(person=person, record=record)
-                            else:
-                                raise(KeyError)
+                        if "dead" in symptoms.tag.name:
+                            Epidemiology.bury_the_dead(world=self.world, person=person, record=record)
+                        elif "recovered" == symptoms.tag.name:
+                            Epidemiology.recover(person=person, record=record)
+
 
     def infect_super_areas(
         self,
