@@ -254,8 +254,8 @@ class Record:
             policy_dicts = []
             for policy in activity_manager.policies.policies:
                 policy_dicts.append(policy.__dict__.copy())
-            with open(self.record_path / "policies.txt", "w") as fout:
-                fout.write(repr(policy_dicts))
+            with open(self.record_path / "policies.json", "w") as f:
+                json.dump(policy_dicts, f, indent=4, default=str)
 
     @staticmethod
     def get_username():
