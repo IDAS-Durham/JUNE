@@ -282,10 +282,11 @@ class ImmunitySetter:
         Sets previous vaccination on the starting population.
         """
         vaccine_type =  []  
+        susccesfully_vaccinated = np.zeros(len(population), dtype=int)
         if not self.vaccination_dict:
             return
         vaccines = list(self.vaccination_dict.keys())
-        for person in population:
+        for i, person in enumerate(population):
             if person.age > 99:
                 age = 99
             else:
@@ -307,18 +308,21 @@ class ImmunitySetter:
                     )
                     if random() < inf_data["sterilisation_efficacy"][age]:
                         person.immunity.susceptibility_dict[inf_id] = 0.0
+                        susccesfully_vaccinated[i] = 1
                 person.vaccinated = True 
                 vaccine_type.append(vaccine)
             else:
                 vaccine_type.append('none')
         if self.record is not None:
             self.record.statics['people'].extra_str_data['vaccine_type'] = vaccine_type
+            self.record.statics['people'].extra_int_data['susccesfully_vaccinated'] = susccesfully_vaccinated
 
     def set_previous_infections(self, population):
         """
         Sets previous infections on the starting population.
         """
-        for person in population:
+        previously_infected = np.zeros(len(population), dtype=int)
+        for i, person in enumerate(population):
             if person.region.name not in self.previous_infections_dict["ratios"]:
                 continue
             ratio = self.previous_infections_dict["ratios"][person.region.name][person.age]
@@ -327,6 +331,9 @@ class ImmunitySetter:
                     person.immunity.add_multiplier(inf_id, inf_data["symptomatic_efficacy"])
                     if random() < inf_data["sterilisation_efficacy"]:
                         person.immunity.add_immunity([inf_id])
+                        previously_infected[i] = 1
+        if self.record is not None:
+            self.record.statics['people'].extra_int_data['previously_infected'] = previously_infected
 
 
 
