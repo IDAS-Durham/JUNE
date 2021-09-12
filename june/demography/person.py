@@ -2,8 +2,10 @@ from itertools import count
 from random import choice
 from recordclass import dataobject
 import numpy as np
+from datetime import datetime
+from typing import Optional
 
-from june.infection import Infection
+from june.epidemiology.infection import Infection, Immunity
 
 
 class Activities(dataobject):
@@ -13,11 +15,9 @@ class Activities(dataobject):
     commute: None
     rail_travel: None
     leisure: None
-    box: None
 
     def iter(self):
         return [getattr(self, activity) for activity in self.__fields__]
-
 
 person_ids = count()
 
@@ -28,22 +28,25 @@ class Person(dataobject):
     sex: str = "f"
     age: int = 27
     ethnicity: str = None
-    socioecon_index: str = None
     area: "Area" = None
     # work info
     work_super_area: "SuperArea" = None
     sector: str = None
     sub_sector: str = None
     lockdown_status: str = None
+    # vaccine
+    vaccine_plan: "VaccinePlan" = None
+    vaccinated: bool = False
+    # comorbidity
     comorbidity: str = None
     # commute
     mode_of_transport: "ModeOfTransport" = None
     # activities
     busy: bool = False
-    subgroups: Activities = Activities(None, None, None, None, None, None, None)
+    subgroups: Activities = Activities(None, None, None, None, None, None)
     infection: Infection = None
+    immunity: Immunity()
     # infection
-    susceptibility: float = 1.0
     dead: bool = False
 
     @classmethod
@@ -51,8 +54,8 @@ class Person(dataobject):
         cls,
         sex="f",
         age=27,
+        susceptibility_dict: dict = None,
         ethnicity=None,
-        socioecon_index=None,
         id=None,
         comorbidity=None,
     ):
@@ -63,24 +66,16 @@ class Person(dataobject):
             sex=sex,
             age=age,
             ethnicity=ethnicity,
-            socioecon_index=socioecon_index,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
+            immunity = Immunity(susceptibility_dict=susceptibility_dict),
             comorbidity=comorbidity,
-            subgroups=Activities(None, None, None, None, None, None, None),
+            subgroups=Activities(None, None, None, None, None, None),
         )
 
     @property
     def infected(self):
         return self.infection is not None
-
-    @property
-    def susceptible(self):
-        return self.susceptibility > 0.0
-
-    @property
-    def recovered(self):
-        return not (self.dead or self.susceptible or self.infected)
 
     @property
     def residence(self):
@@ -105,10 +100,6 @@ class Person(dataobject):
     @property
     def leisure(self):
         return self.subgroups.leisure
-
-    @property
-    def box(self):
-        return self.subgroups.box
 
     @property
     def hospitalised(self):
@@ -186,7 +177,20 @@ class Person(dataobject):
         return self.work_super_area.city
 
     @property
+    def should_be_vaccinated(self):
+        if self.vaccine_plan is None and not self.vaccinated:
+            return True
+        return False
+
+    @property
     def available(self):
         if (not self.dead) and (self.medical_facility is None) and (not self.busy):
             return True
         return False
+
+    @property
+    def socioeconomic_index(self):
+        try:
+            return self.area.socioeconomic_index
+        except:
+            return 

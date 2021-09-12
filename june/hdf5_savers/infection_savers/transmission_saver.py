@@ -4,8 +4,12 @@ from collections import defaultdict
 from typing import List
 
 from june import paths
-from june.infection.transmission import TransmissionGamma, Transmission, TransmissionConstant
-from june.infection.transmission_xnexp import TransmissionXNExp
+from june.epidemiology.infection import (
+    TransmissionGamma,
+    Transmission,
+    TransmissionConstant,
+    TransmissionXNExp,
+)
 from june.hdf5_savers.utils import read_dataset, write_dataset
 
 str_to_class = {
@@ -16,7 +20,7 @@ str_to_class = {
 attributes_to_save_dict = {
     "TransmissionXNExp": ["time_first_infectious", "norm_time", "n", "norm", "alpha"],
     "TransmissionGamma": ["shape", "shift", "scale", "norm"],
-    "TransmissionConstant": ["probability"]
+    "TransmissionConstant": ["probability"],
 }
 
 
@@ -79,12 +83,12 @@ def save_transmissions_to_hdf5(
 
 def load_transmissions_from_hdf5(hdf5_file_path: str, chunk_size=50000):
     """
-    Loads transmissions data from hdf5. 
+    Loads transmissions data from hdf5.
 
     Parameters
     ----------
     hdf5_file_path
-        hdf5 path to load from  
+        hdf5 path to load from
     chunk_size
         number of hdf5 chunks to use while loading
     """
@@ -103,7 +107,7 @@ def load_transmissions_from_hdf5(hdf5_file_path: str, chunk_size=50000):
                 attribute_dict[attribute_name] = read_dataset(
                     transmissions_group[attribute_name], idx1, idx2
                 )
-            for index in range(idx2-idx1):
+            for index in range(idx2 - idx1):
                 transmission = transmission_class()
                 for attribute_name in attribute_dict:
                     attribute_value = attribute_dict[attribute_name][index]
@@ -112,4 +116,3 @@ def load_transmissions_from_hdf5(hdf5_file_path: str, chunk_size=50000):
                     setattr(transmission, attribute_name, attribute_value)
                 transmissions.append(transmission)
     return transmissions
-

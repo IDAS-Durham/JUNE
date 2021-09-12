@@ -1,4 +1,5 @@
 import pytest
+import pandas as pd
 import h5py
 import numpy as np
 import datetime
@@ -22,10 +23,9 @@ from june.groups.travel import Travel
 from june.policy import Policies
 from june.interaction import Interaction
 from june.simulator import Simulator
-from june.infection.symptoms import SymptomTag
-from june.infection_seed import InfectionSeed
-from june.infection.transmission_xnexp import TransmissionXNExp
-from june.infection.transmission import TransmissionGamma
+from june.epidemiology.epidemiology import Epidemiology
+from june.epidemiology.infection import SymptomTag, TransmissionXNExp, TransmissionGamma
+from june.epidemiology.infection_seed import InfectionSeed
 from june import paths
 
 test_config = paths.configs_path / "tests/test_checkpoint_config.yaml"
@@ -37,7 +37,7 @@ def _populate_areas(areas: Areas):
     k = 0
     for area in areas:
         for i in range(12):
-            ages = np.arange(0, 120, 10)
+            ages = np.arange(0, 99, 5)
             person = Person.from_attributes(sex="f", age=ages[i], id=k)
             person.area = area
             k += 1
@@ -93,43 +93,42 @@ def create_world():
     return world
 
 
-def run_simulator(selector, test_results):
+def run_simulator(selectors, test_results):
     world = create_world()
     interaction = Interaction.from_file(config_filename=config_interaction)
     policies = Policies([])
+    epidemiology = Epidemiology(infection_selectors=selectors)
     sim = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selector=selector,
+        epidemiology=epidemiology,
         config_filename=test_config,
         leisure=None,
         policies=policies,
         checkpoint_save_path=test_results / "checkpoint_tests",
     )
-    print(sim.checkpoint_save_dates)
-    seed = InfectionSeed(sim.world, selector)
-    seed.unleash_virus(sim.world.people, n_cases=50)
+    seed = InfectionSeed.from_uniform_cases(sim.world, selectors[0], cases_per_capita = 50 / len(world.people), date="2020-03-01")
+    seed.unleash_virus_per_day(time=0, date=pd.to_datetime("2020-03-01"))
     sim.run()
     return sim
 
 
 class TestCheckpoints:
-    def test__checkpoints_are_saved(self, selector, test_results):
+    def test__checkpoints_are_saved(self, selectors, test_results):
         checkpoint_folder = Path(test_results / "checkpoint_tests")
         checkpoint_folder.mkdir(exist_ok=True, parents=True)
-        sim = run_simulator(selector, test_results)
+        sim = run_simulator(selectors, test_results)
         assert len(sim.world.people.infected) > 0
-        assert len(sim.world.people.recovered) > 0
-        assert len(sim.world.people.susceptible) > 0
         assert len(sim.world.people.dead) > 0
         fresh_world = create_world()
         interaction = Interaction.from_file(config_filename=config_interaction)
         policies = Policies([])
+        epidemiology = Epidemiology(infection_selectors=selectors)
         sim_recovered = Simulator.from_checkpoint(
             world=fresh_world,
             checkpoint_load_path=checkpoint_folder / "checkpoint_2020-03-25.hdf5",
             interaction=interaction,
-            infection_selector=selector,
+            epidemiology=epidemiology,
             config_filename=test_config,
             leisure=None,
             travel=None,
@@ -148,18 +147,69 @@ class TestCheckpoints:
                 assert person2.infection is not None
                 inf1 = person1.infection
                 inf2 = person2.infection
+                assert inf1.infection_id() == inf2.infection_id()
                 assert inf1.start_time == inf1.start_time
                 assert inf1.infection_probability == inf2.infection_probability
-                assert inf1.number_of_infected == inf2.number_of_infected
                 assert inf1.transmission.probability == inf2.transmission.probability
                 assert inf1.symptoms.tag == inf2.symptoms.tag
                 assert inf1.symptoms.stage == inf2.symptoms.stage
                 continue
-            assert person1.susceptible == person2.susceptible
             assert person1.infected == person2.infected
-            assert person1.recovered == person2.recovered
-            assert person1.susceptibility == person2.susceptibility
+            assert (
+                person1.immunity.susceptibility_dict
+                == person2.immunity.susceptibility_dict
+            )
             assert person1.dead == person2.dead
+        # clean up
+        os.remove(checkpoint_folder / "checkpoint_2020-03-25.hdf5")
+        # gotta delete, else it passes any time it should have failed...
+
+
+class TestCheckpointForReseeding:
+    """
+    These tests the situation in which we load from checkpoint and
+    want all the infections reseted.
+    """
+
+    def test__checkpoints_are_saved(self, selectors, test_results):
+        checkpoint_folder = Path(test_results / "checkpoint_tests")
+        checkpoint_folder.mkdir(exist_ok=True, parents=True)
+        sim = run_simulator(selectors, test_results)
+        assert len(sim.world.people.infected) > 0
+        assert len(sim.world.people.dead) > 0
+        epidemiology = Epidemiology(infection_selectors=selectors)
+        fresh_world = create_world()
+        interaction = Interaction.from_file(config_filename=config_interaction)
+        policies = Policies([])
+        sim_recovered = Simulator.from_checkpoint(
+            world=fresh_world,
+            checkpoint_load_path=checkpoint_folder / "checkpoint_2020-03-25.hdf5",
+            interaction=interaction,
+            epidemiology=epidemiology,
+            config_filename=test_config,
+            leisure=None,
+            travel=None,
+            policies=policies,
+            reset_infections=True,
+        )
+        # check timer is correct
+        assert sim_recovered.timer.initial_date == sim.timer.initial_date
+        assert sim_recovered.timer.final_date == sim.timer.final_date
+        assert sim_recovered.timer.now == sim.timer.now
+        assert sim_recovered.timer.date.date() == datetime.datetime(2020, 3, 26).date()
+        assert sim_recovered.timer.shift == sim.timer.shift
+        assert sim_recovered.timer.delta_time == sim.timer.delta_time
+        for person1, person2 in zip(sim.world.people, sim_recovered.world.people):
+            assert person1.id == person2.id
+            if person1.infection is not None:
+                assert person2.infection is None
+                continue
+            assert person1.infected == person2.infected
+            assert person1.dead == person2.dead
+            assert (
+                person1.immunity.susceptibility_dict
+                == person2.immunity.susceptibility_dict
+            )
         # clean up
         os.remove(checkpoint_folder / "checkpoint_2020-03-25.hdf5")
         # gotta delete, else it passes any time it should have failed...

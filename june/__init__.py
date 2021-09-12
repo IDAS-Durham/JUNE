@@ -7,7 +7,6 @@ from june import paths
 from . import demography
 from . import distributors
 from . import groups
-from . import infection
 from . import interaction
 from . import simulator
 from . import activity
@@ -18,7 +17,7 @@ from .world import World
 
 default_logging_config_filename = (
         paths.configs_path /
-        "config_world_creation_logger.yaml"
+        "logging.yaml"
 )
 
 if os.path.isfile(default_logging_config_filename):

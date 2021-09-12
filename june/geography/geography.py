@@ -18,8 +18,8 @@ default_area_coord_filename = (
 default_superarea_coord_filename = (
     paths.data_path / "input/geography/super_area_coordinates_sorted.csv"
 )
-default_logging_config_filename = (
-    paths.configs_path / "config_world_creation_logger.yaml"
+default_area_socioeconomic_index_filename = (
+    paths.data_path / "input/geography/socioeconomic_index.csv"
 )
 
 logger = logging.getLogger(__name__)
@@ -46,6 +46,7 @@ class Area:
         "schools",
         "households",
         "social_venues",
+        "socioeconomic_index",
     )
     _id = count()
 
@@ -54,6 +55,7 @@ class Area:
         name: str = None,
         super_area: "SuperArea" = None,
         coordinates: Tuple[float, float] = None,
+        socioeconomic_index: float = None,
     ):
         """
         Coordinate is given in the format [Y, X] where X is longitude and Y is latitude.
@@ -63,6 +65,7 @@ class Area:
         self.care_home = None
         self.coordinates = coordinates
         self.super_area = super_area
+        self.socioeconomic_index = socioeconomic_index
         self.people = []
         self.schools = []
         self.households = []
@@ -73,12 +76,11 @@ class Area:
         person.area = self
 
     def populate(
-        self, demography, ethnicity=True, socioecon_index=True, comorbidity=True
+        self, demography, ethnicity=True, comorbidity=True,
     ):
         for person in demography.populate(
             self.name,
             ethnicity=ethnicity,
-            socioecon_index=socioecon_index,
             comorbidity=comorbidity,
         ):
             self.add(person)
@@ -415,7 +417,7 @@ class Geography:
 
     @classmethod
     def _create_areas(
-        cls, area_coords: pd.DataFrame, super_area: pd.DataFrame
+        cls, area_coords: pd.DataFrame, super_area: pd.DataFrame, socioeconomic_indices: pd.Series,
     ) -> List[Area]:
         """
         Applies the _create_area function throught the area_coords dataframe.
@@ -431,7 +433,14 @@ class Geography:
         # if a single area is given, then area_coords is a series
         # and we cannot do iterrows()
         if isinstance(area_coords, pd.Series):
-            areas = [Area(area_coords.name, super_area, area_coords.values)]
+            areas = [
+                Area(
+                    area_coords.name, 
+                    super_area, 
+                    area_coords.values, 
+                    socioeconomic_indices.loc[area_coords.name]
+                )
+            ]
         else:
             areas = []
             for name, coordinates in area_coords.iterrows():
@@ -442,6 +451,7 @@ class Geography:
                         coordinates=np.array(
                             [coordinates.latitude, coordinates.longitude]
                         ),
+                        socioeconomic_index=socioeconomic_indices.loc[name]
                     )
                 )
         return areas
@@ -451,6 +461,7 @@ class Geography:
         cls,
         super_area_coords: pd.DataFrame,
         area_coords: pd.DataFrame,
+        area_socioeconomic_indices: pd.Series,
         region: "Region",
         hierarchy: pd.DataFrame,
     ) -> List[Area]:
@@ -486,7 +497,7 @@ class Geography:
             areas_df = area_coords.loc[
                 area_hierarchy.loc[super_area_coords.name, "area"]
             ]
-            areas_list = cls._create_areas(areas_df, super_areas_list[0])
+            areas_list = cls._create_areas(areas_df, super_areas_list[0], area_socioeconomic_indices)
             super_areas_list[0].areas = areas_list
             total_areas_list += areas_list
         else:
@@ -498,7 +509,7 @@ class Geography:
                     region=region,
                 )
                 areas_df = area_coords.loc[area_hierarchy.loc[super_area_name, "area"]]
-                areas_list = cls._create_areas(areas_df, super_area)
+                areas_list = cls._create_areas(areas_df, super_area, area_socioeconomic_indices)
                 super_area.areas = areas_list
                 total_areas_list += list(areas_list)
                 super_areas_list.append(super_area)
@@ -510,6 +521,7 @@ class Geography:
         hierarchy: pd.DataFrame,
         area_coordinates: pd.DataFrame,
         super_area_coordinates: pd.DataFrame,
+        area_socioeconomic_indices: pd.Series,
         sort_identifiers=True,
     ):
         """
@@ -528,7 +540,7 @@ class Geography:
                 region_hierarchy.loc[region_name]
             ]
             super_areas_list, areas_list = cls._create_super_areas(
-                super_areas_df, area_coordinates, region, hierarchy=hierarchy
+                super_areas_df, area_coordinates, area_socioeconomic_indices, region, hierarchy=hierarchy
             )
             region.super_areas = super_areas_list
             total_super_areas_list += list(super_areas_list)
@@ -544,7 +556,7 @@ class Geography:
         logger.info(
             f"There are {len(areas)} areas and "
             + f"{len(super_areas)} super_areas "
-            + f"and {len(regions)} in the world."
+            + f"and {len(regions)} regions in the world."
         )
         return areas, super_areas, regions
 
@@ -555,6 +567,7 @@ class Geography:
         hierarchy_filename: str = default_hierarchy_filename,
         area_coordinates_filename: str = default_area_coord_filename,
         super_area_coordinates_filename: str = default_superarea_coord_filename,
+        area_socioeconomic_index_filename: str = default_area_socioeconomic_index_filename,
         sort_identifiers=True,
     ) -> "Geography":
         """
@@ -579,6 +592,8 @@ class Geography:
             coordinates of the area units
         super_area_coordinates_filename
             coordinates of the super area units
+        area_socioeconomic_index_filename
+            socioeconomic index of each area
         logging_config_filename
             file path of the logger configuration
         """
@@ -594,10 +609,24 @@ class Geography:
         areas_coord.set_index("area", inplace=True)
         super_areas_coord.set_index("super_area", inplace=True)
         geo_hierarchy.set_index("super_area", inplace=True)
+        if area_socioeconomic_index_filename:
+            area_socioeconomic_df = pd.read_csv(area_socioeconomic_index_filename)
+            area_socioeconomic_df = area_socioeconomic_df.loc[
+                area_socioeconomic_df.area.isin(geo_hierarchy.area)
+            ]
+            area_socioeconomic_df.set_index("area", inplace=True)
+            area_socioeconomic_index = area_socioeconomic_df["socioeconomic_centile"]
+        else:
+            area_socioeconomic_index = pd.Series(
+                data=np.full(len(areas_coord), None), 
+                index=areas_coord.index, 
+                name="socioeconomic_centile",
+            )
         areas, super_areas, regions = cls.create_geographical_units(
             geo_hierarchy,
             areas_coord,
             super_areas_coord,
+            area_socioeconomic_index,
             sort_identifiers=sort_identifiers,
         )
         return cls(areas, super_areas, regions)

@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import List
 
 from june.hdf5_savers.utils import read_dataset, write_dataset
-from june.infection import Infection
+from june.epidemiology.infection import Infection, Covid19
 from .symptoms_saver import save_symptoms_to_hdf5, load_symptoms_from_hdf5
 from .transmission_saver import save_transmissions_to_hdf5, load_transmissions_from_hdf5
 
@@ -13,7 +13,9 @@ float_vlen_type = h5py.vlen_dtype(np.dtype("float64"))
 
 
 def save_infections_to_hdf5(
-    hdf5_file_path: str, infections: List[Infection], chunk_size: int = 50000,
+    hdf5_file_path: str,
+    infections: List[Infection],
+    chunk_size: int = 50000,
 ):
     """
     Saves infections data to hdf5.
@@ -47,7 +49,7 @@ def save_infections_to_hdf5(
             hdf5_file_path=hdf5_file_path,
             chunk_size=chunk_size,
         )
-        attributes_to_save = ["start_time", "number_of_infected"]
+        attributes_to_save = ["start_time"]
         n_chunks = int(np.ceil(n_infections / chunk_size))
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
@@ -74,12 +76,12 @@ def save_infections_to_hdf5(
 
 def load_infections_from_hdf5(hdf5_file_path: str, chunk_size=50000):
     """
-    Loads infections data from hdf5. 
+    Loads infections data from hdf5.
 
     Parameters
     ----------
     hdf5_file_path
-        hdf5 path to load from  
+        hdf5 path to load from
     chunk_size
         number of hdf5 chunks to use while loading
     """
@@ -109,7 +111,7 @@ def load_infections_from_hdf5(hdf5_file_path: str, chunk_size=50000):
                     infections_group[attribute_name], idx1, idx2
                 )
             for index in range(idx2 - idx1):
-                infection = Infection(
+                infection = Covid19(
                     transmission=transmissions[trans_symp_index],
                     symptoms=symptoms_list[trans_symp_index],
                 )

@@ -30,8 +30,8 @@ from june.groups.leisure import (
     generate_leisure_for_world,
 )
 from june.groups.group.interactive import InteractiveGroup
-from june.infection import SymptomTag
-from june.infection.infection_selector import InfectionSelector
+from june.epidemiology.infection import SymptomTag
+from june.epidemiology.infection.infection_selector import InfectionSelector
 from june.interaction import Interaction
 from june.policy import (
     Policy,
@@ -53,7 +53,6 @@ class TestSocialDistancing:
         world, pupil, student, worker, sim = setup_policy_world
         world.cemeteries = Cemeteries()
         beta_factors = {
-            "box": 0.7,
             "pub": 0.7,
             "grocery": 0.7,
             "cinema": 0.7,
@@ -196,7 +195,6 @@ class TestMaskWearing:
         compliance = 1.0
         beta_factor = 0.5
         mask_probabilities = {
-            "box": 0.5,
             "pub": 0.5,
             "grocery": 0.5,
             "cinema": 0.5,

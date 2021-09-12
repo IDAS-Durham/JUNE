@@ -1,0 +1,56 @@
+## these are taken directly from https://www.nomisweb.co.uk/census/2011/lc2101ew, 
+## encodings [letter][number] allow for person.ethnicity[0] to get the "broad" groupings.
+
+# All categories: Ethnic group
+# White: Total
+# English/Welsh/Scottish/Northern Irish/British
+# Irish
+# Gypsy or Irish Traveller
+# Other White
+# Mixed/multiple ethnic group: Total
+# White and Black Caribbean
+# White and Black African
+# White and Asian
+# Other Mixed
+# Asian/Asian British: Total
+# Indian
+# Pakistani
+# Bangladeshi
+# Chinese
+# Other Asian
+# Black/African/Caribbean/Black British: Total
+# African
+# Caribbean
+# Other Black
+# Other ethnic group: Total
+# Arab
+# Any other ethnic group
+
+A: 
+  broad: "White"
+  1: "English/Welsh/Scottish/Northern Irish/British"
+  2: "Irish"
+  3: "Gypsy or Irish Traveller"
+  4: "Other White"
+B: 
+  broad: Mixed/multiple ethnic group
+  1: "White and Black Caribbean"
+  2: "White and Black Asian"
+  3: "White and Asian"
+  4: "Other Mixed"
+C:
+  broad: "Asian/Asian British"
+  1: "Indian"
+  2: "Pakistani"
+  3: "Bangladeshi"
+  4: "Chinese"
+  5: "Other Asian"
+D:
+  broad: "Black/African/Caribbean/Black British"
+  1: "African"
+  2: "Caribbean"
+  3: "Other Black"
+E:
+  broad: "Other ethnic group"
+  1: "Arab"
+  2: "Any other ethnic group"

@@ -1,5 +1,6 @@
 from june.interaction import Interaction, interaction
-from june.infection.infection_selector import InfectionSelector
+from june.epidemiology.infection.infection_selector import InfectionSelector
+from june.epidemiology.infection import Immunity
 from june.groups import School
 from june.demography import Person
 from june import paths
@@ -7,13 +8,14 @@ from june.geography import Geography
 from june.groups.group.interactive import InteractiveGroup
 from june.world import generate_world_from_geography
 from june.groups import Hospital, Hospitals
-from june.infection_seed import InfectionSeed
+from june.epidemiology.infection_seed import InfectionSeed
 from june.policy import Policies
 from june.simulator import Simulator
 
 import pytest
 import numpy as np
 import os
+import pandas as pd
 import pathlib
 from itertools import chain
 
@@ -23,13 +25,101 @@ default_sector_beta_filename = (
 )
 
 
-def test__contact_matrices_from_default():
-    interaction = Interaction.from_file(config_filename=test_config)
-    np.testing.assert_allclose(
-        interaction.contact_matrices["pub"],
-        np.array([[3 * (1 + 0.12) * 24 / 3]]),
-        rtol=0.05,
-    )
+class TestInteractionFunctions:
+    def test__contact_matrices_from_default(self):
+        interaction = Interaction.from_file(config_filename=test_config)
+        np.testing.assert_allclose(
+            interaction.contact_matrices["pub"],
+            np.array([[3 * (1 + 0.12) * 24 / 3]]),
+            rtol=0.05,
+        )
+
+    def test__create_infector_tensor(self):
+        infectors_per_infection_per_subgroup = {
+            1: {2: {"ids": [1, 2, 3], "trans_probs": [0.1, 0.2, 0.3]}},
+            2: {
+                0: {"ids": [4, 5], "trans_probs": [0.4, 0.5]},
+                1: {"ids": [6], "trans_probs": [0.8]},
+            },
+        }
+        subgroup_sizes = [3, 5, 7]
+        interaction = Interaction.from_file(config_filename=test_config)
+        contact_matrix = np.array([[1, 0, 1], [1, 1, 1], [0, 1, 0]])
+        infector_tensor = interaction.create_infector_tensor(
+            infectors_per_infection_per_subgroup, subgroup_sizes, contact_matrix, 1, 1
+        )
+        expected = np.array([[0, 0, 0.6 / 7], [0, 0, 0.6 / 7], [0.0, 0.0, 0.0]])
+        assert np.allclose(infector_tensor[1], expected)
+        expected = np.array([[0.9 / 2, 0, 0], [0.9 / 3, 0.8 / 4, 0], [0, 0.8 / 5, 0]])
+        assert np.allclose(infector_tensor[2], expected)
+
+    def test__gets_infected(self):
+        interaction = Interaction.from_file(config_filename=test_config)
+        probs = np.array([0.1, 0.2, 0.3])
+        possible_infections = [1, 2, 3]
+        infections = []
+        misses = 0
+        n = 10000
+        for _ in range(n):
+            infection = interaction._gets_infected(probs, possible_infections)
+            if infection is None:
+                misses += 1
+                continue
+            infections.append(infection)
+        infections = np.array(infections)
+        misses_exp = np.exp(-0.6)
+        assert np.isclose(misses, misses_exp * n, rtol=0.1)
+        assert np.isclose(
+            len(infections[infections == 1]), 0.1 / 0.6 * n * (1 - misses_exp), rtol=0.1
+        )
+        assert np.isclose(
+            len(infections[infections == 2]), 0.2 / 0.6 * n * (1 - misses_exp), rtol=0.1
+        )
+        assert np.isclose(
+            len(infections[infections == 3]), 0.3 / 0.6 * n * (1 - misses_exp), rtol=0.1
+        )
+
+    def test__blame_subgroup(self):
+        interaction = Interaction.from_file(config_filename=test_config)
+        probs = np.array([20, 30, 100])
+        blames = []
+        n = 10000
+        for _ in range(n):
+            blame = interaction._blame_subgroup(probs)
+            blames.append(blame)
+        blames = np.array(blames)
+        assert np.isclose(len(blames[blames == 0]), 20 / 150 * n, rtol=0.1)
+        assert np.isclose(len(blames[blames == 1]), 30 / 150 * n, rtol=0.1)
+        assert np.isclose(len(blames[blames == 2]), 100 / 150 * n, rtol=0.1)
+
+    def test__blame_individuals(self):
+        interaction = Interaction.from_file(config_filename=test_config)
+        infectors_per_infection_per_subgroup = {
+            "a": {
+                0: {"ids": [1, 2, 3], "trans_probs": [0.1, 0.2, 0.3]},
+                1: {"ids": [4], "trans_probs": [0.4]},
+            },
+            "b": {2: {"ids": [5, 6, 7], "trans_probs": [0.1, 0.2, 0.3]}},
+        }
+        infection_ids = ["a", "b"]
+        to_blame_subgroups = [0, 2]
+        blames1 = []
+        blames2 = []
+        n = 1000
+        for i in range(n):
+            to_blame_ids = interaction._blame_individuals(
+                to_blame_subgroups, infection_ids, infectors_per_infection_per_subgroup
+            )
+            blames1.append(to_blame_ids[0])
+            blames2.append(to_blame_ids[1])
+        blames1 = np.array(blames1)
+        blames2 = np.array(blames2)
+        assert np.isclose(len(blames1[blames1 == 1]), 0.1 / 0.6 * n, rtol=0.1)
+        assert np.isclose(len(blames1[blames1 == 2]), 0.2 / 0.6 * n, rtol=0.1)
+        assert np.isclose(len(blames1[blames1 == 3]), 0.3 / 0.6 * n, rtol=0.1)
+        assert np.isclose(len(blames2[blames2 == 5]), 0.1 / 0.6 * n, rtol=0.1)
+        assert np.isclose(len(blames2[blames2 == 6]), 0.2 / 0.6 * n, rtol=0.1)
+        assert np.isclose(len(blames2[blames2 == 7]), 0.3 / 0.6 * n, rtol=0.1)
 
 
 def days_to_infection(interaction, susceptible_person, group, people, n_students):
@@ -40,14 +130,13 @@ def days_to_infection(interaction, susceptible_person, group, people, n_students
             group.subgroups[1].append(person)
         for person in people[n_students:]:
             group.subgroups[0].append(person)
-        infected_ids, group_size = interaction.time_step_for_group(
+        infected_ids, _, _ = interaction.time_step_for_group(
             group=group, delta_time=delta_time
         )
-        if infected_ids:
+        if susceptible_person.id in infected_ids:
             break
         days_to_infection += delta_time
         group.clear()
-
     return days_to_infection
 
 
@@ -110,7 +199,7 @@ def test__average_time_to_infect(n_teachers, mode, selector):
         contact_matrices={"school": contact_matrices},
     )
     n_days = []
-    for _ in range(200):
+    for _ in range(100):
         people, school = create_school(n_students, n_teachers)
         for student in people[:n_students]:
             selector.infect_person_at_time(student, time=0)
@@ -130,28 +219,25 @@ def test__average_time_to_infect(n_teachers, mode, selector):
     )
 
 
-def test__infection_is_isolated(selector):
+def test__infection_is_isolated(epidemiology, selectors):
     geography = Geography.from_file({"area": ["E00002559"]})
     world = generate_world_from_geography(geography, include_households=True)
     interaction = Interaction.from_file(config_filename=test_config)
-    infection_seed = InfectionSeed(world, selector)
-    n_cases = 5
-    infection_seed.unleash_virus(
-        world.people, n_cases=n_cases
-    )  # play around with the initial number of cases
+    infection_seed = InfectionSeed.from_uniform_cases(world, selectors[0], cases_per_capita=5/len(world.people), date="2020-03-01")
+    infection_seed.unleash_virus_per_day(date = pd.to_datetime("2020-03-01"), time=0)
     policies = Policies([])
+    n_infected = len([person for person in world.people if person.infected])
     simulator = Simulator.from_file(
         world=world,
         interaction=interaction,
-        infection_selector=selector,
+        epidemiology=epidemiology,
         config_filename=pathlib.Path(__file__).parent.absolute()
         / "interaction_test_config.yaml",
         leisure=None,
         policies=policies,
         # save_path=None,
     )
-    infected_people = [person for person in world.people if person.infected]
-    assert len(infected_people) == 5
+    assert np.isclose(n_infected, 5, rtol=0.2)
     infected_households = []
     for household in world.households:
         infected = False
@@ -161,32 +247,13 @@ def test__infection_is_isolated(selector):
                 break
         if infected:
             infected_households.append(household)
-    assert len(infected_households) <= 5
+    assert len(infected_households) <= n_infected
     simulator.run()
     for person in world.people:
         if person.residence is None:
             assert person.dead
         elif not (person.residence.group in infected_households):
-            assert not person.infected and person.susceptible
-
-
-def test__assign_blame():
-    interaction = Interaction.from_file(config_filename=test_config)
-    transmission_weights = [1, 10, 2, 3, 4]
-    transmission_ids = [0, 1, 4, 5, 6]
-    total_wegiht = sum(transmission_weights)
-    n_infections = 5000
-    culpables = interaction._assign_blame_for_infections(
-        n_infections, transmission_weights, transmission_ids
-    )
-    culpable_ids, culpable_counts = np.unique(culpables, return_counts=True)
-    culpable_counts = {key: value for key, value in zip(culpable_ids, culpable_counts)}
-    for trans_id, trans_weight in zip(transmission_ids, transmission_weights):
-        assert np.isclose(
-            culpable_counts[trans_id],
-            n_infections * trans_weight / total_wegiht,
-            rtol=0.05,
-        )
+            assert not person.infected
 
 
 def test__super_spreaders(selector):
@@ -203,14 +270,28 @@ def test__super_spreaders(selector):
     interactive_school = school.get_interactive_group()
     interaction = Interaction.from_file(config_filename=test_config)
     beta = interaction._get_interactive_group_beta(interactive_school)
-    contact_matrix = interaction.contact_matrices["school"]
-    subgroup_infected_ids, to_blame_ids = interaction._time_step_for_subgroup(
-        susceptible_subgroup_index=0,
-        susceptible_subgroup_global_index=0,
-        interactive_group=interactive_school,
-        beta=beta,
-        contact_matrix=contact_matrix,
+    contact_matrix_raw = interaction.contact_matrices["school"]
+    contact_matrix = interactive_school.get_processed_contact_matrix(contact_matrix_raw)
+    infector_tensor = interaction.create_infector_tensor(
+        interactive_school.infectors_per_infection_per_subgroup,
+        interactive_school.subgroup_sizes,
+        contact_matrix,
+        beta,
         delta_time=1,
+    )
+    (
+        subgroup_infected_ids,
+        subgroup_infection_ids,
+        to_blame_subgroups,
+    ) = interaction._time_step_for_subgroup(
+        infector_tensor=infector_tensor,
+        susceptible_subgroup_id=0,
+        subgroup_susceptibles=interactive_school.susceptibles_per_subgroup[0],
+    )
+    to_blame_ids = interaction._blame_individuals(
+        to_blame_subgroups,
+        subgroup_infection_ids,
+        interactive_school.infectors_per_infection_per_subgroup,
     )
     for id in subgroup_infected_ids:
         assert id in teacher_ids
@@ -224,5 +305,5 @@ def test__super_spreaders(selector):
         assert np.isclose(
             culpable_count,
             expected,
-            rtol=0.1,
+            rtol=0.25,
         )

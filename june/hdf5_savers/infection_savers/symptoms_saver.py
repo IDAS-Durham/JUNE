@@ -4,17 +4,19 @@ from collections import defaultdict
 from typing import List
 
 from june.hdf5_savers.utils import read_dataset, write_dataset
-from june.infection.symptoms import Symptoms, SymptomTag
+from june.epidemiology.infection import Symptoms, SymptomTag
 
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 float_vlen_type = h5py.vlen_dtype(np.dtype("float64"))
 
 
 def save_symptoms_to_hdf5(
-    hdf5_file_path: str, symptoms_list: List[Symptoms], chunk_size: int = 50000,
+    hdf5_file_path: str,
+    symptoms_list: List[Symptoms],
+    chunk_size: int = 50000,
 ):
     """
-    Saves symptoms data to hdf5. 
+    Saves symptoms data to hdf5.
 
     Parameters
     ----------
@@ -104,12 +106,12 @@ def save_symptoms_to_hdf5(
 
 def load_symptoms_from_hdf5(hdf5_file_path: str, chunk_size=50000):
     """
-    Loads symptoms data from hdf5. 
+    Loads symptoms data from hdf5.
 
     Parameters
     ----------
     hdf5_file_path
-        hdf5 path to load from  
+        hdf5 path to load from
     chunk_size
         number of hdf5 chunks to use while loading
     """
@@ -134,7 +136,7 @@ def load_symptoms_from_hdf5(hdf5_file_path: str, chunk_size=50000):
             trajectory_symptom_list = read_dataset(
                 symptoms_group["trajectory_symptoms"], idx1, idx2
             )
-            for index in range(idx2-idx1):
+            for index in range(idx2 - idx1):
                 symptom = Symptoms()
                 symptom.tag = SymptomTag(tag_list[index])
                 symptom.max_tag = SymptomTag(max_tag_list[index])

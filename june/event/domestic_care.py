@@ -47,7 +47,7 @@ class DomesticCare(Event):
     def initialise(self, world):
         self._link_carers_to_households(world=world)
 
-    def apply(self, world, activities, is_weekend):
+    def apply(self, world, activities, day_type, simulator=None):
         """
         When a household is reponsible for caring of another housheold,
         a random person is sent during leisure to take care of that household.
@@ -55,7 +55,7 @@ class DomesticCare(Event):
         """
         if (
             "leisure" not in activities
-            or is_weekend
+            or day_type == "weekend"
             or "primary_activity" in activities
         ):
             return
@@ -102,7 +102,6 @@ class DomesticCare(Event):
             for needer, provider in zip(need_care, can_provide_care):
                 total_need_care += 1
                 provider.household_to_care = needer
-        logger.info(f"A total number of {total_need_care} people need care here.")
 
     def _check_household_needs_care(self, household):
         """

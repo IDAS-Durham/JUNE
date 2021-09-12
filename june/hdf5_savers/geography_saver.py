@@ -3,7 +3,15 @@ import numpy as np
 from collections import defaultdict
 
 from june.groups import ExternalGroup, ExternalSubgroup
-from june.geography import Geography, Area, SuperArea, Areas, SuperAreas, Region, Regions
+from june.geography import (
+    Geography,
+    Area,
+    SuperArea,
+    Areas,
+    SuperAreas,
+    Region,
+    Regions,
+)
 from .utils import read_dataset
 from june.world import World
 
@@ -11,18 +19,11 @@ nan_integer = -999
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 str_vlen_type = h5py.vlen_dtype(np.dtype("S40"))
 
-social_venues_spec_mapper = {
-    "pubs": "pubs",
-    "household_visits": "households",
-    "care_home_visits": "care_homes",
-    "cinemas": "cinemas",
-    "groceries": "groceries",
-}
-
-super_group_to_group_mapper = {
-    "pubs": "pub",
-    "groceries": "grocery",
-    "cinemas": "cinema",
+spec_to_supergroup_mapper = {
+    "pub": "pubs",
+    "cinema": "cinemas",
+    "grocery": "groceries",
+    "gym": "gyms",
 }
 
 
@@ -34,7 +35,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
 
     Parameters
     ----------
-    companies 
+    companies
         population object
     file_path
         path of the saved hdf5 file
@@ -47,6 +48,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     area_names = []
     area_super_areas = []
     area_coordinates = []
+    area_socioeconomic_indices = []
     n_super_areas = len(geography.super_areas)
     super_area_ids = []
     super_area_names = []
@@ -65,6 +67,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     super_area_closest_stations_lengths = []
     super_area_n_people = []
     super_area_n_workers = []
+    super_area_n_pupils = []
     n_regions = len(geography.regions)
     region_ids = []
     region_names = []
@@ -74,6 +77,7 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         area_super_areas.append(area.super_area.id)
         area_names.append(area.name.encode("ascii", "ignore"))
         area_coordinates.append(np.array(area.coordinates, dtype=np.float64))
+        area_socioeconomic_indices.append(area.socioeconomic_index)
         social_venues_ids = []
         social_venues_specs = []
         social_venues_sas = []
@@ -91,9 +95,13 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         social_venues_ids_list = np.array(social_venues_ids_list, dtype=np.int64)
         social_venues_super_areas = np.array(social_venues_super_areas, dtype=np.int64)
     else:
-        social_venues_specs_list = np.array(social_venues_specs_list, dtype=str_vlen_type)
+        social_venues_specs_list = np.array(
+            social_venues_specs_list, dtype=str_vlen_type
+        )
         social_venues_ids_list = np.array(social_venues_ids_list, dtype=int_vlen_type)
-        social_venues_super_areas = np.array(social_venues_super_areas, dtype=int_vlen_type)
+        social_venues_super_areas = np.array(
+            social_venues_super_areas, dtype=int_vlen_type
+        )
 
     for super_area in geography.super_areas:
         super_area_ids.append(super_area.id)
@@ -102,6 +110,9 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         super_area_coordinates.append(np.array(super_area.coordinates))
         super_area_n_people.append(len(super_area.people))
         super_area_n_workers.append(len(super_area.workers))
+        super_area_n_pupils.append(
+            sum([len(school.people) for area in super_area.areas for school in area.schools])
+        )
         if super_area.closest_hospitals is None:
             closest_hospitals_ids.append(np.array([nan_integer], dtype=np.int64))
             closest_hospitals_super_areas.append(np.array([nan_integer], dtype=np.int64))
@@ -140,14 +151,16 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
     area_names = np.array(area_names, dtype="S20")
     area_super_areas = np.array(area_super_areas, dtype=np.int64)
     area_coordinates = np.array(area_coordinates, dtype=np.float64)
+    area_socioeconomic_indices = np.array(area_socioeconomic_indices, dtype=np.float64)
     super_area_ids = np.array(super_area_ids, dtype=np.int64)
     super_area_names = np.array(super_area_names, dtype="S20")
     super_area_coordinates = np.array(super_area_coordinates, dtype=np.float64)
     super_area_regions = np.array(super_area_regions, dtype=np.int64)
     super_area_n_people = np.array(super_area_n_people, dtype=np.int64)
     super_area_n_workers = np.array(super_area_n_workers, dtype=np.int64)
+    super_area_n_pupils = np.array(super_area_n_pupils, dtype=np.int64)
     region_ids = np.array(region_ids, dtype=np.int64)
-    region_names = np.array(region_names, dtype='S50')
+    region_names = np.array(region_names, dtype="S50")
     if len(np.unique(hospital_lengths)) == 1:
         closest_hospitals_ids = np.array(closest_hospitals_ids, dtype=np.int64)
         closest_hospitals_super_areas = np.array(
@@ -178,17 +191,21 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         geography_dset = f.create_group("geography")
         geography_dset.attrs["n_areas"] = n_areas
         geography_dset.attrs["n_super_areas"] = n_super_areas
-        geography_dset.attrs["n_regions"] = n_regions 
+        geography_dset.attrs["n_regions"] = n_regions
         geography_dset.create_dataset("area_id", data=area_ids)
         geography_dset.create_dataset("area_name", data=area_names)
         geography_dset.create_dataset("area_super_area", data=area_super_areas)
         geography_dset.create_dataset("area_coordinates", data=area_coordinates)
+        geography_dset.create_dataset(
+            "area_socioeconomic_indices", data=area_socioeconomic_indices
+        )
         geography_dset.create_dataset("super_area_id", data=super_area_ids)
         geography_dset.create_dataset("super_area_name", data=super_area_names)
         geography_dset.create_dataset("super_area_region", data=super_area_regions)
         geography_dset.create_dataset("super_area_city", data=super_area_city)
         geography_dset.create_dataset("super_area_n_people", data=super_area_n_people)
         geography_dset.create_dataset("super_area_n_workers", data=super_area_n_workers)
+        geography_dset.create_dataset("super_area_n_pupils", data=super_area_n_pupils)
         geography_dset.create_dataset(
             "super_area_closest_stations_cities",
             data=super_area_closest_stations_cities,
@@ -210,13 +227,16 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         geography_dset.create_dataset("region_name", data=region_names)
         if social_venues_specs and social_venues_ids:
             geography_dset.create_dataset(
-                "social_venues_specs", data=social_venues_specs_list,
+                "social_venues_specs",
+                data=social_venues_specs_list,
             )
             geography_dset.create_dataset(
-                "social_venues_ids", data=social_venues_ids_list,
+                "social_venues_ids",
+                data=social_venues_ids_list,
             )
             geography_dset.create_dataset(
-                "social_venues_super_areas", data=social_venues_super_areas,
+                "social_venues_super_areas",
+                data=social_venues_super_areas,
             )
 
 
@@ -242,6 +262,9 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
             area_ids = read_dataset(geography["area_id"], index1=idx1, index2=idx2)
             area_names = read_dataset(geography["area_name"], index1=idx1, index2=idx2)
             area_coordinates = read_dataset(geography["area_coordinates"], idx1, idx2)
+            area_socioeconomic_indices = read_dataset(
+                geography["area_socioeconomic_indices"], idx1, idx2
+            )
             area_super_areas = read_dataset(geography["area_super_area"], idx1, idx2)
             for k in range(length):
                 if domain_super_areas is not None:
@@ -256,6 +279,7 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
                     name=area_names[k].decode(),
                     super_area=None,
                     coordinates=area_coordinates[k],
+                    socioeconomic_index=area_socioeconomic_indices[k],
                 )
                 area.id = area_ids[k]
                 area_list.append(area)
@@ -269,7 +293,9 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
             length = idx2 - idx1
             super_area_ids = read_dataset(geography["super_area_id"], idx1, idx2)
             super_area_names = read_dataset(geography["super_area_name"], idx1, idx2)
-            super_area_regions = read_dataset(geography["super_area_region"], idx1, idx2)
+            super_area_regions = read_dataset(
+                geography["super_area_region"], idx1, idx2
+            )
             super_area_coordinates = read_dataset(
                 geography["super_area_coordinates"], idx1, idx2
             )
@@ -353,7 +379,7 @@ def restore_geography_properties_from_hdf5(
                 social_venues_ids = read_dataset(
                     geography["social_venues_ids"], idx1, idx2
                 )
-                #TODO:
+                # TODO:
                 social_venues_super_areas = read_dataset(
                     geography["social_venues_super_areas"], idx1, idx2
                 )
@@ -382,7 +408,7 @@ def restore_geography_properties_from_hdf5(
                         social_venues_super_areas[k],
                     ):
                         spec = group_spec.decode()
-                        spec_mapped = social_venues_spec_mapper[spec]
+                        spec_mapped = spec_to_supergroup_mapper[spec]
                         supergroup = getattr(world, spec_mapped)
                         if (
                             domain_super_areas is not None
@@ -395,7 +421,7 @@ def restore_geography_properties_from_hdf5(
                             group = ExternalGroup(
                                 id=group_id,
                                 domain_id=domain_of_group,
-                                spec=super_group_to_group_mapper[spec],
+                                spec=spec,
                             )
                         else:
                             group = supergroup.get_from_id(group_id)
@@ -410,8 +436,12 @@ def restore_geography_properties_from_hdf5(
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_super_areas)
             length = idx2 - idx1
-            super_area_ids = read_dataset(geography["super_area_id"], index1=idx1, index2=idx2)
-            regions = read_dataset(geography["super_area_region"], index1=idx1, index2=idx2)
+            super_area_ids = read_dataset(
+                geography["super_area_id"], index1=idx1, index2=idx2
+            )
+            regions = read_dataset(
+                geography["super_area_region"], index1=idx1, index2=idx2
+            )
             for k in range(length):
                 if domain_super_areas is not None:
                     super_area_id = super_area_ids[k]

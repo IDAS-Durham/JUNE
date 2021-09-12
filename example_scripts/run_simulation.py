@@ -1,4 +1,5 @@
 import time
+import logging
 import numpy as np
 import numba as nb
 import random
@@ -11,25 +12,33 @@ import cProfile
 
 from june.hdf5_savers import generate_world_from_hdf5, load_population_from_hdf5
 from june.interaction import Interaction
-from june.infection import (
+from june.epidemiology.infection import (
     Infection,
     InfectionSelector,
+    InfectionSelectors,
     HealthIndexGenerator,
     SymptomTag,
+    ImmunitySetter,
+    Covid19,
+    B16172
 )
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.groups.travel import Travel
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
 from june.simulator import Simulator
-from june.infection_seed import InfectionSeed, Observed2Cases
+from june.epidemiology.epidemiology import Epidemiology
+from june.epidemiology.infection_seed import InfectionSeed, Observed2Cases, InfectionSeeds
 from june.policy import Policies
 from june.event import Events
 from june import paths
 from june.records import Record
 from june.records.records_writer import combine_records
-from june.domain import Domain, DomainSplitter
+from june.domains import Domain, DomainSplitter
 from june.mpi_setup import mpi_comm, mpi_rank, mpi_size
 
+# disable logging for ranks
+if mpi_rank > 0:
+    logging.disable(logging.CRITICAL)
 
 def keys_to_int(x):
     return {int(k): v for k, v in x.items()}
@@ -67,22 +76,17 @@ else:
 
 
 def generate_simulator():
-    record = Record(
-        record_path=save_path, record_static_data=True, mpi_rank=mpi_rank
-    )
+    record = Record(record_path=save_path, record_static_data=True, mpi_rank=mpi_rank)
     if mpi_rank == 0:
         with h5py.File(world_file, "r") as f:
-            super_area_names = f["geography"]["super_area_name"][:]
-            super_area_ids = f["geography"]["super_area_id"][:]
-        super_area_names = [name.decode() for name in super_area_names]
-        super_area_name_to_id = {
-            key: value for key, value in zip(super_area_names, super_area_ids)
-        }
-        # make dictionary super_area_id -> domain
-        domain_splitter = DomainSplitter(
+            super_area_ids = f["geography"]["super_area_id"]
+            super_area_names = f["geography"]["super_area_name"]
+            super_area_name_to_id = {
+                name.decode(): id for name, id in zip(super_area_names, super_area_ids)
+            }
+        super_areas_per_domain, score_per_domain = DomainSplitter.generate_world_split(
             number_of_domains=mpi_size, world_path=world_file
         )
-        super_areas_per_domain = domain_splitter.generate_domain_split(niter=20)
         super_area_names_to_domain_dict = {}
         super_area_ids_to_domain_dict = {}
         for domain, super_areas in super_areas_per_domain.items():
@@ -91,7 +95,6 @@ def generate_simulator():
                 super_area_ids_to_domain_dict[
                     int(super_area_name_to_id[super_area])
                 ] = domain
-
         with open("super_area_ids_to_domain.json", "w") as f:
             json.dump(super_area_ids_to_domain_dict, f)
         with open("super_area_names_to_domain.json", "w") as f:
@@ -105,32 +108,38 @@ def generate_simulator():
         super_areas_to_domain_dict=super_area_ids_to_domain_dict,
         hdf5_file_path=world_file,
     )
-    record.static_data(world=domain)
     # regenerate lesiure
     leisure = generate_leisure_for_config(domain, config_path)
     #
     # health index and infection selecctor
     health_index_generator = HealthIndexGenerator.from_file()
-    infection_selector = InfectionSelector(
+    selector_c19 = InfectionSelector(
+        infection_class=Covid19,
         health_index_generator=health_index_generator
     )
-    oc = Observed2Cases.from_file(
-        health_index_generator=health_index_generator, smoothing=True
+    selector_indian = InfectionSelector(
+        infection_class=B16172,
+        health_index_generator=health_index_generator
     )
-    daily_cases_per_region = oc.get_regional_latent_cases()
-    daily_cases_per_super_area = oc.convert_regional_cases_to_super_area(
-        daily_cases_per_region, dates=["2020-02-28", "2020-03-02"]
-    )
-    infection_seed = InfectionSeed(
+    inf_selectors = InfectionSelectors([selector_c19, selector_indian])
+    infection_seed = InfectionSeed.from_uniform_cases(
         world=domain,
-        infection_selector=infection_selector,
-        daily_super_area_cases=daily_cases_per_super_area,
-        seed_strength=100,
+        infection_selector=selector_c19,
+        cases_per_capita=0.001,
+        seed_strength=10,
+        date = "2020-02-28",
+    )
+    immunity_setter = ImmunitySetter()
+
+    epidemiology = Epidemiology(
+        infection_selectors=inf_selectors,
+        infection_seeds=InfectionSeeds([infection_seed]),
+        immunity_setter=immunity_setter,
     )
 
     # interaction
     interaction = Interaction.from_file(
-        config_filename="./config_interaction.yaml", population=domain.people
+        config_filename="./config_interaction.yaml"
     )
     # policies
     policies = Policies.from_file()
@@ -148,13 +157,12 @@ def generate_simulator():
         interaction=interaction,
         leisure=leisure,
         travel=travel,
-        infection_selector=infection_selector,
-        infection_seed=infection_seed,
+        epidemiology=epidemiology,
         config_filename=config_path,
         record=record,
     )
-    print("simulator ready to go")
     return simulator
+
 
 def run_simulator(simulator):
 
@@ -170,4 +178,3 @@ if __name__ == "__main__":
     mpi_comm.Barrier()
     if mpi_rank == 0:
         combine_records(save_path)
-        

@@ -9,7 +9,10 @@ class RegionalCompliance(Policy):
     policy_type = "regional_compliance"
 
     def __init__(
-        self, start_time: str, end_time: str, compliances_per_region: dict,
+        self,
+        start_time: str,
+        end_time: str,
+        compliances_per_region: dict,
     ):
         super().__init__(start_time=start_time, end_time=end_time)
         self.compliances_per_region = compliances_per_region
@@ -37,7 +40,10 @@ class TieredLockdown(Policy):
     policy_type = "tiered_lockdown"
 
     def __init__(
-        self, start_time: str, end_time: str, tiers_per_region: dict,
+        self,
+        start_time: str,
+        end_time: str,
+        tiers_per_region: dict,
     ):
         super().__init__(start_time=start_time, end_time=end_time)
         self.tiers_per_region = tiers_per_region
@@ -49,9 +55,16 @@ class TieredLockdown(Policy):
                 lockdown_tier = int(self.tiers_per_region[region.name])
                 region.policy["lockdown_tier"] = lockdown_tier
                 if lockdown_tier == 2:
-                    region.policy["local_closed_venues"].update("household_visits")
+                    region.policy["local_closed_venues"].update("residence_visits")
                 elif lockdown_tier == 3:
-                    region.policy["local_closed_venues"].update(set(("pub", "cinema")))
+                    region.policy["local_closed_venues"].update(
+                        set(("cinema", "residence_visits"))
+                    )
+                elif lockdown_tier == 4:
+                    region.policy["local_closed_venues"].update(
+                        set(("pub", "cinema", "gym", "residence_visits"))
+                    )
+
 
 class TieredLockdowns(PolicyCollection):
     policy_type = "tiered_lockdown"

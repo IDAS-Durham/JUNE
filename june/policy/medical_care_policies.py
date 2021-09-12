@@ -5,7 +5,7 @@ from june.groups import Hospitals, Hospital, MedicalFacilities, MedicalFacility
 from .policy import Policy, Policies, PolicyCollection
 from june.groups import Hospitals, Hospital, ExternalSubgroup
 from june.demography import Person
-from june.infection.symptom_tag import SymptomTag
+from june.epidemiology.infection import SymptomTag
 from june.records import Record
 
 hospitalised_tags = (SymptomTag.hospitalised, SymptomTag.intensive_care)
@@ -75,7 +75,9 @@ class Hospitalisation(MedicalCarePolicy):
         super().__init__(start_time, end_time)
 
     def apply(
-        self, person: Person, record: Optional[Record] = None,
+        self,
+        person: Person,
+        record: Optional[Record] = None,
     ):
         symptoms_tag = person.infection.tag
         if symptoms_tag in hospitalised_tags:
@@ -87,11 +89,11 @@ class Hospitalisation(MedicalCarePolicy):
             else:
                 patient_hospital = person.super_area.closest_hospitals[0]
             # note, we dont model hospital capacity here.
-            status = patient_hospital.allocate_patient(person,)
+            status = patient_hospital.allocate_patient(
+                person,
+            )
             if record is not None:
-                if status in [
-                    "ward_admitted"
-                ]:  
+                if status in ["ward_admitted"]:
                     record.accumulate(
                         table_name="hospital_admissions",
                         hospital_id=patient_hospital.id,
