@@ -58,7 +58,7 @@ class TestSevereSymptomsStayHome:
         sim.epidemiology.set_medical_care(world, sim.activity_manager)
         sim.clear_world()
         sim.activity_manager.move_people_to_active_subgroups(
-            ["primary_activity", "residence"],
+            ("primary_activity", "residence"),
         )
         date = datetime(2019, 2, 1)
         assert worker in worker.primary_activity.people
@@ -67,7 +67,7 @@ class TestSevereSymptomsStayHome:
         infect_person(worker, selector, "severe")
         sim.epidemiology.update_health_status(world, 0.0, 0.0)
         sim.activity_manager.move_people_to_active_subgroups(
-            ["primary_activity", "residence"],
+            ("primary_activity", "residence"),
         )
         assert worker in worker.residence.people
         assert pupil in pupil.primary_activity.people

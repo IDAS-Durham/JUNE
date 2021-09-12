@@ -98,7 +98,7 @@ class StayHome(IndividualPolicy):
         if "medical_facility" in activities:
             return ("medical_facility", "residence")
         else:
-            return ("residence")
+            return ("residence",)
 
     def check_stay_home_condition(self, person: Person, days_from_start: float):
         """
