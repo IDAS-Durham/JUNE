@@ -96,9 +96,9 @@ class StayHome(IndividualPolicy):
         Removes all activities but residence if the person has to stay at home.
         """
         if "medical_facility" in activities:
-            return ["medical_facility", "residence"]
+            return ("medical_facility", "residence")
         else:
-            return ["residence"]
+            return ("residence")
 
     def check_stay_home_condition(self, person: Person, days_from_start: float):
         """
@@ -424,7 +424,7 @@ class CloseCompanies(SkipActivity):
         Prevents workers with the tag ``person.lockdown_status=furlough" to go to work.
         If full_closure is True, then no one will go to work.
         """
-        super().__init__(start_time, end_time, ["primary_activity", "commute"])
+        super().__init__(start_time, end_time, ("primary_activity", "commute"))
         self.full_closure = full_closure
         self.avoid_work_probability = avoid_work_probability
         self.furlough_probability = furlough_probability
