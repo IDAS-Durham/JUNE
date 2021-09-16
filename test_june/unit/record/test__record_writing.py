@@ -4,6 +4,8 @@ import json
 import pandas as pd
 import yaml
 import pytest
+import dateutil.parser
+
 from tables import open_file
 from june import paths
 from june.records import Record
@@ -27,7 +29,6 @@ from june.groups import Supergroup
 from june import World
 
 config_interaction = paths.configs_path / "tests/interaction.yaml"
-
 
 @pytest.fixture(name="dummy_world", scope="module")
 def create_dummy_world():
@@ -496,10 +497,8 @@ def test__parameters(dummy_world, selector, selectors):
     with open(record.record_path / "config.yaml", "r") as file:
         parameters = yaml.load(file, Loader=yaml.FullLoader)
 
-    with open(record.record_path / "policies.txt", "r") as file:
-        policies = file.read()
-        policies = policies.replace("array", "np.array")
-        policies = eval(policies)
+        #policies = policies.replace("array", "np.array")
+        #policies = eval(policies)
     interaction_attributes = ["betas", "alpha_physical"]
     for attribute in interaction_attributes:
         assert parameters["interaction"][attribute] == getattr(interaction, attribute)
@@ -516,5 +515,3 @@ def test__parameters(dummy_world, selector, selectors):
     assert "Covid19" in parameters["infections"]
     inf_parameters = parameters["infections"]["Covid19"]
     assert inf_parameters["transmission_type"] == selector.transmission_type
-    for i, policy in enumerate(activity_manager.policies.policies):
-        assert policies[i] == policy.__dict__
