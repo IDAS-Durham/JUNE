@@ -312,10 +312,6 @@ class ImmunitySetter:
                         1.0 - inf_data["sterilisation_efficacy"][age]
                     )
                     susccesfully_vaccinated[i] = 1
-                    # Old method
-                    # if random() < inf_data["sterilisation_efficacy"][age]:
-                    #    person.immunity.susceptibility_dict[inf_id] = 0.0
-                    #    susccesfully_vaccinated[i] = 1
                 person.vaccinated = True
                 vaccine_type.append(vaccine)
             else:
@@ -347,10 +343,6 @@ class ImmunitySetter:
                     person.immunity.susceptibility_dict[inf_id] = (
                         1.0 - inf_data["sterilisation_efficacy"]
                     )
-                    # Old method
-                    # if random() < inf_data["sterilisation_efficacy"]:
-                    #    person.immunity.add_immunity([inf_id])
-                    #    previously_infected[i] = 1
         if self.record is not None:
             self.record.statics["people"].extra_int_data[
                 "previously_infected"
