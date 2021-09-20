@@ -6,8 +6,13 @@ name: Python package
 on:
   push:
     branches: [ master, develop]
+    paths-ignore:
+      - 'README.md'
+
   pull_request:
     branches: [ master, develop ]
+    paths-ignore:
+      - 'README.md'
 
 jobs:
   build:
