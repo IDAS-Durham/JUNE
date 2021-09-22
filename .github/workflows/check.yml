@@ -36,7 +36,7 @@ jobs:
         # flake8 .
     - name: Get JUNE data
       run: bash scripts/get_june_data.sh
-      
+
     - name: Install simulation
       run: python setup.py install
 
@@ -48,3 +48,7 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         env_vars: OS,PYTHON
+
+    - name: Test all cells in ipynb for errors
+      run: |
+        jupyter nbconvert --to notebook --inplace --execute Notebooks/quickstart.ipynb
