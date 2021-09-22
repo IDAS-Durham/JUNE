@@ -167,7 +167,7 @@ class CareHomeDistributor:
                                     areas_dicts[i][1], age1, age2
                                 )
                                 if person is None:
-                                    continue 
+                                    continue
                                 care_home.add(person)
                                 communal_women_sorted[age_range] -= 1
                                 total_care_home_residents += 1

@@ -43,7 +43,7 @@ def test__years_mapping(school_world):
 
 def test__all_kids_mandatory_school(school_world):
     """
-    Check that all kids in mandatory school ages are assigned a school 
+    Check that all kids in mandatory school ages are assigned a school
     """
     KIDS_LOW = default_mandatory_age_range[0]
     KIDS_UP = default_mandatory_age_range[1]

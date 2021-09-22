@@ -7,7 +7,9 @@ from scipy.stats import expon, beta, lognorm, norm, expon, exponweib
 from june import paths
 from .symptom_tag import SymptomTag
 
-default_config_path = paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
+default_config_path = (
+    paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
+)
 
 
 class CompletionTime(ABC):
@@ -49,18 +51,12 @@ class CompletionTime(ABC):
             return NormalCompletionTime
         elif type_string == "exponweib":
             return ExponweibCompletionTime
-        raise AssertionError(
-            f"Unrecognised variation type {type_string}"
-        )
+        raise AssertionError(f"Unrecognised variation type {type_string}")
 
     @classmethod
     def from_dict(cls, variation_type_dict):
-        type_string = variation_type_dict.pop(
-            "type"
-        )
-        return CompletionTime.class_for_type(
-            type_string
-        )(**variation_type_dict)
+        type_string = variation_type_dict.pop("type")
+        return CompletionTime.class_for_type(type_string)(**variation_type_dict)
 
 
 class ConstantCompletionTime(CompletionTime):
@@ -72,12 +68,7 @@ class ConstantCompletionTime(CompletionTime):
 
 
 class DistributionCompletionTime(CompletionTime, ABC):
-    def __init__(
-            self,
-            distribution,
-            *args,
-            **kwargs
-    ):
+    def __init__(self, distribution, *args, **kwargs):
         self._distribution = distribution
         self.args = args
         self.kwargs = kwargs
@@ -102,94 +93,50 @@ class DistributionCompletionTime(CompletionTime, ABC):
 
 class ExponentialCompletionTime(DistributionCompletionTime):
     def __init__(self, loc: float, scale):
-        super().__init__(
-            expon,
-            loc=loc,
-            scale=scale
-        )
-        #self.loc = loc
-        #self.scale = scale
+        super().__init__(expon, loc=loc, scale=scale)
+        # self.loc = loc
+        # self.scale = scale
 
 
 class BetaCompletionTime(DistributionCompletionTime):
-    def __init__(
-            self,
-            a,
-            b,
-            loc=0.0,
-            scale=1.0
-    ):
-        super().__init__(
-            beta,
-            a,
-            b,
-            loc=loc,
-            scale=scale
-        )
-        #self.a = a
-        #self.b = b
-        #self.loc = loc
-        #self.scale = scale
+    def __init__(self, a, b, loc=0.0, scale=1.0):
+        super().__init__(beta, a, b, loc=loc, scale=scale)
+        # self.a = a
+        # self.b = b
+        # self.loc = loc
+        # self.scale = scale
+
 
 class LognormalCompletionTime(DistributionCompletionTime):
-    def __init__(
-            self,
-            s,
-            loc=0.0,
-            scale=1.0
-    ):
-        super().__init__(
-            lognorm,
-            s,
-            loc=loc,
-            scale=scale
-        )
-        #self.s = s
-        #self.loc = loc
-        #self.scale = scale
+    def __init__(self, s, loc=0.0, scale=1.0):
+        super().__init__(lognorm, s, loc=loc, scale=scale)
+        # self.s = s
+        # self.loc = loc
+        # self.scale = scale
+
 
 class NormalCompletionTime(DistributionCompletionTime):
-    def __init__(
-            self,
-            loc,
-            scale
-    ):
-        super().__init__(
-            norm,
-            loc=loc,
-            scale=scale
-        )
-        #self.loc = loc
-        #self.scale = scale
+    def __init__(self, loc, scale):
+        super().__init__(norm, loc=loc, scale=scale)
+        # self.loc = loc
+        # self.scale = scale
 
 
 class ExponweibCompletionTime(DistributionCompletionTime):
-    def __init__(
-            self,
-            a,
-            c,
-            loc=0.0,
-            scale=1.0
-    ):
-        super().__init__(
-            exponweib,
-            a,
-            c,
-            loc=loc,
-            scale=scale
-        )
-        #self.a = a
-        #self.c = c
-        #self.loc = loc
-        #self.scale = scale
+    def __init__(self, a, c, loc=0.0, scale=1.0):
+        super().__init__(exponweib, a, c, loc=loc, scale=scale)
+        # self.a = a
+        # self.c = c
+        # self.loc = loc
+        # self.scale = scale
 
 
 class Stage:
     def __init__(
-            self,
-            *,
-            symptoms_tag: SymptomTag,
-            completion_time: CompletionTime = ConstantCompletionTime
+        self,
+        *,
+        symptoms_tag: SymptomTag,
+        completion_time: CompletionTime = ConstantCompletionTime,
     ):
         """
         A stage on an illness,
@@ -207,16 +154,9 @@ class Stage:
 
     @classmethod
     def from_dict(cls, stage_dict):
-        completion_time = CompletionTime.from_dict(
-            stage_dict["completion_time"]
-        )
-        symptom_tag = SymptomTag.from_string(
-            stage_dict["symptom_tag"]
-        )
-        return Stage(
-            symptoms_tag=symptom_tag,
-            completion_time=completion_time
-        )
+        completion_time = CompletionTime.from_dict(stage_dict["completion_time"])
+        symptom_tag = SymptomTag.from_string(stage_dict["symptom_tag"])
+        return Stage(symptoms_tag=symptom_tag, completion_time=completion_time)
 
 
 class TrajectoryMaker:
@@ -235,52 +175,33 @@ class TrajectoryMaker:
 
     @property
     def _symptoms_tags(self):
-        return [
-            stage.symptoms_tag
-            for stage in self.stages
-        ]
+        return [stage.symptoms_tag for stage in self.stages]
 
     @property
     def most_severe_symptoms(self) -> SymptomTag:
         """
         The most severe symptoms experienced at any stage in this trajectory
         """
-        return max(
-            self._symptoms_tags
-        )
+        return max(self._symptoms_tags)
 
-    def generate_trajectory(self) -> List[
-        Tuple[
-            float,
-            SymptomTag
-        ]
-    ]:
+    def generate_trajectory(self) -> List[Tuple[float, SymptomTag]]:
         """
         Generate a trajectory for a person. This is a list of tuples
         describing what symptoms the person should display at a given
         time.
         """
         trajectory = []
-        cumulative = 0.
+        cumulative = 0.0
         for stage in self.stages:
             time = stage.completion_time()
-            trajectory.append((
-                cumulative,
-                stage.symptoms_tag
-            ))
+            trajectory.append((cumulative, stage.symptoms_tag))
             cumulative += time
         return trajectory
 
     @classmethod
-    def from_dict(
-            cls,
-            trajectory_dict
-    ):
+    def from_dict(cls, trajectory_dict):
         return TrajectoryMaker(
-            *map(
-                Stage.from_dict,
-                trajectory_dict["stages"]
-            ),
+            *map(Stage.from_dict, trajectory_dict["stages"]),
         )
 
 
@@ -305,8 +226,7 @@ class TrajectoryMakers:
         to reintroduce them when we are ready for configurable trajectories.
         """
         self.trajectories = {
-            trajectory.most_severe_symptoms: trajectory
-            for trajectory in trajectories
+            trajectory.most_severe_symptoms: trajectory for trajectory in trajectories
         }
 
     @classmethod
@@ -327,13 +247,7 @@ class TrajectoryMakers:
                 cls.__path = config_path
         return cls.__instance
 
-    def __getitem__(
-            self,
-            tag: SymptomTag
-    ) -> List[Tuple[
-        float,
-        SymptomTag
-    ]]:
+    def __getitem__(self, tag: SymptomTag) -> List[Tuple[float, SymptomTag]]:
         """
         Generate a trajectory from a tag.
 
@@ -360,8 +274,5 @@ class TrajectoryMakers:
     @classmethod
     def from_list(cls, trajectory_dicts):
         return TrajectoryMakers(
-            trajectories=list(map(
-                TrajectoryMaker.from_dict,
-                trajectory_dicts
-            ))
+            trajectories=list(map(TrajectoryMaker.from_dict, trajectory_dicts))
         )

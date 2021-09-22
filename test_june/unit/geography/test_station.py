@@ -30,7 +30,7 @@ class TestStations:
             number_of_stations=4,
             distance_to_city_center=500,
             super_areas=super_areas,
-            type="city_station"
+            type="city_station",
         )
         assert len(city_stations) == 4
         for st in city_stations:
@@ -53,7 +53,7 @@ class TestStations:
             number_of_stations=4,
             distance_to_city_center=500,
             super_areas=super_areas,
-            type="inter_city_station"
+            type="inter_city_station",
         )
         for st in inter_city_stations:
             assert isinstance(st, InterCityStation)

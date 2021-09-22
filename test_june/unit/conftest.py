@@ -42,7 +42,10 @@ from june.epidemiology.infection import transmission as trans
 from june.simulator import Simulator
 from june.world import generate_world_from_geography, World
 
-constant_config = paths.configs_path / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml"
+constant_config = (
+    paths.configs_path
+    / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml"
+)
 interaction_config = paths.configs_path / "tests/interaction.yaml"
 
 import logging
@@ -161,6 +164,7 @@ def make_selector(health_index_generator):
 @pytest.fixture(name="selectors", scope="session")
 def make_selectors(selector):
     return InfectionSelectors([selector])
+
 
 @pytest.fixture(name="epidemiology", scope="session")
 def make_epidemiology(selectors):

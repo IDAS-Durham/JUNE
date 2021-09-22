@@ -177,7 +177,9 @@ class TestSocialDistancing:
                             beta_reductions=sim.interaction.beta_reductions,
                         )
                         if group.spec == "cinema":
-                            assert beta == sim.interaction.betas["cinema"] * (1 + 0.5 * (4-1))
+                            assert beta == sim.interaction.betas["cinema"] * (
+                                1 + 0.5 * (4 - 1)
+                            )
                         else:
                             assert beta == sim.interaction.betas[group.spec]
                 next(sim.timer)
@@ -238,7 +240,8 @@ class TestMaskWearing:
                             beta_reductions=sim.interaction.beta_reductions,
                         )
                         beta_with_mask = sim.interaction.betas[group.spec] * (
-                            1 - (0.5 * 1.0 * (1 - 0.5))                        )
+                            1 - (0.5 * 1.0 * (1 - 0.5))
+                        )
                         if group.spec == "household":
                             assert beta == sim.interaction.betas["household"]
                         else:

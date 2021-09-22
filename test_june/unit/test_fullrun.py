@@ -53,10 +53,14 @@ def test__full_run(dummy_world, selector, test_results):
         policies=policies,
         record=record,
     )
-    seed = InfectionSeed.from_uniform_cases(world=sim.world, infection_selector=selector, cases_per_capita=0.01, date=sim.timer.date_str)
+    seed = InfectionSeed.from_uniform_cases(
+        world=sim.world,
+        infection_selector=selector,
+        cases_per_capita=0.01,
+        date=sim.timer.date_str,
+    )
     seed.unleash_virus_per_day(date=sim.timer.date, time=0)
     sim.run()
     for region in world.regions:
         region.policy["local_closed_venues"] = set()
         region.policy["global_closed_venues"] = set()
-

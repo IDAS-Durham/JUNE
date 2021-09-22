@@ -10,10 +10,11 @@ class Gym(SocialVenue):
     max_size = 300
     pass
 
+
 class Gyms(SocialVenues):
     social_venue_class = Gym
     default_coordinates_filename = default_gym_coordinates_filename
 
+
 class GymDistributor(SocialVenueDistributor):
     default_config_filename = default_config_filename
-

@@ -611,7 +611,9 @@ class Data2Rates:
         else:
             return self.mild_rates_by_age_sex_df.loc[age, sex]
 
-    def get_asymptomatic_rate(self, age: Union[int, pd.Interval], sex: str, is_care_home):
+    def get_asymptomatic_rate(
+        self, age: Union[int, pd.Interval], sex: str, is_care_home
+    ):
         if isinstance(age, pd.Interval):
             return self.asymptomatic_rates_by_age_sex_df.loc[
                 age.left : age.right, sex
@@ -650,7 +652,7 @@ def get_outputs_df(rates, age_bins):
             ):
                 colname = f"{pop}_{fname}_{sex}"
                 for age_bin in age_bins:
-                    outputs.loc[age_bin, colname] = (
-                        function(age=age_bin, sex=sex, is_care_home=pop == "ch")
+                    outputs.loc[age_bin, colname] = function(
+                        age=age_bin, sex=sex, is_care_home=pop == "ch"
                     )
     return outputs

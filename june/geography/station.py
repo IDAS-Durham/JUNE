@@ -19,6 +19,7 @@ default_super_stations_filename = (
 
 logger = logging.getLogger(__name__)
 
+
 class Station:
     """
     This represents a general station.
@@ -105,12 +106,12 @@ class Stations(Supergroup):
 
         Parameters
         ----------
-        super_areas 
+        super_areas
             The super_areas where to put the hubs on
         number_of_stations:
             How many stations to initialise
-        distance_to_city_center 
-            The distance from the center to the each station 
+        distance_to_city_center
+            The distance from the center to the each station
         """
         stations = []
         angle = 0
@@ -120,19 +121,22 @@ class Stations(Supergroup):
         city_coordinates = city.coordinates
         for i in range(number_of_stations):
             station_position = add_distance_to_lat_lon(
-                city_coordinates[0],
-                city_coordinates[1],
-                x=x,
-                y=y
+                city_coordinates[0], city_coordinates[1], x=x, y=y
             )
             angle += delta_angle
             x = distance_to_city_center * np.cos(angle)
             y = distance_to_city_center * np.sin(angle)
             super_area = super_areas.get_closest_super_area(np.array(station_position))
             if type == "city_station":
-                station = CityStation(city=city.name, super_area=super_area,)
+                station = CityStation(
+                    city=city.name,
+                    super_area=super_area,
+                )
             elif type == "inter_city_station":
-                station = InterCityStation(city=city.name, super_area=super_area,)
+                station = InterCityStation(
+                    city=city.name,
+                    super_area=super_area,
+                )
             else:
                 raise ValueError
             stations.append(station)

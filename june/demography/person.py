@@ -19,6 +19,7 @@ class Activities(dataobject):
     def iter(self):
         return [getattr(self, activity) for activity in self.__fields__]
 
+
 person_ids = count()
 
 
@@ -68,7 +69,7 @@ class Person(dataobject):
             ethnicity=ethnicity,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
-            immunity = Immunity(susceptibility_dict=susceptibility_dict),
+            immunity=Immunity(susceptibility_dict=susceptibility_dict),
             comorbidity=comorbidity,
             subgroups=Activities(None, None, None, None, None, None),
         )
@@ -193,4 +194,4 @@ class Person(dataobject):
         try:
             return self.area.socioeconomic_index
         except:
-            return 
+            return

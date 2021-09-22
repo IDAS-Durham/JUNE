@@ -29,7 +29,9 @@ class CompanyDistributor:
         logger.info(f"Distributing workers to companies")
         for i, super_area in enumerate(super_areas):
             if i % 100 == 0:
-                logger.info(f"Distributed workers to companies in {i} of {len(super_areas)} super areas.")
+                logger.info(
+                    f"Distributed workers to companies in {i} of {len(super_areas)} super areas."
+                )
             self.distribute_adults_to_companies_in_super_area(super_area)
         logger.info(f"Workers distributed to companies")
 
@@ -52,7 +54,7 @@ class CompanyDistributor:
                 if full_idx[worker.sector] >= len(company_dict[worker.sector]):
                     idx = randint(0, len(company_dict[worker.sector]) - 1)
                     company = company_dict[worker.sector][idx]
-                    #company = np.random.choice(company_dict[worker.sector])
+                    # company = np.random.choice(company_dict[worker.sector])
                 else:
                     company = company_dict[worker.sector][0]
                     if company.n_workers >= company.n_workers_max:

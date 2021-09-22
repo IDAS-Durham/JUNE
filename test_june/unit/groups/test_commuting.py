@@ -1,12 +1,12 @@
-#import pytest
+# import pytest
 #
-#from june import World
-#from june.world import generate_world_from_geography
-#from june.demography.geography import Geography, Area
-#from june.demography import Person, Demography
-#from june.distributors import WorkerDistributor
-#from june.commute import CommuteGenerator
-#from june.groups import (
+# from june import World
+# from june.world import generate_world_from_geography
+# from june.demography.geography import Geography, Area
+# from june.demography import Person, Demography
+# from june.distributors import WorkerDistributor
+# from june.commute import CommuteGenerator
+# from june.groups import (
 #    CommuteCity,
 #    CommuteCities,
 #    CommuteCityDistributor,
@@ -19,25 +19,25 @@
 #    CommuteCityUnit,
 #    CommuteCityUnits,
 #    CommuteCityUnitDistributor,
-#)
+# )
 #
 #
-#@pytest.fixture(name="super_area_commute", scope="module")
-#def super_area_name():
+# @pytest.fixture(name="super_area_commute", scope="module")
+# def super_area_name():
 #    return "E02002559"
 #
 #
-#@pytest.fixture(name="geography_commute", scope="module")
-#def create_geography(super_area_companies):
+# @pytest.fixture(name="geography_commute", scope="module")
+# def create_geography(super_area_companies):
 #    return Geography.from_file(filter_key={"super_area": [super_area_commute]})
 #
 #
-#@pytest.fixture(name="person")
-#def create_person():
+# @pytest.fixture(name="person")
+# def create_person():
 #    return Person(sex="m", age=44)
 #
 #
-#class TestCommuteCity:
+# class TestCommuteCity:
 #    @pytest.fixture(name="city")
 #    def create_city(self, super_area_commute):
 #        return CommuteCity(
@@ -53,7 +53,7 @@
 #        assert len(city.commutecityunits) == 0
 #
 #
-#class TestCommuteHub:
+# class TestCommuteHub:
 #    @pytest.fixture(name="hub")
 #    def create_hub(self):
 #        return CommuteHub(city="Manchester", lat_lon=[-2, 52.0],)
@@ -63,7 +63,7 @@
 #        assert len(hub.commuteunits) == 0
 #
 #
-#class TestCommuteUnit:
+# class TestCommuteUnit:
 #    @pytest.fixture(name="unit")
 #    def create_hub(self):
 #        return CommuteUnit(city="Manchester", commutehub_id=0, is_peak=False,)
@@ -73,7 +73,7 @@
 #        assert unit.max_passengers != 0
 #
 #
-#class TestCommuteCityUnit:
+# class TestCommuteCityUnit:
 #    @pytest.fixture(name="unit")
 #    def create_hub(self):
 #        return CommuteCityUnit(city="Manchester", is_peak=False,)
@@ -83,7 +83,7 @@
 #        assert unit.max_passengers != 0
 #
 #
-#class TestNewcastle:
+# class TestNewcastle:
 #    @pytest.fixture(name="super_area_commute_nc")
 #    def super_area_name_nc(self):
 #        return ["E02001731", "E02001729"]

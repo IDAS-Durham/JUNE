@@ -10,7 +10,13 @@ import pytest
 @pytest.fixture(name="world")
 def create_world():
     geography = Geography.from_file(
-        {"super_area": ["E02004314", "E02004315", "E02004313",]}
+        {
+            "super_area": [
+                "E02004314",
+                "E02004315",
+                "E02004313",
+            ]
+        }
     )
     world = generate_world_from_geography(geography, include_households=True)
     return world

@@ -223,8 +223,10 @@ def test__infection_is_isolated(epidemiology, selectors):
     geography = Geography.from_file({"area": ["E00002559"]})
     world = generate_world_from_geography(geography, include_households=True)
     interaction = Interaction.from_file(config_filename=test_config)
-    infection_seed = InfectionSeed.from_uniform_cases(world, selectors[0], cases_per_capita=5/len(world.people), date="2020-03-01")
-    infection_seed.unleash_virus_per_day(date = pd.to_datetime("2020-03-01"), time=0)
+    infection_seed = InfectionSeed.from_uniform_cases(
+        world, selectors[0], cases_per_capita=5 / len(world.people), date="2020-03-01"
+    )
+    infection_seed.unleash_virus_per_day(date=pd.to_datetime("2020-03-01"), time=0)
     policies = Policies([])
     n_infected = len([person for person in world.people if person.infected])
     simulator = Simulator.from_file(

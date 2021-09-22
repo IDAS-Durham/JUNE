@@ -26,6 +26,4 @@ class SymptomTag(IntEnum):
         for item in SymptomTag:
             if item.name == string:
                 return item
-        raise AssertionError(
-            f"{string} is not the name of a SymptomTag"
-        )
+        raise AssertionError(f"{string} is not the name of a SymptomTag")

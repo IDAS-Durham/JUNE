@@ -122,7 +122,7 @@ class ImmunitySetter:
         male_comorbidity_reference_prevalence_path: Optional[str] = None,
         female_comorbidity_reference_prevalence_path: Optional[str] = None,
         susceptibility_mode="average",
-        record:"Record"=None,
+        record: "Record" = None,
     ) -> "ImmunitySetter":
         if comorbidity_multipliers_path is not None:
             with open(comorbidity_multipliers_path) as f:

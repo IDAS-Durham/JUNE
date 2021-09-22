@@ -267,5 +267,6 @@ def restore_households_properties_from_hdf5(
                         elif visit_spec == "care_home":
                             residence = world.care_homes.get_from_id(visit_id)
                     household.residences_to_visit[visit_spec] = (
-                        *household.residences_to_visit[visit_spec], residence
+                        *household.residences_to_visit[visit_spec],
+                        residence,
                     )

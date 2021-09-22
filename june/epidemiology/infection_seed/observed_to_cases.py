@@ -11,7 +11,9 @@ from june.demography import Person
 from june.epidemiology.infection.symptom_tag import SymptomTag
 from june.epidemiology.infection.trajectory_maker import TrajectoryMaker
 
-default_trajectories_path = paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
+default_trajectories_path = (
+    paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
+)
 default_area_super_region_path = (
     paths.data_path / "input/geography/area_super_area_region.csv"
 )
@@ -246,7 +248,9 @@ class Observed2Cases:
         for sex in ("m", "f"):
             for age in np.arange(100):
                 symptoms_rates_dict[sex][age] = np.diff(
-                    self.health_index_generator(Person(sex=sex, age=age), infection_id=None),
+                    self.health_index_generator(
+                        Person(sex=sex, age=age), infection_id=None
+                    ),
                     prepend=0.0,
                     append=1.0,
                 )  # need np.diff because health index is cummulative

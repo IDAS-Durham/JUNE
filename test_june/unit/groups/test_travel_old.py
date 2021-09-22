@@ -1,11 +1,11 @@
-#import pytest
+# import pytest
 #
-#from june import World
-#from june.geography import Geography, Area
-#from june.demography import Person, Demography
-#from june.distributors import WorkerDistributor
-#from june.commute import CommuteGenerator
-#from june.groups import (
+# from june import World
+# from june.geography import Geography, Area
+# from june.demography import Person, Demography
+# from june.distributors import WorkerDistributor
+# from june.commute import CommuteGenerator
+# from june.groups import (
 #    CommuteCity,
 #    CommuteCities,
 #    CommuteCityDistributor,
@@ -18,19 +18,19 @@
 #    CommuteCityUnit,
 #    CommuteCityUnits,
 #    CommuteCityUnitDistributor,
-#)
-#from june.groups import (
+# )
+# from june.groups import (
 #    TravelCity,
 #    TravelCities,
 #    TravelCityDistributor,
 #    TravelUnit,
 #    TravelUnits,
 #    TravelUnitDistributor,
-#)
-#from june.world import generate_world_from_geography
+# )
+# from june.world import generate_world_from_geography
 #
 #
-#class TestTravel:
+# class TestTravel:
 #    @pytest.fixture(name="super_area_commute_nc")
 #    def super_area_name_nc(self):
 #        # return ['E02001731', 'E02001729', 'E02001688', 'E02001689', 'E02001736',

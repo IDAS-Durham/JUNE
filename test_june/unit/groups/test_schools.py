@@ -7,6 +7,7 @@ from june.geography import Geography
 from june.demography import Person
 from june.groups import School, Schools
 
+
 @pytest.fixture(name="geo_schools", scope="module")
 def area_name():
     geography = Geography.from_file(filter_key={"super_area": ["E02004935"]})
@@ -38,10 +39,11 @@ class TestSchool:
         school.add(person, School.SubgroupType.students)
         assert bool(school.subgroups[2].people) is True
 
+
 class TestSchools:
     def test__creating_schools_from_file(self, geo_schools):
         schools = Schools.from_file(
-            areas = geo_schools.areas,
+            areas=geo_schools.areas,
         )
 
     def test_creating_schools_for_areas(self, geo_schools):
@@ -62,5 +64,3 @@ class TestSchools:
             schools.school_agegroup_to_global_indices.get(age)[closest_school[0]]
         ]
         assert closest_school == school
-
-

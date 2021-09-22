@@ -8,4 +8,4 @@ from .symptom_tag import SymptomTag
 from .symptoms import Symptoms
 from .transmission import Transmission, TransmissionConstant, TransmissionGamma
 from .transmission_xnexp import TransmissionXNExp
-from .immunity_setter import ImmunitySetter 
+from .immunity_setter import ImmunitySetter

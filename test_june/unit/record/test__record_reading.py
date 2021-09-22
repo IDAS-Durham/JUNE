@@ -185,7 +185,9 @@ def create_sim(world, interaction, selector, seed=False):
         date="2020-03-01",
     )
     if not seed:
-        infection_seed.unleash_virus_per_day(date=pd.to_datetime("2020-03-01"), time=0, record=record)
+        infection_seed.unleash_virus_per_day(
+            date=pd.to_datetime("2020-03-01"), time=0, record=record
+        )
     elif seed == "hospitalised":
         for person in world.people:
             infect_hospitalised_person(person)

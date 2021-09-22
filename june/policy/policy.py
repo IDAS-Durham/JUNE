@@ -68,7 +68,7 @@ class Policies:
             LeisurePolicies,
             RegionalCompliances,
             TieredLockdowns,
-            VaccineDistributions
+            VaccineDistributions,
         )
 
         self.individual_policies = IndividualPolicies.from_policies(self)

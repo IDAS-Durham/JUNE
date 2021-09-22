@@ -19,7 +19,7 @@ default_config_filename = (
 class HospitalDistributor:
     """
     Distributes people to work as health care workers in hospitals
-        
+
         #TODO: sub sectors of doctors and nurses should be found
         Healthcares sector
         2211: Medical practitioners
@@ -36,7 +36,7 @@ class HospitalDistributor:
         healthcare_sector_label: Optional[str] = None,
     ):
         """
-        
+
         Parameters
         ----------
         hospitals:
@@ -56,7 +56,9 @@ class HospitalDistributor:
 
     @classmethod
     def from_file(
-        cls, hospitals, config_filename=default_config_filename,
+        cls,
+        hospitals,
+        config_filename=default_config_filename,
     ):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -92,7 +94,7 @@ class HospitalDistributor:
 
     def distribute_medics_to_super_areas(self, super_areas: SuperAreas):
         """
-        Distribute medics to super areas, flow data is necessary to find medics in the 
+        Distribute medics to super areas, flow data is necessary to find medics in the
         super area according to their sector.
 
         Parameters
@@ -108,11 +110,11 @@ class HospitalDistributor:
     def get_hospitals_in_super_area(self, super_area: SuperArea) -> List["Hospital"]:
         """
         From all hospitals, filter the ones placed in a given super_area
-        
+
         Parameters
         ----------
         super_area:
-            super area 
+            super area
         """
         hospitals_in_super_area = [
             hospital

@@ -20,14 +20,18 @@ from june.epidemiology.infection import (
     SymptomTag,
     ImmunitySetter,
     Covid19,
-    B16172
+    B16172,
 )
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.groups.travel import Travel
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
 from june.simulator import Simulator
 from june.epidemiology.epidemiology import Epidemiology
-from june.epidemiology.infection_seed import InfectionSeed, Observed2Cases, InfectionSeeds
+from june.epidemiology.infection_seed import (
+    InfectionSeed,
+    Observed2Cases,
+    InfectionSeeds,
+)
 from june.policy import Policies
 from june.event import Events
 from june import paths
@@ -39,6 +43,7 @@ from june.mpi_setup import mpi_comm, mpi_rank, mpi_size
 # disable logging for ranks
 if mpi_rank > 0:
     logging.disable(logging.CRITICAL)
+
 
 def keys_to_int(x):
     return {int(k): v for k, v in x.items()}
@@ -114,12 +119,10 @@ def generate_simulator():
     # health index and infection selecctor
     health_index_generator = HealthIndexGenerator.from_file()
     selector_c19 = InfectionSelector(
-        infection_class=Covid19,
-        health_index_generator=health_index_generator
+        infection_class=Covid19, health_index_generator=health_index_generator
     )
     selector_indian = InfectionSelector(
-        infection_class=B16172,
-        health_index_generator=health_index_generator
+        infection_class=B16172, health_index_generator=health_index_generator
     )
     inf_selectors = InfectionSelectors([selector_c19, selector_indian])
     infection_seed = InfectionSeed.from_uniform_cases(
@@ -127,7 +130,7 @@ def generate_simulator():
         infection_selector=selector_c19,
         cases_per_capita=0.001,
         seed_strength=10,
-        date = "2020-02-28",
+        date="2020-02-28",
     )
     immunity_setter = ImmunitySetter()
 
@@ -138,9 +141,7 @@ def generate_simulator():
     )
 
     # interaction
-    interaction = Interaction.from_file(
-        config_filename="./config_interaction.yaml"
-    )
+    interaction = Interaction.from_file(config_filename="./config_interaction.yaml")
     # policies
     policies = Policies.from_file()
 

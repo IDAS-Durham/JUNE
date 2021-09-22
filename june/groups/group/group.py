@@ -126,7 +126,7 @@ class Group(AbstractGroup):
         person
             A person
         group_type
-            
+
         """
         # if not dynamic:
         self[subgroup_type].append(person)

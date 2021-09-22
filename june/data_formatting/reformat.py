@@ -8,14 +8,18 @@ from shutil import copyfile
 
 
 def read_df(
-    DATA_DIR: str, filename: str, column_names: list, usecols: list, index: str,
+    DATA_DIR: str,
+    filename: str,
+    column_names: list,
+    usecols: list,
+    index: str,
 ) -> pd.DataFrame:
     """Read dataframe and format
 
     Args:
-        DATA_DIR: path to dataset folder (default should be output_area folder) 
+        DATA_DIR: path to dataset folder (default should be output_area folder)
         filename:
-        column_names: names of columns for output dataframe 
+        column_names: names of columns for output dataframe
         usecols: ids of columns to read
         index: index of output dataframe
 
@@ -25,19 +29,22 @@ def read_df(
     """
 
     df = pd.read_csv(
-        os.path.join(DATA_DIR, filename), names=column_names, usecols=usecols, header=0,
+        os.path.join(DATA_DIR, filename),
+        names=column_names,
+        usecols=usecols,
+        header=0,
     )
     df.set_index(index, inplace=True)
     return df
 
 
 def read_population_df(OUTPUT_AREA_DIR) -> pd.DataFrame:
-    """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew        
+    """Read population dataset downloaded from https://www.nomisweb.co.uk/census/2011/ks101ew
 
     Args:
 
     Returns:
-        pandas dataframe with ratio of males and females per output area 
+        pandas dataframe with ratio of males and females per output area
 
     """
     # TODO: column names need to be more general for other datasets.
@@ -55,7 +62,8 @@ def read_population_df(OUTPUT_AREA_DIR) -> pd.DataFrame:
         "Variable: Females; measures: Value",
     ]
     population_df = pd.read_csv(
-        os.path.join(OUTPUT_AREA_DIR, population), usecols=population_usecols,
+        os.path.join(OUTPUT_AREA_DIR, population),
+        usecols=population_usecols,
     )
     names_dict = dict(zip(population_usecols, population_column_names))
     population_df.rename(columns=names_dict, inplace=True)
@@ -81,7 +89,7 @@ def read_ages_df(OUTPUT_AREA_DIR: str, freq: bool = True) -> pd.DataFrame:
     Args:
 
     Returns:
-        pandas dataframe with age profiles per output area 
+        pandas dataframe with age profiles per output area
 
     """
     ages = "age_structure.csv"
@@ -105,7 +113,9 @@ def read_ages_df(OUTPUT_AREA_DIR: str, freq: bool = True) -> pd.DataFrame:
         "90-XXX",
     ]
 
-    ages_usecols = [2,] + list(range(5, 21))
+    ages_usecols = [
+        2,
+    ] + list(range(5, 21))
 
     ages_df = read_df(OUTPUT_AREA_DIR, ages, ages_names, ages_usecols, "output_area")
     return ages_df
@@ -113,6 +123,7 @@ def read_ages_df(OUTPUT_AREA_DIR: str, freq: bool = True) -> pd.DataFrame:
 
 def read_minimal_household_composition(OUTPUT_AREA_DIR):
     pass
+
 
 def read_household_composition_people(OUTPUT_AREA_DIR, ages_df):
     """
@@ -232,7 +243,7 @@ def read_household_df(OUTPUT_AREA_DIR: str) -> pd.DataFrame:
     Args:
 
     Returns:
-        pandas dataframe with number of households per output area 
+        pandas dataframe with number of households per output area
 
     """
 
@@ -320,32 +331,28 @@ def people_compositions2households(comp_people_df):
 
     return households_df
 
+
 def read_school_census(DATA_DIR):
     """
     Reads school location and sizes, it initializes a KD tree on a sphere,
     to query the closest schools to a given location.
     """
-    school_filename = os.path.join(
-        DATA_DIR, "school_data", "uk_schools_data.csv"
-    )
+    school_filename = os.path.join(DATA_DIR, "school_data", "uk_schools_data.csv")
     school_df = pd.read_csv(school_filename, index_col=0)
     school_df.dropna(inplace=True)
     school_df["age_min"].replace(to_replace=np.arange(0, 4), value=4, inplace=True)
 
-    school_df["age_max"].replace(
-        to_replace=np.arange(20, 50), value=19, inplace=True
-    )
+    school_df["age_max"].replace(to_replace=np.arange(20, 50), value=19, inplace=True)
 
     assert school_df["age_min"].min() <= 4
     assert school_df["age_max"].max() < 20
     return school_df
 
 
-
 def downsample_social_matrix(matrix):
-    #low_res_matrix = pd.DataFrame()
+    # low_res_matrix = pd.DataFrame()
 
-    '''
+    """
     print(matrix)
 
     low_res_matrix["0-4"] = matrix["0-4"]
@@ -387,10 +394,9 @@ def downsample_social_matrix(matrix):
             "70-74",
         ], inplace=True
     )
-    '''
+    """
 
-
-    return matrix 
+    return matrix
 
 
 def reformat_social_matrices(raw_mixing_dir, processed_mixing_dir):
@@ -442,7 +448,9 @@ if __name__ == "__main__":
 
     if not os.path.exists(GEO_DIR):
         os.makedirs(GEO_DIR)
-    copyfile(os.path.join("..", "data", "geographical_data", "oa_coorindates.csv"),
-            os.path.join("..", "data", "processed", "geographical_data", "oa_coorindates.csv"))
-
-    
+    copyfile(
+        os.path.join("..", "data", "geographical_data", "oa_coorindates.csv"),
+        os.path.join(
+            "..", "data", "processed", "geographical_data", "oa_coorindates.csv"
+        ),
+    )
