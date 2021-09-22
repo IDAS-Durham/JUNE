@@ -114,10 +114,14 @@ class ImmunitySetter:
         cls,
         susceptibility_dict: dict = default_susceptibility_dict,
         multiplier_dict: dict = default_multiplier_dict,
+        vaccination_dict: dict = None,
+        previous_infections_dict: dict = None,
         comorbidity_multipliers_path: Optional[str] = None,
         male_comorbidity_reference_prevalence_path: Optional[str] = None,
         female_comorbidity_reference_prevalence_path: Optional[str] = None,
-    ) -> "EffectiveMultiplierSetter":
+        susceptibility_mode="average",
+        record:"Record"=None,
+    ) -> "ImmunitySetter":
         if comorbidity_multipliers_path is not None:
             with open(comorbidity_multipliers_path) as f:
                 comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
@@ -135,10 +139,15 @@ class ImmunitySetter:
         else:
             comorbidity_multipliers = None
             comorbidity_prevalence_reference_population = None
-        return EffectiveMultiplierSetter(
+        return ImmunitySetter(
+            susceptibility_dict=susceptibility_dict,
             multiplier_dict=multiplier_dict,
+            vaccination_dict=vaccination_dict,
+            previous_infections_dict=previous_infections_dict,
             multiplier_by_comorbidity=comorbidity_multipliers,
             comorbidity_prevalence_reference_population=comorbidity_prevalence_reference_population,
+            susceptibility_mode=susceptibility_mode,
+            record=record,
         )
 
     def set_immunity(self, population):
