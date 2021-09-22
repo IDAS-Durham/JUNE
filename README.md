@@ -70,3 +70,9 @@ Run the tests with:
 cd test_june
 pytest
 ```
+
+# Contributing
+See our contributors guide [here](CONTRIBUTING).
+
+# Docs
+We have a documentation folder [here](docs/index.md)
