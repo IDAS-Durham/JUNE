@@ -179,6 +179,29 @@ class TestInteractiveSchool:
                             rtol=1e-6,
                         )
 
+    def test__social_distancing_primary_secondary(self):
+        beta_reductions = {"school" : 0.2, "primary_school": 0.3, "secondary_school" : 0.4}
+        betas = {"school" : 3.0}
+
+        school = School(sector = "primary")
+        int_school = InteractiveSchool(school)
+        processed_beta = int_school.get_processed_beta(betas=betas, beta_reductions=beta_reductions)
+        assert np.isclose(processed_beta, 3 * 0.3)
+
+        school = School(sector = "secondary")
+        int_school = InteractiveSchool(school)
+        processed_beta = int_school.get_processed_beta(betas=betas, beta_reductions=beta_reductions)
+        assert np.isclose(processed_beta, 3 * 0.4)
+
+        school = School(sector = "primary_secondary")
+        int_school = InteractiveSchool(school)
+        processed_beta = int_school.get_processed_beta(betas=betas, beta_reductions=beta_reductions)
+        assert np.isclose(processed_beta, 3 * 0.4)
+
+        school = School(sector = None)
+        int_school = InteractiveSchool(school)
+        processed_beta = int_school.get_processed_beta(betas=betas, beta_reductions=beta_reductions)
+        assert np.isclose(processed_beta, 3 * 0.2)
 
 class TestInteractiveCompany:
     def test__sector_beta(self):

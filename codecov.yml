@@ -20,7 +20,4 @@ comment:
   require_changes: no
 
 ignore:
-  - "june/visualization/plotter.py"
-  - "june/visualizer.py"
-  - "june_plots/*"
-  - "june_tests/*"
+  - "june_tests/**/*"

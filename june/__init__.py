@@ -17,7 +17,7 @@ from .world import World
 
 default_logging_config_filename = (
         paths.configs_path /
-        "config_world_creation_logger.yaml"
+        "logging.yaml"
 )
 
 if os.path.isfile(default_logging_config_filename):

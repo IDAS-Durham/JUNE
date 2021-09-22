@@ -160,6 +160,8 @@ class HospitalDistributor:
                     medic.lockdown_status = "key_worker"
 
     def assign_closest_hospitals_to_super_areas(self, super_areas):
+        if not self.hospitals.members:
+            return
         for super_area in super_areas:
             super_area.closest_hospitals = self.hospitals.get_closest_hospitals(
                 super_area.coordinates, self.hospitals.neighbour_hospitals

@@ -1,7 +1,6 @@
 alpha_physical: 2.
 
 betas:
- box: 1
  pub: 0.42941 
  grocery: 0.04137
  cinema: 0.157461

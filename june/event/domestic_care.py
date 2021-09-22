@@ -102,7 +102,6 @@ class DomesticCare(Event):
             for needer, provider in zip(need_care, can_provide_care):
                 total_need_care += 1
                 provider.household_to_care = needer
-        logger.info(f"A total number of {total_need_care} people need care here.")
 
     def _check_household_needs_care(self, household):
         """

@@ -4,7 +4,6 @@ from collections import defaultdict
 from tqdm import tqdm
 import numpy as np
 from typing import Optional
-from june.box.box_mode import Boxes, Box
 from june.demography import Demography, Population
 from june.demography.person import Activities, Person
 from june.distributors import (
@@ -56,7 +55,6 @@ class World:
     This Class creates the world that will later be simulated.
     The world will be stored in pickle, but a better option needs to be found.
     
-    Note: BoxMode = Demography +- Sociology - Geography
     """
 
     def __init__(self):
@@ -79,7 +77,6 @@ class World:
         self.cinemas = None
         self.cemeteries = None
         self.universities = None
-        self.box_mode = False
         self.cities = None
         self.stations = None
 
@@ -175,7 +172,6 @@ class World:
 def generate_world_from_geography(
     geography: Geography,
     demography: Optional[Demography] = None,
-    box_mode=False,
     include_households=True,
     ethnicity=True,
     comorbidity=True,
@@ -185,21 +181,8 @@ def generate_world_from_geography(
     with the default settings for that geography.
     """
     world = World()
-    world.box_mode = box_mode
     if demography is None:
         demography = Demography.for_geography(geography)
-    if box_mode:
-        world.hospitals = Hospitals.for_box_mode()
-        world.people = _populate_areas(
-            geography.areas,
-            demography,
-            ethnicity=ethnicity,
-            comorbidity=comorbidity,
-        )
-        world.boxes = Boxes([Box()])
-        world.cemeteries = Cemeteries()
-        world.boxes.members[0].set_population(world.people)
-        return world
     world.areas = geography.areas
     world.super_areas = geography.super_areas
     world.regions = geography.regions

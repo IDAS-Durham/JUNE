@@ -28,10 +28,6 @@ class Domain:
     def __iter__(self):
         return iter(self.super_areas)
 
-    @property
-    def box_mode(self):
-        return False
-
     @classmethod
     def from_hdf5(
         cls, domain_id, super_areas_to_domain_dict: dict, hdf5_file_path: str,

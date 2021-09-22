@@ -1,8 +1,3 @@
-"""
-This is a quick test that makes sure the box model can be run. It does not check whether it is doing anything correctly,
-but at least we can use it in the meantime to make sure the code runs before pusing it to master.
-"""
-
 from pathlib import Path
 from june.simulator import Simulator
 from june import world
@@ -58,8 +53,8 @@ def test__full_run(dummy_world, selector, test_results):
         policies=policies,
         record=record,
     )
-    seed = InfectionSeed(world=sim.world, infection_selector=selector)
-    seed.unleash_virus(Population(sim.world.people), n_cases=1, time=0)
+    seed = InfectionSeed.from_uniform_cases(world=sim.world, infection_selector=selector, cases_per_capita=0.01, date=sim.timer.date_str)
+    seed.unleash_virus_per_day(date=sim.timer.date, time=0)
     sim.run()
     for region in world.regions:
         region.policy["local_closed_venues"] = set()

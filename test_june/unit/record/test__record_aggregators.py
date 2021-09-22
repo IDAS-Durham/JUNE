@@ -137,7 +137,6 @@ def test__prepend_checkpoint_hdf5(dummy_world):
         infector_ids = [i * 1000 + 500 + 10 + 2 * x + 1 for x in range(3)]
         dead_ids = [i * 1000 + 500 + 20 + 2 * x + 1 for x in range(3)]
         infection_ids = [i * 1000 + 500 + 20 + 2 * x + 1 for x in range(3)]
-
         with open_file(post_checkpoint_record_path, mode="a") as f:
             post_checkpoint_record.file = f
             post_checkpoint_record.accumulate(

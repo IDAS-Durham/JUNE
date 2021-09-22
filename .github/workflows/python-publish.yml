@@ -6,8 +6,13 @@ name: Python package
 on:
   push:
     branches: [ master, develop]
+    paths-ignore:
+      - 'README.md'
+
   pull_request:
     branches: [ master, develop ]
+    paths-ignore:
+      - 'README.md'
 
 jobs:
   build:
@@ -45,6 +50,4 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.xml
-        verbose: true

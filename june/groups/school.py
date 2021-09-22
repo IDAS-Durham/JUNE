@@ -429,6 +429,7 @@ class InteractiveSchool(InteractiveGroup):
     def __init__(self, group: "Group", people_from_abroad=None):
         super().__init__(group=group, people_from_abroad=people_from_abroad)
         self.school_years = group.years
+        self.sector = group.sector
 
     @classmethod
     def get_raw_contact_matrix(
@@ -492,3 +493,40 @@ class InteractiveSchool(InteractiveGroup):
                         else:
                             ret[i, j] = contact_matrix[year_idx_i, year_idx_j]
         return ret
+
+    def get_processed_beta(self, betas, beta_reductions):
+        """
+        Returns the processed contact intensity, by taking into account the policies
+        beta reductions and regional compliance. This is a group method as different interactive
+        groups may choose to treat this differently.
+        """
+        if self.sector is None:
+            spec = "school"
+        elif "secondary" in self.sector:
+            spec = "secondary_school"
+        else:
+            spec = "primary_school"
+        if spec in betas:
+            beta = betas[spec]
+        else:
+            beta = betas["school"]
+        if spec in beta_reductions:
+            beta_reduction = beta_reductions[spec]
+        else:
+            beta_reduction = beta_reductions.get("school", 1.0)
+        try:
+            regional_compliance = self.super_area.region.regional_compliance
+        except AttributeError:
+            regional_compliance = 1
+        try:
+            lockdown_tier = self.super_area.region.policy["lockdown_tier"]
+            if lockdown_tier is None:
+                lockdown_tier = 1
+        except:
+            lockdown_tier = 1
+        if int(lockdown_tier) == 4:
+            tier_reduction = 0.5
+        else:
+            tier_reduction = 1.0
+
+        return beta * (1 + regional_compliance * tier_reduction * (beta_reduction - 1))
