@@ -12,7 +12,7 @@ from june import paths
 from june.distributors import WorkerDistributor, load_workflow_df, load_sex_per_sector
 
 default_config_file = (
-    paths.configs_path/ "defaults/distributors/worker_distributor.yaml"
+    paths.configs_path / "defaults/distributors/worker_distributor.yaml"
 )
 
 
@@ -54,13 +54,17 @@ def create_population(worker_geography, worker_demography):
 
 
 def test__load_workflow_df(worker_super_areas):
-    wf_df = load_workflow_df(area_names=worker_super_areas,)
+    wf_df = load_workflow_df(
+        area_names=worker_super_areas,
+    )
     assert wf_df["n_man"].sum() == len(worker_super_areas)
     assert wf_df["n_woman"].sum() == len(worker_super_areas)
 
 
 def test__load_sex_per_sector(worker_super_areas):
-    sector_by_sex_df = load_sex_per_sector(area_names=worker_super_areas,)
+    sector_by_sex_df = load_sex_per_sector(
+        area_names=worker_super_areas,
+    )
     m_columns = [col for col in sector_by_sex_df.columns.values if "m " in col]
     f_columns = [col for col in sector_by_sex_df.columns.values if "f " in col]
     m_sum = sector_by_sex_df.loc[:, m_columns].sum(axis="columns").values
@@ -73,12 +77,15 @@ def test__load_sex_per_sector(worker_super_areas):
 
 class TestInitialization:
     def test__distributor_from_file(
-        self, worker_super_areas: list,
+        self,
+        worker_super_areas: list,
     ):
         WorkerDistributor.from_file(area_names=worker_super_areas)
 
     def test__distributor_from_geography(
-        self, worker_geography: Geography, worker_population: Population,
+        self,
+        worker_geography: Geography,
+        worker_population: Population,
     ):
         distributor = WorkerDistributor.for_geography(worker_geography)
 
@@ -107,7 +114,9 @@ class TestDistribution:
         case.assertCountEqual(work_super_area_name, worker_super_areas)
 
     def test__workers_that_stay_home(
-        self, worker_config: dict, worker_population: Population,
+        self,
+        worker_config: dict,
+        worker_population: Population,
     ):
         nr_working_from_home = len(
             [
@@ -118,7 +127,7 @@ class TestDistribution:
                     <= person.age
                     <= worker_config["age_range"][1]
                 )
-                and person.work_super_area is None 
+                and person.work_super_area is None
             ]
         )
         assert 0.050 < nr_working_from_home / len(worker_population) < 0.070

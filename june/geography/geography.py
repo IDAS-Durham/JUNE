@@ -76,7 +76,10 @@ class Area:
         person.area = self
 
     def populate(
-        self, demography, ethnicity=True, comorbidity=True,
+        self,
+        demography,
+        ethnicity=True,
+        comorbidity=True,
     ):
         for person in demography.populate(
             self.name,
@@ -322,14 +325,16 @@ class Region:
     _id = count()
 
     def __init__(
-        self, name: Optional[str] = None, super_areas: List[SuperAreas] = None,
+        self,
+        name: Optional[str] = None,
+        super_areas: List[SuperAreas] = None,
     ):
         self.id = next(self._id)
         self.name = name
         self.super_areas = super_areas or []
         self.policy = {
-            "regional_compliance": 1.,
-            "lockdown_tier" : None,
+            "regional_compliance": 1.0,
+            "lockdown_tier": None,
             "local_closed_venues": set(),
             "global_closed_venues": set(),
         }
@@ -347,7 +352,6 @@ class Region:
     @regional_compliance.setter
     def regional_compliance(self, value):
         self.policy["regional_compliance"] = value
-
 
     @property
     def closed_venues(self):
@@ -417,7 +421,10 @@ class Geography:
 
     @classmethod
     def _create_areas(
-        cls, area_coords: pd.DataFrame, super_area: pd.DataFrame, socioeconomic_indices: pd.Series,
+        cls,
+        area_coords: pd.DataFrame,
+        super_area: pd.DataFrame,
+        socioeconomic_indices: pd.Series,
     ) -> List[Area]:
         """
         Applies the _create_area function throught the area_coords dataframe.
@@ -435,10 +442,10 @@ class Geography:
         if isinstance(area_coords, pd.Series):
             areas = [
                 Area(
-                    area_coords.name, 
-                    super_area, 
-                    area_coords.values, 
-                    socioeconomic_indices.loc[area_coords.name]
+                    area_coords.name,
+                    super_area,
+                    area_coords.values,
+                    socioeconomic_indices.loc[area_coords.name],
                 )
             ]
         else:
@@ -451,7 +458,7 @@ class Geography:
                         coordinates=np.array(
                             [coordinates.latitude, coordinates.longitude]
                         ),
-                        socioeconomic_index=socioeconomic_indices.loc[name]
+                        socioeconomic_index=socioeconomic_indices.loc[name],
                     )
                 )
         return areas
@@ -497,7 +504,9 @@ class Geography:
             areas_df = area_coords.loc[
                 area_hierarchy.loc[super_area_coords.name, "area"]
             ]
-            areas_list = cls._create_areas(areas_df, super_areas_list[0], area_socioeconomic_indices)
+            areas_list = cls._create_areas(
+                areas_df, super_areas_list[0], area_socioeconomic_indices
+            )
             super_areas_list[0].areas = areas_list
             total_areas_list += areas_list
         else:
@@ -509,7 +518,9 @@ class Geography:
                     region=region,
                 )
                 areas_df = area_coords.loc[area_hierarchy.loc[super_area_name, "area"]]
-                areas_list = cls._create_areas(areas_df, super_area, area_socioeconomic_indices)
+                areas_list = cls._create_areas(
+                    areas_df, super_area, area_socioeconomic_indices
+                )
                 super_area.areas = areas_list
                 total_areas_list += list(areas_list)
                 super_areas_list.append(super_area)
@@ -540,7 +551,11 @@ class Geography:
                 region_hierarchy.loc[region_name]
             ]
             super_areas_list, areas_list = cls._create_super_areas(
-                super_areas_df, area_coordinates, area_socioeconomic_indices, region, hierarchy=hierarchy
+                super_areas_df,
+                area_coordinates,
+                area_socioeconomic_indices,
+                region,
+                hierarchy=hierarchy,
             )
             region.super_areas = super_areas_list
             total_super_areas_list += list(super_areas_list)
@@ -618,8 +633,8 @@ class Geography:
             area_socioeconomic_index = area_socioeconomic_df["socioeconomic_centile"]
         else:
             area_socioeconomic_index = pd.Series(
-                data=np.full(len(areas_coord), None), 
-                index=areas_coord.index, 
+                data=np.full(len(areas_coord), None),
+                index=areas_coord.index,
                 name="socioeconomic_centile",
             )
         areas, super_areas, regions = cls.create_geographical_units(
@@ -632,7 +647,10 @@ class Geography:
         return cls(areas, super_areas, regions)
 
 
-def _filtering(data: pd.DataFrame, filter_key: Dict[str, list],) -> pd.DataFrame:
+def _filtering(
+    data: pd.DataFrame,
+    filter_key: Dict[str, list],
+) -> pd.DataFrame:
     """
     Filter DataFrame for given geo-unit and it's listed names
     """

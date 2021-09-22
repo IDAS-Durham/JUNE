@@ -64,7 +64,9 @@ class StaticRecord:
             self.str_names += list(self.extra_str_data.keys())
             for value in self.extra_str_data.values():
                 str_data += [value]
-        self._create_table(self.int_names, self.float_names, self.str_names, self.expectedrows)
+        self._create_table(
+            self.int_names, self.float_names, self.str_names, self.expectedrows
+        )
         self._record(
             hdf5_file=hdf5_file,
             int_data=int_data,
@@ -86,7 +88,12 @@ class PeopleRecord(StaticRecord):
                 "area_id",
             ],
             float_names=[],
-            str_names=["sex", "ethnicity", "primary_activity_type", "residence_type",],
+            str_names=[
+                "sex",
+                "ethnicity",
+                "primary_activity_type",
+                "residence_type",
+            ],
             expectedrows=1_000_000,
         )
 
@@ -127,7 +134,9 @@ class PeopleRecord(StaticRecord):
             )
             area_id.append(person.area.id if person.area is not None else 0)
             sex.append(person.sex)
-            ethnicity.append(person.ethnicity if person.ethnicity is not None else "None")
+            ethnicity.append(
+                person.ethnicity if person.ethnicity is not None else "None"
+            )
         int_data = [
             ids,
             age,
@@ -189,7 +198,10 @@ class AreaRecord(StaticRecord):
         super().__init__(
             hdf5_file=hdf5_file,
             table_name="areas",
-            int_names=["id", "super_area_id",],
+            int_names=[
+                "id",
+                "super_area_id",
+            ],
             float_names=["latitude", "longitude", "socioeconomic_index"],
             str_names=["name"],
             expectedrows=10_000,
@@ -197,12 +209,12 @@ class AreaRecord(StaticRecord):
 
     def get_data(self, world):
         (
-            area_id, 
-            super_area_id, 
-            latitude, 
-            longitude, 
-            socioeconomic_index, 
-            area_name
+            area_id,
+            super_area_id,
+            latitude,
+            longitude,
+            socioeconomic_index,
+            area_name,
         ) = ([], [], [], [], [], [])
         if world.areas is not None:
             for area in world.areas:
@@ -223,7 +235,10 @@ class SuperAreaRecord(StaticRecord):
         super().__init__(
             hdf5_file=hdf5_file,
             table_name="super_areas",
-            int_names=["id", "region_id",],
+            int_names=[
+                "id",
+                "region_id",
+            ],
             float_names=["latitude", "longitude"],
             str_names=["name"],
             expectedrows=5_000,
@@ -255,7 +270,9 @@ class RegionRecord(StaticRecord):
         super().__init__(
             hdf5_file=hdf5_file,
             table_name="regions",
-            int_names=["id",],
+            int_names=[
+                "id",
+            ],
             float_names=[],
             str_names=["name"],
             expectedrows=50,

@@ -93,13 +93,13 @@ class TestInput:
                 poisson_parameters["weekday"]["m"][age], 1 * 1 / 5 * 24 / 11
             )
             assert np.isclose(
-                poisson_parameters["weekday"]["f"][age],  0.5 * 1 / 5 * 24 / 11
+                poisson_parameters["weekday"]["f"][age], 0.5 * 1 / 5 * 24 / 11
             )
             assert np.isclose(
-                poisson_parameters["weekend"]["m"][age],  3 * 1 / 2 * 24 / 12
+                poisson_parameters["weekend"]["m"][age], 3 * 1 / 2 * 24 / 12
             )
             assert np.isclose(
-                poisson_parameters["weekend"]["f"][age],  3 * 1 / 2 * 24 / 12
+                poisson_parameters["weekend"]["f"][age], 3 * 1 / 2 * 24 / 12
             )
 
 
@@ -116,12 +116,15 @@ class TestProbabilities:
             while time < max_time:
                 time += 0.25
                 probability = distrib.probability_to_go_to_social_venue(
-                    person, delta_time=delta_time, day_type=day_type, working_hours=False
+                    person,
+                    delta_time=delta_time,
+                    day_type=day_type,
+                    working_hours=False,
                 )
                 if random() < probability:
                     times_this_week += 1
             times.append(times_this_week)
-        return np.mean(times) 
+        return np.mean(times)
 
     def test__decide_person_goes_to_social_venue(
         self, social_venue_distributor, sv_input
@@ -129,37 +132,29 @@ class TestProbabilities:
         times_per_week, hours_per_day = sv_input
 
         # young weekday #
-        dt = 3 / 4 /24  # in days
+        dt = 3 / 4 / 24  # in days
         person = Person(age=40, sex="m")
         times_per_week_weekday = times_per_week["weekday"]["male"]["18-65"]
-        rest = self.get_n_times_a_week(
-            person, dt, "weekday", social_venue_distributor
-        )
+        rest = self.get_n_times_a_week(person, dt, "weekday", social_venue_distributor)
         assert np.isclose(rest, times_per_week_weekday, atol=0, rtol=0.2)
 
         # young weekend #
-        dt = 3/24
+        dt = 3 / 24
         times_per_week_weekend = times_per_week["weekend"]["male"]["18-100"]
-        rest = self.get_n_times_a_week(
-            person, dt, "weekend", social_venue_distributor
-        )
+        rest = self.get_n_times_a_week(person, dt, "weekend", social_venue_distributor)
         assert np.isclose(rest, times_per_week_weekend, atol=0, rtol=0.2)
 
         # retired weekday
         dt = 11 / 4 / 24
         person = Person(age=68, sex="f")
         times_per_week_weekday = times_per_week["weekday"]["female"]["65-100"]
-        rest = self.get_n_times_a_week(
-            person, dt, "weekday", social_venue_distributor
-        )
+        rest = self.get_n_times_a_week(person, dt, "weekday", social_venue_distributor)
         assert np.isclose(rest, times_per_week_weekday, atol=0, rtol=0.2)
 
         # retired weekend
         dt = 3 / 24
         times_per_week_weekend = times_per_week["weekend"]["female"]["18-100"]
-        rest = self.get_n_times_a_week(
-            person, dt, "weekend", social_venue_distributor
-        )
+        rest = self.get_n_times_a_week(person, dt, "weekend", social_venue_distributor)
         assert np.isclose(rest, times_per_week_weekend, atol=0, rtol=0.2)
 
     class MockArea:

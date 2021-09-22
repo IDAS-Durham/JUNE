@@ -53,5 +53,8 @@ def test_weekend_transition():
     assert timer.activities == ("residence",)
     next(timer)
     assert timer.is_weekend is False
-    assert timer.activities == ("primary_activity", "residence",)
+    assert timer.activities == (
+        "primary_activity",
+        "residence",
+    )
     # a second test

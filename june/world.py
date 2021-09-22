@@ -33,9 +33,7 @@ possible_groups = [
 ]
 
 
-def _populate_areas(
-    areas: Areas, demography, ethnicity=True, comorbidity=True
-):
+def _populate_areas(areas: Areas, demography, ethnicity=True, comorbidity=True):
     logger.info(f"Populating areas")
     people = Population()
     for area in areas:
@@ -54,14 +52,14 @@ class World:
     """
     This Class creates the world that will later be simulated.
     The world will be stored in pickle, but a better option needs to be found.
-    
+
     """
 
     def __init__(self):
         """
         Initializes a world given a geography and a demography. For now, households are
         a special group because they require a mix of both groups (we need to fix
-        this later). 
+        this later).
         """
         self.areas = None
         self.super_areas = None
@@ -87,7 +85,6 @@ class World:
                 ret.append(attr_value)
         return iter(ret)
 
-
     def distribute_people(self, include_households=True):
         """
         Distributes people to buildings assuming default configurations.
@@ -112,8 +109,10 @@ class World:
 
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
-            self.households = household_distributor.distribute_people_and_households_to_areas(
-                self.areas
+            self.households = (
+                household_distributor.distribute_people_and_households_to_areas(
+                    self.areas
+                )
             )
 
         if self.schools is not None:
@@ -152,7 +151,7 @@ class World:
     def to_hdf5(self, file_path: str, chunk_size=100000):
         """
         Saves the world to an hdf5 file. All supergroups and geography
-        are stored as groups. Class instances are substituted by ids of the 
+        are stored as groups. Class instances are substituted by ids of the
         instances. To load the world back, one needs to call the
         generate_world_from_hdf5 function.
 
@@ -191,6 +190,8 @@ def generate_world_from_geography(
         geography_group = getattr(geography, possible_group)
         if geography_group is not None:
             setattr(world, possible_group, geography_group)
-    world.distribute_people(include_households=include_households,)
+    world.distribute_people(
+        include_households=include_households,
+    )
     world.cemeteries = Cemeteries()
     return world

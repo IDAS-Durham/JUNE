@@ -8,5 +8,3 @@ def test__event_dates():
     assert event.end_time.strftime("%Y-%m-%d") == "2020-12-05"
     assert event.is_active(datetime.datetime.strptime("2020-03-05", "%Y-%m-%d"))
     assert not event.is_active(datetime.datetime.strptime("2030-03-05", "%Y-%m-%d"))
-
-

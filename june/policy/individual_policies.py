@@ -132,7 +132,7 @@ class Quarantine(StayHome):
         n_days_household: int = 14,
         compliance: float = 1.0,
         household_compliance: float = 1.0,
-        vaccinated_household_compliance: float = 1.0
+        vaccinated_household_compliance: float = 1.0,
     ):
         """
         This policy forces people to stay at home for ```n_days``` days after they show symtpoms, and for ```n_days_household``` if someone else in their household shows symptoms
@@ -183,7 +183,9 @@ class Quarantine(StayHome):
             housemates_quarantine = person.residence.group.quarantine(
                 time=days_from_start,
                 quarantine_days=self.n_days_household,
-                household_compliance=self.vaccinated_household_compliance * self.household_compliance * regional_compliance,
+                household_compliance=self.vaccinated_household_compliance
+                * self.household_compliance
+                * regional_compliance,
             )
 
         else:
@@ -192,7 +194,7 @@ class Quarantine(StayHome):
                 quarantine_days=self.n_days_household,
                 household_compliance=self.household_compliance * regional_compliance,
             )
-            
+
         return housemates_quarantine
 
 
@@ -203,7 +205,7 @@ class SchoolQuarantine(StayHome):
         end_time: Union[str, datetime.datetime] = "2100-01-01",
         compliance: float = 1.0,
         n_days: int = 7,
-        isolate_on: str = "symptoms"
+        isolate_on: str = "symptoms",
     ):
         """
         This policy forces kids to stay at home if there is a symptomatic case of covid in their classroom.
@@ -251,16 +253,28 @@ class SchoolQuarantine(StayHome):
                 time_start_quarantine = person.infection.start_time
             else:
                 if person.infection.time_of_symptoms_onset:
-                    time_start_quarantine = person.infection.start_time + person.infection.time_of_symptoms_onset
+                    time_start_quarantine = (
+                        person.infection.start_time
+                        + person.infection.time_of_symptoms_onset
+                    )
                 else:
                     time_start_quarantine = None
             if time_start_quarantine is not None:
-                if time_start_quarantine < person.primary_activity.quarantine_starting_date:
+                if (
+                    time_start_quarantine
+                    < person.primary_activity.quarantine_starting_date
+                ):
                     # If the agent will show symptoms earlier than the quarantine time, update it.
-                    person.primary_activity.quarantine_starting_date = time_start_quarantine
-                if (days_from_start - person.primary_activity.quarantine_starting_date) > self.n_days:
+                    person.primary_activity.quarantine_starting_date = (
+                        time_start_quarantine
+                    )
+                if (
+                    days_from_start - person.primary_activity.quarantine_starting_date
+                ) > self.n_days:
                     # If it's been more than n_days since last quarantine
-                    person.primary_activity.quarantine_starting_date = time_start_quarantine
+                    person.primary_activity.quarantine_starting_date = (
+                        time_start_quarantine
+                    )
         if (
             0
             < (days_from_start - person.primary_activity.quarantine_starting_date)
@@ -462,7 +476,7 @@ class CloseCompanies(SkipActivity):
         Returns True if the activity is to be skipped, otherwise False
         """
 
-        # stop people going to work in Tier 3 or 4 regions 
+        # stop people going to work in Tier 3 or 4 regions
         # if they don't work in the same region
         # and if their region is not in Tier 3 or 4
         # subject to regional compliance

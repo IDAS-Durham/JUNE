@@ -5,6 +5,7 @@ class Cemetery(Group):
     def add(self, person):
         self[0].people.append(person)
 
+
 class Cemeteries(Supergroup):
     def __init__(self):
         super().__init__([Cemetery()])

@@ -148,6 +148,7 @@ class B117(Infection):
     def immunity_ids(cls):
         return (cls.infection_id(), Covid19.infection_id())
 
+
 class B16172(Infection):
     @classmethod
     def immunity_ids(cls):

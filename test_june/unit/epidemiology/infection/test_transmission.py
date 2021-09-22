@@ -15,6 +15,7 @@ class TestTransmission:
 
         assert transmission.probability == 0.3
 
+
 class TestTransmissionGamma:
     def test__update_probability_at_time(self):
         max_infectiousness = 4.0
@@ -28,9 +29,7 @@ class TestTransmissionGamma:
         avg_gamma = trans.TransmissionGamma(
             max_infectiousness=1.0, shape=shape, rate=rate, shift=shift
         )
-        avg_gamma.update_infection_probability(
-            avg_gamma.time_at_maximum_infectivity
-        )
+        avg_gamma.update_infection_probability(avg_gamma.time_at_maximum_infectivity)
         true_avg_peak_infectivity = avg_gamma.probability
 
         assert transmission.probability / true_avg_peak_infectivity == pytest.approx(
@@ -47,7 +46,9 @@ class TestTransmissionGamma:
             scipy_gamma.pdf(x), rel=0.001
         )
 
-    def test__gamma_pdf_vectorized(self,):
+    def test__gamma_pdf_vectorized(
+        self,
+    ):
         x = np.linspace(0.0, 10.0, 100)
         a = 1.0
         loc = 1.0

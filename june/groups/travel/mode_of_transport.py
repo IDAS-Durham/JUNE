@@ -7,7 +7,9 @@ import yaml
 from june import paths
 from june.utils import random_choice_numba
 
-default_config_filename = paths.configs_path / "defaults/groups/travel/mode_of_transport.yaml"
+default_config_filename = (
+    paths.configs_path / "defaults/groups/travel/mode_of_transport.yaml"
+)
 
 default_commute_file = paths.data_path / "input/travel/mode_of_transport_ew.csv"
 
@@ -16,24 +18,12 @@ class ModeOfTransport:
     __all = {}
     __slots__ = "description", "is_public"
 
-    def __new__(
-            cls,
-            description,
-            is_public=False
-    ):
+    def __new__(cls, description, is_public=False):
         if description not in ModeOfTransport.__all:
-            ModeOfTransport.__all[
-                description
-            ] = super().__new__(cls)
-        return ModeOfTransport.__all[
-            description
-        ]
+            ModeOfTransport.__all[description] = super().__new__(cls)
+        return ModeOfTransport.__all[description]
 
-    def __init__(
-            self,
-            description: str,
-            is_public: bool = False
-    ):
+    def __init__(self, description: str, is_public: bool = False):
         """
         Create a ModeOfTransport from its description.
 
@@ -58,10 +48,7 @@ class ModeOfTransport:
         return not self.is_public
 
     @classmethod
-    def with_description(
-            cls,
-            description: str
-    ) -> "ModeOfTransport":
+    def with_description(cls, description: str) -> "ModeOfTransport":
         """
         Retrieve a mode of transport by its description.
 
@@ -74,9 +61,7 @@ class ModeOfTransport:
         -------
         The corresponding ModeOfTransport instance
         """
-        return ModeOfTransport.__all[
-            description
-        ]
+        return ModeOfTransport.__all[description]
 
     def index(self, headers: List[str]) -> int:
         """
@@ -101,9 +86,7 @@ class ModeOfTransport:
         for i, header in enumerate(headers):
             if self.description in header:
                 return i
-        raise AssertionError(
-            f"{self} not found in headers {headers}"
-        )
+        raise AssertionError(f"{self} not found in headers {headers}")
 
     def __eq__(self, other):
         if isinstance(other, str):
@@ -126,8 +109,7 @@ class ModeOfTransport:
 
     @classmethod
     def load_from_file(
-            cls,
-            config_filename=default_config_filename
+        cls, config_filename=default_config_filename
     ) -> List["ModeOfTransport"]:
         """
         Load all of the modes of transport from commute.yaml.
@@ -146,22 +128,11 @@ class ModeOfTransport:
         """
         with open(config_filename) as f:
             configs = yaml.load(f, Loader=yaml.FullLoader)
-        return [
-            ModeOfTransport(
-                **config
-            )
-            for config in configs
-        ]
+        return [ModeOfTransport(**config) for config in configs]
 
 
 class RegionalGenerator:
-    def __init__(
-            self,
-            area: str,
-            weighted_modes: List[
-                Tuple[int, "ModeOfTransport"]
-            ]
-    ):
+    def __init__(self, area: str, weighted_modes: List[Tuple[int, "ModeOfTransport"]]):
         """
         Randomly generate modes of transport, weighted by usage, for
         one particular region.
@@ -185,31 +156,19 @@ class RegionalGenerator:
         """
         The sum of the numbers of people using each mode of transport
         """
-        return sum(
-            mode[0]
-            for mode
-            in self.weighted_modes
-        )
+        return sum(mode[0] for mode in self.weighted_modes)
 
     def _get_modes(self) -> List["ModeOfTransport"]:
         """
         A list of modes of transport
         """
-        return [
-            mode[1]
-            for mode
-            in self.weighted_modes
-        ]
+        return [mode[1] for mode in self.weighted_modes]
 
     def _get_weights(self) -> List[float]:
         """
         The normalised weights for each mode of transport.
         """
-        return np.array([
-            mode[0] / self.total
-            for mode
-            in self.weighted_modes
-        ])
+        return np.array([mode[0] / self.total for mode in self.weighted_modes])
 
     def weighted_random_choice(self) -> "ModeOfTransport":
         """
@@ -226,10 +185,7 @@ class RegionalGenerator:
 
 
 class ModeOfTransportGenerator:
-    def __init__(
-            self,
-            regional_generators: Dict[str, RegionalGenerator]
-    ):
+    def __init__(self, regional_generators: Dict[str, RegionalGenerator]):
         """
         Generate a mode of transport that a person uses in their commute.
 
@@ -258,15 +214,13 @@ class ModeOfTransportGenerator:
         -------
         An object that weighted-randomly selects modes of transport for the region.
         """
-        return self.regional_generators[
-            area
-        ]
+        return self.regional_generators[area]
 
     @classmethod
     def from_file(
-            cls,
-            filename: str = default_commute_file,
-            config_filename: str = default_config_filename
+        cls,
+        filename: str = default_commute_file,
+        config_filename: str = default_config_filename,
     ) -> "ModeOfTransportGenerator":
         """
         Parse configuration describing each included mode of transport
@@ -291,24 +245,14 @@ class ModeOfTransportGenerator:
             reader = csv.reader(f)
             headers = next(reader)
             area_column = headers.index("geography code")
-            modes_of_transport = ModeOfTransport.load_from_file(
-                config_filename
-            )
+            modes_of_transport = ModeOfTransport.load_from_file(config_filename)
             for row in reader:
                 weighted_modes = []
                 for mode in modes_of_transport:
-                    weighted_modes.append((
-                        int(row[
-                                mode.index(headers)
-                            ]),
-                        mode
-                    ))
+                    weighted_modes.append((int(row[mode.index(headers)]), mode))
                 area = row[area_column]
                 regional_generators[area] = RegionalGenerator(
-                    area=area,
-                    weighted_modes=weighted_modes
+                    area=area, weighted_modes=weighted_modes
                 )
 
-        return ModeOfTransportGenerator(
-            regional_generators
-        )
+        return ModeOfTransportGenerator(regional_generators)

@@ -9,6 +9,7 @@ mpi_comm = MPI.COMM_WORLD
 mpi_rank = mpi_comm.Get_rank()
 mpi_size = mpi_comm.Get_size()
 
+
 class MovablePeople:
     """
     Holds information about people who might be present in a domain, but may or may not be be,
@@ -23,7 +24,7 @@ class MovablePeople:
         self.index = {}
 
     def add_person(self, person, external_subgroup):
-        """ Add or update a person to the outward facing group """
+        """Add or update a person to the outward facing group"""
         domain_id = external_subgroup.domain_id
         group_spec = external_subgroup.spec
         group_id = external_subgroup.group_id
@@ -85,7 +86,7 @@ class MovablePeople:
             return 1
 
     def serialise(self, rank):
-        """ Hopefully more efficient than standard pickle"""
+        """Hopefully more efficient than standard pickle"""
         keys, data = [], []
         if rank not in self.skinny_out:
             return None, None, 0

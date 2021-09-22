@@ -44,8 +44,15 @@ def test__age_sex_generator():
         "f",
     ]
     assert list(age_sex_generator.ethnicity_iterator) == [
-                "A1", "A1", "C3", "C3", "B2", "B2", "B2", "B2"
-            ]
+        "A1",
+        "A1",
+        "C3",
+        "C3",
+        "B2",
+        "B2",
+        "B2",
+        "B2",
+    ]
     age_sex_generator = d.demography.AgeSexGenerator(
         age_counts,
         age_bins,
@@ -95,7 +102,9 @@ class TestDemography:
                 assert person.ethnicity.startswith("A")
                 assert person.ethnicity in ["A1", "A2", "A4"]
             assert person.ethnicity.startswith("D") is False
-            assert person.area.socioeconomic_index == 0.59 # checked in new socioecon_index file.
+            assert (
+                person.area.socioeconomic_index == 0.59
+            )  # checked in new socioecon_index file.
             if person.age not in people_ages_dict:
                 people_ages_dict[person.age] = 1
             else:
@@ -151,6 +160,7 @@ class TestDemography:
             if person.comorbidity is not None:
                 comorbidities.append(person.comorbidity)
         assert len(np.unique(comorbidities)) > 0
+
 
 class TestPopulation:
     def test__create_population_from_demography(self, geography_demography_test):

@@ -18,7 +18,7 @@ def save_care_homes_to_hdf5(
 
     Parameters
     ----------
-    companies 
+    companies
         population object
     file_path
         path of the saved hdf5 file
@@ -61,7 +61,9 @@ def save_care_homes_to_hdf5(
                 care_homes_dset.attrs["n_care_homes"] = n_care_homes
                 care_homes_dset.create_dataset("id", data=ids, maxshape=(None,))
                 care_homes_dset.create_dataset("area", data=areas, maxshape=(None,))
-                care_homes_dset.create_dataset("super_area", data=super_areas, maxshape=(None,))
+                care_homes_dset.create_dataset(
+                    "super_area", data=super_areas, maxshape=(None,)
+                )
                 care_homes_dset.create_dataset(
                     "n_residents", data=n_residents, maxshape=(None,)
                 )
@@ -82,7 +84,9 @@ def save_care_homes_to_hdf5(
                 care_homes_dset["n_workers"][idx1:idx2] = n_workers
 
 
-def load_care_homes_from_hdf5(file_path: str, chunk_size=50000, domain_super_areas=None):
+def load_care_homes_from_hdf5(
+    file_path: str, chunk_size=50000, domain_super_areas=None
+):
     """
     Loads carehomes from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -120,7 +124,7 @@ def load_care_homes_from_hdf5(file_path: str, chunk_size=50000, domain_super_are
 
 
 def restore_care_homes_properties_from_hdf5(
-    world: World, file_path: str, chunk_size=50000, domain_super_areas = None 
+    world: World, file_path: str, chunk_size=50000, domain_super_areas=None
 ):
     """
     Loads carehomes from an hdf5 file located at ``file_path``.

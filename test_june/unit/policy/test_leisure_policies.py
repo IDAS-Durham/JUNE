@@ -101,7 +101,7 @@ class TestCloseLeisure:
         tiered_lockdown = TieredLockdown(
             start_time="2020-03-01",
             end_time="2020-03-30",
-            tiers_per_region={"North East": 4.},
+            tiers_per_region={"North East": 4.0},
         )
         tiered_lockdowns = TieredLockdowns([tiered_lockdown])
 

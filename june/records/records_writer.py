@@ -77,14 +77,14 @@ class Record:
             self.record_path / self.summary_filename, "w", newline=""
         ) as summary_file:
             writer = csv.writer(summary_file)
-            #fields = ["infected", "recovered", "hospitalised", "intensive_care"]
+            # fields = ["infected", "recovered", "hospitalised", "intensive_care"]
             fields = ["infected", "hospitalised", "intensive_care"]
             header = ["time_stamp", "region"]
             for field in fields:
                 header.append("current_" + field)
                 header.append("daily_" + field)
             header.extend(
-                #["current_susceptible", "daily_hospital_deaths", "daily_deaths"]
+                # ["current_susceptible", "daily_hospital_deaths", "daily_deaths"]
                 ["daily_hospital_deaths", "daily_deaths"]
             )
             writer.writerow(header)
@@ -494,4 +494,4 @@ def prepend_checkpoint_summary(
     merged_summary.set_index(["region", "time_stamp"])
     merged_summary.sort_index(inplace=True)
     merged_summary.to_csv(merged_summary_path, index=True)
-    logger.info(f"Written merged summary to {merged_summary_path}")    
+    logger.info(f"Written merged summary to {merged_summary_path}")

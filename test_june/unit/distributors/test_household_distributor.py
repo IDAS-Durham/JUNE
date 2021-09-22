@@ -155,7 +155,9 @@ class TestAuxiliaryFunctions:
         # check we get same sex if not available
         area.men_by_age = {}
         woman = household_distributor._get_matching_partner(
-            woman, area.men_by_age, area.women_by_age,
+            woman,
+            area.men_by_age,
+            area.women_by_age,
         )
         assert woman.sex == 1
         assert (woman.age == 40) or (woman.age == 41)
@@ -164,7 +166,9 @@ class TestAuxiliaryFunctions:
         area = create_area()
         kid = Person(age=10)
         parent = household_distributor._get_matching_parent(
-            kid, area.men_by_age, area.women_by_age,
+            kid,
+            area.men_by_age,
+            area.women_by_age,
         )
         assert parent.age == 30 or parent.age == 31
         assert parent.sex == 1
@@ -175,7 +179,9 @@ class TestAuxiliaryFunctions:
         for key in range(age_min_parent, age_max_parent + 1):
             del area.women_by_age[key]
         male_parent = household_distributor._get_matching_parent(
-            kid, area.men_by_age, area.women_by_age,
+            kid,
+            area.men_by_age,
+            area.women_by_age,
         )
         assert male_parent.sex == 0
         assert male_parent.age == 30 or male_parent.age == 31
@@ -184,7 +190,9 @@ class TestAuxiliaryFunctions:
         for key in range(age_min_parent, age_max_parent + 1):
             del area.men_by_age[key]
         none_parent = household_distributor._get_matching_parent(
-            kid, area.men_by_age, area.women_by_age,
+            kid,
+            area.men_by_age,
+            area.women_by_age,
         )
         assert none_parent == None
 
@@ -192,17 +200,23 @@ class TestAuxiliaryFunctions:
         area = create_area()
         parent = Person(age=20)
         kid = household_distributor._get_matching_second_kid(
-            parent, area.men_by_age, area.women_by_age,
+            parent,
+            area.men_by_age,
+            area.women_by_age,
         )
         assert kid.age == 0
         parent = Person(age=35)
         kid = household_distributor._get_matching_second_kid(
-            parent, area.men_by_age, area.women_by_age,
+            parent,
+            area.men_by_age,
+            area.women_by_age,
         )
         assert kid.age == 5 or kid.age == 4
         parent = Person(age=80)
         kid = household_distributor._get_matching_second_kid(
-            parent, area.men_by_age, area.women_by_age,
+            parent,
+            area.men_by_age,
+            area.women_by_age,
         )
         assert kid.age == 17
 
@@ -322,7 +336,11 @@ class TestIndividualHouseholdCompositions:
             assert (mother.age - kid_2.age <= 30) or (mother.age - kid_2.age <= 31)
             assert (father.age - mother.age) in [-1, 0, 1] or (
                 father.age - mother.age
-            ) in [-1, 0, 1,]
+            ) in [
+                -1,
+                0,
+                1,
+            ]
 
     def test__fill_nokids_households(self, household_distributor):
         area = create_area(age_min=18, people_per_age=10, age_max=60)
@@ -501,7 +519,12 @@ class TestMultipleHouseholdCompositions:
             "0 0 0 0 1": 1,
         }
         area.households = household_distributor.distribute_people_to_households(
-            area.men_by_age, area.women_by_age, area, composition_numbers, 5, 0,
+            area.men_by_age,
+            area.women_by_age,
+            area,
+            composition_numbers,
+            5,
+            0,
         )
         assert len(area.households) == 5
         total_people = 0
@@ -575,8 +598,7 @@ class TestMultipleHouseholdCompositions:
         assert total_people == 17
 
 
-
-#class TestSpecificArea:
+# class TestSpecificArea:
 #    """
 #    Let's carefully check the first output area of the test set.
 #    This area has no carehomes so we don't have to account for them.

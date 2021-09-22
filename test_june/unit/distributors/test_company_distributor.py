@@ -36,6 +36,7 @@ def test__company_distributor(super_area):
         assert len(company.people) == 1
         assert list(company.people)[0].sector == company.sector
 
+
 def test__company_and_work_super_area(full_world):
     has_people = False
     for person in full_world.people:

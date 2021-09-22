@@ -18,7 +18,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
 
     Parameters
     ----------
-    schools 
+    schools
         population object
     file_path
         path of the saved hdf5 file

@@ -13,9 +13,9 @@ class TestCareHome:
     @pytest.fixture(name="carehome")
     def create_carehome(self):
         return CareHome(
-            n_residents = 30,
-            n_workers = 8,
-            area = "asd",
+            n_residents=30,
+            n_workers=8,
+            area="asd",
         )
 
     def test__carehome_grouptype(self, carehome):
@@ -25,4 +25,3 @@ class TestCareHome:
         assert carehome.n_residents == 30
         assert carehome.area == "asd"
         assert carehome.n_workers == 8
-

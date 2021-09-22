@@ -64,12 +64,8 @@ class ActivityManager:
         self.all_activities = all_activities
 
         self.activity_to_super_group_dict = {
-            "medical_facility": activity_to_super_groups.get(
-                "medical_facility", []
-            ),
-            "primary_activity": activity_to_super_groups.get(
-                "primary_activity", []
-            ),
+            "medical_facility": activity_to_super_groups.get("medical_facility", []),
+            "primary_activity": activity_to_super_groups.get("primary_activity", []),
             "leisure": activity_to_super_groups.get("leisure", []),
             "residence": activity_to_super_groups.get("residence", []),
             "commute": activity_to_super_groups.get("commute", []),

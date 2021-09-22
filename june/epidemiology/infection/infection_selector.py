@@ -256,20 +256,22 @@ class InfectionSelector:
         infection_id:
             infection id
         """
-        health_index = self.health_index_generator(person, infection_id=self.infection_id)
+        health_index = self.health_index_generator(
+            person, infection_id=self.infection_id
+        )
         return Symptoms(health_index=health_index)
 
 
 class InfectionSelectors:
     def __init__(self, infection_selectors: list = None):
         self._infection_selectors = infection_selectors
-        self.infection_id_to_selector = self.make_dict() 
+        self.infection_id_to_selector = self.make_dict()
 
     def make_dict(self):
         """
         Makes two dicts:
         infection_type_id -> infection_class (needed for easier MPI comms)
-        infection_class -> infection_selector (needed to map infection to 
+        infection_class -> infection_selector (needed to map infection to
                             the class that creates infections)
         """
         if not self._infection_selectors:
@@ -302,4 +304,3 @@ class InfectionSelectors:
 
     def __getitem__(self, item):
         return self._infection_selectors[item]
-        

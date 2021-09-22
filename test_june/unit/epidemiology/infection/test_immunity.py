@@ -1,5 +1,6 @@
 from june.epidemiology.infection import Immunity
 
+
 class TestImmunity:
     def test_immunity(self):
         susceptibility_dict = {1: 0.3}

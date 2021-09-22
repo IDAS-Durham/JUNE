@@ -54,7 +54,8 @@ class Travel:
     ):
         logger.info(f"Initialising commute...")
         self._generate_cities(
-            world=world, city_super_areas_filename=self.city_super_areas_filename,
+            world=world,
+            city_super_areas_filename=self.city_super_areas_filename,
         )
         self._assign_mode_of_transport_to_people(world=world)
         commuters_dict = self._get_city_commuters(
@@ -67,7 +68,8 @@ class Travel:
             city_stations_filename=self.city_stations_filename,
         )
         self._distribute_commuters_to_stations(
-            world=world, commuters_dict=commuters_dict,
+            world=world,
+            commuters_dict=commuters_dict,
         )
         self._create_transports_in_cities(world)
 
@@ -107,8 +109,8 @@ class Travel:
                 logger.info(
                     f"Mode of transport allocated in {i} of {len(world.areas)} areas."
                 )
-            mode_of_transport_generator_area = mode_of_transport_generator.regional_gen_from_area(
-                area.name
+            mode_of_transport_generator_area = (
+                mode_of_transport_generator.regional_gen_from_area(area.name)
             )
             for person in area.people:
                 if person.age < 18 or person.age >= 65:
@@ -124,7 +126,7 @@ class Travel:
     def _get_city_commuters(self, world: World, city_stations_filename: str):
         """
         Gets internal and external commuters per city.
-        - If the person lives and works in the same city, then the person is assigned 
+        - If the person lives and works in the same city, then the person is assigned
           to be an internal commuter (think as the person takes the subway).
         - If the person lives outside their working city, then that person has to commute
           through a station, and is assigned to the city external commuters.
@@ -230,9 +232,11 @@ class Travel:
             for external_commuter_id in commuters["external"]:
                 external_commuter = world.people.get_from_id(external_commuter_id)
                 work_city = external_commuter.work_city.name
-                station = external_commuter.super_area.closest_inter_city_station_for_city[
-                    work_city
-                ]
+                station = (
+                    external_commuter.super_area.closest_inter_city_station_for_city[
+                        work_city
+                    ]
+                )
                 station.commuter_ids.add(external_commuter_id)
 
     def _create_transports_in_cities(

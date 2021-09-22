@@ -48,6 +48,7 @@ constant_config = (
     dir_pwd.parent.parent.parent / "configs/defaults/infection/InfectionXNExp.yaml"
 )
 
+
 @pytest.fixture(name="selector", scope="module")
 def create_selector():
     selector = InfectionSelector.from_file(config_filename=constant_config)
@@ -67,10 +68,10 @@ def create_geography():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
     return g.super_areas.members[0]
 
+
 class TestPolicy:
     def test__is_active(self):
         policy = Policy(start_time="2020-5-6", end_time="2020-6-6")
         assert policy.is_active(datetime(2020, 5, 6))
         assert policy.is_active(datetime(2020, 6, 5))
         assert not policy.is_active(datetime(2020, 6, 6))
-

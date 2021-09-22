@@ -1322,9 +1322,9 @@ class TestQuarantine:
             n_days=7,
             n_days_household=14,
             household_compliance=1.0,
-            vaccinated_household_compliance=0.0
+            vaccinated_household_compliance=0.0,
         )
-        pupil.age = 19 # such that they aren't caught in the under 18 rule
+        pupil.age = 19  # such that they aren't caught in the under 18 rule
         pupil.vaccinated = True
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
@@ -1369,9 +1369,9 @@ class TestQuarantine:
             n_days=7,
             n_days_household=14,
             household_compliance=1.0,
-            vaccinated_household_compliance=0.0
+            vaccinated_household_compliance=0.0,
         )
-        pupil.age = 17 
+        pupil.age = 17
         policies = Policies([quarantine])
         sim.activity_manager.policies = policies
         infect_person(worker, selector, "mild")

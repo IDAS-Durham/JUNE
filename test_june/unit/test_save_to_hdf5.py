@@ -34,7 +34,7 @@ from june.hdf5_savers import (
     save_social_venues_to_hdf5,
     generate_world_from_hdf5,
     save_data_for_domain_decomposition,
-    load_data_for_domain_decomposition
+    load_data_for_domain_decomposition,
 )
 from june.hdf5_savers import (
     load_geography_from_hdf5,
@@ -608,8 +608,12 @@ class TestSaveDataDomainDecomposition:
                 for area in super_area.areas
                 for school in area.schools
             )
-        total_commuters = sum([len(station.commuter_ids) for station in full_world.stations])
-        total_commuters += sum([len(city.internal_commuter_ids) for city in full_world.cities])
+        total_commuters = sum(
+            [len(station.commuter_ids) for station in full_world.stations]
+        )
+        total_commuters += sum(
+            [len(city.internal_commuter_ids) for city in full_world.cities]
+        )
         total_commuters_recovered = 0
         checks = False
         for super_area in n_pupils_sa.keys():

@@ -398,7 +398,7 @@ class TestPreviousInfectionSetter:
                     population.add(p)
         immunity = ImmunitySetter(previous_infections_dict=previous_infections_dict)
         immunity.set_previous_infections(population)
-        vaccinated = {"London" : {1: 0, 2 : 0} , "North East" : {1: 0, 2: 0}}
+        vaccinated = {"London": {1: 0, 2: 0}, "North East": {1: 0, 2: 0}}
         vaccinated_london = 0
         vaccinated_ne = 0
         for person in population:
@@ -419,10 +419,38 @@ class TestPreviousInfectionSetter:
             if b117_susc < 1.0:
                 assert b117_susc == 0.8
 
-        people_london1 = len([person for person in population if person.region.name == "London" if person.age < 50])
-        people_london2 = len([person for person in population if person.region.name == "London" if person.age >= 50])
-        people_ne1 = len([person for person in population if person.region.name == "North East" if person.age < 70])
-        people_ne2 = len([person for person in population if person.region.name == "North East" if person.age >= 70])
+        people_london1 = len(
+            [
+                person
+                for person in population
+                if person.region.name == "London"
+                if person.age < 50
+            ]
+        )
+        people_london2 = len(
+            [
+                person
+                for person in population
+                if person.region.name == "London"
+                if person.age >= 50
+            ]
+        )
+        people_ne1 = len(
+            [
+                person
+                for person in population
+                if person.region.name == "North East"
+                if person.age < 70
+            ]
+        )
+        people_ne2 = len(
+            [
+                person
+                for person in population
+                if person.region.name == "North East"
+                if person.age >= 70
+            ]
+        )
         assert np.isclose(vaccinated["London"][1] / people_london1, 0.5, rtol=0.1)
         assert np.isclose(vaccinated["London"][2] / people_london2, 0.2, rtol=0.1)
         assert np.isclose(vaccinated["North East"][1] / people_ne1, 0.3, rtol=0.1)

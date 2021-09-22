@@ -17,7 +17,7 @@ logger = logging.getLogger("universities")
 
 class University(Group):
     def __init__(
-        self, n_students_max=None, n_years=5, ukprn=None, area=None, coordinates = None
+        self, n_students_max=None, n_years=5, ukprn=None, area=None, coordinates=None
     ):
         self.n_students_max = n_students_max
         self.n_years = n_years
@@ -52,7 +52,7 @@ class University(Group):
             self.subgroups[year].append(person)
             person.subgroups.primary_activity = self.subgroups[year]
             if person.work_super_area is not None:
-                    person.work_super_area.remove_worker(person)
+                person.work_super_area.remove_worker(person)
         elif subgroup == "professors":
             self.subgroups[0].append(person)
             person.subgroups.primary_activity = self.subgroups[0]

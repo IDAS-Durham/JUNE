@@ -107,7 +107,12 @@ def run_simulator(selectors, test_results):
         policies=policies,
         checkpoint_save_path=test_results / "checkpoint_tests",
     )
-    seed = InfectionSeed.from_uniform_cases(sim.world, selectors[0], cases_per_capita = 50 / len(world.people), date="2020-03-01")
+    seed = InfectionSeed.from_uniform_cases(
+        sim.world,
+        selectors[0],
+        cases_per_capita=50 / len(world.people),
+        date="2020-03-01",
+    )
     seed.unleash_virus_per_day(time=0, date=pd.to_datetime("2020-03-01"))
     sim.run()
     return sim

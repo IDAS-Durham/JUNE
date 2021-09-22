@@ -10,10 +10,11 @@ class Pub(SocialVenue):
     max_size = 100
     pass
 
+
 class Pubs(SocialVenues):
     social_venue_class = Pub
     default_coordinates_filename = default_pub_coordinates_filename
 
+
 class PubDistributor(SocialVenueDistributor):
     default_config_filename = default_config_filename
-

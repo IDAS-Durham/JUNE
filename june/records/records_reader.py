@@ -34,10 +34,8 @@ class RecordReader:
 
     def get_regional_summary(self, summary_path):
         df = pd.read_csv(summary_path)
-        cols = [col for col in df.columns if col not in  ["time_stamp", "region"]]
-        self.aggregator = {
-            col: np.mean if "current" in col else sum for col in cols
-        }
+        cols = [col for col in df.columns if col not in ["time_stamp", "region"]]
+        self.aggregator = {col: np.mean if "current" in col else sum for col in cols}
         df = df.groupby(["region", "time_stamp"], as_index=False).agg(self.aggregator)
         df.set_index("time_stamp", inplace=True)
         df.index = pd.to_datetime(df.index)
@@ -60,7 +58,9 @@ class RecordReader:
         df = self.decode_bytes_columns(df)
         return df
 
-    def get_geography_df(self,):
+    def get_geography_df(
+        self,
+    ):
         areas_df = self.table_to_df("areas")
         super_areas_df = self.table_to_df("super_areas")
         regions_df = self.table_to_df("regions")
@@ -73,7 +73,10 @@ class RecordReader:
             suffixes=("_area", "_super_area"),
         )
         geography_df = geography_df.merge(
-            regions_df, how="inner", left_on="region_id", right_index=True,
+            regions_df,
+            how="inner",
+            left_on="region_id",
+            right_index=True,
         )
         return geography_df.rename(
             columns={geography_df.index.name: "area_id", "name": "name_region"}
@@ -86,7 +89,7 @@ class RecordReader:
         with_people=True,
         with_geography=True,
         people_df=None,
-        geography_df=None
+        geography_df=None,
     ):
         logger.info(f"Loading {table_name} table")
         df = self.table_to_df(table_name, index=index)

@@ -272,13 +272,13 @@ def load_stations_from_hdf5(
                     station = ExternalInterCityStation(
                         id=ids[k],
                         domain_id=super_areas_to_domain_dict[super_area],
-                        city=city
+                        city=city,
                     )
                 else:
                     station = ExternalCityStation(
                         id=ids[k],
                         domain_id=super_areas_to_domain_dict[super_area],
-                        city=city
+                        city=city,
                     )
                 for transport_id in transport_ids[k]:
                     if station_type == "inter":

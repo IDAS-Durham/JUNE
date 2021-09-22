@@ -48,7 +48,7 @@ class Epidemiology:
     ):
         self.infection_selectors = infection_selectors
         self.infection_seeds = infection_seeds
-        self.immunity_setter = immunity_setter 
+        self.immunity_setter = immunity_setter
         self.medical_care_policies = medical_care_policies
         self.medical_facilities = medical_facilities
 
@@ -134,7 +134,6 @@ class Epidemiology:
                 mate for mate in household.residents if mate != person
             )
         person.subgroups = Activities(None, None, None, None, None, None)
-
 
     @staticmethod
     def recover(person: "Person", record: Record = None):
