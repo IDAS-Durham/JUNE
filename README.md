@@ -75,4 +75,4 @@ pytest
 See our contributors guide [here](CONTRIBUTING).
 
 # Docs
-We have a documentation folder [here](docs/index.md)
+We have further documentation [here](docs/index.md).
