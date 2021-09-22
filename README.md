@@ -1,5 +1,5 @@
-![Python package](https://github.com/IDAS-Durham/JUNE/workflows/Python%20package/badge.svg?branch=master)
-[![codecov](https://codecov.io/gh/IDAS-Durham/JUNE/branch/master/graph/badge.svg?token=6TKUHtWxJZ)](https://codecov.io/gh/IDAS-Durham/JUNE)
+[![Python package](https://github.com/IDAS-Durham/JUNE-private/actions/workflows/python-publish.yml/badge.svg)](https://github.com/IDAS-Durham/JUNE-private/actions/workflows/python-publish.yml)
+[![codecov](https://codecov.io/gh/IDAS-Durham/JUNE-private/branch/master/graph/badge.svg?token=SYUJR5DPSZ)](https://codecov.io/gh/IDAS-Durham/JUNE-private)
 
 # JUNE: open-source individual-based epidemiology simulation
 

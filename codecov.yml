@@ -20,5 +20,4 @@ comment:
   require_changes: no
 
 ignore:
-  - "june_plots/**/*"
   - "june_tests/**/*"

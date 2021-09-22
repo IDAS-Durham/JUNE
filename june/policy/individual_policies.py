@@ -250,7 +250,10 @@ class SchoolQuarantine(StayHome):
             if self.isolate_on == "infection":
                 time_start_quarantine = person.infection.start_time
             else:
-                time_start_quarantine = person.infection.start_time + person.infection.time_of_symptoms_onset
+                if person.infection.time_of_symptoms_onset:
+                    time_start_quarantine = person.infection.start_time + person.infection.time_of_symptoms_onset
+                else:
+                    time_start_quarantine = None
             if time_start_quarantine is not None:
                 if time_start_quarantine < person.primary_activity.quarantine_starting_date:
                     # If the agent will show symptoms earlier than the quarantine time, update it.
