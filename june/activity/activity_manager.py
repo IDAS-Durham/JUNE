@@ -3,8 +3,6 @@ import yaml
 from datetime import datetime
 from itertools import chain
 from typing import List, Optional
-from collections import defaultdict
-import numpy as np
 from time import perf_counter
 from time import time as wall_clock
 
@@ -13,12 +11,6 @@ from june.exc import SimulatorError
 from june.groups import Subgroup
 from june.groups.leisure import Leisure
 from june.groups.travel import Travel
-from june.policy import (
-    IndividualPolicies,
-    LeisurePolicies,
-    MedicalCarePolicies,
-    InteractionPolicies,
-)
 from june.mpi_setup import (
     mpi_comm,
     mpi_size,
@@ -86,7 +78,7 @@ class ActivityManager:
             config = yaml.load(f, Loader=yaml.FullLoader)
         try:
             activity_to_super_groups = config["activity_to_super_groups"]
-        except:
+        except KeyError:
             logger.warning(
                 "Activity to groups in config is deprecated"
                 "please change it to activity_to_super_groups"
