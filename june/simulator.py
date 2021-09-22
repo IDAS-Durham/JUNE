@@ -314,9 +314,6 @@ class Simulator:
                     infection_ids += new_infection_ids
                     n_people += group_size
         tock_interaction = perf_counter()
-        # mpi_logger.info(
-        #    f"{self.timer.date},{mpi_rank},interaction,{tock_interaction-tick_interaction}"
-        # )
         rank_logger.info(
             f"Rank {mpi_rank} -- interaction -- {tock_interaction-tick_interaction}"
         )

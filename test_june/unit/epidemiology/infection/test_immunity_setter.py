@@ -286,7 +286,7 @@ class TestVaccinationSetter:
         for person in population:
             if person.age < 30:
                 if b117id in person.immunity.susceptibility_dict:
-                    assert person.immunity.get_susceptibility(b117id) == 0.0
+                    assert np.isclose(person.immunity.get_susceptibility(b117id), 0.2)
                     under30_sputnik += 1
                 if b117id in person.immunity.effective_multiplier_dict:
                     assert (
@@ -302,14 +302,14 @@ class TestVaccinationSetter:
 
             if person.age < 50:
                 if c19id in person.immunity.susceptibility_dict:
-                    assert person.immunity.get_susceptibility(c19id) == 0.0
+                    assert person.immunity.get_susceptibility(c19id) == 0.5
                     under50_pfizer += 1
                 if c19id in person.immunity.effective_multiplier_dict:
                     under50_pfizer_not += 1
                     assert person.immunity.get_effective_multiplier(c19id) == 0.5
             else:
                 if c19id in person.immunity.susceptibility_dict:
-                    assert person.immunity.get_susceptibility(c19id) == 0.0
+                    assert person.immunity.get_susceptibility(c19id) == 0.5
                     over50_pfizer += 1
                 if c19id in person.immunity.effective_multiplier_dict:
                     over50_pfizer_not += 1
@@ -319,11 +319,11 @@ class TestVaccinationSetter:
         over30 = len([person for person in population if person.age >= 30])
         under50 = len([person for person in population if person.age < 50])
         over50 = len([person for person in population if person.age >= 50])
-        assert np.isclose(under30_sputnik / under30, 0.3 * 0.8, rtol=1e-1)
+        assert np.isclose(under30_sputnik / under30, 0.3, rtol=1e-1)
         assert np.isclose(under30_sputnik_not / under30, 0.3, rtol=1e-1)
-        assert np.isclose(under50_pfizer / under50, 0.7 * 0.5, rtol=1e-1)
+        assert np.isclose(under50_pfizer / under50, 0.7, rtol=1e-1)
         assert np.isclose(under50_pfizer_not / under50, 0.7, rtol=1e-1)
-        assert np.isclose(over50_pfizer / over50, 0.5, rtol=1e-1)
+        assert np.isclose(over50_pfizer / over50, 1, rtol=1e-1)
         assert np.isclose(over50_pfizer_not / over50, 1, rtol=1e-1)
 
     def test__set_save_vaccine_type_record(self):
@@ -398,166 +398,32 @@ class TestPreviousInfectionSetter:
                     population.add(p)
         immunity = ImmunitySetter(previous_infections_dict=previous_infections_dict)
         immunity.set_previous_infections(population)
-        results = {
-            "London": {
-                "susceptibility": {
-                    Covid19.infection_id(): np.zeros(100),
-                    B117.infection_id(): np.zeros(100),
-                },
-                "multiplier": {
-                    Covid19.infection_id(): np.zeros(100),
-                    B117.infection_id(): np.zeros(100),
-                },
-            },
-            "North East": {
-                "susceptibility": {
-                    Covid19.infection_id(): np.zeros(100),
-                    B117.infection_id(): np.zeros(100),
-                },
-                "multiplier": {
-                    Covid19.infection_id(): np.zeros(100),
-                    B117.infection_id(): np.zeros(100),
-                },
-            },
-        }
+        vaccinated = {"London" : {1: 0, 2 : 0} , "North East" : {1: 0, 2: 0}}
+        vaccinated_london = 0
+        vaccinated_ne = 0
         for person in population:
-            for inf in [Covid19, B117]:
-                if person.immunity.is_immune(inf.infection_id()):
-                    results[person.region.name]["susceptibility"][inf.infection_id()][
-                        person.age
-                    ] += 1
-                multi = person.immunity.get_effective_multiplier(inf.infection_id())
-                if multi != 1:
-                    if inf == Covid19:
-                        assert multi == 0.6
+            c19_susc = person.immunity.get_susceptibility(Covid19.infection_id())
+            b117_susc = person.immunity.get_susceptibility(B117.infection_id())
+            if c19_susc < 1.0:
+                assert c19_susc == 0.5
+                if person.region.name == "London":
+                    if person.age < 50:
+                        vaccinated[person.region.name][1] += 1
                     else:
-                        assert multi == 0.3
-                    results[person.region.name]["multiplier"][inf.infection_id()][
-                        person.age
-                    ] += 1
-        people_london = len(
-            [person for person in population if person.region.name == "London"]
-        )
-        people_ne = len(
-            [person for person in population if person.region.name == "North East"]
-        )
+                        vaccinated[person.region.name][2] += 1
+                else:
+                    if person.age < 70:
+                        vaccinated[person.region.name][1] += 1
+                    else:
+                        vaccinated[person.region.name][2] += 1
+            if b117_susc < 1.0:
+                assert b117_susc == 0.8
 
-        # susc. covid 19
-        assert np.isclose(
-            sum(results["London"]["susceptibility"][Covid19.infection_id()][:50])
-            / (0.5 * people_london),
-            0.5 * 0.5,
-            atol=0.0,
-            rtol=0.1,
-        )
-        assert np.isclose(
-            sum(results["London"]["susceptibility"][Covid19.infection_id()][50:])
-            / (0.5 * people_london),
-            0.2 * 0.5,
-            atol=0.0,
-            rtol=0.1,
-        )
-        assert np.isclose(
-            sum(results["North East"]["susceptibility"][Covid19.infection_id()][:70])
-            / (0.7 * people_ne),
-            0.3 * 0.5,
-            atol=0.0,
-            rtol=0.1,
-        )
-        assert np.isclose(
-            sum(results["North East"]["susceptibility"][Covid19.infection_id()][70:])
-            / (0.3 * people_ne),
-            0.8 * 0.5,
-            atol=0.0,
-            rtol=0.1,
-        )
-
-        # susc. b117
-        assert np.isclose(
-            sum(results["London"]["susceptibility"][B117.infection_id()][:50])
-            / (0.5 * people_london),
-            0.5 * 0.2,
-            atol=0.0,
-            rtol=0.1,
-        )
-        assert np.isclose(
-            sum(results["London"]["susceptibility"][B117.infection_id()][50:])
-            / (0.5 * people_london),
-            0.2 * 0.2,
-            atol=0.0,
-            rtol=0.1,
-        )
-        assert np.isclose(
-            sum(results["North East"]["susceptibility"][B117.infection_id()][:70])
-            / (0.7 * people_ne),
-            0.3 * 0.2,
-            atol=0.0,
-            rtol=0.1,
-        )
-        assert np.isclose(
-            sum(results["North East"]["susceptibility"][B117.infection_id()][70:])
-            / (0.3 * people_ne),
-            0.8 * 0.2,
-            atol=0.0,
-            rtol=0.1,
-        )
-
-        # multis covid19
-        assert np.isclose(
-            sum(results["London"]["multiplier"][Covid19.infection_id()][:50])
-            / (0.5 * people_london),
-            0.5,
-            atol=0.0,
-            rtol=0.1,
-        )
-        assert np.isclose(
-            sum(results["London"]["multiplier"][Covid19.infection_id()][50:])
-            / (0.5 * people_london),
-            0.2,
-            atol=0.0,
-            rtol=0.1,
-        )
-        assert np.isclose(
-            sum(results["North East"]["multiplier"][Covid19.infection_id()][:70])
-            / (0.7 * people_ne),
-            0.3,
-            atol=0.0,
-            rtol=0.1,
-        )
-        assert np.isclose(
-            sum(results["North East"]["multiplier"][Covid19.infection_id()][70:])
-            / (0.3 * people_ne),
-            0.8,
-            atol=0.0,
-            rtol=0.1,
-        )
-
-        # multis b117
-        assert np.isclose(
-            sum(results["London"]["multiplier"][B117.infection_id()][:50])
-            / (0.5 * people_london),
-            0.5,
-            atol=0.0,
-            rtol=0.1,
-        )
-        assert np.isclose(
-            sum(results["London"]["multiplier"][B117.infection_id()][50:])
-            / (0.5 * people_london),
-            0.2,
-            atol=0.0,
-            rtol=0.1,
-        )
-        assert np.isclose(
-            sum(results["North East"]["multiplier"][B117.infection_id()][:70])
-            / (0.7 * people_ne),
-            0.3,
-            atol=0.0,
-            rtol=0.1,
-        )
-        assert np.isclose(
-            sum(results["North East"]["multiplier"][B117.infection_id()][70:])
-            / (0.3 * people_ne),
-            0.8,
-            atol=0.0,
-            rtol=0.1,
-        )
+        people_london1 = len([person for person in population if person.region.name == "London" if person.age < 50])
+        people_london2 = len([person for person in population if person.region.name == "London" if person.age >= 50])
+        people_ne1 = len([person for person in population if person.region.name == "North East" if person.age < 70])
+        people_ne2 = len([person for person in population if person.region.name == "North East" if person.age >= 70])
+        assert np.isclose(vaccinated["London"][1] / people_london1, 0.5, rtol=0.1)
+        assert np.isclose(vaccinated["London"][2] / people_london2, 0.2, rtol=0.1)
+        assert np.isclose(vaccinated["North East"][1] / people_ne1, 0.3, rtol=0.1)
+        assert np.isclose(vaccinated["North East"][2] / people_ne2, 0.8, rtol=0.1)

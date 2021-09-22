@@ -28,11 +28,11 @@ class ImmunitySetter:
         susceptibility_dict: dict = default_susceptibility_dict,
         multiplier_dict: dict = default_multiplier_dict,
         vaccination_dict: dict = None,
-        previous_infections_dict = None,
+        previous_infections_dict=None,
         multiplier_by_comorbidity: Optional[dict] = None,
         comorbidity_prevalence_reference_population: Optional[dict] = None,
         susceptibility_mode="average",
-        record:"Record" = None,
+        record: "Record" = None,
     ):
         """
         Sets immnuity parameters to different viruses.
@@ -96,7 +96,9 @@ class ImmunitySetter:
         else:
             self.multiplier_dict = multiplier_dict
         self.vaccination_dict = self._read_vaccination_dict(vaccination_dict)
-        self.previous_infections_dict = self._read_previous_infections_dict(previous_infections_dict)
+        self.previous_infections_dict = self._read_previous_infections_dict(
+            previous_infections_dict
+        )
         self.multiplier_by_comorbidity = multiplier_by_comorbidity
         if comorbidity_prevalence_reference_population is not None:
             self.comorbidity_prevalence_reference_population = (
@@ -114,10 +116,14 @@ class ImmunitySetter:
         cls,
         susceptibility_dict: dict = default_susceptibility_dict,
         multiplier_dict: dict = default_multiplier_dict,
+        vaccination_dict: dict = None,
+        previous_infections_dict: dict = None,
         comorbidity_multipliers_path: Optional[str] = None,
         male_comorbidity_reference_prevalence_path: Optional[str] = None,
         female_comorbidity_reference_prevalence_path: Optional[str] = None,
-    ) -> "EffectiveMultiplierSetter":
+        susceptibility_mode="average",
+        record:"Record"=None,
+    ) -> "ImmunitySetter":
         if comorbidity_multipliers_path is not None:
             with open(comorbidity_multipliers_path) as f:
                 comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
@@ -135,10 +141,15 @@ class ImmunitySetter:
         else:
             comorbidity_multipliers = None
             comorbidity_prevalence_reference_population = None
-        return EffectiveMultiplierSetter(
+        return ImmunitySetter(
+            susceptibility_dict=susceptibility_dict,
             multiplier_dict=multiplier_dict,
+            vaccination_dict=vaccination_dict,
+            previous_infections_dict=previous_infections_dict,
             multiplier_by_comorbidity=comorbidity_multipliers,
             comorbidity_prevalence_reference_population=comorbidity_prevalence_reference_population,
+            susceptibility_mode=susceptibility_mode,
+            record=record,
         )
 
     def set_immunity(self, population):
@@ -281,7 +292,7 @@ class ImmunitySetter:
         """
         Sets previous vaccination on the starting population.
         """
-        vaccine_type =  []  
+        vaccine_type = []
         susccesfully_vaccinated = np.zeros(len(population), dtype=int)
         if not self.vaccination_dict:
             return
@@ -304,18 +315,21 @@ class ImmunitySetter:
                 vdata = self.vaccination_dict[vaccine]
                 for inf_id, inf_data in vdata["infections"].items():
                     person.immunity.add_multiplier(
-                        inf_id, 1. - inf_data["symptomatic_efficacy"][age]
+                        inf_id, 1.0 - inf_data["symptomatic_efficacy"][age]
                     )
-                    if random() < inf_data["sterilisation_efficacy"][age]:
-                        person.immunity.susceptibility_dict[inf_id] = 0.0
-                        susccesfully_vaccinated[i] = 1
-                person.vaccinated = True 
+                    person.immunity.susceptibility_dict[inf_id] = (
+                        1.0 - inf_data["sterilisation_efficacy"][age]
+                    )
+                    susccesfully_vaccinated[i] = 1
+                person.vaccinated = True
                 vaccine_type.append(vaccine)
             else:
-                vaccine_type.append('none')
+                vaccine_type.append("none")
         if self.record is not None:
-            self.record.statics['people'].extra_str_data['vaccine_type'] = vaccine_type
-            self.record.statics['people'].extra_int_data['susccesfully_vaccinated'] = susccesfully_vaccinated
+            self.record.statics["people"].extra_str_data["vaccine_type"] = vaccine_type
+            self.record.statics["people"].extra_int_data[
+                "susccesfully_vaccinated"
+            ] = susccesfully_vaccinated
 
     def set_previous_infections(self, population):
         """
@@ -325,15 +339,20 @@ class ImmunitySetter:
         for i, person in enumerate(population):
             if person.region.name not in self.previous_infections_dict["ratios"]:
                 continue
-            ratio = self.previous_infections_dict["ratios"][person.region.name][person.age]
+            ratio = self.previous_infections_dict["ratios"][person.region.name][
+                person.age
+            ]
             if random() < ratio:
-                for inf_id, inf_data in self.previous_infections_dict["infections"].items():
-                    person.immunity.add_multiplier(inf_id, inf_data["symptomatic_efficacy"])
-                    if random() < inf_data["sterilisation_efficacy"]:
-                        person.immunity.add_immunity([inf_id])
-                        previously_infected[i] = 1
+                for inf_id, inf_data in self.previous_infections_dict[
+                    "infections"
+                ].items():
+                    person.immunity.add_multiplier(
+                        inf_id, 1.0 - inf_data["symptomatic_efficacy"]
+                    )
+                    person.immunity.susceptibility_dict[inf_id] = (
+                        1.0 - inf_data["sterilisation_efficacy"]
+                    )
         if self.record is not None:
-            self.record.statics['people'].extra_int_data['previously_infected'] = previously_infected
-
-
-
+            self.record.statics["people"].extra_int_data[
+                "previously_infected"
+            ] = previously_infected
