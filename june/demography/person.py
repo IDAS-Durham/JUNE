@@ -1,11 +1,15 @@
 from itertools import count
 from random import choice
 from recordclass import dataobject
-import numpy as np
-from datetime import datetime
-from typing import Optional
 
 from june.epidemiology.infection import Infection, Immunity
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.geography.geography import Area
+    from june.geography.geography import SuperArea
+    from june.groups.travel.mode_of_transport import ModeOfTransport
+    from june.policy.vaccine_policy import VaccinePlan
 
 
 class Activities(dataobject):
@@ -157,14 +161,14 @@ class Person(dataobject):
     def super_area(self):
         try:
             return self.area.super_area
-        except:
+        except Exception:
             return None
 
     @property
     def region(self):
         try:
             return self.super_area.region
-        except:
+        except Exception:
             return None
 
     @property
@@ -193,5 +197,5 @@ class Person(dataobject):
     def socioeconomic_index(self):
         try:
             return self.area.socioeconomic_index
-        except:
+        except Exception:
             return
