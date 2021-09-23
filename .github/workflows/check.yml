@@ -36,7 +36,6 @@ jobs:
         # flake8 .
         # Temporarily adding individual june folders to this to avoid drastic changes
         flake8 june/activity
-        flake8 june/box
         flake8 june/configs
         flake8 june/data_formatting
         flake8 june/demography
