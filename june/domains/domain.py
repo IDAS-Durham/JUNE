@@ -1,8 +1,5 @@
-import numpy as np
-from typing import List
 from itertools import count
 
-from june.demography import Population
 from june.hdf5_savers import generate_domain_from_hdf5
 
 
