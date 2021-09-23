@@ -25,3 +25,4 @@ dist/
 *.prof
 *.svg
 test_results
+.venv
