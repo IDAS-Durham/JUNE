@@ -13,6 +13,10 @@ from june.demography import Person, Population
 from june.geography import Geography, Areas, SuperAreas
 from june.utils import random_choice_numba
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.groups.company import CompanyError
+
 default_workflow_file = paths.data_path / "input/work/work_flow.csv"
 default_sex_per_sector_per_superarea_file = (
     paths.data_path / "input/work/industry_by_sex_ew.csv"
