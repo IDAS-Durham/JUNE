@@ -1,7 +1,6 @@
 import googlemaps
 import time
 
-import responses
 import requests
 
 
@@ -27,7 +26,7 @@ class APICall:
         try:
             response = requests.get(url)
             return response
-        except:
+        except Exception:
             raise Exception("Error: GET request failed")
 
     def process_results(self, results):
@@ -48,8 +47,7 @@ class APICall:
         try:
             next_page_token = resp_json_payload["next_page_token"]
             return [locations, names, reviews, ratings, next_page_token]
-
-        except:
+        except Exception:
             print("No more next page tokens")
             return [locations, names, reviews, ratings]
 
@@ -171,12 +169,12 @@ class APICall:
                     # language-"en-UK"
                 )
 
-        except:
+        except Exception:
             raise Exception("Error: GET request failed")
 
         results = call["results"]
 
-        locations, names, reviews, ratings = process_results(results)
+        locations, names, reviews, ratings = self.process_results(results)
 
         return [locations, names, reviews, ratings]
 
@@ -191,6 +189,6 @@ class APICall:
 
         dist = self.client.distance_matrix(origin_location, destination_location, mode)
 
-        ## TODO finish this if needed
+        # TODO finish this if needed
 
         return dist

@@ -316,18 +316,18 @@ def people_compositions2households(comp_people_df):
 
     # STUDENTS
     # iv) Students live in houses of 3 or 4
-    households_df[f"0 3 0 0"] = (
+    households_df["0 3 0 0"] = (
         comp_people_df["Students"] // 3 - comp_people_df["Students"] % 3
     ).apply(lambda x: max(x, 0))
 
-    households_df[f"0 4 0 0"] = comp_people_df["Students"] % 3
+    households_df["0 4 0 0"] = comp_people_df["Students"] % 3
 
     # OLD OTHER
     # v) old other live in houses of 2 or 3
-    households_df[f"0 0 0 2"] += (
+    households_df["0 0 0 2"] += (
         comp_people_df["Old_Unclassified"] // 2 - comp_people_df["Old_Unclassified"] % 2
     ).apply(lambda x: max(x, 0))
-    households_df[f"0 0 0 3"] = comp_people_df["Old_Unclassified"] % 2
+    households_df["0 0 0 3"] = comp_people_df["Old_Unclassified"] % 2
 
     return households_df
 
@@ -402,7 +402,6 @@ def downsample_social_matrix(matrix):
 def reformat_social_matrices(raw_mixing_dir, processed_mixing_dir):
     social_matrices = ["all_school", "physical_school", "conversational_school"]
 
-    reformat_social_matrices = []
     for sm in social_matrices:
         matrix = pd.read_excel(
             os.path.join(
