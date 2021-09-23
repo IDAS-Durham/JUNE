@@ -40,6 +40,7 @@ jobs:
         flake8 june/data_formatting
         flake8 june/demography
         flake8 june/distributors
+        flake8 june/domains
     - name: Get JUNE data
       run: bash scripts/get_june_data.sh
 
