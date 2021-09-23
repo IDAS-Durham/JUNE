@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
-import yaml
-from typing import Optional, List
 
-from june.epidemiology.infection.symptom_tag import SymptomTag
 from june import paths
-from . import Data2Rates
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.demography.person import Person
 
 _sex_short_to_long = {"m": "male", "f": "female"}
 index_to_maximum_symptoms_tag = {
@@ -150,7 +150,6 @@ class HealthIndexGenerator:
             )  # dies in the ward
             p[population][sex][age][7] = icu_dead_rate
             # renormalise all but death rates (since those are the most certain ones)
-            total = p[population][sex][age].sum()
             to_keep_sum = p[population][sex][age][5:].sum()
             to_adjust_sum = p[population][sex][age][:5].sum()
             target_adjust_sum = max(1 - to_keep_sum, 0)

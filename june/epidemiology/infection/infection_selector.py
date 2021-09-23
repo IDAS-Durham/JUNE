@@ -1,18 +1,19 @@
-from enum import IntEnum
-
-import numpy as np
-from itertools import count
 import yaml
 
 from june import paths
 from .health_index.health_index import HealthIndexGenerator
-from .health_index import Data2Rates
 from . import Infection, Covid19
-from .symptoms import Symptoms, SymptomTag
+from .symptoms import Symptoms
 from .trajectory_maker import TrajectoryMakers
 from .transmission import TransmissionConstant, TransmissionGamma
 from .transmission_xnexp import TransmissionXNExp
 from .trajectory_maker import CompletionTime
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.demography import Person
+    from .transmission import Transmission
+    from june.epidemiology.infection.symptom_tag import SymptomTag
 
 default_transmission_config_path = (
     paths.configs_path / "defaults/epidemiology/infection/transmission/covid19.yaml"
@@ -89,7 +90,6 @@ class InfectionSelector:
         time:
             time at which infection happens
         """
-        infection_id = self.infection_id
         person.infection = self._make_infection(person, time)
         person.immunity.add_immunity(person.infection.immunity_ids())
 
@@ -196,7 +196,7 @@ class InfectionSelector:
     def _select_transmission(
         self,
         time_to_symptoms_onset: float,
-        max_symptoms_tag: "SymptomsTag",
+        max_symptoms_tag: "SymptomTag",
     ) -> "Transmission":
         """
         Selects the transmission type specified by the user in the init,

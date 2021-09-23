@@ -41,6 +41,7 @@ jobs:
         flake8 june/demography
         flake8 june/distributors
         flake8 june/domains
+        flake8 june/epidemiology
     - name: Get JUNE data
       run: bash scripts/get_june_data.sh
 
