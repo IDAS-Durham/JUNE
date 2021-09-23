@@ -9,6 +9,11 @@ from june import paths
 from june.geography import SuperAreas, SuperArea
 from june.groups import Hospitals
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.demography import Person
+    from june.groups import Hospital
+
 logger = logging.getLogger("hospital_distributor")
 
 default_config_filename = (
@@ -102,10 +107,10 @@ class HospitalDistributor:
         super_areas:
             object containing all the super areas to distribute medics
         """
-        logger.info(f"Distributing medics to hospitals")
+        logger.info("Distributing medics to hospitals")
         for super_area in super_areas:
             self.distribute_medics_to_hospitals(super_area)
-        logger.info(f"Medics distributed to hospitals")
+        logger.info("Medics distributed to hospitals")
 
     def get_hospitals_in_super_area(self, super_area: SuperArea) -> List["Hospital"]:
         """

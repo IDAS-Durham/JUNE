@@ -1,11 +1,10 @@
 from typing import List
 from collections import defaultdict
 import logging
-from random import shuffle
 import numpy as np
 
 from june.groups import University
-from june.geography import Area, Areas
+from june.geography import Areas
 from june.demography import Population
 
 logger = logging.getLogger("university_distributor")
@@ -63,7 +62,7 @@ class UniversityDistributor:
         For each university, search for students in nearby areas and allocate them to
         the university.
         """
-        logger.info(f"Distributing students to universities")
+        logger.info("Distributing students to universities")
         need_more_students = True
         distance_increment = 10
         distance = 5
