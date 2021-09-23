@@ -38,6 +38,7 @@ jobs:
         flake8 june/activity
         flake8 june/configs
         flake8 june/data_formatting
+        flake8 june/demography
     - name: Get JUNE data
       run: bash scripts/get_june_data.sh
 

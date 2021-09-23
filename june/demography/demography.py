@@ -2,8 +2,6 @@ from typing import List, Dict, Optional
 
 import numpy as np
 import pandas as pd
-import h5py
-import yaml
 
 from june import paths
 from june.demography import Person
@@ -405,8 +403,8 @@ def _load_age_and_sex_generators(
     )  # pd MultiIndex!!!
     ethnicity_structure_df = ethnicity_structure_df.loc[pd.IndexSlice[area_names]]
     ethnicity_structure_df.sort_index(level=0, inplace=True)
-    ## "sort" is required as .loc slicing a multi_index df doesn't work as expected --
-    ## it preserves original order, and ignoring "repeat slices".
+    # "sort" is required as .loc slicing a multi_index df doesn't work as expected --
+    # it preserves original order, and ignoring "repeat slices".
     # TODO fix this to use proper complete indexing.
 
     ret = {}
