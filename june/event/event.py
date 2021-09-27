@@ -70,7 +70,7 @@ class Events:
         return cls(events)
 
     def init_events(self, world):
-        logger.info(f"Initialising events...")
+        logger.info("Initialising events...")
         for event in self.events:
             event.initialise(world=world)
             logger.info(f"Event {event.__class__.__name__} initialised")
