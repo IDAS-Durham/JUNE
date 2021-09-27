@@ -1,21 +1,11 @@
 import logging
 import yaml
-from random import randint
-from typing import List
-from enum import IntEnum
-from itertools import chain
 import numpy as np
-from collections import defaultdict
-
-logger = logging.getLogger("travel")
 
 from june.paths import configs_path, data_path
-from june.geography import Cities, Stations, Station
-from june.groups import Group, Supergroup
+from june.geography import Cities, Stations
 from june.world import World
 from .transport import (
-    Transport,
-    Transports,
     CityTransport,
     CityTransports,
     InterCityTransport,
@@ -23,6 +13,8 @@ from .transport import (
 )
 from .mode_of_transport import ModeOfTransport, ModeOfTransportGenerator
 
+
+logger = logging.getLogger("travel")
 default_cities_filename = data_path / "input/geography/cities_per_super_area_ew.csv"
 
 default_city_stations_config_filename = (
@@ -52,7 +44,7 @@ class Travel:
     def initialise_commute(
         self, world: World, maximum_number_commuters_per_city_station=200000
     ):
-        logger.info(f"Initialising commute...")
+        logger.info("Initialising commute...")
         self._generate_cities(
             world=world,
             city_super_areas_filename=self.city_super_areas_filename,
@@ -96,13 +88,13 @@ class Travel:
                 f"This world has {len(city_names)} cities, with names\n" f"{city_names}"
             )
         else:
-            logger.info(f"This world has no important cities in it")
+            logger.info("This world has no important cities in it")
 
     def _assign_mode_of_transport_to_people(self, world: World):
         """
         Assigns a mode of transport (public or not) to the world's population.
         """
-        logger.info(f"Determining people mode of transport")
+        logger.info("Determining people mode of transport")
         mode_of_transport_generator = ModeOfTransportGenerator.from_file()
         for i, area in enumerate(world.areas):
             if i % 4000 == 0:
@@ -121,7 +113,7 @@ class Travel:
                     person.mode_of_transport = (
                         mode_of_transport_generator_area.weighted_random_choice()
                     )
-        logger.info(f"Mode of transport determined for everyone.")
+        logger.info("Mode of transport determined for everyone.")
 
     def _get_city_commuters(self, world: World, city_stations_filename: str):
         """
@@ -141,7 +133,7 @@ class Travel:
         for city in world.cities:
             if city.name in cities_with_stations:
                 ret[city.name] = {"internal": [], "external": []}
-        logger.info(f"Assigning commuters to stations...")
+        logger.info("Assigning commuters to stations...")
         for i, person in enumerate(world.people):
             if person.mode_of_transport.is_public:
                 if (
@@ -158,7 +150,7 @@ class Travel:
                 logger.info(
                     f"Assigned {i} of {len(world.people)} potential commuters..."
                 )
-        logger.info(f"Commuters assigned")
+        logger.info("Commuters assigned")
         for key, value in ret.items():
             internal = value["internal"]
             external = value["external"]
@@ -246,7 +238,7 @@ class Travel:
         Creates city transports and inter city transports in CityStations and
         InterCityStations respectively.
         """
-        logger.info(f"Creating transport units for the population")
+        logger.info("Creating transport units for the population")
         world.city_transports = CityTransports([])
         world.inter_city_transports = InterCityTransports([])
         for city in world.cities:
@@ -300,4 +292,4 @@ class Travel:
                 logger.info(
                     f"City {city.name} has {number_inter_city_transports_total} inter-city train carriages."
                 )
-        logger.info(f"Cities' transport initialised")
+        logger.info("Cities' transport initialised")

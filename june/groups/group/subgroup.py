@@ -1,7 +1,6 @@
 from june.demography.person import Person
 from .abstract import AbstractGroup
 from typing import List
-from itertools import chain
 
 
 class Subgroup(AbstractGroup):
@@ -38,10 +37,6 @@ class Subgroup(AbstractGroup):
     @property
     def recovered(self):
         return self._collate("recovered")
-
-    @property
-    def dead(self):
-        return self._collate("dead")
 
     @property
     def dead(self):

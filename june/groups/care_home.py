@@ -3,7 +3,6 @@ import yaml
 from enum import IntEnum
 from typing import List
 import numpy as np
-import h5py
 
 import pandas as pd
 

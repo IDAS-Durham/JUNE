@@ -3,7 +3,6 @@ from enum import IntEnum
 from random import shuffle
 from june import paths
 from typing import List
-import h5py
 import yaml
 
 import numpy as np
@@ -162,9 +161,6 @@ class Companies(Supergroup):
         Parameters
         ----------
         """
-        with open(default_config_filename) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
-
         size_per_superarea_df = pd.read_csv(size_nr_per_super_area_file, index_col=0)
         sector_per_superarea_df = pd.read_csv(
             sector_nr_per_super_area_file, index_col=0

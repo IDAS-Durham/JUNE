@@ -1,6 +1,9 @@
 from collections import defaultdict
-import numpy as np
 import numba as nb
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.groups.group.group import Group
 
 
 @nb.jit(nopython=True)
@@ -140,7 +143,7 @@ class InteractiveGroup:
             lockdown_tier = self.super_area.region.policy["lockdown_tier"]
             if lockdown_tier is None:
                 lockdown_tier = 1
-        except:
+        except Exception:
             lockdown_tier = 1
         if int(lockdown_tier) == 4:
             tier_reduction = 0.5
