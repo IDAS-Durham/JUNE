@@ -1,8 +1,6 @@
 name: Run linting and sanity checks
 
-on:
-  push:
-  pull_request:
+on: [push, pull_request]
 
 jobs:
   build:
