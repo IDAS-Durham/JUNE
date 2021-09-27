@@ -5,7 +5,7 @@ from typing import List, Optional
 from enum import IntEnum
 from sklearn.neighbors import BallTree
 
-from june.groups import Supergroup, Group, Subgroup
+from june.groups import Supergroup, Group
 from june.geography import Area, Areas, SuperArea, SuperAreas, Geography
 from june.mpi_setup import mpi_rank
 

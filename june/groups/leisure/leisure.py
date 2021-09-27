@@ -1,11 +1,10 @@
 import numpy as np
-from numba import jit
 import yaml
 import logging
-from random import random, randint
-from typing import List, Dict
+from random import random
+from typing import Dict
 from june.demography import Person
-from june.geography import Geography, SuperAreas, Areas, Regions, Region
+from june.geography import SuperAreas, Areas, Regions, Region
 from june.groups.leisure import (
     SocialVenueDistributor,
     PubDistributor,
@@ -14,8 +13,6 @@ from june.groups.leisure import (
     ResidenceVisitsDistributor,
     GymDistributor,
 )
-from june.groups.leisure import Pubs, Cinemas, Groceries
-from june.groups import Household, ExternalSubgroup, Households
 from june.utils import random_choice_numba
 from june import paths
 
@@ -94,7 +91,7 @@ def generate_leisure_for_config(world, config_filename=default_config_filename):
         config = yaml.load(f, Loader=yaml.FullLoader)
     try:
         list_of_leisure_groups = config["activity_to_super_groups"]["leisure"]
-    except:
+    except Exception:
         list_of_leisure_groups = config["activity_to_groups"]["leisure"]
     leisure_instance = generate_leisure_for_world(list_of_leisure_groups, world)
     return leisure_instance

@@ -1,8 +1,6 @@
 import re
 from collections import OrderedDict
 
-from june.exc import GroupException
-
 
 class Supergroup:
     """

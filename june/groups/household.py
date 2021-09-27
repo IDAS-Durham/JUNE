@@ -2,14 +2,11 @@ from enum import IntEnum
 from collections import defaultdict
 import numpy as np
 from random import random
-import h5py
 
-from june.groups import Group, Supergroup, ExternalSubgroup, ExternalGroup
+from june.groups import Group, Supergroup
 from june.groups.group.interactive import InteractiveGroup
 
-from enum import IntEnum
 from typing import List
-from recordclass import dataobject
 
 
 class Household(Group):

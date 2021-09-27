@@ -3,14 +3,11 @@ import logging
 from enum import IntEnum
 from june import paths
 from typing import List, Tuple, Optional
-from random import random
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
 from june.groups import Group, Supergroup, ExternalGroup, ExternalSubgroup
-from june.geography import SuperArea
-from june.epidemiology.infection import SymptomTag
 from june.exc import HospitalError
 
 logger = logging.getLogger("hospitals")
@@ -104,7 +101,7 @@ class AbstractHospital:
             self.remove_from_icu(person)
         else:
             raise HospitalError(
-                f"Trying to release patient not located in icu or ward."
+                "Trying to release patient not located in icu or ward."
             )
 
 

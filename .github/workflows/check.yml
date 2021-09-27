@@ -43,6 +43,7 @@ jobs:
         flake8 june/epidemiology
         flake8 june/event
         flake8 june/geography
+        flake8 june/groups
     - name: Get JUNE data
       run: bash scripts/get_june_data.sh
 

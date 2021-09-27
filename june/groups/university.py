@@ -5,7 +5,7 @@ from typing import List
 import logging
 
 from june.groups import Group, Subgroup, Supergroup
-from june.geography import SuperAreas, Areas, Geography
+from june.geography import Areas, Geography
 from june.paths import data_path
 
 age_to_years = {19: 1, 20: 2, 21: 3, 22: 4, 23: 5}

@@ -1,9 +1,7 @@
 import logging
-import yaml
 import numba as nb
 import math
 from enum import IntEnum
-from itertools import count
 from copy import deepcopy
 from june import paths
 from typing import List, Tuple, Dict, Optional
@@ -275,8 +273,6 @@ class Schools(Supergroup):
             school_df = school_df[school_df["oa"].isin(area_names)]
         school_df.reset_index(drop=True, inplace=True)
         logger.info(f"There are {len(school_df)} schools in this geography.")
-        with open(config_file) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
         return cls.build_schools_for_areas(areas, school_df)  # , **config,)
 
     @classmethod
@@ -522,7 +518,7 @@ class InteractiveSchool(InteractiveGroup):
             lockdown_tier = self.super_area.region.policy["lockdown_tier"]
             if lockdown_tier is None:
                 lockdown_tier = 1
-        except:
+        except Exception:
             lockdown_tier = 1
         if int(lockdown_tier) == 4:
             tier_reduction = 0.5

@@ -1,4 +1,4 @@
-from .social_venue import SocialVenue, SocialVenues, SocialVenueError
+from .social_venue import SocialVenue, SocialVenues
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
 
