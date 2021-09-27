@@ -3,14 +3,13 @@ from typing import List
 import numpy as np
 from random import randint
 from sklearn.neighbors import BallTree
-from itertools import chain, count
-from collections import defaultdict
+from itertools import count
 import logging
 
 from june.paths import data_path
 from june.geography import SuperArea, Geography
 from june.groups.group import Supergroup
-from june.groups.group.external import ExternalSubgroup, ExternalGroup
+from june.groups.group.external import ExternalGroup
 
 default_cities_filename = data_path / "input/geography/cities_per_super_area_ew.csv"
 

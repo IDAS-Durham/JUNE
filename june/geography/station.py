@@ -1,14 +1,11 @@
 from typing import List
-import pandas as pd
 import numpy as np
-import math
 import logging
 from random import randint
 from sklearn.neighbors import BallTree
-from itertools import chain, count
-from collections import defaultdict
+from itertools import count
 
-from june.paths import data_path, configs_path
+from june.paths import data_path
 from june.geography import City, SuperAreas, SuperArea
 from june.groups import Supergroup, ExternalGroup, ExternalSubgroup
 from june.utils.distances import add_distance_to_lat_lon

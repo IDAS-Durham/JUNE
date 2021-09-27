@@ -3,7 +3,6 @@ from itertools import count, chain
 from typing import List, Dict, Tuple, Optional
 import pandas as pd
 import numpy as np
-from collections import defaultdict
 from sklearn.neighbors import BallTree
 
 from june import paths
