@@ -2,7 +2,7 @@ import pandas as pd
 import yaml
 import numpy as np
 from datetime import timedelta
-from typing import List, Optional, Tuple, Union, Dict
+from typing import List, Optional, Tuple
 from collections import defaultdict, Counter
 from scipy.ndimage import gaussian_filter1d
 
@@ -10,6 +10,11 @@ from june import paths
 from june.demography import Person
 from june.epidemiology.infection.symptom_tag import SymptomTag
 from june.epidemiology.infection.trajectory_maker import TrajectoryMaker
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.epidemiology.infection.health_index.health_index import HealthIndexGenerator
+    from june.epidemiology.infection.trajectory_maker import Stage
 
 default_trajectories_path = (
     paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
@@ -197,7 +202,7 @@ class Observed2Cases:
         self,
         age_per_area_df: pd.DataFrame,
         female_fraction_per_area_df: pd.DataFrame,
-    ) -> (pd.DataFrame, pd.DataFrame):
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Combines the age per area dataframe and female fraction per area to
         create two data frames with numbers of females by age per region, and
@@ -445,7 +450,6 @@ class Observed2Cases:
             columns=self.area_super_region_df["super_area"].unique(),
         )
         super_area_weights = self.get_super_area_population_weights()
-        super_area_cases = []
         for region in n_cases_per_region_df.columns:
             super_area_weights_for_region = super_area_weights[
                 super_area_weights["region"] == region

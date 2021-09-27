@@ -4,13 +4,18 @@ from time import time as wall_clock
 import logging
 
 from .infection import InfectionSelectors, ImmunitySetter
-from june.demography import Population, Activities
+from june.demography import Activities
 from june.policy import MedicalCarePolicies
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
 from june.groups import MedicalFacilities
 from june.records import Record
 from june.world import World
 from june.time import Timer
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.demography.person import Person
+    from june.epidemiology.infection_seed.infection_seed import InfectionSeeds
 
 logger = logging.getLogger("epidemiology")
 mpi_logger = logging.getLogger("mpi")
@@ -89,7 +94,7 @@ class Epidemiology:
                 infection_ids=infection_ids,
                 people_from_abroad_dict=people_from_abroad_dict,
             )
-            to_infect = self.tell_domains_to_infect(
+            self.tell_domains_to_infect(
                 world=world, timer=timer, infect_in_domains=infect_in_domains
             )
 
@@ -289,7 +294,7 @@ class Epidemiology:
                 self.infection_selectors.infect_person_at_time(
                     person=person, time=timer.now, infection_id=infection_id
                 )
-            except:
+            except Exception:
                 if person_id == invalid_id:
                     continue
                 raise

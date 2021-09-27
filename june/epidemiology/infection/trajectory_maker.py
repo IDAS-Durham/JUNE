@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple
 
 import yaml
-from scipy.stats import expon, beta, lognorm, norm, expon, exponweib
+from scipy.stats import beta, lognorm, norm, expon, exponweib
 
 from june import paths
 from .symptom_tag import SymptomTag

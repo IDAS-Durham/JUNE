@@ -1,6 +1,8 @@
 from typing import Optional
 import numpy as np
 from random import random
+
+import yaml
 from june.utils import (
     parse_age_probabilities,
     parse_prevalence_comorbidities_in_reference_population,
@@ -9,6 +11,11 @@ from june.utils import (
 )
 
 from . import Covid19, B117, B16172
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.records.records_writer import Record
+
 
 default_susceptibility_dict = {
     Covid19.infection_id(): {"0-13": 0.5, "13-100": 1.0},

@@ -6,8 +6,6 @@ from pathlib import Path
 from june import paths
 import june.epidemiology.infection.symptoms
 from june.demography import Person
-from june.epidemiology.infection import symptoms_trajectory as symtraj
-from june.epidemiology.infection import transmission_xnexp as transxnexp
 from june.epidemiology.infection.infection_selector import (
     default_transmission_config_path,
 )

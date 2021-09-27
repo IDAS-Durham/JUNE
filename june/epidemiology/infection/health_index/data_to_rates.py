@@ -70,8 +70,8 @@ def check_age_intervals(df: pd.DataFrame):
         )
     elif upper_age > 99:
         logger.warning(
-            f"Your age intervals contain values larger than 99."
-            f"Setting that to the be the uper limit"
+            "Your age intervals contain values larger than 99."
+            "Setting that to the be the uper limit"
         )
         age_intervals[-1] = pd.Interval(
             left=age_intervals[-1].left, right=99, closed="both"
@@ -395,7 +395,7 @@ class Data2Rates:
                 deaths_care_home = self.get_care_home_deaths(age=age, sex=sex)
                 return deaths_total - deaths_care_home
 
-    #### hospital ####
+    # ### hospital ###
     def get_all_hospital_deaths(self, age: int, sex: str):
         return self._get_interpolated_value(
             df=self.all_hospital_deaths_by_age_sex,
@@ -491,7 +491,7 @@ class Data2Rates:
             age=age, sex=sex, is_care_home=is_care_home
         ) / self.get_n_icu_admissions(age=age, sex=sex, is_care_home=is_care_home)
 
-    #### home ####
+    # ## home ###
     def get_care_home_home_deaths(self, age: int, sex: str):
         return self.get_n_deaths(
             age=age, sex=sex, is_care_home=True
@@ -505,7 +505,7 @@ class Data2Rates:
                 age=age, sex=sex, is_care_home=False
             ) - self.get_n_hospital_deaths(age=age, sex=sex, is_care_home=False)
 
-    #### IFRS #####
+    # ### IFRS ###
     def _get_ifr(
         self,
         function,

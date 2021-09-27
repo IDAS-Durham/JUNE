@@ -2,17 +2,17 @@ import numpy as np
 import pandas as pd
 from random import random
 import datetime
-from collections import Counter, defaultdict
-from june import paths
+from collections import defaultdict
 from typing import List, Optional
 
 from june.records import Record
-from june.domains import Domain
-from june.demography import Population
-from june.geography import SuperAreas
-from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
+from june.epidemiology.infection import InfectionSelector
 from june.epidemiology.epidemiology import Epidemiology
 from june.utils import parse_age_probabilities
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.world import World
 
 
 class InfectionSeed:
