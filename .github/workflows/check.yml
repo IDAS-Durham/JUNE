@@ -1,7 +1,8 @@
 name: Run linting and sanity checks
 
 on:
-  push
+  push:
+  pull_request:
 
 jobs:
   build:
@@ -42,6 +43,7 @@ jobs:
         flake8 june/distributors
         flake8 june/domains
         flake8 june/epidemiology
+        flake8 june/event
     - name: Get JUNE data
       run: bash scripts/get_june_data.sh
 
