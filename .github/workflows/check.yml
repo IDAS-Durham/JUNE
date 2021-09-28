@@ -46,7 +46,6 @@ jobs:
         flake8 june/groups
         flake8 june/hdf5_savers
         flake8 june/interaction
-        flake8 june/logger
         flake8 june/policy
         flake8 june/records
     - name: Get JUNE data
