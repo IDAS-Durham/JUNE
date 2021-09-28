@@ -1,18 +1,11 @@
 import datetime
 import re
-import sys
-import importlib
-import numpy as np
 from abc import ABC
 from typing import List, Union
 
 import yaml
 
 from june import paths
-from june.demography.person import Person
-from june.groups.leisure import Leisure
-from june.epidemiology.infection import SymptomTag
-from june.interaction import Interaction
 from june.utils import read_date, str_to_class
 
 default_config_filename = paths.configs_path / "defaults/policy/policy.yaml"

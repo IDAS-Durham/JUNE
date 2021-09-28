@@ -2,12 +2,11 @@ import numpy as np
 from typing import List, Optional, Union
 import datetime
 from random import random
-import june.policy
 
 from june.epidemiology.infection import SymptomTag
 from june.demography.person import Person
 from june.policy import Policy, PolicyCollection
-from june.mpi_setup import mpi_rank, mpi_size
+from june.mpi_setup import mpi_size
 from june.utils.distances import haversine_distance
 
 
@@ -78,7 +77,7 @@ class IndividualPolicies(PolicyCollection):
                 if policy.check_skips_activity(person):
                     activities = policy.apply(activities=activities)
             else:
-                raise ValueError(f"policy type not expected")
+                raise ValueError("policy type not expected")
         return activities
 
 
@@ -165,9 +164,8 @@ class Quarantine(StayHome):
     def check_stay_home_condition(self, person: Person, days_from_start):
         try:
             regional_compliance = person.region.regional_compliance
-        except:
+        except Exception:
             regional_compliance = 1
-        self_quarantine = False
         if person.infected:
             time_of_symptoms_onset = person.infection.time_of_symptoms_onset
             if time_of_symptoms_onset is not None:
@@ -238,11 +236,11 @@ class SchoolQuarantine(StayHome):
                 or person.primary_activity.group.external
             ):
                 return False
-        except:
+        except Exception:
             return False
         try:
             regional_compliance = person.region.regional_compliance
-        except:
+        except Exception:
             regional_compliance = 1
         compliance = self.compliance * regional_compliance
         if person.infected:
@@ -299,7 +297,7 @@ class Shielding(StayHome):
     def check_stay_home_condition(self, person: Person, days_from_start: float):
         try:
             regional_compliance = person.region.regional_compliance
-        except:
+        except Exception:
             regional_compliance = 1
         if person.age >= self.min_age:
             if (
@@ -489,7 +487,7 @@ class CloseCompanies(SkipActivity):
                 ):
                     try:
                         regional_compliance = person.region.regional_compliance
-                    except:
+                    except Exception:
                         regional_compliance = 1
                         if random() < regional_compliance:
                             return True
@@ -505,7 +503,7 @@ class CloseCompanies(SkipActivity):
                 ):
                     try:
                         regional_compliance = person.region.regional_compliance
-                    except:
+                    except Exception:
                         regional_compliance = 1
                         if random() < regional_compliance:
                             return True
@@ -523,7 +521,7 @@ class CloseCompanies(SkipActivity):
                 ):
                     try:
                         regional_compliance = person.region.regional_compliance
-                    except:
+                    except Exception:
                         regional_compliance = 1
                         if random() < regional_compliance:
                             return True
@@ -537,7 +535,7 @@ class CloseCompanies(SkipActivity):
                 ):
                     try:
                         regional_compliance = person.region.regional_compliance
-                    except:
+                    except Exception:
                         regional_compliance = 1
                         if random() < regional_compliance:
                             return True

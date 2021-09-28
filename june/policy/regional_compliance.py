@@ -1,8 +1,7 @@
 from datetime import datetime
 
-from .policy import Policy, PolicyCollection, Policies, read_date
+from .policy import Policy, PolicyCollection, read_date
 from june.geography import Regions
-from june import paths
 
 
 class RegionalCompliance(Policy):

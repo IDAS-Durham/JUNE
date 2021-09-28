@@ -1,7 +1,6 @@
 import datetime
-from copy import deepcopy
 
-from .policy import Policy, PolicyCollection, Policies
+from .policy import Policy, PolicyCollection
 from june.interaction import Interaction
 from collections import defaultdict
 

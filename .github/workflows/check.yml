@@ -46,6 +46,8 @@ jobs:
         flake8 june/groups
         flake8 june/hdf5_savers
         flake8 june/interaction
+        flake8 june/logger
+        flake8 june/policy
     - name: Get JUNE data
       run: bash scripts/get_june_data.sh
 
