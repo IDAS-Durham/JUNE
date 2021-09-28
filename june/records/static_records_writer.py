@@ -119,7 +119,7 @@ class PeopleRecord(StaticRecord):
             primary_activity_type.append(
                 person.primary_activity.group.spec
                 if person.primary_activity is not None
-                else f"None"
+                else "None"
             )
             primary_activity_id.append(
                 person.primary_activity.group.id
@@ -127,7 +127,7 @@ class PeopleRecord(StaticRecord):
                 else 0
             )
             residence_type.append(
-                person.residence.group.spec if person.residence is not None else f"None"
+                person.residence.group.spec if person.residence is not None else "None"
             )
             residence_id.append(
                 person.residence.group.id if person.residence is not None else 0

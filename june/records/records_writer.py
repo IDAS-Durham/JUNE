@@ -8,13 +8,11 @@ import json
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
-from collections import Counter, defaultdict
+from typing import Optional
+from collections import defaultdict
 import logging
 
-import subprocess
 import june
-from june.groups import Supergroup
 from june.records.event_records_writer import (
     InfectionRecord,
     HospitalAdmissionsRecord,
@@ -31,7 +29,15 @@ from june.records.static_records_writer import (
     SuperAreaRecord,
     RegionRecord,
 )
-from june import paths
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.world import World
+    from june.interaction.interaction import Interaction
+    from june.epidemiology.infection_seed.infection_seed import InfectionSeeds
+    from june.epidemiology.infection import InfectionSelectors
+    from june.epidemiology.epidemiology import Epidemiology
+    from june.activity.activity_manager import ActivityManager
 
 logger = logging.getLogger("records_writer")
 
@@ -47,9 +53,9 @@ class Record:
             self.filename = f"june_record.{mpi_rank}.h5"
             self.summary_filename = f"summary.{mpi_rank}.csv"
         else:
-            self.filename = f"june_record.h5"
-            self.summary_filename = f"summary.csv"
-        self.configs_filename = f"config.yaml"
+            self.filename = "june_record.h5"
+            self.summary_filename = "summary.csv"
+        self.configs_filename = "config.yaml"
         self.record_static_data = record_static_data
         try:
             os.remove(self.record_path / self.filename)
@@ -261,7 +267,7 @@ class Record:
     def get_username():
         try:
             username = os.getlogin()
-        except:
+        except Exception:
             username = "no_user"
         return username
 
@@ -307,13 +313,13 @@ class Record:
                     .stdout.decode("utf-8")
                     .strip()
                 )
-            except:
+            except Exception:
                 print("Could not record local git SHA")
                 meta_dict["local_SHA"] = "unavailable"
             user = self.get_username()
             meta_dict["user"] = user
             if comment is None:
-                comment: "No comment provided."
+                comment = "No comment provided."
             meta_dict["user_comment"] = f"{comment}"
             meta_dict["june_path"] = str(june.__path__[0])
             meta_dict["number_of_cores"] = number_of_cores

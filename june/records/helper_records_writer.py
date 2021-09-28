@@ -13,12 +13,12 @@ def _get_description_for_event(
     int_constructor = tables.Int64Col
     if int_size == 32:
         int_constructor = tables.Int32Col
-    elif not int_size in (32, 64):
+    elif int_size not in (32, 64):
         raise "int_size must be left unspecified, or should equal 32 or 64"
     float_constructor = tables.Float32Col
     if float_size == 64:
         float_constructor = tables.Float64Col
-    elif not float_size in (32, 64):
+    elif float_size not in (32, 64):
         raise "float_size must be left unspecified, or should equal 32 or 64"
     str_constructor = tables.StringCol
     description = {}
