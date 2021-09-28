@@ -34,6 +34,7 @@ jobs:
         # flake8 . --count --show-source --statistics
         # flake8 .
         flake8 june
+        flake8 test_june
     - name: Get JUNE data
       run: bash scripts/get_june_data.sh
 
