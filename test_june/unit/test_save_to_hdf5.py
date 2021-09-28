@@ -66,7 +66,7 @@ class TestSavePeople:
                 if attribute is None:
                     assert attribute2 is None
                 else:
-                    assert attribute is attribute2
+                    assert attribute == attribute2
             assert (
                 person.mode_of_transport.description
                 == person2.mode_of_transport.description
