@@ -1,10 +1,8 @@
 import datetime
 import numpy as np
-import json
 import pandas as pd
 import yaml
 import pytest
-import dateutil.parser
 
 from tables import open_file
 from june import paths
@@ -15,7 +13,6 @@ from june.activity import ActivityManager
 from june.demography import Person, Population
 from june.interaction import Interaction
 from june.epidemiology.epidemiology import Epidemiology
-from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
 from june.epidemiology.infection_seed import InfectionSeed, InfectionSeeds
 from june.geography.geography import (
     Areas,
