@@ -1,11 +1,6 @@
 import pytest
 import numpy as np
 
-from june.utils import (
-    parse_age_probabilities,
-    parse_prevalence_comorbidities_in_reference_population,
-)
-
 from june.epidemiology.infection import Covid19, B117, ImmunitySetter
 from june.demography import Person, Population
 from june.geography import Area, SuperArea, Region
@@ -229,8 +224,6 @@ class TestVaccinationSetter:
     def test__vaccination_parser(self, vaccination_dict):
         susc_setter = ImmunitySetter(vaccination_dict=vaccination_dict)
         vp = susc_setter.vaccination_dict
-        c19_id = Covid19.infection_id()
-        b117_id = B117.infection_id()
         for age in range(0, 100):
             # pfizer
             if age < 50:
@@ -316,7 +309,6 @@ class TestVaccinationSetter:
                     assert person.immunity.get_effective_multiplier(c19id) == 0.5
 
         under30 = len([person for person in population if person.age < 30])
-        over30 = len([person for person in population if person.age >= 30])
         under50 = len([person for person in population if person.age < 50])
         over50 = len([person for person in population if person.age >= 50])
         assert np.isclose(under30_sputnik / under30, 0.3, rtol=1e-1)
@@ -399,8 +391,6 @@ class TestPreviousInfectionSetter:
         immunity = ImmunitySetter(previous_infections_dict=previous_infections_dict)
         immunity.set_previous_infections(population)
         vaccinated = {"London": {1: 0, 2: 0}, "North East": {1: 0, 2: 0}}
-        vaccinated_london = 0
-        vaccinated_ne = 0
         for person in population:
             c19_susc = person.immunity.get_susceptibility(Covid19.infection_id())
             b117_susc = person.immunity.get_susceptibility(B117.infection_id())
