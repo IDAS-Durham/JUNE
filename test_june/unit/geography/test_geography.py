@@ -1,8 +1,6 @@
 import pytest
-import numpy as np
 import pandas as pd
 import numpy.testing as npt
-from time import time
 
 from june.geography import geography as g
 
