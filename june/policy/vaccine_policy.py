@@ -2,10 +2,8 @@ import operator
 from random import random
 import numpy as np
 import datetime
-from typing import List
 from june.demography.person import Person
-from .policy import Policy, PolicyCollection, Policies, read_date
-from june import paths
+from .policy import Policy, PolicyCollection
 
 
 class VaccinePlan:
@@ -123,7 +121,7 @@ class VaccineDistribution(Policy):
         self,
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
-        group_by: str = "age",  #'residence',
+        group_by: str = "age",  # 'residence',
         group_type: str = "50-100",
         group_coverage: float = 1.0,
         first_dose_sterilisation_efficacy: dict = {0: 0.5},
@@ -199,7 +197,7 @@ class VaccineDistribution(Policy):
                     == self.group_value
                 ):
                     return True
-            except:
+            except Exception:
                 return False
         else:
             if (

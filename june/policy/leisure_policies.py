@@ -1,11 +1,7 @@
 import datetime
-from copy import deepcopy
-import numpy as np
-from collections import defaultdict
 from typing import Dict, Union
 
-from .policy import Policy, Policies, PolicyCollection
-from june.exc import PolicyError
+from .policy import Policy, PolicyCollection
 from june.utils.parse_probabilities import parse_age_probabilities
 from june.groups.leisure import Leisure
 
