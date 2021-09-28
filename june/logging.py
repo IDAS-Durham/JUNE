@@ -6,13 +6,13 @@ This handler is used to deal with logging with mpi4py in Python3.
 
 @author: cheng
 
-@reference: 
+@reference:
     https://cvw.cac.cornell.edu/python/logging
     https://groups.google.com/forum/#!topic/mpi4py/SaNzc8bdj6U
     https://gist.github.com/JohnCEarls/8172807
 """
 
-#%% mpi4py logging handler
+# %% mpi4py logging handler
 from mpi4py import MPI
 import logging
 from os.path import abspath
@@ -76,7 +76,7 @@ class MPIFileHandler(logging.FileHandler):
             self.stream = None
 
 
-#%% example code
+# %% example code
 if __name__ == "__main__":
     comm = MPI.COMM_WORLD
     logger = logging.getLogger("rank[%i]" % comm.rank)

@@ -1,11 +1,6 @@
 import logging
-import h5py
-from collections import defaultdict
-from tqdm import tqdm
-import numpy as np
 from typing import Optional
 from june.demography import Demography, Population
-from june.demography.person import Activities, Person
 from june.distributors import (
     SchoolDistributor,
     HospitalDistributor,
@@ -16,7 +11,7 @@ from june.distributors import (
     UniversityDistributor,
 )
 from june.geography import Geography, Areas
-from june.groups import Supergroup, Hospitals, Cemeteries
+from june.groups import Supergroup, Cemeteries
 
 logger = logging.getLogger("world")
 
@@ -34,7 +29,7 @@ possible_groups = [
 
 
 def _populate_areas(areas: Areas, demography, ethnicity=True, comorbidity=True):
-    logger.info(f"Populating areas")
+    logger.info("Populating areas")
     people = Population()
     for area in areas:
         area.populate(

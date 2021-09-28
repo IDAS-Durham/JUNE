@@ -41,8 +41,9 @@ from june.groups import (
     Cemeteries,
 )
 from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub, Grocery, Groceries
-from june.simulator import Simulator, activity_hierarchy
+from june.simulator import Simulator
 from june.world import generate_world_from_geography
+from june.activity import activity_hierarchy
 
 constant_config = (
     paths.configs_path
