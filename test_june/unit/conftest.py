@@ -15,10 +15,8 @@ from june.geography import (
     Regions,
     Cities,
     City,
-    Station,
-    Stations,
 )
-from june.geography.station import CityStation, InterCityStation
+from june.geography.station import CityStation
 from june.groups.travel import (
     ModeOfTransport,
     CityTransport,

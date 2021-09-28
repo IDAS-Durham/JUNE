@@ -1,22 +1,14 @@
-from pathlib import Path
 from june.simulator import Simulator
-from june import world
-from june.time import Timer
-from june.geography import Geography
-from june.demography import Demography, Person, Population
 from june.interaction import Interaction
 from june.epidemiology.infection import InfectionSelectors, Immunity
 from june.epidemiology.infection_seed import InfectionSeed
 from june.epidemiology.epidemiology import Epidemiology
-from june.groups.travel import ModeOfTransport, Travel
-from june import World
-from june.world import generate_world_from_geography
+from june.groups.travel import Travel
 from june.policy import Policies
 from june.records import Record
 from june.groups.leisure import generate_leisure_for_config
 from june import paths
 
-from pathlib import Path
 
 selector_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"

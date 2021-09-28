@@ -1,25 +1,9 @@
 import numpy as np
 import h5py
 import pytest
-from collections import defaultdict
-from itertools import count
-from june.groups.leisure import generate_leisure_for_world, Pubs, Groceries, Cinemas
-from june.demography import Demography, Person, Population
-from june.geography import Geography, Area, SuperArea
+from june.geography import Geography
 from june.geography.station import CityStation, InterCityStation
-from june.groups.travel import Travel, CityTransport, InterCityTransport
-from june.groups import (
-    Households,
-    Companies,
-    Hospitals,
-    Schools,
-    CareHomes,
-    Group,
-    Universities,
-)
-from june.distributors import HouseholdDistributor
-from june import World
-from june.world import generate_world_from_geography
+from june.groups.travel import CityTransport, InterCityTransport
 from june.hdf5_savers import (
     save_population_to_hdf5,
     save_geography_to_hdf5,
@@ -38,7 +22,6 @@ from june.hdf5_savers import (
 )
 from june.hdf5_savers import (
     load_geography_from_hdf5,
-    load_population_from_hdf5,
     load_care_homes_from_hdf5,
     load_companies_from_hdf5,
     load_households_from_hdf5,
@@ -50,7 +33,6 @@ from june.hdf5_savers import (
     load_universities_from_hdf5,
     load_social_venues_from_hdf5,
 )
-from june import paths
 
 from pytest import fixture
 
@@ -82,9 +64,9 @@ class TestSavePeople:
                 attribute = getattr(person, attribute_name)
                 attribute2 = getattr(person2, attribute_name)
                 if attribute is None:
-                    assert attribute2 == None
+                    assert attribute2 is None
                 else:
-                    assert attribute == attribute2
+                    assert attribute is attribute2
             assert (
                 person.mode_of_transport.description
                 == person2.mode_of_transport.description
@@ -108,7 +90,7 @@ class TestSaveHouses:
                 attribute = getattr(household, attribute_name)
                 attribute2 = getattr(household2, attribute_name)
                 if attribute is None:
-                    assert attribute2 == None
+                    assert attribute2 is None
                 else:
                     assert attribute == attribute2
 
@@ -126,7 +108,7 @@ class TestSaveCompanies:
                 attribute = getattr(company, attribute_name)
                 attribute2 = getattr(company2, attribute_name)
                 if attribute is None:
-                    assert attribute2 == None
+                    assert attribute2 is None
                 else:
                     assert attribute == attribute2
 
@@ -148,7 +130,7 @@ class TestSaveHospitals:
                 attribute = getattr(hospital, attribute_name)
                 attribute2 = getattr(hospital2, attribute_name)
                 if attribute is None:
-                    assert attribute2 == None
+                    assert attribute2 is None
                 else:
                     assert attribute == attribute2
             assert hospital.coordinates[0] == hospital2.coordinates[0]
@@ -177,7 +159,7 @@ class TestSaveSchools:
                 attribute = getattr(school, attribute_name)
                 attribute2 = getattr(school2, attribute_name)
                 if attribute is None:
-                    assert attribute2 == None
+                    assert attribute2 is None
                 else:
                     assert attribute == attribute2
             assert school.coordinates[0] == school2.coordinates[0]
@@ -197,7 +179,7 @@ class TestSaveCarehomes:
                 attribute = getattr(carehome, attribute_name)
                 attribute2 = getattr(carehome2, attribute_name)
                 if attribute is None:
-                    assert attribute2 == None
+                    assert attribute2 is None
                 else:
                     assert attribute == attribute2
 
@@ -218,7 +200,7 @@ class TestSaveGeography:
                 attribute = getattr(area, attribute_name)
                 attribute2 = getattr(area2, attribute_name)
                 if attribute is None:
-                    assert attribute2 == None
+                    assert attribute2 is None
                 else:
                     assert attribute == attribute2
             assert area.coordinates[0] == area2.coordinates[0]
@@ -231,7 +213,7 @@ class TestSaveGeography:
                 attribute = getattr(super_area, attribute_name)
                 attribute2 = getattr(super_area2, attribute_name)
                 if attribute is None:
-                    assert attribute2 == None
+                    assert attribute2 is None
                 else:
                     assert attribute == attribute2
             assert super_area.coordinates[0] == super_area2.coordinates[0]
@@ -242,7 +224,7 @@ class TestSaveGeography:
                 attribute = getattr(region, attribute_name)
                 attribute2 = getattr(region2, attribute_name)
                 if attribute is None:
-                    assert attribute2 == None
+                    assert attribute2 is None
                 else:
                     assert attribute == attribute2
 
@@ -250,7 +232,6 @@ class TestSaveGeography:
 class TestSaveTravel:
     def test__save_cities(self, full_world, test_results):
         cities = full_world.cities
-        city_transports = full_world.city_transports
         assert len(cities) > 0
         save_cities_to_hdf5(cities, test_results / "test.hdf5")
         cities_recovered = load_cities_from_hdf5(test_results / "test.hdf5")
@@ -318,7 +299,7 @@ class TestSaveUniversities:
                 attribute = getattr(uni, attribute_name)
                 attribute2 = getattr(uni2, attribute_name)
                 if attribute is None:
-                    assert attribute2 == None
+                    assert attribute2 is None
                 else:
                     assert attribute == attribute2
             assert uni.coordinates[0] == uni2.coordinates[0]

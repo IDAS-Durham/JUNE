@@ -1,5 +1,4 @@
 from june.geography import Geography
-from june import World
 from june.world import generate_world_from_geography
 from june.groups import Schools, Hospitals, Companies, Households, Cemeteries, CareHomes
 
