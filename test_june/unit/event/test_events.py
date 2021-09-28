@@ -1,5 +1,5 @@
 import datetime
-from june.event import Event, Events
+from june.event import Event
 
 
 def test__event_dates():
