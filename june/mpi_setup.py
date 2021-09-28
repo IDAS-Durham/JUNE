@@ -1,9 +1,6 @@
-from collections import defaultdict
 from mpi4py import MPI
 import numpy as np
 
-from june.groups import ExternalSubgroup
-from june.exc import SimulatorError
 
 mpi_comm = MPI.COMM_WORLD
 mpi_rank = mpi_comm.Get_rank()
@@ -148,7 +145,7 @@ class MovablePeople:
                         for k, i, t, s, iids, iis, d, a in data
                     }
                 )
-            except:
+            except Exception:
                 print("failing", rank, "f-done")
                 raise
 

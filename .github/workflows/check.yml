@@ -33,21 +33,7 @@ jobs:
         # stop the build if there are Python syntax errors or undefined names
         # flake8 . --count --show-source --statistics
         # flake8 .
-        # Temporarily adding individual june folders to this to avoid drastic changes
-        flake8 june/activity
-        flake8 june/configs
-        flake8 june/data_formatting
-        flake8 june/demography
-        flake8 june/distributors
-        flake8 june/domains
-        flake8 june/epidemiology
-        flake8 june/event
-        flake8 june/geography
-        flake8 june/groups
-        flake8 june/hdf5_savers
-        flake8 june/interaction
-        flake8 june/policy
-        flake8 june/records
+        flake8 june
     - name: Get JUNE data
       run: bash scripts/get_june_data.sh
 
