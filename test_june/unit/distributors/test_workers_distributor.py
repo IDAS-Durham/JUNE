@@ -1,6 +1,4 @@
-import os
 import unittest
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -87,7 +85,7 @@ class TestInitialization:
         worker_geography: Geography,
         worker_population: Population,
     ):
-        distributor = WorkerDistributor.for_geography(worker_geography)
+        WorkerDistributor.for_geography(worker_geography)
 
 
 class TestDistribution:
@@ -151,7 +149,8 @@ class TestDistribution:
             idx = np.where(p_sectors == sector)[0]
             sector_worker_nr = len(idx)
             p_sub_sector = p_sub_sectors[idx]
-            sub_sector_worker_nr = len(p_sub_sector[p_sub_sector != None])
+            sub_sector_worker_nr = len(p_sub_sector[p_sub_sector is not None])
+            assert sector_worker_nr > sub_sector_worker_nr
 
     def test__worker_super_area(self, worker_population, worker_geography):
         has_workers = False
