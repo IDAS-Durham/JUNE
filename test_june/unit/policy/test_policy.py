@@ -1,46 +1,13 @@
-import copy
 from datetime import datetime
 from pathlib import Path
 
-import numpy as np
 import pytest
 
-from june import paths
-from june.demography import Person, Population
 from june.geography import Geography
 from june.interaction import Interaction
-from june.groups import Hospital, School, Company, Household, University
-from june.groups import (
-    Hospitals,
-    Schools,
-    Companies,
-    Households,
-    Universities,
-    Cemeteries,
-)
-from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub
-from june.epidemiology.infection import SymptomTag
 from june.epidemiology.infection.infection_selector import InfectionSelector
-from june.policy import (
-    Policy,
-    SevereSymptomsStayHome,
-    CloseSchools,
-    CloseCompanies,
-    CloseUniversities,
-    Quarantine,
-    Shielding,
-    Policies,
-    SocialDistancing,
-    CloseLeisureVenue,
-    ChangeLeisureProbability,
-    Hospitalisation,
-    IndividualPolicies,
-    LeisurePolicies,
-    InteractionPolicies,
-    MedicalCarePolicies,
-)
-from june.simulator import Simulator
-from june.world import World
+from june.policy import Policy
+
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent

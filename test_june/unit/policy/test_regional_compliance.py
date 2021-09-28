@@ -44,8 +44,8 @@ class TestSetTiers:
         tiered_lockdowns.apply(regions=regions, date="2020-05-01")
         assert region.policy["lockdown_tier"] == 2
         tiered_lockdowns.apply(regions=regions, date="2020-01-05")
-        assert region.policy["lockdown_tier"] == None
+        assert region.policy["lockdown_tier"] is None
         tiered_lockdowns.apply(regions=regions, date="2021-01-05")
-        assert region.policy["lockdown_tier"] == None
+        assert region.policy["lockdown_tier"] is None
         tiered_lockdowns.apply(regions=regions, date="2020-09-01")
-        assert region.policy["lockdown_tier"] == None
+        assert region.policy["lockdown_tier"] is None
