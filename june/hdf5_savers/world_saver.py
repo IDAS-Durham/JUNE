@@ -1,13 +1,9 @@
 import h5py
-import random
 import logging
-from collections import defaultdict
-from copy import copy, deepcopy
 
-from june.groups import Household
 from june.geography import Geography
 from june.world import World
-from june.groups import Cemeteries, Households
+from june.groups import Cemeteries
 from . import (
     load_geography_from_hdf5,
     load_hospitals_from_hdf5,
@@ -43,9 +39,11 @@ from . import (
     restore_universities_properties_from_hdf5,
     restore_hospital_properties_from_hdf5,
 )
-from june.demography import Population
-from june.demography.person import Activities, Person
 from june.mpi_setup import mpi_rank
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.domains import Domain
 
 logger = logging.getLogger("world_saver")
 if mpi_rank > 0:
@@ -110,7 +108,7 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
         if hasattr(world, spec) and getattr(world, spec) is not None:
             social_venues_list.append(getattr(world, spec))
     if social_venues_list:
-        logger.info(f"saving social venues...")
+        logger.info("saving social venues...")
         save_social_venues_to_hdf5(social_venues_list, file_path)
     logger.info("Saving domain decomposition data...")
     save_data_for_domain_decomposition(world, file_path)

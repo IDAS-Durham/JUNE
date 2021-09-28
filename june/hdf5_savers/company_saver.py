@@ -34,7 +34,6 @@ def save_companies_to_hdf5(
     """
     n_companies = len(companies)
     n_chunks = int(np.ceil(n_companies / chunk_size))
-    vlen_type = h5py.vlen_dtype(np.dtype("float64"))
     with h5py.File(file_path, "a") as f:
         companies_dset = f.create_group("companies")
         first_company_idx = companies[0].id
@@ -131,7 +130,6 @@ def restore_companies_properties_from_hdf5(
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         companies = f["companies"]
-        companies_list = []
         n_companies = companies.attrs["n_companies"]
         n_chunks = int(np.ceil(n_companies / chunk_size))
         for chunk in range(n_chunks):

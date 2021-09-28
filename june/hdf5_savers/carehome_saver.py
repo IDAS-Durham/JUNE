@@ -28,7 +28,6 @@ def save_care_homes_to_hdf5(
     """
     n_care_homes = len(care_homes)
     n_chunks = int(np.ceil(n_care_homes / chunk_size))
-    vlen_type = h5py.vlen_dtype(np.dtype("float64"))
     with h5py.File(file_path, "a") as f:
         care_homes_dset = f.create_group("care_homes")
         for chunk in range(n_chunks):
@@ -39,9 +38,6 @@ def save_care_homes_to_hdf5(
             super_areas = []
             n_residents = []
             n_workers = []
-            contact_matrices_sizes = []
-            contact_matrices_contacts = []
-            contact_matrices_physical = []
             for carehome in care_homes[idx1:idx2]:
                 ids.append(carehome.id)
                 if carehome.area is None:
@@ -101,7 +97,6 @@ def load_care_homes_from_hdf5(
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_carehomes)
-            length = idx2 - idx1
             ids = read_dataset(care_homes["id"], idx1, idx2)
             n_residents = read_dataset(care_homes["n_residents"], idx1, idx2)
             n_workers = read_dataset(care_homes["n_workers"], idx1, idx2)
@@ -134,7 +129,6 @@ def restore_care_homes_properties_from_hdf5(
     """
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         carehomes = f["care_homes"]
-        carehomes_list = []
         n_carehomes = carehomes.attrs["n_care_homes"]
         n_chunks = int(np.ceil(n_carehomes / chunk_size))
         for chunk in range(n_chunks):

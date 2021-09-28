@@ -1,7 +1,6 @@
 import h5py
 import numpy as np
 import logging
-from collections import defaultdict, OrderedDict
 from itertools import chain
 
 from june.world import World

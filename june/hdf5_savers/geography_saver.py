@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 from collections import defaultdict
 
-from june.groups import ExternalGroup, ExternalSubgroup
+from june.groups import ExternalGroup
 from june.geography import (
     Geography,
     Area,
