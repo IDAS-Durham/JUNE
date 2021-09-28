@@ -1,6 +1,5 @@
 import numpy as np
 import h5py
-from collections import defaultdict
 from typing import List
 
 from june.hdf5_savers.utils import read_dataset, write_dataset

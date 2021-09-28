@@ -14,7 +14,7 @@ from june.geography import (
     ExternalCity,
 )
 from .utils import read_dataset
-from june.groups import ExternalGroup, ExternalSubgroup
+from june.groups import ExternalGroup
 from june.groups.travel import (
     CityTransport,
     CityTransports,
@@ -44,9 +44,6 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
         inter_city_stations_id_list = []
         inter_city_station_ids_lengths = []
         coordinates = []
-        super_area_city = []
-        super_area_closest_commuting_city = []
-        super_area_closest_commuting_city_super_area = []
         for city in cities:
             ids.append(city.id)
             names.append(city.name.encode("ascii", "ignore"))
@@ -134,7 +131,6 @@ def load_cities_from_hdf5(
     """
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         cities = f["cities"]
-        cities_list = []
         n_cities = cities.attrs["n_cities"]
         ids = read_dataset(cities["id"])
         names = read_dataset(cities["name"])
@@ -143,7 +139,6 @@ def load_cities_from_hdf5(
         city_super_areas = read_dataset(cities["city_super_area"])
         cities = []
         for k in range(n_cities):
-            name = names[k].decode()
             super_areas = [super_area.decode() for super_area in super_areas_list[k]]
             city_super_area = city_super_areas[k]
             if domain_super_areas is None or city_super_area in domain_super_areas:

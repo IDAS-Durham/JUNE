@@ -12,7 +12,6 @@ from june.groups.leisure import (
     Cinemas,
     Gym,
     Gyms,
-    SocialVenue,
     SocialVenues,
 )
 from june.world import World

@@ -55,7 +55,7 @@ from .domain_data_saver import (
     load_data_for_domain_decomposition,
 )
 
-from .infection_savers import *
+from .infection_savers import *  # noqa
 
 # important this needs to be last:
 from .world_saver import (

@@ -102,7 +102,6 @@ def restore_universities_properties_from_hdf5(
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         universities = f["universities"]
-        universities_list = []
         n_universities = universities.attrs["n_universities"]
         ids = np.empty(n_universities, dtype=int)
         universities["id"].read_direct(

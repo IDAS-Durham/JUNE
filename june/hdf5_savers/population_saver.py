@@ -1,6 +1,5 @@
 import h5py
 import numpy as np
-from collections import OrderedDict
 import logging
 
 
@@ -142,7 +141,7 @@ def save_population_to_hdf5(
                 group_super_areas.append(
                     np.array(group_super_areas_temp, dtype=np.int64)
                 )
-                if person.mode_of_transport == None:
+                if person.mode_of_transport is None:
                     mode_of_transport_description.append(" ".encode("ascii", "ignore"))
                     mode_of_transport_is_public.append(False)
                 else:
@@ -303,7 +302,6 @@ def load_population_from_hdf5(
             logger.info(f"Loaded chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
-            length = idx2 - idx1
             ids = read_dataset(population["id"], idx1, idx2)
             ages = read_dataset(population["age"], idx1, idx2)
             sexes = read_dataset(population["sex"], idx1, idx2)
