@@ -157,5 +157,5 @@ class TestDomesticCare:
                     int_house.get_processed_beta(
                         {"household": 1, "household_visits": 2, "care_visits": 3}, {}
                     )
-                    == 3
+                    == 1.0
                 )
