@@ -3,10 +3,9 @@ from pathlib import Path
 
 import pytest
 import numpy as np
-import pandas as pd
 from collections import defaultdict
 
-from june.geography import Geography, Area
+from june.geography import Geography
 from june.demography import Person
 from june.groups.company import Company, Companies
 
