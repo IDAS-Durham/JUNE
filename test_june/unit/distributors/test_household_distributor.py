@@ -1,14 +1,9 @@
-import os
-from pathlib import Path
 from collections import OrderedDict
 
 import numpy as np
 import pytest
 
 from june.demography.person import Person
-from june.demography import Demography
-from june.geography import Geography
-from june.groups import Household, Households
 from june.distributors import HouseholdDistributor
 
 
@@ -194,7 +189,7 @@ class TestAuxiliaryFunctions:
             area.men_by_age,
             area.women_by_age,
         )
-        assert none_parent == None
+        assert none_parent is None
 
     def test__get_matching_second_kid(self, household_distributor):
         area = create_area()
@@ -722,49 +717,49 @@ class TestMultipleHouseholdCompositions:
 #            assert size <= 8
 
 
-###class TestSpecificArea2:
-###    """
-###    Let's carefully check the first output area of the test set.
-###    This area has no carehomes so we don't have to account for them.
-###    The area E00062386 has this configuration:
-###    0 0 0 0 1               9
-###    0 0 0 1 0              11
-###    0 0 0 0 2              20
-###    0 0 0 2 0              29
-###    1 0 >=0 2 0             5
-###    >=2 0 >=0 2 0          12
-###    0 0 >=1 2 0            13
-###    1 0 >=0 1 0             6
-###    >=2 0 >=0 1 0           2
-###    0 0 >=1 1 0             0
-###    1 0 >=0 >=1 >=0         1
-###    >=2 0 >=0 >=1 >=0       0
-###    0 >=1 0 0 0             0
-###    0 0 0 0 >=2             1
-###    0 0 >=0 >=0 >=0         1
-###    >=0 >=0 >=0 >=0 >=0     0
-###    Name: E00062386, dtype: int64
-###    """
-###    @pytest.fixture(name="example_area2", scope="module")
-###    def make_geo(self):
-###        geo = Geography.from_file({"oa": ["E00062386"]})
-###        dem = Demography.for_geography(geo)
-###        geo.areas[0].populate(dem)
-###        return geo.areas[0]
-###
-###    @pytest.fixture(name="hd_area2", scope="module")
-###    def populate_example_area(self, example_area2):
-###        area = example_area2
-###        household_distributor = HouseholdDistributor.from_file()
-###        household_distributor.distribute_people_and_households_to_areas(
-###            [area],
-###        )
-###        return household_distributor
-###
-###    def test__households_of_size1(self, hd_area2, example_area2):
-###        area = example_area2
-###        households_one = 0
-###        for household in area.households:
-###            if len(household.people) == 1:
-###                households_one += 1
-###        assert households_one == 20
+# ##class TestSpecificArea2:
+# ##    """
+# ##    Let's carefully check the first output area of the test set.
+# ##    This area has no carehomes so we don't have to account for them.
+# ##    The area E00062386 has this configuration:
+# ##    0 0 0 0 1               9
+# ##    0 0 0 1 0              11
+# ##    0 0 0 0 2              20
+# ##    0 0 0 2 0              29
+# ##    1 0 >=0 2 0             5
+# ##    >=2 0 >=0 2 0          12
+# ##    0 0 >=1 2 0            13
+# ##    1 0 >=0 1 0             6
+# ##    >=2 0 >=0 1 0           2
+# ##    0 0 >=1 1 0             0
+# ##    1 0 >=0 >=1 >=0         1
+# ##    >=2 0 >=0 >=1 >=0       0
+# ##    0 >=1 0 0 0             0
+# ##    0 0 0 0 >=2             1
+# ##    0 0 >=0 >=0 >=0         1
+# ##    >=0 >=0 >=0 >=0 >=0     0
+# ##    Name: E00062386, dtype: int64
+# ##    """
+# ##    @pytest.fixture(name="example_area2", scope="module")
+# ##    def make_geo(self):
+# ##        geo = Geography.from_file({"oa": ["E00062386"]})
+# ##        dem = Demography.for_geography(geo)
+# ##        geo.areas[0].populate(dem)
+# ##        return geo.areas[0]
+# ##
+# ##    @pytest.fixture(name="hd_area2", scope="module")
+# ##    def populate_example_area(self, example_area2):
+# ##        area = example_area2
+# ##        household_distributor = HouseholdDistributor.from_file()
+# ##        household_distributor.distribute_people_and_households_to_areas(
+# ##            [area],
+# ##        )
+# ##        return household_distributor
+# ##
+# ##    def test__households_of_size1(self, hd_area2, example_area2):
+# ##        area = example_area2
+# ##        households_one = 0
+# ##        for household in area.households:
+# ##            if len(household.people) == 1:
+# ##                households_one += 1
+# ##        assert households_one == 20

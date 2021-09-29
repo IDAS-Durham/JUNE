@@ -1,44 +1,22 @@
 from datetime import datetime, timedelta
-from pathlib import Path
 
 import numpy as np
-import pytest
 
 from june import paths
-from june.demography import Person, Population
-from june.geography import Geography
-from june.groups import Hospital, School, Company, Household, University
-from june.groups import (
-    Hospitals,
-    Schools,
-    Companies,
-    Households,
-    Universities,
-    Cemeteries,
-)
+from june.demography import Person
+from june.groups import Household
 from june.groups.leisure import (
-    Cinemas,
-    Pubs,
-    Cinema,
-    Pub,
     generate_leisure_for_config,
     generate_leisure_for_world,
 )
-from june.epidemiology.infection import SymptomTag
-from june.epidemiology.infection.infection_selector import InfectionSelector
-from june.interaction import Interaction
 from june.policy import (
-    Policy,
     Policies,
     CloseLeisureVenue,
     ChangeLeisureProbability,
-    LeisurePolicies,
     TieredLockdown,
     TieredLockdowns,
     ChangeVisitsProbability,
 )
-from june.simulator import Simulator
-from june.world import World
 
 
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
@@ -258,7 +236,6 @@ class TestReduceLeisureProbabilities:
         world, pupil, student, worker, sim = setup_policy_world
         while str(sim.timer.date.date()) != "2020-03-02":
             next(sim.timer)
-        super_area = world.super_areas[0]
         region = worker.region
         leisure = generate_leisure_for_config(world=world, config_filename=test_config)
         assert leisure.regions[0] == region
@@ -338,7 +315,6 @@ class TestReduceLeisureProbabilities:
 class TestChangeVisitsProbabilities:
     def test__change_split(self, setup_policy_world):
         world, pupil, student, worker, sim = setup_policy_world
-        super_area = world.super_areas[0]
         leisure = generate_leisure_for_world(
             world=world, list_of_leisure_groups=["care_home_visits", "household_visits"]
         )

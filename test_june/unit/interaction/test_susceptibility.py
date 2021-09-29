@@ -2,7 +2,6 @@ import pytest
 import numpy as np
 from random import randint
 
-from june.utils import parse_age_probabilities
 from june.interaction import Interaction
 from june.demography import Population, Person
 from june.groups import Company

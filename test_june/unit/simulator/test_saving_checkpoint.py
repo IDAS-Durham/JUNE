@@ -1,30 +1,19 @@
-import pytest
 import pandas as pd
-import h5py
 import numpy as np
 import datetime
-import logging
-import june.simulator
 import os
 from pathlib import Path
-from random import randint
 
-from june.records import Record
 from june.groups import Hospitals, Hospital
 from june.demography import Population, Person
 from june.geography import Area, Areas, SuperArea, SuperAreas
 from june.groups import Households, Household
 from june.world import World
 from june.groups import Cemeteries
-from june.geography import Geography
-from june.geography import Areas
-from june.hdf5_savers import generate_world_from_hdf5
-from june.groups.travel import Travel
 from june.policy import Policies
 from june.interaction import Interaction
 from june.simulator import Simulator
 from june.epidemiology.epidemiology import Epidemiology
-from june.epidemiology.infection import SymptomTag, TransmissionXNExp, TransmissionGamma
 from june.epidemiology.infection_seed import InfectionSeed
 from june import paths
 

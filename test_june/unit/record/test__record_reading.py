@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import random
-import tables
 import numpy as np
 import pytest
 import pandas as pd
@@ -211,7 +210,6 @@ def create_sim(world, interaction, selector, seed=False):
 def test__log_infected_by_region(world, interaction, selector):
     clean_world(world)
     sim = create_sim(world, interaction, selector)
-    infections_seed = [person.id for person in world.people.infected]
     sim.timer.reset()
     counter = 0
     new_infected = {}

@@ -88,7 +88,7 @@ def setup_infections(xnexp_transmissions, symptoms_list):
 
 class TestTransmissionSavers:
     def test__save_xnexp(self, xnexp_transmissions, test_results):
-        with h5py.File(test_results / "checkpoint_tests.hdf5", "w") as f:
+        with h5py.File(test_results / "checkpoint_tests.hdf5", "w"):
             pass
         save_transmissions_to_hdf5(
             test_results / "checkpoint_tests.hdf5", xnexp_transmissions, chunk_size=1
@@ -113,7 +113,7 @@ class TestTransmissionSavers:
                 )
 
     def test__save_gamma(self, gamma_transmissions, test_results):
-        with h5py.File(test_results / "checkpoint_tests.hdf5", "w") as f:
+        with h5py.File(test_results / "checkpoint_tests.hdf5", "w"):
             pass
         save_transmissions_to_hdf5(
             test_results / "checkpoint_tests.hdf5", gamma_transmissions, chunk_size=1
@@ -133,7 +133,7 @@ class TestTransmissionSavers:
 
 class TestSymptomSavers:
     def test__save_symptoms(self, symptoms_list, test_results):
-        with h5py.File(test_results / "checkpoint_tests.hdf5", "w") as f:
+        with h5py.File(test_results / "checkpoint_tests.hdf5", "w"):
             pass
         save_symptoms_to_hdf5(
             test_results / "checkpoint_tests.hdf5", symptoms_list, chunk_size=1
@@ -164,7 +164,7 @@ class TestSymptomSavers:
 
 class TestInfectionSavers:
     def test__save_infection(self, infections, test_results):
-        with h5py.File(test_results / "checkpoint_tests.hdf5", "w") as f:
+        with h5py.File(test_results / "checkpoint_tests.hdf5", "w"):
             pass
         save_infections_to_hdf5(
             test_results / "checkpoint_tests.hdf5", infections, chunk_size=1
@@ -216,7 +216,7 @@ class TestInfectionSavers:
 
 class TestImmunitySavers:
     def test__save_immunities(self, test_results):
-        with h5py.File(test_results / "checkpoint_tests.hdf5", "w") as f:
+        with h5py.File(test_results / "checkpoint_tests.hdf5", "w"):
             pass
         immunities = []
         for i in range(100):

@@ -1,13 +1,10 @@
-import yaml
 import pytest
 from june import paths
-from june.distributors.care_home_distributor import CareHomeDistributor, CareHomeError
+from june.distributors.care_home_distributor import CareHomeDistributor
 from june.demography import Person
-from june.groups.care_home import CareHome, CareHomes
-from june.geography import Geography, Area, SuperArea, Areas, SuperAreas
-from june.demography import Demography
-from june.demography.person import Person
-from june.world import World, generate_world_from_geography
+from june.groups.care_home import CareHome
+from june.geography import Area, SuperArea, Areas, SuperAreas
+
 
 default_config_file = paths.configs_path / "defaults/groups/carehome.yaml"
 

@@ -1,5 +1,3 @@
-import pandas as pd
-import pytest
 from june.groups import Household, Households
 from june.demography import Person
 

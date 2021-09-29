@@ -1,7 +1,7 @@
 from pathlib import Path
 import numpy as np
 
-from june.geography import SuperArea, SuperAreas, Station, Stations, City, Cities
+from june.geography import SuperArea, SuperAreas, Station, Stations, City
 from june.geography.station import CityStation, InterCityStation
 
 super_stations_test_file = Path(__file__).parent / "stations.csv"

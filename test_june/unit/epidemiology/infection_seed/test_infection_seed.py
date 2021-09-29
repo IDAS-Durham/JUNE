@@ -1,9 +1,8 @@
 import pandas as pd
 import pytest
 import numpy as np
-from collections import Counter
-from june.geography import Geography, SuperArea, SuperAreas, Area, Region, Regions
-from june.demography import Demography, Person, Population
+from june.geography import SuperArea, SuperAreas, Area, Region, Regions
+from june.demography import Person, Population
 from june import World
 from june.epidemiology.infection_seed import InfectionSeed
 from june.epidemiology.infection import Immunity

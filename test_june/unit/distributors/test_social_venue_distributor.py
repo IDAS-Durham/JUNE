@@ -1,7 +1,5 @@
 import numpy as np
-import random
 from pytest import fixture
-from scipy.stats import poisson
 from random import random
 
 from june.groups.leisure import SocialVenueDistributor

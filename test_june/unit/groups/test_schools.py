@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-import numpy as np
 import pytest
 
 from june.geography import Geography
@@ -42,12 +39,12 @@ class TestSchool:
 
 class TestSchools:
     def test__creating_schools_from_file(self, geo_schools):
-        schools = Schools.from_file(
+        Schools.from_file(
             areas=geo_schools.areas,
         )
 
     def test_creating_schools_for_areas(self, geo_schools):
-        schools = Schools.for_areas(geo_schools.areas)
+        Schools.for_areas(geo_schools.areas)
 
     @pytest.fixture(name="schools", scope="module")
     def test__creating_schools_for_geography(self, geo_schools):

@@ -1,6 +1,5 @@
-from june.demography import Person
 from june.distributors import UniversityDistributor
-from june.groups import University, Universities
+from june.groups import Universities
 from june.geography import Geography
 from june.world import generate_world_from_geography
 

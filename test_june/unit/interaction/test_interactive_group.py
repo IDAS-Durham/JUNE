@@ -1,17 +1,13 @@
-import pytest
 import numpy as np
 from copy import deepcopy
 
-from june.groups import Group
 from june.geography import Area, SuperArea, Region
 from june.demography.person import Person
-from june.epidemiology.infection.infection_selector import InfectionSelector
 from june.groups import (
     Hospital,
     School,
     Pub,
     InteractiveSchool,
-    InteractiveHousehold,
     Company,
     InteractiveCompany,
     Household,
@@ -139,7 +135,6 @@ class TestInteractiveSchool:
 
     def test__school_contact_matrices_different_classroom(self):
         interaction_instance = Interaction.from_file(config_filename=test_config)
-        xi = 0.3
         age_min = 3
         age_max = 7
         school_years = (3, 4, 4, 5)

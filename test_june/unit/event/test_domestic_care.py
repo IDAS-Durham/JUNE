@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
-import datetime
 
-from june.event import Event, Events, DomesticCare
+from june.event import DomesticCare
 from june.world import World
 from june.groups import Household, Households
 from june.geography import Area, Areas, SuperArea, SuperAreas, Region
@@ -154,9 +153,9 @@ class TestDomesticCare:
                 household_to_care = household.household_to_care
                 assert household_to_care.receiving_care
                 int_house = household.get_interactive_group(None)
-                beta = (
+                assert (
                     int_house.get_processed_beta(
                         {"household": 1, "household_visits": 2, "care_visits": 3}, {}
                     )
-                    == 3
+                    == 1.0
                 )

@@ -3,18 +3,6 @@ from june.geography import SuperArea
 from june.groups import Company
 from june.demography import Person
 from june.distributors import CompanyDistributor
-from june.geography import Geography
-from june.world import World, generate_world_from_geography
-from june.groups import (
-    Hospitals,
-    Schools,
-    Companies,
-    Households,
-    CareHomes,
-    Universities,
-    Cemeteries,
-)
-
 # TODO: This test shouldn't use from goegraphy! Create a world that has those characteristics
 
 

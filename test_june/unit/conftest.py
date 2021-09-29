@@ -1,3 +1,15 @@
+from june.groups.leisure.gym import Gyms
+from june.groups.leisure.leisure import generate_leisure_for_world
+from june.groups.leisure.grocery import Groceries, Grocery
+from june.groups.leisure.pub import Pub, Pubs
+from june.groups.leisure.cinema import Cinema, Cinemas
+from june.groups.university import Universities, University
+from june.groups.household import Household, Households
+from june.groups.cemetery import Cemeteries
+from june.groups.care_home import CareHome, CareHomes
+from june.groups.school import School, Schools
+from june.groups.company import Companies, Company
+from june.groups.hospital import Hospital, Hospitals
 import random
 
 import numba as nb
@@ -15,10 +27,8 @@ from june.geography import (
     Regions,
     Cities,
     City,
-    Station,
-    Stations,
 )
-from june.geography.station import CityStation, InterCityStation
+from june.geography.station import CityStation
 from june.groups.travel import (
     ModeOfTransport,
     CityTransport,
@@ -26,8 +36,6 @@ from june.groups.travel import (
     InterCityTransport,
     InterCityTransports,
 )
-from june.groups import *
-from june.groups.leisure import *
 from june.groups.travel import Travel
 from june.demography import Person, Population
 from june.epidemiology.epidemiology import Epidemiology
@@ -41,6 +49,7 @@ from june.epidemiology.infection import (
 from june.epidemiology.infection import transmission as trans
 from june.simulator import Simulator
 from june.world import generate_world_from_geography, World
+import logging
 
 constant_config = (
     paths.configs_path
@@ -48,7 +57,6 @@ constant_config = (
 )
 interaction_config = paths.configs_path / "tests/interaction.yaml"
 
-import logging
 
 # disable logging for testing
 logging.disable(logging.CRITICAL)
@@ -321,7 +329,7 @@ def make_full_world_geography():
 @pytest.fixture(name="full_world", scope="session")
 def create_full_world(full_world_geography, test_results):
     # clean file
-    with h5py.File(test_results / "test.hdf5", "w") as f:
+    with h5py.File(test_results / "test.hdf5", "w"):
         pass
     geography = full_world_geography
     geography.hospitals = Hospitals.for_geography(geography)
