@@ -1,13 +1,9 @@
-from june.world import World
 from june.geography import Geography
-from june.demography import Demography
 from june.groups import (
     Hospitals,
     Schools,
     Companies,
-    Households,
     CareHomes,
-    Cemeteries,
     Universities,
 )
 from june.groups.leisure import (
@@ -19,8 +15,6 @@ from june.groups.leisure import (
 )
 from june.groups.travel import Travel
 from june.world import generate_world_from_geography
-import pickle
-import sys
 import time
 import numpy as np
 
