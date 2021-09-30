@@ -20,7 +20,7 @@ jobs:
       run: |
         sudo apt-get update -y
         sudo apt-get install -y openmpi-bin
-        sudo apt install -y libhdf5
+        sudo apt install -y libhdf5-dev
         sudo apt install -y libopenmpi-dev
     - name: Install dependencies
       run: |
