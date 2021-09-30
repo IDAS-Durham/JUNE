@@ -1,5 +1,3 @@
-import tables
-from tables import open_file
 import numpy as np
 
 from june.records.helper_records_writer import _get_description_for_event
