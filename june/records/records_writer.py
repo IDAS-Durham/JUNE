@@ -61,8 +61,6 @@ class Record:
             os.remove(self.record_path / self.filename)
         except OSError:
             pass
-        with tables.open_file(self.record_path / self.filename, mode="w"):
-            pass
         filename = self.record_path / self.filename
         self.events = {
             "infections": InfectionRecord(hdf5_filename=filename),
