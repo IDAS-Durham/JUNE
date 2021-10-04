@@ -1,4 +1,5 @@
 import operator
+from typing import List
 from random import random
 import numpy as np
 import datetime
@@ -6,6 +7,78 @@ from june.demography.person import Person
 from .policy import Policy, PolicyCollection
 
 
+class VaccineStage:
+    def __init__(
+        self,
+        date_administered: datetime.datetime,
+        days_to_effective: int,
+        sterilisation_efficacy: float,
+        symptomatic_efficacy: float,
+        prior_sterilisation_efficacy: float = 0.0,
+        prior_symptomatic_efficacy: float = 0.0,
+    ):
+        self.date_administered = date_administered
+        self.days_to_effective = days_to_effective
+        self.sterilisation_efficacy = sterilisation_efficacy
+        self.symptomatic_efficacy = symptomatic_efficacy
+        self.effective_date = self.date_administered + datetime.timedelta(
+            days=self.days_to_effective
+        )
+        self.prior_sterilisation_efficacy = prior_sterilisation_efficacy
+        self.prior_symptomatic_efficacy = prior_symptomatic_efficacy
+
+    # TODO: Generalize to varying functional forms for waning, with extra
+    # parameters
+    def get_vaccine_efficacy(
+        self,
+        date,
+        efficacy_type: str,
+    ):
+        if efficacy_type not in ("symptomatic", "sterilisation"):
+            raise ValueError
+        prior_value = getattr(self, f"prior_{efficacy_type}_efficacy")
+        efficacy = getattr(self, f"{efficacy_type}_efficacy")
+        if date < self.effective_date:
+            n_days = (date - self.date_administered).days
+            m = (efficacy - prior_value) / self.days_to_effective
+            n = prior_value
+            return max(prior_value, m * n_days + n)
+        return max(prior_value, efficacy)
+
+
+class VaccineTrajectory:
+    def __init__(
+        self,
+        stages: List[VaccineStage],
+    ):
+        self.stages = sorted(stages, key=operator.attrgetter("date_administered"))
+        first_stage_date = self.stages[0].date_administered
+        self.stage_days = [
+            (stage.date_administered - first_stage_date).days for stage in self.stages
+        ]
+
+    def get_vaccine_efficacy(
+        self,
+        date,
+        efficacy_type: str,
+    ):
+        days_from_start = (date - self.stages[0].date_administered).days
+        index_stage = min(
+            np.searchsorted(self.stage_days, days_from_start), len(self.stages) - 1
+        )
+        stage = self.stages[index_stage]
+        return stage.get_vaccine_efficacy(date=date, efficacy_type=efficacy_type)
+
+    def is_finished(
+        self,
+        date: datetime.datetime,
+    ):
+        if date > self.stages[-1].effective_date:
+            return True
+        return False
+
+
+'''
 class VaccinePlan:
     __slots__ = (
         "first_dose_date",
@@ -292,3 +365,4 @@ class VaccineDistributions(PolicyCollection):
         if self.policies:
             for policy in self.policies:
                 policy.update_vaccinated(people=people, date=date)
+'''

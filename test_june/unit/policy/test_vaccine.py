@@ -3,11 +3,105 @@ import pytest
 
 from june.groups import CareHome
 from june.demography import Person, Population
-from june.policy import VaccineDistribution
+#from june.policy import VaccineDistribution
+from june.policy.vaccine_policy import VaccineStage, VaccineTrajectory
 
-# TODO: Add test on mulitple vaccines
+@pytest.fixture(name='first_dose', scope='session')
+def create_first_dose():
+    date = datetime.datetime(2100,1,1)
+    return VaccineStage(
+            date_administered=date, 
+            days_to_effective=10, 
+            sterilisation_efficacy=0.8, 
+            symptomatic_efficacy=0.7,
+            prior_sterilisation_efficacy=0.1,
+            prior_symptomatic_efficacy=0.,
+    )
 
 
+@pytest.fixture(name='vt', scope='session')
+def create_vaccine_plan():
+    first_dose = VaccineStage(
+            date_administered=datetime.datetime(2100,1,1), 
+            days_to_effective=1, 
+            sterilisation_efficacy=0.3, 
+            symptomatic_efficacy=0.3,
+    )
+    second_dose = VaccineStage(
+            date_administered=datetime.datetime(2100,1,10), 
+            days_to_effective=2, 
+            sterilisation_efficacy=0.7, 
+            symptomatic_efficacy=0.7,
+            prior_sterilisation_efficacy=0.3, 
+            prior_symptomatic_efficacy=0.3,
+    )
+    third_dose = VaccineStage(
+            date_administered=datetime.datetime(2100,1,17), 
+            days_to_effective=10, 
+            sterilisation_efficacy=0.9, 
+            symptomatic_efficacy=0.7,
+            prior_sterilisation_efficacy=0.7, 
+            prior_symptomatic_efficacy=0.7,
+
+    )
+    return VaccineTrajectory(stages=[first_dose, third_dose, second_dose],)
+
+
+class TestDose:
+    def test__dose_init(
+            self,first_dose
+    ):
+        assert first_dose.effective_date == datetime.datetime(2100,1,11)
+
+    def test__effect_one_stage(
+            self,first_dose
+    ):
+        assert first_dose.get_vaccine_efficacy(
+                datetime.datetime(2100,1,1), efficacy_type='sterilisation'
+        ) == first_dose.prior_sterilisation_efficacy
+        assert pytest.approx(first_dose.get_vaccine_efficacy(
+                datetime.datetime(2100,1,6), efficacy_type='sterilisation'
+        ),0.01) == 0.4499
+        assert first_dose.get_vaccine_efficacy(
+                datetime.datetime(2100,1,11), efficacy_type='sterilisation'
+        ) == first_dose.sterilisation_efficacy
+        assert first_dose.get_vaccine_efficacy(
+                datetime.datetime(2100,1,21), efficacy_type = 'sterilisation'
+        ) == first_dose.sterilisation_efficacy
+
+
+
+class TestVaccineTrajectory:
+    def test__stages_ordered(
+            self, vt
+    ):
+        assert sorted([dose.date_administered for dose in vt.stages]) == [dose.date_administered for dose in vt.stages]
+
+
+
+    def test__is_finished(
+            self, vt
+    ):
+        assert vt.is_finished(datetime.datetime(2100,1,25)) == False
+        assert vt.is_finished(datetime.datetime(2100,1,28)) == True
+
+    def test__time_evolution_vaccine_plan(
+            self, vt
+    ):
+        dates = [
+                datetime.datetime(2100,1,1),
+                datetime.datetime(2100,1,2),
+                datetime.datetime(2100,1,5),
+                datetime.datetime(2100,1,12),
+                datetime.datetime(2100,1,17),
+                datetime.datetime(2100,1,27),
+                datetime.datetime(2100,1,31),
+        ]
+        expected_values = [0.,0.3,0.3,0.7,0.7,0.9,0.9,]
+        for (date, expected) in zip(dates,expected_values):
+            assert vt.get_vaccine_efficacy(date=date,efficacy_type='sterilisation') == expected
+       # Check Build vaccine plan
+'''
 class TestVaccination:
     def test__process_target_population(
         self,
@@ -286,3 +380,4 @@ class TestVaccination:
         assert young_person.immunity.get_effective_multiplier(1) == pytest.approx(
             0.7, 0.01
         )
+'''
