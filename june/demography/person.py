@@ -40,7 +40,7 @@ class Person(dataobject):
     sub_sector: str = None
     lockdown_status: str = None
     # vaccine
-    vaccine_plan: "VaccinePlan" = None
+    vaccine_trajectory: "VaccineTrajectory" = None
     vaccinated: bool = False
     # comorbidity
     comorbidity: str = None
@@ -183,7 +183,7 @@ class Person(dataobject):
 
     @property
     def should_be_vaccinated(self):
-        if self.vaccine_plan is None and not self.vaccinated:
+        if self.vaccine_trajectory is None and not self.vaccinated:
             return True
         return False
 

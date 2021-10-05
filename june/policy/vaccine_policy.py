@@ -1,5 +1,5 @@
 import operator
-from typing import List
+from typing import List, Dict
 from random import random
 import numpy as np
 import datetime
@@ -12,10 +12,10 @@ class VaccineStage:
         self,
         date_administered: datetime.datetime,
         days_to_effective: int,
-        sterilisation_efficacy: float,
-        symptomatic_efficacy: float,
-        prior_sterilisation_efficacy: float = 0.0,
-        prior_symptomatic_efficacy: float = 0.0,
+        sterilisation_efficacy: dict,
+        symptomatic_efficacy: dict,
+        prior_sterilisation_efficacy: dict = None,
+        prior_symptomatic_efficacy: dict = None,
     ):
         self.date_administered = date_administered
         self.days_to_effective = days_to_effective
@@ -24,8 +24,14 @@ class VaccineStage:
         self.effective_date = self.date_administered + datetime.timedelta(
             days=self.days_to_effective
         )
-        self.prior_sterilisation_efficacy = prior_sterilisation_efficacy
-        self.prior_symptomatic_efficacy = prior_symptomatic_efficacy
+        if not prior_sterilisation_efficacy:
+            self.prior_sterilisation_efficacy = {k: 0.0 for k in sterilisation_efficacy}
+        else:
+            self.prior_sterilisation_efficacy = prior_sterilisation_efficacy
+        if not prior_symptomatic_efficacy:
+            self.prior_symptomatic_efficacy = {k: 0.0 for k in symptomatic_efficacy}
+        else:
+            self.prior_symptomatic_efficacy = prior_symptomatic_efficacy
 
     # TODO: Generalize to varying functional forms for waning, with extra
     # parameters
@@ -33,41 +39,61 @@ class VaccineStage:
         self,
         date,
         efficacy_type: str,
+        infection_id: int,
     ):
         if efficacy_type not in ("symptomatic", "sterilisation"):
             raise ValueError
-        prior_value = getattr(self, f"prior_{efficacy_type}_efficacy")
-        efficacy = getattr(self, f"{efficacy_type}_efficacy")
+        prior_value = getattr(self, f"prior_{efficacy_type}_efficacy")[infection_id]
+        efficacy = getattr(self, f"{efficacy_type}_efficacy")[infection_id]
         if date < self.effective_date:
             n_days = (date - self.date_administered).days
             m = (efficacy - prior_value) / self.days_to_effective
             n = prior_value
-            return max(prior_value, m * n_days + n)
-        return max(prior_value, efficacy)
+            return m * n_days + n
+        return efficacy
 
 
 class VaccineTrajectory:
     def __init__(
         self,
         stages: List[VaccineStage],
+        prior_susceptibility: Dict[int,float],
+        prior_effective_multiplier: Dict[int,float],
     ):
         self.stages = sorted(stages, key=operator.attrgetter("date_administered"))
+        self.prior_susceptibility = prior_susceptibility
+        self.prior_effective_multiplier = prior_effective_multiplier
+        self.stages[0].prior_sterilisation_efficacy = {k: 1-prior_susceptibility.get(k, 1.) for k,v in self.stages[0].prior_sterilisation_efficacy.items()}
+        self.stages[0].prior_symptomatic_efficacy= {k: 1-prior_effective_multiplier.get(k, 1.) for k,v in self.stages[0].prior_symptomatic_efficacy.items()}
         first_stage_date = self.stages[0].date_administered
         self.stage_days = [
             (stage.date_administered - first_stage_date).days for stage in self.stages
         ]
 
+    def susceptibility(self, date, infection_id: int):
+        return 1.0 - self.get_vaccine_efficacy(
+            date=date, efficacy_type="sterilisation", infection_id=infection_id
+        )
+
+    def effective_multiplier(self, date, infection_id: int):
+        return 1.0 - self.get_vaccine_efficacy(
+            date=date, efficacy_type="symptomatic", infection_id=infection_id
+        )
+
     def get_vaccine_efficacy(
         self,
         date,
         efficacy_type: str,
+        infection_id: int,
     ):
         days_from_start = (date - self.stages[0].date_administered).days
         index_stage = min(
-            np.searchsorted(self.stage_days, days_from_start), len(self.stages) - 1
+            np.searchsorted(self.stage_days, days_from_start, side='right')-1, len(self.stages) - 1
         )
         stage = self.stages[index_stage]
-        return stage.get_vaccine_efficacy(date=date, efficacy_type=efficacy_type)
+        return stage.get_vaccine_efficacy(
+            date=date, efficacy_type=efficacy_type, infection_id=infection_id
+        )
 
     def is_finished(
         self,
@@ -78,134 +104,19 @@ class VaccineTrajectory:
         return False
 
 
-'''
-class VaccinePlan:
-    __slots__ = (
-        "first_dose_date",
-        "second_dose_date",
-        "first_dose_effective_days",
-        "second_dose_effective_days",
-        "first_dose_sterilisation_efficacy",
-        "second_dose_sterilisation_efficacy",
-        "original_susceptibility",
-        "first_dose_symptomatic_efficacy",
-        "second_dose_symptomatic_efficacy",
-        "original_effective_multiplier",
-        "infection_ids",
-    )
-
-    def __init__(
-        self,
-        first_dose_date,
-        second_dose_date,
-        first_dose_effective_days,
-        second_dose_effective_days,
-        first_dose_sterilisation_efficacy,
-        second_dose_sterilisation_efficacy,
-        original_susceptibility,
-        first_dose_symptomatic_efficacy,
-        second_dose_symptomatic_efficacy,
-        original_effective_multiplier,
-    ):
-        self.first_dose_date = first_dose_date
-        self.first_dose_effective_days = first_dose_effective_days
-        self.first_dose_sterilisation_efficacy = first_dose_sterilisation_efficacy
-        self.first_dose_symptomatic_efficacy = first_dose_symptomatic_efficacy
-        self.second_dose_date = second_dose_date
-        self.second_dose_effective_days = second_dose_effective_days
-        self.second_dose_sterilisation_efficacy = second_dose_sterilisation_efficacy
-        self.second_dose_symptomatic_efficacy = second_dose_symptomatic_efficacy
-        self.original_susceptibility = original_susceptibility
-        self.original_effective_multiplier = original_effective_multiplier
-        self.infection_ids = list(self.first_dose_sterilisation_efficacy.keys())
-
-    @property
-    def first_dose_effective_date(self):
-        return self.first_dose_date + datetime.timedelta(
-            days=self.first_dose_effective_days
-        )
-
-    @property
-    def second_dose_effective_date(self):
-        return self.second_dose_date + datetime.timedelta(
-            days=self.second_dose_effective_days
-        )
-
-    def is_finished(self, date):
-        if self.second_dose_date is None and date > self.first_dose_effective_date:
-            return True
-        elif (
-            self.second_dose_date is not None and date > self.second_dose_effective_date
-        ):
-            return True
-        return False
-
-    def straight_line(self, n_days, p0, p1):
-        m = (p1[1] - p0[1]) / (p1[0] - p0[0])
-        c = p1[1] - (m * p1[0])
-        return m * n_days + c
-
-    def update_original_value(
-        self, date, first_dose_efficacy, second_dose_efficacy, original_value
-    ):
-        if self.second_dose_date is None and date > self.first_dose_effective_date:
-            return 1.0 - first_dose_efficacy
-        elif date <= self.first_dose_effective_date:
-            n_days = (date - self.first_dose_date).days
-            return self.straight_line(
-                n_days,
-                p0=(0, original_value),
-                p1=(self.first_dose_effective_days, 1.0 - first_dose_efficacy),
-            )
-        elif self.first_dose_effective_date <= date < self.second_dose_date:
-            return 1.0 - first_dose_efficacy
-        elif date < self.second_dose_effective_date:
-            n_days = (date - self.second_dose_date).days
-            return self.straight_line(
-                n_days,
-                p0=(0, 1.0 - first_dose_efficacy),
-                p1=(self.second_dose_effective_days, 1.0 - second_dose_efficacy),
-            )
-        else:
-            return 1.0 - second_dose_efficacy
-
-    def get_updated_vaccine_effect(self, date):
-        updated_susceptibility, updated_effective_multiplier = {}, {}
-        for idx in self.infection_ids:
-            updated_susceptibility[idx] = self.update_original_value(
-                date,
-                self.first_dose_sterilisation_efficacy[idx],
-                self.second_dose_sterilisation_efficacy[idx],
-                self.original_susceptibility.get(idx, 1.0),
-            )
-            updated_effective_multiplier[idx] = self.update_original_value(
-                date,
-                self.first_dose_symptomatic_efficacy[idx],
-                self.second_dose_symptomatic_efficacy[idx],
-                self.original_effective_multiplier.get(idx, 1.0),
-            )
-        return (updated_susceptibility, updated_effective_multiplier)
-
-
+# TODO: Group coverage should be given by stage
 class VaccineDistribution(Policy):
     policy_type = "vaccine_distribution"
 
     def __init__(
         self,
+        stages: List[VaccineStage],
+        infection_ids: List[int],
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
         group_by: str = "age",  # 'residence',
         group_type: str = "50-100",
         group_coverage: float = 1.0,
-        first_dose_sterilisation_efficacy: dict = {0: 0.5},
-        second_dose_sterilisation_efficacy: dict = {0: 1.0},
-        first_dose_symptomatic_efficacy: dict = {0: 0.0},
-        second_dose_symptomatic_efficacy: dict = {0: 0.0},
-        second_dose_compliance: float = 1.0,
-        mean_time_delay: int = 1,
-        std_time_delay: int = 1,
-        effective_after_first_dose: int = 7,
-        effective_after_second_dose: int = 7,
     ):
         """
         Policy to apply a vaccinated tag to people based on certain attributes with a given probability
@@ -244,16 +155,8 @@ class VaccineDistribution(Policy):
         )
         self.total_days = (self.end_time - self.start_time).days
         self.group_coverage = group_coverage
-        self.second_dose_compliance = second_dose_compliance
-        self.mean_time_delay = mean_time_delay
-        self.std_time_delay = std_time_delay
-        self.effective_after_first_dose = effective_after_first_dose
-        self.effective_after_second_dose = effective_after_second_dose
-        self.first_dose_symptomatic_efficacy = first_dose_symptomatic_efficacy
-        self.second_dose_symptomatic_efficacy = second_dose_symptomatic_efficacy
-        self.first_dose_sterilisation_efficacy = first_dose_sterilisation_efficacy
-        self.second_dose_sterilisation_efficacy = second_dose_sterilisation_efficacy
-        self.infection_ids = list(self.first_dose_sterilisation_efficacy.keys())
+        self.infection_ids = infection_ids
+        self.stages = stages
         self.vaccinated_ids = set()
 
     def process_group_description(self, group_by, group_type):
@@ -282,33 +185,12 @@ class VaccineDistribution(Policy):
         return False
 
     def vaccinate(self, person, date):
+        #TODO: implement varying compliance per step
         person.vaccinated = True
-        first_dose_effective_date = date + datetime.timedelta(
-            days=self.effective_after_first_dose
-        )
-        # second dose
-        if random() < self.second_dose_compliance:
-            second_dose_lag = np.random.normal(
-                loc=self.mean_time_delay, scale=self.std_time_delay
-            )
-            second_dose_date = first_dose_effective_date + datetime.timedelta(
-                days=int(second_dose_lag)
-            )
-            second_dose_effective_days = self.effective_after_second_dose
-        else:
-            second_dose_date = None
-            second_dose_effective_days = None
-        person.vaccine_plan = VaccinePlan(
-            first_dose_date=date,
-            first_dose_effective_days=self.effective_after_first_dose,
-            first_dose_symptomatic_efficacy=self.first_dose_symptomatic_efficacy,
-            first_dose_sterilisation_efficacy=self.first_dose_sterilisation_efficacy,
-            second_dose_date=second_dose_date,
-            second_dose_effective_days=second_dose_effective_days,
-            second_dose_symptomatic_efficacy=self.second_dose_symptomatic_efficacy,
-            second_dose_sterilisation_efficacy=self.second_dose_sterilisation_efficacy,
-            original_susceptibility=person.immunity.susceptibility_dict,
-            original_effective_multiplier=person.immunity.effective_multiplier_dict,
+        person.vaccine_trajectory = VaccineTrajectory(
+                stages=self.stages, 
+                prior_susceptibility = person.immunity.susceptibility_dict,
+                prior_effective_multiplier= person.immunity.effective_multiplier_dict,
         )
         self.vaccinated_ids.add(person.id)
 
@@ -324,17 +206,16 @@ class VaccineDistribution(Policy):
                 self.vaccinate(person=person, date=date)
 
     def update_vaccine_effect(self, person, date):
-        (
-            updated_susceptibility,
-            updated_effective_multiplier,
-        ) = person.vaccine_plan.get_updated_vaccine_effect(date=date)
-        for idx in person.vaccine_plan.infection_ids:
-            person.immunity.susceptibility_dict[idx] = min(
-                person.immunity.get_susceptibility(idx), updated_susceptibility[idx]
+        for infection_id in self.infection_ids:
+            updated_susceptibility = person.vaccine_trajectory.susceptibility(date=date, infection_id=infection_id)
+            updated_effective_multiplier = person.vaccine_trajectory.effective_multiplier(date=date, infection_id=infection_id)
+            person.immunity.susceptibility_dict[infection_id] = min(
+                person.vaccine_trajectory.prior_susceptibility.get(infection_id,1.),
+                updated_susceptibility,
             )
-            person.immunity.effective_multiplier_dict[idx] = min(
-                person.immunity.get_effective_multiplier(idx),
-                updated_effective_multiplier[idx],
+            person.immunity.effective_multiplier_dict[infection_id] = min(
+                person.vaccine_trajectory.prior_effective_multiplier.get(infection_id,1.),
+                updated_effective_multiplier,
             )
 
     def update_vaccinated(self, people, date):
@@ -343,9 +224,9 @@ class VaccineDistribution(Policy):
             for pid in self.vaccinated_ids:
                 person = people.get_from_id(pid)
                 self.update_vaccine_effect(person=person, date=date)
-                if person.vaccine_plan.is_finished(date):
+                if person.vaccine_trajectory.is_finished(date):
                     ids_to_remove.add(person.id)
-                    person.vaccine_plan = None
+                    person.vaccine_trajectory = None
             self.vaccinated_ids -= ids_to_remove
 
 
@@ -365,4 +246,3 @@ class VaccineDistributions(PolicyCollection):
         if self.policies:
             for policy in self.policies:
                 policy.update_vaccinated(people=people, date=date)
-'''
