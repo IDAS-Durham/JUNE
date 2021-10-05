@@ -29,24 +29,24 @@ def create_stages():
     first_dose = VaccineStage(
         date_administered=datetime.datetime(2100, 1, 1),
         days_to_effective=1,
-        sterilisation_efficacy={0: 0.3, 1: 0.3},
-        symptomatic_efficacy={0: 0.3, 1: 0.3},
+        sterilisation_efficacy={0: 0.3, 1: 0.2},
+        symptomatic_efficacy={0: 0.3, 1: 0.5},
     )
     second_dose = VaccineStage(
         date_administered=datetime.datetime(2100, 1, 10),
         days_to_effective=2,
-        sterilisation_efficacy={0: 0.7, 1: 0.7},
-        symptomatic_efficacy={0: 0.7, 1: 0.7},
-        prior_sterilisation_efficacy={0: 0.3, 1: 0.3},
-        prior_symptomatic_efficacy={0: 0.3, 1: 0.3},
+        sterilisation_efficacy={0: 0.7, 1: 0.2},
+        symptomatic_efficacy={0: 0.7, 1: 0.2},
+        prior_sterilisation_efficacy={0: 0.3, 1: 0.2},
+        prior_symptomatic_efficacy={0: 0.3, 1: 0.5},
     )
     third_dose = VaccineStage(
         date_administered=datetime.datetime(2100, 1, 17),
         days_to_effective=10,
-        sterilisation_efficacy={0: 0.9, 1: 0.9},
-        symptomatic_efficacy={0: 0.7, 1: 0.7},
-        prior_sterilisation_efficacy={0: 0.7, 1: 0.7},
-        prior_symptomatic_efficacy={0: 0.7, 1: 0.7},
+        sterilisation_efficacy={0: 0.9, 1: 0.8},
+        symptomatic_efficacy={0: 0.7, 1: 0.1},
+        prior_sterilisation_efficacy={0: 0.7, 1: 0.2},
+        prior_symptomatic_efficacy={0: 0.7, 1: 0.2},
     )
     return [first_dose, third_dose, second_dose]
 
@@ -253,167 +253,44 @@ class TestVaccination:
                 young_person.immunity.get_susceptibility(0), 0.001
         ) == 0.1
 
-"""
-    def test_overall_susceptibility_update_no_second_dose(
-        self,
-    ):
-        young_person = Person.from_attributes(age=30, sex="f")
-        vaccine_policy = VaccineDistribution(
-            group_by="age",
-            group_type="20-40",
-            first_dose_sterilisation_efficacy={0: 0.5},
-            second_dose_sterilisation_efficacy={0: 1.0},
-            first_dose_symptomatic_efficacy={0: 0.0},
-            second_dose_symptomatic_efficacy={0: 0.0},
-        )
-        people = Population([young_person])
-        for person in people:
-            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
-        young_person.vaccine_plan.second_dose_date = None
-        vaccine_policy.update_vaccinated(
-            people=people, date=datetime.datetime(2100, 12, 31)
-        )
-
-        assert young_person.immunity.get_susceptibility(0) == 0.5
-        assert young_person.immunity.get_effective_multiplier(0) == 1.0
-        vaccine_policy.update_vaccinated(
-            people=people, date=datetime.datetime(2100, 12, 31)
-        )
-        assert young_person.id not in vaccine_policy.vaccinated_ids
-        assert young_person.immunity.get_susceptibility(0) == 0.5
-        assert young_person.immunity.get_effective_multiplier(0) == 1.0
-
     def test_vaccinate_inmune(
-        self,
+        self, stages,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         young_person.immunity.susceptibility_dict[0] = 0.0
         vaccine_policy = VaccineDistribution(
             group_by="age",
             group_type="20-40",
-            first_dose_sterilisation_efficacy={0: 0.5},
-            second_dose_sterilisation_efficacy={0: 1.0},
-            first_dose_symptomatic_efficacy={0: 0.0},
-            second_dose_symptomatic_efficacy={0: 0.0},
+            stages=stages,
+            infection_ids=[0,1],
         )
 
         people = Population([young_person])
         for person in people:
-            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
-        young_person.vaccine_plan.second_dose_date = None
+            vaccine_policy.apply(
+                    person=person, date=datetime.datetime(2100, 1, 1)
+            )
         vaccine_policy.update_vaccinated(
             people=people, date=datetime.datetime(2100, 12, 31)
         )
 
         assert young_person.immunity.get_susceptibility(0) == 0.0
-        assert young_person.immunity.get_effective_multiplier(0) == 1.0
         vaccine_policy.update_vaccinated(
             people=people, date=datetime.datetime(2100, 12, 31)
         )
         assert young_person.id not in vaccine_policy.vaccinated_ids
         assert young_person.immunity.get_susceptibility(0) == 0.0
-
-    def test_overall_multiplier_update(
-        self,
-    ):
-        young_person = Person.from_attributes(age=30, sex="f")
-        old_person = Person.from_attributes(age=80, sex="f")
-        vaccine_policy = VaccineDistribution(
-            group_by="age",
-            group_type="20-40",
-            first_dose_sterilisation_efficacy={0: 0.0},
-            second_dose_sterilisation_efficacy={0: 0.0},
-            first_dose_symptomatic_efficacy={0: 0.5},
-            second_dose_symptomatic_efficacy={0: 1.0},
-        )
-
-        people = Population([young_person, old_person])
-        for person in people:
-            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
-        vaccine_policy.update_vaccinated(
-            people=people, date=datetime.datetime(2100, 12, 3)
-        )
-
-        assert young_person.immunity.get_effective_multiplier(0) == 0.0
-        assert young_person.immunity.get_susceptibility(0) == 1.0
-        assert old_person.immunity.get_effective_multiplier(0) == 1.0
-        assert old_person.immunity.get_susceptibility(0) == 1.0
-        vaccine_policy.update_vaccinated(
-            people=people, date=datetime.datetime(2100, 12, 3)
-        )
-        assert young_person.id not in vaccine_policy.vaccinated_ids
-        assert young_person.immunity.get_effective_multiplier(0) == 0.0
-        assert young_person.immunity.get_susceptibility(0) == 1.0
-
-    def test_all_zeros_update(
-        self,
-    ):
-        young_person = Person.from_attributes(age=30, sex="f")
-        old_person = Person.from_attributes(age=80, sex="f")
-        vaccine_policy = VaccineDistribution(
-            group_by="age",
-            group_type="20-40",
-            first_dose_sterilisation_efficacy={0: 0.0},
-            second_dose_sterilisation_efficacy={0: 0.0},
-            first_dose_symptomatic_efficacy={0: 0.0},
-            second_dose_symptomatic_efficacy={0: 0.0},
-        )
-
-        people = Population([young_person, old_person])
-        for person in people:
-            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
-        vaccine_policy.update_vaccinated(
-            people=people, date=datetime.datetime(2100, 12, 3)
-        )
-
-        assert young_person.immunity.get_effective_multiplier(0) == 1.0
-        assert young_person.immunity.get_susceptibility(0) == 1.0
-        assert old_person.immunity.get_effective_multiplier(0) == 1.0
-        assert old_person.immunity.get_susceptibility(0) == 1.0
-        vaccine_policy.update_vaccinated(
-            people=people, date=datetime.datetime(2100, 12, 3)
-        )
-        assert young_person.id not in vaccine_policy.vaccinated_ids
-        assert young_person.immunity.get_effective_multiplier(0) == 1.0
-        assert young_person.immunity.get_susceptibility(0) == 1.0
-
-    def test_both_vaccines_update(
-        self,
-    ):
-        young_person = Person.from_attributes(age=30, sex="f")
-        old_person = Person.from_attributes(age=80, sex="f")
-        vaccine_policy = VaccineDistribution(
-            group_by="age",
-            group_type="20-40",
-            first_dose_sterilisation_efficacy={0: 0.3},
-            second_dose_sterilisation_efficacy={0: 0.7},
-            first_dose_symptomatic_efficacy={0: 0.2},
-            second_dose_symptomatic_efficacy={0: 0.8},
-        )
-        people = Population([young_person, old_person])
-        for person in people:
-            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
-        vaccine_policy.update_vaccinated(
-            people=people, date=datetime.datetime(2100, 12, 3)
-        )
-        assert young_person.id not in vaccine_policy.vaccinated_ids
-        assert young_person.immunity.get_effective_multiplier(0) == pytest.approx(
-            0.2, 0.001
-        )
-        assert young_person.immunity.get_susceptibility(0) == pytest.approx(0.3, 0.001)
 
     def test_several_infections_update(
-        self,
+        self, stages,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
         vaccine_policy = VaccineDistribution(
             group_by="age",
             group_type="20-40",
-            first_dose_sterilisation_efficacy={0: 0.3, 1: 0.2},
-            second_dose_sterilisation_efficacy={0: 0.7, 1: 0.3},
-            first_dose_symptomatic_efficacy={0: 0.3, 1: 0.2},
-            second_dose_symptomatic_efficacy={0: 0.7, 1: 0.3},
+            stages=stages,
+            infection_ids=[0,1],
         )
 
         people = Population([young_person, old_person])
@@ -423,12 +300,11 @@ class TestVaccination:
             people=people, date=datetime.datetime(2100, 12, 3)
         )
         assert young_person.id not in vaccine_policy.vaccinated_ids
-        assert young_person.immunity.get_susceptibility(0) == pytest.approx(0.3, 0.001)
-        assert young_person.immunity.get_susceptibility(1) == pytest.approx(0.7, 0.001)
+        assert young_person.immunity.get_susceptibility(0) == pytest.approx(0.1, 0.001)
+        assert young_person.immunity.get_susceptibility(1) == pytest.approx(0.2, 0.001)
         assert young_person.immunity.get_effective_multiplier(0) == pytest.approx(
             0.3, 0.001
         )
         assert young_person.immunity.get_effective_multiplier(1) == pytest.approx(
-            0.7, 0.01
+            0.9, 0.01
         )
-"""
