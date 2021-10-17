@@ -53,22 +53,77 @@ class VaccineStage:
         return efficacy
 
 
+class VaccineStagesGenerator:
+    def __init__(
+        self,
+        days_to_next_dose: List[int],
+        days_to_effective: List[int],
+        sterilisation_efficacies: List[Dict],
+        symptomatic_efficacies: List[Dict],
+    ):
+        self.days_to_next_dose = days_to_next_dose
+        self.days_to_effective = days_to_effective
+        self.sterilisation_efficacies = sterilisation_efficacies
+        self.symptomatic_efficacies = symptomatic_efficacies
+
+    def __call__(
+        self,
+        person,
+        date_administered: datetime.datetime,
+    ):
+        prior_susceptibility = person.immunity.susceptibility_dict
+        prior_effective_multiplier = person.immunity.effective_multiplier_dict
+        prior_sterilisation_efficacy = {
+            k: 1 - prior_susceptibility.get(k, 1.0)
+            for k, v in self.sterilisation_efficacies[0].items()
+        }
+        prior_symptomatic_efficacy = {
+            k: 1 - prior_effective_multiplier.get(k, 1.0)
+            for k, v in self.symptomatic_efficacies[0].items()
+        }
+        stages = []
+        for i, days in enumerate(self.days_to_next_dose):
+            date = date_administered + datetime.timedelta(days=days)
+            stage = VaccineStage(
+                date_administered=date,
+                days_to_effective=self.days_to_effective[i],
+                sterilisation_efficacy=self.sterilisation_efficacies[i],
+                symptomatic_efficacy=self.symptomatic_efficacies[i],
+                prior_sterilisation_efficacy=prior_sterilisation_efficacy,
+                prior_symptomatic_efficacy=prior_symptomatic_efficacy,
+            )
+            prior_sterilisation_efficacy = self.sterilisation_efficacies[i]
+            prior_symptomatic_efficacy = self.symptomatic_efficacies[i]
+            stages.append(stage)
+        return stages
+
+
+#TODO: COMBINE STAGEGENERATOR AND TRAJECTORY
 class VaccineTrajectory:
     def __init__(
         self,
-        stages: List[VaccineStage],
-        prior_susceptibility: Dict[int,float],
-        prior_effective_multiplier: Dict[int,float],
+        person,
+        date_administered,
+        days_to_next_dose: List[int],
+        days_to_effective: List[int],
+        sterilisation_efficacies: List[Dict],
+        symptomatic_efficacies: List[Dict],
     ):
+        stage_generator = VaccineStagesGenerator(
+                days_to_next_dose= days_to_next_dose,
+                days_to_effective = days_to_effective,
+                sterilisation_efficacies=sterilisation_efficacies,
+                symptomatic_efficacies = symptomatic_efficacies,
+        )
+        stages = stage_generator(person=person, date_administered=date_administered)
         self.stages = sorted(stages, key=operator.attrgetter("date_administered"))
-        self.prior_susceptibility = prior_susceptibility
-        self.prior_effective_multiplier = prior_effective_multiplier
-        self.stages[0].prior_sterilisation_efficacy = {k: 1-prior_susceptibility.get(k, 1.) for k,v in self.stages[0].prior_sterilisation_efficacy.items()}
-        self.stages[0].prior_symptomatic_efficacy= {k: 1-prior_effective_multiplier.get(k, 1.) for k,v in self.stages[0].prior_symptomatic_efficacy.items()}
-        first_stage_date = self.stages[0].date_administered
         self.stage_days = [
-            (stage.date_administered - first_stage_date).days for stage in self.stages
+            (stage.date_administered - date_administered).days for stage in self.stages
         ]
+        self.prior_susceptibility = person.immunity.susceptibility_dict
+        self.prior_effective_multiplier = person.immunity.effective_multiplier_dict
+
+
 
     def susceptibility(self, date, infection_id: int):
         return 1.0 - self.get_vaccine_efficacy(
@@ -88,7 +143,8 @@ class VaccineTrajectory:
     ):
         days_from_start = (date - self.stages[0].date_administered).days
         index_stage = min(
-            np.searchsorted(self.stage_days, days_from_start, side='right')-1, len(self.stages) - 1
+            np.searchsorted(self.stage_days, days_from_start, side="right") - 1,
+            len(self.stages) - 1,
         )
         stage = self.stages[index_stage]
         return stage.get_vaccine_efficacy(
@@ -110,7 +166,10 @@ class VaccineDistribution(Policy):
 
     def __init__(
         self,
-        stages: List[VaccineStage],
+        days_to_next_dose: List[int],
+        days_to_effective: List[int],
+        sterilisation_efficacies: List[Dict],
+        symptomatic_efficacies: List[Dict],
         infection_ids: List[int],
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
@@ -150,13 +209,16 @@ class VaccineDistribution(Policy):
         """
 
         super().__init__(start_time=start_time, end_time=end_time)
+        self.days_to_next_dose = days_to_next_dose
+        self.days_to_effective = days_to_effective
+        self.sterilisation_efficacies = sterilisation_efficacies
+        self.symptomatic_efficacies = symptomatic_efficacies
         self.group_attribute, self.group_value = self.process_group_description(
             group_by, group_type
         )
         self.total_days = (self.end_time - self.start_time).days
         self.group_coverage = group_coverage
         self.infection_ids = infection_ids
-        self.stages = stages
         self.vaccinated_ids = set()
 
     def process_group_description(self, group_by, group_type):
@@ -185,12 +247,15 @@ class VaccineDistribution(Policy):
         return False
 
     def vaccinate(self, person, date):
-        #TODO: implement varying compliance per step
+        # TODO: implement varying compliance per step
         person.vaccinated = True
         person.vaccine_trajectory = VaccineTrajectory(
-                stages=self.stages, 
-                prior_susceptibility = person.immunity.susceptibility_dict,
-                prior_effective_multiplier= person.immunity.effective_multiplier_dict,
+                person=person,
+                date_administered=date,
+                days_to_next_dose = self.days_to_next_dose,
+                days_to_effective = self.days_to_effective,
+                sterilisation_efficacies = self.sterilisation_efficacies,
+                symptomatic_efficacies=self.symptomatic_efficacies,
         )
         self.vaccinated_ids.add(person.id)
 
@@ -207,14 +272,22 @@ class VaccineDistribution(Policy):
 
     def update_vaccine_effect(self, person, date):
         for infection_id in self.infection_ids:
-            updated_susceptibility = person.vaccine_trajectory.susceptibility(date=date, infection_id=infection_id)
-            updated_effective_multiplier = person.vaccine_trajectory.effective_multiplier(date=date, infection_id=infection_id)
+            updated_susceptibility = person.vaccine_trajectory.susceptibility(
+                date=date, infection_id=infection_id
+            )
+            updated_effective_multiplier = (
+                person.vaccine_trajectory.effective_multiplier(
+                    date=date, infection_id=infection_id
+                )
+            )
             person.immunity.susceptibility_dict[infection_id] = min(
-                person.vaccine_trajectory.prior_susceptibility.get(infection_id,1.),
+                person.vaccine_trajectory.prior_susceptibility.get(infection_id, 1.0),
                 updated_susceptibility,
             )
             person.immunity.effective_multiplier_dict[infection_id] = min(
-                person.vaccine_trajectory.prior_effective_multiplier.get(infection_id,1.),
+                person.vaccine_trajectory.prior_effective_multiplier.get(
+                    infection_id, 1.0
+                ),
                 updated_effective_multiplier,
             )
 
