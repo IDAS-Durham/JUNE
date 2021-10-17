@@ -9,6 +9,7 @@ from .policy import Policy, PolicyCollection
 
 # TODO:  combine stagesgenerator and vaccinetrajectory into one object
 # TODO: Group coverage should be given by stage to model complacency
+# TODO: Smearing of dates (give mean and std and generate spacing between doses)
 # TODO: Generalize to varying functional forms for waning, with extra params
 class VaccineStage:
     def __init__(
@@ -175,32 +176,27 @@ class VaccineDistribution(Policy):
         group_coverage: float = 1.0,
     ):
         """
-        Policy to apply a vaccinated tag to people based on certain attributes with a given probability
+        Policy to distribute vaccines among a population
 
         Parameters
         ----------
+        days_to_next_dose: list of integers with the days between doses.
+        (It'd normally start with 0 since the first dose happens on the first date)
+        days_to_effective: number of days it takes for each dose to be fully effective.
+        sterilisation_efficacies: List of dictionaries with sterilisation efficacies.
+        Example [ {0: 0.1, 1: 0.2}, {0:0.2,1:0.3} ... ], where dictionary keys are infection_ids
+        and values efficacies.
+        symptomatic_efficacies: List of dictionaries with sterilisation efficacies.
         start_time: start time of vaccine rollout
         end_time: end time of vaccine rollout
         group_description: type of people to get the vaccine, currently support:
             by: either residence, primary activity or age
             group: group type e.g. care_home for residence or XX-YY for age range
         group_coverage: % of group to be left as having target susceptibility after vaccination
-        first_dose_efficacy: % reduction in susceptibility after first dose
-        second_dose_efficacy: % reduction in susceptibility after second dose
-        second_dose_compliance: % of people getting their second vaccine dose if required
-        mean_time_delay: mean time delay of the second dose being administered after the first dose has had an effect
-        std_time_delay: std time delat of the second dose being administered
-        effective_after_first_dose: number of days for the first dose to become effective
-        effective_after_second_dose: number of days for second dose to become effective
-        Otherwise, they will be less likely to show symptoms
 
         Assumptions
         -----------
         - The chance of getting your first dose in the first first_rollout_days days is uniform
-        - The probability of when you get your second dose is chosen from a Gaussian distribution
-          with mean mean_time_delay and std std_time_delay
-        - The progression over time after vaccination (first and/or second dose) to reach the target
-          susceptibilty is linear
         - The target susceptiblity after the first dose is half that of after the second dose
         - The target susceptibility after the second dose is 1-efficacy of the vaccine
         """
