@@ -7,6 +7,9 @@ from june.demography.person import Person
 from .policy import Policy, PolicyCollection
 
 
+# TODO:  combine stagesgenerator and vaccinetrajectory into one object
+# TODO: Group coverage should be given by stage to model complacency
+# TODO: Generalize to varying functional forms for waning, with extra params
 class VaccineStage:
     def __init__(
         self,
@@ -33,8 +36,6 @@ class VaccineStage:
         else:
             self.prior_symptomatic_efficacy = prior_symptomatic_efficacy
 
-    # TODO: Generalize to varying functional forms for waning, with extra
-    # parameters
     def get_vaccine_efficacy(
         self,
         date,
@@ -98,7 +99,6 @@ class VaccineStagesGenerator:
         return stages
 
 
-#TODO: COMBINE STAGEGENERATOR AND TRAJECTORY
 class VaccineTrajectory:
     def __init__(
         self,
@@ -110,10 +110,10 @@ class VaccineTrajectory:
         symptomatic_efficacies: List[Dict],
     ):
         stage_generator = VaccineStagesGenerator(
-                days_to_next_dose= days_to_next_dose,
-                days_to_effective = days_to_effective,
-                sterilisation_efficacies=sterilisation_efficacies,
-                symptomatic_efficacies = symptomatic_efficacies,
+            days_to_next_dose=days_to_next_dose,
+            days_to_effective=days_to_effective,
+            sterilisation_efficacies=sterilisation_efficacies,
+            symptomatic_efficacies=symptomatic_efficacies,
         )
         stages = stage_generator(person=person, date_administered=date_administered)
         self.stages = sorted(stages, key=operator.attrgetter("date_administered"))
@@ -122,8 +122,6 @@ class VaccineTrajectory:
         ]
         self.prior_susceptibility = person.immunity.susceptibility_dict
         self.prior_effective_multiplier = person.immunity.effective_multiplier_dict
-
-
 
     def susceptibility(self, date, infection_id: int):
         return 1.0 - self.get_vaccine_efficacy(
@@ -160,7 +158,6 @@ class VaccineTrajectory:
         return False
 
 
-# TODO: Group coverage should be given by stage
 class VaccineDistribution(Policy):
     policy_type = "vaccine_distribution"
 
@@ -250,12 +247,12 @@ class VaccineDistribution(Policy):
         # TODO: implement varying compliance per step
         person.vaccinated = True
         person.vaccine_trajectory = VaccineTrajectory(
-                person=person,
-                date_administered=date,
-                days_to_next_dose = self.days_to_next_dose,
-                days_to_effective = self.days_to_effective,
-                sterilisation_efficacies = self.sterilisation_efficacies,
-                symptomatic_efficacies=self.symptomatic_efficacies,
+            person=person,
+            date_administered=date,
+            days_to_next_dose=self.days_to_next_dose,
+            days_to_effective=self.days_to_effective,
+            sterilisation_efficacies=self.sterilisation_efficacies,
+            symptomatic_efficacies=self.symptomatic_efficacies,
         )
         self.vaccinated_ids.add(person.id)
 
