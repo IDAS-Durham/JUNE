@@ -1,13 +1,9 @@
 import h5py
-import random
 import logging
-from collections import defaultdict
-from copy import copy, deepcopy
 
-from june.groups import Household
 from june.geography import Geography
 from june.world import World
-from june.groups import Cemeteries, Households
+from june.groups import Cemeteries
 from . import (
     load_geography_from_hdf5,
     load_hospitals_from_hdf5,
@@ -43,9 +39,11 @@ from . import (
     restore_universities_properties_from_hdf5,
     restore_hospital_properties_from_hdf5,
 )
-from june.demography import Population
-from june.demography.person import Activities, Person
 from june.mpi_setup import mpi_rank
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.domains import Domain
 
 logger = logging.getLogger("world_saver")
 if mpi_rank > 0:
@@ -55,7 +53,7 @@ if mpi_rank > 0:
 def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     """
     Saves the world to an hdf5 file. All supergroups and geography
-    are stored as groups. Class instances are substituted by ids of the 
+    are stored as groups. Class instances are substituted by ids of the
     instances. To load the world back, one needs to call the
     generate_world_from_hdf5 function.
 
@@ -99,17 +97,21 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     if world.universities is not None:
         logger.info("saving universities...")
         save_universities_to_hdf5(world.universities, file_path)
-    social_venue_possible_specs = ["pubs", "groceries", "cinemas", "gyms"]  # TODO: generalise
+    social_venue_possible_specs = [
+        "pubs",
+        "groceries",
+        "cinemas",
+        "gyms",
+    ]  # TODO: generalise
     social_venues_list = []
     for spec in social_venue_possible_specs:
         if hasattr(world, spec) and getattr(world, spec) is not None:
             social_venues_list.append(getattr(world, spec))
     if social_venues_list:
-        logger.info(f"saving social venues...")
+        logger.info("saving social venues...")
         save_social_venues_to_hdf5(social_venues_list, file_path)
     logger.info("Saving domain decomposition data...")
     save_data_for_domain_decomposition(world, file_path)
-
 
 
 def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
@@ -207,12 +209,16 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     if "companies" in f_keys:
         logger.info("restoring companies...")
         restore_companies_properties_from_hdf5(
-            world=world, file_path=file_path, chunk_size=chunk_size,
+            world=world,
+            file_path=file_path,
+            chunk_size=chunk_size,
         )
     if "schools" in f_keys:
         logger.info("restoring schools...")
         restore_school_properties_from_hdf5(
-            world=world, file_path=file_path, chunk_size=chunk_size,
+            world=world,
+            file_path=file_path,
+            chunk_size=chunk_size,
         )
     if "universities" in f_keys:
         logger.info("restoring unis...")
@@ -292,7 +298,9 @@ def generate_domain_from_hdf5(
     if "universities" in f_keys:
         logger.info("loading universities...")
         domain.universities = load_universities_from_hdf5(
-            file_path=file_path, chunk_size=chunk_size, domain_areas=area_ids,
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_areas=area_ids,
         )
     if "cities" in f_keys:
         logger.info("loading cities...")
@@ -351,7 +359,7 @@ def generate_domain_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
-            super_areas_to_domain_dict=super_areas_to_domain_dict
+            super_areas_to_domain_dict=super_areas_to_domain_dict,
         )
     if "care_homes" in f_keys:
         logger.info("restoring care homes...")

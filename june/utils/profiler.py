@@ -1,5 +1,6 @@
 import cProfile
-from june.mpi_setup import mpi_rank, mpi_comm 
+from june.mpi_setup import mpi_rank, mpi_comm
+
 
 # a decorator for profiling
 def profile(filename=None, comm=mpi_comm):
@@ -21,6 +22,3 @@ def profile(filename=None, comm=mpi_comm):
         return wrap_f
 
     return prof_decorator
-
-
-

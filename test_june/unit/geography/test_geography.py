@@ -1,8 +1,6 @@
 import pytest
-import numpy as np
 import pandas as pd
 import numpy.testing as npt
-from time import time
 
 from june.geography import geography as g
 
@@ -15,7 +13,12 @@ def geography_example():
 def test__create_geographical_hierarchy():
     hierarchy_df = pd.DataFrame(
         {
-            "area": ["area_1", "area_2", "area_3", "area_4",],
+            "area": [
+                "area_1",
+                "area_2",
+                "area_3",
+                "area_4",
+            ],
             "super_area": [
                 "super_area_1",
                 "super_area_1",
@@ -42,15 +45,14 @@ def test__create_geographical_hierarchy():
     )
     super_area_coordinates_df.set_index("super_area", inplace=True)
     area_socioeconomic_indices_df = pd.Series(
-        index=area_coordinates_df.index,
-        data= [0.01, 0.02, 0.75, 0.90]
+        index=area_coordinates_df.index, data=[0.01, 0.02, 0.75, 0.90]
     )
     # area_socioeconomic_indices_df.set_index("area", inplace=True)
     areas, super_areas, regions = g.Geography.create_geographical_units(
         hierarchy=hierarchy_df,
         area_coordinates=area_coordinates_df,
         super_area_coordinates=super_area_coordinates_df,
-        area_socioeconomic_indices=area_socioeconomic_indices_df
+        area_socioeconomic_indices=area_socioeconomic_indices_df,
     )
 
     assert len(areas) == 4
@@ -69,7 +71,9 @@ def test__create_geographical_hierarchy():
     assert areas[0].socioeconomic_index == 0.01
     assert areas[1].socioeconomic_index == 0.02
     assert areas[2].socioeconomic_index == 0.75
-    assert areas[3].socioeconomic_index == 0.90 # this one is important, it's a single-area region.
+    assert (
+        areas[3].socioeconomic_index == 0.90
+    )  # this one is important, it's a single-area region.
 
 
 def test__nr_of_members_in_units(geography_example):
@@ -81,7 +85,9 @@ def test__area_attributes(geography_example):
     area = geography_example.areas.get_from_name("E00003598")
     assert area.name == "E00003598"
     npt.assert_almost_equal(
-        area.coordinates, [51.395954503652504, 0.10846483370388499], decimal=3,
+        area.coordinates,
+        [51.395954503652504, 0.10846483370388499],
+        decimal=3,
     )
     assert area.super_area.name == "E02000140"
     assert area.socioeconomic_index == 0.12
@@ -91,7 +97,9 @@ def test__super_area_attributes(geography_example):
     super_area = geography_example.super_areas.get_from_name("E02000140")
     assert super_area.name == "E02000140"
     npt.assert_almost_equal(
-        super_area.coordinates, [51.40340615262757, 0.10741193961090514], decimal=3,
+        super_area.coordinates,
+        [51.40340615262757, 0.10741193961090514],
+        decimal=3,
     )
     assert "E00003595" in [area.name for area in super_area.areas]
 
@@ -100,9 +108,10 @@ def test__create_single_area():
     geography = g.Geography.from_file(filter_key={"area": ["E00120481"]})
     assert len(geography.areas) == 1
 
+
 def test__geography_no_socioeconomic_index():
     geog_no_sei = g.Geography.from_file(
-        filter_key={"area": ["E00003598","E00120481"]},
+        filter_key={"area": ["E00003598", "E00120481"]},
         area_socioeconomic_index_filename=None,
     )
     for area in geog_no_sei.areas:
@@ -124,10 +133,5 @@ def test_create_ball_tree_for_super_areas():
         == 2
     )
     assert (
-        len(
-            geo.areas.get_closest_areas(
-                coordinates=[54.770512, -1.594221], k=10
-            )
-        )
-        == 10
+        len(geo.areas.get_closest_areas(coordinates=[54.770512, -1.594221], k=10)) == 10
     )

@@ -18,7 +18,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
 
     Parameters
     ----------
-    schools 
+    schools
         population object
     file_path
         path of the saved hdf5 file
@@ -135,7 +135,6 @@ def load_schools_from_hdf5(
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_schools)
-            length = idx2 - idx1
             ids = read_dataset(schools["id"], idx1, idx2)
             n_pupils_max = read_dataset(schools["n_pupils_max"], idx1, idx2)
             age_min = read_dataset(schools["age_min"], idx1, idx2)
@@ -178,7 +177,6 @@ def restore_school_properties_from_hdf5(
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         schools = f["schools"]
-        schools_list = []
         n_schools = schools.attrs["n_schools"]
         n_chunks = int(np.ceil(n_schools / chunk_size))
         for chunk in range(n_chunks):

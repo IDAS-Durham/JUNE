@@ -1,4 +1,5 @@
 import time
+import logging
 import numpy as np
 import numba as nb
 import random
@@ -19,14 +20,18 @@ from june.epidemiology.infection import (
     SymptomTag,
     ImmunitySetter,
     Covid19,
-    B16172
+    B16172,
 )
 from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries
 from june.groups.travel import Travel
 from june.groups.leisure import Cinemas, Pubs, Groceries, generate_leisure_for_config
 from june.simulator import Simulator
 from june.epidemiology.epidemiology import Epidemiology
-from june.epidemiology.infection_seed import InfectionSeed, Observed2Cases, InfectionSeeds
+from june.epidemiology.infection_seed import (
+    InfectionSeed,
+    Observed2Cases,
+    InfectionSeeds,
+)
 from june.policy import Policies
 from june.event import Events
 from june import paths
@@ -34,6 +39,10 @@ from june.records import Record
 from june.records.records_writer import combine_records
 from june.domains import Domain, DomainSplitter
 from june.mpi_setup import mpi_comm, mpi_rank, mpi_size
+
+# disable logging for ranks
+if mpi_rank > 0:
+    logging.disable(logging.CRITICAL)
 
 
 def keys_to_int(x):
@@ -104,34 +113,24 @@ def generate_simulator():
         super_areas_to_domain_dict=super_area_ids_to_domain_dict,
         hdf5_file_path=world_file,
     )
-    record.static_data(world=domain)
     # regenerate lesiure
     leisure = generate_leisure_for_config(domain, config_path)
     #
     # health index and infection selecctor
     health_index_generator = HealthIndexGenerator.from_file()
     selector_c19 = InfectionSelector(
-        infection_class=Covid19,
-        health_index_generator=health_index_generator
+        infection_class=Covid19, health_index_generator=health_index_generator
     )
     selector_indian = InfectionSelector(
-        infection_class=B16172,
-        health_index_generator=health_index_generator
+        infection_class=B16172, health_index_generator=health_index_generator
     )
     inf_selectors = InfectionSelectors([selector_c19, selector_indian])
-    oc = Observed2Cases.from_file(
-        health_index_generator=health_index_generator, smoothing=True
-    )
-    daily_cases_per_region = oc.get_regional_latent_cases()
-    daily_cases_per_super_area = oc.convert_regional_cases_to_super_area(
-        daily_cases_per_region,
-        starting_date="2020-02-28",
-    )
-    infection_seed = InfectionSeed(
+    infection_seed = InfectionSeed.from_uniform_cases(
         world=domain,
         infection_selector=selector_c19,
-        daily_super_area_cases=daily_cases_per_super_area,
-        seed_strength=100,
+        cases_per_capita=0.001,
+        seed_strength=10,
+        date="2020-02-28",
     )
     immunity_setter = ImmunitySetter()
 
@@ -142,9 +141,7 @@ def generate_simulator():
     )
 
     # interaction
-    interaction = Interaction.from_file(
-        config_filename="./config_interaction.yaml"
-    )
+    interaction = Interaction.from_file(config_filename="./config_interaction.yaml")
     # policies
     policies = Policies.from_file()
 
@@ -165,7 +162,6 @@ def generate_simulator():
         config_filename=config_path,
         record=record,
     )
-    print("simulator ready to go")
     return simulator
 
 

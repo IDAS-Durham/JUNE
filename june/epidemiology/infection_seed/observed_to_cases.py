@@ -2,7 +2,7 @@ import pandas as pd
 import yaml
 import numpy as np
 from datetime import timedelta
-from typing import List, Optional, Tuple, Union, Dict
+from typing import List, Optional, Tuple
 from collections import defaultdict, Counter
 from scipy.ndimage import gaussian_filter1d
 
@@ -11,7 +11,14 @@ from june.demography import Person
 from june.epidemiology.infection.symptom_tag import SymptomTag
 from june.epidemiology.infection.trajectory_maker import TrajectoryMaker
 
-default_trajectories_path = paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.epidemiology.infection.health_index.health_index import HealthIndexGenerator
+    from june.epidemiology.infection.trajectory_maker import Stage
+
+default_trajectories_path = (
+    paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
+)
 default_area_super_region_path = (
     paths.data_path / "input/geography/area_super_area_region.csv"
 )
@@ -195,7 +202,7 @@ class Observed2Cases:
         self,
         age_per_area_df: pd.DataFrame,
         female_fraction_per_area_df: pd.DataFrame,
-    ) -> (pd.DataFrame, pd.DataFrame):
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Combines the age per area dataframe and female fraction per area to
         create two data frames with numbers of females by age per region, and
@@ -246,7 +253,9 @@ class Observed2Cases:
         for sex in ("m", "f"):
             for age in np.arange(100):
                 symptoms_rates_dict[sex][age] = np.diff(
-                    self.health_index_generator(Person(sex=sex, age=age), infection_id=None),
+                    self.health_index_generator(
+                        Person(sex=sex, age=age), infection_id=None
+                    ),
                     prepend=0.0,
                     append=1.0,
                 )  # need np.diff because health index is cummulative
@@ -441,7 +450,6 @@ class Observed2Cases:
             columns=self.area_super_region_df["super_area"].unique(),
         )
         super_area_weights = self.get_super_area_population_weights()
-        super_area_cases = []
         for region in n_cases_per_region_df.columns:
             super_area_weights_for_region = super_area_weights[
                 super_area_weights["region"] == region

@@ -3,7 +3,7 @@ from itertools import count
 from typing import List, Dict, Optional
 
 import numpy as np
-from random import randint, random
+from random import randint
 import pandas as pd
 import yaml
 from scipy.stats import rv_discrete
@@ -12,6 +12,10 @@ from june import paths
 from june.demography import Person, Population
 from june.geography import Geography, Areas, SuperAreas
 from june.utils import random_choice_numba
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.groups.company import CompanyError
 
 default_workflow_file = paths.data_path / "input/work/work_flow.csv"
 default_sex_per_sector_per_superarea_file = (
@@ -54,7 +58,7 @@ class WorkerDistributor:
             DataFrame that contains information on the nr. of man and woman working
             in different sectors per Area (note that it is thus not provided for the
             SuperArea).
-        sub_sector_ratio 
+        sub_sector_ratio
             For each region containing the ratio of man and woman respectively that
             work in any key sector type. (e.g. for healthcare, how many man work
             in the key occupations, such as nurses within that sector)
@@ -85,13 +89,16 @@ class WorkerDistributor:
         self.n_boundary_workers = 0
 
     def distribute(
-        self, areas: Areas, super_areas: SuperAreas, population: Population,
+        self,
+        areas: Areas,
+        super_areas: SuperAreas,
+        population: Population,
     ):
         """
         Assign any person within the eligible working age range a location
         (SuperArea) of their work, and the sector (e.g. "P"=education) of
         their work.
-        
+
         Parameters
         ----------
         """
@@ -99,10 +106,12 @@ class WorkerDistributor:
         self.super_areas = super_areas
         lockdown_tags = np.array(["key_worker", "random", "furlough"])
         lockdown_tags_idx = np.arange(0, len(lockdown_tags))
-        lockdown_tags_probabilities_by_sector = self._parse_closure_probabilities_by_sector(
-            company_closure=self.company_closure, lockdown_tags=lockdown_tags
+        lockdown_tags_probabilities_by_sector = (
+            self._parse_closure_probabilities_by_sector(
+                company_closure=self.company_closure, lockdown_tags=lockdown_tags
+            )
         )
-        logger.info(f"Distributing workers to super areas...")
+        logger.info("Distributing workers to super areas...")
         for i, area in enumerate(iter(self.areas)):
             wf_area_df = self.workflow_df.loc[(area.super_area.name,)]
             self._work_place_lottery(area.name, wf_area_df, len(area.people))
@@ -119,7 +128,7 @@ class WorkerDistributor:
                     )
             if i % 5000 == 0 and i != 0:
                 logger.info(f"Distributed workers in {i} areas of {len(self.areas)}")
-        logger.info(f"Workers distributed.")
+        logger.info("Workers distributed.")
 
     def _work_place_lottery(
         self, area_name: str, wf_area_df: pd.DataFrame, n_workers: int
@@ -160,7 +169,7 @@ class WorkerDistributor:
                 values=(numbers, distribution_female)
             )
             self.sector_female_rnd = self.sector_distribution_female.rvs(size=n_workers)
-        except:
+        except Exception:
             logger.info(f"The Area {area_name} has no woman working in it.")
         try:
             # fails if no male work in this Area
@@ -171,7 +180,7 @@ class WorkerDistributor:
                 values=(numbers, distribution_male)
             )
             self.sector_male_rnd = self.sector_distribution_male.rvs(size=n_workers)
-        except:
+        except Exception:
             logger.info(f"The Area {area_name} has no man working in it.")
 
     def _assign_work_location(self, i: int, person: Person, wf_area_df: pd.DataFrame):
@@ -316,7 +325,7 @@ class WorkerDistributor:
         policy_config_file: str = default_policy_config_file,
     ) -> "WorkerDistributor":
         """
-        
+
         Example
         -------
             filter_key = {"region" : "North East"}
@@ -352,8 +361,7 @@ class WorkerDistributor:
         config_file: str = default_config_file,
         policy_config_file: str = default_policy_config_file,
     ) -> "WorkerDistributor":
-        """
-        """
+        """ """
         return cls.from_file(
             area_names,
             workflow_file,
@@ -400,7 +408,8 @@ class WorkerDistributor:
 
 
 def load_workflow_df(
-    workflow_file: str = default_workflow_file, area_names: Optional[List[str]] = None,
+    workflow_file: str = default_workflow_file,
+    area_names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     wf_df = pd.read_csv(
         workflow_file,
@@ -442,7 +451,8 @@ def load_sex_per_sector(
 
     uni_columns = [col for col in sector_by_sex_df.columns.values if "all " in col]
     sector_by_sex_df = sector_by_sex_df.drop(
-        uni_columns + ["m all", "m R S T U", "f all", "f R S T U"], axis=1,
+        uni_columns + ["m all", "m R S T U", "f all", "f R S T U"],
+        axis=1,
     )
 
     if area_names:
@@ -452,11 +462,11 @@ def load_sex_per_sector(
         if (np.sum(sector_by_sex_df["m Q"]) == 0) and (
             np.sum(sector_by_sex_df["f Q"]) == 0
         ):
-            logger.info(f"There exists no Healthcare sector in this geography.")
+            logger.info("There exists no Healthcare sector in this geography.")
         if (np.sum(sector_by_sex_df["m P"]) == 0) and (
             np.sum(sector_by_sex_df["f P"]) == 0
         ):
-            logger.info(f"There exists no Education sector in this geography.")
+            logger.info("There exists no Education sector in this geography.")
 
     # convert counts to ratios
     sector_by_sex_df.loc[:, m_columns] = sector_by_sex_df.loc[:, m_columns].div(

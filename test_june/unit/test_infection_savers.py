@@ -14,8 +14,9 @@ from june.hdf5_savers.infection_savers import (
     save_infections_to_hdf5,
     load_infections_from_hdf5,
     save_immunities_to_hdf5,
-    load_immunities_from_hdf5
+    load_immunities_from_hdf5,
 )
+
 
 @pytest.fixture(name="xnexp_transmissions", scope="module")
 def setup_xnexp_trans():
@@ -42,6 +43,7 @@ def setup_xnexp_trans():
     transmissions = [transmission1, transmission2]
     return transmissions
 
+
 @pytest.fixture(name="gamma_transmissions", scope="module")
 def setup_gamma_trans():
     transmission1 = TransmissionGamma(
@@ -65,6 +67,7 @@ def setup_gamma_trans():
     transmissions = [transmission1, transmission2]
     return transmissions
 
+
 @pytest.fixture(name="symptoms_list", scope="module")
 def setup_symptoms():
     health_index = np.linspace(0, 1, 5)
@@ -72,6 +75,7 @@ def setup_symptoms():
     symptoms2 = Symptoms(health_index=health_index)
     symptoms = [symptoms1, symptoms2]
     return symptoms
+
 
 @pytest.fixture(name="infections", scope="module")
 def setup_infections(xnexp_transmissions, symptoms_list):
@@ -81,17 +85,20 @@ def setup_infections(xnexp_transmissions, symptoms_list):
         infections.append(infection)
     return infections
 
+
 class TestTransmissionSavers:
     def test__save_xnexp(self, xnexp_transmissions, test_results):
-        with h5py.File(test_results / "checkpoint_tests.hdf5", "w") as f:
+        with h5py.File(test_results / "checkpoint_tests.hdf5", "w"):
             pass
-        save_transmissions_to_hdf5(test_results / "checkpoint_tests.hdf5", xnexp_transmissions, chunk_size=1)
+        save_transmissions_to_hdf5(
+            test_results / "checkpoint_tests.hdf5", xnexp_transmissions, chunk_size=1
+        )
         transmissions_recovered = load_transmissions_from_hdf5(
             test_results / "checkpoint_tests.hdf5", chunk_size=1
         )
         assert len(transmissions_recovered) == len(xnexp_transmissions)
         for transmission, transmission_recovered in zip(
-            xnexp_transmissions, transmissions_recovered 
+            xnexp_transmissions, transmissions_recovered
         ):
             for attribute in [
                 "time_first_infectious",
@@ -106,15 +113,17 @@ class TestTransmissionSavers:
                 )
 
     def test__save_gamma(self, gamma_transmissions, test_results):
-        with h5py.File(test_results / "checkpoint_tests.hdf5", "w") as f:
+        with h5py.File(test_results / "checkpoint_tests.hdf5", "w"):
             pass
-        save_transmissions_to_hdf5(test_results / "checkpoint_tests.hdf5", gamma_transmissions, chunk_size=1)
+        save_transmissions_to_hdf5(
+            test_results / "checkpoint_tests.hdf5", gamma_transmissions, chunk_size=1
+        )
         transmissions_recovered = load_transmissions_from_hdf5(
             test_results / "checkpoint_tests.hdf5", chunk_size=1
         )
         assert len(transmissions_recovered) == len(gamma_transmissions)
         for transmission, transmission_recovered in zip(
-            gamma_transmissions, transmissions_recovered 
+            gamma_transmissions, transmissions_recovered
         ):
             for attribute in ["shape", "shift", "scale", "norm", "probability"]:
                 assert getattr(transmission, attribute) == getattr(
@@ -124,9 +133,11 @@ class TestTransmissionSavers:
 
 class TestSymptomSavers:
     def test__save_symptoms(self, symptoms_list, test_results):
-        with h5py.File(test_results / "checkpoint_tests.hdf5", "w") as f:
+        with h5py.File(test_results / "checkpoint_tests.hdf5", "w"):
             pass
-        save_symptoms_to_hdf5(test_results / "checkpoint_tests.hdf5", symptoms_list, chunk_size=1)
+        save_symptoms_to_hdf5(
+            test_results / "checkpoint_tests.hdf5", symptoms_list, chunk_size=1
+        )
         symptoms_recovered = load_symptoms_from_hdf5(
             test_results / "checkpoint_tests.hdf5", chunk_size=1
         )
@@ -150,12 +161,15 @@ class TestSymptomSavers:
                 assert stage[0] == stage_recovered[0]
                 assert stage[1] == stage_recovered[1]
 
+
 class TestInfectionSavers:
     def test__save_infection(self, infections, test_results):
-        with h5py.File(test_results / "checkpoint_tests.hdf5", "w") as f:
+        with h5py.File(test_results / "checkpoint_tests.hdf5", "w"):
             pass
-        save_infections_to_hdf5(test_results / "checkpoint_tests.hdf5", infections, chunk_size=1)
-        infections_recovered= load_infections_from_hdf5(
+        save_infections_to_hdf5(
+            test_results / "checkpoint_tests.hdf5", infections, chunk_size=1
+        )
+        infections_recovered = load_infections_from_hdf5(
             test_results / "checkpoint_tests.hdf5", chunk_size=1
         )
         assert len(infections_recovered) == len(infections)
@@ -199,9 +213,10 @@ class TestInfectionSavers:
                     transmission_recovered, attribute
                 )
 
+
 class TestImmunitySavers:
     def test__save_immunities(self, test_results):
-        with h5py.File(test_results / "checkpoint_tests.hdf5", "w") as f:
+        with h5py.File(test_results / "checkpoint_tests.hdf5", "w"):
             pass
         immunities = []
         for i in range(100):
@@ -209,7 +224,9 @@ class TestImmunitySavers:
             imm = Immunity(susc_dict)
             immunities.append(imm)
         save_immunities_to_hdf5(test_results / "checkpoint_tests.hdf5", immunities)
-        immunities_recovered = load_immunities_from_hdf5(test_results / "checkpoint_tests.hdf5", chunk_size = 2)
+        immunities_recovered = load_immunities_from_hdf5(
+            test_results / "checkpoint_tests.hdf5", chunk_size=2
+        )
         assert len(immunities) == len(immunities_recovered)
         for imm, immr in zip(immunities, immunities_recovered):
             assert imm.susceptibility_dict == immr.susceptibility_dict

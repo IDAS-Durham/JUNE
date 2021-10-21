@@ -1,13 +1,13 @@
 import datetime
-from copy import deepcopy
 
-from .policy import Policy, PolicyCollection, Policies
+from .policy import Policy, PolicyCollection
 from june.interaction import Interaction
 from collections import defaultdict
 
 
 class InteractionPolicy(Policy):
     policy_type = "interaction"
+
 
 class InteractionPolicies(PolicyCollection):
     policy_type = "interaction"
@@ -20,9 +20,11 @@ class InteractionPolicies(PolicyCollection):
             for group in beta_reductions_dict:
                 beta_reductions[group] *= beta_reductions_dict[group]
         interaction.beta_reductions = beta_reductions
-        
+
+
 class SocialDistancing(InteractionPolicy):
     policy_subtype = "beta_factor"
+
     def __init__(
         self,
         start_time: str,
@@ -35,7 +37,7 @@ class SocialDistancing(InteractionPolicy):
     def apply(self):
         """
         Implement social distancing policy
-        
+
         -----------
         Parameters:
         betas: e.g. (dict) from DefaultInteraction, e.g. DefaultInteraction.from_file(selector=selector).beta
@@ -50,14 +52,16 @@ class SocialDistancing(InteractionPolicy):
         """
         return self.beta_factors
 
+
 class MaskWearing(InteractionPolicy):
     policy_subtype = "beta_factor"
+
     def __init__(
         self,
         start_time: str,
         end_time: str,
         compliance: float,
-        beta_factor: float,    
+        beta_factor: float,
         mask_probabilities: dict = None,
     ):
         super().__init__(start_time, end_time)
@@ -68,7 +72,7 @@ class MaskWearing(InteractionPolicy):
     def apply(self):
         """
         Implement mask wearing policy
-        
+
         -----------
         Parameters:
         betas: e.g. (dict) from DefaultInteraction, e.g. DefaultInteraction.from_file(selector=selector).beta
@@ -80,6 +84,5 @@ class MaskWearing(InteractionPolicy):
         """
         ret = {}
         for key, value in self.mask_probabilities.items():
-            ret[key] = (1 - (value * self.compliance * (1-self.beta_factor)))
+            ret[key] = 1 - (value * self.compliance * (1 - self.beta_factor))
         return ret
-

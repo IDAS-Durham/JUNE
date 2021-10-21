@@ -5,7 +5,7 @@ from typing import List, Optional
 from enum import IntEnum
 from sklearn.neighbors import BallTree
 
-from june.groups import Supergroup, Group, Subgroup
+from june.groups import Supergroup, Group
 from june.geography import Area, Areas, SuperArea, SuperAreas, Geography
 from june.mpi_setup import mpi_rank
 
@@ -154,6 +154,7 @@ class SocialVenues(Supergroup):
                 for _ in range(int(np.ceil(venues_per_capita * area_population))):
                     sv = cls.social_venue_class()
                     sv.area = area
+                    sv.coordinates = area.coordinates
                     social_venues.append(sv)
         else:
             raise SocialVenueError(
@@ -187,11 +188,15 @@ class SocialVenues(Supergroup):
                     sv.area = area
                     social_venues.append(sv)
         elif venues_per_capita is not None:
-            for area in super_areas:
-                area_population = len(area.people)
-                for _ in range(int(np.ceil(venues_per_capita * area_population))):
+            for super_area in super_areas:
+                super_area_population = len(super_area.people)
+                for _ in range(int(np.ceil(venues_per_capita * super_area_population))):
                     sv = cls.social_venue_class()
+                    area = Areas(super_area.areas).get_closest_area(
+                        coordinates=super_area.coordinates
+                    )
                     sv.area = area
+                    sv.coordinates = area.coordinates
                     social_venues.append(sv)
         else:
             raise SocialVenueError(

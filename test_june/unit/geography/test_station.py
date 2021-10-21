@@ -1,7 +1,7 @@
 from pathlib import Path
 import numpy as np
 
-from june.geography import SuperArea, SuperAreas, Station, Stations, City, Cities
+from june.geography import SuperArea, SuperAreas, Station, Stations, City
 from june.geography.station import CityStation, InterCityStation
 
 super_stations_test_file = Path(__file__).parent / "stations.csv"
@@ -30,7 +30,7 @@ class TestStations:
             number_of_stations=4,
             distance_to_city_center=500,
             super_areas=super_areas,
-            type="city_station"
+            type="city_station",
         )
         assert len(city_stations) == 4
         for st in city_stations:
@@ -53,7 +53,7 @@ class TestStations:
             number_of_stations=4,
             distance_to_city_center=500,
             super_areas=super_areas,
-            type="inter_city_station"
+            type="inter_city_station",
         )
         for st in inter_city_stations:
             assert isinstance(st, InterCityStation)

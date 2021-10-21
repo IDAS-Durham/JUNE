@@ -1,5 +1,0 @@
-# specify which geographical area to use
-zone: test
-
-# specify which social environments to have in the world
-groups: ['pubs', 'schools', 'companies', 'households']

@@ -1,5 +1,4 @@
 from june.geography import Geography
-from june import World
 from june.world import generate_world_from_geography
 from june.groups import Schools, Hospitals, Companies, Households, Cemeteries, CareHomes
 
@@ -24,6 +23,7 @@ def test__world_has_everything(world):
     assert isinstance(world.hospitals, Hospitals)
     assert isinstance(world.care_homes, CareHomes)
     assert isinstance(world.companies, Companies)
+
 
 def test__people_in_world_right_subgroups(world):
     dummy_people = world.people.members[:40]

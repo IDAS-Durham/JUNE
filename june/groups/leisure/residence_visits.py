@@ -1,7 +1,6 @@
 import yaml
 from random import shuffle, randint
 import numpy as np
-from numpy.random import choice
 
 from june.groups.leisure import SocialVenueDistributor
 from june.paths import configs_path

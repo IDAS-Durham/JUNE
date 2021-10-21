@@ -1,16 +1,11 @@
 import numpy as np
 import pytest
-from june.groups import CareHome
-from june import paths
-from june.interaction import Interaction
-from june.groups import CareHome, Household
-from june.epidemiology.infection.symptom_tag import SymptomTag
 from june.epidemiology.infection.health_index.health_index import (
     HealthIndexGenerator,
     index_to_maximum_symptoms_tag,
 )
 from june.demography import Person, Population
-from june.epidemiology.infection import Covid19, B117, ImmunitySetter 
+from june.epidemiology.infection import Covid19, ImmunitySetter
 
 
 @pytest.fixture(name="health_index", scope="module")
@@ -31,22 +26,17 @@ class TestHealthIndex:
 
 
 class TestMultipliers:
-
-    @pytest.mark.parametrize("multiplier",[1.5,0.5])
-    def test__apply_large_multiplier(
-        self, multiplier
-    ):
+    @pytest.mark.parametrize("multiplier", [1.5, 0.5])
+    def test__apply_large_multiplier(self, multiplier):
         health_index = HealthIndexGenerator.from_file()
-        probabilities = np.array([1./8]*8)
+        probabilities = np.array([1.0 / 8] * 8)
         modified_probabilities = health_index.apply_effective_multiplier(
-                probabilities=probabilities,
-                effective_multiplier=multiplier
+            probabilities=probabilities, effective_multiplier=multiplier
         )
-        assert modified_probabilities[0] == (1 - 6./8.*multiplier)/2.
-        assert modified_probabilities[1] == (1 - 6./8.*multiplier)/2.
-        for i in range(2,8):
-            assert modified_probabilities[i] == 1./8.*multiplier
-
+        assert modified_probabilities[0] == (1 - 6.0 / 8.0 * multiplier) / 2.0
+        assert modified_probabilities[1] == (1 - 6.0 / 8.0 * multiplier) / 2.0
+        for i in range(2, 8):
+            assert modified_probabilities[i] == 1.0 / 8.0 * multiplier
 
     def test__comorbidities_effect(self):
         comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
@@ -54,11 +44,11 @@ class TestMultipliers:
             sex="f",
             age=60,
         )
-        dummy.infection = Covid19(None,None)
+        dummy.infection = Covid19(None, None)
         feo = Person.from_attributes(sex="f", age=60, comorbidity="feo")
-        feo.infection = Covid19(None,None)
+        feo.infection = Covid19(None, None)
         guapo = Person.from_attributes(sex="f", age=60, comorbidity="guapo")
-        guapo.infection = Covid19(None,None)
+        guapo.infection = Covid19(None, None)
 
         population = Population([])
         population.add(dummy)
@@ -80,7 +70,7 @@ class TestMultipliers:
             },
         }
         multiplier_setter = ImmunitySetter(
-            multiplier_by_comorbidity = comorbidity_multipliers,
+            multiplier_by_comorbidity=comorbidity_multipliers,
             comorbidity_prevalence_reference_population=prevalence_reference_population,
         )
         multiplier_setter.set_multipliers(population)

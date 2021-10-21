@@ -3,18 +3,6 @@ from june.geography import SuperArea
 from june.groups import Company
 from june.demography import Person
 from june.distributors import CompanyDistributor
-from june.geography import Geography
-from june.world import World, generate_world_from_geography
-from june.groups import (
-    Hospitals,
-    Schools,
-    Companies,
-    Households,
-    CareHomes,
-    Universities,
-    Cemeteries,
-)
-
 # TODO: This test shouldn't use from goegraphy! Create a world that has those characteristics
 
 
@@ -35,6 +23,7 @@ def test__company_distributor(super_area):
     for company in super_area.companies:
         assert len(company.people) == 1
         assert list(company.people)[0].sector == company.sector
+
 
 def test__company_and_work_super_area(full_world):
     has_people = False

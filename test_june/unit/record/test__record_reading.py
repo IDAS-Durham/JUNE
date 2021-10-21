@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import random
-import tables
 import numpy as np
 import pytest
 import pandas as pd
@@ -178,11 +177,15 @@ def create_sim(world, interaction, selector, seed=False):
     policies = Policies(
         [Hospitalisation(start_time="1000-01-01", end_time="9999-01-01")]
     )
-    infection_seed = InfectionSeed(world=world, infection_selector=selector)
+    infection_seed = InfectionSeed.from_uniform_cases(
+        world=world,
+        infection_selector=selector,
+        cases_per_capita=2 / len(world.people),
+        date="2020-03-01",
+    )
     if not seed:
-        n_cases = 2
-        infection_seed.unleash_virus(
-            population=world.people, n_cases=n_cases, record=record, time=0
+        infection_seed.unleash_virus_per_day(
+            date=pd.to_datetime("2020-03-01"), time=0, record=record
         )
     elif seed == "hospitalised":
         for person in world.people:
@@ -207,7 +210,6 @@ def create_sim(world, interaction, selector, seed=False):
 def test__log_infected_by_region(world, interaction, selector):
     clean_world(world)
     sim = create_sim(world, interaction, selector)
-    infections_seed = [person.id for person in world.people.infected]
     sim.timer.reset()
     counter = 0
     new_infected = {}

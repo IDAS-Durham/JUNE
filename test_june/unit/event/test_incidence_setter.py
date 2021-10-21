@@ -34,7 +34,9 @@ class TestIncidenceSetter:
             people.append(person)
 
         world.areas = Areas([ne_area, london_area], ball_tree=False)
-        world.super_areas = SuperAreas([ne_super_area, london_super_area], ball_tree=False)
+        world.super_areas = SuperAreas(
+            [ne_super_area, london_super_area], ball_tree=False
+        )
         world.regions = Regions([london, ne])
         world.people = Population(people)
         return world
@@ -70,8 +72,12 @@ class TestIncidenceSetter:
 
     def test__adding_infections(self, world, policy_simulator):
         selector = policy_simulator.epidemiology.infection_selectors[0]
-        selector.infect_person_at_time(world.regions.get_from_name("London").people[0], 0.0)
-        selector.infect_person_at_time(world.regions.get_from_name("North East").people[0], 0.0)
+        selector.infect_person_at_time(
+            world.regions.get_from_name("London").people[0], 0.0
+        )
+        selector.infect_person_at_time(
+            world.regions.get_from_name("North East").people[0], 0.0
+        )
         setter = IncidenceSetter(
             start_time="2020-03-01",
             end_time="2020-03-02",

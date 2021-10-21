@@ -1,48 +1,17 @@
 import random
 from datetime import datetime
-import pytest
 
+import pytest
 from june import paths
-from june.demography import Person, Population
-from june.geography import Geography, Area, SuperArea, Areas, SuperAreas
-from june.world import World
-from june.groups import Hospitals, Schools, Companies, CareHomes, Universities
-from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
-from june.groups.travel import ModeOfTransport, Travel
-from june.epidemiology.infection import (
-    InfectionSelector,
-    SymptomTag,
-    InfectionSelectors,
-    Immunity,
-)
+from june.activity import activity_hierarchy
 from june.epidemiology.epidemiology import Epidemiology
+from june.epidemiology.infection import (Immunity, InfectionSelector,
+                                         InfectionSelectors)
+from june.groups.leisure import leisure
+from june.groups.travel import Travel
 from june.interaction import Interaction
-from june.policy import (
-    Policies,
-    Hospitalisation,
-    MedicalCarePolicies,
-    SevereSymptomsStayHome,
-    IndividualPolicies,
-)
-from june.groups import (
-    Hospital,
-    School,
-    Company,
-    Household,
-    University,
-    CareHome,
-)
-from june.groups import (
-    Hospitals,
-    Schools,
-    Companies,
-    Households,
-    Universities,
-    Cemeteries,
-)
-from june.groups.leisure import leisure, Cinemas, Pubs, Cinema, Pub, Grocery, Groceries
-from june.simulator import Simulator, activity_hierarchy
-from june.world import generate_world_from_geography
+from june.policy import Hospitalisation, MedicalCarePolicies, Policies
+from june.simulator import Simulator
 
 constant_config = (
     paths.configs_path
@@ -167,7 +136,7 @@ def test__clear_world(sim: Simulator):
                 assert len(subgroup.people) == 0
 
     for person in sim.world.people.members:
-        assert person.busy == False
+        assert person.busy is False
 
 
 def test__move_to_active_subgroup(sim: Simulator):

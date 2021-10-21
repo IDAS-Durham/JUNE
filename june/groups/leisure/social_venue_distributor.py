@@ -1,13 +1,11 @@
 import numpy as np
-from random import choice, random, sample, randint
-from numba import jit, typed
+from random import random, sample, randint
+from numba import jit
 from typing import Dict
-from itertools import chain
 import yaml
 import re
 
-from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
-from june.groups import Household, ExternalSubgroup
+from june.groups.leisure import SocialVenues
 from june.utils.parse_probabilities import parse_age_probabilities
 from june.geography import Area
 

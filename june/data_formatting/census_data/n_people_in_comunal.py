@@ -14,7 +14,7 @@ carehome_df = carehome_df.sum(axis=1)
 comunal = all_comunal_df[all_comunal_df.columns[0]] - carehome_df
 
 assert (
-        comunal.sum() + carehome_df.sum() == all_comunal_df[all_comunal_df.columns[0]].sum()
+    comunal.sum() + carehome_df.sum() == all_comunal_df[all_comunal_df.columns[0]].sum()
 )
 
 # comunal = comunal.rename(

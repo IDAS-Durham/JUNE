@@ -1,6 +1,8 @@
 from typing import Optional
 import numpy as np
 from random import random
+
+import yaml
 from june.utils import (
     parse_age_probabilities,
     parse_prevalence_comorbidities_in_reference_population,
@@ -9,6 +11,11 @@ from june.utils import (
 )
 
 from . import Covid19, B117, B16172
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.records.records_writer import Record
+
 
 default_susceptibility_dict = {
     Covid19.infection_id(): {"0-13": 0.5, "13-100": 1.0},
@@ -23,33 +30,82 @@ default_multiplier_dict = {
 
 
 class ImmunitySetter:
-    """
-    Sets immnuity parameters to different viruses.
-
-    Parameters
-    ----------
-    susceptibility_dict
-       A dictionary mapping infection_id -> susceptibility by age.
-       Example:
-        susceptibility_dict = {"123" : {"0-50" : 0.5, "50-100" : 0.2}}
-    """
-
     def __init__(
         self,
         susceptibility_dict: dict = default_susceptibility_dict,
         multiplier_dict: dict = default_multiplier_dict,
         vaccination_dict: dict = None,
+        previous_infections_dict=None,
         multiplier_by_comorbidity: Optional[dict] = None,
         comorbidity_prevalence_reference_population: Optional[dict] = None,
         susceptibility_mode="average",
-        record:"Record" = None,
+        record: "Record" = None,
     ):
+        """
+        Sets immnuity parameters to different viruses.
+
+        Parameters
+        ----------
+        susceptibility_dict:
+           A dictionary mapping infection_id -> susceptibility by age.
+           Example:
+            susceptibility_dict = {"123" : {"0-50" : 0.5, "50-100" : 0.2}}
+        multiplier_dict:
+           A dictionary mapping infection_id -> symptoms reduction by age.
+           Example:
+            multiplier_dict = {"123" : {"0-50" : 0.5, "50-100" : 0.2}}
+        vaccination_dict:
+            A dictionary specifying the starting vaccination status of the population.
+            Example:
+                vaccination_dict = {
+                    "pfizer": {
+                        "percentage_vaccinated": {"0-50": 0.7, "50-100": 1.0},
+                        "infections": {
+                            Covid19.infection_id(): {
+                                "sterilisation_efficacy": {"0-100": 0.5},
+                                "symptomatic_efficacy": {"0-100": 0.5},
+                            },
+                        },
+                    },
+                    "sputnik": {
+                        "percentage_vaccinated": {"0-30": 0.3, "30-100": 0.0},
+                        "infections": {
+                            B117.infection_id(): {
+                                "sterilisation_efficacy": {"0-100": 0.8},
+                                "symptomatic_efficacy": {"0-100": 0.8},
+                            },
+                        },
+                    },
+                }
+            previous_infections_dict:
+                A dictionary specifying the current seroprevalence per region and age.
+                Example:
+                    previous_infections_dict = {
+                        "infections": {
+                            Covid19.infection_id(): {
+                                "sterilisation_efficacy": 0.5,
+                                "symptomatic_efficacy": 0.6,
+                            },
+                            B117.infection_id(): {
+                                "sterilisation_efficacy": 0.2,
+                                "symptomatic_efficacy": 0.3,
+                            },
+                        },
+                        "ratios": {
+                            "London": {"0-50": 0.5, "50-100": 0.2},
+                            "North East": {"0-70": 0.3, "70-100": 0.8},
+                        },
+                    }
+        """
         self.susceptibility_dict = self._read_susceptibility_dict(susceptibility_dict)
         if multiplier_dict is None:
             self.multiplier_dict = {}
         else:
             self.multiplier_dict = multiplier_dict
         self.vaccination_dict = self._read_vaccination_dict(vaccination_dict)
+        self.previous_infections_dict = self._read_previous_infections_dict(
+            previous_infections_dict
+        )
         self.multiplier_by_comorbidity = multiplier_by_comorbidity
         if comorbidity_prevalence_reference_population is not None:
             self.comorbidity_prevalence_reference_population = (
@@ -67,10 +123,14 @@ class ImmunitySetter:
         cls,
         susceptibility_dict: dict = default_susceptibility_dict,
         multiplier_dict: dict = default_multiplier_dict,
+        vaccination_dict: dict = None,
+        previous_infections_dict: dict = None,
         comorbidity_multipliers_path: Optional[str] = None,
         male_comorbidity_reference_prevalence_path: Optional[str] = None,
         female_comorbidity_reference_prevalence_path: Optional[str] = None,
-    ) -> "EffectiveMultiplierSetter":
+        susceptibility_mode="average",
+        record: "Record" = None,
+    ) -> "ImmunitySetter":
         if comorbidity_multipliers_path is not None:
             with open(comorbidity_multipliers_path) as f:
                 comorbidity_multipliers = yaml.load(f, Loader=yaml.FullLoader)
@@ -88,10 +148,15 @@ class ImmunitySetter:
         else:
             comorbidity_multipliers = None
             comorbidity_prevalence_reference_population = None
-        return EffectiveMultiplierSetter(
+        return ImmunitySetter(
+            susceptibility_dict=susceptibility_dict,
             multiplier_dict=multiplier_dict,
+            vaccination_dict=vaccination_dict,
+            previous_infections_dict=previous_infections_dict,
             multiplier_by_comorbidity=comorbidity_multipliers,
             comorbidity_prevalence_reference_population=comorbidity_prevalence_reference_population,
+            susceptibility_mode=susceptibility_mode,
+            record=record,
         )
 
     def set_immunity(self, population):
@@ -99,6 +164,8 @@ class ImmunitySetter:
             self.set_multipliers(population)
         if self.susceptibility_dict:
             self.set_susceptibilities(population)
+        if self.previous_infections_dict:
+            self.set_previous_infections(population)
         if self.vaccination_dict:
             self.set_vaccinations(population)
 
@@ -192,6 +259,16 @@ class ImmunitySetter:
                     )
         return ret
 
+    def _read_previous_infections_dict(self, previous_infections_dict):
+        if previous_infections_dict is None:
+            return {}
+        ret = {}
+        ret["infections"] = previous_infections_dict["infections"]
+        ret["ratios"] = {}
+        for region, region_ratios in previous_infections_dict["ratios"].items():
+            ret["ratios"][region] = parse_age_probabilities(region_ratios)
+        return ret
+
     def set_susceptibilities(self, population):
         if self.susceptibility_mode == "average":
             self._set_susceptibilities_avg(population)
@@ -219,11 +296,15 @@ class ImmunitySetter:
                     person.immunity.susceptibility_dict[inf_id] = 0.0
 
     def set_vaccinations(self, population):
-        vaccine_type =  []  
+        """
+        Sets previous vaccination on the starting population.
+        """
+        vaccine_type = []
+        susccesfully_vaccinated = np.zeros(len(population), dtype=int)
         if not self.vaccination_dict:
             return
         vaccines = list(self.vaccination_dict.keys())
-        for person in population:
+        for i, person in enumerate(population):
             if person.age > 99:
                 age = 99
             else:
@@ -241,13 +322,44 @@ class ImmunitySetter:
                 vdata = self.vaccination_dict[vaccine]
                 for inf_id, inf_data in vdata["infections"].items():
                     person.immunity.add_multiplier(
-                        inf_id, 1. - inf_data["symptomatic_efficacy"][age]
+                        inf_id, 1.0 - inf_data["symptomatic_efficacy"][age]
                     )
-                    if random() < inf_data["sterilisation_efficacy"][age]:
-                        person.immunity.susceptibility_dict[inf_id] = 0.0
+                    person.immunity.susceptibility_dict[inf_id] = (
+                        1.0 - inf_data["sterilisation_efficacy"][age]
+                    )
+                    susccesfully_vaccinated[i] = 1
+                person.vaccinated = True
                 vaccine_type.append(vaccine)
             else:
-                vaccine_type.append('none')
+                vaccine_type.append("none")
         if self.record is not None:
-            self.record.statics['people'].extra_str_data['vaccine_type'] = vaccine_type
+            self.record.statics["people"].extra_str_data["vaccine_type"] = vaccine_type
+            self.record.statics["people"].extra_int_data[
+                "susccesfully_vaccinated"
+            ] = susccesfully_vaccinated
 
+    def set_previous_infections(self, population):
+        """
+        Sets previous infections on the starting population.
+        """
+        previously_infected = np.zeros(len(population), dtype=int)
+        for i, person in enumerate(population):
+            if person.region.name not in self.previous_infections_dict["ratios"]:
+                continue
+            ratio = self.previous_infections_dict["ratios"][person.region.name][
+                person.age
+            ]
+            if random() < ratio:
+                for inf_id, inf_data in self.previous_infections_dict[
+                    "infections"
+                ].items():
+                    person.immunity.add_multiplier(
+                        inf_id, 1.0 - inf_data["symptomatic_efficacy"]
+                    )
+                    person.immunity.susceptibility_dict[inf_id] = (
+                        1.0 - inf_data["sterilisation_efficacy"]
+                    )
+        if self.record is not None:
+            self.record.statics["people"].extra_int_data[
+                "previously_infected"
+            ] = previously_infected

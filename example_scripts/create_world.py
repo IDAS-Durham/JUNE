@@ -1,13 +1,9 @@
-from june.world import World
 from june.geography import Geography
-from june.demography import Demography
 from june.groups import (
     Hospitals,
     Schools,
     Companies,
-    Households,
     CareHomes,
-    Cemeteries,
     Universities,
 )
 from june.groups.leisure import (
@@ -19,13 +15,11 @@ from june.groups.leisure import (
 )
 from june.groups.travel import Travel
 from june.world import generate_world_from_geography
-import pickle
-import sys
 import time
 import numpy as np
 
 # load london super areas
-london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[40:60]
+london_areas = np.loadtxt("./london_areas.txt", dtype=np.str_)[20:60]
 
 # add King's cross area for station
 if "E00004734" not in london_areas:

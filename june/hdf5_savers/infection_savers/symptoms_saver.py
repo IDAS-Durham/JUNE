@@ -1,6 +1,5 @@
 import numpy as np
 import h5py
-from collections import defaultdict
 from typing import List
 
 from june.hdf5_savers.utils import read_dataset, write_dataset
@@ -55,7 +54,9 @@ def save_symptoms_to_hdf5(
                 time_of_symptoms_onset_list.append(symptoms.time_of_symptoms_onset)
             attribute_dict["max_tag"] = np.array(max_tag_list, dtype=np.int64)
             attribute_dict["tag"] = np.array(tag_list, dtype=np.int64)
-            attribute_dict["max_severity"] = np.array(max_severity_list, dtype=np.float64)
+            attribute_dict["max_severity"] = np.array(
+                max_severity_list, dtype=np.float64
+            )
             attribute_dict["stage"] = np.array(stage_list, dtype=np.int64)
             attribute_dict["time_of_symptoms_onset"] = np.array(
                 time_of_symptoms_onset_list, dtype=np.float64

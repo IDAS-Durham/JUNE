@@ -1,4 +1,3 @@
-from collections import defaultdict
 
 
 class Immunity:
@@ -9,7 +8,9 @@ class Immunity:
 
     __slots__ = "susceptibility_dict", "effective_multiplier_dict"
 
-    def __init__(self, susceptibility_dict: dict = None, effective_multiplier_dict: dict=None):
+    def __init__(
+        self, susceptibility_dict: dict = None, effective_multiplier_dict: dict = None
+    ):
         if susceptibility_dict:
             self.susceptibility_dict = susceptibility_dict
         else:

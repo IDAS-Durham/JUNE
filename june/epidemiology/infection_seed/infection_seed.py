@@ -1,27 +1,35 @@
 import numpy as np
 import pandas as pd
-from random import shuffle
+from random import random
 import datetime
-from collections import Counter, defaultdict
-from june import paths
+from collections import defaultdict
 from typing import List, Optional
 
 from june.records import Record
-from june.domains import Domain
-from june.demography import Population
-from june.geography import SuperAreas
-from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
-from june.utils import parse_probabilities
+from june.epidemiology.infection import InfectionSelector
+from june.epidemiology.epidemiology import Epidemiology
+from june.utils import parse_age_probabilities
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.world import World
 
 
 class InfectionSeed:
+    """
+    The infection seed takes a dataframe of cases to seed per capita, per age, and per region.
+    There are multiple ways to construct the dataframe, from deaths, tests, etc. Each infection seed
+    is associated to one infection selector, so if we run multiple infection types, there could be multiple infection
+    seeds for each infection type.
+    """
+
     def __init__(
         self,
         world: "World",
         infection_selector: InfectionSelector,
-        seed_strength: float = 1.0,
-        age_profile: Optional[dict] = None,
-        daily_super_area_cases: Optional[pd.DataFrame] = None,
+        daily_cases_per_capita_per_age_per_region: pd.DataFrame,
+        seed_past_infections: bool = True,
+        seed_strength=1.0,
     ):
         """
         Class that generates the seed for the infection.
@@ -32,6 +40,63 @@ class InfectionSeed:
             world to infect
         infection_selector:
             selector to generate infections
+        daily_cases_per_capita_per_region:
+            Double indexed dataframe. First index: date, second index: age in brackets "0-100",
+            columns: region names, use "all" as placeholder for whole England.
+            Example:
+                date,age,North East,London
+                2020-07-01,0-100,0.05,0.1
+        seed_past_infections:
+            whether to seed infections that started past the initial simulation point.
+        """
+        self.world = world
+        self.infection_selector = infection_selector
+        self.daily_cases_per_capita_per_age_per_region = self._parse_input_dataframe(
+            df=daily_cases_per_capita_per_age_per_region,
+            seed_strength=seed_strength,
+        )
+        self.min_date = (
+            self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
+                "date"
+            ).min()
+        )
+        self.max_date = (
+            self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
+                "date"
+            ).max()
+        )
+        self.dates_seeded = set()
+        self.past_infections_seeded = not (seed_past_infections)
+        self.seed_strength = seed_strength
+
+    def _parse_input_dataframe(self, df, seed_strength=1.0):
+        """
+        Parses ages by expanding the intervals.
+        """
+        multi_index = pd.MultiIndex.from_product(
+            [df.index.get_level_values("date").unique(), range(0, 100)],
+            names=["date", "age"],
+        )
+        ret = pd.DataFrame(index=multi_index, columns=df.columns, dtype=float)
+        for date in df.index.get_level_values("date"):
+            for region in df.loc[date].columns:
+                cases_per_age = parse_age_probabilities(
+                    df.loc[date, region].to_dict(), fill_value=0.0
+                )
+                ret.loc[date, region] = np.array(cases_per_age)
+        ret *= seed_strength
+        return ret
+
+    @classmethod
+    def from_global_age_profile(
+        cls,
+        world: "World",
+        infection_selector: InfectionSelector,
+        daily_cases_per_region: pd.DataFrame,
+        seed_strength: float = 1.0,
+        age_profile: Optional[dict] = None,
+    ):
+        """
         seed_strength:
             float that controls the strength of the seed
         age_profile:
@@ -39,67 +104,68 @@ class InfectionSeed:
             age_profile = {'0-20': 0., '21-50':1, '51-100':0.}
             would only infect people aged between 21 and 50
         """
-        self.world = world
-        self.infection_selector = infection_selector
-        self.seed_strength = seed_strength
-        self.age_profile = age_profile
-        self.daily_super_area_cases = daily_super_area_cases
-        if self.daily_super_area_cases is not None:
-            self.min_date = self.daily_super_area_cases.index.min()
-            self.max_date = self.daily_super_area_cases.index.max()
-        self.dates_seeded = set()
-
-    def unleash_virus(
-        self,
-        population: "Population",
-        n_cases: int,
-        time: float,
-        mpi_rank: int = 0,
-        mpi_comm: Optional["MPI.COMM_WORLD"] = None,
-        mpi_size: Optional[int] = None,
-        box_mode=False,
-        record: Optional["Record"] = None,
-    ):
-        """
-        Infects ```n_cases``` people in ```population```
-
-        Parameters
-        ----------
-        population:
-            population to infect
-        n_cases:
-            number of initial cases
-        mpi_rank:
-            rank of the process
-        mpi_comm:
-            mpi comm_world to enable communication between
-            different processes
-        mpi_size:
-            number of processes
-        box_mode:
-            whether to run on box mode
-        """
-        if mpi_rank == 0:
-            people_ids = [person.id for person in population.people if not person.dead]
-            n_cases = round(self.seed_strength * n_cases)
-            if self.age_profile is None:
-                ids_to_infect = np.random.choice(
-                    people_ids,
-                    n_cases,
-                    replace=False,
+        if age_profile is None:
+            age_profile = {"0-100": 1.0}
+        multi_index = pd.MultiIndex.from_product(
+            [daily_cases_per_region.index.values, age_profile.keys()],
+            names=["date", "age"],
+        )
+        df = pd.DataFrame(
+            index=multi_index, columns=daily_cases_per_region.columns, dtype=float
+        )
+        for region in daily_cases_per_region.columns:
+            for age_key, age_value in age_profile.items():
+                df.loc[(daily_cases_per_region.index, age_key), region] = (
+                    age_value * daily_cases_per_region[region].values
                 )
-            else:
-                ids_to_infect = self.select_people_by_age(people_ids, n_cases)
-        if mpi_comm is not None:
-            for rank_receiving in range(1, mpi_size):
-                mpi_comm.send(ids_to_infect, est=rank_receiving, tag=0)
-            if mpi_rank > 0:
-                ids_to_infect = mpi_comm.recv(source=0, tag=0)
-            for inf_id in ids_to_infect:
-                if inf_id in self.world.people.people_dict:
-                    person = self.world.people.get_from_id(inf_id)
-                    self.infection_selector.infect_person_at_time(person, time=time)
-                    if record is not None:
+        return cls(
+            world=world,
+            infection_selector=infection_selector,
+            daily_cases_per_capita_per_age_per_region=df,
+            seed_strength=seed_strength,
+        )
+
+    @classmethod
+    def from_uniform_cases(
+        cls,
+        world: "World",
+        infection_selector: InfectionSelector,
+        cases_per_capita: float,
+        date: str,
+        seed_strength=1.0,
+    ):
+        date = pd.to_datetime(date)
+        mi = pd.MultiIndex.from_product([[date], ["0-100"]], names=["date", "age"])
+        df = pd.DataFrame(index=mi, columns=["all"])
+        df[:] = cases_per_capita
+        return cls(
+            world=world,
+            infection_selector=infection_selector,
+            daily_cases_per_capita_per_age_per_region=df,
+            seed_strength=seed_strength,
+        )
+
+    def infect_super_area(
+        self, super_area, cases_per_capita_per_age, time, record=None
+    ):
+        people = super_area.people
+        infection_id = self.infection_selector.infection_class.infection_id()
+        n_people_by_age = defaultdict(int)
+        susceptible_people_by_age = defaultdict(list)
+        for person in people:
+            n_people_by_age[person.age] += 1
+            if person.immunity.get_susceptibility(infection_id) > 0:
+                susceptible_people_by_age[person.age].append(person)
+        for age, susceptible in susceptible_people_by_age.items():
+            # Need to rescale to number of susceptible people in the simulation.
+            rescaling = n_people_by_age[age] / len(susceptible_people_by_age[age])
+            for person in susceptible:
+                prob = cases_per_capita_per_age.loc[age] * rescaling
+                if random() < prob:
+                    self.infection_selector.infect_person_at_time(
+                        person=person, time=time
+                    )
+                    if record:
                         record.accumulate(
                             table_name="infections",
                             location_spec="infection_seed",
@@ -109,87 +175,34 @@ class InfectionSeed:
                             infector_ids=[person.id],
                             infection_ids=[person.infection.infection_id()],
                         )
-        else:
-            for inf_id in ids_to_infect:
-                if box_mode:
-                    person_to_infect = self.world.members[0].people[inf_id]
-                else:
-                    person_to_infect = self.world.people.get_from_id(inf_id)
-                self.infection_selector.infect_person_at_time(
-                    person_to_infect, time=time
-                )
-                if record is not None:
-                    record.accumulate(
-                        table_name="infections",
-                        location_spec="infection_seed",
-                        region_name=person_to_infect.super_area.region.name,
-                        location_id=0,
-                        infected_ids=[person_to_infect.id],
-                        infector_ids=[person_to_infect.id],
-                        infection_ids=[person_to_infect.infection.infection_id()],
-                    )
-
-    def select_people_by_age(self, people_ids: List[int], n_cases: int) -> List[int]:
-        """
-        Select cases according to an age profile
-
-        Parameters
-        ----------
-        people_ids:
-            list of ids of people to select from
-        n_cases:
-            number of cases
-
-        Returns
-        -------
-        choices:
-            ids of people to infect, following the age profile given
-        """
-        n_per_age_group = n_cases * np.array(list(self.age_profile.values()))
-        shuffle(people_ids)
-        choices = []
-        for idx, age_group in enumerate(self.age_profile.keys()):
-            age_choices = self.get_people_from_age_group(
-                people_ids, int(round(n_per_age_group[idx])), age_group
-            )
-            choices.extend(age_choices)
-        return choices
-
-    def get_people_from_age_group(
-        self, susceptible_ids: List[int], n_people: int, age_group: str
-    ) -> List[int]:
-        """
-        Get ```n_people``` in a given ```age_group``` from the list of susceptible_ids
-
-        Parameters
-        ----------
-        susceptible_ids:
-            list of ids of susceptible people to select from
-        n_people:
-            number of people to select
-        age_group:
-            age limits to select from (Example: '18-25')
-
-        Returns
-        -------
-        ids of people in age group
-        """
-        choices = []
-        for person_id in susceptible_ids:
-            if len(choices) == n_people:
-                break
-            if (
-                int(age_group.split("-")[0])
-                <= self.world.people.get_from_id(person_id).age
-                < int(age_group.split("-")[1])
-            ):
-                choices.append(person_id)
-        return choices
+                    if time < 0:
+                        time_from_infection = -time
+                        # Update transmission probability
+                        person.infection.transmission.update_infection_probability(
+                            time_from_infection=time_from_infection
+                        )
+                        # Need to update trajectories to current stage
+                        symptoms = person.symptoms
+                        while (
+                            time_from_infection
+                            > symptoms.trajectory[symptoms.stage + 1][0]
+                        ):
+                            symptoms.stage += 1
+                            symptoms.tag = symptoms.trajectory[symptoms.stage][1]
+                            if symptoms.stage == len(symptoms.trajectory) - 1:
+                                break
+                        # Need to check if the person has already recovered or died
+                        if "dead" in symptoms.tag.name:
+                            Epidemiology.bury_the_dead(
+                                world=self.world, person=person, record=record
+                            )
+                        elif "recovered" == symptoms.tag.name:
+                            Epidemiology.recover(person=person, record=record)
 
     def infect_super_areas(
         self,
-        n_cases_per_super_area: pd.DataFrame,
-        time: float = 0,
+        cases_per_capita_per_age_per_region: pd.DataFrame,
+        time: float,
         record: Optional[Record] = None,
     ):
         """
@@ -199,21 +212,29 @@ class InfectionSeed:
         ----------
         n_cases_per_super_area:
             data frame containig the number of cases per super area
+        time:
+            Time where infections start (could be negative if they started before the simulation)
         """
         for super_area in self.world.super_areas:
-            try:
-                n_cases = int(n_cases_per_super_area[super_area.name])
-                self.unleash_virus(
-                    Population(super_area.people),
-                    n_cases=n_cases,
-                    record=record,
-                    time=time,
-                )
-            except KeyError:
-                continue
+            if "all" in cases_per_capita_per_age_per_region.columns:
+                cases_per_capita_per_age = cases_per_capita_per_age_per_region["all"]
+            else:
+                cases_per_capita_per_age = cases_per_capita_per_age_per_region[
+                    super_area.region.name
+                ]
+            self.infect_super_area(
+                super_area=super_area,
+                cases_per_capita_per_age=cases_per_capita_per_age,
+                time=time,
+                record=record,
+            )
 
     def unleash_virus_per_day(
-        self, date: datetime, time: float = 0, record: Optional[Record] = None
+        self,
+        date: datetime,
+        time: float = 0,
+        record: Optional[Record] = None,
+        seed_past_infections=True,
     ):
         """
         Infect super areas at a given ```date```
@@ -221,21 +242,59 @@ class InfectionSeed:
         Parameters
         ----------
         date:
-            datetime object
+            current date
+        time:
+            time since start of the simulation
+        record:
+            Record object to record infections
+        seed_past_infections:
+            whether to seed infections that started past the initial simulation point.
         """
+        if not self.past_infections_seeded:
+            self._seed_past_infections(date=date, time=time, record=record)
+            self.past_infections_seeded = True
         is_seeding_date = self.max_date >= date >= self.min_date
         date_str = date.date().strftime("%Y-%m-%d")
         not_yet_seeded_date = (
             date_str not in self.dates_seeded
-            and date_str in self.daily_super_area_cases.index
+            and date_str
+            in self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
+                "date"
+            )
         )
         if is_seeding_date and not_yet_seeded_date:
             self.infect_super_areas(
-                n_cases_per_super_area=self.daily_super_area_cases.loc[date_str],
+                cases_per_capita_per_age_per_region=self.daily_cases_per_capita_per_age_per_region.loc[
+                    date
+                ],
                 time=time,
                 record=record,
             )
             self.dates_seeded.add(date_str)
+
+    def _seed_past_infections(self, date, time, record):
+        past_dates = []
+        for (
+            past_date
+        ) in self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
+            "date"
+        ).unique():
+            if past_date.date() < date.date():
+                past_dates.append(past_date)
+        for past_date in past_dates:
+            past_time = (past_date.date() - date.date()).days
+            past_date_str = past_date.date().strftime("%Y-%m-%d")
+            self.dates_seeded.add(past_date_str)
+            self.infect_super_areas(
+                cases_per_capita_per_age_per_region=self.daily_cases_per_capita_per_age_per_region.loc[
+                    past_date
+                ],
+                time=past_time,
+                record=record,
+            )
+            if record:
+                # record past infections and deaths.
+                record.time_step(timestamp=past_date)
 
 
 class InfectionSeeds:
@@ -243,14 +302,20 @@ class InfectionSeeds:
     Groups infection seeds and applies them sequentially.
     """
 
-    def __init__(self, infection_seeds: List[InfectionSeed]):
+    def __init__(self, infection_seeds: List[InfectionSeed], seed_past_infections=True):
         self.infection_seeds = infection_seeds
+        self.seed_past_infections = seed_past_infections
 
     def unleash_virus_per_day(
         self, date: datetime, time: float = 0, record: Optional[Record] = None
     ):
         for seed in self.infection_seeds:
-            seed.unleash_virus_per_day(date=date, record=record, time=time)
+            seed.unleash_virus_per_day(
+                date=date,
+                record=record,
+                time=time,
+                seed_past_infections=self.seed_past_infections,
+            )
 
     def __iter__(self):
         return iter(self.infection_seeds)

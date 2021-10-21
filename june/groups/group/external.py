@@ -35,7 +35,7 @@ class ExternalSubgroup:
 
     def clear(self):
         pass
-    
+
     @property
     def spec(self):
         return self.group.spec

@@ -1,21 +1,18 @@
 import numpy as np
-from numba import jit
 import yaml
 import logging
-from random import random, randint
-from typing import List, Dict
+from random import random
+from typing import Dict
 from june.demography import Person
-from june.geography import Geography, SuperAreas, Areas, Regions, Region
+from june.geography import SuperAreas, Areas, Regions, Region
 from june.groups.leisure import (
     SocialVenueDistributor,
     PubDistributor,
     GroceryDistributor,
     CinemaDistributor,
     ResidenceVisitsDistributor,
-    GymDistributor
+    GymDistributor,
 )
-from june.groups.leisure import Pubs, Cinemas, Groceries
-from june.groups import Household, ExternalSubgroup, Households
 from june.utils import random_choice_numba
 from june import paths
 
@@ -94,7 +91,7 @@ def generate_leisure_for_config(world, config_filename=default_config_filename):
         config = yaml.load(f, Loader=yaml.FullLoader)
     try:
         list_of_leisure_groups = config["activity_to_super_groups"]["leisure"]
-    except:
+    except Exception:
         list_of_leisure_groups = config["activity_to_groups"]["leisure"]
     leisure_instance = generate_leisure_for_world(list_of_leisure_groups, world)
     return leisure_instance
@@ -145,7 +142,10 @@ class Leisure:
         logger.info(f"Distributed in {len(areas)} of {len(areas)} areas.")
 
     def generate_leisure_probabilities_for_timestep(
-            self, delta_time: float, working_hours: bool, day_type:str,
+        self,
+        delta_time: float,
+        working_hours: bool,
+        day_type: str,
     ):
         self.probabilities_by_region_sex_age = {}
         if self.regions:
@@ -209,11 +209,7 @@ class Leisure:
             return subgroup
 
     def _generate_leisure_probabilities_for_age_and_sex(
-        self,
-        delta_time: float,
-        working_hours: bool,
-        day_type: str,
-        region: Region 
+        self, delta_time: float, working_hours: bool, day_type: str, region: Region
     ):
         ret = {}
         for sex in ["m", "f"]:
@@ -224,7 +220,7 @@ class Leisure:
                     delta_time=delta_time,
                     day_type=day_type,
                     working_hours=working_hours,
-                    region=region
+                    region=region,
                 )
                 for age in range(0, 100)
             ]
@@ -308,9 +304,7 @@ class Leisure:
         regional compliances and lockdown tiers.
         """
         if activity in self.policy_reductions:
-            policy_reduction = (
-                self.policy_reductions[activity][day_type][sex][age]
-            )  
+            policy_reduction = self.policy_reductions[activity][day_type][sex][age]
         else:
             policy_reduction = 1
         activity_poisson_parameter = distributor.get_poisson_parameter(
@@ -360,4 +354,3 @@ class Leisure:
                 return self.probabilities_by_region_sex_age[
                     list(self.probabilities_by_region_sex_age.keys())[0]
                 ][person.sex][person.age]
-

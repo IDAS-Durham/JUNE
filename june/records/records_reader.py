@@ -16,7 +16,7 @@ class RecordReader:
             self.regional_summary = self.get_regional_summary(
                 self.results_path / "summary.csv"
             )
-        except:
+        except Exception:
             self.regional_summary = None
             logger.warning("No summary available to read...")
         if self.regional_summary is not None:
@@ -27,17 +27,15 @@ class RecordReader:
             self.record_name = record_name
 
     def decode_bytes_columns(self, df):
-        str_df = df.select_dtypes([np.object])
+        str_df = df.select_dtypes([object])
         for col in str_df:
             df[col] = str_df[col].str.decode("utf-8")
         return df
 
     def get_regional_summary(self, summary_path):
         df = pd.read_csv(summary_path)
-        cols = [col for col in df.columns if col not in  ["time_stamp", "region"]]
-        self.aggregator = {
-            col: np.mean if "current" in col else sum for col in cols
-        }
+        cols = [col for col in df.columns if col not in ["time_stamp", "region"]]
+        self.aggregator = {col: np.mean if "current" in col else sum for col in cols}
         df = df.groupby(["region", "time_stamp"], as_index=False).agg(self.aggregator)
         df.set_index("time_stamp", inplace=True)
         df.index = pd.to_datetime(df.index)
@@ -60,7 +58,9 @@ class RecordReader:
         df = self.decode_bytes_columns(df)
         return df
 
-    def get_geography_df(self,):
+    def get_geography_df(
+        self,
+    ):
         areas_df = self.table_to_df("areas")
         super_areas_df = self.table_to_df("super_areas")
         regions_df = self.table_to_df("regions")
@@ -73,7 +73,10 @@ class RecordReader:
             suffixes=("_area", "_super_area"),
         )
         geography_df = geography_df.merge(
-            regions_df, how="inner", left_on="region_id", right_index=True,
+            regions_df,
+            how="inner",
+            left_on="region_id",
+            right_index=True,
         )
         return geography_df.rename(
             columns={geography_df.index.name: "area_id", "name": "name_region"}
@@ -86,21 +89,21 @@ class RecordReader:
         with_people=True,
         with_geography=True,
         people_df=None,
-        geography_df=None
+        geography_df=None,
     ):
         logger.info(f"Loading {table_name} table")
         df = self.table_to_df(table_name, index=index)
         if with_people:
-            logger.info(f"Loading population table")
+            logger.info("Loading population table")
             if people_df is None:
                 people_df = self.table_to_df("population", index="id")
-            logger.info(f"Merging infection and population tables")
+            logger.info("Merging infection and population tables")
             df = df.merge(people_df, how="inner", left_index=True, right_index=True)
             if with_geography:
-                logger.info(f"Loading geography table")
+                logger.info("Loading geography table")
                 if geography_df is None:
                     geography_df = self.get_geography_df()
-                logger.info(f"Mergeing infection and geography tables")
+                logger.info("Mergeing infection and geography tables")
                 df = df.merge(
                     geography_df.drop_duplicates(),
                     left_on="area_id",

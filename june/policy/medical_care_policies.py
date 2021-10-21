@@ -1,9 +1,7 @@
 import datetime
 from typing import List, Optional
-from june.groups import Hospitals, Hospital, MedicalFacilities, MedicalFacility
 
-from .policy import Policy, Policies, PolicyCollection
-from june.groups import Hospitals, Hospital, ExternalSubgroup
+from .policy import Policy, PolicyCollection
 from june.demography import Person
 from june.epidemiology.infection import SymptomTag
 from june.records import Record

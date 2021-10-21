@@ -1,16 +1,10 @@
 import numpy as np
 import yaml
-import numba as nb
-from numpy.random import choice
 from random import random
 from typing import List, Dict
-from itertools import chain
-from typing import TYPE_CHECKING
 
-from june.exc import InteractionError
-from june.utils import parse_age_probabilities
 from june.groups.group.interactive import InteractiveGroup
-from june.groups import InteractiveSchool, InteractiveCompany, InteractiveHousehold
+from june.groups import InteractiveSchool
 from june.records import Record
 from june import paths
 
@@ -146,7 +140,7 @@ class Interaction:
 
     def time_step_for_group(
         self,
-        group: "Group",
+        group: InteractiveGroup,
         delta_time: float,
         people_from_abroad: dict = None,
         record: Record = None,
@@ -296,7 +290,7 @@ class Interaction:
         infected_ids: list,
         infection_ids: list,
         to_blame_ids: list,
-        group: "Group",
+        group: InteractiveGroup,
         record: Record,
     ):
         """

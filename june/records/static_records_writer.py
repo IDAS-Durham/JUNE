@@ -1,5 +1,3 @@
-import tables
-from tables import open_file
 import numpy as np
 
 from june.records.helper_records_writer import _get_description_for_event
@@ -8,11 +6,8 @@ from june.groups import Supergroup
 
 class StaticRecord:
     def __init__(
-        self, hdf5_file, table_name, int_names, float_names, str_names, expectedrows
+        self, table_name, int_names, float_names, str_names, expectedrows
     ):
-        if not isinstance(hdf5_file, tables.file.File):
-            raise TypeError("hdf5_file must be an open HDF5 file (use tables.openFile)")
-        self.file = hdf5_file
         self.table_name = table_name
         self.int_names = int_names
         self.float_names = float_names
@@ -22,20 +17,19 @@ class StaticRecord:
         self.extra_float_data = {}
         self.extra_str_data = {}
 
-    def _create_table(self, int_names, float_names, str_names, expectedrows):
-        with open_file(self.file.filename, mode="a") as file:
-            table_description = _get_description_for_event(
-                int_names=int_names,
-                float_names=float_names,
-                str_names=str_names,
-                timestamp=False,
-            )
-            self.table = file.create_table(
-                file.root,
-                self.table_name,
-                table_description,
-                expectedrows=expectedrows,
-            )
+    def _create_table(self, file, int_names, float_names, str_names, expectedrows):
+        table_description = _get_description_for_event(
+            int_names=int_names,
+            float_names=float_names,
+            str_names=str_names,
+            timestamp=False,
+        )
+        self.table = file.create_table(
+            file.root,
+            self.table_name,
+            table_description,
+            expectedrows=expectedrows,
+        )
 
     def _record(self, hdf5_file, int_data, float_data, str_data):
         data = np.rec.fromarrays(
@@ -64,7 +58,9 @@ class StaticRecord:
             self.str_names += list(self.extra_str_data.keys())
             for value in self.extra_str_data.values():
                 str_data += [value]
-        self._create_table(self.int_names, self.float_names, self.str_names, self.expectedrows)
+        self._create_table(
+            hdf5_file, self.int_names, self.float_names, self.str_names, self.expectedrows
+        )
         self._record(
             hdf5_file=hdf5_file,
             int_data=int_data,
@@ -74,9 +70,8 @@ class StaticRecord:
 
 
 class PeopleRecord(StaticRecord):
-    def __init__(self, hdf5_file):
+    def __init__(self):
         super().__init__(
-            hdf5_file=hdf5_file,
             table_name="population",
             int_names=[
                 "id",
@@ -86,7 +81,12 @@ class PeopleRecord(StaticRecord):
                 "area_id",
             ],
             float_names=[],
-            str_names=["sex", "ethnicity", "primary_activity_type", "residence_type",],
+            str_names=[
+                "sex",
+                "ethnicity",
+                "primary_activity_type",
+                "residence_type",
+            ],
             expectedrows=1_000_000,
         )
 
@@ -112,7 +112,7 @@ class PeopleRecord(StaticRecord):
             primary_activity_type.append(
                 person.primary_activity.group.spec
                 if person.primary_activity is not None
-                else f"None"
+                else "None"
             )
             primary_activity_id.append(
                 person.primary_activity.group.id
@@ -120,14 +120,16 @@ class PeopleRecord(StaticRecord):
                 else 0
             )
             residence_type.append(
-                person.residence.group.spec if person.residence is not None else f"None"
+                person.residence.group.spec if person.residence is not None else "None"
             )
             residence_id.append(
                 person.residence.group.id if person.residence is not None else 0
             )
             area_id.append(person.area.id if person.area is not None else 0)
             sex.append(person.sex)
-            ethnicity.append(person.ethnicity if person.ethnicity is not None else "None")
+            ethnicity.append(
+                person.ethnicity if person.ethnicity is not None else "None"
+            )
         int_data = [
             ids,
             age,
@@ -142,9 +144,8 @@ class PeopleRecord(StaticRecord):
 
 
 class LocationRecord(StaticRecord):
-    def __init__(self, hdf5_file):
+    def __init__(self):
         super().__init__(
-            hdf5_file=hdf5_file,
             table_name="locations",
             int_names=["id", "group_id", "area_id"],
             float_names=["latitude", "longitude"],
@@ -185,11 +186,13 @@ class LocationRecord(StaticRecord):
 
 
 class AreaRecord(StaticRecord):
-    def __init__(self, hdf5_file):
+    def __init__(self):
         super().__init__(
-            hdf5_file=hdf5_file,
             table_name="areas",
-            int_names=["id", "super_area_id",],
+            int_names=[
+                "id",
+                "super_area_id",
+            ],
             float_names=["latitude", "longitude", "socioeconomic_index"],
             str_names=["name"],
             expectedrows=10_000,
@@ -197,12 +200,12 @@ class AreaRecord(StaticRecord):
 
     def get_data(self, world):
         (
-            area_id, 
-            super_area_id, 
-            latitude, 
-            longitude, 
-            socioeconomic_index, 
-            area_name
+            area_id,
+            super_area_id,
+            latitude,
+            longitude,
+            socioeconomic_index,
+            area_name,
         ) = ([], [], [], [], [], [])
         if world.areas is not None:
             for area in world.areas:
@@ -219,11 +222,13 @@ class AreaRecord(StaticRecord):
 
 
 class SuperAreaRecord(StaticRecord):
-    def __init__(self, hdf5_file):
+    def __init__(self):
         super().__init__(
-            hdf5_file=hdf5_file,
             table_name="super_areas",
-            int_names=["id", "region_id",],
+            int_names=[
+                "id",
+                "region_id",
+            ],
             float_names=["latitude", "longitude"],
             str_names=["name"],
             expectedrows=5_000,
@@ -251,11 +256,12 @@ class SuperAreaRecord(StaticRecord):
 
 
 class RegionRecord(StaticRecord):
-    def __init__(self, hdf5_file):
+    def __init__(self):
         super().__init__(
-            hdf5_file=hdf5_file,
             table_name="regions",
-            int_names=["id",],
+            int_names=[
+                "id",
+            ],
             float_names=[],
             str_names=["name"],
             expectedrows=50,

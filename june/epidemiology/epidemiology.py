@@ -4,14 +4,18 @@ from time import time as wall_clock
 import logging
 
 from .infection import InfectionSelectors, ImmunitySetter
-from .infection_seed import InfectionSeeds
-from june.demography import Population, Activities
+from june.demography import Activities
 from june.policy import MedicalCarePolicies
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
 from june.groups import MedicalFacilities
 from june.records import Record
 from june.world import World
 from june.time import Timer
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.demography.person import Person
+    from june.epidemiology.infection_seed.infection_seed import InfectionSeeds
 
 logger = logging.getLogger("epidemiology")
 mpi_logger = logging.getLogger("mpi")
@@ -42,14 +46,14 @@ class Epidemiology:
     def __init__(
         self,
         infection_selectors: InfectionSelectors = None,
-        infection_seeds: InfectionSeeds = None,
+        infection_seeds: "InfectionSeeds" = None,
         immunity_setter: ImmunitySetter = None,
         medical_care_policies: MedicalCarePolicies = None,
         medical_facilities: MedicalFacilities = None,
     ):
         self.infection_selectors = infection_selectors
         self.infection_seeds = infection_seeds
-        self.immunity_setter = immunity_setter 
+        self.immunity_setter = immunity_setter
         self.medical_care_policies = medical_care_policies
         self.medical_facilities = medical_facilities
 
@@ -90,7 +94,7 @@ class Epidemiology:
                 infection_ids=infection_ids,
                 people_from_abroad_dict=people_from_abroad_dict,
             )
-            to_infect = self.tell_domains_to_infect(
+            self.tell_domains_to_infect(
                 world=world, timer=timer, infect_in_domains=infect_in_domains
             )
 
@@ -102,7 +106,8 @@ class Epidemiology:
             record.summarise_time_step(timestamp=timer.date, world=world)
             record.time_step(timestamp=timer.date)
 
-    def bury_the_dead(self, world: World, person: "Person", record: Record = None):
+    @staticmethod
+    def bury_the_dead(world: World, person: "Person", record: Record = None):
         """
         When someone dies, send them to cemetery.
         ZOMBIE ALERT!!
@@ -135,8 +140,8 @@ class Epidemiology:
             )
         person.subgroups = Activities(None, None, None, None, None, None)
 
-
-    def recover(self, person: "Person", record: Record = None):
+    @staticmethod
+    def recover(person: "Person", record: Record = None):
         """
         When someone recovers, erase the health information they carry and change their susceptibility.
 
@@ -289,7 +294,7 @@ class Epidemiology:
                 self.infection_selectors.infect_person_at_time(
                     person=person, time=timer.now, infection_id=infection_id
                 )
-            except:
+            except Exception:
                 if person_id == invalid_id:
                     continue
                 raise

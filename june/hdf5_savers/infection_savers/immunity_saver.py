@@ -1,9 +1,8 @@
 import numpy as np
 import h5py
 from typing import List
-from itertools import chain
 
-from june.hdf5_savers.utils import read_dataset, write_dataset
+from june.hdf5_savers.utils import read_dataset
 from june.epidemiology.infection import Immunity
 
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))

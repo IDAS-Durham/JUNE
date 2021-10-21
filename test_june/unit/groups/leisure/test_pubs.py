@@ -1,15 +1,7 @@
-import os
-from pathlib import Path
-
-import numpy as np
-import random
-import pandas as pd
 import pytest
 
-from june.time import Timer
-from june.geography import Geography, SuperArea, Area
-from june.demography import Demography, Person
-from june.groups.leisure import Pub, Pubs
+from june.geography import Geography
+from june.groups.leisure import Pubs
 
 
 @pytest.fixture(name="geography")

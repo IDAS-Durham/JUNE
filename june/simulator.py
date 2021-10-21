@@ -1,22 +1,16 @@
 import logging
 import datetime
-import numpy as np
-import pickle
 import yaml
-from itertools import chain
-from typing import Optional, List, Dict, Union
+from typing import Optional, List
 from pathlib import Path
 from time import perf_counter
 from time import time as wall_clock
-from mpi4py import MPI
 
 from june import paths
-from june.activity import ActivityManager, activity_hierarchy
-from june.demography import Person, Activities
+from june.activity import ActivityManager
 from june.exc import SimulatorError
 from june.groups.leisure import Leisure
 from june.groups.travel import Travel
-from june.groups.group.interactive import InteractiveGroup
 from june.epidemiology.epidemiology import Epidemiology
 from june.interaction import Interaction
 from june.policy import Policies
@@ -24,8 +18,7 @@ from june.event import Events
 from june.time import Timer
 from june.records import Record
 from june.world import World
-from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
-from june.utils.profiler import profile
+from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -42,7 +35,7 @@ def enable_mpi_debug(results_folder):
     from june.logging import MPIFileHandler
 
     logging_file = Path(results_folder) / "mpi.log"
-    with open(logging_file, "w") as f:
+    with open(logging_file, "w"):
         pass
     mh = MPIFileHandler(logging_file)
     rank_logger.addHandler(mh)
@@ -314,9 +307,6 @@ class Simulator:
                     infection_ids += new_infection_ids
                     n_people += group_size
         tock_interaction = perf_counter()
-        # mpi_logger.info(
-        #    f"{self.timer.date},{mpi_rank},interaction,{tock_interaction-tick_interaction}"
-        # )
         rank_logger.info(
             f"Rank {mpi_rank} -- interaction -- {tock_interaction-tick_interaction}"
         )

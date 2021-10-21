@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from collections import defaultdict
-from itertools import chain
 from typing import List
 import logging
 
@@ -52,7 +51,7 @@ according to census data.
 
 
 class HouseholdError(BaseException):
-    """ class for throwing household related errors """
+    """class for throwing household related errors"""
 
 
 def get_closest_element_in_array(array, value):
@@ -296,7 +295,7 @@ class HouseholdDistributor:
         n_people_in_communal_filename
             path to file containing the number of people living in communal establishments per area
         """
-        logger.info(f"Distributing people to households")
+        logger.info("Distributing people to households")
         area_names = [area.name for area in areas]
         household_numbers_df = pd.read_csv(
             number_households_per_composition_filename, index_col=0
@@ -418,7 +417,7 @@ class HouseholdDistributor:
                     composition_type=key,
                 )
 
-        ## single person old
+        # single person old
         key = "0 0 0 0 1"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -470,9 +469,9 @@ class HouseholdDistributor:
                     composition_type=key,
                 )
 
-        ## possible multigenerational, one kid and one adult minimum.
-        ## even though the number of old people is >=0, we put one old person
-        ## always if possible.
+        # possible multigenerational, one kid and one adult minimum.
+        # even though the number of old people is >=0, we put one old person
+        # always if possible.
         key = "1 0 >=0 >=1 >=0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -492,7 +491,7 @@ class HouseholdDistributor:
                     area=area,
                     composition_type=key,
                 )
-        ### same as the previous one but with 2 kids minimum.
+        # same as the previous one but with 2 kids minimum.
         key = ">=2 0 >=0 >=1 >=0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -514,7 +513,7 @@ class HouseholdDistributor:
                     composition_type=key,
                 )
 
-        ### one kid and one parent for sure, possibly extra young adults.
+        # one kid and one parent for sure, possibly extra young adults.
         key = "1 0 >=0 1 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -533,7 +532,7 @@ class HouseholdDistributor:
                     ),
                     composition_type=key,
                 )
-        ## same as above with two kids instead.
+        # same as above with two kids instead.
         key = ">=2 0 >=0 1 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -553,7 +552,7 @@ class HouseholdDistributor:
                     ),
                     composition_type=key,
                 )
-        ## 1 kid and two parents with possibly young adults.
+        # 1 kid and two parents with possibly young adults.
         key = "1 0 >=0 2 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -572,7 +571,7 @@ class HouseholdDistributor:
                     ),
                     composition_type=key,
                 )
-        ## same as above but two kids.
+        # same as above but two kids.
         key = ">=2 0 >=0 2 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -592,7 +591,7 @@ class HouseholdDistributor:
                     ),
                     composition_type=key,
                 )
-        ## couple adult, it's possible to have a person < 65 with one > 65
+        # couple adult, it's possible to have a person < 65 with one > 65
         key = "0 0 0 2 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -610,7 +609,7 @@ class HouseholdDistributor:
                     ),
                     composition_type=key,
                 )
-        ## one adult (parent) and one young adult (non-dependable child)
+        # one adult (parent) and one young adult (non-dependable child)
         key = "0 0 >=1 1 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -625,7 +624,7 @@ class HouseholdDistributor:
                     composition_type=key,
                 )
 
-        ## same as above but two adults
+        # same as above but two adults
         key = "0 0 >=1 2 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -640,7 +639,7 @@ class HouseholdDistributor:
                     composition_type=key,
                 )
 
-        ## single person adult
+        # single person adult
         key = "0 0 0 1 0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -655,7 +654,7 @@ class HouseholdDistributor:
                     composition_type=key,
                 )
 
-        ## other to be filled with remaining young adults, adults, and old people
+        # other to be filled with remaining young adults, adults, and old people
         key = "0 0 >=0 >=0 >=0"
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
@@ -669,10 +668,10 @@ class HouseholdDistributor:
                     households_with_extra_oldpeople.append(household)
                     all_households.append(household)
 
-        ## we have so far filled the minimum household configurations.
-        ## If the area has communal establishments, we fill those next.
-        ## The remaining people are then assigned to the existing households
-        ## trying to fit their household composition as much as possible
+        # we have so far filled the minimum household configurations.
+        # If the area has communal establishments, we fill those next.
+        # The remaining people are then assigned to the existing households
+        # trying to fit their household composition as much as possible
 
         remaining_people = count_remaining_people(men_by_age, women_by_age)
         communal_houses = 0  # this is used to count houses later
@@ -691,7 +690,7 @@ class HouseholdDistributor:
                     composition_type=key,
                 )
 
-        ## remaining people
+        # remaining people
         self.fill_random_people_to_existing_households(
             men_by_age,
             women_by_age,
@@ -703,7 +702,7 @@ class HouseholdDistributor:
             all_households,
         )
 
-        ## make sure we have the correct number of households
+        # make sure we have the correct number of households
         if not (
             total_number_of_households - communal_houses
             <= len(all_households)
@@ -1685,7 +1684,7 @@ class HouseholdDistributor:
                         self._remove_household_from_all_lists(
                             household, available_lists
                         )
-        ## now adults
+        # now adults
         for age in range(self.young_adult_max_age + 1, self.adult_max_age + 1):
             if age in people_left_dict:
                 for person in people_left_dict[age]:
@@ -1709,7 +1708,7 @@ class HouseholdDistributor:
                             household, available_lists
                         )
 
-        ## and lastly, kids
+        # and lastly, kids
         for age in range(0, self.kid_max_age + 1):
             if age in people_left_dict:
                 for person in people_left_dict[age]:

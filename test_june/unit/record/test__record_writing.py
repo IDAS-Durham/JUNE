@@ -1,9 +1,9 @@
 import datetime
 import numpy as np
-import json
 import pandas as pd
 import yaml
 import pytest
+
 from tables import open_file
 from june import paths
 from june.records import Record
@@ -13,7 +13,6 @@ from june.activity import ActivityManager
 from june.demography import Person, Population
 from june.interaction import Interaction
 from june.epidemiology.epidemiology import Epidemiology
-from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
 from june.epidemiology.infection_seed import InfectionSeed, InfectionSeeds
 from june.geography.geography import (
     Areas,
@@ -255,19 +254,20 @@ def test__static_people(dummy_world):
     assert df.loc[0, "sex"] == "f"
     assert df.loc[2, "sex"] == "m"
 
+
 def test__static_with_extras_people(dummy_world):
     record = Record(
         record_path="results",
         record_static_data=True,
     )
-    tonto = [0.1,1.3,5.]
-    listo = [0.9,0.7,0.]
-    vaccine_type = [0,1,2]
-    vaccine_name = ['astra','pfizer','moderna']
-    record.statics['people'].extra_float_data['tonto'] = tonto
-    record.statics['people'].extra_float_data['listo'] = listo  
-    record.statics['people'].extra_int_data['vaccine_type'] = vaccine_type
-    record.statics['people'].extra_str_data['vaccine_name'] = vaccine_name
+    tonto = [0.1, 1.3, 5.0]
+    listo = [0.9, 0.7, 0.0]
+    vaccine_type = [0, 1, 2]
+    vaccine_name = ["astra", "pfizer", "moderna"]
+    record.statics["people"].extra_float_data["tonto"] = tonto
+    record.statics["people"].extra_float_data["listo"] = listo
+    record.statics["people"].extra_int_data["vaccine_type"] = vaccine_type
+    record.statics["people"].extra_str_data["vaccine_name"] = vaccine_name
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -292,16 +292,18 @@ def test__static_with_extras_people(dummy_world):
     assert df.loc[2, "ethnicity"] == "C"
     assert df.loc[0, "sex"] == "f"
     assert df.loc[2, "sex"] == "m"
-    assert len(df['tonto'].values) == len(tonto)
-    assert all([pytest.approx(a) == b for a, b in zip(df['tonto'].values, tonto)])
-    assert len(df['listo'].values) == len(listo)
-    assert all([pytest.approx(a) == b for a, b in zip(df['listo'].values, listo)])
-    assert len(df['vaccine_type'].values) == len(vaccine_type)
-    assert all([pytest.approx(a) == b for a, b in zip(df['vaccine_type'].values, vaccine_type)])
-    assert len(df['vaccine_name'].values) == len(vaccine_name)
-    assert all([pytest.approx(a) == b for a, b in zip(df['vaccine_name'].values, vaccine_name)])
-
-
+    assert len(df["tonto"].values) == len(tonto)
+    assert all([pytest.approx(a) == b for a, b in zip(df["tonto"].values, tonto)])
+    assert len(df["listo"].values) == len(listo)
+    assert all([pytest.approx(a) == b for a, b in zip(df["listo"].values, listo)])
+    assert len(df["vaccine_type"].values) == len(vaccine_type)
+    assert all(
+        [pytest.approx(a) == b for a, b in zip(df["vaccine_type"].values, vaccine_type)]
+    )
+    assert len(df["vaccine_name"].values) == len(vaccine_name)
+    assert all(
+        [pytest.approx(a) == b for a, b in zip(df["vaccine_name"].values, vaccine_name)]
+    )
 
 
 def test__static_location(dummy_world):
@@ -465,10 +467,12 @@ def test__meta_information():
 def test__parameters(dummy_world, selector, selectors):
     interaction = Interaction.from_file(config_filename=config_interaction)
     interaction.alpha_physical = 100.0
-    infection_seed = InfectionSeed(
+    infection_seed = InfectionSeed.from_uniform_cases(
         world=None,
         infection_selector=selector,
         seed_strength=0.0,
+        cases_per_capita=0,
+        date="2020-03-01",
     )
     infection_seeds = InfectionSeeds([infection_seed])
     infection_seed.min_date = datetime.datetime(2020, 10, 10)
@@ -494,10 +498,8 @@ def test__parameters(dummy_world, selector, selectors):
     with open(record.record_path / "config.yaml", "r") as file:
         parameters = yaml.load(file, Loader=yaml.FullLoader)
 
-    with open(record.record_path / "policies.txt", "r") as file:
-        policies = file.read()
-        policies = policies.replace("array", "np.array")
-        policies = eval(policies)
+        # policies = policies.replace("array", "np.array")
+        # policies = eval(policies)
     interaction_attributes = ["betas", "alpha_physical"]
     for attribute in interaction_attributes:
         assert parameters["interaction"][attribute] == getattr(interaction, attribute)
@@ -514,5 +516,3 @@ def test__parameters(dummy_world, selector, selectors):
     assert "Covid19" in parameters["infections"]
     inf_parameters = parameters["infections"]["Covid19"]
     assert inf_parameters["transmission_type"] == selector.transmission_type
-    for i, policy in enumerate(activity_manager.policies.policies):
-        assert policies[i] == policy.__dict__

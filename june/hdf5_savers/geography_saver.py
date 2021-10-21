@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 from collections import defaultdict
 
-from june.groups import ExternalGroup, ExternalSubgroup
+from june.groups import ExternalGroup
 from june.geography import (
     Geography,
     Area,
@@ -111,15 +111,24 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         super_area_n_people.append(len(super_area.people))
         super_area_n_workers.append(len(super_area.workers))
         super_area_n_pupils.append(
-            sum([len(school.people) for area in super_area.areas for school in area.schools])
+            sum(
+                [
+                    len(school.people)
+                    for area in super_area.areas
+                    for school in area.schools
+                ]
+            )
         )
         if super_area.closest_hospitals is None:
             closest_hospitals_ids.append(np.array([nan_integer], dtype=np.int64))
-            closest_hospitals_super_areas.append(np.array([nan_integer], dtype=np.int64))
+            closest_hospitals_super_areas.append(
+                np.array([nan_integer], dtype=np.int64)
+            )
             hospital_lengths.append(1)
         else:
             hospital_ids = np.array(
-                [hospital.id for hospital in super_area.closest_hospitals], dtype=np.int64
+                [hospital.id for hospital in super_area.closest_hospitals],
+                dtype=np.int64,
             )
             hospital_sas = np.array(
                 [hospital.super_area.id for hospital in super_area.closest_hospitals],

@@ -55,7 +55,7 @@ class Timer:
         if week_number < 5:
             return False
         return True
-    
+
     @property
     def day_type(self):
         week_number = self.date.weekday()
@@ -68,6 +68,10 @@ class Timer:
     def now(self):
         difference = self.date - self.initial_date
         return difference.total_seconds() / SECONDS_PER_DAY
+
+    @property
+    def date_str(self):
+        return self.date.date().strftime("%Y-%m-%d")
 
     @property
     def duration(self):

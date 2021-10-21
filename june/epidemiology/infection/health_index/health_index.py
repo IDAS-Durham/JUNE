@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
-import yaml
-from typing import Optional, List
 
-from june.epidemiology.infection.symptom_tag import SymptomTag
 from june import paths
-from . import Data2Rates
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.demography.person import Person
 
 _sex_short_to_long = {"m": "male", "f": "female"}
 index_to_maximum_symptoms_tag = {
@@ -67,7 +67,7 @@ class HealthIndexGenerator:
         return cls(
             rates_df=ifrs,
             care_home_min_age=care_home_min_age,
-                    )
+        )
 
     def __call__(self, person: "Person", infection_id: int):
         """
@@ -87,9 +87,13 @@ class HealthIndexGenerator:
             population = "gp"
         probabilities = self.probabilities[population][person.sex][person.age]
         if infection_id is not None:
-            effective_multiplier = person.immunity.get_effective_multiplier(infection_id)
-            if effective_multiplier != 1.:
-                probabilities = self.apply_effective_multiplier(probabilities, effective_multiplier)
+            effective_multiplier = person.immunity.get_effective_multiplier(
+                infection_id
+            )
+            if effective_multiplier != 1.0:
+                probabilities = self.apply_effective_multiplier(
+                    probabilities, effective_multiplier
+                )
         return np.cumsum(probabilities)
 
     def apply_effective_multiplier(self, probabilities, effective_multiplier):
@@ -99,16 +103,16 @@ class HealthIndexGenerator:
             1 - probabilities.sum()
         )
         modified_probability_severe = probability_severe * effective_multiplier
-        modified_probability_mild = 1. - modified_probability_severe 
+        modified_probability_mild = 1.0 - modified_probability_severe
         modified_probabilities[: self.max_mild_symptom_tag] = (
             probabilities[: self.max_mild_symptom_tag]
-            * modified_probability_mild 
-            / probability_mild 
+            * modified_probability_mild
+            / probability_mild
         )
         modified_probabilities[self.max_mild_symptom_tag :] = (
             probabilities[self.max_mild_symptom_tag :]
-            * modified_probability_severe 
-            / probability_severe 
+            * modified_probability_severe
+            / probability_severe
         )
         return modified_probabilities
 
@@ -146,7 +150,6 @@ class HealthIndexGenerator:
             )  # dies in the ward
             p[population][sex][age][7] = icu_dead_rate
             # renormalise all but death rates (since those are the most certain ones)
-            total = p[population][sex][age].sum()
             to_keep_sum = p[population][sex][age][5:].sum()
             to_adjust_sum = p[population][sex][age][:5].sum()
             target_adjust_sum = max(1 - to_keep_sum, 0)
@@ -175,6 +178,3 @@ class HealthIndexGenerator:
                         population=population,
                     )
         return probabilities
-
-
-

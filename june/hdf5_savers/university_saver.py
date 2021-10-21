@@ -11,11 +11,11 @@ def save_universities_to_hdf5(universities: Universities, file_path: str):
     """
     Saves the universities object to hdf5 format file ``file_path``. Currently for each person,
     the following values are stored:
-    - id, n_pupils_max,  age_min, age_max, sector 
+    - id, n_pupils_max,  age_min, age_max, sector
 
     Parameters
     ----------
-    universities 
+    universities
         population object
     file_path
         path of the saved hdf5 file
@@ -90,7 +90,7 @@ def load_universities_from_hdf5(
                 n_students_max=n_students_max[k],
                 n_years=n_years[k],
                 ukprn=ukprns[k],
-                coordinates=coordinates[k]
+                coordinates=coordinates[k],
             )
             university.id = ids[k]
             universities_list.append(university)
@@ -102,7 +102,6 @@ def restore_universities_properties_from_hdf5(
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         universities = f["universities"]
-        universities_list = []
         n_universities = universities.attrs["n_universities"]
         ids = np.empty(n_universities, dtype=int)
         universities["id"].read_direct(

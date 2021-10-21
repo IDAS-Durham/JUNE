@@ -1,22 +1,18 @@
-from june.interaction import Interaction, interaction
-from june.epidemiology.infection.infection_selector import InfectionSelector
-from june.epidemiology.infection import Immunity
+from june.interaction import Interaction
 from june.groups import School
 from june.demography import Person
 from june import paths
 from june.geography import Geography
-from june.groups.group.interactive import InteractiveGroup
 from june.world import generate_world_from_geography
-from june.groups import Hospital, Hospitals
 from june.epidemiology.infection_seed import InfectionSeed
 from june.policy import Policies
 from june.simulator import Simulator
 
 import pytest
 import numpy as np
-import os
+import pandas as pd
 import pathlib
-from itertools import chain
+
 
 test_config = paths.configs_path / "tests/interaction.yaml"
 default_sector_beta_filename = (
@@ -173,9 +169,6 @@ def create_school(n_students, n_teachers):
     ],
 )
 def test__average_time_to_infect(n_teachers, mode, selector):
-    selector_config = (
-        paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
-    )
     transmission_probability = 0.1
     n_students = 1
     contact_matrices = {
@@ -222,12 +215,12 @@ def test__infection_is_isolated(epidemiology, selectors):
     geography = Geography.from_file({"area": ["E00002559"]})
     world = generate_world_from_geography(geography, include_households=True)
     interaction = Interaction.from_file(config_filename=test_config)
-    infection_seed = InfectionSeed(world, selectors)
-    n_cases = 5
-    infection_seed.unleash_virus(
-        world.people, n_cases=n_cases, time=0
-    )  # play around with the initial number of cases
+    infection_seed = InfectionSeed.from_uniform_cases(
+        world, selectors[0], cases_per_capita=5 / len(world.people), date="2020-03-01"
+    )
+    infection_seed.unleash_virus_per_day(date=pd.to_datetime("2020-03-01"), time=0)
     policies = Policies([])
+    n_infected = len([person for person in world.people if person.infected])
     simulator = Simulator.from_file(
         world=world,
         interaction=interaction,
@@ -238,8 +231,7 @@ def test__infection_is_isolated(epidemiology, selectors):
         policies=policies,
         # save_path=None,
     )
-    infected_people = [person for person in world.people if person.infected]
-    assert len(infected_people) == 5
+    assert np.isclose(n_infected, 5, rtol=0.2)
     infected_households = []
     for household in world.households:
         infected = False
@@ -249,7 +241,7 @@ def test__infection_is_isolated(epidemiology, selectors):
                 break
         if infected:
             infected_households.append(household)
-    assert len(infected_households) <= 5
+    assert len(infected_households) <= n_infected
     simulator.run()
     for person in world.people:
         if person.residence is None:

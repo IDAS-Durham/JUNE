@@ -3,7 +3,6 @@ from enum import IntEnum
 from random import shuffle
 from june import paths
 from typing import List
-import h5py
 import yaml
 
 import numpy as np
@@ -45,7 +44,7 @@ class CompanyError(BaseException):
 
 class Company(Group):
     """
-    The Company class represents a company that contains information about 
+    The Company class represents a company that contains information about
     its workers which are not yet distributed to key company sectors
     (e.g. as schools and hospitals).
 
@@ -120,15 +119,15 @@ class Companies(Supergroup):
         default_config_filename: str = default_config_filename,
     ) -> "Companies":
         """
-        Creates companies for the specified geography, and saves them 
+        Creates companies for the specified geography, and saves them
         to the super_aresa they belong to
         Parameters
         ----------
         geography
             an instance of the geography class
-        company_size_per_superarea_filename: 
+        company_size_per_superarea_filename:
             Nr. of companies within a size-range per SuperArea.
-        compsec_per_msoa_filename: 
+        compsec_per_msoa_filename:
             Nr. of companies per sector sector per SuperArea.
         """
         if not geography.super_areas:
@@ -148,23 +147,20 @@ class Companies(Supergroup):
         sector_nr_per_super_area_file: str = default_sector_nr_per_msoa_file,
         default_config_filename: str = default_config_filename,
     ) -> "Companies":
-        """Creates companies for the specified super_areas, and saves them 
+        """Creates companies for the specified super_areas, and saves them
         to the super_aresa they belong to
         Parameters
         ----------
         super_areas
             list of super areas
-        company_size_per_superarea_filename: 
+        company_size_per_superarea_filename:
             Nr. of companies within a size-range per SuperArea.
-        compsec_per_msoa_filename: 
+        compsec_per_msoa_filename:
             Nr. of companies per industry sector per SuperArea.
 
         Parameters
         ----------
         """
-        with open(default_config_filename) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
-
         size_per_superarea_df = pd.read_csv(size_nr_per_super_area_file, index_col=0)
         sector_per_superarea_df = pd.read_csv(
             sector_nr_per_super_area_file, index_col=0
@@ -189,14 +185,19 @@ class Companies(Supergroup):
                 company_sectors_per_super_area.iterrows(),
             ):
                 super_area.companies = cls.create_companies_in_super_area(
-                    super_area, company_sizes, company_sectors,
+                    super_area,
+                    company_sizes,
+                    company_sectors,
                 )
                 companies += super_area.companies
         return cls(companies)
 
     @classmethod
     def create_companies_in_super_area(
-        cls, super_area: SuperArea, company_sizes, company_sectors,
+        cls,
+        super_area: SuperArea,
+        company_sizes,
+        company_sectors,
     ) -> list:
         """
         Crates companies in super area using the sizes and sectors distributions.

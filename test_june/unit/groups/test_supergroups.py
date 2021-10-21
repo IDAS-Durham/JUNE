@@ -2,7 +2,6 @@ from june.groups import Supergroup
 from june.groups import Group
 from june.demography import Person
 from enum import IntEnum
-import numpy as np
 import pytest
 
 

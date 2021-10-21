@@ -1,8 +1,6 @@
 import numpy as np
 from pytest import fixture
 from june.groups import Household
-from june.geography import Area, SuperArea
-from june.world import generate_world_from_geography
 
 from june.groups.leisure import (
     Leisure,
@@ -11,13 +9,10 @@ from june.groups.leisure import (
     Pubs,
     Cinemas,
     Cinema,
-    Groceries,
     PubDistributor,
     CinemaDistributor,
 )
-from june.geography import Geography
-from june.demography import Person, Demography
-from june import World
+from june.demography import Person
 
 
 class MockArea:

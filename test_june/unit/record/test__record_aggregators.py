@@ -1,8 +1,5 @@
 import datetime
 import numpy as np
-import json
-import pandas as pd
-import yaml
 import pytest
 from pathlib import Path
 
@@ -10,12 +7,7 @@ from tables import open_file
 from june import paths
 from june.records import Record
 from june.groups import Hospital, Hospitals, Household, Households, CareHome, CareHomes
-from june.policy import Policies
-from june.activity import ActivityManager
-from june.demography import Person, Population
-from june.interaction import Interaction
-from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
-from june.epidemiology.infection_seed import InfectionSeed
+from june.demography import Person
 from june.geography.geography import (
     Areas,
     SuperAreas,
@@ -24,7 +16,6 @@ from june.geography.geography import (
     SuperArea,
     Region,
 )
-from june.groups import Supergroup
 from june import World
 
 from june.records.records_writer import prepend_checkpoint_hdf5
@@ -100,7 +91,7 @@ def test__prepend_checkpoint_hdf5(dummy_world):
     pre_checkpoint_record.static_data(dummy_world)
     for i in range(1, 15):
         timestamp = datetime.datetime(2020, 3, i)
-        ## everyone from the second record should have an EVEN id.
+        # everyone from the second record should have an EVEN id.
         infected_ids = [i * 1000 + 500 + 0 + 2 * x for x in range(3)]
         infector_ids = [i * 1000 + 500 + 10 + 2 * x for x in range(3)]
         dead_ids = [i * 1000 + 500 + 20 + 2 * x for x in range(3)]
@@ -132,12 +123,11 @@ def test__prepend_checkpoint_hdf5(dummy_world):
     post_checkpoint_record.static_data(dummy_world)
     for i in range(11, 21):
         timestamp = datetime.datetime(2020, 3, i)
-        ## everyone from the second record should have an ODD id.
+        # everyone from the second record should have an ODD id.
         infected_ids = [i * 1000 + 500 + 0 + 2 * x + 1 for x in range(3)]
         infector_ids = [i * 1000 + 500 + 10 + 2 * x + 1 for x in range(3)]
         dead_ids = [i * 1000 + 500 + 20 + 2 * x + 1 for x in range(3)]
         infection_ids = [i * 1000 + 500 + 20 + 2 * x + 1 for x in range(3)]
-
         with open_file(post_checkpoint_record_path, mode="a") as f:
             post_checkpoint_record.file = f
             post_checkpoint_record.accumulate(

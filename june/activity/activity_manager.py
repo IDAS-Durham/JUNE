@@ -3,8 +3,6 @@ import yaml
 from datetime import datetime
 from itertools import chain
 from typing import List, Optional
-from collections import defaultdict
-import numpy as np
 from time import perf_counter
 from time import time as wall_clock
 
@@ -13,12 +11,6 @@ from june.exc import SimulatorError
 from june.groups import Subgroup
 from june.groups.leisure import Leisure
 from june.groups.travel import Travel
-from june.policy import (
-    IndividualPolicies,
-    LeisurePolicies,
-    MedicalCarePolicies,
-    InteractionPolicies,
-)
 from june.mpi_setup import (
     mpi_comm,
     mpi_size,
@@ -33,7 +25,6 @@ if mpi_rank > 0:
     logger.propagate = True
 
 activity_hierarchy = [
-    "box",
     "medical_facility",
     "rail_travel_out",
     "rail_travel_back",
@@ -64,23 +55,14 @@ class ActivityManager:
         self.travel = travel
         self.all_activities = all_activities
 
-        if self.world.box_mode:
-            self.activity_to_super_group_dict = {
-                "box": ["boxes"],
-            }
-        else:
-            self.activity_to_super_group_dict = {
-                "medical_facility": activity_to_super_groups.get(
-                    "medical_facility", []
-                ),
-                "primary_activity": activity_to_super_groups.get(
-                    "primary_activity", []
-                ),
-                "leisure": activity_to_super_groups.get("leisure", []),
-                "residence": activity_to_super_groups.get("residence", []),
-                "commute": activity_to_super_groups.get("commute", []),
-                "rail_travel": activity_to_super_groups.get("rail_travel", []),
-            }
+        self.activity_to_super_group_dict = {
+            "medical_facility": activity_to_super_groups.get("medical_facility", []),
+            "primary_activity": activity_to_super_groups.get("primary_activity", []),
+            "leisure": activity_to_super_groups.get("leisure", []),
+            "residence": activity_to_super_groups.get("residence", []),
+            "commute": activity_to_super_groups.get("commute", []),
+            "rail_travel": activity_to_super_groups.get("rail_travel", []),
+        }
 
     @classmethod
     def from_file(
@@ -94,17 +76,14 @@ class ActivityManager:
     ):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        if world.box_mode:
-            activity_to_super_groups = None
-        else:
-            try:
-                activity_to_super_groups = config["activity_to_super_groups"]
-            except:
-                logger.warning(
-                    "Activity to groups in config is deprecated"
-                    "please change it to activity_to_super_groups"
-                )
-                activity_to_super_groups = config["activity_to_groups"]
+        try:
+            activity_to_super_groups = config["activity_to_super_groups"]
+        except KeyError:
+            logger.warning(
+                "Activity to groups in config is deprecated"
+                "please change it to activity_to_super_groups"
+            )
+            activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
         cls.check_inputs(time_config)
         weekday_activities = [

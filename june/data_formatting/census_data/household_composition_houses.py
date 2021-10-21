@@ -23,7 +23,13 @@ df = pd.read_csv(raw_path / "household_houses.csv", index_col=0)
 assert len(df) == 181408
 
 df.set_index("geography", inplace=True)
-df.drop(columns=["date", "geography code", ], inplace=True)
+df.drop(
+    columns=[
+        "date",
+        "geography code",
+    ],
+    inplace=True,
+)
 
 df = df[
     [col for col in df.columns if "Total" not in col and "All categories" not in col]
@@ -98,8 +104,8 @@ carehome_df = carehome_df.sum(axis=1)
 comunal_not_carehome_df = all_comunal_df[all_comunal_df.columns[0]] - carehome_df
 
 assert (
-        comunal_not_carehome_df.sum() + carehome_df.sum()
-        == all_comunal_df[all_comunal_df.columns[0]].sum()
+    comunal_not_carehome_df.sum() + carehome_df.sum()
+    == all_comunal_df[all_comunal_df.columns[0]].sum()
 )
 
 encoding_households[">=0 >=0 >=0 >=0 >=0"] = comunal_not_carehome_df

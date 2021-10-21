@@ -2,14 +2,13 @@ import logging
 import yaml
 from random import shuffle, randint
 from collections import OrderedDict, defaultdict
-from itertools import chain
 
 import numpy as np
 import pandas as pd
 
 from june import paths
-from june.geography import Area, Areas, SuperArea, SuperAreas
-from june.groups import CareHome
+from june.geography import Area, SuperAreas
+
 
 logger = logging.getLogger("care_home_distributor")
 
@@ -112,7 +111,7 @@ class CareHomeDistributor:
         population that lives in communal establishments, from there we pick the oldest ones
         to live in care homes.
         """
-        logger.info(f"Populating care homes")
+        logger.info("Populating care homes")
         total_care_home_residents = 0
         for super_area in super_areas:
             men_communal_residents = self.communal_men_by_super_area[super_area.name]
@@ -167,7 +166,7 @@ class CareHomeDistributor:
                                     areas_dicts[i][1], age1, age2
                                 )
                                 if person is None:
-                                    continue 
+                                    continue
                                 care_home.add(person)
                                 communal_women_sorted[age_range] -= 1
                                 total_care_home_residents += 1
@@ -205,7 +204,7 @@ class CareHomeDistributor:
                 while len(care_home.workers) < care_home.n_workers:
                     try:
                         carer = carers.pop()
-                    except:
+                    except Exception:
                         logger.info(
                             f"Care home in area {care_home.area.name} has not enough workers!"
                         )

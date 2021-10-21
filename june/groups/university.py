@@ -5,7 +5,7 @@ from typing import List
 import logging
 
 from june.groups import Group, Subgroup, Supergroup
-from june.geography import SuperAreas, Areas, Geography
+from june.geography import Areas, Geography
 from june.paths import data_path
 
 age_to_years = {19: 1, 20: 2, 21: 3, 22: 4, 23: 5}
@@ -17,7 +17,7 @@ logger = logging.getLogger("universities")
 
 class University(Group):
     def __init__(
-        self, n_students_max=None, n_years=5, ukprn=None, area=None, coordinates = None
+        self, n_students_max=None, n_years=5, ukprn=None, area=None, coordinates=None
     ):
         self.n_students_max = n_students_max
         self.n_years = n_years
@@ -52,7 +52,7 @@ class University(Group):
             self.subgroups[year].append(person)
             person.subgroups.primary_activity = self.subgroups[year]
             if person.work_super_area is not None:
-                    person.work_super_area.remove_worker(person)
+                person.work_super_area.remove_worker(person)
         elif subgroup == "professors":
             self.subgroups[0].append(person)
             person.subgroups.primary_activity = self.subgroups[0]

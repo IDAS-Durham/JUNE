@@ -1,13 +1,9 @@
 import pytest
 import numpy as np
 
-from june.utils import (
-    parse_age_probabilities,
-    parse_prevalence_comorbidities_in_reference_population,
-)
-
 from june.epidemiology.infection import Covid19, B117, ImmunitySetter
 from june.demography import Person, Population
+from june.geography import Area, SuperArea, Region
 from june.records import Record, RecordReader
 from june import World
 
@@ -228,8 +224,6 @@ class TestVaccinationSetter:
     def test__vaccination_parser(self, vaccination_dict):
         susc_setter = ImmunitySetter(vaccination_dict=vaccination_dict)
         vp = susc_setter.vaccination_dict
-        c19_id = Covid19.infection_id()
-        b117_id = B117.infection_id()
         for age in range(0, 100):
             # pfizer
             if age < 50:
@@ -285,10 +279,13 @@ class TestVaccinationSetter:
         for person in population:
             if person.age < 30:
                 if b117id in person.immunity.susceptibility_dict:
-                    assert person.immunity.get_susceptibility(b117id) == 0.0
+                    assert np.isclose(person.immunity.get_susceptibility(b117id), 0.2)
                     under30_sputnik += 1
                 if b117id in person.immunity.effective_multiplier_dict:
-                    assert pytest.approx(person.immunity.get_effective_multiplier(b117id)) == 0.2
+                    assert (
+                        pytest.approx(person.immunity.get_effective_multiplier(b117id))
+                        == 0.2
+                    )
                     under30_sputnik_not += 1
             if person.age > 30:
                 if b117id in person.immunity.susceptibility_dict:
@@ -298,34 +295,33 @@ class TestVaccinationSetter:
 
             if person.age < 50:
                 if c19id in person.immunity.susceptibility_dict:
-                    assert person.immunity.get_susceptibility(c19id) == 0.0
+                    assert person.immunity.get_susceptibility(c19id) == 0.5
                     under50_pfizer += 1
                 if c19id in person.immunity.effective_multiplier_dict:
                     under50_pfizer_not += 1
                     assert person.immunity.get_effective_multiplier(c19id) == 0.5
             else:
                 if c19id in person.immunity.susceptibility_dict:
-                    assert person.immunity.get_susceptibility(c19id) == 0.0
+                    assert person.immunity.get_susceptibility(c19id) == 0.5
                     over50_pfizer += 1
                 if c19id in person.immunity.effective_multiplier_dict:
                     over50_pfizer_not += 1
                     assert person.immunity.get_effective_multiplier(c19id) == 0.5
 
         under30 = len([person for person in population if person.age < 30])
-        over30 = len([person for person in population if person.age >= 30])
         under50 = len([person for person in population if person.age < 50])
         over50 = len([person for person in population if person.age >= 50])
-        assert np.isclose(under30_sputnik / under30, 0.3 * 0.8, rtol=1e-1)
+        assert np.isclose(under30_sputnik / under30, 0.3, rtol=1e-1)
         assert np.isclose(under30_sputnik_not / under30, 0.3, rtol=1e-1)
-        assert np.isclose(under50_pfizer / under50, 0.7 * 0.5, rtol=1e-1)
+        assert np.isclose(under50_pfizer / under50, 0.7, rtol=1e-1)
         assert np.isclose(under50_pfizer_not / under50, 0.7, rtol=1e-1)
-        assert np.isclose(over50_pfizer / over50, 0.5, rtol=1e-1)
+        assert np.isclose(over50_pfizer / over50, 1, rtol=1e-1)
         assert np.isclose(over50_pfizer_not / over50, 1, rtol=1e-1)
 
     def test__set_save_vaccine_type_record(self):
         vaccination_dict = {
-                "sputnik": {
-            "percentage_vaccinated": {"0-30": 1.0, "30-100": 0.0},
+            "sputnik": {
+                "percentage_vaccinated": {"0-30": 1.0, "30-100": 0.0},
                 "infections": {
                     B117.infection_id(): {
                         "sterilisation_efficacy": {"0-100": 0.8},
@@ -334,7 +330,7 @@ class TestVaccinationSetter:
                 },
             }
         }
-        record = Record(record_path='results/', record_static_data=True)
+        record = Record(record_path="results/", record_static_data=True)
         population = Population([])
         world = World()
         world.people = population
@@ -346,15 +342,106 @@ class TestVaccinationSetter:
         immunity.set_vaccinations(population)
         record.static_data(world=world)
 
-        record_reader =  RecordReader()
-        people_df = record_reader.table_to_df('population')
+        record_reader = RecordReader()
+        people_df = record_reader.table_to_df("population")
         for id, row in people_df.iterrows():
-            if row['age'] < 30:
-                assert row['vaccine_type'] == 'sputnik'
+            if row["age"] < 30:
+                assert row["vaccine_type"] == "sputnik"
             else:
-                assert row['vaccine_type'] == 'none'
+                assert row["vaccine_type"] == "none"
 
 
+class TestPreviousInfectionSetter:
+    @pytest.fixture(name="previous_infections_dict")
+    def make_prev_inf_dict(self):
+        dd = {
+            "infections": {
+                Covid19.infection_id(): {
+                    "sterilisation_efficacy": 0.5,
+                    "symptomatic_efficacy": 0.6,
+                },
+                B117.infection_id(): {
+                    "sterilisation_efficacy": 0.2,
+                    "symptomatic_efficacy": 0.3,
+                },
+            },
+            "ratios": {
+                "London": {"0-50": 0.5, "50-100": 0.2},
+                "North East": {"0-70": 0.3, "70-100": 0.8},
+            },
+        }
+        return dd
 
+    def test__setting_prev_infections(self, previous_infections_dict):
+        ne = Region(name="North East")
+        ne_super_area = SuperArea(region=ne)
+        ne_area = Area(super_area=ne_super_area)
 
+        london = Region(name="London")
+        london_super_area = SuperArea(region=london)
+        london_area = Area(super_area=london_super_area)
 
+        population = Population([])
+        for area in [ne_area, london_area]:
+            for age in range(100):
+                for _ in range(100):
+                    p = Person.from_attributes(age=age)
+                    p.area = area
+                    population.add(p)
+        immunity = ImmunitySetter(previous_infections_dict=previous_infections_dict)
+        immunity.set_previous_infections(population)
+        vaccinated = {"London": {1: 0, 2: 0}, "North East": {1: 0, 2: 0}}
+        for person in population:
+            c19_susc = person.immunity.get_susceptibility(Covid19.infection_id())
+            b117_susc = person.immunity.get_susceptibility(B117.infection_id())
+            if c19_susc < 1.0:
+                assert c19_susc == 0.5
+                if person.region.name == "London":
+                    if person.age < 50:
+                        vaccinated[person.region.name][1] += 1
+                    else:
+                        vaccinated[person.region.name][2] += 1
+                else:
+                    if person.age < 70:
+                        vaccinated[person.region.name][1] += 1
+                    else:
+                        vaccinated[person.region.name][2] += 1
+            if b117_susc < 1.0:
+                assert b117_susc == 0.8
+
+        people_london1 = len(
+            [
+                person
+                for person in population
+                if person.region.name == "London"
+                if person.age < 50
+            ]
+        )
+        people_london2 = len(
+            [
+                person
+                for person in population
+                if person.region.name == "London"
+                if person.age >= 50
+            ]
+        )
+        people_ne1 = len(
+            [
+                person
+                for person in population
+                if person.region.name == "North East"
+                if person.age < 70
+            ]
+        )
+        people_ne2 = len(
+            [
+                person
+                for person in population
+                if person.region.name == "North East"
+                if person.age >= 70
+            ]
+        )
+        assert np.isclose(vaccinated["London"][1] / people_london1, 0.5, rtol=0.1)
+        assert np.isclose(vaccinated["London"][2] / people_london2, 0.2, rtol=0.1)
+        assert np.isclose(vaccinated["North East"][1] / people_ne1, 0.3, rtol=0.1)
+        assert np.isclose(vaccinated["North East"][2] / people_ne2, 0.8, rtol=0.1)

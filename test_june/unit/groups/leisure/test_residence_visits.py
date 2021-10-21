@@ -4,7 +4,7 @@ import pytest
 from june.groups.leisure.residence_visits import ResidenceVisitsDistributor
 from june.demography import Person
 from june.groups import Household, CareHome, Pub, Company
-from june.geography import SuperArea, SuperAreas, Area, Areas
+from june.geography import SuperArea, SuperAreas, Area
 
 
 @pytest.fixture(name="rv_distributor", scope="module")
@@ -65,7 +65,6 @@ class TestResidenceVisitsDistributor:
         ]
 
     def test__no_visits_during_working_hours(self, rv_distributor):
-        poisson_no_working = []
         for sex in ["m", "f"]:
             for age in range(0, 100):
                 for day_type in ["weekday", "weekend"]:

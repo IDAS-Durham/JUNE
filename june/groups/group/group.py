@@ -7,10 +7,13 @@ from itertools import count
 from typing import List, Tuple
 
 from june.demography.person import Person
-from june.exc import GroupException
 from .interactive import InteractiveGroup
 from . import AbstractGroup
 from . import Subgroup
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.geography.geography import Region
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +85,7 @@ class Group(AbstractGroup):
     def region(self) -> "Region":
         try:
             return self.super_area.region
-        except:
+        except Exception:
             return None
 
     def get_spec(self) -> str:
@@ -126,7 +129,7 @@ class Group(AbstractGroup):
         person
             A person
         group_type
-            
+
         """
         # if not dynamic:
         self[subgroup_type].append(person)

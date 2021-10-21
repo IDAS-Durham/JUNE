@@ -8,13 +8,11 @@ import json
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
-from collections import Counter, defaultdict
+from typing import Optional
+from collections import defaultdict
 import logging
 
-import subprocess
 import june
-from june.groups import Supergroup
 from june.records.event_records_writer import (
     InfectionRecord,
     HospitalAdmissionsRecord,
@@ -31,7 +29,15 @@ from june.records.static_records_writer import (
     SuperAreaRecord,
     RegionRecord,
 )
-from june import paths
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from june.world import World
+    from june.interaction.interaction import Interaction
+    from june.epidemiology.infection_seed.infection_seed import InfectionSeeds
+    from june.epidemiology.infection import InfectionSelectors
+    from june.epidemiology.epidemiology import Epidemiology
+    from june.activity.activity_manager import ActivityManager
 
 logger = logging.getLogger("records_writer")
 
@@ -47,44 +53,44 @@ class Record:
             self.filename = f"june_record.{mpi_rank}.h5"
             self.summary_filename = f"summary.{mpi_rank}.csv"
         else:
-            self.filename = f"june_record.h5"
-            self.summary_filename = f"summary.csv"
-        self.configs_filename = f"config.yaml"
+            self.filename = "june_record.h5"
+            self.summary_filename = "summary.csv"
+        self.configs_filename = "config.yaml"
         self.record_static_data = record_static_data
         try:
             os.remove(self.record_path / self.filename)
         except OSError:
             pass
-        with tables.open_file(self.record_path / self.filename, mode="w") as self.file:
-            self.events = {
-                "infections": InfectionRecord(hdf5_file=self.file),
-                "hospital_admissions": HospitalAdmissionsRecord(hdf5_file=self.file),
-                "icu_admissions": ICUAdmissionsRecord(hdf5_file=self.file),
-                "discharges": DischargesRecord(hdf5_file=self.file),
-                "deaths": DeathsRecord(hdf5_file=self.file),
-                "recoveries": RecoveriesRecord(hdf5_file=self.file),
-                "symptoms": SymptomsRecord(hdf5_file=self.file),
+        filename = self.record_path / self.filename
+        self.events = {
+            "infections": InfectionRecord(hdf5_filename=filename),
+            "hospital_admissions": HospitalAdmissionsRecord(hdf5_filename=filename),
+            "icu_admissions": ICUAdmissionsRecord(hdf5_filename=filename),
+            "discharges": DischargesRecord(hdf5_filename=filename),
+            "deaths": DeathsRecord(hdf5_filename=filename),
+            "recoveries": RecoveriesRecord(hdf5_filename=filename),
+            "symptoms": SymptomsRecord(hdf5_filename=filename),
+        }
+        if self.record_static_data:
+            self.statics = {
+                "people": PeopleRecord(),
+                "locations": LocationRecord(),
+                "areas": AreaRecord(),
+                "super_areas": SuperAreaRecord(),
+                "regions": RegionRecord(),
             }
-            if self.record_static_data:
-                self.statics = {
-                    "people": PeopleRecord(hdf5_file=self.file),
-                    "locations": LocationRecord(hdf5_file=self.file),
-                    "areas": AreaRecord(hdf5_file=self.file),
-                    "super_areas": SuperAreaRecord(hdf5_file=self.file),
-                    "regions": RegionRecord(hdf5_file=self.file),
-                }
         with open(
             self.record_path / self.summary_filename, "w", newline=""
         ) as summary_file:
             writer = csv.writer(summary_file)
-            #fields = ["infected", "recovered", "hospitalised", "intensive_care"]
+            # fields = ["infected", "recovered", "hospitalised", "intensive_care"]
             fields = ["infected", "hospitalised", "intensive_care"]
             header = ["time_stamp", "region"]
             for field in fields:
                 header.append("current_" + field)
                 header.append("daily_" + field)
             header.extend(
-                #["current_susceptible", "daily_hospital_deaths", "daily_deaths"]
+                # ["current_susceptible", "daily_hospital_deaths", "daily_deaths"]
                 ["daily_hospital_deaths", "daily_deaths"]
             )
             writer.writerow(header)
@@ -95,17 +101,17 @@ class Record:
             yaml.dump(description, f)
 
     def static_data(self, world: "World"):
-        with tables.open_file(self.record_path / self.filename, mode="a") as self.file:
+        with tables.open_file(self.record_path / self.filename, mode="a") as file:
             for static_name in self.statics.keys():
-                self.statics[static_name].record(hdf5_file=self.file, world=world)
+                self.statics[static_name].record(hdf5_file=file, world=world)
 
     def accumulate(self, table_name: str, **kwargs):
         self.events[table_name].accumulate(**kwargs)
 
     def time_step(self, timestamp: str):
-        with tables.open_file(self.record_path / self.filename, mode="a") as self.file:
+        with tables.open_file(self.record_path / self.filename, mode="a") as file:
             for event_name in self.events.keys():
-                self.events[event_name].record(hdf5_file=self.file, timestamp=timestamp)
+                self.events[event_name].record(hdf5_file=file, timestamp=timestamp)
 
     def summarise_hospitalisations(self, world: "World"):
         hospital_admissions, icu_admissions = defaultdict(int), defaultdict(int)
@@ -254,14 +260,14 @@ class Record:
             policy_dicts = []
             for policy in activity_manager.policies.policies:
                 policy_dicts.append(policy.__dict__.copy())
-            with open(self.record_path / "policies.txt", "w") as fout:
-                fout.write(repr(policy_dicts))
+            with open(self.record_path / "policies.json", "w") as f:
+                json.dump(policy_dicts, f, indent=4, default=str)
 
     @staticmethod
     def get_username():
         try:
             username = os.getlogin()
-        except:
+        except Exception:
             username = "no_user"
         return username
 
@@ -307,13 +313,13 @@ class Record:
                     .stdout.decode("utf-8")
                     .strip()
                 )
-            except:
+            except Exception:
                 print("Could not record local git SHA")
                 meta_dict["local_SHA"] = "unavailable"
             user = self.get_username()
             meta_dict["user"] = user
             if comment is None:
-                comment: "No comment provided."
+                comment = "No comment provided."
             meta_dict["user_comment"] = f"{comment}"
             meta_dict["june_path"] = str(june.__path__[0])
             meta_dict["number_of_cores"] = number_of_cores
@@ -494,4 +500,4 @@ def prepend_checkpoint_summary(
     merged_summary.set_index(["region", "time_stamp"])
     merged_summary.sort_index(inplace=True)
     merged_summary.to_csv(merged_summary_path, index=True)
-    logger.info(f"Written merged summary to {merged_summary_path}")    
+    logger.info(f"Written merged summary to {merged_summary_path}")

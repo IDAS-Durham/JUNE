@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from itertools import chain
 
+
 def parse_age_probabilities(age_dict: dict, fill_value=0):
     """
     Parses the age probability dictionaries into an array.
@@ -19,9 +20,9 @@ def parse_age_probabilities(age_dict: dict, fill_value=0):
             bins.append(int(age_range_split[1]))
         probabilities.append(age_dict[age_range])
     sorting_idx = np.argsort(bins[::2])
-    bins = list(chain.from_iterable(
-        [bins[2 * idx], bins[2 * idx + 1]] for idx in sorting_idx
-    ))
+    bins = list(
+        chain.from_iterable([bins[2 * idx], bins[2 * idx + 1]] for idx in sorting_idx)
+    )
     probabilities = np.array(probabilities)[sorting_idx]
     probabilities_binned = []
     for prob in probabilities:
@@ -61,8 +62,9 @@ def convert_comorbidities_prevalence_to_dict(prevalence_female, prevalence_male)
         }
     return prevalence_reference_population
 
+
 def parse_prevalence_comorbidities_in_reference_population(
-    comorbidity_prevalence_reference_population
+    comorbidity_prevalence_reference_population,
 ):
     parsed_comorbidity_prevalence = {}
     for comorbidity, values in comorbidity_prevalence_reference_population.items():
@@ -71,5 +73,3 @@ def parse_prevalence_comorbidities_in_reference_population(
             "m": parse_age_probabilities(values["m"]),
         }
     return parsed_comorbidity_prevalence
-
-
