@@ -3,6 +3,7 @@ from zlib import adler32
 from .symptoms import Symptoms, SymptomTag
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.epidemiology.infection.transmission import Transmission
 

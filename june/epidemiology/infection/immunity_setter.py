@@ -13,6 +13,7 @@ from june.utils import (
 from . import Covid19, B117, B16172
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.records.records_writer import Record
 

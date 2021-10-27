@@ -11,6 +11,7 @@ from june.epidemiology.epidemiology import Epidemiology
 from june.utils import parse_age_probabilities
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.world import World
 
