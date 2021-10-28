@@ -100,9 +100,7 @@ class AbstractHospital:
         elif person.id in self.icu_ids:
             self.remove_from_icu(person)
         else:
-            raise HospitalError(
-                "Trying to release patient not located in icu or ward."
-            )
+            raise HospitalError("Trying to release patient not located in icu or ward.")
 
 
 class Hospital(Group, AbstractHospital, MedicalFacility):

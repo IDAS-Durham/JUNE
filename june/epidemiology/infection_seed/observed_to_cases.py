@@ -12,8 +12,11 @@ from june.epidemiology.infection.symptom_tag import SymptomTag
 from june.epidemiology.infection.trajectory_maker import TrajectoryMaker
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
-    from june.epidemiology.infection.health_index.health_index import HealthIndexGenerator
+    from june.epidemiology.infection.health_index.health_index import (
+        HealthIndexGenerator,
+    )
     from june.epidemiology.infection.trajectory_maker import Stage
 
 default_trajectories_path = (

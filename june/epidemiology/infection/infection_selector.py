@@ -10,6 +10,7 @@ from .transmission_xnexp import TransmissionXNExp
 from .trajectory_maker import CompletionTime
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.demography import Person
     from .transmission import Transmission

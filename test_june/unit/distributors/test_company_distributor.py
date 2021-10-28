@@ -3,6 +3,7 @@ from june.geography import SuperArea
 from june.groups import Company
 from june.demography import Person
 from june.distributors import CompanyDistributor
+
 # TODO: This test shouldn't use from goegraphy! Create a world that has those characteristics
 
 

@@ -2,6 +2,7 @@ from collections import defaultdict
 import numba as nb
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.groups.group.group import Group
 
