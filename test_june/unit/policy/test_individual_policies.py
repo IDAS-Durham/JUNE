@@ -433,7 +433,6 @@ class TestClosure:
             worker.region.policy['regional_compliance'] = 0  # Want them to not comply this time
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is False
 
-
         # Live in a tier 3 or 4 and work in another region: skip activity
         live_tiers = [3, 4, 3, 4]
         work_tiers = [1, 2, 3, 4]
