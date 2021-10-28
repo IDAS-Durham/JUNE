@@ -405,10 +405,10 @@ class TestClosure:
         world, pupil, student, worker, sim = setup_policy_world
         worker.lockdown_status = "random"
         live_area = Area()
-        live_super_area = SuperArea(coordinates=[0, 3], region=live_region, areas=[live_area])
+        live_super_area = SuperArea(name="live_super_area", coordinates=[0, 3], region=live_region, areas=[live_area])
         live_area.super_area = live_super_area
         live_region.super_areas = [live_super_area]
-        work_super_area = SuperArea(coordinates=[0, 0], region=work_region)
+        work_super_area = SuperArea(name="work_super_area", coordinates=[0, 0], region=work_region)
         work_region.super_areas = [work_super_area]
 
         live_area.add(worker)

@@ -422,6 +422,8 @@ class CloseUniversities(SkipActivity):
 
 
 class CloseCompaniesLockdownTiers(SkipActivity):
+    TIERS = set([3, 4])
+
     def __init__(
         self,
         start_time: str,
@@ -437,7 +439,6 @@ class CloseCompaniesLockdownTiers(SkipActivity):
             person.primary_activity is not None
             and person.primary_activity.group.spec == "company"
         ):
-            tiers = set([3, 4])
             # import pdb; pdb.set_trace()
             if person.lockdown_status == "random":
                 # stop people going to work in Tier 3 or 4 regions
@@ -447,8 +448,8 @@ class CloseCompaniesLockdownTiers(SkipActivity):
                 try:
                     if (
                         person.work_super_area != person.area.super_area
-                        and person.work_super_area.region.policy["lockdown_tier"] in tiers
-                        and person.region.policy["lockdown_tier"] not in tiers
+                        and person.work_super_area.region.policy["lockdown_tier"] in CloseCompaniesLockdownTiers.TIERS
+                        and person.region.policy["lockdown_tier"] not in CloseCompaniesLockdownTiers.TIERS
                     ):
                         try:
                             return random() < person.region.regional_compliance
@@ -463,7 +464,7 @@ class CloseCompaniesLockdownTiers(SkipActivity):
                 try:
                     if (
                         person.work_super_area != person.area.super_area
-                        and person.region.policy["lockdown_tier"] in tiers
+                        and person.region.policy["lockdown_tier"] in CloseCompaniesLockdownTiers.TIERS
                     ):
                         try:
                             return random() < person.region.regional_compliance
