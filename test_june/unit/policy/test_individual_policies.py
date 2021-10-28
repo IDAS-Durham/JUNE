@@ -414,6 +414,11 @@ class TestClosure:
         live_area.add(worker)
         worker.area = live_area
         work_super_area.add_worker(worker)
+        company_closure_lockdown_tiers = CloseCompaniesLockdownTiers(start_time="2020-1-1", end_time="2020-10-1")
+
+        # Make sure apply removes correct activities
+        activities_before = ["commute", "primary_activity"]
+        assert company_closure_lockdown_tiers.apply(activities_before) == []
 
         # Work in tier 3 or 4 and live in a tier 1 or 2: skip activity
         live_tiers = [1, 2]
@@ -423,11 +428,11 @@ class TestClosure:
             worker.region.policy['lockdown_tier'] = live_tier
             worker.region.policy['regional_compliance'] = 1  # Want them to comply this time
 
-            company_closure_lockdown_tiers = CloseCompaniesLockdownTiers(start_time="2020-1-1", end_time="2020-10-1")
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is True
 
             worker.region.policy['regional_compliance'] = 0  # Want them to not comply this time
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is False
+
 
         # Live in a tier 3 or 4 and work in another region: skip activity
         live_tiers = [3, 4, 3, 4]
@@ -437,7 +442,6 @@ class TestClosure:
             worker.region.policy['lockdown_tier'] = live_tier
             worker.region.policy['regional_compliance'] = 1  # Want them to comply this time
 
-            company_closure_lockdown_tiers = CloseCompaniesLockdownTiers(start_time="2020-1-1", end_time="2020-10-1")
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is True
 
             worker.region.policy['regional_compliance'] = 0  # Want them to not comply this time
@@ -451,7 +455,6 @@ class TestClosure:
             worker.region.policy['lockdown_tier'] = live_tier
             worker.region.policy['regional_compliance'] = 1  # Want them to comply this time
 
-            company_closure_lockdown_tiers = CloseCompaniesLockdownTiers(start_time="2020-1-1", end_time="2020-10-1")
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is False
 
         # Live in a tier 3 or 4 AND work in same region: Do not skip as allowed to go to work
@@ -463,7 +466,6 @@ class TestClosure:
             worker.region.policy['lockdown_tier'] = live_tier
             worker.region.policy['regional_compliance'] = 1  # Want them to comply this time
 
-            company_closure_lockdown_tiers = CloseCompaniesLockdownTiers(start_time="2020-1-1", end_time="2020-10-1")
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is False
 
     def test__close_companies(self, setup_policy_world):

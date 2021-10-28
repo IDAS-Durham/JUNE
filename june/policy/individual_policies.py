@@ -427,7 +427,7 @@ class CloseCompaniesLockdownTiers(SkipActivity):
         start_time: str,
         end_time: str
     ):
-        super().__init__(start_time, end_time)
+        super().__init__(start_time, end_time, ("primary_activity", "commute"))
 
     def check_skips_activity(self, person: "Person") -> bool:
         """
