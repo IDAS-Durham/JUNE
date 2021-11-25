@@ -84,22 +84,30 @@ class TestInfectOneHousehold:
             super_area=world.super_areas[0],
             cases_per_capita_per_age=cases_per_capita_per_age,
         )
-        assert to_infect_by_age[10] == 2.5
-        assert to_infect_by_age[50] == 1
+        assert to_infect_by_age[10] == 25
+        assert to_infect_by_age[50] == 10
         for age in range(100):
             if age not in (10, 50):
                 to_infect_by_age[age] == 0
 
     def test__person_can_be_infected(self, cis, world):
         to_infect_by_age = {0: 2, 1: 0}
-        person = Person(age=1)
+        person = Person.from_attributes(age=1)
         assert (
-            cis.can_person_be_infected(person=person, to_infect_by_age=to_infect_by_age)
+            cis.can_person_be_infected(
+                person=person,
+                to_infect_by_age=to_infect_by_age,
+                infection_id=cis.infection_selector.infection_class.infection_id(),
+            )
             is False
         )
-        person = Person(age=0)
+        person = Person.from_attributes(age=0)
         assert (
-            cis.can_person_be_infected(person=person, to_infect_by_age=to_infect_by_age)
+            cis.can_person_be_infected(
+                person=person,
+                to_infect_by_age=to_infect_by_age,
+                infection_id=cis.infection_selector.infection_class.infection_id()
+            )
             is True
         )
 
