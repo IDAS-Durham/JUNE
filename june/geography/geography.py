@@ -212,6 +212,10 @@ class SuperArea:
     def people(self):
         return list(chain.from_iterable(area.people for area in self.areas))
 
+    @property
+    def households(self):
+        return list(chain.from_iterable(area.households for area in self.areas))
+
 
 class SuperAreas:
     __slots__ = "members_by_id", "ball_tree", "members_by_name"
