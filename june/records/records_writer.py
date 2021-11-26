@@ -337,6 +337,8 @@ def combine_summaries(record_path, remove_left_overs=False, save_dir=None):
     dfs = []
     for summary_file in summary_files:
         df = pd.read_csv(summary_file)
+        if len(df) == 0:
+            continue
         aggregator = {
             col: np.mean if "current" in col else sum for col in df.columns[2:]
         }

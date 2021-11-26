@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from random import random
 import datetime
+import logging
 from collections import defaultdict
 from typing import List, Optional
 
@@ -15,6 +16,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from june.world import World
 
+seed_logger = logging.getLogger("seed")
 
 class InfectionSeed:
     """
@@ -266,6 +268,7 @@ class InfectionSeed:
             )
         )
         if is_seeding_date and not_yet_seeded_date:
+            seed_logger.info(f"Seeding infections in super areas at date {date}")
             self.infect_super_areas(
                 cases_per_capita_per_age_per_region=self.daily_cases_per_capita_per_age_per_region.loc[
                     date
