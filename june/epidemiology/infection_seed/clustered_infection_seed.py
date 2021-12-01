@@ -106,7 +106,7 @@ class ClusteredInfectionSeed(InfectionSeed):
                             age_distribution=age_distribution,
                             person=resident,
                             infection_id=infection_id,
-                            error = 2
+                            error=2,
                         ):
                             self.infect_person(
                                 person=resident, time=time, record=record
@@ -127,7 +127,7 @@ class ClusteredInfectionSeed(InfectionSeed):
         ret = 0
         for resident in household.residents:
             ret += age_distribution.loc[resident.age]
-        #return ret
+        # return ret
         return ret / np.sqrt(len(household.residents))
 
     def infect_super_area(
@@ -142,16 +142,18 @@ class ClusteredInfectionSeed(InfectionSeed):
         age_distribution = cases_per_capita_per_age / cases_per_capita_per_age.sum()
         households = np.array(super_area.households)
         scores = [self.get_household_score(h, age_distribution) for h in households]
+
         cum_scores = np.cumsum(scores)
+        seeded_households = set()
         while total_to_infect > 0:
             num = random() * cum_scores[-1]
             idx = np.searchsorted(cum_scores, num)
             household = households[idx]
+            if household.id in seeded_households:
+                continue
             for person in household.people:
                 if person.immunity.get_susceptibility(infection_id) > 0:
-                    self.infect_person(
-                        person=person, time=time, record=record
-                    )
+                    self.infect_person(person=person, time=time, record=record)
                     if time < 0:
                         self.bring_infection_up_to_date(
                             person=person,
@@ -161,8 +163,5 @@ class ClusteredInfectionSeed(InfectionSeed):
                     total_to_infect -= 1
                     if total_to_infect < 1:
                         return
+                    seeded_households.add(household.id)
 
-
-
-
-    #    age_distribution = cases_per_capita_per_age / cases_per_capita_per_age.sum()

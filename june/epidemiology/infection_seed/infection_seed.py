@@ -279,6 +279,7 @@ class InfectionSeed:
             self.dates_seeded.add(date_str)
 
     def _seed_past_infections(self, date, time, record):
+        seed_logger.info(f"Seeding past infections at {date}")
         past_dates = []
         for (
             past_date
