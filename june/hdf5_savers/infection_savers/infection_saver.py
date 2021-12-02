@@ -129,7 +129,7 @@ def load_infections_from_hdf5(hdf5_file_path: str, chunk_size=50000):
             idx2 = min((chunk + 1) * chunk_size, n_infections)
             attribute_dict = {}
             for attribute_name in infections_group.keys():
-                if attribute_name in ["symptoms", "transmissions"]:
+                if attribute_name in ["symptoms", "transmissions", "infection_class"]:
                     continue
                 attribute_dict[attribute_name] = read_dataset(
                     infections_group[attribute_name], idx1, idx2
