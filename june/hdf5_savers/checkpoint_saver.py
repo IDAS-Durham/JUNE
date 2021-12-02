@@ -210,6 +210,8 @@ def restore_simulator_to_checkpoint(
     for person_id, immunity in zip(
         checkpoint_data["people_id"], checkpoint_data["immunity_list"]
     ):
+        if person_id not in people_ids:
+            continue
         person = world.people.get_from_id(person_id)
         person.immunity = immunity
     # restore timer
