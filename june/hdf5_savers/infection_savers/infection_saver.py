@@ -4,12 +4,36 @@ from collections import defaultdict
 from typing import List
 
 from june.hdf5_savers.utils import read_dataset, write_dataset
-from june.epidemiology.infection import Infection, Covid19
+from june.epidemiology.infection.infection import *
 from .symptoms_saver import save_symptoms_to_hdf5, load_symptoms_from_hdf5
 from .transmission_saver import save_transmissions_to_hdf5, load_transmissions_from_hdf5
 
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 float_vlen_type = h5py.vlen_dtype(np.dtype("float64"))
+
+def save_infection_classes_to_hdf5(
+    hdf5_file_path: str,
+    infections: List[Infection],
+    chunk_size: int = 50000,
+):
+    n_infections = len(infections)
+    n_chunks = int(np.ceil(n_infections / chunk_size))
+    with h5py.File(hdf5_file_path, "a") as f:
+        for chunk in range(n_chunks):
+            idx1 = chunk * chunk_size
+            idx2 = min((chunk + 1) * chunk_size, n_infections)
+            tosave = []
+            for index in range(idx1, idx2):
+                infection = infections[index]
+                tosave.append(infection.__class__.__name__.encode("ascii", "ignore"))
+            data = np.array(tosave, dtype="S20")
+            write_dataset(
+                group=f["infections"],
+                dataset_name="infection_class",
+                data=data,
+                index1=idx1,
+                index2=idx2,
+            )
 
 
 def save_infections_to_hdf5(
@@ -72,7 +96,7 @@ def save_infections_to_hdf5(
                     index1=idx1,
                     index2=idx2,
                 )
-
+    save_infection_classes_to_hdf5(hdf5_file_path = hdf5_file_path, infections=infections, chunk_size=chunk_size)
 
 def load_infections_from_hdf5(hdf5_file_path: str, chunk_size=50000):
     """
@@ -105,13 +129,15 @@ def load_infections_from_hdf5(hdf5_file_path: str, chunk_size=50000):
             idx2 = min((chunk + 1) * chunk_size, n_infections)
             attribute_dict = {}
             for attribute_name in infections_group.keys():
-                if attribute_name in ["symptoms", "transmissions"]:
+                if attribute_name in ["symptoms", "transmissions", "infection_class"]:
                     continue
                 attribute_dict[attribute_name] = read_dataset(
                     infections_group[attribute_name], idx1, idx2
                 )
             for index in range(idx2 - idx1):
-                infection = Covid19(
+                infection_class_str = infections_group["infection_class"][index].decode()
+                infection_class = globals()[infection_class_str]
+                infection = infection_class(
                     transmission=transmissions[trans_symp_index],
                     symptoms=symptoms_list[trans_symp_index],
                 )

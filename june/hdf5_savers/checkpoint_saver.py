@@ -219,6 +219,7 @@ def restore_simulator_to_checkpoint(
     # we need to start the next day
     checkpoint_date += timedelta(days=1)
     simulator.timer.reset_to_new_date(checkpoint_date)
+    logger.info(f"Restored checkpoint at date {checkpoint_date.date()}")
     return simulator
 
 
