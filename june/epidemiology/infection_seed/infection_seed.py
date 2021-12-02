@@ -268,7 +268,7 @@ class InfectionSeed:
             )
         )
         if is_seeding_date and not_yet_seeded_date:
-            seed_logger.info(f"Seeding infections in super areas at date {date}")
+            seed_logger.info(f"Seeding infections at date {date.date()}")
             self.infect_super_areas(
                 cases_per_capita_per_age_per_region=self.daily_cases_per_capita_per_age_per_region.loc[
                     date
@@ -288,7 +288,7 @@ class InfectionSeed:
             if past_date.date() < date.date():
                 past_dates.append(past_date)
         for past_date in past_dates:
-            seed_logger.info(f"Seeding past infections at {past_date}")
+            seed_logger.info(f"Seeding past infections at {past_date.date()}")
             past_time = (past_date.date() - date.date()).days
             past_date_str = past_date.date().strftime("%Y-%m-%d")
             self.dates_seeded.add(past_date_str)
