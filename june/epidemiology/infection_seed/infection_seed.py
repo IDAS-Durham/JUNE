@@ -255,7 +255,7 @@ class InfectionSeed:
         seed_past_infections:
             whether to seed infections that started past the initial simulation point.
         """
-        if not self.past_infections_seeded:
+        if (not self.past_infections_seeded) and seed_past_infections:
             self._seed_past_infections(date=date, time=time, record=record)
             self.past_infections_seeded = True
         is_seeding_date = self.max_date >= date >= self.min_date
@@ -279,7 +279,6 @@ class InfectionSeed:
             self.dates_seeded.add(date_str)
 
     def _seed_past_infections(self, date, time, record):
-        seed_logger.info(f"Seeding past infections at {date}")
         past_dates = []
         for (
             past_date
@@ -289,6 +288,7 @@ class InfectionSeed:
             if past_date.date() < date.date():
                 past_dates.append(past_date)
         for past_date in past_dates:
+            seed_logger.info(f"Seeding past infections at {past_date}")
             past_time = (past_date.date() - date.date()).days
             past_date_str = past_date.date().strftime("%Y-%m-%d")
             self.dates_seeded.add(past_date_str)

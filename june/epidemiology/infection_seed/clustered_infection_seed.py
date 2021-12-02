@@ -151,7 +151,7 @@ class ClusteredInfectionSeed(InfectionSeed):
             household = households[idx]
             if household.id in seeded_households:
                 continue
-            for person in household.people:
+            for person in household.residents:
                 if person.immunity.get_susceptibility(infection_id) > 0:
                     self.infect_person(person=person, time=time, record=record)
                     if time < 0:
