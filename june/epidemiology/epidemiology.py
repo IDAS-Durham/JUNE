@@ -13,6 +13,7 @@ from june.world import World
 from june.time import Timer
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.demography.person import Person
     from june.epidemiology.infection_seed.infection_seed import InfectionSeeds

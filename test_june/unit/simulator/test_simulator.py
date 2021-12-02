@@ -5,8 +5,7 @@ import pytest
 from june import paths
 from june.activity import activity_hierarchy
 from june.epidemiology.epidemiology import Epidemiology
-from june.epidemiology.infection import (Immunity, InfectionSelector,
-                                         InfectionSelectors)
+from june.epidemiology.infection import Immunity, InfectionSelector, InfectionSelectors
 from june.groups.leisure import leisure
 from june.groups.travel import Travel
 from june.interaction import Interaction

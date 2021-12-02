@@ -42,6 +42,7 @@ from . import (
 from june.mpi_setup import mpi_rank
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.domains import Domain
 

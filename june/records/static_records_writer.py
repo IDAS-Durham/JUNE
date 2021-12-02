@@ -5,9 +5,7 @@ from june.groups import Supergroup
 
 
 class StaticRecord:
-    def __init__(
-        self, table_name, int_names, float_names, str_names, expectedrows
-    ):
+    def __init__(self, table_name, int_names, float_names, str_names, expectedrows):
         self.table_name = table_name
         self.int_names = int_names
         self.float_names = float_names
@@ -59,7 +57,11 @@ class StaticRecord:
             for value in self.extra_str_data.values():
                 str_data += [value]
         self._create_table(
-            hdf5_file, self.int_names, self.float_names, self.str_names, self.expectedrows
+            hdf5_file,
+            self.int_names,
+            self.float_names,
+            self.str_names,
+            self.expectedrows,
         )
         self._record(
             hdf5_file=hdf5_file,

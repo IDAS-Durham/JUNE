@@ -31,6 +31,7 @@ from june.records.static_records_writer import (
 )
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.world import World
     from june.interaction.interaction import Interaction

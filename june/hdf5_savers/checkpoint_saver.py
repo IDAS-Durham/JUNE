@@ -25,6 +25,7 @@ from june.groups.travel import Travel
 import june.simulator as june_simulator_module
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.records.records_writer import Record
 

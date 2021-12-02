@@ -1,5 +1,3 @@
-
-
 class Immunity:
     """
     This class stores the "medical record" of the person,
