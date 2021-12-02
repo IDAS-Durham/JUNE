@@ -70,45 +70,41 @@ def create_seed(world, selector, cases):
 
 
 class TestInfectOneHousehold:
-    def test__get_people_to_infect_by_age(self, cis, world):
-        cases_per_capita_per_age = {}
-        for age in range(0, 100):
-            cases_per_capita_per_age[age] = 0
-        cases_per_capita_per_age[10] = 0.5
-        cases_per_capita_per_age[50] = 0.2
-        cases_per_capita_per_age = pd.DataFrame(
-            index=list(cases_per_capita_per_age.keys()),
-            data=list(cases_per_capita_per_age.values()),
+    def test__get_people_to_infect(self, cis, world):
+        people = world.people
+        cases = cis.daily_cases_per_capita_per_age_per_region.loc[
+            "2021-06-26", "London"
+        ]
+        total_to_infect = cis.get_total_people_to_infect(
+            people=people, cases_per_capita_per_age=cases
         )
-        to_infect_by_age = cis.get_people_to_infect_in_super_area_by_age(
-            super_area=world.super_areas[0],
-            cases_per_capita_per_age=cases_per_capita_per_age,
-        )
-        assert to_infect_by_age[10] == 25
-        assert to_infect_by_age[50] == 10
-        for age in range(100):
-            if age not in (10, 50):
-                to_infect_by_age[age] == 0
+        total_50 = len([person for person in world.people if person.age < 50])
+        total_100 = len([person for person in world.people if person.age >= 50])
+        expected = total_50 * 0.5 + total_100 * 0.2
+        assert np.isclose(total_to_infect, expected)
 
-    def test__person_can_be_infected(self, cis, world):
-        to_infect_by_age = {0: 2, 1: 0}
-        person = Person.from_attributes(age=1)
-        assert (
-            cis.can_person_be_infected(
-                person=person,
-                to_infect_by_age=to_infect_by_age,
-                infection_id=cis.infection_selector.infection_class.infection_id(),
-            )
-            is False
+    def test__get_household_score(self, cis):
+        household = Household()
+        age_distribution = pd.Series(
+            index=[0, 1, 2, 3, 4], data=[0.1, 0.2, 0, 0.1, 0.3]
         )
-        person = Person.from_attributes(age=0)
-        assert (
-            cis.can_person_be_infected(
-                person=person,
-                to_infect_by_age=to_infect_by_age,
-                infection_id=cis.infection_selector.infection_class.infection_id()
-            )
-            is True
+        for i in range(3):
+            person = Person.from_attributes(age=i)
+            household.add(person)
+        assert np.isclose(
+            cis.get_household_score(
+                household=household, age_distribution=age_distribution
+            ),
+            0.3 / np.sqrt(3),
+            rtol=1e-2,
+        )
+        household.add(Person.from_attributes(age=4))
+        assert np.isclose(
+            cis.get_household_score(
+                household=household, age_distribution=age_distribution
+            ),
+            0.6 / np.sqrt(4),
+            rtol=1e-2,
         )
 
     def test__infect_super_area(self, cis, world):
@@ -144,4 +140,4 @@ class TestInfectOneHousehold:
                     n += 1
             if n > 0:
                 n_infected_per_household.append(n)
-        assert np.isclose(np.mean(n_infected_per_household), 3, rtol=0.1)
+        assert np.isclose(np.mean(n_infected_per_household), 5, rtol=0.1)
