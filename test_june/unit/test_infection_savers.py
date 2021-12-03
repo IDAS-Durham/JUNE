@@ -5,7 +5,7 @@ import numpy as np
 from june.epidemiology.infection.transmission_xnexp import TransmissionXNExp
 from june.epidemiology.infection.transmission import TransmissionGamma
 from june.epidemiology.infection.symptoms import Symptoms, SymptomTag
-from june.epidemiology.infection import Infection, Immunity
+from june.epidemiology.infection import Immunity, B117, Covid19
 from june.hdf5_savers.infection_savers import (
     save_transmissions_to_hdf5,
     load_transmissions_from_hdf5,
@@ -80,8 +80,11 @@ def setup_symptoms():
 @pytest.fixture(name="infections", scope="module")
 def setup_infections(xnexp_transmissions, symptoms_list):
     infections = []
-    for symptoms, trans in zip(symptoms_list, xnexp_transmissions):
-        infection = Infection(transmission=trans, symptoms=symptoms, start_time=2)
+    for (i, (symptoms, trans)) in enumerate(zip(symptoms_list, xnexp_transmissions)):
+        if i % 2:
+            infection = Covid19(transmission=trans, symptoms=symptoms, start_time=2)
+        else:
+            infection = B117(transmission=trans, symptoms=symptoms, start_time=2)
         infections.append(infection)
     return infections
 
@@ -174,6 +177,7 @@ class TestInfectionSavers:
         )
         assert len(infections_recovered) == len(infections)
         for infection, infection_recovered in zip(infections, infections_recovered):
+            assert infection.__class__.__name__ == infection_recovered.__class__.__name__
             for attribute_name in [
                 "start_time",
             ]:
