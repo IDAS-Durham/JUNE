@@ -12,6 +12,7 @@ from .transmission_saver import save_transmissions_to_hdf5, load_transmissions_f
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
 float_vlen_type = h5py.vlen_dtype(np.dtype("float64"))
 
+
 def save_infection_classes_to_hdf5(
     hdf5_file_path: str,
     infections: List[Infection],
@@ -97,7 +98,10 @@ def save_infections_to_hdf5(
                     index1=idx1,
                     index2=idx2,
                 )
-    save_infection_classes_to_hdf5(hdf5_file_path = hdf5_file_path, infections=infections, chunk_size=chunk_size)
+    save_infection_classes_to_hdf5(
+        hdf5_file_path=hdf5_file_path, infections=infections, chunk_size=chunk_size
+    )
+
 
 def load_infections_from_hdf5(hdf5_file_path: str, chunk_size=50000):
     """
@@ -136,7 +140,9 @@ def load_infections_from_hdf5(hdf5_file_path: str, chunk_size=50000):
                     infections_group[attribute_name], idx1, idx2
                 )
             for index in range(idx2 - idx1):
-                infection_class_str = infections_group["infection_class"][trans_symp_index].decode()
+                infection_class_str = infections_group["infection_class"][
+                    trans_symp_index
+                ].decode()
                 infection_class = getattr(infection_module, infection_class_str)
                 infection = infection_class(
                     transmission=transmissions[trans_symp_index],
