@@ -177,7 +177,7 @@ class Quarantine(StayHome):
                         if random() < self.compliance * regional_compliance:
                             return True
 
-        if (person.vaccinated and person.vaccine_plan is None) or person.age < 18:
+        if (person.vaccinated and person.vaccine_trajectory is None) or person.age < 18:
             housemates_quarantine = person.residence.group.quarantine(
                 time=days_from_start,
                 quarantine_days=self.n_days_household,
