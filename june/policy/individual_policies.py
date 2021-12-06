@@ -177,7 +177,7 @@ class Quarantine(StayHome):
                         if random() < self.compliance * regional_compliance:
                             return True
 
-        if (person.vaccinated and person.vaccine_plan is None) or person.age < 18:
+        if (person.vaccinated and person.vaccine_trajectory is None) or person.age < 18:
             housemates_quarantine = person.residence.group.quarantine(
                 time=days_from_start,
                 quarantine_days=self.n_days_household,
@@ -424,11 +424,7 @@ class CloseUniversities(SkipActivity):
 class CloseCompaniesLockdownTiers(SkipActivity):
     TIERS = set([3, 4])
 
-    def __init__(
-        self,
-        start_time: str,
-        end_time: str
-    ):
+    def __init__(self, start_time: str, end_time: str):
         super().__init__(start_time, end_time, ("primary_activity", "commute"))
 
     def check_skips_activity(self, person: "Person") -> bool:
@@ -448,8 +444,10 @@ class CloseCompaniesLockdownTiers(SkipActivity):
                 try:
                     if (
                         person.work_super_area != person.area.super_area
-                        and person.work_super_area.region.policy["lockdown_tier"] in CloseCompaniesLockdownTiers.TIERS
-                        and person.region.policy["lockdown_tier"] not in CloseCompaniesLockdownTiers.TIERS
+                        and person.work_super_area.region.policy["lockdown_tier"]
+                        in CloseCompaniesLockdownTiers.TIERS
+                        and person.region.policy["lockdown_tier"]
+                        not in CloseCompaniesLockdownTiers.TIERS
                     ):
                         try:
                             return random() < person.region.regional_compliance
@@ -464,7 +462,8 @@ class CloseCompaniesLockdownTiers(SkipActivity):
                 try:
                     if (
                         person.work_super_area != person.area.super_area
-                        and person.region.policy["lockdown_tier"] in CloseCompaniesLockdownTiers.TIERS
+                        and person.region.policy["lockdown_tier"]
+                        in CloseCompaniesLockdownTiers.TIERS
                     ):
                         try:
                             return random() < person.region.regional_compliance
@@ -500,7 +499,7 @@ class CloseCompanies(SkipActivity):
         self.key_probability = key_probability
 
     @classmethod
-    def set_ratios(cls, world):
+    def initialize(cls, world):
         furlough_ratio = 0
         key_ratio = 0
         random_ratio = 0
@@ -667,6 +666,9 @@ class LimitLongCommute(SkipActivity):
         self.going_to_work_probability = going_to_work_probability
         self.__class__.apply_from_distance = apply_from_distance
         self.__class__.long_distance_commuter_ids = set()
+
+    def initialize(self, world):
+        return self.get_long_commuters(world.people)
 
     @classmethod
     def get_long_commuters(cls, people):

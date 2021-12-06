@@ -10,7 +10,6 @@ if TYPE_CHECKING:
     from june.geography.geography import Area
     from june.geography.geography import SuperArea
     from june.groups.travel.mode_of_transport import ModeOfTransport
-    from june.policy.vaccine_policy import VaccinePlan
 
 
 class Activities(dataobject):

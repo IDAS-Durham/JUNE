@@ -7,11 +7,14 @@ from june.demography.person import Person
 from .policy import Policy, PolicyCollection
 
 
-# TODO:  combine stagesgenerator and vaccinetrajectory into one object
+# TODO: Combine stagesgenerator and vaccinetrajectory into one object
 # TODO: Group coverage should be given by stage to model complacency
 # TODO: Smearing of dates (give mean and std and generate spacing between doses)
 # TODO: Generalize to varying functional forms for waning, with extra params
 class VaccineStage:
+
+    valid_efficacy_types = ("symptomatic", "sterilisation")
+
     def __init__(
         self,
         date_administered: datetime.datetime,
@@ -21,6 +24,27 @@ class VaccineStage:
         prior_sterilisation_efficacy: dict = None,
         prior_symptomatic_efficacy: dict = None,
     ):
+        """
+        A stage of a vaccination trajectory.
+        Dictionaries map infection ids to their respective vax efficacies.
+
+        Parameters
+        ----------
+        date_administered:
+            date the stage begins
+        days_to_effective:
+            number of days since administered day for the stage to be fully effective
+        sterilisation_efficacy
+            final full efficacy against infection
+        symptomatic_efficacy
+            final full efficacy against symptoms
+        prior_sterilisation_efficacy
+            prior sterlisiation efficacy, between the date administered and the final effective date,
+            the efficacy varies linearly between prior and final.
+        prior_symptomatic_efficacy
+            prior symptomatic efficacy, between the date administered and the final effective date,
+            the efficacy varies linearly between prior and final.
+        """
         self.date_administered = date_administered
         self.days_to_effective = days_to_effective
         self.sterilisation_efficacy = sterilisation_efficacy
@@ -43,7 +67,7 @@ class VaccineStage:
         efficacy_type: str,
         infection_id: int,
     ):
-        if efficacy_type not in ("symptomatic", "sterilisation"):
+        if efficacy_type not in self.valid_efficacy_types:
             raise ValueError
         prior_value = getattr(self, f"prior_{efficacy_type}_efficacy")[infection_id]
         efficacy = getattr(self, f"{efficacy_type}_efficacy")[infection_id]

@@ -48,6 +48,9 @@ class Policy(ABC):
         """
         return self.start_time <= date < self.end_time
 
+    def initialize(self, world):
+        pass
+
 
 class Policies:
     def __init__(self, policies=None):
@@ -103,9 +106,11 @@ class Policies:
         return Policies(policies=policies)
 
     def get_policies_for_type(self, policy_type):
-        return [policy for policy in self.policies if policy.policy_type == policy_type]
+        return [policy for policy in self if policy.policy_type == policy_type]
 
     def __iter__(self):
+        if self.policies is None:
+            return iter([])
         return iter(self.policies)
 
     def init_policies(self, world):
@@ -113,10 +118,8 @@ class Policies:
         This function is meant to be used for those policies that need world information to initialise,
         like policies depending on workers' behaviours during lockdown.
         """
-        from june.policy import CloseCompanies, LimitLongCommute
-
-        CloseCompanies.set_ratios(world=world)
-        LimitLongCommute.get_long_commuters(people=world.people)
+        for policy in self:
+            policy.initialize(world=world)
 
 
 class PolicyCollection:
