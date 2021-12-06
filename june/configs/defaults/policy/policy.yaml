@@ -118,57 +118,46 @@ vaccine_distribution:
         group_by: 'residence'
         group_type: 'care_home'
         group_coverage: 0.5
-        first_dose_sterilisation_efficacy: 
-          170852960: 0.52 # FDA - primary efficacy endpoint
-        second_dose_sterilisation_efficacy: 
-          170852960: 0.95 # FDA + Pfizer > 55=0.94
-        first_dose_symptomatic_efficacy:
-          170852960: 0.
-        second_dose_symptomatic_efficacy: 
-          170852960: 0.
-        second_dose_compliance: 0.95 # assumption
-        mean_time_delay: 14 # 21-7 from FDA monitoring - to be changed
-        std_time_delay: 5 # based on Pfizer trials - to be changed
-        effective_after_first_dose: 12 # FDA monitoring
-        effective_after_second_dose: 7 # FDA monitoring
+        days_to_next_dose: [0,14]
+        days_to_effective: [12,7]
+        sterilisation_efficacies:
+          - 170852960:  0.52 # FDA - primary efficacy endpoint
+          - 170852960: 0.95 # FDA + Pfizer > 55=0.94
+        symptomatic_efficacies: 
+          - 170852960:  0.
+          - 170852960: 0.
+        infection_ids: [170852960]
     2:
         start_time: 2020-01-01 
         end_time: 2020-02-15 
         group_by: 'age'
         group_type: '70-100'
         group_coverage: 0.5
-        first_dose_sterilisation_efficacy: 
-          170852960: 0.52 # FDA - primary efficacy endpoint
-        second_dose_sterilisation_efficacy: 
-          170852960: 0.95 # FDA + Pfizer > 55=0.94
-        first_dose_symptomatic_efficacy:
-          170852960: 0.
-        second_dose_symptomatic_efficacy: 
-          170852960: 0.
-        second_dose_compliance: 0.95 # assumption
-        mean_time_delay: 14 # 21-7 from FDA monitoring
-        std_time_delay: 5 # based on Pfizer trials
-        effective_after_first_dose: 12 # FDA monitoring
-        effective_after_second_dose: 7 # FDA monitoring
+        days_to_next_dose: [0,14]
+        days_to_effective: [12,7]
+        sterilisation_efficacies:
+          - 170852960:  0.52 # FDA - primary efficacy endpoint
+          - 170852960: 0.95 # FDA + Pfizer > 55=0.94
+        symptomatic_efficacies: 
+          - 170852960:  0.
+          - 170852960: 0.
+        infection_ids: [170852960]
+
     3:
         start_time: 2020-01-01 
         end_time: 2020-02-15 
         group_by: 'primary_activity'
         group_type: 'care_home'
         group_coverage: 0.5
-        first_dose_sterilisation_efficacy: 
-          170852960: 0.52 # FDA - primary efficacy endpoint
-        second_dose_sterilisation_efficacy: 
-          170852960: 0.95 # FDA + Pfizer > 55=0.94
-        first_dose_symptomatic_efficacy:
-          170852960: 0.
-        second_dose_symptomatic_efficacy: 
-          170852960: 0.
-        second_dose_compliance: 0.95 # assumption
-        mean_time_delay: 14 # 21-7 from FDA monitoring
-        std_time_delay: 5 # based on Pfizer trials
-        effective_after_first_dose: 12 # FDA monitoring
-        effective_after_second_dose: 7 # FDA monitoring
+        days_to_next_dose: [0,14]
+        days_to_effective: [12,7]
+        sterilisation_efficacies:
+          - 170852960:  0.52 # FDA - primary efficacy endpoint
+          - 170852960: 0.95 # FDA + Pfizer > 55=0.94
+        symptomatic_efficacies: 
+          - 170852960:  0.
+          - 170852960: 0.
+        infection_ids: [170852960]
 
     # Groups 1-4 Oxford/AstraZeneca
     4:
@@ -177,57 +166,47 @@ vaccine_distribution:
         group_by: 'residence'
         group_type: 'care_home'
         group_coverage: 0.5
-        first_dose_sterilisation_efficacy: 
-          170852960: 0.4 # assumption
-        second_dose_sterilisation_efficacy: 
-          170852960: 0.6 # Lancet UK SD/SD
-        first_dose_symptomatic_efficacy:
-          170852960: 0.
-        second_dose_symptomatic_efficacy: 
-          170852960: 0.
-        second_dose_compliance: 0.95 # assumption
-        mean_time_delay: 36 # roughly from Lancet trials
-        std_time_delay: 10 # roughly from Lancet trials
-        effective_after_first_dose: 12 # Taken as Pfizer - unknown
-        effective_after_second_dose: 14 # Lancet trials
+        days_to_next_dose: [0,14]
+        days_to_effective: [12,7]
+        sterilisation_efficacies:
+          - 170852960:  0.52 # FDA - primary efficacy endpoint
+          - 170852960: 0.95 # FDA + Pfizer > 55=0.94
+        symptomatic_efficacies: 
+          - 170852960:  0.
+          - 170852960: 0.
+        infection_ids: [170852960]
+
     5:
         start_time: 2020-01-03
         end_time: 2020-02-15 
         group_by: 'age'
         group_type: '70-100'
         group_coverage: 0.5
-        first_dose_sterilisation_efficacy: 
-          170852960: 0.4 # assumption
-        second_dose_sterilisation_efficacy: 
-          170852960: 0.6 # Lancet UK SD/SD
-        first_dose_symptomatic_efficacy:
-          170852960: 0.
-        second_dose_symptomatic_efficacy: 
-          170852960: 0.
-        second_dose_compliance: 0.95 # assumption
-        mean_time_delay: 36 # roughly from Lancet trials
-        std_time_delay: 10 # roughly from Lancet trials
-        effective_after_first_dose: 12 # Taken as Pfizer - unknown
-        effective_after_second_dose: 14 # Lancet trials
+        days_to_next_dose: [0,14]
+        days_to_effective: [12,7]
+        sterilisation_efficacies:
+          - 170852960:  0.52 # FDA - primary efficacy endpoint
+          - 170852960: 0.95 # FDA + Pfizer > 55=0.94
+        symptomatic_efficacies: 
+          - 170852960:  0.
+          - 170852960: 0.
+        infection_ids: [170852960]
+
     6:
         start_time: 2020-01-03
         end_time: 2020-02-15 
         group_by: 'primary_activity'
         group_type: 'care_home'
         group_coverage: 0.5
-        first_dose_sterilisation_efficacy: 
-          170852960: 0.4 # assumption
-        second_dose_sterilisation_efficacy: 
-          170852960: 0.6 # Lancet UK SD/SD
-        first_dose_symptomatic_efficacy:
-          170852960: 0.
-        second_dose_symptomatic_efficacy: 
-          170852960: 0.
-        second_dose_compliance: 0.95 # assumption
-        mean_time_delay: 36 # roughly from Lancet trials
-        std_time_delay: 10 # roughly from Lancet trials
-        effective_after_first_dose: 12 # Taken as Pfizer - unknown
-        effective_after_second_dose: 14 # Lancet trials
+        days_to_next_dose: [0,14]
+        days_to_effective: [12,7]
+        sterilisation_efficacies:
+          - 170852960:  0.52 # FDA - primary efficacy endpoint
+          - 170852960: 0.95 # FDA + Pfizer > 55=0.94
+        symptomatic_efficacies: 
+          - 170852960:  0.
+          - 170852960: 0.
+        infection_ids: [170852960]
 
 
 quarantine:
