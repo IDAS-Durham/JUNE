@@ -48,7 +48,7 @@ class ActivityManager:
     ):
         self.policies = policies
         if self.policies is not None:
-            self.policies.init_policies(world=world)
+            self.policies.init_policies(world=world, date=timer.date)
         self.world = world
         self.timer = timer
         self.leisure = leisure

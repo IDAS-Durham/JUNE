@@ -1,5 +1,6 @@
 import datetime
 import pytest
+import numpy as np
 
 from june.groups import CareHome
 from june.demography import Person, Population
@@ -469,3 +470,60 @@ class TestVaccination:
         assert young_person.immunity.get_effective_multiplier(1) == pytest.approx(
             0.9, 0.01
         )
+
+class TestVaccinationInitialization:
+    @pytest.fixture(name="vax_policy")
+    def make_policy(self):
+        vaccine_policy = VaccineDistribution(
+            start_time = "2021-03-01",
+            end_time = "2021-04-01",
+            days_to_next_dose=[
+                0,
+                9,
+                16,
+            ],
+            days_to_effective=[1, 2, 10],
+            sterilisation_efficacies=[
+                {0: 0.3, 1: 0.2},
+                {0: 0.7, 1: 0.2},
+                {0: 0.9, 1: 0.8},
+            ],
+            symptomatic_efficacies=[
+                {0: 0.3, 1: 0.5},
+                {0: 0.7, 1: 0.2},
+                {0: 0.7, 1: 0.1},
+            ],
+            infection_ids=[0, 1],
+            group_by="age",
+            group_type="20-40",
+            group_coverage=0.6,
+        )
+        return vaccine_policy
+
+    @pytest.fixture(name="population")
+    def make_population(self):
+        people = []
+        for age in range(100):
+            for _ in range(100):
+                person = Person.from_attributes(age=age)
+                people.append(person)
+        return Population(people)
+
+    def test__vaccination_from_the_past(self, population, vax_policy):
+        date = datetime.datetime(2021, 4, 30)
+        vax_policy._apply_past_vaccinations(people=population, date=date)
+        n_vaccinated = 0
+        for person in population:
+            if (person.age < 20) or (person.age >= 40):
+                assert person.vaccinated is False
+            else:
+                if person.vaccinated:
+                    n_vaccinated += 1
+                    assert np.isclose(person.vaccine_trajectory.susceptibility(date, 0), 0.1)
+                    assert np.isclose(person.vaccine_trajectory.susceptibility(date, 1), 0.2)
+                    assert np.isclose(person.vaccine_trajectory.effective_multiplier(date, 0), 0.3)
+                    assert np.isclose(person.vaccine_trajectory.effective_multiplier(date, 1), 0.9)
+
+        assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
+
+

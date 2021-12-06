@@ -121,10 +121,10 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         days_to_effective: [12,7]
         sterilisation_efficacies:
-          - 170852960:  0.52 # FDA - primary efficacy endpoint
+          - 170852960: 0.52 # FDA - primary efficacy endpoint
           - 170852960: 0.95 # FDA + Pfizer > 55=0.94
         symptomatic_efficacies: 
-          - 170852960:  0.
+          - 170852960: 0.
           - 170852960: 0.
         infection_ids: [170852960]
     2:
@@ -136,10 +136,10 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         days_to_effective: [12,7]
         sterilisation_efficacies:
-          - 170852960:  0.52 # FDA - primary efficacy endpoint
+          - 170852960: 0.52 # FDA - primary efficacy endpoint
           - 170852960: 0.95 # FDA + Pfizer > 55=0.94
         symptomatic_efficacies: 
-          - 170852960:  0.
+          - 170852960: 0.
           - 170852960: 0.
         infection_ids: [170852960]
 
@@ -152,10 +152,10 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         days_to_effective: [12,7]
         sterilisation_efficacies:
-          - 170852960:  0.52 # FDA - primary efficacy endpoint
+          - 170852960: 0.52 # FDA - primary efficacy endpoint
           - 170852960: 0.95 # FDA + Pfizer > 55=0.94
         symptomatic_efficacies: 
-          - 170852960:  0.
+          - 170852960: 0.
           - 170852960: 0.
         infection_ids: [170852960]
 
@@ -169,10 +169,10 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         days_to_effective: [12,7]
         sterilisation_efficacies:
-          - 170852960:  0.52 # FDA - primary efficacy endpoint
+          - 170852960: 0.52 # FDA - primary efficacy endpoint
           - 170852960: 0.95 # FDA + Pfizer > 55=0.94
         symptomatic_efficacies: 
-          - 170852960:  0.
+          - 170852960: 0.
           - 170852960: 0.
         infection_ids: [170852960]
 
@@ -185,10 +185,10 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         days_to_effective: [12,7]
         sterilisation_efficacies:
-          - 170852960:  0.52 # FDA - primary efficacy endpoint
+          - 170852960: 0.52 # FDA - primary efficacy endpoint
           - 170852960: 0.95 # FDA + Pfizer > 55=0.94
         symptomatic_efficacies: 
-          - 170852960:  0.
+          - 170852960: 0.
           - 170852960: 0.
         infection_ids: [170852960]
 
@@ -201,10 +201,10 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         days_to_effective: [12,7]
         sterilisation_efficacies:
-          - 170852960:  0.52 # FDA - primary efficacy endpoint
+          - 170852960: 0.52 # FDA - primary efficacy endpoint
           - 170852960: 0.95 # FDA + Pfizer > 55=0.94
         symptomatic_efficacies: 
-          - 170852960:  0.
+          - 170852960: 0.
           - 170852960: 0.
         infection_ids: [170852960]
 

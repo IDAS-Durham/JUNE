@@ -499,7 +499,7 @@ class CloseCompanies(SkipActivity):
         self.key_probability = key_probability
 
     @classmethod
-    def initialize(cls, world):
+    def initialize(cls, world, date):
         furlough_ratio = 0
         key_ratio = 0
         random_ratio = 0
@@ -667,7 +667,7 @@ class LimitLongCommute(SkipActivity):
         self.__class__.apply_from_distance = apply_from_distance
         self.__class__.long_distance_commuter_ids = set()
 
-    def initialize(self, world):
+    def initialize(self, world, date):
         return self.get_long_commuters(world.people)
 
     @classmethod

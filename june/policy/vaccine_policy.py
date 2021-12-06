@@ -3,8 +3,13 @@ from typing import List, Dict
 from random import random
 import numpy as np
 import datetime
+import logging
+
 from june.demography.person import Person
 from .policy import Policy, PolicyCollection
+
+
+logger = logging.getLogger("vaccination")
 
 
 # TODO: Combine stagesgenerator and vaccinetrajectory into one object
@@ -221,7 +226,7 @@ class VaccineDistribution(Policy):
         Assumptions
         -----------
         - The chance of getting your first dose in the first first_rollout_days days is uniform
-        - The target susceptiblity after the first dose is half that of after the second dose
+        - The target susceptibility after the first dose is half that of after the second dose
         - The target susceptibility after the second dose is 1-efficacy of the vaccine
         """
 
@@ -258,7 +263,7 @@ class VaccineDistribution(Policy):
             if (
                 int(self.group_value.split("-")[0])
                 <= getattr(person, self.group_attribute)
-                <= int(self.group_value.split("-")[1])
+                < int(self.group_value.split("-")[1])
             ):
                 return True
         return False
@@ -318,6 +323,22 @@ class VaccineDistribution(Policy):
                     ids_to_remove.add(person.id)
                     person.vaccine_trajectory = None
             self.vaccinated_ids -= ids_to_remove
+
+    def _apply_past_vaccinations(self, people, date):
+        date = min(date, self.end_time)
+        days_in_the_past = max(0, (date - self.start_time).days)
+        if days_in_the_past > 0:
+            for i in range(days_in_the_past):
+                date_to_vax = self.start_time + datetime.timedelta(days=i)
+                logger.info(f"Vaccinating at date {date_to_vax.date()}")
+                for person in people:
+                    self.apply(person=person, date=date_to_vax)
+
+    def initialize(self, world, date):
+        """
+        Initializes policy, vaccinating people in the past if needed.
+        """
+        return self._apply_past_vaccinations(people=world.people, date=date)
 
 
 class VaccineDistributions(PolicyCollection):
