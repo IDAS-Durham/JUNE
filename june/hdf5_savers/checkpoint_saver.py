@@ -25,6 +25,7 @@ from june.groups.travel import Travel
 import june.simulator as june_simulator_module
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.records.records_writer import Record
 
@@ -209,6 +210,8 @@ def restore_simulator_to_checkpoint(
     for person_id, immunity in zip(
         checkpoint_data["people_id"], checkpoint_data["immunity_list"]
     ):
+        if person_id not in people_ids:
+            continue
         person = world.people.get_from_id(person_id)
         person.immunity = immunity
     # restore timer
@@ -216,6 +219,7 @@ def restore_simulator_to_checkpoint(
     # we need to start the next day
     checkpoint_date += timedelta(days=1)
     simulator.timer.reset_to_new_date(checkpoint_date)
+    logger.info(f"Restored checkpoint at date {checkpoint_date.date()}")
     return simulator
 
 

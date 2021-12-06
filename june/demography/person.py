@@ -5,6 +5,7 @@ from recordclass import dataobject
 from june.epidemiology.infection import Infection, Immunity
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.geography.geography import Area
     from june.geography.geography import SuperArea

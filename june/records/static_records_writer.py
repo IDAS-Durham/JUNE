@@ -1,5 +1,3 @@
-import tables
-from tables import open_file
 import numpy as np
 
 from june.records.helper_records_writer import _get_description_for_event
@@ -7,12 +5,7 @@ from june.groups import Supergroup
 
 
 class StaticRecord:
-    def __init__(
-        self, hdf5_file, table_name, int_names, float_names, str_names, expectedrows
-    ):
-        if not isinstance(hdf5_file, tables.file.File):
-            raise TypeError("hdf5_file must be an open HDF5 file (use tables.openFile)")
-        self.file = hdf5_file
+    def __init__(self, table_name, int_names, float_names, str_names, expectedrows):
         self.table_name = table_name
         self.int_names = int_names
         self.float_names = float_names
@@ -22,20 +15,19 @@ class StaticRecord:
         self.extra_float_data = {}
         self.extra_str_data = {}
 
-    def _create_table(self, int_names, float_names, str_names, expectedrows):
-        with open_file(self.file.filename, mode="a") as file:
-            table_description = _get_description_for_event(
-                int_names=int_names,
-                float_names=float_names,
-                str_names=str_names,
-                timestamp=False,
-            )
-            self.table = file.create_table(
-                file.root,
-                self.table_name,
-                table_description,
-                expectedrows=expectedrows,
-            )
+    def _create_table(self, file, int_names, float_names, str_names, expectedrows):
+        table_description = _get_description_for_event(
+            int_names=int_names,
+            float_names=float_names,
+            str_names=str_names,
+            timestamp=False,
+        )
+        self.table = file.create_table(
+            file.root,
+            self.table_name,
+            table_description,
+            expectedrows=expectedrows,
+        )
 
     def _record(self, hdf5_file, int_data, float_data, str_data):
         data = np.rec.fromarrays(
@@ -65,7 +57,11 @@ class StaticRecord:
             for value in self.extra_str_data.values():
                 str_data += [value]
         self._create_table(
-            self.int_names, self.float_names, self.str_names, self.expectedrows
+            hdf5_file,
+            self.int_names,
+            self.float_names,
+            self.str_names,
+            self.expectedrows,
         )
         self._record(
             hdf5_file=hdf5_file,
@@ -76,9 +72,8 @@ class StaticRecord:
 
 
 class PeopleRecord(StaticRecord):
-    def __init__(self, hdf5_file):
+    def __init__(self):
         super().__init__(
-            hdf5_file=hdf5_file,
             table_name="population",
             int_names=[
                 "id",
@@ -151,9 +146,8 @@ class PeopleRecord(StaticRecord):
 
 
 class LocationRecord(StaticRecord):
-    def __init__(self, hdf5_file):
+    def __init__(self):
         super().__init__(
-            hdf5_file=hdf5_file,
             table_name="locations",
             int_names=["id", "group_id", "area_id"],
             float_names=["latitude", "longitude"],
@@ -194,9 +188,8 @@ class LocationRecord(StaticRecord):
 
 
 class AreaRecord(StaticRecord):
-    def __init__(self, hdf5_file):
+    def __init__(self):
         super().__init__(
-            hdf5_file=hdf5_file,
             table_name="areas",
             int_names=[
                 "id",
@@ -231,9 +224,8 @@ class AreaRecord(StaticRecord):
 
 
 class SuperAreaRecord(StaticRecord):
-    def __init__(self, hdf5_file):
+    def __init__(self):
         super().__init__(
-            hdf5_file=hdf5_file,
             table_name="super_areas",
             int_names=[
                 "id",
@@ -266,9 +258,8 @@ class SuperAreaRecord(StaticRecord):
 
 
 class RegionRecord(StaticRecord):
-    def __init__(self, hdf5_file):
+    def __init__(self):
         super().__init__(
-            hdf5_file=hdf5_file,
             table_name="regions",
             int_names=[
                 "id",

@@ -14,6 +14,7 @@ from june.geography import Geography, Areas, SuperAreas
 from june.utils import random_choice_numba
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.groups.company import CompanyError
 

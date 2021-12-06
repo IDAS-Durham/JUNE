@@ -4,6 +4,7 @@ import pandas as pd
 from june import paths
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.demography.person import Person
 

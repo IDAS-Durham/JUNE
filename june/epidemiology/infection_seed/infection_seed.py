@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from random import random
 import datetime
+import logging
 from collections import defaultdict
 from typing import List, Optional
 
@@ -11,9 +12,11 @@ from june.epidemiology.epidemiology import Epidemiology
 from june.utils import parse_age_probabilities
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.world import World
 
+seed_logger = logging.getLogger("seed")
 
 class InfectionSeed:
     """
@@ -145,6 +148,21 @@ class InfectionSeed:
             seed_strength=seed_strength,
         )
 
+    def infect_person(self, person, time, record):
+        self.infection_selector.infect_person_at_time(
+            person=person, time=time
+        )
+        if record:
+            record.accumulate(
+                table_name="infections",
+                location_spec="infection_seed",
+                region_name=person.super_area.region.name,
+                location_id=0,
+                infected_ids=[person.id],
+                infector_ids=[person.id],
+                infection_ids=[person.infection.infection_id()],
+            )
+
     def infect_super_area(
         self, super_area, cases_per_capita_per_age, time, record=None
     ):
@@ -162,42 +180,29 @@ class InfectionSeed:
             for person in susceptible:
                 prob = cases_per_capita_per_age.loc[age] * rescaling
                 if random() < prob:
-                    self.infection_selector.infect_person_at_time(
-                        person=person, time=time
-                    )
-                    if record:
-                        record.accumulate(
-                            table_name="infections",
-                            location_spec="infection_seed",
-                            region_name=person.super_area.region.name,
-                            location_id=0,
-                            infected_ids=[person.id],
-                            infector_ids=[person.id],
-                            infection_ids=[person.infection.infection_id()],
-                        )
+                    self.infect_person(person=person, time=time, record=record)
                     if time < 0:
-                        time_from_infection = -time
-                        # Update transmission probability
-                        person.infection.transmission.update_infection_probability(
-                            time_from_infection=time_from_infection
+                        self.bring_infection_up_to_date(
+                            person=person, time_from_infection=-time, record=record
                         )
-                        # Need to update trajectories to current stage
-                        symptoms = person.symptoms
-                        while (
-                            time_from_infection
-                            > symptoms.trajectory[symptoms.stage + 1][0]
-                        ):
-                            symptoms.stage += 1
-                            symptoms.tag = symptoms.trajectory[symptoms.stage][1]
-                            if symptoms.stage == len(symptoms.trajectory) - 1:
-                                break
-                        # Need to check if the person has already recovered or died
-                        if "dead" in symptoms.tag.name:
-                            Epidemiology.bury_the_dead(
-                                world=self.world, person=person, record=record
-                            )
-                        elif "recovered" == symptoms.tag.name:
-                            Epidemiology.recover(person=person, record=record)
+
+    def bring_infection_up_to_date(self, person, time_from_infection, record):
+        # Update transmission probability
+        person.infection.transmission.update_infection_probability(
+            time_from_infection=time_from_infection
+        )
+        # Need to update trajectories to current stage
+        symptoms = person.symptoms
+        while time_from_infection > symptoms.trajectory[symptoms.stage + 1][0]:
+            symptoms.stage += 1
+            symptoms.tag = symptoms.trajectory[symptoms.stage][1]
+            if symptoms.stage == len(symptoms.trajectory) - 1:
+                break
+        # Need to check if the person has already recovered or died
+        if "dead" in symptoms.tag.name:
+            Epidemiology.bury_the_dead(world=self.world, person=person, record=record)
+        elif "recovered" == symptoms.tag.name:
+            Epidemiology.recover(person=person, record=record)
 
     def infect_super_areas(
         self,
@@ -250,7 +255,7 @@ class InfectionSeed:
         seed_past_infections:
             whether to seed infections that started past the initial simulation point.
         """
-        if not self.past_infections_seeded:
+        if (not self.past_infections_seeded) and seed_past_infections:
             self._seed_past_infections(date=date, time=time, record=record)
             self.past_infections_seeded = True
         is_seeding_date = self.max_date >= date >= self.min_date
@@ -263,6 +268,7 @@ class InfectionSeed:
             )
         )
         if is_seeding_date and not_yet_seeded_date:
+            seed_logger.info(f"Seeding infections at date {date.date()}")
             self.infect_super_areas(
                 cases_per_capita_per_age_per_region=self.daily_cases_per_capita_per_age_per_region.loc[
                     date
@@ -282,6 +288,7 @@ class InfectionSeed:
             if past_date.date() < date.date():
                 past_dates.append(past_date)
         for past_date in past_dates:
+            seed_logger.info(f"Seeding past infections at {past_date.date()}")
             past_time = (past_date.date() - date.date()).days
             past_date_str = past_date.date().strftime("%Y-%m-%d")
             self.dates_seeded.add(past_date_str)

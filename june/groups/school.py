@@ -311,7 +311,7 @@ class Schools(Supergroup):
                 n_pupils_max=n_pupils_max,
                 age_min=int(row["age_min"]),
                 age_max=int(row["age_max"]),
-                sector=row["sector"],
+                sector=school_type,
                 area=area,
             )
             schools.append(school)

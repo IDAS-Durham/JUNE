@@ -10,6 +10,7 @@ from june.geography import SuperAreas, SuperArea
 from june.groups import Hospitals
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from june.demography import Person
     from june.groups import Hospital

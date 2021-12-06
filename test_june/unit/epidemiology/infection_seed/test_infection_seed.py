@@ -219,7 +219,7 @@ def test__age_profile(world, selector):
         ]
     )
     target = (39 - 10) / 100 * 0.25
-    assert np.isclose(should_infected / len(world.people), target, rtol=1e-1)
+    assert np.isclose(should_infected / len(world.people), target, rtol=2e-1)
 
 
 def test__ignore_previously_infected(world, selector):

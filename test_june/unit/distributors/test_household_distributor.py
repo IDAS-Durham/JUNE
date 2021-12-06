@@ -227,6 +227,7 @@ class TestIndividualHouseholdCompositions:
             area,
             n_students=20,
             student_houses_number=5,
+            composition_type=None,
         )
         assert len(area.households) == 5
         counter = 0
@@ -246,6 +247,7 @@ class TestIndividualHouseholdCompositions:
             area,
             n_students=11,
             student_houses_number=3,
+            composition_type=None,
         )
         assert len(area.households) == 3
 
@@ -261,6 +263,7 @@ class TestIndividualHouseholdCompositions:
             10,
             area,
             extra_people_lists=(households_with_extrapeople_list,),
+            composition_type=None,
         )
         assert len(households_with_extrapeople_list) == 10
         assert len(area.households) == 10
@@ -277,6 +280,7 @@ class TestIndividualHouseholdCompositions:
             area,
             extra_people_lists=(households_with_extrapeople_list,),
             max_household_size=2,
+            composition_type=None,
         )
         assert len(area.households) == 20
         assert len(households_with_extrapeople_list) == 0  # no spaces left
@@ -297,6 +301,7 @@ class TestIndividualHouseholdCompositions:
             old_per_house=0,
             area=area,
             extra_people_lists=(households_with_extrapeople_list,),
+            composition_type=None,
         )
         assert len(households_with_extrapeople_list) == 10
         assert len(area.households) == 10
@@ -347,6 +352,7 @@ class TestIndividualHouseholdCompositions:
             n_households=10,
             area=area,
             extra_people_lists=(households_with_extrapeople_list,),
+            composition_type=None,
         )
         assert len(households_with_extrapeople_list) == 10
         assert len(area.households) == 10
@@ -380,6 +386,7 @@ class TestIndividualHouseholdCompositions:
             20,
             area,
             extra_people_lists=(households_with_extrapeople_list,),
+            composition_type=None,
         )
         assert len(households_with_extrapeople_list) == 20
         assert len(area.households) == 20
@@ -401,6 +408,7 @@ class TestIndividualHouseholdCompositions:
             20,
             area,
             extra_people_lists=(households_with_extrapeople_list,),
+            composition_type=None,
         )
         assert len(households_with_extrapeople_list) == 20
         assert len(area.households) == 20
@@ -420,6 +428,7 @@ class TestIndividualHouseholdCompositions:
             n_establishments=5,
             n_people_in_communal=20,
             area=area,
+            composition_type=None,
         )
         assert len(area.households) == 5
         for household in area.households:
@@ -431,6 +440,7 @@ class TestIndividualHouseholdCompositions:
             n_establishments=2,
             n_people_in_communal=7,
             area=area,
+            composition_type=None,
         )
         assert len(area.households) == 2
         for household in area.households:
