@@ -363,6 +363,14 @@ class Region:
     def closed_venues(self):
         return self.policy["local_closed_venues"] | self.policy["global_closed_venues"]
 
+    @property
+    def households(self):
+        return list(
+            chain.from_iterable(
+                super_area.households for super_area in self.super_areas
+            )
+        )
+
 
 class Regions:
     __slots__ = "members_by_id", "members_by_name"
