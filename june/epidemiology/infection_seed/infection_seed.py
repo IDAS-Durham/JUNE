@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 seed_logger = logging.getLogger("seed")
 
+
 class InfectionSeed:
     """
     The infection seed takes a dataframe of cases to seed per capita, per age, and per region.
@@ -33,6 +34,7 @@ class InfectionSeed:
         daily_cases_per_capita_per_age_per_region: pd.DataFrame,
         seed_past_infections: bool = True,
         seed_strength=1.0,
+        account_secondary_infections=False,
     ):
         """
         Class that generates the seed for the infection.
@@ -55,22 +57,19 @@ class InfectionSeed:
         self.world = world
         self.infection_selector = infection_selector
         self.daily_cases_per_capita_per_age_per_region = self._parse_input_dataframe(
-            df=daily_cases_per_capita_per_age_per_region,
-            seed_strength=seed_strength,
+            df=daily_cases_per_capita_per_age_per_region, seed_strength=seed_strength,
         )
-        self.min_date = (
-            self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
-                "date"
-            ).min()
-        )
-        self.max_date = (
-            self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
-                "date"
-            ).max()
-        )
+        self.min_date = self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
+            "date"
+        ).min()
+        self.max_date = self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
+            "date"
+        ).max()
         self.dates_seeded = set()
         self.past_infections_seeded = not (seed_past_infections)
+        self.seed_past_infections = seed_past_infections
         self.seed_strength = seed_strength
+        self.account_secondary_infections = account_secondary_infections
 
     def _parse_input_dataframe(self, df, seed_strength=1.0):
         """
@@ -96,8 +95,10 @@ class InfectionSeed:
         world: "World",
         infection_selector: InfectionSelector,
         daily_cases_per_region: pd.DataFrame,
+        seed_past_infections: bool,
         seed_strength: float = 1.0,
         age_profile: Optional[dict] = None,
+        account_secondary_infections=False,
     ):
         """
         seed_strength:
@@ -125,7 +126,9 @@ class InfectionSeed:
             world=world,
             infection_selector=infection_selector,
             daily_cases_per_capita_per_age_per_region=df,
+            seed_past_infections=seed_past_infections,
             seed_strength=seed_strength,
+            account_secondary_infections=account_secondary_infections,
         )
 
     @classmethod
@@ -135,7 +138,9 @@ class InfectionSeed:
         infection_selector: InfectionSelector,
         cases_per_capita: float,
         date: str,
+        seed_past_infections,
         seed_strength=1.0,
+        account_secondary_infections=False,
     ):
         date = pd.to_datetime(date)
         mi = pd.MultiIndex.from_product([[date], ["0-100"]], names=["date", "age"])
@@ -145,13 +150,13 @@ class InfectionSeed:
             world=world,
             infection_selector=infection_selector,
             daily_cases_per_capita_per_age_per_region=df,
+            seed_past_infections=seed_past_infections,
             seed_strength=seed_strength,
+            account_secondary_infections=account_secondary_infections,
         )
 
     def infect_person(self, person, time, record):
-        self.infection_selector.infect_person_at_time(
-            person=person, time=time
-        )
+        self.infection_selector.infect_person_at_time(person=person, time=time)
         if record:
             record.accumulate(
                 table_name="infections",
@@ -208,6 +213,7 @@ class InfectionSeed:
         self,
         cases_per_capita_per_age_per_region: pd.DataFrame,
         time: float,
+        date: datetime.datetime,
         record: Optional[Record] = None,
     ):
         """
@@ -220,26 +226,30 @@ class InfectionSeed:
         time:
             Time where infections start (could be negative if they started before the simulation)
         """
-        for super_area in self.world.super_areas:
+        for region in self.world.regions:
             if "all" in cases_per_capita_per_age_per_region.columns:
                 cases_per_capita_per_age = cases_per_capita_per_age_per_region["all"]
             else:
                 cases_per_capita_per_age = cases_per_capita_per_age_per_region[
-                    super_area.region.name
+                    region.name
                 ]
-            self.infect_super_area(
-                super_area=super_area,
-                cases_per_capita_per_age=cases_per_capita_per_age,
-                time=time,
-                record=record,
-            )
+            # Check if secondary infections already provide seeding.
+            if self._need_to_seed_accounting_secondary_infections(
+                date=date, region=region
+            ):
+                for super_area in region.super_areas:
+                    self.infect_super_area(
+                        super_area=super_area,
+                        cases_per_capita_per_age=cases_per_capita_per_age,
+                        time=time,
+                        record=record,
+                    )
 
     def unleash_virus_per_day(
         self,
         date: datetime,
         time: float = 0,
         record: Optional[Record] = None,
-        seed_past_infections=True,
     ):
         """
         Infect super areas at a given ```date```
@@ -252,10 +262,8 @@ class InfectionSeed:
             time since start of the simulation
         record:
             Record object to record infections
-        seed_past_infections:
-            whether to seed infections that started past the initial simulation point.
         """
-        if (not self.past_infections_seeded) and seed_past_infections:
+        if (not self.past_infections_seeded) and self.seed_past_infections:
             self._seed_past_infections(date=date, time=time, record=record)
             self.past_infections_seeded = True
         is_seeding_date = self.max_date >= date >= self.min_date
@@ -269,12 +277,14 @@ class InfectionSeed:
         )
         if is_seeding_date and not_yet_seeded_date:
             seed_logger.info(f"Seeding infections at date {date.date()}")
+            cases_per_capita_per_age_per_region = self.daily_cases_per_capita_per_age_per_region.loc[
+                date
+            ]
             self.infect_super_areas(
-                cases_per_capita_per_age_per_region=self.daily_cases_per_capita_per_age_per_region.loc[
-                    date
-                ],
+                cases_per_capita_per_age_per_region=cases_per_capita_per_age_per_region,
                 time=time,
                 record=record,
+                date=date,
             )
             self.dates_seeded.add(date_str)
 
@@ -298,10 +308,43 @@ class InfectionSeed:
                 ],
                 time=past_time,
                 record=record,
+                date=past_date,
             )
             if record:
                 # record past infections and deaths.
                 record.time_step(timestamp=past_date)
+
+    def _need_to_seed_accounting_secondary_infections(self, region, date):
+        if not self.account_secondary_infections:
+            return True
+        yesterday = date - datetime.timedelta(days=1)
+        if yesterday not in self.daily_cases_per_capita_per_age_per_region.index:
+            return True
+        people_by_age = defaultdict(int)
+        for person in region.people:
+            people_by_age[person.age] += 1
+        yesterday_df = self.daily_cases_per_capita_per_age_per_region.loc[yesterday]
+        yesterday_seeded_cases = sum(
+            [
+                yesterday_df.loc[age, region.name] * people_by_age[age]
+                for age in people_by_age
+            ]
+        )
+        today_df = self.daily_cases_per_capita_per_age_per_region.loc[date]
+        today_seeded_cases = sum(
+            [
+                today_df.loc[age, region.name] * people_by_age[age]
+                for age in people_by_age
+            ]
+        )
+        yesterday_total_cases = len(
+            [p for p in region.people if p.infected and p.infection.start_time <= 1]
+        )
+        secondary_infs = yesterday_total_cases - yesterday_seeded_cases
+        if secondary_infs >= today_seeded_cases:
+            return False
+        else:
+            return True
 
 
 class InfectionSeeds:
@@ -309,9 +352,8 @@ class InfectionSeeds:
     Groups infection seeds and applies them sequentially.
     """
 
-    def __init__(self, infection_seeds: List[InfectionSeed], seed_past_infections=True):
+    def __init__(self, infection_seeds: List[InfectionSeed]):
         self.infection_seeds = infection_seeds
-        self.seed_past_infections = seed_past_infections
 
     def unleash_virus_per_day(
         self, date: datetime, time: float = 0, record: Optional[Record] = None
@@ -321,7 +363,6 @@ class InfectionSeeds:
                 date=date,
                 record=record,
                 time=time,
-                seed_past_infections=self.seed_past_infections,
             )
 
     def __iter__(self):

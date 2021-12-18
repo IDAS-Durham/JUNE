@@ -23,24 +23,24 @@ def create_world():
     household = Household()
     people = [
         Person.from_attributes(age=np.random.randint(0, 100), sex="f")
-        for i in range(5000)
+        for i in range(10000)
     ]
     for person in people:
         household.add(person)
     world = World()
-    region1 = Region(name="London")
-    region2 = Region(name="North East")
     world.people = Population(people)
     area_1 = Area(name="area_1", super_area=None, coordinates=None)
-    area_1.people = people[:2500]
+    area_1.people = people[: int(len(people) / 2)]
     area_2 = Area(name="area_2", super_area=None, coordinates=None)
-    area_2.people = people[2500:]
-    super_area_1 = SuperArea(
-        "super_1", areas=[area_1], coordinates=(1.0, 1.0), region=region1
-    )
-    super_area_2 = SuperArea(
-        "super_2", areas=[area_2], coordinates=(1.0, 2.0), region=region2
-    )
+    area_2.people = people[int(len(people) / 2) :]
+    super_area_1 = SuperArea("super_1", areas=[area_1], coordinates=(1.0, 1.0))
+    super_area_2 = SuperArea("super_2", areas=[area_2], coordinates=(1.0, 2.0))
+    region1 = Region(name="London", super_areas=[super_area_1])
+    region2 = Region(name="North East", super_areas=[super_area_2])
+    super_area_1.region = region1
+    super_area_2.region = region2
+    area_1.super_area = super_area_1
+    area_2.super_area = super_area_2
     world.super_areas = SuperAreas([super_area_1, super_area_2])
     world.regions = Regions([region1, region2])
     world.cemeteries = Cemeteries()
@@ -57,10 +57,14 @@ def test__simplest_seed(world, selector):
     clean_world(world)
     date = "2020-03-01"
     seed = InfectionSeed.from_uniform_cases(
-        world=world, infection_selector=selector, cases_per_capita=0.1, date=date
+        world=world,
+        infection_selector=selector,
+        cases_per_capita=0.1,
+        date=date,
+        seed_past_infections=False,
     )
     seed.unleash_virus_per_day(
-        date=pd.to_datetime(date), time=0.0, record=None, seed_past_infections=False
+        date=pd.to_datetime(date), time=0.0, record=None
     )
     n_people = len(world.people)
     infected_people = len([person for person in world.people if person.infected])
@@ -76,9 +80,10 @@ def test__seed_strength(world, selector):
         cases_per_capita=0.05,
         date=date,
         seed_strength=10,
+        seed_past_infections=False,
     )
     seed.unleash_virus_per_day(
-        date=pd.to_datetime(date), time=0.0, record=None, seed_past_infections=False
+        date=pd.to_datetime(date), time=0.0, record=None
     )
     n_people = len(world.people)
     infected_people = len([person for person in world.people if person.infected])
@@ -100,13 +105,11 @@ def test__infection_per_day(world, selector):
         world=world,
         infection_selector=selector,
         daily_cases_per_region=cases_per_region_df,
+        seed_past_infections=False,
     )
     assert seed.min_date.strftime("%Y-%m-%d") == "2020-04-20"
     assert seed.max_date.strftime("%Y-%m-%d") == "2020-04-21"
-    timer = Timer(
-        initial_day="2020-04-20",
-        total_days=7,
-    )
+    timer = Timer(initial_day="2020-04-20", total_days=7,)
     seed.unleash_virus_per_day(timer.date)
     n_sa1 = len(world.super_areas[0].people)
     n_sa2 = len(world.super_areas[0].people)
@@ -201,6 +204,7 @@ def test__age_profile(world, selector):
         infection_selector=selector,
         daily_cases_per_region=cases_per_region_df,
         age_profile={"0-9": 0.0, "10-39": 1.0, "40-100": 0.0},
+        seed_past_infections=False,
     )
     seed.unleash_virus_per_day(pd.to_datetime("2020-04-20"))
     # seed.unleash_virus(Population(world.people), n_cases=20, time=0)
@@ -229,10 +233,14 @@ def test__ignore_previously_infected(world, selector):
 
     date = "2020-03-01"
     seed = InfectionSeed.from_uniform_cases(
-        world=world, infection_selector=selector, cases_per_capita=0.1, date=date
+        world=world,
+        infection_selector=selector,
+        cases_per_capita=0.1,
+        date=date,
+        seed_past_infections=False,
     )
     seed.unleash_virus_per_day(
-        date=pd.to_datetime(date), time=0.0, record=None, seed_past_infections=False
+        date=pd.to_datetime(date), time=0.0, record=None
     )
     n_people = len(world.people)
     infected_people = len([person for person in world.people if person.infected])
@@ -262,11 +270,9 @@ def test__seed_past_days(world, selector):
         world=world,
         infection_selector=selector,
         daily_cases_per_region=cases_per_region_df,
+        seed_past_infections=True,
     )
-    timer = Timer(
-        initial_day="2020-04-01",
-        total_days=7,
-    )
+    timer = Timer(initial_day="2020-04-01", total_days=7,)
     seed.unleash_virus_per_day(timer.date)
     recovered = 0
     infected_1 = 0
@@ -289,3 +295,55 @@ def test__seed_past_days(world, selector):
     assert np.isclose(infected_1, expected_inf1, rtol=1e-1)
     assert np.isclose(infected_2, expected_inf2, rtol=1e-1)
     assert np.isclose(recovered, expected_recovered, rtol=1e-1)
+
+
+def test__account_secondary_infections(world, selector):
+    clean_world(world)
+    cases_per_region_df = pd.DataFrame(
+        {
+            "date": ["2020-02-01", "2020-02-02", "2020-02-03"],
+            "London": [0.5, 0.5, 0.1],
+            "North East": [0.3, 0.2, 0.3],
+        }
+    )
+    cases_per_region_df.set_index("date", inplace=True)
+    cases_per_region_df.index = pd.to_datetime(cases_per_region_df.index)
+    seed = InfectionSeed.from_global_age_profile(
+        world=world,
+        infection_selector=selector,
+        daily_cases_per_region=cases_per_region_df,
+        seed_past_infections=False,
+        account_secondary_infections=True,
+    )
+    timer = Timer(initial_day="2020-02-02", total_days=7,)
+    seed.unleash_virus_per_day(timer.date)
+    infected = 0
+    london = world.regions.get_from_name("London")
+    for person in london.people:
+        if person.infected:
+            infected += 1
+    n_people_london = len(london.people)
+    assert np.isclose(infected, 0.5 * n_people_london, rtol=0.1)
+
+    timer = Timer(initial_day="2020-02-03", total_days=7,)
+    to_infect = int(0.25 * n_people_london)
+    print(timer.now)
+    for person in london.people:
+        if not person.infected:
+            selector.infect_person_at_time(person=person, time=timer.now)
+            to_infect -= 1
+        if to_infect <= 0:
+            break
+    infected = 0
+    for person in london.people:
+        if person.infected:
+            infected += 1
+    assert np.isclose(infected, 0.75 * n_people_london, rtol=0.1)
+    print("#################################")
+    # No more people should be infected
+    seed.unleash_virus_per_day(timer.date)
+    infected = 0
+    for person in london.people:
+        if person.infected:
+            infected += 1
+    assert np.isclose(infected, 0.75 * n_people_london, rtol=0.1)

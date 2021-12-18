@@ -6,7 +6,7 @@ from pathlib import Path
 
 from june.groups import Hospitals, Hospital
 from june.demography import Population, Person
-from june.geography import Area, Areas, SuperArea, SuperAreas
+from june.geography import Area, Areas, SuperArea, SuperAreas, Region, Regions
 from june.groups import Households, Household
 from june.world import World
 from june.groups import Cemeteries
@@ -62,11 +62,13 @@ def create_world():
         super_areas.append(super_area)
     areas = Areas(areas, ball_tree=False)
     super_areas = SuperAreas(super_areas, ball_tree=False)
+    region = Region(super_areas = super_areas)
     world = World()
     world.people = _populate_areas(areas)
     world.households = _create_households(areas)
     world.areas = areas
     world.super_areas = super_areas
+    world.regions = Regions([region])
     world.hospitals = Hospitals(
         [
             Hospital(
@@ -101,6 +103,7 @@ def run_simulator(selectors, test_results):
         selectors[0],
         cases_per_capita=50 / len(world.people),
         date="2020-03-01",
+        seed_past_infections=False
     )
     seed.unleash_virus_per_day(time=0, date=pd.to_datetime("2020-03-01"))
     sim.run()

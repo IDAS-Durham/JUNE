@@ -147,4 +147,29 @@ class B117(Infection):
 class B16172(Infection):
     @classmethod
     def immunity_ids(cls):
-        return (cls.infection_id(), Covid19.infection_id(), B117.infection_id())
+        return (
+            cls.infection_id(),
+            Covid19.infection_id(),
+            B117.infection_id(),
+            Omicron.infection_id(),
+        )
+
+class Delta(Infection):
+    @classmethod
+    def immunity_ids(cls):
+        return (
+            cls.infection_id(),
+            Covid19.infection_id(),
+            B117.infection_id(),
+            Omicron.infection_id(),
+        )
+
+class Omicron(Infection):
+    @classmethod
+    def immunity_ids(cls):
+        return (
+            cls.infection_id(),
+            Covid19.infection_id(),
+            B117.infection_id(),
+            Delta.infection_id(),
+        )

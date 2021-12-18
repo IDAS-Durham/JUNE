@@ -182,6 +182,7 @@ def create_sim(world, interaction, selector, seed=False):
         infection_selector=selector,
         cases_per_capita=2 / len(world.people),
         date="2020-03-01",
+        seed_past_infections=False,
     )
     if not seed:
         infection_seed.unleash_virus_per_day(

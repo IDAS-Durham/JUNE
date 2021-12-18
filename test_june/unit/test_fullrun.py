@@ -50,6 +50,7 @@ def test__full_run(dummy_world, selector, test_results):
         infection_selector=selector,
         cases_per_capita=0.01,
         date=sim.timer.date_str,
+        seed_past_infections=True
     )
     seed.unleash_virus_per_day(date=sim.timer.date, time=0)
     sim.run()

@@ -15,7 +15,7 @@ class ClusteredInfectionSeed(InfectionSeed):
         daily_cases_per_capita_per_age_per_region: pd.DataFrame,
         seed_past_infections: bool = True,
         seed_strength=1.0,
-        probability_infected_housemate=0.5,
+        account_secondary_infections = False,
     ):
         super().__init__(
             world=world,
@@ -23,8 +23,8 @@ class ClusteredInfectionSeed(InfectionSeed):
             daily_cases_per_capita_per_age_per_region=daily_cases_per_capita_per_age_per_region,
             seed_past_infections=seed_past_infections,
             seed_strength=seed_strength,
+            account_secondary_infections = account_secondary_infections,
         )
-        self.probability_infected_housemate = probability_infected_housemate
 
     def get_total_people_to_infect(self, people, cases_per_capita_per_age):
         people_by_age = defaultdict(int)
