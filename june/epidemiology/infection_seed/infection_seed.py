@@ -337,7 +337,14 @@ class InfectionSeed:
             ]
         )
         yesterday_total_cases = len(
-            [p for p in region.people if p.infected and p.infection.start_time <= 1]
+            [
+                p
+                for p in region.people
+                if p.infected
+                and p.infection.start_time <= 1
+                and p.infection.__class__.__name__
+                == self.infection_selector.infection_class.__name__
+            ]
         )
         secondary_infs = yesterday_total_cases - yesterday_seeded_cases
         if secondary_infs >= today_seeded_cases:
