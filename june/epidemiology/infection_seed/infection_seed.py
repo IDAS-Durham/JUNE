@@ -231,28 +231,26 @@ class InfectionSeed:
         """
         for region in self.world.regions:
             # Check if secondary infections already provide seeding.
+            if "all" in cases_per_capita_per_age_per_region.columns:
+                cases_per_capita_per_age = cases_per_capita_per_age_per_region["all"]
+            else:
+                cases_per_capita_per_age = cases_per_capita_per_age_per_region[
+                    region.name
+                ]
             if self._need_to_seed_accounting_secondary_infections(date=date):
-                if "all" in cases_per_capita_per_age_per_region.columns:
-                    cases_per_capita_per_age = cases_per_capita_per_age_per_region[
-                        "all"
-                    ]
-                else:
-                    cases_per_capita_per_age = cases_per_capita_per_age_per_region[
-                        region.name
-                    ]
                 cases_per_capita_per_age = self._adjust_seed_accounting_secondary_infections(
                     cases_per_capita_per_age=cases_per_capita_per_age,
                     region=region,
                     date=date,
                     time=time,
                 )
-                for super_area in region.super_areas:
-                    self.infect_super_area(
-                        super_area=super_area,
-                        cases_per_capita_per_age=cases_per_capita_per_age,
-                        time=time,
-                        record=record,
-                    )
+            for super_area in region.super_areas:
+                self.infect_super_area(
+                    super_area=super_area,
+                    cases_per_capita_per_age=cases_per_capita_per_age,
+                    time=time,
+                    record=record,
+                )
 
     def unleash_virus_per_day(
         self, date: datetime, time, record: Optional[Record] = None,
@@ -325,12 +323,12 @@ class InfectionSeed:
                 record.time_step(timestamp=past_date)
 
     def _need_to_seed_accounting_secondary_infections(self, date):
-        if not self.account_secondary_infections:
-            return False
-        yesterday = date - datetime.timedelta(days=1)
-        if yesterday not in self.daily_cases_per_capita_per_age_per_region.index:
-            return False
-        return True
+        if self.account_secondary_infections:
+            yesterday = date - datetime.timedelta(days=1)
+            if yesterday not in self.daily_cases_per_capita_per_age_per_region.index:
+                return False
+            return True
+        return False
 
     def _adjust_seed_accounting_secondary_infections(
         self, cases_per_capita_per_age, region, date, time
