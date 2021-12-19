@@ -333,7 +333,6 @@ class InfectionSeed:
     def _adjust_seed_accounting_secondary_infections(
         self, cases_per_capita_per_age, region, date, time
     ):
-        yesterday = date - datetime.timedelta(days=1)
         people_by_age = defaultdict(int)
         for person in region.people:
             people_by_age[person.age] += 1
