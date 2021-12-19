@@ -63,6 +63,8 @@ def create_world():
     areas = Areas(areas, ball_tree=False)
     super_areas = SuperAreas(super_areas, ball_tree=False)
     region = Region(super_areas = super_areas)
+    for super_area in super_areas:
+        super_area.region = region
     world = World()
     world.people = _populate_areas(areas)
     world.households = _create_households(areas)
