@@ -71,7 +71,7 @@ def make_selector(desired_symptoms,):
 
 def infect_hospitalised_person(person):
     max_symptom_tag = random.choice(
-        [SymptomTag.hospitalised, SymptomTag.intensive_care,]
+        [SymptomTag.hospitalised, SymptomTag.intensive_care]
     )
     selector = make_selector(desired_symptoms=max_symptom_tag)
     selector.infect_person_at_time(person, 0.0)
