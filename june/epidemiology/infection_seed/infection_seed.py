@@ -318,6 +318,8 @@ class InfectionSeed:
                 record=record,
                 date=past_date,
             )
+            self.last_seeded_cases = self.current_seeded_cases.copy()
+            self.current_seeded_cases = defaultdict(int)
             if record:
                 # record past infections and deaths.
                 record.time_step(timestamp=past_date)
