@@ -240,7 +240,7 @@ class InfectionSeed:
                     cases_per_capita_per_age = cases_per_capita_per_age_per_region[
                         region.name
                     ]
-                self._adjust_seed_accounting_secondary_infections(
+                cases_per_capita_per_age = self._adjust_seed_accounting_secondary_infections(
                     cases_per_capita_per_age=cases_per_capita_per_age,
                     region=region,
                     date=date,
@@ -360,7 +360,7 @@ class InfectionSeed:
             ]
         )
         secondary_infs = yesterday_total_cases - yesterday_seeded_cases
-        toseed = max(0, secondary_infs - today_seeded_cases)
+        toseed = max(0, today_seeded_cases - secondary_infs)
         previous = sum(
             [
                 cases_per_capita_per_age.loc[age] * people_by_age[age]
@@ -368,6 +368,7 @@ class InfectionSeed:
             ]
         )
         cases_per_capita_per_age = cases_per_capita_per_age * toseed / previous
+        return cases_per_capita_per_age
 
 
 class InfectionSeeds:
