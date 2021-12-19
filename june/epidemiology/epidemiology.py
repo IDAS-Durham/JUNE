@@ -261,7 +261,7 @@ class Epidemiology:
         tick, tickw = perf_counter(), wall_clock()
 
         invalid_id = 4294967295  # largest possible uint32
-        empty = np.array([invalid_id,], dtype=np.uint32)
+        empty = np.array([invalid_id], dtype=np.uint32)
 
         # we want to make sure we transfer something for every domain.
         # (we have an np.concatenate which doesn't work on empty arrays)
