@@ -154,6 +154,7 @@ class B16172(Infection):
             Omicron.infection_id(),
         )
 
+
 class Delta(Infection):
     @classmethod
     def immunity_ids(cls):
@@ -163,6 +164,7 @@ class Delta(Infection):
             B117.infection_id(),
             Omicron.infection_id(),
         )
+
 
 class Omicron(Infection):
     @classmethod

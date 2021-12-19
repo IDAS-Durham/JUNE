@@ -337,7 +337,6 @@ class InfectionSeed:
         people_by_age = defaultdict(int)
         for person in region.people:
             people_by_age[person.age] += 1
-        yesterday_df = self.daily_cases_per_capita_per_age_per_region.loc[yesterday]
         yesterday_seeded_cases = self.last_seeded_cases[region.name]
         today_df = self.daily_cases_per_capita_per_age_per_region.loc[date]
         today_seeded_cases = sum(

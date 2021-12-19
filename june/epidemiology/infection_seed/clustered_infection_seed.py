@@ -1,10 +1,15 @@
 import pandas as pd
 import numpy as np
-from random import shuffle, random
+from random import random
 from collections import defaultdict
 
 from .infection_seed import InfectionSeed
 from june.epidemiology.infection import InfectionSelector
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from june.world import World
 
 
 class ClusteredInfectionSeed(InfectionSeed):
@@ -15,7 +20,7 @@ class ClusteredInfectionSeed(InfectionSeed):
         daily_cases_per_capita_per_age_per_region: pd.DataFrame,
         seed_past_infections: bool = True,
         seed_strength=1.0,
-        account_secondary_infections = False,
+        account_secondary_infections=False,
     ):
         super().__init__(
             world=world,
@@ -23,7 +28,7 @@ class ClusteredInfectionSeed(InfectionSeed):
             daily_cases_per_capita_per_age_per_region=daily_cases_per_capita_per_age_per_region,
             seed_past_infections=seed_past_infections,
             seed_strength=seed_strength,
-            account_secondary_infections = account_secondary_infections,
+            account_secondary_infections=account_secondary_infections,
         )
 
     def get_total_people_to_infect(self, people, cases_per_capita_per_age):
@@ -74,12 +79,9 @@ class ClusteredInfectionSeed(InfectionSeed):
                     self.infect_person(person=person, time=time, record=record)
                     if time < 0:
                         self.bring_infection_up_to_date(
-                            person=person,
-                            time_from_infection=-time,
-                            record=record,
+                            person=person, time_from_infection=-time, record=record,
                         )
                     total_to_infect -= 1
                     if total_to_infect < 1:
                         return
                     seeded_households.add(household.id)
-
