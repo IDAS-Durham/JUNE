@@ -2,7 +2,6 @@ import pytest
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from collections import defaultdict
 
 from june.epidemiology.infection_seed.clustered_infection_seed import (
     ClusteredInfectionSeed,

@@ -61,22 +61,14 @@ def create_vaccine_plan():
     return VaccineTrajectory(
         person=person,
         date_administered=datetime.datetime(2100, 1, 1),
-        days_to_next_dose=[
-            0,
-            9,
-            16,
-        ],
+        days_to_next_dose=[0, 9, 16,],
         days_to_effective=[1, 2, 10],
         sterilisation_efficacies=[
             {0: 0.3, 1: 0.2},
             {0: 0.7, 1: 0.2},
             {0: 0.9, 1: 0.8},
         ],
-        symptomatic_efficacies=[
-            {0: 0.3, 1: 0.5},
-            {0: 0.7, 1: 0.2},
-            {0: 0.7, 1: 0.1},
-        ],
+        symptomatic_efficacies=[{0: 0.3, 1: 0.5}, {0: 0.7, 1: 0.2}, {0: 0.7, 1: 0.1},],
     )
 
 
@@ -87,16 +79,8 @@ def create_generated_stages():
     vg = VaccineStagesGenerator(
         days_to_next_dose=[0, 10, 20],
         days_to_effective=[1, 2, 3],
-        sterilisation_efficacies=[
-            {0: 0.2},
-            {0: 0.7},
-            {0: 0.5},
-        ],
-        symptomatic_efficacies=[
-            {0: 0.3},
-            {0: 0.6},
-            {0: 0.3},
-        ],
+        sterilisation_efficacies=[{0: 0.2}, {0: 0.7}, {0: 0.5},],
+        symptomatic_efficacies=[{0: 0.3}, {0: 0.6}, {0: 0.3},],
     )
     return vg(person, date)
 
@@ -150,8 +134,8 @@ class TestVaccineTrajectory:
         ]
 
     def test__is_finished(self, vt):
-        assert vt.is_finished(datetime.datetime(2100, 1, 25)) == False
-        assert vt.is_finished(datetime.datetime(2100, 1, 28)) == True
+        assert not (vt.is_finished(datetime.datetime(2100, 1, 25)))
+        assert vt.is_finished(datetime.datetime(2100, 1, 28))
 
     def test__time_evolution_vaccine_plan(self, vt):
         dates = [
@@ -219,16 +203,10 @@ class TestVaccineStagesGenerator:
 
 
 class TestVaccination:
-    def test__process_target_population(
-        self,
-    ):
+    def test__process_target_population(self,):
         person = Person.from_attributes(age=30, sex="f")
         vaccine_policy = VaccineDistribution(
-            days_to_next_dose=[
-                0,
-                9,
-                16,
-            ],
+            days_to_next_dose=[0, 9, 16,],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
                 {0: 0.3, 1: 0.2},
@@ -256,18 +234,13 @@ class TestVaccination:
         assert person.vaccine_trajectory is None
 
     def test__process_target_population_care_home(
-        self,
-        stages,
+        self, stages,
     ):
         care_home = CareHome()
         person = Person.from_attributes(age=30, sex="f")
         care_home.add(person)
         vaccine_policy = VaccineDistribution(
-            days_to_next_dose=[
-                0,
-                9,
-                16,
-            ],
+            days_to_next_dose=[0, 9, 16,],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
                 {0: 0.3, 1: 0.2},
@@ -294,11 +267,7 @@ class TestVaccination:
         person = Person.from_attributes(age=30, sex="f")
         date = datetime.datetime(2100, 1, 1)
         vaccine_policy = VaccineDistribution(
-            days_to_next_dose=[
-                0,
-                9,
-                16,
-            ],
+            days_to_next_dose=[0, 9, 16,],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
                 {0: 0.3, 1: 0.2},
@@ -335,17 +304,11 @@ class TestVaccination:
         assert pytest.approx(person.immunity.get_susceptibility(0), 0.001) == 0.1
         assert pytest.approx(person.immunity.get_effective_multiplier(0), 0.001) == 0.3
 
-    def test_overall_susceptibility_update(
-        self,
-    ):
+    def test_overall_susceptibility_update(self,):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
         vaccine_policy = VaccineDistribution(
-            days_to_next_dose=[
-                0,
-                9,
-                16,
-            ],
+            days_to_next_dose=[0, 9, 16,],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
                 {0: 0.3, 1: 0.2},
@@ -386,17 +349,12 @@ class TestVaccination:
         assert pytest.approx(young_person.immunity.get_susceptibility(0), 0.001) == 0.1
 
     def test_vaccinate_inmune(
-        self,
-        stages,
+        self, stages,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         young_person.immunity.susceptibility_dict[0] = 0.0
         vaccine_policy = VaccineDistribution(
-            days_to_next_dose=[
-                0,
-                9,
-                16,
-            ],
+            days_to_next_dose=[0, 9, 16,],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
                 {0: 0.3, 1: 0.2},
@@ -428,17 +386,12 @@ class TestVaccination:
         assert young_person.immunity.get_susceptibility(0) == 0.0
 
     def test_several_infections_update(
-        self,
-        stages,
+        self, stages,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
         vaccine_policy = VaccineDistribution(
-            days_to_next_dose=[
-                0,
-                9,
-                16,
-            ],
+            days_to_next_dose=[0, 9, 16,],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
                 {0: 0.3, 1: 0.2},
@@ -471,17 +424,14 @@ class TestVaccination:
             0.9, 0.01
         )
 
+
 class TestVaccinationInitialization:
     @pytest.fixture(name="vax_policy")
     def make_policy(self):
         vaccine_policy = VaccineDistribution(
-            start_time = "2021-03-01",
-            end_time = "2021-04-01",
-            days_to_next_dose=[
-                0,
-                9,
-                16,
-            ],
+            start_time="2021-03-01",
+            end_time="2021-04-01",
+            days_to_next_dose=[0, 9, 16,],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
                 {0: 0.3, 1: 0.2},
@@ -519,11 +469,17 @@ class TestVaccinationInitialization:
             else:
                 if person.vaccinated:
                     n_vaccinated += 1
-                    assert np.isclose(person.vaccine_trajectory.susceptibility(date, 0), 0.1)
-                    assert np.isclose(person.vaccine_trajectory.susceptibility(date, 1), 0.2)
-                    assert np.isclose(person.vaccine_trajectory.effective_multiplier(date, 0), 0.3)
-                    assert np.isclose(person.vaccine_trajectory.effective_multiplier(date, 1), 0.9)
+                    assert np.isclose(
+                        person.vaccine_trajectory.susceptibility(date, 0), 0.1
+                    )
+                    assert np.isclose(
+                        person.vaccine_trajectory.susceptibility(date, 1), 0.2
+                    )
+                    assert np.isclose(
+                        person.vaccine_trajectory.effective_multiplier(date, 0), 0.3
+                    )
+                    assert np.isclose(
+                        person.vaccine_trajectory.effective_multiplier(date, 1), 0.9
+                    )
 
         assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
-
-

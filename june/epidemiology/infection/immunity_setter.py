@@ -1,5 +1,5 @@
 from typing import Optional
-from collections import defaultdict
+from collections import Counter
 import numpy as np
 import yaml
 from random import random
@@ -377,9 +377,7 @@ class ImmunitySetter:
         """
         Returns total people to infect according to the serorev age profile
         """
-        people_by_age = defaultdict(int)
-        for person in people:
-            people_by_age[person.age] += 1
+        people_by_age = Counter([person.age for person in people])
         people_to_infect = {
             age: people_by_age[age] * seroprev_by_age[age] for age in people_by_age
         }

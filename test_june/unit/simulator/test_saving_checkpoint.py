@@ -62,7 +62,7 @@ def create_world():
         super_areas.append(super_area)
     areas = Areas(areas, ball_tree=False)
     super_areas = SuperAreas(super_areas, ball_tree=False)
-    region = Region(super_areas = super_areas)
+    region = Region(super_areas=super_areas)
     for super_area in super_areas:
         super_area.region = region
     world = World()
@@ -72,14 +72,7 @@ def create_world():
     world.super_areas = super_areas
     world.regions = Regions([region])
     world.hospitals = Hospitals(
-        [
-            Hospital(
-                n_beds=1000,
-                n_icu_beds=1000,
-                area=None,
-                coordinates=None,
-            )
-        ],
+        [Hospital(n_beds=1000, n_icu_beds=1000, area=None, coordinates=None,)],
         ball_tree=False,
     )
     world.cemeteries = Cemeteries()
@@ -105,7 +98,7 @@ def run_simulator(selectors, test_results):
         selectors[0],
         cases_per_capita=50 / len(world.people),
         date="2020-03-01",
-        seed_past_infections=False
+        seed_past_infections=False,
     )
     seed.unleash_virus_per_day(time=0, date=pd.to_datetime("2020-03-01"))
     sim.run()

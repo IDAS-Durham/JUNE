@@ -184,9 +184,7 @@ class Person(dataobject):
 
     @property
     def should_be_vaccinated(self):
-        if self.vaccine_trajectory is None and not self.vaccinated:
-            return True
-        return False
+        return (self.vaccine_trajectory is None) and (not self.vaccinated):
 
     @property
     def available(self):

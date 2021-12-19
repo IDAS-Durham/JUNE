@@ -161,19 +161,19 @@ def create_school(n_students, n_teachers):
 
 
 @pytest.mark.parametrize(
-    "n_teachers,mode", [[2, "average"], [4, "average"], [6, "average"],],
+    "n_teachers,mode", [[2, "average"], [4, "average"], [6, "average"]]
 )
 def test__average_time_to_infect(n_teachers, mode, selector):
     transmission_probability = 0.1
     n_students = 1
     contact_matrices = {
         "contacts": [[n_teachers - 1, 1], [1, 0]],
-        "proportion_physical": [[0, 0,], [0, 0],],
+        "proportion_physical": [[0, 0,], [0, 0]],
         "xi": 1.0,
         "characteristic_time": 24,
     }
     interaction = Interaction(
-        betas={"school": 1,},
+        betas={"school": 1},
         alpha_physical=1,
         contact_matrices={"school": contact_matrices},
     )
