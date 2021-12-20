@@ -163,15 +163,15 @@ class ImmunitySetter:
             record=record,
         )
 
-    def set_immunity(self, population):
+    def set_immunity(self, world):
         if self.multiplier_dict:
-            self.set_multipliers(population)
+            self.set_multipliers(world.people)
         if self.susceptibility_dict:
-            self.set_susceptibilities(population)
+            self.set_susceptibilities(world.people)
         if self.previous_infections_dict:
-            self.set_previous_infections(population)
+            self.set_previous_infections(world)
         if self.vaccination_dict:
-            self.set_vaccinations(population)
+            self.set_vaccinations(world.people)
 
     def get_multiplier_from_reference_prevalence(self, age, sex):
         """

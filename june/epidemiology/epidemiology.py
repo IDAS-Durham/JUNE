@@ -58,9 +58,9 @@ class Epidemiology:
         self.medical_care_policies = medical_care_policies
         self.medical_facilities = medical_facilities
 
-    def set_immunity(self, population):
+    def set_immunity(self, world):
         if self.immunity_setter:
-            self.immunity_setter.set_immunity(population)
+            self.immunity_setter.set_immunity(world)
 
     def set_effective_multipliers(self, population):
         if self.effective_multiplier_setter:
