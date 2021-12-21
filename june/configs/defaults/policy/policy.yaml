@@ -121,12 +121,11 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         days_to_effective: [12,7]
         sterilisation_efficacies:
-          - 170852960: 0.52 # FDA - primary efficacy endpoint
-          - 170852960: 0.95 # FDA + Pfizer > 55=0.94
+          - Covid19: 0.52 # FDA - primary efficacy endpoint
+          - Covid19: 0.95 # FDA + Pfizer > 55=0.94
         symptomatic_efficacies: 
-          - 170852960: 0.
-          - 170852960: 0.
-        infection_ids: [170852960]
+          - Covid19: 0.
+          - Covid19: 0.
     2:
         start_time: 2020-01-01 
         end_time: 2020-02-15 
@@ -136,12 +135,11 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         days_to_effective: [12,7]
         sterilisation_efficacies:
-          - 170852960: 0.52 # FDA - primary efficacy endpoint
-          - 170852960: 0.95 # FDA + Pfizer > 55=0.94
+          - Covid19: 0.52 # FDA - primary efficacy endpoint
+          - Covid19: 0.95 # FDA + Pfizer > 55=0.94
         symptomatic_efficacies: 
-          - 170852960: 0.
-          - 170852960: 0.
-        infection_ids: [170852960]
+          - Covid19: 0.
+          - Covid19: 0.
 
     3:
         start_time: 2020-01-01 
@@ -152,12 +150,11 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         days_to_effective: [12,7]
         sterilisation_efficacies:
-          - 170852960: 0.52 # FDA - primary efficacy endpoint
-          - 170852960: 0.95 # FDA + Pfizer > 55=0.94
+          - Covid19: 0.52 # FDA - primary efficacy endpoint
+          - Covid19: 0.95 # FDA + Pfizer > 55=0.94
         symptomatic_efficacies: 
-          - 170852960: 0.
-          - 170852960: 0.
-        infection_ids: [170852960]
+          - Covid19: 0.
+          - Covid19: 0.
 
     # Groups 1-4 Oxford/AstraZeneca
     4:
@@ -169,12 +166,11 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         days_to_effective: [12,7]
         sterilisation_efficacies:
-          - 170852960: 0.52 # FDA - primary efficacy endpoint
-          - 170852960: 0.95 # FDA + Pfizer > 55=0.94
+          - Covid19: 0.52 # FDA - primary efficacy endpoint
+          - Covid19: 0.95 # FDA + Pfizer > 55=0.94
         symptomatic_efficacies: 
-          - 170852960: 0.
-          - 170852960: 0.
-        infection_ids: [170852960]
+          - Covid19: 0.
+          - Covid19: 0.
 
     5:
         start_time: 2020-01-03
@@ -185,12 +181,11 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         days_to_effective: [12,7]
         sterilisation_efficacies:
-          - 170852960: 0.52 # FDA - primary efficacy endpoint
-          - 170852960: 0.95 # FDA + Pfizer > 55=0.94
+          - Covid19: 0.52 # FDA - primary efficacy endpoint
+          - Covid19: 0.95 # FDA + Pfizer > 55=0.94
         symptomatic_efficacies: 
-          - 170852960: 0.
-          - 170852960: 0.
-        infection_ids: [170852960]
+          - Covid19: 0.
+          - Covid19: 0.
 
     6:
         start_time: 2020-01-03
@@ -201,12 +196,11 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         days_to_effective: [12,7]
         sterilisation_efficacies:
-          - 170852960: 0.52 # FDA - primary efficacy endpoint
-          - 170852960: 0.95 # FDA + Pfizer > 55=0.94
+          - Covid19: 0.52 # FDA - primary efficacy endpoint
+          - Covid19: 0.95 # FDA + Pfizer > 55=0.94
         symptomatic_efficacies: 
-          - 170852960: 0.
-          - 170852960: 0.
-        infection_ids: [170852960]
+          - Covid19: 0.
+          - Covid19: 0.
 
 
 quarantine:
