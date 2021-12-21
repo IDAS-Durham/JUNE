@@ -11,6 +11,10 @@ from june.policy.vaccine_policy import (
     VaccineDistribution,
     VaccineStagesGenerator,
 )
+from june.epidemiology.infection.infection import Delta, Omicron
+
+delta_id = Delta.infection_id()
+omicron_id = Omicron.infection_id()
 
 
 @pytest.fixture(name="first_dose", scope="session")
@@ -209,25 +213,24 @@ class TestVaccination:
             days_to_next_dose=[0, 9, 16],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
-                {0: 0.3, 1: 0.2},
-                {0: 0.7, 1: 0.2},
-                {0: 0.9, 1: 0.8},
+                {"Delta": 0.3, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.9, "Omicron": 0.8},
             ],
             symptomatic_efficacies=[
-                {0: 0.3, 1: 0.5},
-                {0: 0.7, 1: 0.2},
-                {0: 0.7, 1: 0.1},
+                {"Delta": 0.3, "Omicron": 0.5},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.1},
             ],
             group_by="age",
             group_type="20-40",
-            infection_ids=[0, 1],
         )
         date = datetime.datetime(2100, 1, 1)
         vaccine_policy.apply(person=person, date=date)
         assert person.vaccine_trajectory is not None
         assert person.vaccine_trajectory.stages[1].sterilisation_efficacy == {
-            0: 0.7,
-            1: 0.2,
+            delta_id: 0.7,
+            omicron_id: 0.2,
         }
         person = Person.from_attributes(age=50, sex="f")
         vaccine_policy.apply(person=person, date=date)
@@ -243,18 +246,17 @@ class TestVaccination:
             days_to_next_dose=[0, 9, 16],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
-                {0: 0.3, 1: 0.2},
-                {0: 0.7, 1: 0.2},
-                {0: 0.9, 1: 0.8},
+                {"Delta": 0.3, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.9, "Omicron": 0.8},
             ],
             symptomatic_efficacies=[
-                {0: 0.3, 1: 0.5},
-                {0: 0.7, 1: 0.2},
-                {0: 0.7, 1: 0.1},
+                {"Delta": 0.3, "Omicron": 0.5},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.1},
             ],
             group_by="residence",
             group_type="care_home",
-            infection_ids=[0, 1],
         )
         date = datetime.datetime(2100, 1, 1)
         vaccine_policy.apply(person=person, date=date)
@@ -270,39 +272,44 @@ class TestVaccination:
             days_to_next_dose=[0, 9, 16],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
-                {0: 0.3, 1: 0.2},
-                {0: 0.7, 1: 0.2},
-                {0: 0.9, 1: 0.8},
+                {"Delta": 0.3, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.9, "Omicron": 0.8},
             ],
             symptomatic_efficacies=[
-                {0: 0.3, 1: 0.5},
-                {0: 0.7, 1: 0.2},
-                {0: 0.7, 1: 0.1},
+                {"Delta": 0.3, "Omicron": 0.5},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.1},
             ],
             group_by="age",
             group_type="20-40",
-            infection_ids=[0, 1],
         )
         vaccine_policy.apply(person=person, date=date)
-        assert person.immunity.get_susceptibility(0) == 1.0
-        assert person.immunity.get_effective_multiplier(0) == 1.0
+        assert person.immunity.get_susceptibility(delta_id) == 1.0
+        assert person.immunity.get_effective_multiplier(delta_id) == 1.0
         vaccine_policy.update_vaccine_effect(
             person=person, date=datetime.datetime(2100, 1, 2)
         )
-        assert person.immunity.get_susceptibility(0) == 0.7
-        assert person.immunity.get_effective_multiplier(0) == 0.7
+        assert person.immunity.get_susceptibility(delta_id) == 0.7
+        assert person.immunity.get_effective_multiplier(delta_id) == 0.7
 
         vaccine_policy.update_vaccine_effect(
             person=person, date=datetime.datetime(2100, 1, 15)
         )
-        assert pytest.approx(person.immunity.get_susceptibility(0), 0.001) == 0.3
-        assert pytest.approx(person.immunity.get_effective_multiplier(0), 0.001) == 0.3
+        assert pytest.approx(person.immunity.get_susceptibility(delta_id), 0.001) == 0.3
+        assert (
+            pytest.approx(person.immunity.get_effective_multiplier(delta_id), 0.001)
+            == 0.3
+        )
 
         vaccine_policy.update_vaccine_effect(
             person=person, date=datetime.datetime(2220, 12, 25)
         )
-        assert pytest.approx(person.immunity.get_susceptibility(0), 0.001) == 0.1
-        assert pytest.approx(person.immunity.get_effective_multiplier(0), 0.001) == 0.3
+        assert pytest.approx(person.immunity.get_susceptibility(delta_id), 0.001) == 0.1
+        assert (
+            pytest.approx(person.immunity.get_effective_multiplier(delta_id), 0.001)
+            == 0.3
+        )
 
     def test_overall_susceptibility_update(self,):
         young_person = Person.from_attributes(age=30, sex="f")
@@ -311,18 +318,17 @@ class TestVaccination:
             days_to_next_dose=[0, 9, 16],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
-                {0: 0.3, 1: 0.2},
-                {0: 0.7, 1: 0.2},
-                {0: 0.9, 1: 0.8},
+                {"Delta": 0.3, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.9, "Omicron": 0.8},
             ],
             symptomatic_efficacies=[
-                {0: 0.3, 1: 0.5},
-                {0: 0.7, 1: 0.2},
-                {0: 0.7, 1: 0.1},
+                {"Delta": 0.3, "Omicron": 0.5},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.1},
             ],
             group_by="age",
             group_type="20-40",
-            infection_ids=[0, 1],
         )
         people = Population([young_person, old_person])
         for person in people:
@@ -332,43 +338,52 @@ class TestVaccination:
         )
 
         assert (
-            pytest.approx(young_person.immunity.get_effective_multiplier(0), 0.001)
+            pytest.approx(
+                young_person.immunity.get_effective_multiplier(delta_id), 0.001
+            )
             == 0.3
         )
-        assert pytest.approx(young_person.immunity.get_susceptibility(0), 0.001) == 0.1
-        assert old_person.immunity.get_effective_multiplier(0) == 1.0
-        assert old_person.immunity.get_susceptibility(0) == 1.0
+        assert (
+            pytest.approx(young_person.immunity.get_susceptibility(delta_id), 0.001)
+            == 0.1
+        )
+        assert old_person.immunity.get_effective_multiplier(delta_id) == 1.0
+        assert old_person.immunity.get_susceptibility(delta_id) == 1.0
         vaccine_policy.update_vaccinated(
             people=people, date=datetime.datetime(2100, 12, 3)
         )
         assert young_person.id not in vaccine_policy.vaccinated_ids
         assert (
-            pytest.approx(young_person.immunity.get_effective_multiplier(0), 0.001)
+            pytest.approx(
+                young_person.immunity.get_effective_multiplier(delta_id), 0.001
+            )
             == 0.3
         )
-        assert pytest.approx(young_person.immunity.get_susceptibility(0), 0.001) == 0.1
+        assert (
+            pytest.approx(young_person.immunity.get_susceptibility(delta_id), 0.001)
+            == 0.1
+        )
 
     def test_vaccinate_inmune(
         self, stages,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
-        young_person.immunity.susceptibility_dict[0] = 0.0
+        young_person.immunity.susceptibility_dict[delta_id] = 0.0
         vaccine_policy = VaccineDistribution(
             days_to_next_dose=[0, 9, 16],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
-                {0: 0.3, 1: 0.2},
-                {0: 0.7, 1: 0.2},
-                {0: 0.9, 1: 0.8},
+                {"Delta": 0.3, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.9, "Omicron": 0.8},
             ],
             symptomatic_efficacies=[
-                {0: 0.3, 1: 0.5},
-                {0: 0.7, 1: 0.2},
-                {0: 0.7, 1: 0.1},
+                {"Delta": 0.3, "Omicron": 0.5},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.1},
             ],
             group_by="age",
             group_type="20-40",
-            infection_ids=[0, 1],
         )
 
         people = Population([young_person])
@@ -378,12 +393,12 @@ class TestVaccination:
             people=people, date=datetime.datetime(2100, 12, 31)
         )
 
-        assert young_person.immunity.get_susceptibility(0) == 0.0
+        assert young_person.immunity.get_susceptibility(delta_id) == 0.0
         vaccine_policy.update_vaccinated(
             people=people, date=datetime.datetime(2100, 12, 31)
         )
         assert young_person.id not in vaccine_policy.vaccinated_ids
-        assert young_person.immunity.get_susceptibility(0) == 0.0
+        assert young_person.immunity.get_susceptibility(delta_id) == 0.0
 
     def test_several_infections_update(
         self, stages,
@@ -394,18 +409,17 @@ class TestVaccination:
             days_to_next_dose=[0, 9, 16],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
-                {0: 0.3, 1: 0.2},
-                {0: 0.7, 1: 0.2},
-                {0: 0.9, 1: 0.8},
+                {"Delta": 0.3, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.9, "Omicron": 0.8},
             ],
             symptomatic_efficacies=[
-                {0: 0.3, 1: 0.5},
-                {0: 0.7, 1: 0.2},
-                {0: 0.7, 1: 0.1},
+                {"Delta": 0.3, "Omicron": 0.5},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.1},
             ],
             group_by="age",
             group_type="20-40",
-            infection_ids=[0, 1],
         )
 
         people = Population([young_person, old_person])
@@ -415,14 +429,18 @@ class TestVaccination:
             people=people, date=datetime.datetime(2100, 12, 3)
         )
         assert young_person.id not in vaccine_policy.vaccinated_ids
-        assert young_person.immunity.get_susceptibility(0) == pytest.approx(0.1, 0.001)
-        assert young_person.immunity.get_susceptibility(1) == pytest.approx(0.2, 0.001)
-        assert young_person.immunity.get_effective_multiplier(0) == pytest.approx(
-            0.3, 0.001
+        assert young_person.immunity.get_susceptibility(delta_id) == pytest.approx(
+            0.1, 0.001
         )
-        assert young_person.immunity.get_effective_multiplier(1) == pytest.approx(
-            0.9, 0.01
+        assert young_person.immunity.get_susceptibility(omicron_id) == pytest.approx(
+            0.2, 0.001
         )
+        assert young_person.immunity.get_effective_multiplier(
+            delta_id
+        ) == pytest.approx(0.3, 0.001)
+        assert young_person.immunity.get_effective_multiplier(
+            omicron_id
+        ) == pytest.approx(0.9, 0.01)
 
 
 class TestVaccinationInitialization:
@@ -434,16 +452,15 @@ class TestVaccinationInitialization:
             days_to_next_dose=[0, 9, 16],
             days_to_effective=[1, 2, 10],
             sterilisation_efficacies=[
-                {0: 0.3, 1: 0.2},
-                {0: 0.7, 1: 0.2},
-                {0: 0.9, 1: 0.8},
+                {"Delta": 0.3, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.9, "Omicron": 0.8},
             ],
             symptomatic_efficacies=[
-                {0: 0.3, 1: 0.5},
-                {0: 0.7, 1: 0.2},
-                {0: 0.7, 1: 0.1},
+                {"Delta": 0.3, "Omicron": 0.5},
+                {"Delta": 0.7, "Omicron": 0.2},
+                {"Delta": 0.7, "Omicron": 0.1},
             ],
-            infection_ids=[0, 1],
             group_by="age",
             group_type="20-40",
             group_coverage=0.6,
@@ -470,16 +487,20 @@ class TestVaccinationInitialization:
                 if person.vaccinated:
                     n_vaccinated += 1
                     assert np.isclose(
-                        person.vaccine_trajectory.susceptibility(date, 0), 0.1
+                        person.vaccine_trajectory.susceptibility(date, delta_id), 0.1
                     )
                     assert np.isclose(
-                        person.vaccine_trajectory.susceptibility(date, 1), 0.2
+                        person.vaccine_trajectory.susceptibility(date, omicron_id), 0.2
                     )
                     assert np.isclose(
-                        person.vaccine_trajectory.effective_multiplier(date, 0), 0.3
+                        person.vaccine_trajectory.effective_multiplier(date, delta_id),
+                        0.3,
                     )
                     assert np.isclose(
-                        person.vaccine_trajectory.effective_multiplier(date, 1), 0.9
+                        person.vaccine_trajectory.effective_multiplier(
+                            date, omicron_id
+                        ),
+                        0.9,
                     )
 
         assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)

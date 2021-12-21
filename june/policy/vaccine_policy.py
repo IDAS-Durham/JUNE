@@ -6,6 +6,7 @@ import datetime
 import logging
 
 from june.demography.person import Person
+from june.epidemiology.infection import infection as infection_module
 from .policy import Policy, PolicyCollection
 
 
@@ -67,10 +68,7 @@ class VaccineStage:
             self.prior_symptomatic_efficacy = prior_symptomatic_efficacy
 
     def get_vaccine_efficacy(
-        self,
-        date,
-        efficacy_type: str,
-        infection_id: int,
+        self, date, efficacy_type: str, infection_id: int,
     ):
         if efficacy_type not in self.valid_efficacy_types:
             raise ValueError
@@ -98,9 +96,7 @@ class VaccineStagesGenerator:
         self.symptomatic_efficacies = symptomatic_efficacies
 
     def __call__(
-        self,
-        person,
-        date_administered: datetime.datetime,
+        self, person, date_administered: datetime.datetime,
     ):
         prior_susceptibility = person.immunity.susceptibility_dict
         prior_effective_multiplier = person.immunity.effective_multiplier_dict
@@ -164,10 +160,7 @@ class VaccineTrajectory:
         )
 
     def get_vaccine_efficacy(
-        self,
-        date,
-        efficacy_type: str,
-        infection_id: int,
+        self, date, efficacy_type: str, infection_id: int,
     ):
         days_from_start = (date - self.stages[0].date_administered).days
         index_stage = min(
@@ -180,8 +173,7 @@ class VaccineTrajectory:
         )
 
     def is_finished(
-        self,
-        date: datetime.datetime,
+        self, date: datetime.datetime,
     ):
         if date > self.stages[-1].effective_date:
             return True
@@ -197,7 +189,6 @@ class VaccineDistribution(Policy):
         days_to_effective: List[int],
         sterilisation_efficacies: List[Dict],
         symptomatic_efficacies: List[Dict],
-        infection_ids: List[int],
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
         group_by: str = "age",  # 'residence',
@@ -213,7 +204,7 @@ class VaccineDistribution(Policy):
         (It'd normally start with 0 since the first dose happens on the first date)
         days_to_effective: number of days it takes for each dose to be fully effective.
         sterilisation_efficacies: List of dictionaries with sterilisation efficacies.
-        Example [ {0: 0.1, 1: 0.2}, {0:0.2,1:0.3} ... ], where dictionary keys are infection_ids
+        Example [ {Delta: 0.1, Omicron: 0.2}, {Delta:0.2, Omicron:0.3} ... ], where dictionary keys are infection classes
         and values efficacies.
         symptomatic_efficacies: List of dictionaries with sterilisation efficacies.
         start_time: start time of vaccine rollout
@@ -233,15 +224,32 @@ class VaccineDistribution(Policy):
         super().__init__(start_time=start_time, end_time=end_time)
         self.days_to_next_dose = days_to_next_dose
         self.days_to_effective = days_to_effective
-        self.sterilisation_efficacies = sterilisation_efficacies
-        self.symptomatic_efficacies = symptomatic_efficacies
+        self.sterilisation_efficacies = self._parse_efficacies(sterilisation_efficacies)
+        self.symptomatic_efficacies = self._parse_efficacies(symptomatic_efficacies)
         self.group_attribute, self.group_value = self.process_group_description(
             group_by, group_type
         )
         self.total_days = (self.end_time - self.start_time).days
         self.group_coverage = group_coverage
-        self.infection_ids = infection_ids
+        self.infection_ids = self._read_infection_ids(self.sterilisation_efficacies)
         self.vaccinated_ids = set()
+
+    def _parse_efficacies(self, efficacies):
+        ret = []
+        for dd in efficacies:
+            dd_id = {}
+            for key in dd:
+                infection_id = getattr(infection_module, key).infection_id()
+                dd_id[infection_id] = dd[key]
+            ret.append(dd_id)
+        return ret
+
+    def _read_infection_ids(self, sterilisation_efficacies):
+        ids = set()
+        for dd in sterilisation_efficacies:
+            for key in dd:
+                ids.add(key)
+        return list(ids)
 
     def process_group_description(self, group_by, group_type):
         if group_by in ("residence", "primary_activity"):
@@ -297,10 +305,8 @@ class VaccineDistribution(Policy):
             updated_susceptibility = person.vaccine_trajectory.susceptibility(
                 date=date, infection_id=infection_id
             )
-            updated_effective_multiplier = (
-                person.vaccine_trajectory.effective_multiplier(
-                    date=date, infection_id=infection_id
-                )
+            updated_effective_multiplier = person.vaccine_trajectory.effective_multiplier(
+                date=date, infection_id=infection_id
             )
             person.immunity.susceptibility_dict[infection_id] = min(
                 person.vaccine_trajectory.prior_susceptibility.get(infection_id, 1.0),
