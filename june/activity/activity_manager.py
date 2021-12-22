@@ -182,7 +182,7 @@ class ActivityManager:
     def get_personal_subgroup(self, person: "Person", activity: str):
         return getattr(person, activity)
 
-    def do_timestep(self):
+    def do_timestep(self, record=None):
         # get time data
         tick_interaction_timestep = perf_counter()
         date = self.timer.date
@@ -200,7 +200,7 @@ class ActivityManager:
             )
         # move people to subgroups and get going abroad people
         to_send_abroad = self.move_people_to_active_subgroups(
-            activities=activities, date=date, days_from_start=self.timer.now
+            activities=activities, date=date, days_from_start=self.timer.now, record=record
         )
         tock_interaction_timestep = perf_counter()
         rank_logger.info(
@@ -229,6 +229,7 @@ class ActivityManager:
         activities: List[str],
         date: datetime = datetime(2020, 2, 2),
         days_from_start=0,
+        record=None,
     ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
@@ -249,7 +250,7 @@ class ActivityManager:
 
         for person in self.world.people:
             self.policies.vaccine_distribution.apply(
-                person=person, date=date, active_policies=active_vaccine_policies
+                person=person, date=date, active_policies=active_vaccine_policies, record=record,
             )
             if person.dead or person.busy:
                 continue

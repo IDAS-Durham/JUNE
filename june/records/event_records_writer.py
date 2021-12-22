@@ -195,3 +195,20 @@ class SymptomsRecord(EventRecord):
         self.infected_ids.append(infected_id)
         self.new_symptoms.append(symptoms)
         self.infection_ids.append(infection_id)
+
+class VaccinesRecord(EventRecord):
+    def __init__(
+        self,
+        hdf5_filename,
+    ):
+        super().__init__(
+            hdf5_filename=hdf5_filename,
+            table_name="vaccines",
+            int_names=["vaccinated_ids", "dose_numbers"],
+            float_names=[],
+            str_names=[],
+        )
+
+    def accumulate(self, vaccinated_id, dose_number):
+        self.vaccinated_ids.append(vaccinated_id)
+        self.dose_numbers.append(dose_number)

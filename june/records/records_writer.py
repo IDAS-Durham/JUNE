@@ -21,6 +21,7 @@ from june.records.event_records_writer import (
     DeathsRecord,
     RecoveriesRecord,
     SymptomsRecord,
+    VaccinesRecord,
 )
 from june.records.static_records_writer import (
     PeopleRecord,
@@ -71,6 +72,7 @@ class Record:
             "deaths": DeathsRecord(hdf5_filename=filename),
             "recoveries": RecoveriesRecord(hdf5_filename=filename),
             "symptoms": SymptomsRecord(hdf5_filename=filename),
+            "vaccines": VaccinesRecord(hdf5_filename=filename),
         }
         if self.record_static_data:
             self.statics = {

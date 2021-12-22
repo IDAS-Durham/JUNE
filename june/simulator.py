@@ -237,7 +237,7 @@ class Simulator:
             )
             if self.activity_manager.policies.vaccine_distribution is not None:
                 self.activity_manager.policies.vaccine_distribution.update_vaccinated(
-                    self.world.people, date=self.timer.date
+                    self.world.people, date=self.timer.date, record=self.record,
                 )
         activities = self.timer.activities
         # apply events
@@ -257,7 +257,7 @@ class Simulator:
             n_people_from_abroad,
             n_people_going_abroad,
             to_send_abroad,  # useful for knowing who's MPI-ing, so can send extra info as needed.
-        ) = self.activity_manager.do_timestep()
+        ) = self.activity_manager.do_timestep(record=self.record)
         tick_interaction = perf_counter()
 
         # get the supergroup instances that are active in this time step:
