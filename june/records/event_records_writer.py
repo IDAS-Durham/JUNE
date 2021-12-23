@@ -59,8 +59,7 @@ class EventRecord:
 
 class InfectionRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -89,8 +88,7 @@ class InfectionRecord(EventRecord):
 
 class HospitalAdmissionsRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -107,8 +105,7 @@ class HospitalAdmissionsRecord(EventRecord):
 
 class ICUAdmissionsRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -125,8 +122,7 @@ class ICUAdmissionsRecord(EventRecord):
 
 class DischargesRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -143,8 +139,7 @@ class DischargesRecord(EventRecord):
 
 class DeathsRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -162,8 +157,7 @@ class DeathsRecord(EventRecord):
 
 class RecoveriesRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -180,8 +174,7 @@ class RecoveriesRecord(EventRecord):
 
 class SymptomsRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -196,10 +189,10 @@ class SymptomsRecord(EventRecord):
         self.new_symptoms.append(symptoms)
         self.infection_ids.append(infection_id)
 
+
 class VaccinesRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,

@@ -189,6 +189,7 @@ class VaccineTrajectory:
         dose_number = self.get_dose_number(date=date)
         return date == self.stages[dose_number].date_administered
 
+
 class VaccineDistribution(Policy):
     policy_type = "vaccine_distribution"
 
@@ -297,10 +298,8 @@ class VaccineDistribution(Policy):
             symptomatic_efficacies=self.symptomatic_efficacies,
         )
         self.vaccinated_ids.add(person.id)
-        if record is not None: 
-            record.events['vaccines'].accumulate(
-                person.id, 0
-            )
+        if record is not None:
+            record.events["vaccines"].accumulate(person.id, 0)
 
     def daily_vaccine_probability(self, days_passed):
         return self.group_coverage * (
@@ -312,7 +311,6 @@ class VaccineDistribution(Policy):
             days_passed = (date - self.start_time).days
             if random() < self.daily_vaccine_probability(days_passed=days_passed):
                 self.vaccinate(person=person, date=date, record=record)
-            
 
     def update_vaccine_effect(self, person, date, record):
         for infection_id in self.infection_ids:
@@ -333,11 +331,10 @@ class VaccineDistribution(Policy):
                 updated_effective_multiplier,
             )
         if record is not None and person.vaccine_trajectory.is_date_dose(date=date):
-            if person.id not in record.events['vaccines'].vaccinated_ids:
-                record.events['vaccines'].accumulate(
+            if person.id not in record.events["vaccines"].vaccinated_ids:
+                record.events["vaccines"].accumulate(
                     person.id, person.vaccine_trajectory.get_dose_number(date=date)
                 )
-
 
     def update_vaccinated(self, people, date, record):
         if self.vaccinated_ids:
@@ -370,7 +367,7 @@ class VaccineDistribution(Policy):
 class VaccineDistributions(PolicyCollection):
     policy_type = "vaccine_distribution"
 
-    def apply(self, person: Person, date: datetime, active_policies: List, record): 
+    def apply(self, person: Person, date: datetime, active_policies: List, record):
         for policy in active_policies:
             policy.apply(person=person, date=date, record=record)
 
