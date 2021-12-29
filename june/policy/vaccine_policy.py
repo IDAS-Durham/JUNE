@@ -52,7 +52,6 @@ class Vaccine:
         self.sterilisation_efficacies = self._parse_efficacies(sterilisation_efficacies)
         self.symptomatic_efficacies = self._parse_efficacies(symptomatic_efficacies)
 
-
     def _parse_efficacies(self, efficacies):
         ret = []
         for dd in efficacies:
@@ -63,7 +62,7 @@ class Vaccine:
             ret.append(dd_id)
         return ret
 
-    '''
+    """
     def _parse_efficacies(self, efficacies):
         return {
             getattr(infection_module, variant).infection_id(): parse_age_probabilities(
@@ -71,7 +70,7 @@ class Vaccine:
             )
             for variant, efficacy in efficacies.items()
         }
-    '''
+    """
 
     def get_efficacy(
         self, person: Person, infection_id: int, dose: int
@@ -105,23 +104,22 @@ class Vaccine:
         ----------
         person:
             person to get efficacy for
-        infection_id:
-            id of the infection
         dose:
             dose number
         """
-        
+
         return (
-            self.select_dose_age(self.sterilisation_efficacies,
-                dose=dose,
-                age=person.age),
-            self.select_dose_age(self.symptomatic_efficacies,
-                dose=dose,
-                age=person.age),
+            self.select_dose_age(
+                self.sterilisation_efficacies, dose=dose, age=person.age
+            ),
+            self.select_dose_age(
+                self.symptomatic_efficacies, dose=dose, age=person.age
+            ),
         )
 
     def select_dose_age(self, efficacy, dose, age):
-        return {k: v[age] for k,v in efficacy[dose].items()}
+        # TODO make this faster?
+        return {k: v[age] for k, v in efficacy[dose].items()}
 
 
 class VaccineStage:
@@ -205,16 +203,19 @@ class VaccineStagesGenerator:
         prior_effective_multiplier = person.immunity.effective_multiplier_dict
         prior_sterilisation_efficacy = {
             k: 1 - prior_susceptibility.get(k, 1.0)
-            for k, v in self.sterilisation_efficacies[0].items()
+            for k, v in self.vaccine.sterilisation_efficacies[0].items()
         }
         prior_symptomatic_efficacy = {
             k: 1 - prior_effective_multiplier.get(k, 1.0)
-            for k, v in self.symptomatic_efficacies[0].items()
+            for k, v in self.vaccine.symptomatic_efficacies[0].items()
         }
         stages = []
-        for i, days in enumerate(self.days_to_next_dose):
+        for i, days in enumerate(self.vaccine.days_to_next_dose):
             date = date_administered + datetime.timedelta(days=days)
-            sterilisation_efficacy, symptomatic_efficacy = vaccine.get_efficacy_for_dose_person(person=person, dose=i)
+            (
+                sterilisation_efficacy,
+                symptomatic_efficacy,
+            ) = self.vaccine.get_efficacy_for_dose_person(person=person, dose=i)
             stage = VaccineStage(
                 date_administered=date,
                 days_to_effective=self.vaccine.days_to_effective[i],
@@ -223,8 +224,8 @@ class VaccineStagesGenerator:
                 prior_sterilisation_efficacy=prior_sterilisation_efficacy,
                 prior_symptomatic_efficacy=prior_symptomatic_efficacy,
             )
-            prior_sterilisation_efficacy = self.sterilisation_efficacies[i]
-            prior_symptomatic_efficacy = self.symptomatic_efficacies[i]
+            prior_sterilisation_efficacy = sterilisation_efficacy
+            prior_symptomatic_efficacy = symptomatic_efficacy
             stages.append(stage)
         return stages
 
@@ -235,10 +236,6 @@ class VaccineTrajectory:
         person,
         date_administered,
         vaccine: "Vaccine",
-        days_to_next_dose: List[int],
-        days_to_effective: List[int],
-        sterilisation_efficacies: List[Dict],
-        symptomatic_efficacies: List[Dict],
     ):
         stage_generator = VaccineStagesGenerator(
             vaccine=vaccine,
@@ -336,27 +333,14 @@ class VaccineDistribution(Policy):
         """
 
         super().__init__(start_time=start_time, end_time=end_time)
-        self.days_to_next_dose = days_to_next_dose
-        self.days_to_effective = days_to_effective
-        self.sterilisation_efficacies = self._parse_efficacies(sterilisation_efficacies)
-        self.symptomatic_efficacies = self._parse_efficacies(symptomatic_efficacies)
+        self.vaccine = vaccine
         self.group_attribute, self.group_value = self.process_group_description(
             group_by, group_type
         )
         self.total_days = (self.end_time - self.start_time).days
         self.group_coverage = group_coverage
-        self.infection_ids = self._read_infection_ids(self.sterilisation_efficacies)
+        self.infection_ids = self._read_infection_ids(vaccine.sterilisation_efficacies)
         self.vaccinated_ids = set()
-
-    def _parse_efficacies(self, efficacies):
-        ret = []
-        for dd in efficacies:
-            dd_id = {}
-            for key in dd:
-                infection_id = getattr(infection_module, key).infection_id()
-                dd_id[infection_id] = dd[key]
-            ret.append(dd_id)
-        return ret
 
     def _read_infection_ids(self, sterilisation_efficacies):
         ids = set()
@@ -396,10 +380,7 @@ class VaccineDistribution(Policy):
         person.vaccine_trajectory = VaccineTrajectory(
             person=person,
             date_administered=date,
-            days_to_next_dose=self.days_to_next_dose,
-            days_to_effective=self.days_to_effective,
-            sterilisation_efficacies=self.sterilisation_efficacies,
-            symptomatic_efficacies=self.symptomatic_efficacies,
+            vaccine=self.vaccine,
         )
         self.vaccinated_ids.add(person.id)
         if record is not None:
@@ -416,7 +397,7 @@ class VaccineDistribution(Policy):
             if random() < self.daily_vaccine_probability(days_passed=days_passed):
                 self.vaccinate(person=person, date=date, record=record)
 
-    def update_vaccine_effect(self, person, date, record):
+    def update_vaccine_effect(self, person, date, record=None):
         for infection_id in self.infection_ids:
             updated_susceptibility = person.vaccine_trajectory.susceptibility(
                 date=date, infection_id=infection_id
@@ -442,7 +423,7 @@ class VaccineDistribution(Policy):
                     person.id, person.vaccine_trajectory.get_dose_number(date=date)
                 )
 
-    def update_vaccinated(self, people, date, record):
+    def update_vaccinated(self, people, date, record=None):
         if self.vaccinated_ids:
             ids_to_remove = set()
             for pid in self.vaccinated_ids:
