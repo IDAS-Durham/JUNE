@@ -111,61 +111,59 @@ limit_long_commute:
   going_to_work_probability: 0.2 # once a week
 
 vaccine_distribution:
-  vaccines:
-    vaccination_campaigns:
-      # Groups 1-4 Pfizer/BioNTech
-      1:
-          start_time: 2020-12-08 
-          end_time: 2020-02-15 
-          group_by: 'residence'
-          group_type: 'care_home'
-          group_coverage: 0.5
-          vaccine_type: 'Pfizer'
-          n_doses: 2
-      2:
-          start_time: 2020-01-01 
-          end_time: 2020-02-15 
-          group_by: 'age'
-          group_type: '70-100'
-          group_coverage: 0.5
-          vaccine_type: 'Pfizer'
-          n_doses: 2
-      3:
-          start_time: 2020-01-01 
-          end_time: 2020-02-15 
-          group_by: 'primary_activity'
-          group_type: 'care_home'
-          group_coverage: 0.5
-          vaccine_type: 'Pfizer'
-          n_doses: 2
+    # Groups 1-4 Pfizer/BioNTech
+    1:
+        start_time: 2020-12-08 
+        end_time: 2020-02-15 
+        group_by: 'residence'
+        group_type: 'care_home'
+        group_coverage: 0.5
+        vaccine_type: 'Pfizer'
+        n_doses: 2
+    2:
+        start_time: 2020-01-01 
+        end_time: 2020-02-15 
+        group_by: 'age'
+        group_type: '70-100'
+        group_coverage: 0.5
+        vaccine_type: 'Pfizer'
+        n_doses: 2
+    3:
+        start_time: 2020-01-01 
+        end_time: 2020-02-15 
+        group_by: 'primary_activity'
+        group_type: 'care_home'
+        group_coverage: 0.5
+        vaccine_type: 'Pfizer'
+        n_doses: 2
 
-      # Groups 1-4 Oxford/AstraZeneca
-      4:
-          start_time: 2020-01-03
-          end_time: 2020-02-15 
-          group_by: 'residence'
-          group_type: 'care_home'
-          group_coverage: 0.5
-          vaccine_type: 'Pfizer'
-          n_doses: 2
+    # Groups 1-4 Oxford/AstraZeneca
+    4:
+        start_time: 2020-01-03
+        end_time: 2020-02-15 
+        group_by: 'residence'
+        group_type: 'care_home'
+        group_coverage: 0.5
+        vaccine_type: 'Pfizer'
+        n_doses: 2
 
-      5:
-          start_time: 2020-01-03
-          end_time: 2020-02-15 
-          group_by: 'age'
-          group_type: '70-100'
-          group_coverage: 0.5
-          vaccine_type: 'Pfizer'
-          n_doses: 2
+    5:
+        start_time: 2020-01-03
+        end_time: 2020-02-15 
+        group_by: 'age'
+        group_type: '70-100'
+        group_coverage: 0.5
+        vaccine_type: 'Pfizer'
+        n_doses: 2
 
-      6:
-          start_time: 2020-01-03
-          end_time: 2020-02-15 
-          group_by: 'primary_activity'
-          group_type: 'care_home'
-          group_coverage: 0.5
-          vaccine_type: 'AstraZeneca'
-          n_doses: 2
+    6:
+        start_time: 2020-01-03
+        end_time: 2020-02-15 
+        group_by: 'primary_activity'
+        group_type: 'care_home'
+        group_coverage: 0.5
+        vaccine_type: 'AstraZeneca'
+        n_doses: 2
 
 
 quarantine:
