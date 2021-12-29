@@ -115,6 +115,7 @@ vaccine_distribution:
     1:
         start_time: 2020-12-08 
         end_time: 2020-02-15 
+        days_to_next_dose: [0,14]
         group_by: 'residence'
         group_type: 'care_home'
         group_coverage: 0.5
@@ -123,6 +124,7 @@ vaccine_distribution:
     2:
         start_time: 2020-01-01 
         end_time: 2020-02-15 
+        days_to_next_dose: [0,14]
         group_by: 'age'
         group_type: '70-100'
         group_coverage: 0.5
@@ -131,6 +133,7 @@ vaccine_distribution:
     3:
         start_time: 2020-01-01 
         end_time: 2020-02-15 
+        days_to_next_dose: [0,14]
         group_by: 'primary_activity'
         group_type: 'care_home'
         group_coverage: 0.5
@@ -141,6 +144,7 @@ vaccine_distribution:
     4:
         start_time: 2020-01-03
         end_time: 2020-02-15 
+        days_to_next_dose: [0,14]
         group_by: 'residence'
         group_type: 'care_home'
         group_coverage: 0.5
@@ -150,6 +154,7 @@ vaccine_distribution:
     5:
         start_time: 2020-01-03
         end_time: 2020-02-15 
+        days_to_next_dose: [0,14]
         group_by: 'age'
         group_type: '70-100'
         group_coverage: 0.5
@@ -159,6 +164,7 @@ vaccine_distribution:
     6:
         start_time: 2020-01-03
         end_time: 2020-02-15 
+        days_to_next_dose: [0,14]
         group_by: 'primary_activity'
         group_type: 'care_home'
         group_coverage: 0.5

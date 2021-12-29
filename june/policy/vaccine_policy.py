@@ -88,8 +88,9 @@ class VaccineStage:
 
 
 class VaccineStagesGenerator:
-    def __init__(self, vaccine):
+    def __init__(self, vaccine, days_to_next_dose):
         self.vaccine = vaccine
+        self.days_to_next_dose = days_to_next_dose
 
     def __call__(
         self,
@@ -108,7 +109,7 @@ class VaccineStagesGenerator:
         }
         stages = []
         for i in range(self.vaccine.n_doses):
-            days = self.vaccine.days_to_next_dose[i]
+            days = self.days_to_next_dose[i]
             date = date_administered + datetime.timedelta(days=days)
             (
                 sterilisation_efficacy,
@@ -134,9 +135,11 @@ class VaccineTrajectory:
         person,
         date_administered,
         vaccine: "Vaccine",
+        days_to_next_dose,
     ):
         stage_generator = VaccineStagesGenerator(
             vaccine=vaccine,
+            days_to_next_dose=days_to_next_dose,
         )
         stages = stage_generator(person=person, date_administered=date_administered)
         self.stages = sorted(stages, key=operator.attrgetter("date_administered"))
@@ -198,6 +201,7 @@ class VaccineDistribution(Policy):
     def __init__(
         self,
         vaccine_type: "str",
+        days_to_next_dose: List[int],
         n_doses: int = 2,
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
@@ -212,12 +216,7 @@ class VaccineDistribution(Policy):
         ----------
         days_to_next_dose: list of integers with the days between doses.
         (It'd normally start with 0 since the first dose happens on the first date)
-        days_to_effective: number of days it takes for each dose to be fully effective.
-        sterilisation_efficacies: List of dictionaries with sterilisation efficacies.
-        Example [ {Delta: 0.1, Omicron: 0.2}, {Delta:0.2, Omicron:0.3} ... ], where dictionary keys are infection classes
-        and values efficacies.
-        symptomatic_efficacies: List of dictionaries with sterilisation efficacies.
-        start_time: start time of vaccine rollout
+       start_time: start time of vaccine rollout
         end_time: end time of vaccine rollout
         group_description: type of people to get the vaccine, currently support:
             by: either residence, primary activity or age
@@ -233,6 +232,7 @@ class VaccineDistribution(Policy):
 
         super().__init__(start_time=start_time, end_time=end_time)
         self.vaccine = Vaccine.from_config(vaccine_type=vaccine_type, n_doses=n_doses)
+        self.days_to_next_dose = days_to_next_dose
         self.group_attribute, self.group_value = self.process_group_description(
             group_by, group_type
         )
@@ -282,6 +282,7 @@ class VaccineDistribution(Policy):
             person=person,
             date_administered=date,
             vaccine=self.vaccine,
+            days_to_next_dose=self.days_to_next_dose,
         )
         self.vaccinated_ids.add(person.id)
         if record is not None:

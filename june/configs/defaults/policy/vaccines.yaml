@@ -1,5 +1,4 @@
 Pfizer:
-  days_to_next_dose: [0,14,21]
   days_to_effective: [12,7,5]
   sterilisation_efficacies:
     - Covid19:
@@ -17,7 +16,6 @@ Pfizer:
         0-100: 0.98
 
 AstraZeneca:
-  days_to_next_dose: [0,14,21]
   days_to_effective: [12,7,5]
   sterilisation_efficacies:
     - Covid19:
@@ -36,7 +34,6 @@ AstraZeneca:
 
 
 Test:
-  days_to_next_dose: [0,9,16]
   days_to_effective: [1,2,10]
   sterilisation_efficacies:
       - Delta:

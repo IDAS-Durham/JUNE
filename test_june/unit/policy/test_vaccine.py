@@ -22,7 +22,6 @@ def create_vaccine():
     return Vaccine(
             'pfizer',
             n_doses=3,
-            days_to_next_dose = [0,9,16],
             days_to_effective = [1,2,10],
             sterilisation_efficacies = [ 
                 {'Delta': {'0-100':0.3}, 'Omicron': {'0-100':0.2}},
@@ -84,7 +83,8 @@ def create_vaccine_plan(vaccine,):
     return VaccineTrajectory(
         person=person,
         date_administered=datetime.datetime(2100, 1, 1),
-        vaccine=vaccine
+        vaccine=vaccine,
+        days_to_next_dose = [0,9,16],
     )
 
 
@@ -95,7 +95,6 @@ def create_generated_stages():
     vaccine = Vaccine(
             'pfizer',
             n_doses=3,
-            days_to_next_dose = [0,10,20],
             days_to_effective = [1,2,3],
             sterilisation_efficacies = [ 
                 {'Delta': {'0-100':0.2},},
@@ -112,6 +111,8 @@ def create_generated_stages():
 
     vg = VaccineStagesGenerator(
             vaccine=vaccine,
+            days_to_next_dose = [0,10,20],
+
     )
     return vg(person, date)
 
@@ -124,7 +125,6 @@ class TestVaccine:
         vaccine = Vaccine(
                 'pfizer',
                 n_doses=3,
-                days_to_next_dose = [0,10],
                 days_to_effective = [0,10],
                 sterilisation_efficacies = effectiveness,
                 symptomatic_efficacies= effectiveness,
@@ -261,6 +261,7 @@ class TestVaccination:
         person = Person.from_attributes(age=30, sex="f")
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
+            days_to_next_dose=[0,9,16],
             n_doses=3,
             group_by="age",
             group_type="20-40",
@@ -284,6 +285,7 @@ class TestVaccination:
         care_home.add(person)
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
+            days_to_next_dose=[0,9,16],
             n_doses=3,
             group_by="residence",
             group_type="care_home",
@@ -300,6 +302,7 @@ class TestVaccination:
         date = datetime.datetime(2100, 1, 1)
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
+            days_to_next_dose=[0,9,16],
             n_doses=3,
             group_by="age",
             group_type="20-40",
@@ -336,6 +339,7 @@ class TestVaccination:
         old_person = Person.from_attributes(age=80, sex="f")
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
+            days_to_next_dose=[0,9,16],
             n_doses=3,
             group_by="age",
             group_type="20-40",
@@ -381,6 +385,7 @@ class TestVaccination:
         young_person.immunity.susceptibility_dict[delta_id] = 0.0
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
+            days_to_next_dose=[0,9,16],
             n_doses=3,
             group_by="age",
             group_type="20-40",
@@ -407,6 +412,7 @@ class TestVaccination:
         old_person = Person.from_attributes(age=80, sex="f")
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
+            days_to_next_dose=[0,9,16],
             n_doses=3,
             group_by="age",
             group_type="20-40",
@@ -438,6 +444,7 @@ class TestVaccinationInitialization:
     def make_policy(self, ):
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
+            days_to_next_dose=[0,9,16],
             n_doses=3,
             start_time="2021-03-01",
             end_time="2021-04-01",

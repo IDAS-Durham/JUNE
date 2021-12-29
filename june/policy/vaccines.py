@@ -15,7 +15,6 @@ class Vaccine:
         self,
         name: str,
         n_doses: int,
-        days_to_next_dose: List[int],
         days_to_effective: List[int],
         sterilisation_efficacies,
         symptomatic_efficacies,
@@ -27,8 +26,6 @@ class Vaccine:
         ----------
         name:
            vaccine name
-        days_to_next_dose:
-            number of days to wait for next dose
         days_to_effective:
             number of days it takes for current dose to be fully effective
         sterilisation_efficacy
@@ -39,14 +36,9 @@ class Vaccine:
 
         self.name = name
         self.n_doses = n_doses
-        self.days_to_next_dose = days_to_next_dose
         self.days_to_effective = days_to_effective
         self.sterilisation_efficacies = self._parse_efficacies(sterilisation_efficacies)
         self.symptomatic_efficacies = self._parse_efficacies(symptomatic_efficacies)
-        print('Sterrr')
-        person = Person(age=50)
-        print(self.get_efficacy_for_dose_person(person, dose=0))
-        print(self.get_efficacy_for_dose_person(person, dose=1))
 
     @classmethod
     def from_config(
@@ -61,7 +53,6 @@ class Vaccine:
         return cls(
             name=vaccine_type,
             n_doses=n_doses,
-            days_to_next_dose=config["days_to_next_dose"],
             days_to_effective=config["days_to_effective"],
             sterilisation_efficacies=config["sterilisation_efficacies"],
             symptomatic_efficacies=config["symptomatic_efficacies"],
