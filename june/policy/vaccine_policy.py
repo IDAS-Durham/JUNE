@@ -107,7 +107,8 @@ class VaccineStagesGenerator:
             for k, v in self.vaccine.symptomatic_efficacies[0].items()
         }
         stages = []
-        for i, days in enumerate(self.vaccine.days_to_next_dose):
+        for i in range(self.vaccine.n_doses):
+            days = self.vaccine.days_to_next_dose[i]
             date = date_administered + datetime.timedelta(days=days)
             (
                 sterilisation_efficacy,
@@ -197,7 +198,7 @@ class VaccineDistribution(Policy):
     def __init__(
         self,
         vaccine_type: "str",
-        n_doses: int=2,
+        n_doses: int = 2,
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
         group_by: str = "age",  # 'residence',
@@ -231,16 +232,15 @@ class VaccineDistribution(Policy):
         """
 
         super().__init__(start_time=start_time, end_time=end_time)
-        self.vaccine = Vaccine.from_config(
-                vaccine_type=vaccine_type,
-                n_doses=n_doses
-        )
+        self.vaccine = Vaccine.from_config(vaccine_type=vaccine_type, n_doses=n_doses)
         self.group_attribute, self.group_value = self.process_group_description(
             group_by, group_type
         )
         self.total_days = (self.end_time - self.start_time).days
         self.group_coverage = group_coverage
-        self.infection_ids = self._read_infection_ids(self.vaccine.sterilisation_efficacies)
+        self.infection_ids = self._read_infection_ids(
+            self.vaccine.sterilisation_efficacies
+        )
         self.vaccinated_ids = set()
 
     def _read_infection_ids(self, sterilisation_efficacies):
@@ -321,7 +321,9 @@ class VaccineDistribution(Policy):
         if record is not None and person.vaccine_trajectory.is_date_dose(date=date):
             if person.id not in record.events["vaccines"].vaccinated_ids:
                 record.events["vaccines"].accumulate(
-                    person.id, self.vaccine.name, person.vaccine_trajectory.get_dose_number(date=date)
+                    person.id,
+                    self.vaccine.name,
+                    person.vaccine_trajectory.get_dose_number(date=date),
                 )
 
     def update_vaccinated(self, people, date, record=None):

@@ -21,6 +21,7 @@ omicron_id = Omicron.infection_id()
 def create_vaccine():
     return Vaccine(
             'pfizer',
+            n_doses=3,
             days_to_next_dose = [0,9,16],
             days_to_effective = [1,2,10],
             sterilisation_efficacies = [ 
@@ -93,6 +94,7 @@ def create_generated_stages():
     date = datetime.datetime(2100, 1, 3)
     vaccine = Vaccine(
             'pfizer',
+            n_doses=3,
             days_to_next_dose = [0,10,20],
             days_to_effective = [1,2,3],
             sterilisation_efficacies = [ 
@@ -121,6 +123,7 @@ class TestVaccine:
         ]
         vaccine = Vaccine(
                 'pfizer',
+                n_doses=3,
                 days_to_next_dose = [0,10],
                 days_to_effective = [0,10],
                 sterilisation_efficacies = effectiveness,
