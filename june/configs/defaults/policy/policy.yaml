@@ -120,7 +120,7 @@ vaccine_distribution:
         group_type: 'care_home'
         group_coverage: 0.5
         vaccine_type: 'Pfizer'
-        n_doses: 2
+        doses: [0,1]
     2:
         start_time: 2020-01-01 
         end_time: 2020-02-15 
@@ -129,7 +129,7 @@ vaccine_distribution:
         group_type: '70-100'
         group_coverage: 0.5
         vaccine_type: 'Pfizer'
-        n_doses: 2
+        doses: [0,1]
     3:
         start_time: 2020-01-01 
         end_time: 2020-02-15 
@@ -138,7 +138,7 @@ vaccine_distribution:
         group_type: 'care_home'
         group_coverage: 0.5
         vaccine_type: 'Pfizer'
-        n_doses: 2
+        doses: [0,1]
 
     # Groups 1-4 Oxford/AstraZeneca
     4:
@@ -149,7 +149,7 @@ vaccine_distribution:
         group_type: 'care_home'
         group_coverage: 0.5
         vaccine_type: 'Pfizer'
-        n_doses: 2
+        doses: [0,1]
 
     5:
         start_time: 2020-01-03
@@ -159,7 +159,7 @@ vaccine_distribution:
         group_type: '70-100'
         group_coverage: 0.5
         vaccine_type: 'Pfizer'
-        n_doses: 2
+        doses: [0,1]
 
     6:
         start_time: 2020-01-03
@@ -169,7 +169,7 @@ vaccine_distribution:
         group_type: 'care_home'
         group_coverage: 0.5
         vaccine_type: 'AstraZeneca'
-        n_doses: 2
+        doses: [0,1]
 
 
 quarantine:

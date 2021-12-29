@@ -14,7 +14,7 @@ class Vaccine:
     def __init__(
         self,
         name: str,
-        n_doses: int,
+        doses: List[int],
         days_to_effective: List[int],
         sterilisation_efficacies,
         symptomatic_efficacies,
@@ -35,7 +35,7 @@ class Vaccine:
         """
 
         self.name = name
-        self.n_doses = n_doses
+        self.doses = doses
         self.days_to_effective = days_to_effective
         self.sterilisation_efficacies = self._parse_efficacies(sterilisation_efficacies)
         self.symptomatic_efficacies = self._parse_efficacies(symptomatic_efficacies)
@@ -44,7 +44,7 @@ class Vaccine:
     def from_config(
         cls,
         vaccine_type: str,
-        n_doses: int,
+        doses: List[int],
         config_file: Path = default_config_filename,
     ):
         with open(config_file) as f:
@@ -52,7 +52,7 @@ class Vaccine:
         config = config[vaccine_type]
         return cls(
             name=vaccine_type,
-            n_doses=n_doses,
+            doses=doses,
             days_to_effective=config["days_to_effective"],
             sterilisation_efficacies=config["sterilisation_efficacies"],
             symptomatic_efficacies=config["symptomatic_efficacies"],

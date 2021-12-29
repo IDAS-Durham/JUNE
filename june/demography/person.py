@@ -42,7 +42,7 @@ class Person(dataobject):
     lockdown_status: str = None
     # vaccine
     vaccine_trajectory: "VaccineTrajectory" = None
-    vaccinated: bool = False
+    vaccinated: int = None
     # comorbidity
     comorbidity: str = None
     # commute
@@ -181,10 +181,6 @@ class Person(dataobject):
         if self.work_super_area is None:
             return None
         return self.work_super_area.city
-
-    @property
-    def should_be_vaccinated(self):
-        return (self.vaccine_trajectory is None) and (not self.vaccinated)
 
     @property
     def available(self):

@@ -108,13 +108,14 @@ class VaccineStagesGenerator:
             for k, v in self.vaccine.symptomatic_efficacies[0].items()
         }
         stages = []
-        for i in range(self.vaccine.n_doses):
+        for dose_number in self.vaccine.doses:
+            i = dose_number - self.vaccine.doses[0]
             days = self.days_to_next_dose[i]
             date = date_administered + datetime.timedelta(days=days)
             (
                 sterilisation_efficacy,
                 symptomatic_efficacy,
-            ) = self.vaccine.get_efficacy_for_dose_person(person=person, dose=i)
+            ) = self.vaccine.get_efficacy_for_dose_person(person=person, dose=dose_number)
             stage = VaccineStage(
                 date_administered=date,
                 days_to_effective=self.vaccine.days_to_effective[i],
@@ -148,6 +149,7 @@ class VaccineTrajectory:
         ]
         self.prior_susceptibility = person.immunity.susceptibility_dict
         self.prior_effective_multiplier = person.immunity.effective_multiplier_dict
+        self.doses = vaccine.doses
 
     def susceptibility(self, date, infection_id: int):
         return 1.0 - self.get_vaccine_efficacy(
@@ -165,7 +167,7 @@ class VaccineTrajectory:
         efficacy_type: str,
         infection_id: int,
     ):
-        index_stage = self.get_dose_number(date=date)
+        index_stage = self.get_dose_number(date=date) - self.doses[0]
         stage = self.stages[index_stage]
         return stage.get_vaccine_efficacy(
             date=date, efficacy_type=efficacy_type, infection_id=infection_id
@@ -188,11 +190,12 @@ class VaccineTrajectory:
             np.searchsorted(self.stage_days, days_from_start, side="right") - 1,
             len(self.stages) - 1,
         )
-        return index_stage
+        return self.doses[index_stage]
 
     def is_date_dose(self, date):
         dose_number = self.get_dose_number(date=date)
-        return date == self.stages[dose_number].date_administered
+        stage_idx = dose_number - self.doses[0]
+        return date == self.stages[stage_idx].date_administered
 
 
 class VaccineDistribution(Policy):
@@ -202,7 +205,7 @@ class VaccineDistribution(Policy):
         self,
         vaccine_type: "str",
         days_to_next_dose: List[int],
-        n_doses: int = 2,
+        doses: List[int] = [0,1],
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
         group_by: str = "age",  # 'residence',
@@ -231,7 +234,7 @@ class VaccineDistribution(Policy):
         """
 
         super().__init__(start_time=start_time, end_time=end_time)
-        self.vaccine = Vaccine.from_config(vaccine_type=vaccine_type, n_doses=n_doses)
+        self.vaccine = Vaccine.from_config(vaccine_type=vaccine_type, doses=doses)
         self.days_to_next_dose = days_to_next_dose
         self.group_attribute, self.group_value = self.process_group_description(
             group_by, group_type
@@ -256,14 +259,14 @@ class VaccineDistribution(Policy):
         elif group_by == "age":
             return f"{group_by}", group_type
 
-    def is_target_group(self, person):
+    def is_target_group(self, person,):
         if self.group_attribute != "age":
             try:
                 if (
                     operator.attrgetter(self.group_attribute)(person)
                     == self.group_value
                 ):
-                    return True
+                        return True
             except Exception:
                 return False
         else:
@@ -275,9 +278,16 @@ class VaccineDistribution(Policy):
                 return True
         return False
 
+    def should_be_vaccinated(self, person):
+        starting_dose = self.vaccine.doses[0]
+        if person.vaccinated is not None and starting_dose == 0:
+            return False
+        if starting_dose > 0 and (person.vaccinated is None or person.vaccinated != starting_dose - 1):
+            return False
+        return True
+
     def vaccinate(self, person, date, record):
-        # TODO: implement varying compliance per step
-        person.vaccinated = True
+        person.vaccinated = self.vaccine.doses[0] 
         person.vaccine_trajectory = VaccineTrajectory(
             person=person,
             date_administered=date,
@@ -286,7 +296,7 @@ class VaccineDistribution(Policy):
         )
         self.vaccinated_ids.add(person.id)
         if record is not None:
-            record.events["vaccines"].accumulate(person.id, self.vaccine.name, 0)
+            record.events["vaccines"].accumulate(person.id, self.vaccine.name, self.vaccine.doses[0])
 
     def daily_vaccine_probability(self, days_passed):
         return self.group_coverage * (
@@ -294,7 +304,7 @@ class VaccineDistribution(Policy):
         )
 
     def apply(self, person: Person, date: datetime, record=None):
-        if person.should_be_vaccinated and self.is_target_group(person):
+        if self.should_be_vaccinated(person,) and self.is_target_group(person):
             days_passed = (date - self.start_time).days
             if random() < self.daily_vaccine_probability(days_passed=days_passed):
                 self.vaccinate(person=person, date=date, record=record)
@@ -319,12 +329,14 @@ class VaccineDistribution(Policy):
                 ),
                 updated_effective_multiplier,
             )
-        if record is not None and person.vaccine_trajectory.is_date_dose(date=date):
-            if person.id not in record.events["vaccines"].vaccinated_ids:
+        if person.vaccine_trajectory.is_date_dose(date=date):
+            dose_number = person.vaccine_trajectory.get_dose_number(date=date)
+            person.vaccinated = dose_number
+            if record is not None and person.id not in record.events["vaccines"].vaccinated_ids:
                 record.events["vaccines"].accumulate(
                     person.id,
                     self.vaccine.name,
-                    person.vaccine_trajectory.get_dose_number(date=date),
+                    dose_number,
                 )
 
     def update_vaccinated(self, people, date, record=None):
