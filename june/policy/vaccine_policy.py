@@ -115,7 +115,9 @@ class VaccineStagesGenerator:
             (
                 sterilisation_efficacy,
                 symptomatic_efficacy,
-            ) = self.vaccine.get_efficacy_for_dose_person(person=person, dose=dose_number)
+            ) = self.vaccine.get_efficacy_for_dose_person(
+                person=person, dose=dose_number
+            )
             stage = VaccineStage(
                 date_administered=date,
                 days_to_effective=self.vaccine.days_to_effective[i],
@@ -205,7 +207,7 @@ class VaccineDistribution(Policy):
         self,
         vaccine_type: "str",
         days_to_next_dose: List[int],
-        doses: List[int] = [0,1],
+        doses: List[int] = [0, 1],
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
         group_by: str = "age",  # 'residence',
@@ -213,24 +215,24 @@ class VaccineDistribution(Policy):
         group_coverage: float = 1.0,
     ):
         """
-        Policy to distribute vaccines among a population
+         Policy to distribute vaccines among a population
 
-        Parameters
-        ----------
-        days_to_next_dose: list of integers with the days between doses.
-        (It'd normally start with 0 since the first dose happens on the first date)
-       start_time: start time of vaccine rollout
-        end_time: end time of vaccine rollout
-        group_description: type of people to get the vaccine, currently support:
-            by: either residence, primary activity or age
-            group: group type e.g. care_home for residence or XX-YY for age range
-        group_coverage: % of group to be left as having target susceptibility after vaccination
+         Parameters
+         ----------
+         days_to_next_dose: list of integers with the days between doses.
+         (It'd normally start with 0 since the first dose happens on the first date)
+        start_time: start time of vaccine rollout
+         end_time: end time of vaccine rollout
+         group_description: type of people to get the vaccine, currently support:
+             by: either residence, primary activity or age
+             group: group type e.g. care_home for residence or XX-YY for age range
+         group_coverage: % of group to be left as having target susceptibility after vaccination
 
-        Assumptions
-        -----------
-        - The chance of getting your first dose in the first first_rollout_days days is uniform
-        - The target susceptibility after the first dose is half that of after the second dose
-        - The target susceptibility after the second dose is 1-efficacy of the vaccine
+         Assumptions
+         -----------
+         - The chance of getting your first dose in the first first_rollout_days days is uniform
+         - The target susceptibility after the first dose is half that of after the second dose
+         - The target susceptibility after the second dose is 1-efficacy of the vaccine
         """
 
         super().__init__(start_time=start_time, end_time=end_time)
@@ -259,14 +261,17 @@ class VaccineDistribution(Policy):
         elif group_by == "age":
             return f"{group_by}", group_type
 
-    def is_target_group(self, person,):
+    def is_target_group(
+        self,
+        person,
+    ):
         if self.group_attribute != "age":
             try:
                 if (
                     operator.attrgetter(self.group_attribute)(person)
                     == self.group_value
                 ):
-                        return True
+                    return True
             except Exception:
                 return False
         else:
@@ -282,12 +287,14 @@ class VaccineDistribution(Policy):
         starting_dose = self.vaccine.doses[0]
         if person.vaccinated is not None and starting_dose == 0:
             return False
-        if starting_dose > 0 and (person.vaccinated is None or person.vaccinated != starting_dose - 1):
+        if starting_dose > 0 and (
+            person.vaccinated is None or person.vaccinated != starting_dose - 1
+        ):
             return False
         return True
 
     def vaccinate(self, person, date, record):
-        person.vaccinated = self.vaccine.doses[0] 
+        person.vaccinated = self.vaccine.doses[0]
         person.vaccine_trajectory = VaccineTrajectory(
             person=person,
             date_administered=date,
@@ -296,7 +303,9 @@ class VaccineDistribution(Policy):
         )
         self.vaccinated_ids.add(person.id)
         if record is not None:
-            record.events["vaccines"].accumulate(person.id, self.vaccine.name, self.vaccine.doses[0])
+            record.events["vaccines"].accumulate(
+                person.id, self.vaccine.name, self.vaccine.doses[0]
+            )
 
     def daily_vaccine_probability(self, days_passed):
         return self.group_coverage * (
@@ -304,7 +313,12 @@ class VaccineDistribution(Policy):
         )
 
     def apply(self, person: Person, date: datetime, record=None):
-        if self.should_be_vaccinated(person,) and self.is_target_group(person):
+        if (
+            self.should_be_vaccinated(
+                person,
+            )
+            and self.is_target_group(person)
+        ):
             days_passed = (date - self.start_time).days
             if random() < self.daily_vaccine_probability(days_passed=days_passed):
                 self.vaccinate(person=person, date=date, record=record)
@@ -332,7 +346,10 @@ class VaccineDistribution(Policy):
         if person.vaccine_trajectory.is_date_dose(date=date):
             dose_number = person.vaccine_trajectory.get_dose_number(date=date)
             person.vaccinated = dose_number
-            if record is not None and person.id not in record.events["vaccines"].vaccinated_ids:
+            if (
+                record is not None
+                and person.id not in record.events["vaccines"].vaccinated_ids
+            ):
                 record.events["vaccines"].accumulate(
                     person.id,
                     self.vaccine.name,

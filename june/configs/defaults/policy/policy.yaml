@@ -118,7 +118,7 @@ vaccine_distribution:
         days_to_next_dose: [0,14]
         group_by: 'residence'
         group_type: 'care_home'
-        group_coverage: 0.5
+        group_coverage: 1.
         vaccine_type: 'Pfizer'
         doses: [0,1]
     2:
@@ -170,6 +170,17 @@ vaccine_distribution:
         group_coverage: 0.5
         vaccine_type: 'AstraZeneca'
         doses: [0,1]
+
+    7:
+        start_time: 2021-03-01 
+        end_time: 2021-03-10 
+        days_to_next_dose: [0]
+        group_by: 'residence'
+        group_type: 'care_home'
+        group_coverage: 0.95
+        vaccine_type: 'Pfizer'
+        doses: [2]
+
 
 
 quarantine:
