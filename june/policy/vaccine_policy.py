@@ -20,108 +20,6 @@ logger = logging.getLogger("vaccination")
 # TODO: Generalize to varying functional forms for waning, with extra params
 
 
-class Vaccine:
-    def __init__(
-        self,
-        name: str,
-        days_to_next_dose: List[int],
-        days_to_effective: List[int],
-        sterilisation_efficacies,
-        symptomatic_efficacies,
-    ):
-        """
-        Class defining a vaccine type and its effectiveness
-
-        Parameters
-        ----------
-        name:
-           vaccine name
-        days_to_next_dose:
-            number of days to wait for next dose
-        days_to_effective:
-            number of days it takes for current dose to be fully effective
-        sterilisation_efficacy
-            final full efficacy against infection, by variant and age
-        symptomatic_efficacy
-            final full efficacy against symptoms, by variant and age
-        """
-
-        self.name = name
-        self.days_to_next_dose = days_to_next_dose
-        self.days_to_effective = days_to_effective
-        self.sterilisation_efficacies = self._parse_efficacies(sterilisation_efficacies)
-        self.symptomatic_efficacies = self._parse_efficacies(symptomatic_efficacies)
-
-    def _parse_efficacies(self, efficacies):
-        ret = []
-        for dd in efficacies:
-            dd_id = {}
-            for key in dd:
-                infection_id = getattr(infection_module, key).infection_id()
-                dd_id[infection_id] = parse_age_probabilities(dd[key])
-            ret.append(dd_id)
-        return ret
-
-    """
-    def _parse_efficacies(self, efficacies):
-        return {
-            getattr(infection_module, variant).infection_id(): parse_age_probabilities(
-                efficacy
-            )
-            for variant, efficacy in efficacies.items()
-        }
-    """
-
-    def get_efficacy(
-        self, person: Person, infection_id: int, dose: int
-    ) -> Tuple[float, float]:
-        """
-        Get sterilisation and symptomatic efficacy of a given dose
-        for a person and variant
-
-        Parameters
-        ----------
-        person:
-            person to get efficacy for
-        infection_id:
-            id of the infection
-        dose:
-            dose number
-        """
-        return (
-            self.sterilisation_efficacies[dose][infection_id][person.age],
-            self.symptomatic_efficacies[dose][infection_id][person.age],
-        )
-
-    def get_efficacy_for_dose_person(
-        self, person: Person, dose: int
-    ) -> Tuple[float, float]:
-        """
-        Get sterilisation and symptomatic efficacy of a given dose
-        for a person and variant
-
-        Parameters
-        ----------
-        person:
-            person to get efficacy for
-        dose:
-            dose number
-        """
-
-        return (
-            self.select_dose_age(
-                self.sterilisation_efficacies, dose=dose, age=person.age
-            ),
-            self.select_dose_age(
-                self.symptomatic_efficacies, dose=dose, age=person.age
-            ),
-        )
-
-    def select_dose_age(self, efficacy, dose, age):
-        # TODO make this faster?
-        return {k: v[age] for k, v in efficacy[dose].items()}
-
-
 class VaccineStage:
 
     valid_efficacy_types = ("symptomatic", "sterilisation")
@@ -299,7 +197,8 @@ class VaccineDistribution(Policy):
 
     def __init__(
         self,
-        vaccine: "Vaccine",
+        vaccine_type: "str",
+        n_doses: int=2,
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
         group_by: str = "age",  # 'residence',
@@ -384,7 +283,7 @@ class VaccineDistribution(Policy):
         )
         self.vaccinated_ids.add(person.id)
         if record is not None:
-            record.events["vaccines"].accumulate(person.id, 0)
+            record.events["vaccines"].accumulate(person.id, self.vaccine.name, 0)
 
     def daily_vaccine_probability(self, days_passed):
         return self.group_coverage * (
@@ -420,7 +319,7 @@ class VaccineDistribution(Policy):
         if record is not None and person.vaccine_trajectory.is_date_dose(date=date):
             if person.id not in record.events["vaccines"].vaccinated_ids:
                 record.events["vaccines"].accumulate(
-                    person.id, person.vaccine_trajectory.get_dose_number(date=date)
+                    person.id, self.vaccine.name, person.vaccine_trajectory.get_dose_number(date=date)
                 )
 
     def update_vaccinated(self, people, date, record=None):

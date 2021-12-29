@@ -1,0 +1,37 @@
+Pfizer:
+  days_to_next_dose: [0,14,21]
+  days_to_effective: [12,7,5]
+  sterilisation_efficacies:
+    - Covid19: 
+        0-100: 0.52
+    - Covid19: 
+        0-100: 0.95
+    - Covid19: 
+        0-100: 0.98
+  symptomatic_efficacies:
+    - Covid19: 
+        0-100: 0.52
+    - Covid19: 
+        0-100: 0.95
+    - Covid19: 
+        0-100: 0.98
+
+AstraZeneca:
+  days_to_next_dose: [0,14,21]
+  days_to_effective: [12,7,5]
+  sterilisation_efficacies:
+    - Covid19: 
+        0-100: 0.32
+    - Covid19: 
+        0-100: 0.75
+    - Covid19: 
+        0-100: 0.88
+  symptomatic_efficacies:
+    - Covid19: 
+        0-100: 0.32
+    - Covid19: 
+        0-100: 0.75
+    - Covid19: 
+        0-100: 0.88
+
+

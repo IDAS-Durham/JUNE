@@ -199,9 +199,10 @@ class VaccinesRecord(EventRecord):
             table_name="vaccines",
             int_names=["vaccinated_ids", "dose_numbers"],
             float_names=[],
-            str_names=[],
+            str_names=['vaccine_names'],
         )
 
-    def accumulate(self, vaccinated_id, dose_number):
+    def accumulate(self, vaccinated_id, vaccine_name, dose_number):
         self.vaccinated_ids.append(vaccinated_id)
+        self.vaccine_names.append(vaccine_name)
         self.dose_numbers.append(dose_number)

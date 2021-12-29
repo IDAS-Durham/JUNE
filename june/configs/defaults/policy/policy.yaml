@@ -112,29 +112,6 @@ limit_long_commute:
 
 vaccine_distribution:
   vaccines:
-    pfizer:
-      days_to_next_dose:
-          [0, 14] 
-      days_to_effective:
-          [12, 7] 
-      sterilisation_efficaces:
-        Covid19:
-          0-100: [0.52,0.95]
-      symptomatic_efficacies:
-        Covid19:
-          0-100: [0.,0.]
-    astra_zeneca:
-      days_to_next_dose:
-          [0, 10] 
-      days_to_effective:
-          [11, 5] 
-      sterilisation_efficaces:
-        Covid19:
-          0-100: [0.42,0.85]
-      symptomatic_efficacies:
-        Covid19:
-          0-100: [0.,0.]
-
     vaccination_campaigns:
       # Groups 1-4 Pfizer/BioNTech
       1:
@@ -143,7 +120,7 @@ vaccine_distribution:
           group_by: 'residence'
           group_type: 'care_home'
           group_coverage: 0.5
-          vaccine_type: 'pfizer'
+          vaccine_type: 'Pfizer'
           n_doses: 2
       2:
           start_time: 2020-01-01 
@@ -151,7 +128,7 @@ vaccine_distribution:
           group_by: 'age'
           group_type: '70-100'
           group_coverage: 0.5
-          vaccine_type: 'pfizer'
+          vaccine_type: 'Pfizer'
           n_doses: 2
       3:
           start_time: 2020-01-01 
@@ -159,7 +136,7 @@ vaccine_distribution:
           group_by: 'primary_activity'
           group_type: 'care_home'
           group_coverage: 0.5
-          vaccine_type: 'pfizer'
+          vaccine_type: 'Pfizer'
           n_doses: 2
 
       # Groups 1-4 Oxford/AstraZeneca
@@ -169,7 +146,7 @@ vaccine_distribution:
           group_by: 'residence'
           group_type: 'care_home'
           group_coverage: 0.5
-          vaccine_type: 'pfizer'
+          vaccine_type: 'Pfizer'
           n_doses: 2
 
       5:
@@ -178,7 +155,7 @@ vaccine_distribution:
           group_by: 'age'
           group_type: '70-100'
           group_coverage: 0.5
-          vaccine_type: 'pfizer'
+          vaccine_type: 'Pfizer'
           n_doses: 2
 
       6:
@@ -187,7 +164,7 @@ vaccine_distribution:
           group_by: 'primary_activity'
           group_type: 'care_home'
           group_coverage: 0.5
-          vaccine_type: 'pfizer'
+          vaccine_type: 'AstraZeneca'
           n_doses: 2
 
 
