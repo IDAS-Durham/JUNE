@@ -6,12 +6,12 @@ from june.groups import CareHome
 from june.demography import Person, Population
 
 from june.policy.vaccine_policy import (
-    Vaccine,
     VaccineStage,
     VaccineTrajectory,
     VaccineDistribution,
     VaccineStagesGenerator,
 )
+from june.policy.vaccines import Vaccine
 from june.epidemiology.infection.infection import Delta, Omicron
 
 delta_id = Delta.infection_id()
@@ -254,10 +254,11 @@ class TestVaccineStagesGenerator:
 
 
 class TestVaccination:
-    def test__process_target_population(self,vaccine,):
+    def test__process_target_population(self,):
         person = Person.from_attributes(age=30, sex="f")
         vaccine_policy = VaccineDistribution(
-            vaccine=vaccine,
+            vaccine_type='Test',
+            n_doses=2,
             group_by="age",
             group_type="20-40",
         )
@@ -273,13 +274,14 @@ class TestVaccination:
         assert person.vaccine_trajectory is None
 
     def test__process_target_population_care_home(
-        self, stages, vaccine,
+        self, stages, 
     ):
         care_home = CareHome()
         person = Person.from_attributes(age=30, sex="f")
         care_home.add(person)
         vaccine_policy = VaccineDistribution(
-            vaccine=vaccine,
+            vaccine_type='Test',
+            n_doses=2,
             group_by="residence",
             group_type="care_home",
         )
@@ -290,11 +292,12 @@ class TestVaccination:
         vaccine_policy.apply(person=person, date=date)
         assert person.vaccine_trajectory is None
 
-    def test__update_vaccine_effect(self, stages, vaccine):
+    def test__update_vaccine_effect(self, stages):
         person = Person.from_attributes(age=30, sex="f")
         date = datetime.datetime(2100, 1, 1)
         vaccine_policy = VaccineDistribution(
-            vaccine=vaccine,
+            vaccine_type='Test',
+            n_doses=2,
             group_by="age",
             group_type="20-40",
         )
@@ -325,11 +328,12 @@ class TestVaccination:
             == 0.3
         )
 
-    def test_overall_susceptibility_update(self,vaccine,):
+    def test_overall_susceptibility_update(self,):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
         vaccine_policy = VaccineDistribution(
-            vaccine=vaccine,
+            vaccine_type='Test',
+            n_doses=2,
             group_by="age",
             group_type="20-40",
         )
@@ -368,12 +372,13 @@ class TestVaccination:
         )
 
     def test_vaccinate_inmune(
-        self, stages, vaccine,
+        self, stages, 
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         young_person.immunity.susceptibility_dict[delta_id] = 0.0
         vaccine_policy = VaccineDistribution(
-            vaccine=vaccine,
+            vaccine_type='Test',
+            n_doses=2,
             group_by="age",
             group_type="20-40",
         )
@@ -393,12 +398,13 @@ class TestVaccination:
         assert young_person.immunity.get_susceptibility(delta_id) == 0.0
 
     def test_several_infections_update(
-        self, stages, vaccine,
+        self, stages, 
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
         vaccine_policy = VaccineDistribution(
-            vaccine=vaccine,
+            vaccine_type='Test',
+            n_doses=2,
             group_by="age",
             group_type="20-40",
         )
@@ -426,11 +432,12 @@ class TestVaccination:
 
 class TestVaccinationInitialization:
     @pytest.fixture(name="vax_policy")
-    def make_policy(self, vaccine,):
+    def make_policy(self, ):
         vaccine_policy = VaccineDistribution(
+            vaccine_type='Test',
+            n_doses=2,
             start_time="2021-03-01",
             end_time="2021-04-01",
-            vaccine=vaccine,
             group_by="age",
             group_type="20-40",
             group_coverage=0.6,

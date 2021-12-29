@@ -2,36 +2,67 @@ Pfizer:
   days_to_next_dose: [0,14,21]
   days_to_effective: [12,7,5]
   sterilisation_efficacies:
-    - Covid19: 
+    - Covid19:
         0-100: 0.52
-    - Covid19: 
+    - Covid19:
         0-100: 0.95
-    - Covid19: 
+    - Covid19:
         0-100: 0.98
   symptomatic_efficacies:
-    - Covid19: 
+    - Covid19:
         0-100: 0.52
-    - Covid19: 
+    - Covid19:
         0-100: 0.95
-    - Covid19: 
+    - Covid19:
         0-100: 0.98
 
 AstraZeneca:
   days_to_next_dose: [0,14,21]
   days_to_effective: [12,7,5]
   sterilisation_efficacies:
-    - Covid19: 
+    - Covid19:
         0-100: 0.32
-    - Covid19: 
+    - Covid19:
         0-100: 0.75
-    - Covid19: 
+    - Covid19:
         0-100: 0.88
   symptomatic_efficacies:
-    - Covid19: 
+    - Covid19:
         0-100: 0.32
-    - Covid19: 
+    - Covid19:
         0-100: 0.75
-    - Covid19: 
+    - Covid19:
         0-100: 0.88
 
+
+Test:
+  days_to_next_dose: [0,9,16]
+  days_to_effective: [1,2,10]
+  sterilisation_efficacies:
+      - Delta:
+          0-100: 0.3
+      - Delta:
+          0-100: 0.7
+      - Delta:
+          0-100: 0.9
+      - Omicron:
+          0-100: 0.2
+      - Omicron:
+          0-100: 0.2
+      - Omicron:
+          0-100: 0.8
+
+  symptomatic_efficacies: 
+      - Delta:
+          0-100: 0.3
+      - Delta:
+          0-100: 0.7
+      - Delta:
+          0-100: 0.7
+      - Omicron:
+          0-100: 0.5
+      - Omicron:
+          0-100: 0.2
+      - Omicron:
+          0-100: 0.1
 

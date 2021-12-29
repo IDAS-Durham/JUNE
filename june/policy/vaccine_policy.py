@@ -6,9 +6,8 @@ import datetime
 import logging
 
 from june.demography.person import Person
-from june.epidemiology.infection import infection as infection_module
-from june.utils.parse_probabilities import parse_age_probabilities
 from .policy import Policy, PolicyCollection
+from .vaccines import Vaccine
 
 
 logger = logging.getLogger("vaccination")
@@ -232,13 +231,16 @@ class VaccineDistribution(Policy):
         """
 
         super().__init__(start_time=start_time, end_time=end_time)
-        self.vaccine = vaccine
+        self.vaccine = Vaccine.from_config(
+                vaccine_type=vaccine_type,
+                n_doses=n_doses
+        )
         self.group_attribute, self.group_value = self.process_group_description(
             group_by, group_type
         )
         self.total_days = (self.end_time - self.start_time).days
         self.group_coverage = group_coverage
-        self.infection_ids = self._read_infection_ids(vaccine.sterilisation_efficacies)
+        self.infection_ids = self._read_infection_ids(self.vaccine.sterilisation_efficacies)
         self.vaccinated_ids = set()
 
     def _read_infection_ids(self, sterilisation_efficacies):
