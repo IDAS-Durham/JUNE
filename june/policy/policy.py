@@ -48,7 +48,7 @@ class Policy(ABC):
         """
         return self.start_time <= date < self.end_time
 
-    def initialize(self, world, date):
+    def initialize(self, world, date, record=None):
         pass
 
 
@@ -113,13 +113,13 @@ class Policies:
             return iter([])
         return iter(self.policies)
 
-    def init_policies(self, world, date):
+    def init_policies(self, world, date, record=None):
         """
         This function is meant to be used for those policies that need world information to initialise,
         like policies depending on workers' behaviours during lockdown.
         """
         for policy in self:
-            policy.initialize(world=world, date=date)
+            policy.initialize(world=world, date=date, record=record)
 
 
 class PolicyCollection:

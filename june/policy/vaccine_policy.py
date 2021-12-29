@@ -367,7 +367,7 @@ class VaccineDistribution(Policy):
                     person.vaccine_trajectory = None
             self.vaccinated_ids -= ids_to_remove
 
-    def _apply_past_vaccinations(self, people, date):
+    def _apply_past_vaccinations(self, people, date, record=None):
         date = min(date, self.end_time)
         days_in_the_past = max(0, (date - self.start_time).days)
         if days_in_the_past > 0:
@@ -375,13 +375,13 @@ class VaccineDistribution(Policy):
                 date_to_vax = self.start_time + datetime.timedelta(days=i)
                 logger.info(f"Vaccinating at date {date_to_vax.date()}")
                 for person in people:
-                    self.apply(person=person, date=date_to_vax)
+                    self.apply(person=person, date=date_to_vax,record=record)
 
-    def initialize(self, world, date):
+    def initialize(self, world, date, record=None):
         """
         Initializes policy, vaccinating people in the past if needed.
         """
-        return self._apply_past_vaccinations(people=world.people, date=date)
+        return self._apply_past_vaccinations(people=world.people, date=date, record=record)
 
 
 class VaccineDistributions(PolicyCollection):

@@ -438,6 +438,32 @@ class TestVaccination:
             omicron_id
         ) == pytest.approx(0.9, 0.01)
 
+    def test_trajectory_doses(
+        self,  
+    ):
+        young_person = Person.from_attributes(age=30, sex="f")
+        vaccine_policy = VaccineDistribution(
+            vaccine_type='Test',
+            days_to_next_dose=[0,9],
+            doses=[0,1],
+            group_by="age",
+            group_type="20-40",
+        )
+
+        people = Population([young_person])
+        for person in people:
+            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
+
+        assert person.vaccine_trajectory.is_date_dose(date=datetime.datetime(2100,1,1)) == True
+        assert person.vaccine_trajectory.is_date_dose(date=datetime.datetime(2100,1,5)) == False
+        assert person.vaccine_trajectory.is_date_dose(date=datetime.datetime(2100,1,10)) == True
+
+        assert person.vaccine_trajectory.get_dose_number(date=datetime.datetime(2100,1,1)) == 0 
+        assert person.vaccine_trajectory.get_dose_number(date=datetime.datetime(2100,1,5)) == 0 
+        assert person.vaccine_trajectory.get_dose_number(date=datetime.datetime(2100,1,10)) == 1 
+
+
+
 
 class TestVaccinationInitialization:
     @pytest.fixture(name="vax_policy")

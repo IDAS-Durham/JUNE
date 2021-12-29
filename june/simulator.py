@@ -154,6 +154,7 @@ class Simulator:
             travel=travel,
             policies=policies,
             timer=timer,
+            record=record,
         )
         return cls(
             world=world,

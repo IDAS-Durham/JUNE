@@ -17,6 +17,7 @@ from june.mpi_setup import (
     mpi_rank,
     MovablePeople,
 )
+from june.records import Record
 
 logger = logging.getLogger("activity_manager")
 mpi_logger = logging.getLogger("mpi")
@@ -43,12 +44,13 @@ class ActivityManager:
         timer,
         all_activities,
         activity_to_super_groups: dict,
+        record: Optional[Record] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
     ):
         self.policies = policies
         if self.policies is not None:
-            self.policies.init_policies(world=world, date=timer.date)
+            self.policies.init_policies(world=world, date=timer.date,record=record)
         self.world = world
         self.timer = timer
         self.leisure = leisure
@@ -71,6 +73,7 @@ class ActivityManager:
         world,
         policies,
         timer,
+        record: Optional[Record] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
     ):
@@ -103,6 +106,7 @@ class ActivityManager:
             activity_to_super_groups=activity_to_super_groups,
             leisure=leisure,
             travel=travel,
+            record=record,
         )
 
     @staticmethod
