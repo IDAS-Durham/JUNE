@@ -1,6 +1,6 @@
 import yaml
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Tuple
 
 from june import paths
 from june.demography.person import Person
