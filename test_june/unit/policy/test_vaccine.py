@@ -261,7 +261,7 @@ class TestVaccination:
         person = Person.from_attributes(age=30, sex="f")
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
-            n_doses=2,
+            n_doses=3,
             group_by="age",
             group_type="20-40",
         )
@@ -277,14 +277,14 @@ class TestVaccination:
         assert person.vaccine_trajectory is None
 
     def test__process_target_population_care_home(
-        self, stages, 
+        self, 
     ):
         care_home = CareHome()
         person = Person.from_attributes(age=30, sex="f")
         care_home.add(person)
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
-            n_doses=2,
+            n_doses=3,
             group_by="residence",
             group_type="care_home",
         )
@@ -295,12 +295,12 @@ class TestVaccination:
         vaccine_policy.apply(person=person, date=date)
         assert person.vaccine_trajectory is None
 
-    def test__update_vaccine_effect(self, stages):
+    def test__update_vaccine_effect(self,):
         person = Person.from_attributes(age=30, sex="f")
         date = datetime.datetime(2100, 1, 1)
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
-            n_doses=2,
+            n_doses=3,
             group_by="age",
             group_type="20-40",
         )
@@ -336,7 +336,7 @@ class TestVaccination:
         old_person = Person.from_attributes(age=80, sex="f")
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
-            n_doses=2,
+            n_doses=3,
             group_by="age",
             group_type="20-40",
         )
@@ -375,13 +375,13 @@ class TestVaccination:
         )
 
     def test_vaccinate_inmune(
-        self, stages, 
+        self,  
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         young_person.immunity.susceptibility_dict[delta_id] = 0.0
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
-            n_doses=2,
+            n_doses=3,
             group_by="age",
             group_type="20-40",
         )
@@ -401,13 +401,13 @@ class TestVaccination:
         assert young_person.immunity.get_susceptibility(delta_id) == 0.0
 
     def test_several_infections_update(
-        self, stages, 
+        self,  
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
-            n_doses=2,
+            n_doses=3,
             group_by="age",
             group_type="20-40",
         )
@@ -438,7 +438,7 @@ class TestVaccinationInitialization:
     def make_policy(self, ):
         vaccine_policy = VaccineDistribution(
             vaccine_type='Test',
-            n_doses=2,
+            n_doses=3,
             start_time="2021-03-01",
             end_time="2021-04-01",
             group_by="age",
