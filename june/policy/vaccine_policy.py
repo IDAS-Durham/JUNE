@@ -214,8 +214,7 @@ class VaccineTrajectory:
         self.stages[stage_index].administered = True
         dose_number = person.vaccine_trajectory.doses[stage_index]
         person.vaccinated = dose_number
-        if dose_number == 0:
-            person.vaccine_type = self.vaccine_name
+        person.vaccine_type = self.vaccine_name
         if record is not None:
             record.events["vaccines"].accumulate(
                 person.id,
