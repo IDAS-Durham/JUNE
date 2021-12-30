@@ -50,7 +50,7 @@ class ActivityManager:
     ):
         self.policies = policies
         if self.policies is not None:
-            self.policies.init_policies(world=world, date=timer.date,record=record)
+            self.policies.init_policies(world=world, date=timer.date, record=record)
         self.world = world
         self.timer = timer
         self.leisure = leisure
@@ -205,7 +205,10 @@ class ActivityManager:
             )
         # move people to subgroups and get going abroad people
         to_send_abroad = self.move_people_to_active_subgroups(
-            activities=activities, date=date, days_from_start=self.timer.now, record=record
+            activities=activities,
+            date=date,
+            days_from_start=self.timer.now,
+            record=record,
         )
         tock_interaction_timestep = perf_counter()
         rank_logger.info(
@@ -263,7 +266,10 @@ class ActivityManager:
                 continue
             if apply_vaccine_distribution:
                 self.policies.vaccine_distribution.apply(
-                    person=person, date=date, active_policies=active_vaccine_policies, record=record,
+                    person=person,
+                    date=date,
+                    active_policies=active_vaccine_policies,
+                    record=record,
                 )
             allowed_activities = self.policies.individual_policies.apply(
                 active_policies=active_individual_policies,
