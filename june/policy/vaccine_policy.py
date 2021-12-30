@@ -265,7 +265,6 @@ class VaccineDistribution(Policy):
         )
         self.total_days = (self.end_time - self.start_time).days
         self.group_coverage = group_coverage
-        print('GROUP COVERAGE = ', self.group_coverage)
         self.infection_ids = self._read_infection_ids(
             self.vaccine.sterilisation_efficacies
         )
@@ -342,6 +341,7 @@ class VaccineDistribution(Policy):
             )
             and self.is_target_group(person)
         ):
+
             days_passed = (date - self.start_time).days
             if random() < self.daily_vaccine_probability(days_passed=days_passed):
                 self.vaccinate(person=person, date=date, record=record)
@@ -378,10 +378,11 @@ class VaccineDistribution(Policy):
             ids_to_remove = set()
             for pid in self.vaccinated_ids:
                 person = people.get_from_id(pid)
-                self.update_vaccine_effect(person=person, date=date, record=record)
-                if person.vaccine_trajectory.is_finished(date):
-                    ids_to_remove.add(person.id)
-                    person.vaccine_trajectory = None
+                if person.vaccine_trajectory is not None:
+                    self.update_vaccine_effect(person=person, date=date, record=record)
+                    if person.vaccine_trajectory.is_finished(date):
+                        ids_to_remove.add(person.id)
+                        person.vaccine_trajectory = None
             self.vaccinated_ids -= ids_to_remove
 
     def _apply_past_vaccinations(self, people, date, record=None):
