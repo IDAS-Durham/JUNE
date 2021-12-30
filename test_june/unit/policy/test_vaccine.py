@@ -511,7 +511,6 @@ class TestVaccinationInitialization:
                         ),
                         0.9,
                     )
-
         assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
 
 class TestBooster:
@@ -560,6 +559,7 @@ class TestCoverage:
             else:
                 if person.vaccinated is not None:
                     n_vaccinated += 1
+        print(n_vaccinated)
         assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
 
 
