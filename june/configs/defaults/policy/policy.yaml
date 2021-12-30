@@ -180,6 +180,7 @@ vaccine_distribution:
         group_coverage: 0.95
         vaccine_type: 'Pfizer'
         doses: [2]
+        match_vaccine_type: True
 
 
 
