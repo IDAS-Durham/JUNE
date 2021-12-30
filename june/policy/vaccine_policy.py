@@ -210,7 +210,7 @@ class VaccineTrajectory:
         return False
 
     def give_dose(self, person, date, record):
-        stage_index = self.get_stage_index(date=date) 
+        stage_index = self.get_stage_index(date=date)
         self.stages[stage_index].administered = True
         dose_number = person.vaccine_trajectory.doses[stage_index]
         person.vaccinated = dose_number
@@ -323,9 +323,9 @@ class VaccineDistribution(Policy):
             days_to_next_dose=self.days_to_next_dose,
         )
         person.vaccine_trajectory.give_dose(
-                person=person,
-                date=date,
-                record=record,
+            person=person,
+            date=date,
+            record=record,
         )
         self.vaccinated_ids.add(person.id)
 
@@ -368,9 +368,9 @@ class VaccineDistribution(Policy):
             )
         if person.vaccine_trajectory.is_date_dose(date=date):
             person.vaccine_trajectory.give_dose(
-                    person=person,
-                    date=date,
-                    record=record,
+                person=person,
+                date=date,
+                record=record,
             )
 
     def update_vaccinated(self, people, date, record=None):
@@ -393,13 +393,15 @@ class VaccineDistribution(Policy):
                 date_to_vax = self.start_time + datetime.timedelta(days=i)
                 logger.info(f"Vaccinating at date {date_to_vax.date()}")
                 for person in people:
-                    self.apply(person=person, date=date_to_vax,record=record)
+                    self.apply(person=person, date=date_to_vax, record=record)
 
     def initialize(self, world, date, record=None):
         """
         Initializes policy, vaccinating people in the past if needed.
         """
-        return self._apply_past_vaccinations(people=world.people, date=date, record=record)
+        return self._apply_past_vaccinations(
+            people=world.people, date=date, record=record
+        )
 
 
 class VaccineDistributions(PolicyCollection):
