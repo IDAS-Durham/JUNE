@@ -454,10 +454,6 @@ class TestVaccination:
         for person in people:
             vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
 
-        assert person.vaccine_trajectory.is_date_dose(date=datetime.datetime(2100,1,1)) == True
-        assert person.vaccine_trajectory.is_date_dose(date=datetime.datetime(2100,1,5)) == False
-        assert person.vaccine_trajectory.is_date_dose(date=datetime.datetime(2100,1,10)) == True
-
         assert person.vaccine_trajectory.get_dose_number(date=datetime.datetime(2100,1,1)) == 0 
         assert person.vaccine_trajectory.get_dose_number(date=datetime.datetime(2100,1,5)) == 0 
         assert person.vaccine_trajectory.get_dose_number(date=datetime.datetime(2100,1,10)) == 1 

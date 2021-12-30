@@ -265,6 +265,7 @@ class VaccineDistribution(Policy):
         )
         self.total_days = (self.end_time - self.start_time).days
         self.group_coverage = group_coverage
+        print('GROUP COVERAGE = ', self.group_coverage)
         self.infection_ids = self._read_infection_ids(
             self.vaccine.sterilisation_efficacies
         )
