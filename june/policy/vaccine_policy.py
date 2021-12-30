@@ -1,5 +1,5 @@
 import operator
-from typing import List
+from typing import List, Optional
 from random import random
 import numpy as np
 import datetime
@@ -237,7 +237,7 @@ class VaccineDistribution(Policy):
         group_by: str = "age",  # 'residence',
         group_type: str = "50-100",
         group_coverage: float = 1.0,
-        match_vaccine_type: bool = False,
+        last_dose_type: Optional[str]= None,
     ):
         """
          Policy to distribute vaccines among a population
@@ -271,7 +271,7 @@ class VaccineDistribution(Policy):
         self.infection_ids = self._read_infection_ids(
             self.vaccine.sterilisation_efficacies
         )
-        self.match_vaccine_type = match_vaccine_type
+        self.last_dose_type = last_dose_type
         self.vaccinated_ids = set()
 
     def _read_infection_ids(self, sterilisation_efficacies):
@@ -319,8 +319,7 @@ class VaccineDistribution(Policy):
             return False
         if (
             starting_dose > 0
-            and self.match_vaccine_type
-            and person.vaccine_type != self.vaccine.name
+            and person.vaccine_type != self.last_dose_type
         ):
             return False
         return True
