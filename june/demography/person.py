@@ -43,6 +43,7 @@ class Person(dataobject):
     # vaccine
     vaccine_trajectory: "VaccineTrajectory" = None
     vaccinated: int = None
+    vaccine_type: str = None
     # comorbidity
     comorbidity: str = None
     # commute

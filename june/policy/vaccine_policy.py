@@ -214,6 +214,8 @@ class VaccineTrajectory:
         self.stages[stage_index].administered = True
         dose_number = person.vaccine_trajectory.doses[stage_index]
         person.vaccinated = dose_number
+        if dose_number == 0:
+            person.vaccine_type = self.vaccine_name
         if record is not None:
             record.events["vaccines"].accumulate(
                 person.id,
@@ -235,6 +237,7 @@ class VaccineDistribution(Policy):
         group_by: str = "age",  # 'residence',
         group_type: str = "50-100",
         group_coverage: float = 1.0,
+        match_vaccine_type: bool = False,
     ):
         """
          Policy to distribute vaccines among a population
@@ -268,6 +271,7 @@ class VaccineDistribution(Policy):
         self.infection_ids = self._read_infection_ids(
             self.vaccine.sterilisation_efficacies
         )
+        self.match_vaccine_type = match_vaccine_type
         self.vaccinated_ids = set()
 
     def _read_infection_ids(self, sterilisation_efficacies):
@@ -312,6 +316,16 @@ class VaccineDistribution(Policy):
         if starting_dose > 0 and (
             person.vaccinated is None or person.vaccinated != starting_dose - 1
         ):
+            return False
+        if (
+            starting_dose > 0
+            and self.match_vaccine_type
+            and person.vaccine_type != self.vaccine.name
+        ):
+            print('Missed!')
+            print('vaccine type = ', person.vaccine_type)
+            print('name = ', self.vaccine.name)
+            print(person.vaccine_type == self.vaccine.name)
             return False
         return True
 

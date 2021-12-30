@@ -598,6 +598,34 @@ class TestBooster:
         assert not_dosed_person.immunity.get_susceptibility(delta_id) == 1.0
         assert not_dosed_person.vaccinated is None
 
+    def test_vaccinate_booster_by_type(
+        self,
+    ):
+        pfizer_person = Person.from_attributes(age=30, sex="f")
+        pfizer_person.vaccinated = 1
+        pfizer_person.vaccine_type = "Pfizer"
+        az_person = Person.from_attributes(age=30, sex="f")
+        az_person.vaccinated = 1
+        az_person.vaccine_type = "AstraZeneca"
+
+        vaccine_policy = VaccineDistribution(
+            vaccine_type="Pfizer",
+            days_to_next_dose=[0],
+            doses=[2],
+            group_by="age",
+            group_type="20-40",
+            match_vaccine_type=True,
+        )
+
+        people = Population([pfizer_person, az_person])
+        for person in people:
+            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
+        vaccine_policy.update_vaccinated(
+            people=people, date=datetime.datetime(2100, 1, 30)
+        )
+        assert pfizer_person.vaccinated == 2
+        assert az_person.vaccinated == 1
+
 
 class TestCoverage:
     def test__right_coverage(self, population, vax_policy):
@@ -615,5 +643,4 @@ class TestCoverage:
             else:
                 if person.vaccinated is not None:
                     n_vaccinated += 1
-        print(n_vaccinated)
         assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
