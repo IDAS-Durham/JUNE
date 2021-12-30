@@ -322,10 +322,6 @@ class VaccineDistribution(Policy):
             and self.match_vaccine_type
             and person.vaccine_type != self.vaccine.name
         ):
-            print('Missed!')
-            print('vaccine type = ', person.vaccine_type)
-            print('name = ', self.vaccine.name)
-            print(person.vaccine_type == self.vaccine.name)
             return False
         return True
 
