@@ -17,6 +17,7 @@ from june.epidemiology.infection.infection import Delta, Omicron
 delta_id = Delta.infection_id()
 omicron_id = Omicron.infection_id()
 
+
 @pytest.fixture(name="population")
 def make_population():
     people = []
@@ -26,12 +27,13 @@ def make_population():
             people.append(person)
     return Population(people)
 
+
 @pytest.fixture(name="vax_policy")
 def make_policy():
     return VaccineDistribution(
-        vaccine_type='Test',
-        days_to_next_dose=[0,9,16],
-        doses=[0,1,2],
+        vaccine_type="Test",
+        days_to_next_dose=[0, 9, 16],
+        doses=[0, 1, 2],
         start_time="2021-03-01",
         end_time="2021-03-05",
         group_by="age",
@@ -43,20 +45,21 @@ def make_policy():
 @pytest.fixture(name="vaccine", scope="session")
 def create_vaccine():
     return Vaccine(
-            'pfizer',
-            doses=[0,1,2],
-            days_to_effective = [1,2,10],
-            sterilisation_efficacies = [ 
-                {'Delta': {'0-100':0.3}, 'Omicron': {'0-100':0.2}},
-                {'Delta': {'0-100':0.7}, 'Omicron': {'0-100':0.2}},
-                {'Delta': {'0-100':0.9}, 'Omicron': {'0-100':0.8}},
-            ],
-            symptomatic_efficacies= [ 
-                {'Delta': {'0-100':0.3}, 'Omicron': {'0-100':0.5}},
-                {'Delta': {'0-100':0.7}, 'Omicron': {'0-100':0.2}},
-                {'Delta': {'0-100':0.7}, 'Omicron': {'0-100':0.1}},
-            ],
+        "pfizer",
+        doses=[0, 1, 2],
+        days_to_effective=[1, 2, 10],
+        sterilisation_efficacies=[
+            {"Delta": {"0-100": 0.3}, "Omicron": {"0-100": 0.2}},
+            {"Delta": {"0-100": 0.7}, "Omicron": {"0-100": 0.2}},
+            {"Delta": {"0-100": 0.9}, "Omicron": {"0-100": 0.8}},
+        ],
+        symptomatic_efficacies=[
+            {"Delta": {"0-100": 0.3}, "Omicron": {"0-100": 0.5}},
+            {"Delta": {"0-100": 0.7}, "Omicron": {"0-100": 0.2}},
+            {"Delta": {"0-100": 0.7}, "Omicron": {"0-100": 0.1}},
+        ],
     )
+
 
 @pytest.fixture(name="first_dose", scope="session")
 def create_first_dose():
@@ -99,7 +102,9 @@ def create_stages():
 
 
 @pytest.fixture(name="vt", scope="session")
-def create_vaccine_plan(vaccine,):
+def create_vaccine_plan(
+    vaccine,
+):
     person = Person.from_attributes(age=10, sex="f")
     person.immunity.susceptibility_dict = {delta_id: 0.9, omicron_id: 0.9}
     person.immunity.effective_multiplier_dict = {delta_id: 1.0, omicron_id: 1.0}
@@ -107,7 +112,7 @@ def create_vaccine_plan(vaccine,):
         person=person,
         date_administered=datetime.datetime(2100, 1, 1),
         vaccine=vaccine,
-        days_to_next_dose = [0,9,16],
+        days_to_next_dose=[0, 9, 16],
     )
 
 
@@ -116,50 +121,79 @@ def create_generated_stages():
     person = Person.from_attributes(age=10, sex="f")
     date = datetime.datetime(2100, 1, 3)
     vaccine = Vaccine(
-            'pfizer',
-            doses=[0,1,2],
-            days_to_effective = [1,2,3],
-            sterilisation_efficacies = [ 
-                {'Delta': {'0-100':0.2},},
-                {'Delta': {'0-100':0.7},},
-                {'Delta': {'0-100':0.5},},
-            ],
-            symptomatic_efficacies= [ 
-                {'Delta': {'0-100':0.3},},
-                {'Delta': {'0-100':0.6},},
-                {'Delta': {'0-100':0.3},},
-            ],
+        "pfizer",
+        doses=[0, 1, 2],
+        days_to_effective=[1, 2, 3],
+        sterilisation_efficacies=[
+            {
+                "Delta": {"0-100": 0.2},
+            },
+            {
+                "Delta": {"0-100": 0.7},
+            },
+            {
+                "Delta": {"0-100": 0.5},
+            },
+        ],
+        symptomatic_efficacies=[
+            {
+                "Delta": {"0-100": 0.3},
+            },
+            {
+                "Delta": {"0-100": 0.6},
+            },
+            {
+                "Delta": {"0-100": 0.3},
+            },
+        ],
     )
-
 
     vg = VaccineStagesGenerator(
-            vaccine=vaccine,
-            days_to_next_dose = [0,10,20],
-
+        vaccine=vaccine,
+        days_to_next_dose=[0, 10, 20],
     )
     return vg(person, date)
+
 
 class TestVaccine:
     def test__effective(self):
         effectiveness = [
-                {'Delta': {'0-50': 0.6, '50-100': 0.7}},
-                {'Delta': {'0-50': 0.8, '50-100': 0.9}},
+            {"Delta": {"0-50": 0.6, "50-100": 0.7}},
+            {"Delta": {"0-50": 0.8, "50-100": 0.9}},
         ]
         vaccine = Vaccine(
-                'pfizer',
-                doses=[0,1,2],
-                days_to_effective = [0,10],
-                sterilisation_efficacies = effectiveness,
-                symptomatic_efficacies= effectiveness,
+            "pfizer",
+            doses=[0, 1, 2],
+            days_to_effective=[0, 10],
+            sterilisation_efficacies=effectiveness,
+            symptomatic_efficacies=effectiveness,
         )
         person = Person(age=99)
-        assert vaccine.get_efficacy(person=person,dose=0, infection_id=delta_id) == (0.7,0.7)
-        assert vaccine.get_efficacy_for_dose_person(person=person,dose=0,) == ({delta_id:0.7},{delta_id:0.7})
-        assert vaccine.get_efficacy(person=person,infection_id=delta_id,dose=1) == (0.9,0.9)
+        assert vaccine.get_efficacy(person=person, dose=0, infection_id=delta_id) == (
+            0.7,
+            0.7,
+        )
+        assert (
+            vaccine.get_efficacy_for_dose_person(
+                person=person,
+                dose=0,
+            )
+            == ({delta_id: 0.7}, {delta_id: 0.7})
+        )
+        assert vaccine.get_efficacy(person=person, infection_id=delta_id, dose=1) == (
+            0.9,
+            0.9,
+        )
 
         person = Person(age=10)
-        assert vaccine.get_efficacy(person=person,infection_id=delta_id,dose=0) == (0.6,0.6)
-        assert vaccine.get_efficacy(person=person,infection_id=delta_id,dose=1) == (0.8,0.8)
+        assert vaccine.get_efficacy(person=person, infection_id=delta_id, dose=0) == (
+            0.6,
+            0.6,
+        )
+        assert vaccine.get_efficacy(person=person, infection_id=delta_id, dose=1) == (
+            0.8,
+            0.8,
+        )
 
 
 class TestDose:
@@ -280,12 +314,14 @@ class TestVaccineStagesGenerator:
 
 
 class TestVaccination:
-    def test__process_target_population(self,):
+    def test__process_target_population(
+        self,
+    ):
         person = Person.from_attributes(age=30, sex="f")
         vaccine_policy = VaccineDistribution(
-            vaccine_type='Test',
-            days_to_next_dose=[0,9,16],
-            doses=[0,1,2],
+            vaccine_type="Test",
+            days_to_next_dose=[0, 9, 16],
+            doses=[0, 1, 2],
             group_by="age",
             group_type="20-40",
         )
@@ -301,15 +337,15 @@ class TestVaccination:
         assert person.vaccine_trajectory is None
 
     def test__process_target_population_care_home(
-        self, 
+        self,
     ):
         care_home = CareHome()
         person = Person.from_attributes(age=30, sex="f")
         care_home.add(person)
         vaccine_policy = VaccineDistribution(
-            vaccine_type='Test',
-            days_to_next_dose=[0,9,16],
-            doses=[0,1,2],
+            vaccine_type="Test",
+            days_to_next_dose=[0, 9, 16],
+            doses=[0, 1, 2],
             group_by="residence",
             group_type="care_home",
         )
@@ -320,13 +356,15 @@ class TestVaccination:
         vaccine_policy.apply(person=person, date=date)
         assert person.vaccine_trajectory is None
 
-    def test__update_vaccine_effect(self,):
+    def test__update_vaccine_effect(
+        self,
+    ):
         person = Person.from_attributes(age=30, sex="f")
         date = datetime.datetime(2100, 1, 1)
         vaccine_policy = VaccineDistribution(
-            vaccine_type='Test',
-            days_to_next_dose=[0,9,16],
-            doses=[0,1,2],
+            vaccine_type="Test",
+            days_to_next_dose=[0, 9, 16],
+            doses=[0, 1, 2],
             group_by="age",
             group_type="20-40",
         )
@@ -357,13 +395,15 @@ class TestVaccination:
             == 0.3
         )
 
-    def test_overall_susceptibility_update(self,):
+    def test_overall_susceptibility_update(
+        self,
+    ):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
         vaccine_policy = VaccineDistribution(
-            vaccine_type='Test',
-            days_to_next_dose=[0,9,16],
-            doses=[0,1,2],
+            vaccine_type="Test",
+            days_to_next_dose=[0, 9, 16],
+            doses=[0, 1, 2],
             group_by="age",
             group_type="20-40",
         )
@@ -402,14 +442,14 @@ class TestVaccination:
         )
 
     def test_vaccinate_inmune(
-        self,  
+        self,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         young_person.immunity.susceptibility_dict[delta_id] = 0.0
         vaccine_policy = VaccineDistribution(
-            vaccine_type='Test',
-            days_to_next_dose=[0,9,16],
-            doses=[0,1,2],
+            vaccine_type="Test",
+            days_to_next_dose=[0, 9, 16],
+            doses=[0, 1, 2],
             group_by="age",
             group_type="20-40",
         )
@@ -429,14 +469,14 @@ class TestVaccination:
         assert young_person.immunity.get_susceptibility(delta_id) == 0.0
 
     def test_several_infections_update(
-        self,  
+        self,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
         vaccine_policy = VaccineDistribution(
-            vaccine_type='Test',
-            days_to_next_dose=[0,9,16],
-            doses=[0,1,2],
+            vaccine_type="Test",
+            days_to_next_dose=[0, 9, 16],
+            doses=[0, 1, 2],
             group_by="age",
             group_type="20-40",
         )
@@ -462,13 +502,13 @@ class TestVaccination:
         ) == pytest.approx(0.9, 0.01)
 
     def test_trajectory_doses(
-        self,  
+        self,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         vaccine_policy = VaccineDistribution(
-            vaccine_type='Test',
-            days_to_next_dose=[0,9],
-            doses=[0,1],
+            vaccine_type="Test",
+            days_to_next_dose=[0, 9],
+            doses=[0, 1],
             group_by="age",
             group_type="20-40",
         )
@@ -477,11 +517,24 @@ class TestVaccination:
         for person in people:
             vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1))
 
-        assert person.vaccine_trajectory.get_dose_number(date=datetime.datetime(2100,1,1)) == 0 
-        assert person.vaccine_trajectory.get_dose_number(date=datetime.datetime(2100,1,5)) == 0 
-        assert person.vaccine_trajectory.get_dose_number(date=datetime.datetime(2100,1,10)) == 1 
-
-
+        assert (
+            person.vaccine_trajectory.get_dose_number(
+                date=datetime.datetime(2100, 1, 1)
+            )
+            == 0
+        )
+        assert (
+            person.vaccine_trajectory.get_dose_number(
+                date=datetime.datetime(2100, 1, 5)
+            )
+            == 0
+        )
+        assert (
+            person.vaccine_trajectory.get_dose_number(
+                date=datetime.datetime(2100, 1, 10)
+            )
+            == 1
+        )
 
 
 class TestVaccinationInitialization:
@@ -491,7 +544,7 @@ class TestVaccinationInitialization:
         n_vaccinated = 0
         for person in population:
             if (person.age < 20) or (person.age >= 40):
-                assert person.vaccinated is None 
+                assert person.vaccinated is None
             else:
                 if person.vaccinated is not None:
                     n_vaccinated += 1
@@ -513,16 +566,17 @@ class TestVaccinationInitialization:
                     )
         assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
 
+
 class TestBooster:
     def test_vaccinate_booster(
-        self,  
+        self,
     ):
         dosed_person = Person.from_attributes(age=30, sex="f")
         not_dosed_person = Person.from_attributes(age=30, sex="f")
         dosed_person.vaccinated = 1
 
         vaccine_policy = VaccineDistribution(
-            vaccine_type='Test',
+            vaccine_type="Test",
             days_to_next_dose=[0],
             doses=[2],
             group_by="age",
@@ -537,30 +591,29 @@ class TestBooster:
         )
 
         assert dosed_person.vaccinated == 2
-        assert dosed_person.immunity.get_susceptibility(delta_id) == pytest.approx(0.1, 0.01)
+        assert dosed_person.immunity.get_susceptibility(delta_id) == pytest.approx(
+            0.1, 0.01
+        )
 
-        assert not_dosed_person.immunity.get_susceptibility(delta_id) == 1.
+        assert not_dosed_person.immunity.get_susceptibility(delta_id) == 1.0
         assert not_dosed_person.vaccinated is None
 
 
 class TestCoverage:
     def test__right_coverage(self, population, vax_policy):
         date = datetime.datetime(2021, 4, 30)
-        start_time=datetime.datetime(2021,3,1)
+        start_time = datetime.datetime(2021, 3, 1)
         n_days = 4
-        dates = [start_time+ datetime.timedelta(days=idx) for idx in range(n_days)]
+        dates = [start_time + datetime.timedelta(days=idx) for idx in range(n_days)]
         for date in dates:
             for person in population:
                 vax_policy.apply(person=person, date=date)
         n_vaccinated = 0
         for person in population:
             if (person.age < 20) or (person.age >= 40):
-                assert person.vaccinated is None 
+                assert person.vaccinated is None
             else:
                 if person.vaccinated is not None:
                     n_vaccinated += 1
         print(n_vaccinated)
         assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
-
-
-
