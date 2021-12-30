@@ -1,5 +1,5 @@
 Pfizer:
-  days_to_effective: [12,7,5]
+  days_to_effective: [5,7,5]
   sterilisation_efficacies:
     - Covid19:
         0-100: 0.52
@@ -16,7 +16,7 @@ Pfizer:
         0-100: 0.98
 
 AstraZeneca:
-  days_to_effective: [12,7,5]
+  days_to_effective: [5,7,5]
   sterilisation_efficacies:
     - Covid19:
         0-100: 0.32
