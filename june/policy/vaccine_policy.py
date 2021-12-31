@@ -236,7 +236,7 @@ class VaccineDistribution(Policy):
         group_by: str = "age",  # 'residence',
         group_type: str = "50-100",
         group_coverage: float = 1.0,
-        last_dose_type: Optional[str]= None,
+        last_dose_type: Optional[str] = None,
     ):
         """
          Policy to distribute vaccines among a population
