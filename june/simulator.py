@@ -99,7 +99,7 @@ class Simulator:
                 world=world, activity_manager=activity_manager
             )
             self.epidemiology.set_immunity(self.world)
-            self.epidemoilogy.set_past_vaccinations(world=self.world, date=self.timer.date(), record=record)
+            self.epidemiology.set_past_vaccinations(world=self.world, date=self.timer.date, record=record)
         if self.events is not None:
             self.events.init_events(world=world)
         # self.comment = comment
@@ -156,7 +156,6 @@ class Simulator:
             policies=policies,
             timer=timer,
             record=record,
-            vaccines=epidemiology.vaccines,
         )
         return cls(
             world=world,
@@ -238,10 +237,6 @@ class Simulator:
             self.activity_manager.policies.regional_compliance.apply(
                 date=self.timer.date, regions=self.world.regions
             )
-            if self.activity_manager.policies.vaccine_distribution is not None:
-                self.activity_manager.policies.vaccine_distribution.update_vaccinated(
-                    self.world.people, date=self.timer.date, record=self.record,
-                )
         activities = self.timer.activities
         # apply events
         if self.events is not None:

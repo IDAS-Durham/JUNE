@@ -18,7 +18,6 @@ from june.mpi_setup import (
     MovablePeople,
 )
 from june.records import Record
-from june.epidemiology.vaccines import Vaccines
 
 logger = logging.getLogger("activity_manager")
 mpi_logger = logging.getLogger("mpi")
@@ -48,13 +47,11 @@ class ActivityManager:
         record: Optional[Record] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
-        vaccines: Vaccines = Vaccines.from_config(),
     ):
         self.policies = policies
-        self.vaccines = vaccines
         if self.policies is not None:
             self.policies.init_policies(
-                world=world, date=timer.date, record=record, vaccines=vaccines
+                world=world, date=timer.date, record=record, 
             )
         self.world = world
         self.timer = timer
@@ -81,7 +78,6 @@ class ActivityManager:
         record: Optional[Record] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
-        vaccines: Vaccines = Vaccines.from_config(),
     ):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -113,7 +109,6 @@ class ActivityManager:
             leisure=leisure,
             travel=travel,
             record=record,
-            vaccines=vaccines,
         )
 
     @staticmethod

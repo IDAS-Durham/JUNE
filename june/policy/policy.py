@@ -64,7 +64,6 @@ class Policies:
             LeisurePolicies,
             RegionalCompliances,
             TieredLockdowns,
-            VaccineDistributions,
         )
 
         self.individual_policies = IndividualPolicies.from_policies(self)
@@ -73,7 +72,6 @@ class Policies:
         self.leisure_policies = LeisurePolicies.from_policies(self)
         self.regional_compliance = RegionalCompliances.from_policies(self)
         self.tiered_lockdown = TieredLockdowns.from_policies(self)
-        self.vaccine_distribution = VaccineDistributions.from_policies(self)
 
     @classmethod
     def from_file(
@@ -113,7 +111,7 @@ class Policies:
             return iter([])
         return iter(self.policies)
 
-    def init_policies(self, world, date, vaccines, record=None):
+    def init_policies(self, world, date, record=None):
         """
         This function is meant to be used for those policies that need world information to initialise,
         like policies depending on workers' behaviours during lockdown.

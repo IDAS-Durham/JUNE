@@ -53,7 +53,7 @@ class Epidemiology:
         medical_care_policies: Optional[MedicalCarePolicies] = None,
         medical_facilities: Optional[MedicalFacilities] = None,
         vaccines: Vaccines = Vaccines.from_config(),
-        vaccine_campaigns: Optional[VaccinationCampaigns] = None,
+        vaccination_campaigns: Optional[VaccinationCampaigns] = VaccinationCampaigns.from_config(),
     ):
         self.infection_selectors = infection_selectors
         self.infection_seeds = infection_seeds
@@ -61,7 +61,10 @@ class Epidemiology:
         self.medical_care_policies = medical_care_policies
         self.medical_facilities = medical_facilities
         self.vaccines = vaccines
-        self.vaccine_campaigns = vaccine_campaigns
+        if vaccination_campaigns is None:
+            self.vaccination_campaigns = []
+        else:
+            self.vaccination_campaigns = vaccination_campaigns
         self.current_date = None
 
     def set_immunity(self, world):
@@ -69,10 +72,8 @@ class Epidemiology:
             self.immunity_setter.set_immunity(world)
 
     def set_past_vaccinations(self, world, date, record=None):
-        for vaccine_campaign in self.vaccine_campaigns:
-            vaccine_campaign.initialize(world=world,
-                    date=date, vaccines=self.vaccines,
-                    record=record)
+        for vc in self.vaccination_campaigns:
+            vc.initialize(world=world, date=date, vaccines=self.vaccines, record=record)
 
     def set_effective_multipliers(self, population):
         if self.effective_multiplier_setter:
@@ -100,13 +101,15 @@ class Epidemiology:
         infection_ids: list = None,
         people_from_abroad_dict: dict = None,
     ):
-        if self.current_date is None or date.date() != self.current_date.date():
-            self.current_date = date
+        if self.vaccination_campaigns and (
+            self.current_date is None or timer.date.date() != self.current_date.date()
+        ):
+            self.current_date = timer.date
             active_vacciantion_campaigns = self.vaccination_campaigns.get_active(
-                date=time,
+                date=timer.date,
             )
         else:
-            active_vacciantion_campaigns = None 
+            active_vacciantion_campaigns = None
 
         # infect the people that got exposed
         if self.infection_selectors:
@@ -123,7 +126,11 @@ class Epidemiology:
 
         # update the health status of the population
         self.update_health_status(
-            world=world, time=timer.now, duration=timer.duration, record=record, vaccination_campaigns = active_vacciantion_campaigns,
+            world=world,
+            time=timer.now,
+            duration=timer.duration,
+            record=record,
+            vaccination_campaigns=active_vacciantion_campaigns,
         )
         if record:
             record.summarise_time_step(timestamp=timer.date, world=world)
@@ -184,7 +191,12 @@ class Epidemiology:
         person.infection = None
 
     def update_health_status(
-            self, world: World, time: float, duration: float, vaccination_campaigns: Optional[VaccinationCampaigns]= None, record: Record = None
+        self,
+        world: World,
+        time: float,
+        duration: float,
+        vaccination_campaigns: Optional[VaccinationCampaigns] = None,
+        record: Record = None,
     ):
         """
         Update symptoms and health status of infected people.
@@ -225,7 +237,7 @@ class Epidemiology:
                     self.bury_the_dead(world, person, record=record)
             if person.dead or person.busy:
                 continue
-            if vaccinate:
+            if vaccination_campaigns and vaccinate:
                 vaccination_campaigns.distribute_vaccines(
                     person=person,
                     date=date,
@@ -233,8 +245,12 @@ class Epidemiology:
                     record=record,
                     vaccines=self.vaccines,
                 )
-
-
+        if vaccination_campaigns:
+            vaccination_campaigns.update_vaccinated(
+                self.world.people,
+                date=self.timer.date,
+                record=self.record,
+            )
 
     def infect_people(
         self, world, time, infected_ids, infection_ids, people_from_abroad_dict
