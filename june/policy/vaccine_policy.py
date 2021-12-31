@@ -404,21 +404,23 @@ class VaccineDistribution(Policy):
             self.vaccinated_ids -= ids_to_remove
 
     def _apply_past_vaccinations(self, people, date, vaccines, record=None):
-        max_days_effective = max([vaccine.days_to_effective[self.doses].cumsum() for vaccine in vaccines])
-        print('max days effective = ',max_days_effective)
-        date = min(date, self.end_time) + max_days_effective
+        vaccine = vaccines.get_by_name(self.vaccine_type)
+        days_to_effective = sum([vaccine.days_to_effective[dose] for dose in self.doses])
+        end_time = self.end_time + datetime.timedelta(days=days_to_effective)
+        date = min(date, end_time) 
         days_in_the_past = max(0, (date - self.start_time).days)
         if days_in_the_past > 0:
             for i in range(days_in_the_past):
                 date_to_vax = self.start_time + datetime.timedelta(days=i)
                 logger.info(f"Vaccinating at date {date_to_vax.date()}")
-                for person in people:
-                    self.apply(
-                        person=person,
-                        date=date_to_vax,
-                        vaccines=vaccines,
-                        record=record,
-                    )
+                if self.is_active(date=date_to_vax):
+                    for person in people:
+                        self.apply(
+                            person=person,
+                            date=date_to_vax,
+                            vaccines=vaccines,
+                            record=record,
+                        )
                 self.update_vaccinated(
                     people=people,date=date_to_vax,record=record,
                 )

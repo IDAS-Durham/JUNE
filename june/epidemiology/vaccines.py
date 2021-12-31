@@ -132,6 +132,7 @@ class Vaccine:
 
 class Vaccines:
     def __init__(self, vaccines: List[Vaccine]):
+        self.vaccines = vaccines
         self.vaccines_dict = {vaccine.name: vaccine for vaccine in vaccines}
 
     def get_by_name(self, vaccine_name: str):
@@ -166,4 +167,4 @@ class Vaccines:
         return cls.from_config_dict(config=config)
 
     def __iter__(self,):
-        return vaccines.values()
+        return iter(self.vaccines)
