@@ -71,9 +71,13 @@ class Epidemiology:
         if self.immunity_setter:
             self.immunity_setter.set_immunity(world)
 
-    def set_past_vaccinations(self, world, date, record=None):
-        for vc in self.vaccination_campaigns:
-            vc.initialize(world=world, date=date, vaccines=self.vaccines, record=record)
+    def set_past_vaccinations(self, people, date, record=None):
+        self.vaccination_campaigns._apply_past_vaccinations(
+                people=people,
+                date=date,
+                vaccines=self.vaccines,
+                record=record
+        )
 
     def set_effective_multipliers(self, population):
         if self.effective_multiplier_setter:
@@ -105,11 +109,9 @@ class Epidemiology:
             self.current_date is None or timer.date.date() != self.current_date.date()
         ):
             self.current_date = timer.date
-            active_vacciantion_campaigns = self.vaccination_campaigns.get_active(
-                date=timer.date,
-            )
+            vaccinate = True
         else:
-            active_vacciantion_campaigns = None
+            vaccinate = False
 
         # infect the people that got exposed
         if self.infection_selectors:
@@ -130,7 +132,8 @@ class Epidemiology:
             timer=timer,
             duration=timer.duration,
             record=record,
-            vaccination_campaigns=active_vacciantion_campaigns,
+            vaccination_campaigns=self.vaccination_campaigns,
+            vaccinate=vaccinate,
         )
         if record:
             record.summarise_time_step(timestamp=timer.date, world=world)
@@ -196,6 +199,7 @@ class Epidemiology:
         timer: "Timer",
         duration: float,
         vaccination_campaigns: Optional[VaccinationCampaigns] = None,
+        vaccinate: bool = False,
         record: Record = None,
     ):
         """
@@ -210,8 +214,6 @@ class Epidemiology:
         duration:
             duration of time step
         """
-        if vaccination_campaigns is None:
-            vaccination_campaigns = []
         for person in world.people:
             if person.infected:
                 previous_tag = person.infection.tag
@@ -238,16 +240,14 @@ class Epidemiology:
                     self.bury_the_dead(world, person, record=record)
             if person.dead:
                 continue
-            for vaccination_campaign in vaccination_campaigns:
-                vaccination_campaign.apply(
+            if vaccinate:
+                vaccination_campaigns.apply(
                     person=person,
                     date=timer.date,
                     record=record,
                     vaccines=self.vaccines,
                 )
-        if vaccination_campaigns is not None:
-            for vaccination_campaign in vaccination_campaigns:
-                vaccination_campaign.update_vaccinated(
+        vaccination_campaigns.update_vaccinated(
                     world.people,
                     date=timer.date,
                     record=record,

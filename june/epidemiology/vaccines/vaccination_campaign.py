@@ -470,53 +470,67 @@ class VaccinationCampaigns:
                 if vc.is_target_group(person):
                     days_passed = (date - vc.start_time).days
                     campaign_coverage.append(
-                        vc.daily_vaccine_probability(days_passed = days_passed)
+                        vc.daily_vaccine_probability(days_passed=days_passed)
                     )
                     available_campaigns.append(vc)
         campaign_coverage = np.array(campaign_coverage)
         total_coverage = campaign_coverage.sum()
-        if total_coverage > 0.:
+        if total_coverage > 0.0:
             if random() < total_coverage:
                 campaign_coverage /= total_coverage
                 campaign = np.random.choice(available_campaigns, p=campaign_coverage)
                 vaccine = vaccines.get_by_name(campaign.vaccine_type)
-                campaign.vaccinate(person=person, date=date, vaccine=vaccine, record=record)
+                campaign.vaccinate(
+                    person=person, date=date, vaccine=vaccine, record=record
+                )
 
-    def update_vaccinated(self, people, date, record=None,):
+    def update_vaccinated(
+        self,
+        people,
+        date,
+        record=None,
+    ):
         for cv in self.vaccination_campaigns:
             cv.update_vaccinated(
-                    people=people,
-                    date=date,
-                    record=record,
+                people=people,
+                date=date,
+                record=record,
             )
 
-    def collect_all_dates_in_past(self, current_date, vaccines,):
+    def collect_all_dates_in_past(
+        self,
+        current_date,
+        vaccines,
+    ):
         dates = set()
         for cv in self.vaccination_campaigns:
             start_time = cv.start_time
             if start_time < current_date:
                 vaccine = vaccines.get_by_name(cv.vaccine_type)
-                days_to_effective = sum(vaccine.days_to_effective) 
-                end_time = min(current_date,cv.end_time + datetime.timedelta(days=days_to_effective))
+                days_to_effective = sum(vaccine.days_to_effective)
+                end_time = min(
+                    current_date,
+                    cv.end_time + datetime.timedelta(days=days_to_effective),
+                )
 
-                delta = end_time - start_time 
+                delta = end_time - start_time
                 for i in range(delta.days + 1):
                     date = start_time + datetime.timedelta(days=i)
                     dates.add(date)
         return sorted(list(dates))
 
-
     def _apply_past_vaccinations(self, people, date, vaccines, record=None):
-        dates_to_vaccinate = self.collect_all_dates_in_past(current_date=date, vaccines=vaccines)
-        print('Dates to vax = ', dates_to_vaccinate)
+        dates_to_vaccinate = self.collect_all_dates_in_past(
+            current_date=date, vaccines=vaccines
+        )
         for date_to_vax in dates_to_vaccinate:
             logger.info(f"Vaccinating at date {date_to_vax.date()}")
             for person in people:
                 self.apply(
-                        person=person,
-                        date=date_to_vax,
-                        vaccines=vaccines,
-                        record=record,
+                    person=person,
+                    date=date_to_vax,
+                    vaccines=vaccines,
+                    record=record,
                 )
             self.update_vaccinated(
                 people=people,
@@ -525,5 +539,3 @@ class VaccinationCampaigns:
             )
             if record is not None:
                 record.time_step(timestamp=date_to_vax)
-
-
