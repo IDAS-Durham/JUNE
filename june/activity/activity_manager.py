@@ -18,7 +18,7 @@ from june.mpi_setup import (
     MovablePeople,
 )
 from june.records import Record
-from june.epidemiology import Vaccines
+from june.epidemiology.vaccines import Vaccines
 
 logger = logging.getLogger("activity_manager")
 mpi_logger = logging.getLogger("mpi")

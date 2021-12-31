@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import List, Tuple, Optional
 
 from june import paths
-from june.demography.person import Person
 from june.epidemiology.infection import infection as infection_module
 from june.utils.parse_probabilities import parse_age_probabilities
 
@@ -75,7 +74,7 @@ class Vaccine:
         return ret
 
     def get_efficacy(
-        self, person: Person, infection_id: int, dose: int
+        self, person: "Person", infection_id: int, dose: int
     ) -> Tuple[float, float]:
         """
         Get sterilisation and symptomatic efficacy of a given dose
@@ -96,7 +95,7 @@ class Vaccine:
         )
 
     def get_efficacy_for_dose_person(
-        self, person: Person, dose: int
+        self, person: "Person", dose: int
     ) -> Tuple[float, float]:
         """
         Get sterilisation and symptomatic efficacy of a given dose
@@ -130,7 +129,7 @@ class Vaccines:
     def get_by_name(self, vaccine_name: str):
         if vaccine_name not in self.vaccines_dict:
             raise ValueError(f"{vaccine_name} does not exist")
-        return self.vaccines_dict.vaccine_name
+        return self.vaccines_dict[vaccine_name]
 
     @classmethod
     def from_config(
