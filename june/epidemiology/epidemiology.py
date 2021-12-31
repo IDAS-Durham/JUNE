@@ -101,7 +101,7 @@ class Epidemiology:
         infection_ids: list = None,
         people_from_abroad_dict: dict = None,
     ):
-        if self.vaccination_campaigns and (
+        if self.vaccination_campaigns is not None and (
             self.current_date is None or timer.date.date() != self.current_date.date()
         ):
             self.current_date = timer.date
@@ -127,7 +127,7 @@ class Epidemiology:
         # update the health status of the population
         self.update_health_status(
             world=world,
-            time=timer.now,
+            timer=timer,
             duration=timer.duration,
             record=record,
             vaccination_campaigns=active_vacciantion_campaigns,
@@ -193,7 +193,7 @@ class Epidemiology:
     def update_health_status(
         self,
         world: World,
-        time: float,
+        timer: "Timer",
         duration: float,
         vaccination_campaigns: Optional[VaccinationCampaigns] = None,
         record: Record = None,
@@ -210,11 +210,12 @@ class Epidemiology:
         duration:
             duration of time step
         """
-
+        if vaccination_campaigns is None:
+            vaccination_campaigns = []
         for person in world.people:
             if person.infected:
                 previous_tag = person.infection.tag
-                new_status = person.infection.update_health_status(time, duration)
+                new_status = person.infection.update_health_status(timer.now, duration)
                 if record is not None:
                     if previous_tag != person.infection.tag:
                         record.accumulate(
@@ -228,29 +229,29 @@ class Epidemiology:
                     self.medical_care_policies.apply(
                         person=person,
                         medical_facilities=self.medical_facilities,
-                        days_from_start=time,
+                        days_from_start=timer.now,
                         record=record,
                     )
                 if new_status == "recovered":
                     self.recover(person, record=record)
                 elif new_status == "dead":
                     self.bury_the_dead(world, person, record=record)
-            if person.dead or person.busy:
+            if person.dead:
                 continue
-            if vaccination_campaigns and vaccinate:
-                vaccination_campaigns.distribute_vaccines(
+            for vaccination_campaign in vaccination_campaigns:
+                vaccination_campaign.apply(
                     person=person,
-                    date=date,
-                    active_policies=active_vaccine_policies,
+                    date=timer.date,
                     record=record,
                     vaccines=self.vaccines,
                 )
-        if vaccination_campaigns:
-            vaccination_campaigns.update_vaccinated(
-                self.world.people,
-                date=self.timer.date,
-                record=self.record,
-            )
+        if vaccination_campaigns is not None:
+            for vaccination_campaign in vaccination_campaigns:
+                vaccination_campaign.update_vaccinated(
+                    world.people,
+                    date=timer.date,
+                    record=record,
+                )
 
     def infect_people(
         self, world, time, infected_ids, infection_ids, people_from_abroad_dict

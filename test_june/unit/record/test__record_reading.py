@@ -247,7 +247,7 @@ def test__log_hospital_admissions(world, interaction, selector):
         timer = sim.timer.date.strftime("%Y-%m-%d")
         daily_hosps_ids = []
         sim.epidemiology.update_health_status(
-            sim.world, sim.timer.now, sim.timer.duration, sim.record
+            sim.world, sim.timer.now, sim.timer.duration, record=sim.record
         )
         for person in world.people.infected:
             if person.medical_facility is not None and person.id not in saved_ids:
@@ -280,7 +280,7 @@ def test__log_deaths(world, interaction, selector):
         timer = sim.timer.date.strftime("%Y-%m-%d")
         daily_deaths_ids = []
         sim.epidemiology.update_health_status(
-            sim.world, sim.timer.now, sim.timer.duration, sim.record
+            sim.world, sim.timer.now, sim.timer.duration, record=sim.record
         )
         for person in world.people:
             if person.dead and person.id not in saved_ids:
