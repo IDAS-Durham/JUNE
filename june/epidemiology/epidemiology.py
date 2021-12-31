@@ -52,8 +52,8 @@ class Epidemiology:
         immunity_setter: Optional[ImmunitySetter] = None,
         medical_care_policies: Optional[MedicalCarePolicies] = None,
         medical_facilities: Optional[MedicalFacilities] = None,
-        vaccines: Vaccines = Vaccines.from_config(),
-        vaccination_campaigns: Optional[VaccinationCampaigns] = VaccinationCampaigns.from_config(),
+        vaccines: Optional[Vaccines] = None,
+        vaccination_campaigns: Optional[VaccinationCampaigns] = None,
     ):
         self.infection_selectors = infection_selectors
         self.infection_seeds = infection_seeds
