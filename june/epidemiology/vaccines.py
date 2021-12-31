@@ -36,9 +36,7 @@ class Vaccine:
         self.days_to_effective = days_to_effective
         self.sterilisation_efficacies = self._parse_efficacies(sterilisation_efficacies)
         self.symptomatic_efficacies = self._parse_efficacies(symptomatic_efficacies)
-        self.infection_ids = self._read_infection_ids(
-            self.sterilisation_efficacies
-        )
+        self.infection_ids = self._read_infection_ids(self.sterilisation_efficacies)
 
     @classmethod
     def from_config(

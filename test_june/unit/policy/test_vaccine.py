@@ -38,7 +38,7 @@ def make_policy():
         group_by="age",
         group_type="20-40",
         group_coverage=0.6,
-        doses=[0,1,2],
+        doses=[0, 1, 2],
     )
 
 
@@ -58,6 +58,7 @@ def create_vaccine():
             {"Delta": {"0-100": 0.7}, "Omicron": {"0-100": 0.1}},
         ],
     )
+
 
 @pytest.fixture(name="vaccines", scope="session")
 def make_vaccines():
@@ -116,7 +117,7 @@ def create_vaccine_plan(
         date_administered=datetime.datetime(2100, 1, 1),
         vaccine=vaccine,
         days_to_next_dose=[0, 9, 16],
-        doses = [0,1,2],
+        doses=[0, 1, 2],
     )
 
 
@@ -154,10 +155,9 @@ def create_generated_stages():
     vg = VaccineStagesGenerator(
         vaccine=vaccine,
         days_to_next_dose=[0, 10, 20],
-        doses=[0,1,2],
+        doses=[0, 1, 2],
     )
     return vg(person, date)
-
 
 
 class TestDose:
@@ -278,9 +278,7 @@ class TestVaccineStagesGenerator:
 
 
 class TestVaccination:
-    def test__process_target_population(
-        self, vaccines
-    ):
+    def test__process_target_population(self, vaccines):
         person = Person.from_attributes(age=30, sex="f")
         vaccine_policy = VaccineDistribution(
             vaccine_type="Test",
@@ -290,7 +288,11 @@ class TestVaccination:
             group_type="20-40",
         )
         date = datetime.datetime(2100, 1, 1)
-        vaccine_policy.apply(person=person, date=date, vaccines=vaccines,)
+        vaccine_policy.apply(
+            person=person,
+            date=date,
+            vaccines=vaccines,
+        )
         assert person.vaccine_trajectory is not None
         assert person.vaccine_trajectory.stages[1].sterilisation_efficacy == {
             delta_id: 0.7,
@@ -301,7 +303,8 @@ class TestVaccination:
         assert person.vaccine_trajectory is None
 
     def test__process_target_population_care_home(
-        self, vaccines,
+        self,
+        vaccines,
     ):
         care_home = CareHome()
         person = Person.from_attributes(age=30, sex="f")
@@ -321,7 +324,8 @@ class TestVaccination:
         assert person.vaccine_trajectory is None
 
     def test__update_vaccine_effect(
-        self, vaccines,
+        self,
+        vaccines,
     ):
         person = Person.from_attributes(age=30, sex="f")
         date = datetime.datetime(2100, 1, 1)
@@ -360,7 +364,8 @@ class TestVaccination:
         )
 
     def test_overall_susceptibility_update(
-        self, vaccines,
+        self,
+        vaccines,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
@@ -373,7 +378,11 @@ class TestVaccination:
         )
         people = Population([young_person, old_person])
         for person in people:
-            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1), vaccines=vaccines,)
+            vaccine_policy.apply(
+                person=person,
+                date=datetime.datetime(2100, 1, 1),
+                vaccines=vaccines,
+            )
         vaccine_policy.update_vaccinated(
             people=people, date=datetime.datetime(2100, 12, 3)
         )
@@ -405,9 +414,7 @@ class TestVaccination:
             == 0.1
         )
 
-    def test_vaccinate_inmune(
-        self, vaccines
-    ):
+    def test_vaccinate_inmune(self, vaccines):
         young_person = Person.from_attributes(age=30, sex="f")
         young_person.immunity.susceptibility_dict[delta_id] = 0.0
         vaccine_policy = VaccineDistribution(
@@ -420,7 +427,11 @@ class TestVaccination:
 
         people = Population([young_person])
         for person in people:
-            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1), vaccines=vaccines,)
+            vaccine_policy.apply(
+                person=person,
+                date=datetime.datetime(2100, 1, 1),
+                vaccines=vaccines,
+            )
         vaccine_policy.update_vaccinated(
             people=people, date=datetime.datetime(2100, 12, 31)
         )
@@ -433,7 +444,8 @@ class TestVaccination:
         assert young_person.immunity.get_susceptibility(delta_id) == 0.0
 
     def test_several_infections_update(
-        self, vaccines,
+        self,
+        vaccines,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
@@ -447,7 +459,11 @@ class TestVaccination:
 
         people = Population([young_person, old_person])
         for person in people:
-            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1),vaccines=vaccines,)
+            vaccine_policy.apply(
+                person=person,
+                date=datetime.datetime(2100, 1, 1),
+                vaccines=vaccines,
+            )
         vaccine_policy.update_vaccinated(
             people=people, date=datetime.datetime(2100, 12, 3)
         )
@@ -466,7 +482,8 @@ class TestVaccination:
         ) == pytest.approx(0.9, 0.01)
 
     def test_trajectory_doses(
-        self, vaccines,
+        self,
+        vaccines,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         vaccine_policy = VaccineDistribution(
@@ -479,7 +496,11 @@ class TestVaccination:
 
         people = Population([young_person])
         for person in people:
-            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1), vaccines=vaccines,)
+            vaccine_policy.apply(
+                person=person,
+                date=datetime.datetime(2100, 1, 1),
+                vaccines=vaccines,
+            )
 
         assert (
             person.vaccine_trajectory.get_dose_number(
@@ -502,9 +523,18 @@ class TestVaccination:
 
 
 class TestVaccinationInitialization:
-    def test__vaccination_from_the_past(self, population, vax_policy, vaccines,):
+    def test__vaccination_from_the_past(
+        self,
+        population,
+        vax_policy,
+        vaccines,
+    ):
         date = datetime.datetime(2021, 4, 30)
-        vax_policy._apply_past_vaccinations(people=population, date=date, vaccines=vaccines,)
+        vax_policy._apply_past_vaccinations(
+            people=population,
+            date=date,
+            vaccines=vaccines,
+        )
         n_vaccinated = 0
         for person in population:
             if (person.age < 20) or (person.age >= 40):
@@ -533,7 +563,8 @@ class TestVaccinationInitialization:
 
 class TestBooster:
     def test_vaccinate_booster(
-        self, vaccines,
+        self,
+        vaccines,
     ):
         dosed_person = Person.from_attributes(age=30, sex="f")
         not_dosed_person = Person.from_attributes(age=30, sex="f")
@@ -549,7 +580,9 @@ class TestBooster:
 
         people = Population([dosed_person, not_dosed_person])
         for person in people:
-            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1),vaccines=vaccines)
+            vaccine_policy.apply(
+                person=person, date=datetime.datetime(2100, 1, 1), vaccines=vaccines
+            )
         vaccine_policy.update_vaccinated(
             people=people, date=datetime.datetime(2100, 1, 30)
         )
@@ -563,7 +596,8 @@ class TestBooster:
         assert not_dosed_person.vaccinated is None
 
     def test_vaccinate_booster_by_type(
-        self, vaccines,
+        self,
+        vaccines,
     ):
         pfizer_person = Person.from_attributes(age=30, sex="f")
         pfizer_person.vaccinated = 1
@@ -578,12 +612,16 @@ class TestBooster:
             doses=[2],
             group_by="age",
             group_type="20-40",
-            last_dose_type=['Pfizer'],
+            last_dose_type=["Pfizer"],
         )
 
         people = Population([pfizer_person, az_person])
         for person in people:
-            vaccine_policy.apply(person=person, date=datetime.datetime(2100, 1, 1), vaccines=vaccines,)
+            vaccine_policy.apply(
+                person=person,
+                date=datetime.datetime(2100, 1, 1),
+                vaccines=vaccines,
+            )
         vaccine_policy.update_vaccinated(
             people=people, date=datetime.datetime(2100, 1, 30)
         )
@@ -592,7 +630,12 @@ class TestBooster:
 
 
 class TestCoverage:
-    def test__right_coverage(self, population, vax_policy, vaccines,):
+    def test__right_coverage(
+        self,
+        population,
+        vax_policy,
+        vaccines,
+    ):
         date = datetime.datetime(2021, 4, 30)
         start_time = datetime.datetime(2021, 3, 1)
         n_days = 4

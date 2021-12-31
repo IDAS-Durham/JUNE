@@ -324,7 +324,13 @@ class VaccineDistribution(Policy):
             return False
         return True
 
-    def vaccinate(self, person, date, vaccine, record,):
+    def vaccinate(
+        self,
+        person,
+        date,
+        vaccine,
+        record,
+    ):
         person.vaccine_trajectory = VaccineTrajectory(
             person=person,
             date_administered=date,
@@ -356,7 +362,7 @@ class VaccineDistribution(Policy):
 
             days_passed = (date - self.start_time).days
             if random() < self.daily_vaccine_probability(days_passed=days_passed):
-                self.vaccinate(person=person, date=date, vaccine=vaccine,record=record)
+                self.vaccinate(person=person, date=date, vaccine=vaccine, record=record)
 
     def update_vaccine_effect(self, person, date, record=None):
         for infection_id in person.vaccine_trajectory.infection_ids:
@@ -405,7 +411,12 @@ class VaccineDistribution(Policy):
                 date_to_vax = self.start_time + datetime.timedelta(days=i)
                 logger.info(f"Vaccinating at date {date_to_vax.date()}")
                 for person in people:
-                    self.apply(person=person, date=date_to_vax, vaccines=vaccines,record=record)
+                    self.apply(
+                        person=person,
+                        date=date_to_vax,
+                        vaccines=vaccines,
+                        record=record,
+                    )
 
     def initialize(self, world, date, record=None):
         """
@@ -419,9 +430,11 @@ class VaccineDistribution(Policy):
 class VaccineDistributions(PolicyCollection):
     policy_type = "vaccine_distribution"
 
-    def apply(self, person: Person, date: datetime, active_policies: List, record, vaccines):
+    def apply(
+        self, person: Person, date: datetime, active_policies: List, record, vaccines
+    ):
         for policy in active_policies:
-            policy.apply(person=person, date=date, record=record,vaccines=vaccines)
+            policy.apply(person=person, date=date, record=record, vaccines=vaccines)
 
     def is_active(self, date: datetime):
         if self.get_active(date):
