@@ -61,10 +61,7 @@ class Epidemiology:
         self.medical_care_policies = medical_care_policies
         self.medical_facilities = medical_facilities
         self.vaccines = vaccines
-        if vaccination_campaigns is None:
-            self.vaccination_campaigns = []
-        else:
-            self.vaccination_campaigns = vaccination_campaigns
+        self.vaccination_campaigns = vaccination_campaigns
         self.current_date = None
 
     def set_immunity(self, world):
@@ -72,12 +69,13 @@ class Epidemiology:
             self.immunity_setter.set_immunity(world)
 
     def set_past_vaccinations(self, people, date, record=None):
-        self.vaccination_campaigns._apply_past_vaccinations(
-                people=people,
-                date=date,
-                vaccines=self.vaccines,
-                record=record
-        )
+        if self.vaccination_campaigns is not None:
+            self.vaccination_campaigns._apply_past_vaccinations(
+                    people=people,
+                    date=date,
+                    vaccines=self.vaccines,
+                    record=record
+            )
 
     def set_effective_multipliers(self, population):
         if self.effective_multiplier_setter:
@@ -247,11 +245,12 @@ class Epidemiology:
                     record=record,
                     vaccines=self.vaccines,
                 )
-        vaccination_campaigns.update_vaccinated(
-                    world.people,
-                    date=timer.date,
-                    record=record,
-                )
+        if vaccinate:
+            vaccination_campaigns.update_vaccinated(
+                        world.people,
+                        date=timer.date,
+                        record=record,
+                    )
 
     def infect_people(
         self, world, time, infected_ids, infection_ids, people_from_abroad_dict
