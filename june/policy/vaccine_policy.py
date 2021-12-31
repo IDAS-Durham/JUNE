@@ -418,12 +418,12 @@ class VaccineDistribution(Policy):
                         record=record,
                     )
 
-    def initialize(self, world, date, record=None):
+    def initialize(self, world, date, vaccines, record=None):
         """
         Initializes policy, vaccinating people in the past if needed.
         """
         return self._apply_past_vaccinations(
-            people=world.people, date=date, record=record
+            people=world.people, date=date, vaccines=vaccines,record=record
         )
 
 

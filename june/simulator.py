@@ -155,6 +155,7 @@ class Simulator:
             policies=policies,
             timer=timer,
             record=record,
+            vaccines=epidemiology.vaccines,
         )
         return cls(
             world=world,
@@ -260,7 +261,6 @@ class Simulator:
             to_send_abroad,  # useful for knowing who's MPI-ing, so can send extra info as needed.
         ) = self.activity_manager.do_timestep(
                 record=self.record,
-                vaccines=self.epidemiology.vaccines
         )
         tick_interaction = perf_counter()
 

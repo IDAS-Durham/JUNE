@@ -48,10 +48,14 @@ class ActivityManager:
         record: Optional[Record] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
+        vaccines: Vaccines = Vaccines.from_config(),
     ):
         self.policies = policies
+        self.vaccines = vaccines
         if self.policies is not None:
-            self.policies.init_policies(world=world, date=timer.date, record=record)
+            self.policies.init_policies(
+                world=world, date=timer.date, record=record, vaccines=vaccines
+            )
         self.world = world
         self.timer = timer
         self.leisure = leisure
@@ -78,6 +82,7 @@ class ActivityManager:
         record: Optional[Record] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
+        vaccines: Vaccines = Vaccines.from_config(),
     ):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -109,6 +114,7 @@ class ActivityManager:
             leisure=leisure,
             travel=travel,
             record=record,
+            vaccines=vaccines,
         )
 
     @staticmethod
@@ -188,7 +194,10 @@ class ActivityManager:
     def get_personal_subgroup(self, person: "Person", activity: str):
         return getattr(person, activity)
 
-    def do_timestep(self, record=None,vaccines=Vaccines.from_config(),):
+    def do_timestep(
+        self,
+        record=None,
+    ):
         # get time data
         tick_interaction_timestep = perf_counter()
         date = self.timer.date
@@ -210,7 +219,6 @@ class ActivityManager:
             date=date,
             days_from_start=self.timer.now,
             record=record,
-            vaccines=vaccines,
         )
         tock_interaction_timestep = perf_counter()
         rank_logger.info(
@@ -240,7 +248,6 @@ class ActivityManager:
         date: datetime = datetime(2020, 2, 2),
         days_from_start=0,
         record=None,
-        vaccines=Vaccines.from_config(),
     ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
@@ -273,7 +280,7 @@ class ActivityManager:
                     date=date,
                     active_policies=active_vaccine_policies,
                     record=record,
-                    vaccines=vaccines,
+                    vaccines=self.vaccines,
                 )
             allowed_activities = self.policies.individual_policies.apply(
                 active_policies=active_individual_policies,

@@ -52,7 +52,7 @@ class Epidemiology:
         immunity_setter: Optional[ImmunitySetter] = None,
         medical_care_policies: Optional[MedicalCarePolicies] = None,
         medical_facilities: Optional[MedicalFacilities] = None,
-        vaccines: Optional[Vaccines] = None,
+        vaccines: Vaccines = Vaccines.from_config(),
     ):
         self.infection_selectors = infection_selectors
         self.infection_seeds = infection_seeds
