@@ -99,7 +99,9 @@ class Simulator:
                 world=world, activity_manager=activity_manager
             )
             self.epidemiology.set_immunity(self.world)
-            self.epidemiology.set_past_vaccinations(people=self.world.people, date=self.timer.date, record=record)
+            self.epidemiology.set_past_vaccinations(
+                people=self.world.people, date=self.timer.date, record=record
+            )
         if self.events is not None:
             self.events.init_events(world=world)
         # self.comment = comment
@@ -256,7 +258,7 @@ class Simulator:
             n_people_going_abroad,
             to_send_abroad,  # useful for knowing who's MPI-ing, so can send extra info as needed.
         ) = self.activity_manager.do_timestep(
-                record=self.record,
+            record=self.record,
         )
         tick_interaction = perf_counter()
 
