@@ -9,6 +9,7 @@ from june.epidemiology.vaccines.vaccination_campaign import (
     VaccineStage,
     VaccineTrajectory,
     VaccinationCampaign,
+    VaccinationCampaigns,
     VaccineStagesGenerator,
 )
 from june.epidemiology.vaccines import Vaccine, Vaccines
@@ -41,15 +42,19 @@ def make_fast_population():
 
 @pytest.fixture(name="vax_policy")
 def make_policy():
-    return VaccinationCampaign(
-        vaccine_type="Test",
-        days_to_next_dose=[0, 9, 16],
-        start_time="2021-03-01",
-        end_time="2021-03-05",
-        group_by="age",
-        group_type="20-40",
-        group_coverage=0.6,
-        doses=[0, 1, 2],
+    return VaccinationCampaigns(
+        [
+            VaccinationCampaign(
+                vaccine_type="Test",
+                days_to_next_dose=[0, 9, 16],
+                start_time="2021-03-01",
+                end_time="2021-03-05",
+                group_by="age",
+                group_type="20-40",
+                group_coverage=0.6,
+                doses=[0, 1, 2],
+            )
+        ]
     )
 
 
@@ -291,12 +296,16 @@ class TestVaccineStagesGenerator:
 class TestVaccination:
     def test__process_target_population(self, vaccines):
         person = Person.from_attributes(age=30, sex="f")
-        vaccine_policy = VaccinationCampaign(
-            vaccine_type="Test",
-            days_to_next_dose=[0, 9, 16],
-            doses=[0, 1, 2],
-            group_by="age",
-            group_type="20-40",
+        vaccine_policy = VaccinationCampaigns(
+            [
+                VaccinationCampaign(
+                    vaccine_type="Test",
+                    days_to_next_dose=[0, 9, 16],
+                    doses=[0, 1, 2],
+                    group_by="age",
+                    group_type="20-40",
+                )
+            ]
         )
         date = datetime.datetime(2100, 1, 1)
         vaccine_policy.apply(
@@ -320,13 +329,18 @@ class TestVaccination:
         care_home = CareHome()
         person = Person.from_attributes(age=30, sex="f")
         care_home.add(person)
-        vaccine_policy = VaccinationCampaign(
-            vaccine_type="Test",
-            days_to_next_dose=[0, 9, 16],
-            doses=[0, 1, 2],
-            group_by="residence",
-            group_type="care_home",
+        vaccine_policy = VaccinationCampaigns(
+            [
+                VaccinationCampaign(
+                    vaccine_type="Test",
+                    days_to_next_dose=[0, 9, 16],
+                    doses=[0, 1, 2],
+                    group_by="residence",
+                    group_type="care_home",
+                )
+            ]
         )
+
         date = datetime.datetime(2100, 1, 1)
         vaccine_policy.apply(person=person, date=date, vaccines=vaccines)
         assert person.vaccine_trajectory is not None
@@ -340,24 +354,30 @@ class TestVaccination:
     ):
         person = Person.from_attributes(age=30, sex="f")
         date = datetime.datetime(2100, 1, 1)
-        vaccine_policy = VaccinationCampaign(
-            vaccine_type="Test",
-            days_to_next_dose=[0, 9, 16],
-            doses=[0, 1, 2],
-            group_by="age",
-            group_type="20-40",
+        vaccine_policy = VaccinationCampaigns(
+            [
+                VaccinationCampaign(
+                    vaccine_type="Test",
+                    days_to_next_dose=[0, 9, 16],
+                    doses=[0, 1, 2],
+                    group_by="age",
+                    group_type="20-40",
+                )
+            ]
         )
+
         vaccine_policy.apply(person=person, date=date, vaccines=vaccines)
         assert person.immunity.get_susceptibility(delta_id) == 1.0
         assert person.immunity.get_effective_multiplier(delta_id) == 1.0
-        vaccine_policy.update_vaccine_effect(
-            person=person, date=datetime.datetime(2100, 1, 2)
+        people = Population([person])
+        vaccine_policy.update_vaccinated(
+            people=people, date=datetime.datetime(2100, 1, 2)
         )
         assert person.immunity.get_susceptibility(delta_id) == 0.7
         assert person.immunity.get_effective_multiplier(delta_id) == 0.7
 
-        vaccine_policy.update_vaccine_effect(
-            person=person, date=datetime.datetime(2100, 1, 15)
+        vaccine_policy.update_vaccinated(
+            people=people, date=datetime.datetime(2100, 1, 15)
         )
         assert pytest.approx(person.immunity.get_susceptibility(delta_id), 0.001) == 0.3
         assert (
@@ -365,8 +385,8 @@ class TestVaccination:
             == 0.3
         )
 
-        vaccine_policy.update_vaccine_effect(
-            person=person, date=datetime.datetime(2220, 12, 25)
+        vaccine_policy.update_vaccinated(
+            people=people, date=datetime.datetime(2220, 12, 25)
         )
         assert pytest.approx(person.immunity.get_susceptibility(delta_id), 0.001) == 0.1
         assert (
@@ -380,13 +400,18 @@ class TestVaccination:
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
-        vaccine_policy = VaccinationCampaign(
-            vaccine_type="Test",
-            days_to_next_dose=[0, 9, 16],
-            doses=[0, 1, 2],
-            group_by="age",
-            group_type="20-40",
+        vaccine_policy = VaccinationCampaigns(
+            [
+                VaccinationCampaign(
+                    vaccine_type="Test",
+                    days_to_next_dose=[0, 9, 16],
+                    doses=[0, 1, 2],
+                    group_by="age",
+                    group_type="20-40",
+                )
+            ]
         )
+
         people = Population([young_person, old_person])
         for person in people:
             vaccine_policy.apply(
@@ -413,7 +438,6 @@ class TestVaccination:
         vaccine_policy.update_vaccinated(
             people=people, date=datetime.datetime(2100, 12, 3)
         )
-        assert young_person.id not in vaccine_policy.vaccinated_ids
         assert (
             pytest.approx(
                 young_person.immunity.get_effective_multiplier(delta_id), 0.001
@@ -428,12 +452,16 @@ class TestVaccination:
     def test_vaccinate_inmune(self, vaccines):
         young_person = Person.from_attributes(age=30, sex="f")
         young_person.immunity.susceptibility_dict[delta_id] = 0.0
-        vaccine_policy = VaccinationCampaign(
-            vaccine_type="Test",
-            days_to_next_dose=[0, 9, 16],
-            doses=[0, 1, 2],
-            group_by="age",
-            group_type="20-40",
+        vaccine_policy = VaccinationCampaigns(
+            [
+                VaccinationCampaign(
+                    vaccine_type="Test",
+                    days_to_next_dose=[0, 9, 16],
+                    doses=[0, 1, 2],
+                    group_by="age",
+                    group_type="20-40",
+                )
+            ]
         )
 
         people = Population([young_person])
@@ -451,7 +479,6 @@ class TestVaccination:
         vaccine_policy.update_vaccinated(
             people=people, date=datetime.datetime(2100, 12, 31)
         )
-        assert young_person.id not in vaccine_policy.vaccinated_ids
         assert young_person.immunity.get_susceptibility(delta_id) == 0.0
 
     def test_several_infections_update(
@@ -460,12 +487,16 @@ class TestVaccination:
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
-        vaccine_policy = VaccinationCampaign(
-            vaccine_type="Test",
-            days_to_next_dose=[0, 9, 16],
-            doses=[0, 1, 2],
-            group_by="age",
-            group_type="20-40",
+        vaccine_policy = VaccinationCampaigns(
+            [
+                VaccinationCampaign(
+                    vaccine_type="Test",
+                    days_to_next_dose=[0, 9, 16],
+                    doses=[0, 1, 2],
+                    group_by="age",
+                    group_type="20-40",
+                )
+            ]
         )
 
         people = Population([young_person, old_person])
@@ -478,7 +509,6 @@ class TestVaccination:
         vaccine_policy.update_vaccinated(
             people=people, date=datetime.datetime(2100, 12, 3)
         )
-        assert young_person.id not in vaccine_policy.vaccinated_ids
         assert young_person.immunity.get_susceptibility(delta_id) == pytest.approx(
             0.1, 0.001
         )
@@ -497,12 +527,16 @@ class TestVaccination:
         vaccines,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
-        vaccine_policy = VaccinationCampaign(
-            vaccine_type="Test",
-            days_to_next_dose=[0, 9],
-            doses=[0, 1],
-            group_by="age",
-            group_type="20-40",
+        vaccine_policy = VaccinationCampaigns(
+            [
+                VaccinationCampaign(
+                    vaccine_type="Test",
+                    days_to_next_dose=[0, 9],
+                    doses=[0, 1],
+                    group_by="age",
+                    group_type="20-40",
+                )
+            ]
         )
 
         people = Population([young_person])
@@ -542,12 +576,20 @@ class TestBooster:
         not_dosed_person = Person.from_attributes(age=30, sex="f")
         dosed_person.vaccinated = 1
 
-        vaccine_policy = VaccinationCampaign(
-            vaccine_type="Test",
-            days_to_next_dose=[0],
-            doses=[2],
-            group_by="age",
-            group_type="20-40",
+        vaccine_policy = VaccinationCampaigns(
+            [
+                VaccinationCampaign(
+                    vaccine_type="Test",
+                    days_to_next_dose=[
+                        0,
+                    ],
+                    doses=[
+                        2,
+                    ],
+                    group_by="age",
+                    group_type="20-40",
+                )
+            ]
         )
 
         people = Population([dosed_person, not_dosed_person])
@@ -578,13 +620,21 @@ class TestBooster:
         az_person.vaccinated = 1
         az_person.vaccine_type = "AstraZeneca"
 
-        vaccine_policy = VaccinationCampaign(
-            vaccine_type="Pfizer",
-            days_to_next_dose=[0],
-            doses=[2],
-            group_by="age",
-            group_type="20-40",
-            last_dose_type=["Pfizer"],
+        vaccine_policy = VaccinationCampaigns(
+            [
+                VaccinationCampaign(
+                    vaccine_type="Test",
+                    days_to_next_dose=[
+                        0,
+                    ],
+                    doses=[
+                        2,
+                    ],
+                    group_by="age",
+                    group_type="20-40",
+                    last_dose_type=["Pfizer"],
+                )
+            ]
         )
 
         people = Population([pfizer_person, az_person])

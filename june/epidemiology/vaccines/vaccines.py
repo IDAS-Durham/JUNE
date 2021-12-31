@@ -173,3 +173,9 @@ class Vaccines:
         self,
     ):
         return iter(self.vaccines)
+
+    def get_max_effective_date(self,):
+        return max(
+                [
+                sum(vaccine.days_to_effective) for vaccine in self.vaccines
+        ])
