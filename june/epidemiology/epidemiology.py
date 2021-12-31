@@ -192,7 +192,7 @@ class Epidemiology:
             )
         person.infection = None
 
-    def update_health_status(self, world: World, time: float, duration: float, date = None, record: Record = None, vaccinate: bool = False):
+    def update_health_status(self, world: World, time: float, duration: float, date = None, record: Record = None, vaccinate: bool = False, vaccination_campaigns=None):
         """
         Update symptoms and health status of infected people.
         Send them to hospital if necessary, or bury them if they
