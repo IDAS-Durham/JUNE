@@ -70,7 +70,6 @@ class ActivityManager:
             "commute": activity_to_super_groups.get("commute", []),
             "rail_travel": activity_to_super_groups.get("rail_travel", []),
         }
-        self.current_date = None
 
     @classmethod
     def from_file(
@@ -261,27 +260,10 @@ class ActivityManager:
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
         )
-        active_vaccine_policies = self.policies.vaccine_distribution.get_active(
-            date=date
-        )
         to_send_abroad = MovablePeople()
-        if self.current_date is None or date.date() != self.current_date.date():
-            self.current_date = date
-            apply_vaccine_distribution = True
-        else:
-            apply_vaccine_distribution = False
-
         for person in self.world.people:
             if person.dead or person.busy:
                 continue
-            if apply_vaccine_distribution:
-                self.policies.vaccine_distribution.apply(
-                    person=person,
-                    date=date,
-                    active_policies=active_vaccine_policies,
-                    record=record,
-                    vaccines=self.vaccines,
-                )
             allowed_activities = self.policies.individual_policies.apply(
                 active_policies=active_individual_policies,
                 person=person,

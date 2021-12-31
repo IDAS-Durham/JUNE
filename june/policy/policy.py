@@ -119,13 +119,7 @@ class Policies:
         like policies depending on workers' behaviours during lockdown.
         """
         for policy in self:
-            if policy.policy_type == "vaccine_distribution":
-                print('Initialize vaccine distribution!')
-                policy.initialize(
-                    world=world, date=date, record=record, vaccines=vaccines
-                )
-            else:
-                policy.initialize(world=world, date=date, record=record)
+            policy.initialize(world=world, date=date, record=record)
 
 
 class PolicyCollection:

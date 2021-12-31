@@ -99,6 +99,7 @@ class Simulator:
                 world=world, activity_manager=activity_manager
             )
             self.epidemiology.set_immunity(self.world)
+            self.epidemoilogy.set_past_vaccinations(world=self.world, date=self.timer.date(), record=record)
         if self.events is not None:
             self.events.init_events(world=world)
         # self.comment = comment

@@ -5,10 +5,10 @@ import numpy as np
 from june.groups import CareHome
 from june.demography import Person, Population
 
-from june.policy.vaccine_policy import (
+from june.epidemiology.vaccines.vaccination_campaign import (
     VaccineStage,
     VaccineTrajectory,
-    VaccineDistribution,
+    VaccinationCampaign,
     VaccineStagesGenerator,
 )
 from june.epidemiology.vaccines import Vaccine, Vaccines
@@ -30,7 +30,7 @@ def make_population():
 
 @pytest.fixture(name="vax_policy")
 def make_policy():
-    return VaccineDistribution(
+    return VaccinationCampaign(
         vaccine_type="Test",
         days_to_next_dose=[0, 9, 16],
         start_time="2021-03-01",
@@ -280,7 +280,7 @@ class TestVaccineStagesGenerator:
 class TestVaccination:
     def test__process_target_population(self, vaccines):
         person = Person.from_attributes(age=30, sex="f")
-        vaccine_policy = VaccineDistribution(
+        vaccine_policy = VaccinationCampaign(
             vaccine_type="Test",
             days_to_next_dose=[0, 9, 16],
             doses=[0, 1, 2],
@@ -309,7 +309,7 @@ class TestVaccination:
         care_home = CareHome()
         person = Person.from_attributes(age=30, sex="f")
         care_home.add(person)
-        vaccine_policy = VaccineDistribution(
+        vaccine_policy = VaccinationCampaign(
             vaccine_type="Test",
             days_to_next_dose=[0, 9, 16],
             doses=[0, 1, 2],
@@ -329,7 +329,7 @@ class TestVaccination:
     ):
         person = Person.from_attributes(age=30, sex="f")
         date = datetime.datetime(2100, 1, 1)
-        vaccine_policy = VaccineDistribution(
+        vaccine_policy = VaccinationCampaign(
             vaccine_type="Test",
             days_to_next_dose=[0, 9, 16],
             doses=[0, 1, 2],
@@ -369,7 +369,7 @@ class TestVaccination:
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
-        vaccine_policy = VaccineDistribution(
+        vaccine_policy = VaccinationCampaign(
             vaccine_type="Test",
             days_to_next_dose=[0, 9, 16],
             doses=[0, 1, 2],
@@ -417,7 +417,7 @@ class TestVaccination:
     def test_vaccinate_inmune(self, vaccines):
         young_person = Person.from_attributes(age=30, sex="f")
         young_person.immunity.susceptibility_dict[delta_id] = 0.0
-        vaccine_policy = VaccineDistribution(
+        vaccine_policy = VaccinationCampaign(
             vaccine_type="Test",
             days_to_next_dose=[0, 9, 16],
             doses=[0, 1, 2],
@@ -449,7 +449,7 @@ class TestVaccination:
     ):
         young_person = Person.from_attributes(age=30, sex="f")
         old_person = Person.from_attributes(age=80, sex="f")
-        vaccine_policy = VaccineDistribution(
+        vaccine_policy = VaccinationCampaign(
             vaccine_type="Test",
             days_to_next_dose=[0, 9, 16],
             doses=[0, 1, 2],
@@ -486,7 +486,7 @@ class TestVaccination:
         vaccines,
     ):
         young_person = Person.from_attributes(age=30, sex="f")
-        vaccine_policy = VaccineDistribution(
+        vaccine_policy = VaccinationCampaign(
             vaccine_type="Test",
             days_to_next_dose=[0, 9],
             doses=[0, 1],
@@ -570,7 +570,7 @@ class TestBooster:
         not_dosed_person = Person.from_attributes(age=30, sex="f")
         dosed_person.vaccinated = 1
 
-        vaccine_policy = VaccineDistribution(
+        vaccine_policy = VaccinationCampaign(
             vaccine_type="Test",
             days_to_next_dose=[0],
             doses=[2],
@@ -606,7 +606,7 @@ class TestBooster:
         az_person.vaccinated = 1
         az_person.vaccine_type = "AstraZeneca"
 
-        vaccine_policy = VaccineDistribution(
+        vaccine_policy = VaccinationCampaign(
             vaccine_type="Pfizer",
             days_to_next_dose=[0],
             doses=[2],
