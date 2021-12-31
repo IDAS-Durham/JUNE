@@ -7,7 +7,6 @@ import logging
 
 from june.demography.person import Person
 from .policy import Policy, PolicyCollection
-from .vaccines import Vaccine
 
 
 logger = logging.getLogger("vaccination")
@@ -267,21 +266,11 @@ class VaccineDistribution(Policy):
         )
         self.total_days = (self.end_time - self.start_time).days
         self.group_coverage = group_coverage
-        self.infection_ids = self._read_infection_ids(
-            self.vaccine.sterilisation_efficacies
-        )
         if last_dose_type is None:
             self.last_dose_type = []
         else:
             self.last_dose_type = last_dose_type
         self.vaccinated_ids = set()
-
-    def _read_infection_ids(self, sterilisation_efficacies):
-        ids = set()
-        for dd in sterilisation_efficacies:
-            for key in dd:
-                ids.add(key)
-        return list(ids)
 
     def process_group_description(self, group_by, group_type):
         if group_by in ("residence", "primary_activity"):
@@ -311,8 +300,8 @@ class VaccineDistribution(Policy):
                 return True
         return False
 
-    def should_be_vaccinated(self, person):
-        starting_dose = self.vaccine.doses[0]
+    def should_be_vaccinated(self, person, vaccine):
+        starting_dose = vaccine.doses[0]
         if person.vaccinated is not None and starting_dose == 0:
             return False
         if starting_dose > 0 and (
@@ -327,11 +316,11 @@ class VaccineDistribution(Policy):
             return False
         return True
 
-    def vaccinate(self, person, date, record):
+    def vaccinate(self, person, date, vaccine, record,):
         person.vaccine_trajectory = VaccineTrajectory(
             person=person,
             date_administered=date,
-            vaccine=self.vaccine,
+            vaccine=vaccine,
             days_to_next_dose=self.days_to_next_dose,
         )
         person.vaccine_trajectory.give_dose(
@@ -346,20 +335,22 @@ class VaccineDistribution(Policy):
             1 / (self.total_days - days_passed * self.group_coverage)
         )
 
-    def apply(self, person: Person, date: datetime, record=None):
+    def apply(self, person: Person, date: datetime, vaccines, record=None):
+        vaccine = self.vaccines.get_by_name(self.vaccine_type)
         if (
             self.should_be_vaccinated(
-                person,
+                person=person,
+                vaccine=vaccine,
             )
             and self.is_target_group(person)
         ):
 
             days_passed = (date - self.start_time).days
             if random() < self.daily_vaccine_probability(days_passed=days_passed):
-                self.vaccinate(person=person, date=date, record=record)
+                self.vaccinate(person=person, date=date, vaccine=vaccine,record=record)
 
     def update_vaccine_effect(self, person, date, record=None):
-        for infection_id in self.infection_ids:
+        for infection_id in person.vaccine_trajecotry.vaccine.infection_ids:
             updated_susceptibility = person.vaccine_trajectory.susceptibility(
                 date=date, infection_id=infection_id
             )

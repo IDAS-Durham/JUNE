@@ -1,6 +1,6 @@
 import yaml
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from june import paths
 from june.demography.person import Person
@@ -14,7 +14,6 @@ class Vaccine:
     def __init__(
         self,
         name: str,
-        doses: List[int],
         days_to_effective: List[int],
         sterilisation_efficacies,
         symptomatic_efficacies,
@@ -35,16 +34,17 @@ class Vaccine:
         """
 
         self.name = name
-        self.doses = doses
         self.days_to_effective = days_to_effective
         self.sterilisation_efficacies = self._parse_efficacies(sterilisation_efficacies)
         self.symptomatic_efficacies = self._parse_efficacies(symptomatic_efficacies)
+        self.infection_ids = self._read_infection_ids(
+            self.sterilisation_efficacies
+        )
 
     @classmethod
     def from_config(
         cls,
         vaccine_type: str,
-        doses: List[int],
         config_file: Path = default_config_filename,
     ):
         with open(config_file) as f:
@@ -52,11 +52,17 @@ class Vaccine:
         config = config[vaccine_type]
         return cls(
             name=vaccine_type,
-            doses=doses,
             days_to_effective=config["days_to_effective"],
             sterilisation_efficacies=config["sterilisation_efficacies"],
             symptomatic_efficacies=config["symptomatic_efficacies"],
         )
+
+    def _read_infection_ids(self, sterilisation_efficacies):
+        ids = set()
+        for dd in sterilisation_efficacies:
+            for key in dd:
+                ids.add(key)
+        return list(ids)
 
     def _parse_efficacies(self, efficacies):
         ret = []
@@ -115,3 +121,32 @@ class Vaccine:
 
     def select_dose_age(self, efficacy, dose, age):
         return {k: v[age] for k, v in efficacy[dose].items()}
+
+
+class Vaccines:
+    def __init__(self, vaccines: List[Vaccine]):
+        self.vaccines_dict = {vaccine.name: vaccine for vaccine in vaccines}
+
+    def get_by_name(self, vaccine_name: str):
+        if vaccine_name not in self.vaccines_dict:
+            raise ValueError(f"{vaccine_name} does not exist")
+        return self.vaccines_dict.vaccine_name
+
+    @classmethod
+    def from_config(
+        cls,
+        config_file: Path = default_config_filename,
+    ):
+        with open(config_file) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        vaccines = []
+        for key, values in config.items():
+            vaccines.append(
+                Vaccine(
+                    name=key,
+                    days_to_effective=values["days_to_effective"],
+                    sterilisation_efficacies=values["sterilisation_efficacies"],
+                    symptomatic_efficacies=values["symptomatic_efficacies"],
+                )
+            )
+        return cls(vaccines=vaccines)

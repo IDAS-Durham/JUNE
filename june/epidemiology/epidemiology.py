@@ -4,6 +4,7 @@ from time import time as wall_clock
 import logging
 
 from .infection import InfectionSelectors, ImmunitySetter
+from .vaccines import Vaccines
 from june.demography import Activities
 from june.policy import MedicalCarePolicies
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
@@ -12,7 +13,7 @@ from june.records import Record
 from june.world import World
 from june.time import Timer
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from june.demography.person import Person
@@ -46,17 +47,19 @@ class Epidemiology:
 
     def __init__(
         self,
-        infection_selectors: InfectionSelectors = None,
-        infection_seeds: "InfectionSeeds" = None,
-        immunity_setter: ImmunitySetter = None,
-        medical_care_policies: MedicalCarePolicies = None,
-        medical_facilities: MedicalFacilities = None,
+        infection_selectors: Optional[InfectionSelectors] = None,
+        infection_seeds: Optional["InfectionSeeds"] = None,
+        immunity_setter: Optional[ImmunitySetter] = None,
+        medical_care_policies: Optional[MedicalCarePolicies] = None,
+        medical_facilities: Optional[MedicalFacilities] = None,
+        vaccines: Optional[Vaccines] = None,
     ):
         self.infection_selectors = infection_selectors
         self.infection_seeds = infection_seeds
         self.immunity_setter = immunity_setter
         self.medical_care_policies = medical_care_policies
         self.medical_facilities = medical_facilities
+        self.vaccines = vaccines
 
     def set_immunity(self, world):
         if self.immunity_setter:
