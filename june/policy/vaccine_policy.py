@@ -270,7 +270,10 @@ class VaccineDistribution(Policy):
         self.infection_ids = self._read_infection_ids(
             self.vaccine.sterilisation_efficacies
         )
-        self.last_dose_type = last_dose_type
+        if last_dose_type is None:
+            self.last_dose_type = []
+        else:
+            self.last_dose_type = last_dose_type
         self.vaccinated_ids = set()
 
     def _read_infection_ids(self, sterilisation_efficacies):
@@ -317,8 +320,9 @@ class VaccineDistribution(Policy):
         ):
             return False
         if (
-            starting_dose > 0
-            and person.vaccine_type != self.last_dose_type
+            self.last_dose_type
+            and starting_dose > 0
+            and person.vaccine_type not in self.last_dose_type
         ):
             return False
         return True

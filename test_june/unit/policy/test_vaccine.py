@@ -614,7 +614,7 @@ class TestBooster:
             doses=[2],
             group_by="age",
             group_type="20-40",
-            last_dose_type='Pfizer',
+            last_dose_type=['Pfizer'],
         )
 
         people = Population([pfizer_person, az_person])
