@@ -127,7 +127,8 @@ class Epidemiology:
         # update the health status of the population
         self.update_health_status(
             world=world,
-            timer=timer,
+            time=timer.now,
+            date=timer.date,
             duration=timer.duration,
             record=record,
             vaccination_campaigns=self.vaccination_campaigns,
@@ -191,15 +192,7 @@ class Epidemiology:
             )
         person.infection = None
 
-    def update_health_status(
-        self,
-        world: World,
-        timer: "Timer",
-        duration: float,
-        vaccination_campaigns: Optional[VaccinationCampaigns] = None,
-        vaccinate: bool = False,
-        record: Record = None,
-    ):
+    def update_health_status(self, world: World, time: float, duration: float, date = None, record: Record = None, vaccinate: bool = False):
         """
         Update symptoms and health status of infected people.
         Send them to hospital if necessary, or bury them if they
@@ -215,7 +208,7 @@ class Epidemiology:
         for person in world.people:
             if person.infected:
                 previous_tag = person.infection.tag
-                new_status = person.infection.update_health_status(timer.now, duration)
+                new_status = person.infection.update_health_status(time, duration)
                 if record is not None:
                     if previous_tag != person.infection.tag:
                         record.accumulate(
@@ -229,7 +222,7 @@ class Epidemiology:
                     self.medical_care_policies.apply(
                         person=person,
                         medical_facilities=self.medical_facilities,
-                        days_from_start=timer.now,
+                        days_from_start=time,
                         record=record,
                     )
                 if new_status == "recovered":
@@ -241,14 +234,14 @@ class Epidemiology:
             if vaccinate:
                 vaccination_campaigns.apply(
                     person=person,
-                    date=timer.date,
+                    date=date,
                     record=record,
                     vaccines=self.vaccines,
                 )
         if vaccinate:
             vaccination_campaigns.update_vaccinated(
                         world.people,
-                        date=timer.date,
+                        date=date,
                         record=record,
                     )
 
