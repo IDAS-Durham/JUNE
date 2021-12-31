@@ -18,6 +18,7 @@ from june.mpi_setup import (
     MovablePeople,
 )
 from june.records import Record
+from june.epidemiology import Vaccines
 
 logger = logging.getLogger("activity_manager")
 mpi_logger = logging.getLogger("mpi")
@@ -187,7 +188,7 @@ class ActivityManager:
     def get_personal_subgroup(self, person: "Person", activity: str):
         return getattr(person, activity)
 
-    def do_timestep(self, record=None):
+    def do_timestep(self, record=None,vaccines=Vaccines.from_config(),):
         # get time data
         tick_interaction_timestep = perf_counter()
         date = self.timer.date
@@ -209,6 +210,7 @@ class ActivityManager:
             date=date,
             days_from_start=self.timer.now,
             record=record,
+            vaccines=vaccines,
         )
         tock_interaction_timestep = perf_counter()
         rank_logger.info(
@@ -238,6 +240,7 @@ class ActivityManager:
         date: datetime = datetime(2020, 2, 2),
         days_from_start=0,
         record=None,
+        vaccines=Vaccines.from_config(),
     ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
@@ -270,6 +273,7 @@ class ActivityManager:
                     date=date,
                     active_policies=active_vaccine_policies,
                     record=record,
+                    vaccines=vaccines,
                 )
             allowed_activities = self.policies.individual_policies.apply(
                 active_policies=active_individual_policies,

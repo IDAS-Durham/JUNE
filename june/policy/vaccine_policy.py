@@ -410,9 +410,9 @@ class VaccineDistribution(Policy):
 class VaccineDistributions(PolicyCollection):
     policy_type = "vaccine_distribution"
 
-    def apply(self, person: Person, date: datetime, active_policies: List, record):
+    def apply(self, person: Person, date: datetime, active_policies: List, record, vaccines):
         for policy in active_policies:
-            policy.apply(person=person, date=date, record=record)
+            policy.apply(person=person, date=date, record=record,vaccines=vaccines)
 
     def is_active(self, date: datetime):
         if self.get_active(date):

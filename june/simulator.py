@@ -258,7 +258,10 @@ class Simulator:
             n_people_from_abroad,
             n_people_going_abroad,
             to_send_abroad,  # useful for knowing who's MPI-ing, so can send extra info as needed.
-        ) = self.activity_manager.do_timestep(record=self.record)
+        ) = self.activity_manager.do_timestep(
+                record=self.record,
+                vaccines=self.epidemiology.vaccines
+        )
         tick_interaction = perf_counter()
 
         # get the supergroup instances that are active in this time step:
