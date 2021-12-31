@@ -6,7 +6,9 @@ from june import paths
 from june.epidemiology.infection import infection as infection_module
 from june.utils.parse_probabilities import parse_age_probabilities
 
-default_config_filename = paths.configs_path / "defaults/epidemiology/vaccines/vaccines.yaml"
+default_config_filename = (
+    paths.configs_path / "defaults/epidemiology/vaccines/vaccines.yaml"
+)
 
 
 class Vaccine:

@@ -18,7 +18,10 @@ logger = logging.getLogger("vaccination")
 # TODO: Smearing of dates (give mean and std and generate spacing between doses)
 # TODO: Generalize to varying functional forms for waning, with extra params
 
-default_config_filename = paths.configs_path / "defaults/epidemiology/vaccines/vaccination_campaigns.yaml"
+default_config_filename = (
+    paths.configs_path / "defaults/epidemiology/vaccines/vaccination_campaigns.yaml"
+)
+
 
 class VaccineStage:
 
@@ -297,8 +300,6 @@ class VaccinationCampaign:
         """
         return self.start_time <= date < self.end_time
 
-
-
     def is_target_group(
         self,
         person,
@@ -458,25 +459,24 @@ class VaccinationCampaign:
 
 
 class VaccinationCampaigns:
-
-    def __init__(self, vaccination_campaigns: List[VaccinationCampaign],):
+    def __init__(
+        self,
+        vaccination_campaigns: List[VaccinationCampaign],
+    ):
         self.vaccination_campaigns = vaccination_campaigns
 
     @classmethod
-    def from_config(cls,
+    def from_config(
+        cls,
         config_file: Path = default_config_filename,
     ):
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         vaccination_campaigns = []
         for key, value in config.items():
-            vaccination_campaigns.append(
-                    VaccinationCampaign(
-                        **value
-                    )
-            )
+            vaccination_campaigns.append(VaccinationCampaign(**value))
         return cls(
-                vaccination_campaigns = vaccination_campaigns,
+            vaccination_campaigns=vaccination_campaigns,
         )
 
     def get_active(self, date: datetime):
@@ -492,5 +492,7 @@ class VaccinationCampaigns:
             for policy in self.policies:
                 policy.update_vaccinated(people=people, date=date, record=record)
 
-    def __iter__(self,):
+    def __iter__(
+        self,
+    ):
         return iter(self.vaccination_campaigns)

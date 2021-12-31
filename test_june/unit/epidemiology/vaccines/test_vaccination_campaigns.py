@@ -13,6 +13,7 @@ from june.epidemiology.vaccines.vaccination_campaign import (
 )
 from june.epidemiology.vaccines import Vaccine, Vaccines
 from june.epidemiology.infection.infection import Delta, Omicron
+from june.records import Record, RecordReader
 
 delta_id = Delta.infection_id()
 omicron_id = Omicron.infection_id()
@@ -23,6 +24,16 @@ def make_population():
     people = []
     for age in range(100):
         for _ in range(100):
+            person = Person.from_attributes(age=age)
+            people.append(person)
+    return Population(people)
+
+
+@pytest.fixture(name="fast_population")
+def make_fast_population():
+    people = []
+    for age in range(100):
+        for _ in range(10):
             person = Person.from_attributes(age=age)
             people.append(person)
     return Population(people)
@@ -522,45 +533,6 @@ class TestVaccination:
         )
 
 
-class TestVaccinationInitialization:
-    def test__vaccination_from_the_past(
-        self,
-        population,
-        vax_policy,
-        vaccines,
-    ):
-        date = datetime.datetime(2021, 4, 30)
-        vax_policy._apply_past_vaccinations(
-            people=population,
-            date=date,
-            vaccines=vaccines,
-        )
-        n_vaccinated = 0
-        for person in population:
-            if (person.age < 20) or (person.age >= 40):
-                assert person.vaccinated is None
-            else:
-                if person.vaccinated is not None:
-                    n_vaccinated += 1
-                    assert np.isclose(
-                        person.vaccine_trajectory.susceptibility(date, delta_id), 0.1
-                    )
-                    assert np.isclose(
-                        person.vaccine_trajectory.susceptibility(date, omicron_id), 0.2
-                    )
-                    assert np.isclose(
-                        person.vaccine_trajectory.effective_multiplier(date, delta_id),
-                        0.3,
-                    )
-                    assert np.isclose(
-                        person.vaccine_trajectory.effective_multiplier(
-                            date, omicron_id
-                        ),
-                        0.9,
-                    )
-        assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
-
-
 class TestBooster:
     def test_vaccinate_booster(
         self,
@@ -651,3 +623,66 @@ class TestCoverage:
                 if person.vaccinated is not None:
                     n_vaccinated += 1
         assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
+
+
+class TestVaccinationInitialization:
+    def test__vaccination_from_the_past(
+        self,
+        population,
+        vax_policy,
+        vaccines,
+    ):
+        date = datetime.datetime(2021, 4, 30)
+        vax_policy._apply_past_vaccinations(
+            people=population,
+            date=date,
+            vaccines=vaccines,
+        )
+        n_vaccinated = 0
+        for person in population:
+            if (person.age < 20) or (person.age >= 40):
+                assert person.vaccinated is None
+            else:
+                if person.vaccinated is not None:
+                    n_vaccinated += 1
+                    assert np.isclose(
+                        person.vaccine_trajectory.susceptibility(date, delta_id), 0.1
+                    )
+                    assert np.isclose(
+                        person.vaccine_trajectory.susceptibility(date, omicron_id), 0.2
+                    )
+                    assert np.isclose(
+                        person.vaccine_trajectory.effective_multiplier(date, delta_id),
+                        0.3,
+                    )
+                    assert np.isclose(
+                        person.vaccine_trajectory.effective_multiplier(
+                            date, omicron_id
+                        ),
+                        0.9,
+                    )
+        assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
+
+    def test__record_saving(
+        self,
+        fast_population,
+        vax_policy,
+        vaccines,
+    ):
+        record = Record(record_path="results")
+        vax_policy._apply_past_vaccinations(
+            people=fast_population,
+            date=datetime.datetime(2021, 5, 1),
+            vaccines=vaccines,
+            record=record,
+        )
+        n_vaccinated = 0
+        for person in fast_population:
+            if person.vaccinated is not None:
+                n_vaccinated += 1
+        read = RecordReader(results_path="results")
+        vaccines_df = read.table_to_df("vaccines", "vaccinated_ids")
+        first_dose_df = vaccines_df[vaccines_df["dose_numbers"] == 0]
+        second_dose_df = vaccines_df[vaccines_df["dose_numbers"] == 1]
+        assert len(first_dose_df) == len(second_dose_df)
+        assert len(first_dose_df) == n_vaccinated
