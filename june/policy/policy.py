@@ -120,6 +120,7 @@ class Policies:
         """
         for policy in self:
             if policy.policy_type == "vaccine_distribution":
+                print('Initialize vaccine distribution!')
                 policy.initialize(
                     world=world, date=date, record=record, vaccines=vaccines
                 )

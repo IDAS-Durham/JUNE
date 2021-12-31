@@ -1,6 +1,6 @@
 import yaml
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 
 from june import paths
 from june.epidemiology.infection import infection as infection_module
@@ -39,6 +39,19 @@ class Vaccine:
         self.infection_ids = self._read_infection_ids(self.sterilisation_efficacies)
 
     @classmethod
+    def from_config_dict(
+        cls,
+        config: Dict,
+    ):
+        return cls(
+            name=vaccine_type,
+            days_to_effective=config["days_to_effective"],
+            sterilisation_efficacies=config["sterilisation_efficacies"],
+            symptomatic_efficacies=config["symptomatic_efficacies"],
+        )
+
+
+    @classmethod
     def from_config(
         cls,
         vaccine_type: str,
@@ -47,11 +60,8 @@ class Vaccine:
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         config = config[vaccine_type]
-        return cls(
-            name=vaccine_type,
-            days_to_effective=config["days_to_effective"],
-            sterilisation_efficacies=config["sterilisation_efficacies"],
-            symptomatic_efficacies=config["symptomatic_efficacies"],
+        return cls.from_config_dict(
+                config=config,
         )
 
     def _read_infection_ids(self, sterilisation_efficacies):
@@ -130,12 +140,9 @@ class Vaccines:
         return self.vaccines_dict[vaccine_name]
 
     @classmethod
-    def from_config(
-        cls,
-        config_file: Path = default_config_filename,
+    def from_config_dict(
+        cls, config: Dict,
     ):
-        with open(config_file) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
         vaccines = []
         for key, values in config.items():
             vaccines.append(
@@ -147,3 +154,16 @@ class Vaccines:
                 )
             )
         return cls(vaccines=vaccines)
+
+
+    @classmethod
+    def from_config(
+        cls,
+        config_file: Path = default_config_filename,
+    ):
+        with open(config_file) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        return cls.from_config_dict(config=config)
+
+    def __iter__(self,):
+        return vaccines.values()

@@ -404,7 +404,9 @@ class VaccineDistribution(Policy):
             self.vaccinated_ids -= ids_to_remove
 
     def _apply_past_vaccinations(self, people, date, vaccines, record=None):
-        date = min(date, self.end_time)
+        max_days_effective = max([vaccine.days_to_effective[self.doses].cumsum() for vaccine in vaccines])
+        print('max days effective = ',max_days_effective)
+        date = min(date, self.end_time) + max_days_effective
         days_in_the_past = max(0, (date - self.start_time).days)
         if days_in_the_past > 0:
             for i in range(days_in_the_past):
@@ -417,6 +419,9 @@ class VaccineDistribution(Policy):
                         vaccines=vaccines,
                         record=record,
                     )
+                self.update_vaccinated(
+                    people=people,date=date_to_vax,record=record,
+                )
 
     def initialize(self, world, date, vaccines, record=None):
         """
