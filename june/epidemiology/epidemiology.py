@@ -71,10 +71,7 @@ class Epidemiology:
     def set_past_vaccinations(self, people, date, record=None):
         if self.vaccination_campaigns is not None:
             self.vaccination_campaigns._apply_past_vaccinations(
-                    people=people,
-                    date=date,
-                    vaccines=self.vaccines,
-                    record=record
+                people=people, date=date, vaccines=self.vaccines, record=record
             )
 
     def set_effective_multipliers(self, population):
@@ -192,7 +189,16 @@ class Epidemiology:
             )
         person.infection = None
 
-    def update_health_status(self, world: World, time: float, duration: float, date = None, record: Record = None, vaccinate: bool = False, vaccination_campaigns=None):
+    def update_health_status(
+        self,
+        world: World,
+        time: float,
+        duration: float,
+        date=None,
+        record: Record = None,
+        vaccinate: bool = False,
+        vaccination_campaigns=None,
+    ):
         """
         Update symptoms and health status of infected people.
         Send them to hospital if necessary, or bury them if they
@@ -240,10 +246,10 @@ class Epidemiology:
                 )
         if vaccinate:
             vaccination_campaigns.update_vaccinated(
-                        world.people,
-                        date=date,
-                        record=record,
-                    )
+                world.people,
+                date=date,
+                record=record,
+            )
 
     def infect_people(
         self, world, time, infected_ids, infection_ids, people_from_abroad_dict
