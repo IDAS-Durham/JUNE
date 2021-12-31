@@ -1,6 +1,6 @@
 import yaml
 from pathlib import Path
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Dict
 
 from june import paths
 from june.epidemiology.infection import infection as infection_module
@@ -41,15 +41,15 @@ class Vaccine:
     @classmethod
     def from_config_dict(
         cls,
+        name: str,
         config: Dict,
     ):
         return cls(
-            name=vaccine_type,
+            name=name,
             days_to_effective=config["days_to_effective"],
             sterilisation_efficacies=config["sterilisation_efficacies"],
             symptomatic_efficacies=config["symptomatic_efficacies"],
         )
-
 
     @classmethod
     def from_config(
@@ -61,7 +61,8 @@ class Vaccine:
             config = yaml.load(f, Loader=yaml.FullLoader)
         config = config[vaccine_type]
         return cls.from_config_dict(
-                config=config,
+            name=vaccine_type,
+            config=config,
         )
 
     def _read_infection_ids(self, sterilisation_efficacies):
@@ -142,7 +143,8 @@ class Vaccines:
 
     @classmethod
     def from_config_dict(
-        cls, config: Dict,
+        cls,
+        config: Dict,
     ):
         vaccines = []
         for key, values in config.items():
@@ -156,7 +158,6 @@ class Vaccines:
             )
         return cls(vaccines=vaccines)
 
-
     @classmethod
     def from_config(
         cls,
@@ -166,5 +167,7 @@ class Vaccines:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls.from_config_dict(config=config)
 
-    def __iter__(self,):
+    def __iter__(
+        self,
+    ):
         return iter(self.vaccines)

@@ -7,7 +7,6 @@ import logging
 
 from june.demography.person import Person
 from .policy import Policy, PolicyCollection
-from june.epidemiology.vaccines import Vaccines
 
 
 logger = logging.getLogger("vaccination")
@@ -405,9 +404,11 @@ class VaccineDistribution(Policy):
 
     def _apply_past_vaccinations(self, people, date, vaccines, record=None):
         vaccine = vaccines.get_by_name(self.vaccine_type)
-        days_to_effective = sum([vaccine.days_to_effective[dose] for dose in self.doses])
+        days_to_effective = sum(
+            [vaccine.days_to_effective[dose] for dose in self.doses]
+        )
         end_time = self.end_time + datetime.timedelta(days=days_to_effective)
-        date = min(date, end_time) 
+        date = min(date, end_time)
         days_in_the_past = max(0, (date - self.start_time).days)
         if days_in_the_past > 0:
             for i in range(days_in_the_past):
@@ -422,7 +423,9 @@ class VaccineDistribution(Policy):
                             record=record,
                         )
                 self.update_vaccinated(
-                    people=people,date=date_to_vax,record=record,
+                    people=people,
+                    date=date_to_vax,
+                    record=record,
                 )
 
     def initialize(self, world, date, vaccines, record=None):
@@ -430,7 +433,7 @@ class VaccineDistribution(Policy):
         Initializes policy, vaccinating people in the past if needed.
         """
         return self._apply_past_vaccinations(
-            people=world.people, date=date, vaccines=vaccines,record=record
+            people=world.people, date=date, vaccines=vaccines, record=record
         )
 
 
