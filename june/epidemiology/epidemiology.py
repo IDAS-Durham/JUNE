@@ -4,7 +4,7 @@ from time import time as wall_clock
 import logging
 
 from .infection import InfectionSelectors, ImmunitySetter
-from .vaccines import Vaccines, VaccinationCampaigns
+from .vaccines import Vaccines#, VaccinationCampaigns
 from june.demography import Activities
 from june.policy import MedicalCarePolicies
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
@@ -53,7 +53,7 @@ class Epidemiology:
         medical_care_policies: Optional[MedicalCarePolicies] = None,
         medical_facilities: Optional[MedicalFacilities] = None,
         vaccines: Optional[Vaccines] = None,
-        vaccination_campaigns: Optional[VaccinationCampaigns] = None,
+        vaccination_campaigns: Optional["VaccinationCampaigns"] = None,
     ):
         self.infection_selectors = infection_selectors
         self.infection_seeds = infection_seeds

@@ -1,6 +1,10 @@
 import yaml
+import operator
 from pathlib import Path
-from typing import List, Tuple, Dict
+import datetime
+from typing import List, Tuple, Dict, Optional
+from dataclasses import dataclass
+import numpy as np
 
 from june import paths
 from june.epidemiology.infection import infection as infection_module
@@ -11,13 +15,156 @@ default_config_filename = (
 )
 
 
+@dataclass
+class Efficacy:
+    """Efficacy types"""
+
+    infection: Dict[int, float]
+    symptoms: Dict[int, float]
+    waning_factor: float
+
+    def __call__(
+        self,
+        protection_type: str,
+        infection_id: int,
+    ):
+        return getattr(self, f"{protection_type}").get(infection_id)
+
+    def __mul__(self, factor: float):
+        return Efficacy(
+            infection={k: v * factor for k, v in self.infection.items()},
+            symptoms={k: v * factor for k, v in self.symptoms.items()},
+            waning_factor=1.0,
+        )
+
+
+class Dose:
+    def __init__(
+        self,
+        number: int,
+        date_administered: datetime.datetime,
+        days_administered_to_effective: int,
+        days_effective_to_waning: int,
+        days_waning: int,
+        prior_efficacy: Efficacy,
+        efficacy: Efficacy,
+    ):
+        self.number = number
+        self.days_administered_to_effective = days_administered_to_effective
+        self.days_effective_to_waning = days_effective_to_waning
+        self.days_waning = days_waning
+        self.efficacy = efficacy
+        self.prior_efficacy = prior_efficacy
+        self.date_administered = date_administered
+        self.date_effective = self.date_administered + datetime.timedelta(
+            days=self.days_administered_to_effective
+        )
+        self.date_waning = self.date_administered + datetime.timedelta(
+            days=self.days_effective_to_waning + self.days_administered_to_effective,
+        )
+        self.date_finished = self.date_administered + datetime.timedelta(
+            days=self.days_waning
+            + self.days_effective_to_waning
+            + self.days_administered_to_effective,
+        )
+
+    def get_efficacy(
+        self,
+        date: datetime.datetime,
+        infection_id: int,
+        protection_type: str,
+    ):
+        efficacy = self.efficacy(
+            protection_type=protection_type, infection_id=infection_id
+        )
+        if date > self.date_finished:
+            return self.efficacy.waning_factor * self.efficacy(
+                protection_type=protection_type,
+                infection_id=infection_id,
+            )
+
+        elif date > self.date_waning:
+            prior_efficacy = efficacy
+            final_efficacy = self.efficacy.waning_factor * self.efficacy(
+                protection_type=protection_type,
+                infection_id=infection_id,
+            )
+            prior_date = self.date_waning
+            duration = self.days_waning
+        elif date > self.date_effective:
+            return efficacy
+        elif date >= self.date_administered:
+            prior_efficacy = self.prior_efficacy(
+                protection_type=protection_type, infection_id=infection_id
+            )
+            final_efficacy = efficacy
+            prior_date = self.date_administered
+            duration = self.days_administered_to_effective
+        n_days = (date - prior_date).days
+        m = (final_efficacy - prior_efficacy) / duration
+        n = prior_efficacy
+        return m * n_days + n
+
+
+class VaccineTrajectory:
+    def __init__(
+        self,
+        doses: List[Dose],
+    ):
+        self.doses = sorted(doses, key=operator.attrgetter("date_administered"))
+        self.first_dose_date = self.doses[0].date_administered
+        self.dates_administered = [
+            (dose.date_administered - self.first_dose_date).days for dose in self.doses
+        ]
+        self.stage = 0
+
+    def get_dose_index(
+        self,
+        date: datetime.datetime,
+    ):
+        days_from_start = (date - self.first_dose_date).days
+        return min(
+            np.searchsorted(self.dates_administered, days_from_start, side="right") - 1,
+            len(self.doses) - 1,
+        )
+
+    def get_dose_number(
+        self,
+        date: datetime.datetime,
+    ):
+        return self.doses[self.get_dose_index(date=date)].number
+
+    def update_trajectory_stage(self, date: datetime.datetime):
+        if (
+            self.stage < len(self.doses) - 1
+            and date >= self.doses[self.stage + 1].date_administered
+        ):
+            self.stage += 1
+            self.dose_number = self.doses[self.stage].number
+
+    def get_efficacy(
+        self,
+        date: datetime.datetime,
+        infection_id: int,
+        protection_type: str,
+    ):
+        return self.doses[self.stage].get_efficacy(
+            date=date,
+            infection_id=infection_id,
+            protection_type=protection_type,
+        )
+
+
 class Vaccine:
     def __init__(
         self,
         name: str,
-        days_to_effective: List[int],
+        days_administered_to_effective: List[int],
+        days_effective_to_waning: List[int],
+        days_waning: List[int],
         sterilisation_efficacies,
         symptomatic_efficacies,
+        waning_factor: Optional[float] = 1.0,
     ):
         """
         Class defining a vaccine type and its effectiveness
@@ -35,10 +182,13 @@ class Vaccine:
         """
 
         self.name = name
-        self.days_to_effective = days_to_effective
+        self.days_administered_to_effective = days_administered_to_effective
+        self.days_effective_to_waning = days_effective_to_waning
+        self.days_waning = days_waning
         self.sterilisation_efficacies = self._parse_efficacies(sterilisation_efficacies)
         self.symptomatic_efficacies = self._parse_efficacies(symptomatic_efficacies)
         self.infection_ids = self._read_infection_ids(self.sterilisation_efficacies)
+        self.waning_factor = waning_factor
 
     @classmethod
     def from_config_dict(
@@ -84,53 +234,57 @@ class Vaccine:
             ret.append(dd_id)
         return ret
 
-    def get_efficacy(
-        self, person: "Person", infection_id: int, dose: int
-    ) -> Tuple[float, float]:
-        """
-        Get sterilisation and symptomatic efficacy of a given dose
-        for a person and variant
-
-        Parameters
-        ----------
-        person:
-            person to get efficacy for
-        infection_id:
-            id of the infection
-        dose:
-            dose number
-        """
-        return (
-            self.sterilisation_efficacies[dose][infection_id][person.age],
-            self.symptomatic_efficacies[dose][infection_id][person.age],
+    def collect_prior_efficacy(self, person):
+        immunity = person.immunity
+        return Efficacy(
+            infection={
+                inf_id: 1.0 - immunity.susceptibility_dict.get(inf_id, 1.0)
+                for inf_id in self.infection_ids
+            },
+            symptoms={
+                inf_id: 1.0 - immunity.effective_multiplier_dict.get(inf_id, 1.0)
+                for inf_id in self.infection_ids
+            },
+            waning_factor=1.0,
         )
 
-    def get_efficacy_for_dose_person(
-        self, person: "Person", dose: int
-    ) -> Tuple[float, float]:
-        """
-        Get sterilisation and symptomatic efficacy of a given dose
-        for a person and variant
-
-        Parameters
-        ----------
-        person:
-            person to get efficacy for
-        dose:
-            dose number
-        """
-
-        return (
-            self.select_dose_age(
-                self.sterilisation_efficacies, dose=dose, age=person.age
-            ),
-            self.select_dose_age(
-                self.symptomatic_efficacies, dose=dose, age=person.age
-            ),
-        )
-
-    def select_dose_age(self, efficacy, dose, age):
-        return {k: v[age] for k, v in efficacy[dose].items()}
+    def generate_trajectory(
+        self,
+        person: "Person",
+        dose_numbers: List[int],
+        days_to_next_dose: List[int],
+        date: datetime.datetime,
+    ) -> VaccineTrajectory:
+        prior_efficacy = self.collect_prior_efficacy(person=person)
+        doses = []
+        for i, dose in enumerate(dose_numbers):
+            date += datetime.timedelta(days=days_to_next_dose[i])
+            efficacy = Efficacy(
+                infection={
+                    inf_id: self.sterilisation_efficacies[dose][inf_id][person.age]
+                    for inf_id in self.infection_ids
+                },
+                symptoms={
+                    inf_id: self.symptomatic_efficacies[dose][inf_id][person.age]
+                    for inf_id in self.infection_ids
+                },
+                waning_factor=self.waning_factor,
+            )
+            doses.append(
+                Dose(
+                    number=dose,
+                    date_administered=date,
+                    days_administered_to_effective=self.days_administered_to_effective[
+                        dose
+                    ],
+                    days_effective_to_waning=self.days_effective_to_waning[dose],
+                    days_waning=self.days_waning[dose],
+                    prior_efficacy=prior_efficacy,
+                    efficacy=efficacy,
+                )
+            )
+            prior_efficacy = efficacy * efficacy.waning_factor
+        return VaccineTrajectory(doses=doses)
 
 
 class Vaccines:
