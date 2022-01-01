@@ -116,7 +116,19 @@ class VaccineTrajectory:
         self.dates_administered = [
             (dose.date_administered - self.first_dose_date).days for dose in self.doses
         ]
+        self.prior_susceptibility, self.prior_effective_multiplier = self._get_immunity_prior_to_trajectory()
         self.stage = 0
+
+    @property
+    def current_dose(self,):
+        return self.doses[self.stage].dose_number
+
+    def _get_immunity_prior_to_trajectory(self,):
+        prior_efficacy = self.doses[0].prior_efficacy
+        suscepbitility = {inf_id: 1-value for inf_id, value in prior_efficacy.infection.items()}
+        effective_multiplier = {inf_id: 1-value for inf_id, value in prior_efficacy.symptoms.items()}
+        return suscepbitility, effective_multiplier
+
 
     def get_dose_index(
         self,
@@ -152,6 +164,16 @@ class VaccineTrajectory:
             date=date,
             infection_id=infection_id,
             protection_type=protection_type,
+        )
+
+    def susceptibility(self, date: datetime.datetime, infection_id: int):
+        return 1.0 - self.get_efficacy(
+            date=date, protection_type="infection", infection_id=infection_id
+        )
+
+    def effective_multiplier(self, date, infection_id: int):
+        return 1.0 - self.get_efficacy(
+            date=date, protection_type="symptoms", infection_id=infection_id
         )
 
 

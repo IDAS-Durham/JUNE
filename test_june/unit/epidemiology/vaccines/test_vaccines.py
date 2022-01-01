@@ -40,24 +40,26 @@ def make_dose(efficacy, prior_efficacy):
         date_administered=datetime.datetime(2022, 1, 1),
     )
 
+
 @pytest.fixture(name="dates_values")
 def make_dates_and_values():
     return {
-            datetime.datetime(2022, 1, 1): 0.1,
-            datetime.datetime(2022, 1, 2): (0.3 - 0.1) / 5 + 0.1,
-            datetime.datetime(2022, 1, 6): 0.3,
-            datetime.datetime(2022, 1, 7): 0.3,
-            datetime.datetime(2022, 1, 8): 0.3,
-            datetime.datetime(2022, 1, 9): (0.15 - 0.3) / 10 + 0.3,
-            datetime.datetime(2022, 1, 19): 0.15,
-            datetime.datetime(2022, 3, 2): (0.9 - 0.15) / 5 + 0.15,
-            datetime.datetime(2022, 3, 6): 0.9,
-            datetime.datetime(2022, 3, 7): 0.9,
-            datetime.datetime(2022, 3, 8): 0.9,
-            datetime.datetime(2022, 3, 9): (0.45 - 0.9) / 10 + 0.9,
-            datetime.datetime(2022, 3, 19): 0.45,
-            datetime.datetime(2022, 8, 1): 0.45,
+        datetime.datetime(2022, 1, 1): 0.1,
+        datetime.datetime(2022, 1, 2): (0.3 - 0.1) / 5 + 0.1,
+        datetime.datetime(2022, 1, 6): 0.3,
+        datetime.datetime(2022, 1, 7): 0.3,
+        datetime.datetime(2022, 1, 8): 0.3,
+        datetime.datetime(2022, 1, 9): (0.15 - 0.3) / 10 + 0.3,
+        datetime.datetime(2022, 1, 19): 0.15,
+        datetime.datetime(2022, 3, 2): (0.9 - 0.15) / 5 + 0.15,
+        datetime.datetime(2022, 3, 6): 0.9,
+        datetime.datetime(2022, 3, 7): 0.9,
+        datetime.datetime(2022, 3, 8): 0.9,
+        datetime.datetime(2022, 3, 9): (0.45 - 0.9) / 10 + 0.9,
+        datetime.datetime(2022, 3, 19): 0.45,
+        datetime.datetime(2022, 8, 1): 0.45,
     }
+
 
 class TestEfficacy:
     def test_waning(self, efficacy):
@@ -84,12 +86,16 @@ class TestDose:
             (0.45 - 0.9) / 10 + 0.9,
             0.45,
         ]
-        for date, value in zip(dates,values):
-            assert dose.get_efficacy(
-                date=date,
-                infection_id=delta_id,
-                protection_type="infection",
-            ) == value
+        for date, value in zip(dates, values):
+            assert (
+                dose.get_efficacy(
+                    date=date,
+                    infection_id=delta_id,
+                    protection_type="infection",
+                )
+                == value
+            )
+
 
 @pytest.fixture(name="trajectory")
 def make_trajectory():
@@ -153,11 +159,12 @@ class TestVaccineTrajectory:
             trajectory.update_trajectory_stage(date=date)
             if date in dates_values:
                 efficacy = trajectory.get_efficacy(
-                        date=date,
-                        infection_id=delta_id,
-                        protection_type="infection",
+                    date=date,
+                    infection_id=delta_id,
+                    protection_type="infection",
                 )
                 assert dates_values[date] == pytest.approx(efficacy)
+
 
 @pytest.fixture(name="vaccine")
 def make_vaccine():
@@ -204,7 +211,8 @@ class TestVaccine:
         assert vts[1].doses[0].efficacy.symptoms[delta_id] == 0.99
 
     def test__vt_generation_time_evolution(
-        self, dates_values,
+        self,
+        dates_values,
     ):
         effectiveness = [
             {"Delta": {"0-100": 0.3}, "Omicron": {"0-100": 0.3}},
@@ -239,11 +247,8 @@ class TestVaccine:
             trajectory.update_trajectory_stage(date=date)
             if date in dates_values:
                 efficacy = trajectory.get_efficacy(
-                        date=date,
-                        infection_id=delta_id,
-                        protection_type="infection",
+                    date=date,
+                    infection_id=delta_id,
+                    protection_type="infection",
                 )
                 assert dates_values[date] == pytest.approx(efficacy)
-
-
-
