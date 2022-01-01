@@ -17,7 +17,7 @@ default_config_filename = (
     paths.configs_path / "defaults/epidemiology/vaccines/vaccination_campaigns.yaml"
 )
 #TODO:
-# i) Reformat vaccination campaign
+# i) Reformat vaccination campaign (make sure record works)
 # ii) Do as in symptoms with update trajectory to avoid searchsorted
 # iii) Vaccinate individually given age, region, n doses, and vaccine type (could be made of combinations)
 

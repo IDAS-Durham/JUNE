@@ -40,6 +40,24 @@ def make_dose(efficacy, prior_efficacy):
         date_administered=datetime.datetime(2022, 1, 1),
     )
 
+@pytest.fixture(name="dates_values")
+def make_dates_and_values():
+    return {
+            datetime.datetime(2022, 1, 1): 0.1,
+            datetime.datetime(2022, 1, 2): (0.3 - 0.1) / 5 + 0.1,
+            datetime.datetime(2022, 1, 6): 0.3,
+            datetime.datetime(2022, 1, 7): 0.3,
+            datetime.datetime(2022, 1, 8): 0.3,
+            datetime.datetime(2022, 1, 9): (0.15 - 0.3) / 10 + 0.3,
+            datetime.datetime(2022, 1, 19): 0.15,
+            datetime.datetime(2022, 3, 2): (0.9 - 0.15) / 5 + 0.15,
+            datetime.datetime(2022, 3, 6): 0.9,
+            datetime.datetime(2022, 3, 7): 0.9,
+            datetime.datetime(2022, 3, 8): 0.9,
+            datetime.datetime(2022, 3, 9): (0.45 - 0.9) / 10 + 0.9,
+            datetime.datetime(2022, 3, 19): 0.45,
+            datetime.datetime(2022, 8, 1): 0.45,
+    }
 
 class TestEfficacy:
     def test_waning(self, efficacy):
@@ -54,39 +72,24 @@ class TestDose:
         assert dose.date_finished == datetime.datetime(2022, 1, 18)
 
     def test_time_evolution(self, dose):
-        assert (
-            dose.get_efficacy(
-                date=datetime.datetime(2022, 1, 1),
+        dates = [
+            datetime.datetime(2022, 1, 1),
+            datetime.datetime(2022, 1, 2),
+            datetime.datetime(2022, 1, 9),
+            datetime.datetime(2022, 1, 20),
+        ]
+        values = [
+            0.1,
+            (0.9 - 0.1) / 5 + 0.1,
+            (0.45 - 0.9) / 10 + 0.9,
+            0.45,
+        ]
+        for date, value in zip(dates,values):
+            assert dose.get_efficacy(
+                date=date,
                 infection_id=delta_id,
                 protection_type="infection",
-            )
-            == 0.1
-        )
-        assert (
-            dose.get_efficacy(
-                date=datetime.datetime(2022, 1, 2),
-                infection_id=delta_id,
-                protection_type="infection",
-            )
-            == (0.9 - 0.1) / 5 + 0.1
-        )
-        assert (
-            dose.get_efficacy(
-                date=datetime.datetime(2022, 1, 9),
-                infection_id=delta_id,
-                protection_type="infection",
-            )
-            == (0.45 - 0.9) / 10 + 0.9
-        )
-        assert (
-            dose.get_efficacy(
-                date=datetime.datetime(2022, 1, 20),
-                infection_id=delta_id,
-                protection_type="infection",
-            )
-            == 0.45
-        )
-
+            ) == value
 
 @pytest.fixture(name="trajectory")
 def make_trajectory():
@@ -143,139 +146,18 @@ class TestVaccineTrajectory:
         assert trajectory.get_dose_number(date=datetime.datetime(2022, 1, 1)) == 0
         assert trajectory.get_dose_number(date=datetime.datetime(2022, 3, 20)) == 1
 
-    def test_time_evolution(self, trajectory):
+    def test_time_evolution(self, trajectory, dates_values):
         n_days = 500
         for days in range(n_days):
             date = trajectory.first_dose_date + datetime.timedelta(days=days)
             trajectory.update_trajectory_stage(date=date)
-            if date==datetime.datetime(2022, 1, 1):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 1),
+            if date in dates_values:
+                efficacy = trajectory.get_efficacy(
+                        date=date,
                         infection_id=delta_id,
                         protection_type="infection",
-                    )
-                    == 0.1
                 )
-            elif date==datetime.datetime(2022, 1, 2):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 2),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == (0.3 - 0.1) / 5 + 0.1
-                )
-            elif date==datetime.datetime(2022, 1, 6):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 6),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx(0.3)
-                )
-            elif date==datetime.datetime(2022, 1, 7):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 7),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx(0.3)
-                )
-            elif date==datetime.datetime(2022, 1, 8):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 8),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx(0.3)
-                )
-            elif date==datetime.datetime(2022, 1, 9):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 9),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx((0.15 - 0.3) / 10 + 0.3)
-                )
-            elif date==datetime.datetime(2022, 1, 19):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 19),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == 0.15
-                )
-
-            elif date==datetime.datetime(2022, 3, 2):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 3, 2),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == (0.9 - 0.15) / 5 + 0.15
-                )
-            elif date==datetime.datetime(2022, 3, 6):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 3, 6),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx(0.9)
-                )
-            elif date==datetime.datetime(2022, 3, 7):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 3, 7),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx(0.9)
-                )
-
-            elif date==datetime.datetime(2022, 3, 8):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 3, 8),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx(0.9)
-                )
-            elif date==datetime.datetime(2022, 3, 9):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 3, 9),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx((0.45 - 0.9) / 10 + 0.9)
-                )
-            elif date==datetime.datetime(2022, 3, 19):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 3, 19),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == 0.45
-                )
-            elif date==datetime.datetime(2022, 8, 1):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 8, 1),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == 0.45
-                )
+                assert dates_values[date] == pytest.approx(efficacy)
 
 @pytest.fixture(name="vaccine")
 def make_vaccine():
@@ -322,7 +204,7 @@ class TestVaccine:
         assert vts[1].doses[0].efficacy.symptoms[delta_id] == 0.99
 
     def test__vt_generation_time_evolution(
-        self,
+        self, dates_values,
     ):
         effectiveness = [
             {"Delta": {"0-100": 0.3}, "Omicron": {"0-100": 0.3}},
@@ -355,133 +237,13 @@ class TestVaccine:
         for days in range(n_days):
             date = trajectory.first_dose_date + datetime.timedelta(days=days)
             trajectory.update_trajectory_stage(date=date)
-            if date==datetime.datetime(2022, 1, 1):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 1),
+            if date in dates_values:
+                efficacy = trajectory.get_efficacy(
+                        date=date,
                         infection_id=delta_id,
                         protection_type="infection",
-                    )
-                    == pytest.approx(0.1)
                 )
-            elif date==datetime.datetime(2022, 1, 2):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 2),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx((0.3 - 0.1) / 5 + 0.1)
-                )
-            elif date==datetime.datetime(2022, 1, 6):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 6),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx(0.3)
-                )
-            elif date==datetime.datetime(2022, 1, 7):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 7),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx(0.3)
-                )
-            elif date==datetime.datetime(2022, 1, 8):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 8),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx(0.3)
-                )
-            elif date==datetime.datetime(2022, 1, 9):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 9),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx((0.15 - 0.3) / 10 + 0.3)
-                )
-            elif date==datetime.datetime(2022, 1, 19):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 1, 19),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == 0.15
-                )
+                assert dates_values[date] == pytest.approx(efficacy)
 
-            elif date==datetime.datetime(2022, 3, 2):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 3, 2),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == (0.9 - 0.15) / 5 + 0.15
-                )
-            elif date==datetime.datetime(2022, 3, 6):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 3, 6),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx(0.9)
-                )
-            elif date==datetime.datetime(2022, 3, 7):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 3, 7),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx(0.9)
-                )
-
-            elif date==datetime.datetime(2022, 3, 8):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 3, 8),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx(0.9)
-                )
-            elif date==datetime.datetime(2022, 3, 9):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 3, 9),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == pytest.approx((0.45 - 0.9) / 10 + 0.9)
-                )
-            elif date==datetime.datetime(2022, 3, 19):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 3, 19),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == 0.45
-                )
-            elif date==datetime.datetime(2022, 8, 1):
-                assert (
-                    trajectory.get_efficacy(
-                        date=datetime.datetime(2022, 8, 1),
-                        infection_id=delta_id,
-                        protection_type="infection",
-                    )
-                    == 0.45
-                )
 
 
