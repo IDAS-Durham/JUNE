@@ -28,9 +28,25 @@ class Efficacy:
         protection_type: str,
         infection_id: int,
     ):
+        """__call__.
+
+        Parameters
+        ----------
+        protection_type : str
+            protection_type
+        infection_id : int
+            infection_id
+        """
         return getattr(self, f"{protection_type}").get(infection_id)
 
     def __mul__(self, factor: float):
+        """__mul__.
+
+        Parameters
+        ----------
+        factor : float
+            factor
+        """
         return Efficacy(
             infection={k: v * factor for k, v in self.infection.items()},
             symptoms={k: v * factor for k, v in self.symptoms.items()},
@@ -39,6 +55,9 @@ class Efficacy:
 
 
 class Dose:
+    """Dose.
+    """
+
     def __init__(
         self,
         number: int,
@@ -49,6 +68,25 @@ class Dose:
         prior_efficacy: Efficacy,
         efficacy: Efficacy,
     ):
+        """__init__.
+
+        Parameters
+        ----------
+        number : int
+            number
+        date_administered : datetime.datetime
+            date_administered
+        days_administered_to_effective : int
+            days_administered_to_effective
+        days_effective_to_waning : int
+            days_effective_to_waning
+        days_waning : int
+            days_waning
+        prior_efficacy : Efficacy
+            prior_efficacy
+        efficacy : Efficacy
+            efficacy
+        """
         self.number = number
         self.days_administered_to_effective = days_administered_to_effective
         self.days_effective_to_waning = days_effective_to_waning
@@ -74,6 +112,17 @@ class Dose:
         infection_id: int,
         protection_type: str,
     ):
+        """get_efficacy.
+
+        Parameters
+        ----------
+        date : datetime.datetime
+            date
+        infection_id : int
+            infection_id
+        protection_type : str
+            protection_type
+        """
         efficacy = self.efficacy(
             protection_type=protection_type, infection_id=infection_id
         )
@@ -107,12 +156,26 @@ class Dose:
 
 
 class VaccineTrajectory:
+    """VaccineTrajectory.
+    """
+
     def __init__(
         self,
         doses: List[Dose],
         name: str,
         infection_ids: List[int],
     ):
+        """__init__.
+
+        Parameters
+        ----------
+        doses : List[Dose]
+            doses
+        name : str
+            name
+        infection_ids : List[int]
+            infection_ids
+        """
         self.doses = sorted(doses, key=operator.attrgetter("date_administered"))
         self.name = name
         self.infection_ids = infection_ids
@@ -130,11 +193,15 @@ class VaccineTrajectory:
     def current_dose(
         self,
     ):
+        """current_dose.
+        """
         return self.doses[self.stage].number
 
     def _get_immunity_prior_to_trajectory(
         self,
     ):
+        """_get_immunity_prior_to_trajectory.
+        """
         prior_efficacy = self.doses[0].prior_efficacy
         suscepbitility = {
             inf_id: 1 - value for inf_id, value in prior_efficacy.infection.items()
@@ -148,6 +215,13 @@ class VaccineTrajectory:
         self,
         date: datetime.datetime,
     ):
+        """get_dose_index.
+
+        Parameters
+        ----------
+        date : datetime.datetime
+            date
+        """
         days_from_start = (date - self.first_dose_date).days
         return min(
             np.searchsorted(self.dates_administered, days_from_start, side="right") - 1,
@@ -158,9 +232,23 @@ class VaccineTrajectory:
         self,
         date: datetime.datetime,
     ):
+        """get_dose_number.
+
+        Parameters
+        ----------
+        date : datetime.datetime
+            date
+        """
         return self.doses[self.get_dose_index(date=date)].number
 
     def update_trajectory_stage(self, date: datetime.datetime):
+        """update_trajectory_stage.
+
+        Parameters
+        ----------
+        date : datetime.datetime
+            date
+        """
         if (
             self.stage < len(self.doses) - 1
             and date >= self.doses[self.stage + 1].date_administered
@@ -174,6 +262,17 @@ class VaccineTrajectory:
         infection_id: int,
         protection_type: str,
     ):
+        """get_efficacy.
+
+        Parameters
+        ----------
+        date : datetime.datetime
+            date
+        infection_id : int
+            infection_id
+        protection_type : str
+            protection_type
+        """
         return self.doses[self.stage].get_efficacy(
             date=date,
             infection_id=infection_id,
@@ -181,11 +280,29 @@ class VaccineTrajectory:
         )
 
     def susceptibility(self, date: datetime.datetime, infection_id: int):
+        """susceptibility.
+
+        Parameters
+        ----------
+        date : datetime.datetime
+            date
+        infection_id : int
+            infection_id
+        """
         return 1.0 - self.get_efficacy(
             date=date, protection_type="infection", infection_id=infection_id
         )
 
     def effective_multiplier(self, date, infection_id: int):
+        """effective_multiplier.
+
+        Parameters
+        ----------
+        date :
+            date
+        infection_id : int
+            infection_id
+        """
         return 1.0 - self.get_efficacy(
             date=date, protection_type="symptoms", infection_id=infection_id
         )
@@ -194,6 +311,13 @@ class VaccineTrajectory:
         self,
         date,
     ):
+        """is_finished.
+
+        Parameters
+        ----------
+        date :
+            date
+        """
         if date > self.doses[-1].date_finished:
             return True
         return False
@@ -203,6 +327,15 @@ class VaccineTrajectory:
         person,
         record=None,
     ):
+        """update_dosage.
+
+        Parameters
+        ----------
+        person :
+            person
+        record :
+            record
+        """
         dose_number = self.current_dose
         person.vaccinated = dose_number
         person.vaccine_type = self.name
@@ -219,6 +352,17 @@ class VaccineTrajectory:
         date: datetime.datetime,
         record=None,
     ):
+        """update_vaccine_effect.
+
+        Parameters
+        ----------
+        person : "Person"
+            person
+        date : datetime.datetime
+            date
+        record :
+            record
+        """
         if self.is_finished(date=date):
             person.vaccine_trajectory = None
         immunity = person.immunity
@@ -245,6 +389,9 @@ class VaccineTrajectory:
 
 
 class Vaccine:
+    """Vaccine.
+    """
+
     def __init__(
         self,
         name: str,
@@ -285,6 +432,15 @@ class Vaccine:
         name: str,
         config: Dict,
     ):
+        """from_config_dict.
+
+        Parameters
+        ----------
+        name : str
+            name
+        config : Dict
+            config
+        """
         return cls(
             name=name,
             days_administered_to_effective=config["days_administered_to_effective"],
@@ -301,6 +457,15 @@ class Vaccine:
         vaccine_type: str,
         config_file: Path = default_config_filename,
     ):
+        """from_config.
+
+        Parameters
+        ----------
+        vaccine_type : str
+            vaccine_type
+        config_file : Path
+            config_file
+        """
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         config = config[vaccine_type]
@@ -310,6 +475,13 @@ class Vaccine:
         )
 
     def _read_infection_ids(self, sterilisation_efficacies):
+        """_read_infection_ids.
+
+        Parameters
+        ----------
+        sterilisation_efficacies :
+            sterilisation_efficacies
+        """
         ids = set()
         for dd in sterilisation_efficacies:
             for key in dd:
@@ -317,6 +489,13 @@ class Vaccine:
         return list(ids)
 
     def _parse_efficacies(self, efficacies):
+        """_parse_efficacies.
+
+        Parameters
+        ----------
+        efficacies :
+            efficacies
+        """
         ret = []
         for dd in efficacies:
             dd_id = {}
@@ -327,6 +506,13 @@ class Vaccine:
         return ret
 
     def collect_prior_efficacy(self, person):
+        """collect_prior_efficacy.
+
+        Parameters
+        ----------
+        person :
+            person
+        """
         immunity = person.immunity
         return Efficacy(
             infection={
@@ -347,6 +533,24 @@ class Vaccine:
         days_to_next_dose: List[int],
         date: datetime.datetime,
     ) -> VaccineTrajectory:
+        """generate_trajectory.
+
+        Parameters
+        ----------
+        person : "Person"
+            person
+        dose_numbers : List[int]
+            dose_numbers
+        days_to_next_dose : List[int]
+            days_to_next_dose
+        date : datetime.datetime
+            date
+
+        Returns
+        -------
+        VaccineTrajectory
+
+        """
         prior_efficacy = self.collect_prior_efficacy(person=person)
         doses = []
         for i, dose in enumerate(dose_numbers):
@@ -382,11 +586,28 @@ class Vaccine:
 
 
 class Vaccines:
+    """Vaccines.
+    """
+
     def __init__(self, vaccines: List[Vaccine]):
+        """__init__.
+
+        Parameters
+        ----------
+        vaccines : List[Vaccine]
+            vaccines
+        """
         self.vaccines = vaccines
         self.vaccines_dict = {vaccine.name: vaccine for vaccine in vaccines}
 
     def get_by_name(self, vaccine_name: str):
+        """get_by_name.
+
+        Parameters
+        ----------
+        vaccine_name : str
+            vaccine_name
+        """
         if vaccine_name not in self.vaccines_dict:
             raise ValueError(f"{vaccine_name} does not exist")
         return self.vaccines_dict[vaccine_name]
@@ -396,6 +617,13 @@ class Vaccines:
         cls,
         config: Dict,
     ):
+        """from_config_dict.
+
+        Parameters
+        ----------
+        config : Dict
+            config
+        """
         vaccines = []
         for key, values in config.items():
             vaccines.append(
@@ -411,6 +639,13 @@ class Vaccines:
         cls,
         config_file: Path = default_config_filename,
     ):
+        """from_config.
+
+        Parameters
+        ----------
+        config_file : Path
+            config_file
+        """
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls.from_config_dict(config=config)
@@ -418,9 +653,13 @@ class Vaccines:
     def __iter__(
         self,
     ):
+        """__iter__.
+        """
         return iter(self.vaccines)
 
     def get_max_effective_date(
         self,
     ):
+        """get_max_effective_date.
+        """
         return max([sum(vaccine.days_to_effective) for vaccine in self.vaccines])
