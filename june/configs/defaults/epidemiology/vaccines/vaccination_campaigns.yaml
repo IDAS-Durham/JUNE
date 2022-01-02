@@ -7,7 +7,7 @@
     group_type: 'care_home'
     group_coverage: 0.3
     vaccine_type: 'Pfizer'
-    doses: [0,1]
+    dose_numbers: [0,1]
 2:
     start_time: 2020-12-01 
     end_time: 2020-12-20 
@@ -16,7 +16,7 @@
     group_type: 'care_home'
     group_coverage: 0.3
     vaccine_type: 'AstraZeneca'
-    doses: [0,1]
+    dose_numbers: [0,1]
 
 3:
     start_time: 2021-02-25 
@@ -26,7 +26,7 @@
     group_type: 'care_home'
     group_coverage: 1.
     vaccine_type: 'Pfizer'
-    doses: [2]
+    dose_numbers: [2]
     last_dose_type: ['Pfizer', 'AstraZeneca']
 
 

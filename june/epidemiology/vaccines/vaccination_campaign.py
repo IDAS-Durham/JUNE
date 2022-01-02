@@ -9,7 +9,7 @@ from pathlib import Path
 
 from june import paths
 from june.utils import read_date
-from .vaccines import Vaccine
+from .vaccines import Vaccine, Vaccines
 
 logger = logging.getLogger("vaccination")
 
@@ -17,17 +17,28 @@ logger = logging.getLogger("vaccination")
 default_config_filename = (
     paths.configs_path / "defaults/epidemiology/vaccines/vaccination_campaigns.yaml"
 )
+default_vaccines_config_filename = (
+    paths.configs_path / "defaults/epidemiology/vaccines/vaccines.yaml"
+)
+
+
 # TODO:
-# i) Do integration tests and make sure record is working
+# i) Make sure record is working (make sure full run uses it)
 # ii) Vaccinate in the past
 # iii) Vaccinate individually given age, region, n doses, and vaccine type (could be made of combinations)
 
+
 class VaccinationCampaign:
+    """
+    Defines a campaign to vaccinate a group of people in
+    a given time span and with a given vaccine 
+    """
+
     def __init__(
         self,
         vaccine: Vaccine,
-        days_to_next_dose: List[int],
         dose_numbers: List[int] = [0, 1],
+        days_to_next_dose: List[int],
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
         group_by: str = "age",
@@ -35,6 +46,40 @@ class VaccinationCampaign:
         group_coverage: float = 1.0,
         last_dose_type: Optional[str] = None,
     ):
+        """__init__.
+
+        Parameters
+        ----------
+        vaccine : Vaccine
+            vaccine to give out
+        dose_numbers : List[int]
+            what doses to give out. 
+            Example: dose_numbers = [0,1] would give out first
+            and second dose, whereas dose_numbers = [2] would
+            only give a third dose
+        days_to_next_dose : List[int]
+            days to wait from the moment a person is vaccinated to
+            their next dose. Should have same length as dose_numbers
+        start_time : str
+            date at which to start vaccinating people 
+        end_time : str
+            date at which to stop vaccinating people 
+        group_by : str
+            defines what group to vaccinate.
+            Examples: 'age', 'sex', 'residence', 'primary_activity'
+        group_type : str
+            from the group defined by group_by, what people to vaccinate.
+            Examples: 
+            if group_by = 'age' -> group_type = '20-40' would vaccinate 
+            people aged between 20 and 40
+            if group_by = 'residence' -> group_type = 'carehome' would vaccinate 
+            people living in care homes.
+        group_coverage : float
+            percentage of the eligible group to vaccinate. Must be between 0. and 1. 
+        last_dose_type : Optional[str]
+            if not starting with a first dose (dose_numbers[0] = 0), whether to 
+            vaccinate only people whose previous vaccines where of a certain type.
+        """
         self.start_time = read_date(start_time)
         self.end_time = read_date(end_time)
         self.vaccine = vaccine
@@ -63,6 +108,20 @@ class VaccinationCampaign:
         return self.start_time <= date < self.end_time
 
     def process_group_description(self, group_by: str, group_type: str) -> Tuple[str]:
+        """process_group_description.
+
+        Parameters
+        ----------
+        group_by : str
+            group_by
+        group_type : str
+            group_type
+
+        Returns
+        -------
+        Tuple[str]
+
+        """
         if group_by in ("residence", "primary_activity"):
             return f"{group_by}.group.spec", group_type
         else:
@@ -72,6 +131,18 @@ class VaccinationCampaign:
         self,
         person: "Person",
     ) -> bool:
+        """is_target_group.
+
+        Parameters
+        ----------
+        person : "Person"
+            person
+
+        Returns
+        -------
+        bool
+
+        """
         if self.group_attribute != "age":
             try:
                 if (
@@ -91,6 +162,18 @@ class VaccinationCampaign:
         return False
 
     def has_right_dosage(self, person: "Person") -> bool:
+        """has_right_dosage.
+
+        Parameters
+        ----------
+        person : "Person"
+            person
+
+        Returns
+        -------
+        bool
+
+        """
         if person.vaccinated is not None and self.starting_dose == 0:
             return False
         if self.starting_dose > 0:
@@ -101,6 +184,18 @@ class VaccinationCampaign:
         return True
 
     def should_be_vaccinated(self, person: "Person") -> bool:
+        """should_be_vaccinated.
+
+        Parameters
+        ----------
+        person : "Person"
+            person
+
+        Returns
+        -------
+        bool
+
+        """
         return self.has_right_dosage(person) and self.is_target_group(person)
 
     def vaccinate(
@@ -109,6 +204,17 @@ class VaccinationCampaign:
         date: datetime.datetime,
         record: Optional["Record"] = None,
     ):
+        """vaccinate.
+
+        Parameters
+        ----------
+        person : "Person"
+            person
+        date : datetime.datetime
+            date
+        record : Optional["Record"]
+            record
+        """
         vaccine_trajectory = self.vaccine.generate_trajectory(
             person=person,
             dose_numbers=self.dose_numbers,
@@ -120,24 +226,63 @@ class VaccinationCampaign:
         self.vaccinated_ids.add(person.id)
 
     def daily_vaccination_probability(self, days_passed: int) -> float:
+        """daily_vaccination_probability.
+
+        Parameters
+        ----------
+        days_passed : int
+            days_passed
+
+        Returns
+        -------
+        float
+
+        """
         return self.group_coverage * (
             1 / (self.total_days - days_passed * self.group_coverage)
         )
 
+
 class VaccinationCampaigns:
+    """VaccinationCampaigns.
+    """
+
     def __init__(self, vaccination_campaigns: List[VaccinationCampaign]):
+        """__init__.
+
+        Parameters
+        ----------
+        vaccination_campaigns : List[VaccinationCampaign]
+            vaccination_campaigns
+        """
         self.vaccination_campaigns = vaccination_campaigns
 
     @classmethod
     def from_config(
         cls,
         config_file: Path = default_config_filename,
+        vaccines_config_file: Path = default_vaccines_config_filename,
     ):
+        """from_config.
+
+        Parameters
+        ----------
+        config_file : Path
+            config_file
+        vaccines_config_file : Path
+            vaccines_config_file
+        """
+        vaccines = Vaccines.from_config(vaccines_config_file)
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         vaccination_campaigns = []
-        for key, value in config.items():
-            vaccination_campaigns.append(VaccinationCampaign(**value))
+        for key, params_dict in config.items():
+            params_dict["vaccine"] = vaccines.get_by_name(params_dict["vaccine_type"])
+            vaccination_campaigns.append(
+                VaccinationCampaign(
+                    **{k: v for k, v in params_dict.items() if k != "vaccine_type"}
+                )
+            )
         return cls(
             vaccination_campaigns=vaccination_campaigns,
         )
@@ -145,12 +290,37 @@ class VaccinationCampaigns:
     def __iter__(
         self,
     ):
+        """__iter__.
+        """
         return iter(self.vaccination_campaigns)
 
     def get_active(self, date: datetime) -> List[VaccinationCampaign]:
+        """get_active.
+
+        Parameters
+        ----------
+        date : datetime
+            date
+
+        Returns
+        -------
+        List[VaccinationCampaign]
+
+        """
         return [vc for vc in self.vaccination_campaigns if vc.is_active(date)]
 
     def apply(self, person: "Person", date: datetime, record=None):
+        """apply.
+
+        Parameters
+        ----------
+        person : "Person"
+            person
+        date : datetime
+            date
+        record :
+            record
+        """
         active_campaigns = self.get_active(date=date)
         daily_probability, campaigns_to_chose_from = [], []
         for vc in active_campaigns:

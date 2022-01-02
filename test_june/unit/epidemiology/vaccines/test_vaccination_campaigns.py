@@ -25,6 +25,7 @@ def make_effectiveness():
         {"Delta": {"0-50": 0.9, "50-100": 0.99}},
     ]
 
+
 @pytest.fixture(name="vaccine")
 def make_vaccine(effectiveness):
     return Vaccine(
@@ -46,6 +47,7 @@ def make_fast_population():
             person = Person.from_attributes(age=age)
             people.append(person)
     return Population(people)
+
 
 def make_campaign(
     vaccine, group_by, group_type, dose_numbers=[0, 1], last_dose_type=None
@@ -155,14 +157,17 @@ class TestCampaign:
         person = Person.from_attributes(age=5, sex="f")
         person.immunity.susceptibility_dict = {delta_id: 0.9, omicron_id: 0.9}
         person.immunity.effective_multiplier_dict = {delta_id: 0.9, omicron_id: 0.9}
- 
-        date=datetime.datetime(2022,1,1)
+
+        date = datetime.datetime(2022, 1, 1)
         campaign = make_campaign(
             vaccine=vaccine,
             group_by="age",
             group_type="0-100",
         )
-        campaign.vaccinate(person,date=date,)
+        campaign.vaccinate(
+            person,
+            date=date,
+        )
         assert isinstance(person.vaccine_trajectory, VaccineTrajectory)
         assert person.vaccine_trajectory.doses[0].date_administered == date
         assert person.id in campaign.vaccinated_ids
@@ -191,43 +196,37 @@ class TestCampaigns:
         )
         pfizer_campaign = VaccinationCampaign(
             vaccine=pfizer,
-            days_to_next_dose=[0,10],
-            dose_numbers=[0,1],
+            days_to_next_dose=[0, 10],
+            dose_numbers=[0, 1],
             start_time="2022-01-01",
             end_time="2022-01-11",
-            group_by='age',
-            group_type='0-50',
+            group_by="age",
+            group_type="0-50",
             group_coverage=0.6,
         )
         az_campaign = VaccinationCampaign(
             vaccine=az,
-            days_to_next_dose=[0,10],
-            dose_numbers=[0,1],
+            days_to_next_dose=[0, 10],
+            dose_numbers=[0, 1],
             start_time="2022-01-01",
             end_time="2022-01-11",
-            group_by='age',
-            group_type='0-50',
+            group_by="age",
+            group_type="0-50",
             group_coverage=0.1,
         )
         campaigns = VaccinationCampaigns([pfizer_campaign, az_campaign])
-        start_date = datetime.datetime(2021,12,31)
+        start_date = datetime.datetime(2021, 12, 31)
         n_days = 11
         for days in range(n_days):
             date = start_date + datetime.timedelta(days=days)
             for person in fast_population:
-                campaigns.apply(person=person,date=date)
+                campaigns.apply(person=person, date=date)
 
         n_pfizer, n_az = 0, 0
         for person in fast_population:
-            if person.vaccine_type == 'Pfizer':
+            if person.vaccine_type == "Pfizer":
                 n_pfizer += 1
-            elif person.vaccine_type == 'AstraZeneca':
+            elif person.vaccine_type == "AstraZeneca":
                 n_az += 1
-        assert 0.6*0.5*len(fast_population) == pytest.approx(n_pfizer,rel=0.1)
-        assert 0.1*0.5*len(fast_population) == pytest.approx(n_az,rel=0.15)
-
-
- 
-     
-
-            
+        assert 0.6 * 0.5 * len(fast_population) == pytest.approx(n_pfizer, rel=0.1)
+        assert 0.1 * 0.5 * len(fast_population) == pytest.approx(n_az, rel=0.15)

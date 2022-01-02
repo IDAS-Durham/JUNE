@@ -1,5 +1,8 @@
 Pfizer:
-  days_to_effective: [5,7,5]
+  days_administered_to_effective: [5,7,5]
+  days_effective_to_waning: [1,1,1]
+  days_waning: [1,1,1]
+  waning_factor: 1.
   sterilisation_efficacies:
     - Covid19:
         0-100: 0.52
@@ -16,7 +19,10 @@ Pfizer:
         0-100: 0.98
 
 AstraZeneca:
-  days_to_effective: [5,7,5]
+  days_administered_to_effective: [5,7,5]
+  days_effective_to_waning: [1,1,1]
+  days_waning: [1,1,1]
+  waning_factor: 1.
   sterilisation_efficacies:
     - Covid19:
         0-100: 0.32
@@ -34,7 +40,10 @@ AstraZeneca:
 
 
 Test:
-  days_to_effective: [1,2,10]
+  days_administered_to_effective: [1,2,10]
+  days_effective_to_waning: [1,1,1]
+  days_waning: [1,1,1]
+  waning_factor: 1.
   sterilisation_efficacies:
       - Delta:
           0-100: 0.3

@@ -52,7 +52,6 @@ class Epidemiology:
         immunity_setter: Optional[ImmunitySetter] = None,
         medical_care_policies: Optional[MedicalCarePolicies] = None,
         medical_facilities: Optional[MedicalFacilities] = None,
-        vaccines: Optional[Vaccines] = None,
         vaccination_campaigns: Optional["VaccinationCampaigns"] = None,
     ):
         self.infection_selectors = infection_selectors
@@ -60,7 +59,6 @@ class Epidemiology:
         self.immunity_setter = immunity_setter
         self.medical_care_policies = medical_care_policies
         self.medical_facilities = medical_facilities
-        self.vaccines = vaccines
         self.vaccination_campaigns = vaccination_campaigns
         self.current_date = None
 
@@ -71,7 +69,7 @@ class Epidemiology:
     def set_past_vaccinations(self, people, date, record=None):
         if self.vaccination_campaigns is not None:
             self.vaccination_campaigns._apply_past_vaccinations(
-                people=people, date=date, vaccines=self.vaccines, record=record
+                people=people, date=date, record=record
             )
 
     def set_effective_multipliers(self, population):
@@ -128,7 +126,6 @@ class Epidemiology:
             date=timer.date,
             duration=timer.duration,
             record=record,
-            vaccination_campaigns=self.vaccination_campaigns,
             vaccinate=vaccinate,
         )
         if record:
@@ -197,7 +194,6 @@ class Epidemiology:
         date=None,
         record: Record = None,
         vaccinate: bool = False,
-        vaccination_campaigns=None,
     ):
         """
         Update symptoms and health status of infected people.
@@ -238,11 +234,10 @@ class Epidemiology:
             if person.dead:
                 continue
             if vaccinate:
-                vaccination_campaigns.apply(
+                self.vaccination_campaigns.apply(
                     person=person,
                     date=date,
                     record=record,
-                    vaccines=self.vaccines,
                 )
                 if person.vaccine_trajectory is not None:
                     if person.vaccine_trajectory.is_finished(date):

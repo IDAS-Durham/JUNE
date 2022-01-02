@@ -191,9 +191,9 @@ class VaccineTrajectory:
         )
 
     def is_finished(
-            self, 
-            date,
-        ):
+        self,
+        date,
+    ):
         if date > self.doses[-1].date_finished:
             return True
         return False
@@ -243,6 +243,7 @@ class VaccineTrajectory:
                 self.update_dosage(person=person, record=record)
         self.update_trajectory_stage(date=date)
 
+
 class Vaccine:
     def __init__(
         self,
@@ -286,9 +287,12 @@ class Vaccine:
     ):
         return cls(
             name=name,
-            days_to_effective=config["days_to_effective"],
+            days_administered_to_effective=config["days_administered_to_effective"],
+            days_effective_to_waning=config["days_effective_to_waning"],
+            days_waning=config["days_waning"],
             sterilisation_efficacies=config["sterilisation_efficacies"],
             symptomatic_efficacies=config["symptomatic_efficacies"],
+            waning_factor=config["waning_factor"],
         )
 
     @classmethod
@@ -372,7 +376,9 @@ class Vaccine:
                 )
             )
             prior_efficacy = efficacy * efficacy.waning_factor
-        return VaccineTrajectory(doses=doses, name=self.name, infection_ids=self.infection_ids)
+        return VaccineTrajectory(
+            doses=doses, name=self.name, infection_ids=self.infection_ids
+        )
 
 
 class Vaccines:
@@ -395,9 +401,7 @@ class Vaccines:
             vaccines.append(
                 Vaccine(
                     name=key,
-                    days_to_effective=values["days_to_effective"],
-                    sterilisation_efficacies=values["sterilisation_efficacies"],
-                    symptomatic_efficacies=values["symptomatic_efficacies"],
+                    **values,
                 )
             )
         return cls(vaccines=vaccines)
