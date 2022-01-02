@@ -168,46 +168,6 @@ class TestCampaign:
         assert person.id in campaign.vaccinated_ids
 
 
-    def test__update_vaccine_effect(self, vaccine):
-        person = Person.from_attributes(age=5, sex="f")
-        person.immunity.susceptibility_dict = {delta_id: 0.9, omicron_id: 0.9}
-        person.immunity.effective_multiplier_dict = {delta_id: 0.9, omicron_id: 0.9}
- 
-        date=datetime.datetime(2022,1,1)
-        campaign = make_campaign(
-            vaccine=vaccine,
-            group_by="age",
-            group_type="0-100",
-        )
-        campaign.vaccinate(person,date=date,)
-        n_days = 200
-        trajectory = person.vaccine_trajectory
-        for days in range(n_days):
-            date = trajectory.first_dose_date + datetime.timedelta(days=days)
-            campaign.update_vaccine_effect(person=person,date=date)
-        assert person.immunity.susceptibility_dict[delta_id] == pytest.approx(0.2)
-        assert person.immunity.effective_multiplier_dict[delta_id] == pytest.approx(0.2)
-
-    def test__update_vaccine_effect_high_initial_immunity(self, vaccine):
-        person = Person.from_attributes(age=5, sex="f")
-        person.immunity.susceptibility_dict = {delta_id: 0.1, omicron_id: 0.1}
-        person.immunity.effective_multiplier_dict = {delta_id: 0.1, omicron_id: 0.1}
- 
-        date=datetime.datetime(2022,1,1)
-        campaign = make_campaign(
-            vaccine=vaccine,
-            group_by="age",
-            group_type="0-100",
-        )
-        campaign.vaccinate(person,date=date,)
-        n_days = 200
-        trajectory = person.vaccine_trajectory
-        for days in range(n_days):
-            date = trajectory.first_dose_date + datetime.timedelta(days=days)
-            campaign.update_vaccine_effect(person=person,date=date)
-        assert person.immunity.susceptibility_dict[delta_id] == pytest.approx(0.1)
-        assert person.immunity.effective_multiplier_dict[delta_id] == pytest.approx(0.1)
-
 class TestCampaigns:
     def test__apply(self, fast_population, effectiveness):
         pfizer = Vaccine(

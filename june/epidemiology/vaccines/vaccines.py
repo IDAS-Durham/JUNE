@@ -110,8 +110,12 @@ class VaccineTrajectory:
     def __init__(
         self,
         doses: List[Dose],
+        name: str,
+        infection_ids: List[int],
     ):
         self.doses = sorted(doses, key=operator.attrgetter("date_administered"))
+        self.name = name
+        self.infection_ids = infection_ids
         self.first_dose_date = self.doses[0].date_administered
         self.dates_administered = [
             (dose.date_administered - self.first_dose_date).days for dose in self.doses
@@ -186,6 +190,58 @@ class VaccineTrajectory:
             date=date, protection_type="symptoms", infection_id=infection_id
         )
 
+    def is_finished(
+            self, 
+            date,
+        ):
+        if date > self.doses[-1].date_finished:
+            return True
+        return False
+
+    def update_dosage(
+        self,
+        person,
+        record=None,
+    ):
+        dose_number = self.current_dose
+        person.vaccinated = dose_number
+        person.vaccine_type = self.name
+        if record is not None:
+            record.events["vaccines"].accumulate(
+                person.id,
+                self.name,
+                dose_number,
+            )
+
+    def update_vaccine_effect(
+        self,
+        person: "Person",
+        date: datetime.datetime,
+        record=None,
+    ):
+        if self.is_finished(date=date):
+            person.vaccine_trajectory = None
+        immunity = person.immunity
+        dose_number = self.current_dose
+        # update person.vaccinated here and use record
+        for infection_id in self.infection_ids:
+            updated_susceptibility = self.susceptibility(
+                date=date, infection_id=infection_id
+            )
+            updated_effective_multiplier = self.effective_multiplier(
+                date=date, infection_id=infection_id
+            )
+            immunity.susceptibility_dict[infection_id] = min(
+                self.prior_susceptibility.get(infection_id, 1.0),
+                updated_susceptibility,
+            )
+            immunity.effective_multiplier_dict[infection_id] = min(
+                self.prior_effective_multiplier.get(infection_id, 1.0),
+                updated_effective_multiplier,
+            )
+            if self.current_dose != dose_number:
+                self.update_dosage(person=person, record=record)
+        self.update_trajectory_stage(date=date)
 
 class Vaccine:
     def __init__(
@@ -316,7 +372,7 @@ class Vaccine:
                 )
             )
             prior_efficacy = efficacy * efficacy.waning_factor
-        return VaccineTrajectory(doses=doses)
+        return VaccineTrajectory(doses=doses, name=self.name, infection_ids=self.infection_ids)
 
 
 class Vaccines:

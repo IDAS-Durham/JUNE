@@ -244,12 +244,15 @@ class Epidemiology:
                     record=record,
                     vaccines=self.vaccines,
                 )
-        if vaccinate:
-            vaccination_campaigns.update_vaccinated(
-                world.people,
-                date=date,
-                record=record,
-            )
+                if person.vaccine_trajectory is not None:
+                    if person.vaccine_trajectory.is_finished(date):
+                        person.vaccine_trajectory = None
+                    else:
+                        person.vaccine_trajectory.update_vaccine_effect(
+                                person=person,
+                                date=date,
+                                record=record,
+                        )
 
     def infect_people(
         self, world, time, infected_ids, infection_ids, people_from_abroad_dict

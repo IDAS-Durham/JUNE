@@ -96,12 +96,10 @@ class TestDose:
                 == value
             )
 
-
-@pytest.fixture(name="trajectory")
-def make_trajectory():
+def get_trajectory_initial_efficacy(prior_efficacy):
     prior_efficacy = Efficacy(
-        infection={delta_id: 0.1, omicron_id: 0.1},
-        symptoms={delta_id: 0.1, omicron_id: 0.1},
+        infection={delta_id: prior_efficacy, omicron_id: prior_efficacy},
+        symptoms={delta_id: prior_efficacy, omicron_id: prior_efficacy},
         waning_factor=1.0,
     )
     first_dose_efficacy = Efficacy(
@@ -138,8 +136,14 @@ def make_trajectory():
         prior_efficacy=first_dose_efficacy_waned,
         date_administered=datetime.datetime(2022, 3, 1),
     )
-    return VaccineTrajectory(doses=[first_dose, second_dose])
+    return VaccineTrajectory(doses=[first_dose, second_dose],name='holi',
+            infection_ids=[delta_id, omicron_id])
 
+
+
+@pytest.fixture(name="trajectory")
+def make_trajectory():
+    return get_trajectory_initial_efficacy(0.1)
 
 class TestVaccineTrajectory:
     def test_dose_index(self, trajectory):
@@ -151,6 +155,10 @@ class TestVaccineTrajectory:
     def test_dose_number(self, trajectory):
         assert trajectory.get_dose_number(date=datetime.datetime(2022, 1, 1)) == 0
         assert trajectory.get_dose_number(date=datetime.datetime(2022, 3, 20)) == 1
+
+    def test_is_finished(self, trajectory):
+        assert trajectory.is_finished(date=datetime.datetime(2022,1,1)) == False
+        assert trajectory.is_finished(date=datetime.datetime(2022,3,19)) == True
 
     def test_time_evolution(self, trajectory, dates_values):
         n_days = 500
@@ -164,6 +172,32 @@ class TestVaccineTrajectory:
                     protection_type="infection",
                 )
                 assert dates_values[date] == pytest.approx(efficacy)
+
+    def test__update_vaccine_effect(self, trajectory,):
+        person = Person.from_attributes(age=5, sex="f")
+        person.immunity.susceptibility_dict = {delta_id: 0.9, omicron_id: 0.9}
+        person.immunity.effective_multiplier_dict = {delta_id: 0.9, omicron_id: 0.9}
+        date=datetime.datetime(2022,1,1)
+        n_days = 200
+        for days in range(n_days):
+            date = trajectory.first_dose_date + datetime.timedelta(days=days)
+            trajectory.update_vaccine_effect(person=person,date=date)
+        assert person.immunity.susceptibility_dict[delta_id] == pytest.approx(0.55)
+        assert person.immunity.effective_multiplier_dict[delta_id] == pytest.approx(0.55)
+
+    def test__update_vaccine_effect_high_initial_immunity(self,):
+        trajectory = get_trajectory_initial_efficacy(0.9)
+        person = Person.from_attributes(age=5, sex="f")
+        person.immunity.susceptibility_dict = {delta_id: 0.1, omicron_id: 0.1}
+        person.immunity.effective_multiplier_dict = {delta_id: 0.1, omicron_id: 0.1}
+        date=datetime.datetime(2022,1,1)
+        n_days = 200
+        for days in range(n_days):
+            date = trajectory.first_dose_date + datetime.timedelta(days=days)
+            trajectory.update_vaccine_effect(person=person,date=date)
+
+        assert person.immunity.susceptibility_dict[delta_id] == pytest.approx(0.1)
+        assert person.immunity.effective_multiplier_dict[delta_id] == pytest.approx(0.1)
 
 
 @pytest.fixture(name="vaccine")

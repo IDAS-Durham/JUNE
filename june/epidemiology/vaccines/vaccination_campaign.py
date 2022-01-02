@@ -18,10 +18,9 @@ default_config_filename = (
     paths.configs_path / "defaults/epidemiology/vaccines/vaccination_campaigns.yaml"
 )
 # TODO:
-# i) Reformat vaccination campaign (make sure record works)
-# ii) Vaccinate individually given age, region, n doses, and vaccine type (could be made of combinations)
-
-#TODO: avoid loop people when update vaccinated to be double, do it within existing for loop
+# i) Do integration tests and make sure record is working
+# ii) Vaccinate in the past
+# iii) Vaccinate individually given age, region, n doses, and vaccine type (could be made of combinations)
 
 class VaccinationCampaign:
     def __init__(
@@ -110,65 +109,20 @@ class VaccinationCampaign:
         date: datetime.datetime,
         record: Optional["Record"] = None,
     ):
-        person.vaccine_trajectory = self.vaccine.generate_trajectory(
+        vaccine_trajectory = self.vaccine.generate_trajectory(
             person=person,
             dose_numbers=self.dose_numbers,
             days_to_next_dose=self.days_to_next_dose,
             date=date,
         )
-        self.update_dosage(person=person, record=record)
+        vaccine_trajectory.update_dosage(person=person, record=record)
+        person.vaccine_trajectory = vaccine_trajectory
         self.vaccinated_ids.add(person.id)
 
     def daily_vaccination_probability(self, days_passed: int) -> float:
         return self.group_coverage * (
             1 / (self.total_days - days_passed * self.group_coverage)
         )
-
-    def update_dosage(
-        self,
-        person,
-        record=None,
-    ):
-        dose_number = person.vaccine_trajectory.current_dose
-        person.vaccinated = dose_number
-        person.vaccine_type = self.vaccine.name
-        if record is not None:
-            record.events["vaccines"].accumulate(
-                person.id,
-                self.vaccine.name,
-                dose_number,
-            )
-
-    def update_vaccine_effect(
-        self,
-        person: "Person",
-        date: datetime.datetime,
-        record=None,
-    ):
-        trajectory = person.vaccine_trajectory
-        immunity = person.immunity
-        dose_number = trajectory.current_dose
-        # update person.vaccinated here and use record
-        for infection_id in self.vaccine.infection_ids:
-            updated_susceptibility = trajectory.susceptibility(
-                date=date, infection_id=infection_id
-            )
-            updated_effective_multiplier = trajectory.effective_multiplier(
-                date=date, infection_id=infection_id
-            )
-            immunity.susceptibility_dict[infection_id] = min(
-                trajectory.prior_susceptibility.get(infection_id, 1.0),
-                updated_susceptibility,
-            )
-            immunity.effective_multiplier_dict[infection_id] = min(
-                trajectory.prior_effective_multiplier.get(infection_id, 1.0),
-                updated_effective_multiplier,
-            )
-            if trajectory.current_dose != dose_number:
-                self.update_dosage(person=person, record=record)
-        trajectory.update_trajectory_stage(date=date)
-
-
 
 class VaccinationCampaigns:
     def __init__(self, vaccination_campaigns: List[VaccinationCampaign]):
@@ -192,19 +146,6 @@ class VaccinationCampaigns:
         self,
     ):
         return iter(self.vaccination_campaigns)
-
-    def update_vaccinated(
-        self,
-        people: "Population",
-        date: datetime.datetime,
-        record: Optional[Record] = None,
-    ):
-        for cv in self.vaccination_campaigns:
-            cv.update_vaccinated(
-                people=people,
-                date=date,
-                record=record,
-            )
 
     def get_active(self, date: datetime) -> List[VaccinationCampaign]:
         return [vc for vc in self.vaccination_campaigns if vc.is_active(date)]
