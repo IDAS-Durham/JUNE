@@ -37,8 +37,8 @@ class VaccinationCampaign:
     def __init__(
         self,
         vaccine: Vaccine,
-        dose_numbers: List[int] = [0, 1],
         days_to_next_dose: List[int],
+        dose_numbers: List[int] = [0, 1],
         start_time: str = "2100-01-01",
         end_time: str = "2100-01-02",
         group_by: str = "age",
@@ -52,14 +52,14 @@ class VaccinationCampaign:
         ----------
         vaccine : Vaccine
             vaccine to give out
+        days_to_next_dose : List[int]
+            days to wait from the moment a person is vaccinated to
+            their next dose. Should have same length as dose_numbers
         dose_numbers : List[int]
             what doses to give out. 
             Example: dose_numbers = [0,1] would give out first
             and second dose, whereas dose_numbers = [2] would
             only give a third dose
-        days_to_next_dose : List[int]
-            days to wait from the moment a person is vaccinated to
-            their next dose. Should have same length as dose_numbers
         start_time : str
             date at which to start vaccinating people 
         end_time : str
