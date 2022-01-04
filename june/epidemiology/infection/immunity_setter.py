@@ -1,5 +1,6 @@
 from typing import Optional
 import numpy as np
+import yaml
 from random import random
 from june.utils import (
     parse_age_probabilities,
