@@ -1,5 +1,5 @@
 import operator
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Dict, Tuple, Set
 from random import random
 import numpy as np
 import datetime
@@ -23,7 +23,6 @@ default_vaccines_config_filename = (
 
 
 # TODO:
-# i) Make sure record is working (make sure full run uses it)
 # ii) Vaccinate in the past
 # iii) Vaccinate individually given age, region, n doses, and vaccine type (could be made of combinations)
 
@@ -31,7 +30,7 @@ default_vaccines_config_filename = (
 class VaccinationCampaign:
     """
     Defines a campaign to vaccinate a group of people in
-    a given time span and with a given vaccine 
+    a given time span and with a given vaccine
     """
 
     def __init__(
@@ -56,28 +55,28 @@ class VaccinationCampaign:
             days to wait from the moment a person is vaccinated to
             their next dose. Should have same length as dose_numbers
         dose_numbers : List[int]
-            what doses to give out. 
+            what doses to give out.
             Example: dose_numbers = [0,1] would give out first
             and second dose, whereas dose_numbers = [2] would
             only give a third dose
         start_time : str
-            date at which to start vaccinating people 
+            date at which to start vaccinating people
         end_time : str
-            date at which to stop vaccinating people 
+            date at which to stop vaccinating people
         group_by : str
             defines what group to vaccinate.
             Examples: 'age', 'sex', 'residence', 'primary_activity'
         group_type : str
             from the group defined by group_by, what people to vaccinate.
-            Examples: 
-            if group_by = 'age' -> group_type = '20-40' would vaccinate 
+            Examples:
+            if group_by = 'age' -> group_type = '20-40' would vaccinate
             people aged between 20 and 40
-            if group_by = 'residence' -> group_type = 'carehome' would vaccinate 
+            if group_by = 'residence' -> group_type = 'carehome' would vaccinate
             people living in care homes.
         group_coverage : float
-            percentage of the eligible group to vaccinate. Must be between 0. and 1. 
+            percentage of the eligible group to vaccinate. Must be between 0. and 1.
         last_dose_type : Optional[str]
-            if not starting with a first dose (dose_numbers[0] = 0), whether to 
+            if not starting with a first dose (dose_numbers[0] = 0), whether to
             vaccinate only people whose previous vaccines where of a certain type.
         """
         self.start_time = read_date(start_time)
@@ -96,6 +95,22 @@ class VaccinationCampaign:
         self.dose_numbers = dose_numbers
         self.vaccinated_ids = set()
         self.starting_dose = self.dose_numbers[0]
+        self.days_from_administered_to_finished = (
+            sum(self.days_to_next_dose)
+            + sum(
+                [
+                    self.vaccine.days_administered_to_effective[dose]
+                    for dose in self.dose_numbers
+                ]
+            )
+            + sum(
+                [
+                    self.vaccine.days_effective_to_waning[dose]
+                    for dose in self.dose_numbers
+                ]
+            )
+            + sum([self.vaccine.days_waning[dose] for dose in self.dose_numbers])
+        )
 
     def is_active(self, date: datetime.datetime) -> bool:
         """
@@ -244,8 +259,7 @@ class VaccinationCampaign:
 
 
 class VaccinationCampaigns:
-    """VaccinationCampaigns.
-    """
+    """VaccinationCampaigns."""
 
     def __init__(self, vaccination_campaigns: List[VaccinationCampaign]):
         """__init__.
@@ -290,8 +304,7 @@ class VaccinationCampaigns:
     def __iter__(
         self,
     ):
-        """__iter__.
-        """
+        """__iter__."""
         return iter(self.vaccination_campaigns)
 
     def get_active(self, date: datetime) -> List[VaccinationCampaign]:
@@ -309,7 +322,9 @@ class VaccinationCampaigns:
         """
         return [vc for vc in self.vaccination_campaigns if vc.is_active(date)]
 
-    def apply(self, person: "Person", date: datetime, record=None):
+    def apply(
+        self, person: "Person", date: datetime, record: Optional["Record"] = None
+    ):
         """apply.
 
         Parameters
@@ -341,3 +356,44 @@ class VaccinationCampaigns:
                     campaigns_to_chose_from, p=daily_probability
                 )
                 campaign.vaccinate(person=person, date=date, record=record)
+
+    def collect_all_dates_in_past(
+        self,
+        current_date: datetime.datetime,
+    ) -> Set[datetime.datetime]:
+        dates = set()
+        for cv in self.vaccination_campaigns:
+            start_time = cv.start_time
+            if start_time < current_date:
+                days_to_finished = cv.days_from_administered_to_finished
+                end_time = min(
+                    current_date,
+                    cv.end_time + datetime.timedelta(days=days_to_finished),
+                )
+                delta = end_time - start_time
+                for i in range(delta.days + 1):
+                    date = start_time + datetime.timedelta(days=i)
+                    dates.add(date)
+        return sorted(list(dates))
+
+    def apply_past_campaigns(
+        self, people, date: datetime.datetime, record: Optional["Record"] = None
+    ):
+        dates_to_vaccinate = self.collect_all_dates_in_past(
+            current_date=date,
+        )
+        vaccinated = False
+        for date_to_vax in dates_to_vaccinate:
+            logger.info(f"Vaccinating at date {date_to_vax.date()}")
+            for person in people:
+                self.apply(
+                    person=person,
+                    date=date_to_vax,
+                    record=record,
+                )
+                if person.vaccine_trajectory is not None:
+                    person.vaccine_trajectory.update_vaccine_effect(
+                        person=person, date=date_to_vax, record=record
+                    )
+            if record is not None:
+                record.time_step(timestamp=date_to_vax)

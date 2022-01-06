@@ -234,7 +234,7 @@ def make_vaccine():
 class TestVaccine:
     def test__infection_ids(self, vaccine):
         assert set(vaccine.infection_ids) == set([delta_id])
-
+        
     def test__vt_generation(self, vaccine):
         young_person = Person.from_attributes(age=20)
         old_person = Person.from_attributes(age=70)

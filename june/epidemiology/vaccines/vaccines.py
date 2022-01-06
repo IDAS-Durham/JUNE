@@ -5,6 +5,7 @@ import datetime
 from typing import List, Tuple, Dict, Optional
 from dataclasses import dataclass
 import numpy as np
+import pandas as pd
 
 from june import paths
 from june.epidemiology.infection import infection as infection_module
@@ -14,6 +15,9 @@ default_config_filename = (
     paths.configs_path / "defaults/epidemiology/vaccines/vaccines.yaml"
 )
 
+# TODO: apply doses from file
+# Start with (date, pseudo_id, region, age, dose, vaccine_type)
+# (person id, dose number, vaccine type) -> append to trajectory.doses
 
 @dataclass
 class Efficacy:
@@ -55,8 +59,7 @@ class Efficacy:
 
 
 class Dose:
-    """Dose.
-    """
+    """Dose."""
 
     def __init__(
         self,
@@ -156,8 +159,7 @@ class Dose:
 
 
 class VaccineTrajectory:
-    """VaccineTrajectory.
-    """
+    """VaccineTrajectory."""
 
     def __init__(
         self,
@@ -193,15 +195,13 @@ class VaccineTrajectory:
     def current_dose(
         self,
     ):
-        """current_dose.
-        """
+        """current_dose."""
         return self.doses[self.stage].number
 
     def _get_immunity_prior_to_trajectory(
         self,
     ):
-        """_get_immunity_prior_to_trajectory.
-        """
+        """_get_immunity_prior_to_trajectory."""
         prior_efficacy = self.doses[0].prior_efficacy
         suscepbitility = {
             inf_id: 1 - value for inf_id, value in prior_efficacy.infection.items()
@@ -365,9 +365,11 @@ class VaccineTrajectory:
         """
         if self.is_finished(date=date):
             person.vaccine_trajectory = None
+            return
         immunity = person.immunity
         dose_number = self.current_dose
         # update person.vaccinated here and use record
+        self.update_trajectory_stage(date=date)
         for infection_id in self.infection_ids:
             updated_susceptibility = self.susceptibility(
                 date=date, infection_id=infection_id
@@ -383,14 +385,12 @@ class VaccineTrajectory:
                 self.prior_effective_multiplier.get(infection_id, 1.0),
                 updated_effective_multiplier,
             )
-            if self.current_dose != dose_number:
-                self.update_dosage(person=person, record=record)
-        self.update_trajectory_stage(date=date)
+        if self.current_dose != dose_number:
+            self.update_dosage(person=person, record=record)
 
 
 class Vaccine:
-    """Vaccine.
-    """
+    """Vaccine."""
 
     def __init__(
         self,
@@ -586,8 +586,7 @@ class Vaccine:
 
 
 class Vaccines:
-    """Vaccines.
-    """
+    """Vaccines."""
 
     def __init__(self, vaccines: List[Vaccine]):
         """__init__.
@@ -653,13 +652,13 @@ class Vaccines:
     def __iter__(
         self,
     ):
-        """__iter__.
-        """
+        """__iter__."""
         return iter(self.vaccines)
 
     def get_max_effective_date(
         self,
     ):
-        """get_max_effective_date.
-        """
+        """get_max_effective_date."""
         return max([sum(vaccine.days_to_effective) for vaccine in self.vaccines])
+
+

@@ -68,7 +68,7 @@ class Epidemiology:
 
     def set_past_vaccinations(self, people, date, record=None):
         if self.vaccination_campaigns is not None:
-            self.vaccination_campaigns._apply_past_vaccinations(
+            self.vaccination_campaigns.apply_past_campaigns(
                 people=people, date=date, record=record
             )
 
@@ -240,14 +240,11 @@ class Epidemiology:
                     record=record,
                 )
                 if person.vaccine_trajectory is not None:
-                    if person.vaccine_trajectory.is_finished(date):
-                        person.vaccine_trajectory = None
-                    else:
-                        person.vaccine_trajectory.update_vaccine_effect(
-                                person=person,
-                                date=date,
-                                record=record,
-                        )
+                    person.vaccine_trajectory.update_vaccine_effect(
+                            person=person,
+                            date=date,
+                            record=record,
+                    )
 
     def infect_people(
         self, world, time, infected_ids, infection_ids, people_from_abroad_dict

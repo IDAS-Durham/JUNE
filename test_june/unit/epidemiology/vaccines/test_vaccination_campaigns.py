@@ -230,3 +230,131 @@ class TestCampaigns:
                 n_az += 1
         assert 0.6 * 0.5 * len(fast_population) == pytest.approx(n_pfizer, rel=0.1)
         assert 0.1 * 0.5 * len(fast_population) == pytest.approx(n_az, rel=0.15)
+
+@pytest.fixture(name="population")
+def make_population():
+    people = []
+    for age in range(100):
+        for _ in range(100):
+            person = Person.from_attributes(age=age)
+            people.append(person)
+    return Population(people)
+
+
+
+@pytest.fixture(name="fast_population")
+def make_fast_population():
+    people = []
+    for age in range(100):
+        for _ in range(10):
+            person = Person.from_attributes(age=age)
+            people.append(person)
+    return Population(people)
+
+@pytest.fixture(name="vax_campaigns")
+def make_campaigns():
+    ster_effectiveness = [
+        {"Delta": {"0-100": 0.3}, "Omicron": {"0-100": 0.2}},
+        {"Delta": {"0-100": 0.7}, "Omicron": {"0-100": 0.2}},
+        {"Delta": {"0-100": 0.9}, "Omicron": {"0-100": 0.8}},
+    ]
+    sympto_effectiveness = [
+        {"Delta": {"0-100": 0.3}, "Omicron": {"0-100": 0.5}},
+        {"Delta": {"0-100": 0.7}, "Omicron": {"0-100": 0.2}},
+        {"Delta": {"0-100": 0.7}, "Omicron": {"0-100": 0.1}},
+    ]
+
+    vaccine = Vaccine(
+        "Test",
+        days_administered_to_effective=[1, 2, 10],
+        days_effective_to_waning=[0, 0, 0],
+        days_waning=[0, 0, 0],
+        sterilisation_efficacies=ster_effectiveness,
+        symptomatic_efficacies=sympto_effectiveness,
+        waning_factor=1.0,
+    )
+    return VaccinationCampaigns(
+        [
+            VaccinationCampaign(
+                vaccine=vaccine,
+                days_to_next_dose=[0, 9, 16],
+                start_time="2021-03-01",
+                end_time="2021-03-05",
+                group_by="age",
+                group_type="20-40",
+                group_coverage=0.6,
+                dose_numbers=[0, 1, 2],
+            )
+        ]
+    )
+
+class TestVaccinationInitialization:
+    def test__to_finished(
+        self,
+        vax_campaigns,
+    ):
+        assert vax_campaigns.vaccination_campaigns[0].days_from_administered_to_finished == 38
+
+    def test__vaccination_from_the_past(
+        self,
+        population,
+        vax_campaigns,
+    ):
+        date = datetime.datetime(2021, 4, 30)
+        vax_campaigns.apply_past_campaigns(
+            people=population,
+            date=date,
+        )
+        n_vaccinated = 0
+        for person in population:
+            if (person.age < 20) or (person.age >= 40):
+                assert person.vaccinated is None
+            else:
+                if person.vaccinated is not None:
+                    n_vaccinated += 1
+                    assert np.isclose(
+                        person.immunity.susceptibility_dict[delta_id], 0.1
+                    )
+                    assert np.isclose(
+                        person.immunity.susceptibility_dict[omicron_id], 0.2
+                    )
+                    assert np.isclose(
+                        person.immunity.effective_multiplier_dict[delta_id],
+                        0.3,
+                    )
+                    assert np.isclose(
+                        person.immunity.effective_multiplier_dict[
+                            omicron_id
+                        ],
+                        0.9,
+                    )
+        assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
+
+    def test__record_saving(
+        self,
+        fast_population,
+        vax_campaigns,
+    ):
+        record = Record(record_path="results")
+        dates = vax_campaigns.collect_all_dates_in_past(
+            current_date=datetime.datetime(2021, 5, 1),
+        )
+        assert len(set(dates)) == len(dates)
+        vax_campaigns.apply_past_campaigns(
+            people=fast_population,
+            date=datetime.datetime(2021, 5, 1),
+            record=record,
+        )
+        n_vaccinated = 0
+        for person in fast_population:
+            if person.vaccinated is not None:
+                n_vaccinated += 1
+        read = RecordReader(results_path="results")
+        vaccines_df = read.table_to_df("vaccines", "vaccinated_ids")
+        first_dose_df = vaccines_df[vaccines_df["dose_numbers"] == 0]
+        second_dose_df = vaccines_df[vaccines_df["dose_numbers"] == 1]
+        third_dose_df = vaccines_df[vaccines_df["dose_numbers"] == 2]
+        print(third_dose_df)
+        assert len(first_dose_df) == n_vaccinated
+        assert len(third_dose_df) == n_vaccinated
+        assert len(first_dose_df) == len(second_dose_df)
