@@ -1,5 +1,5 @@
 import operator
-from typing import List, Optional, Dict, Tuple, Set
+from typing import List, Optional, Tuple, Set, TYPE_CHECKING
 from random import random
 import numpy as np
 import datetime
@@ -23,8 +23,12 @@ default_vaccines_config_filename = (
 
 
 # TODO:
-# ii) Vaccinate in the past
 # iii) Vaccinate individually given age, region, n doses, and vaccine type (could be made of combinations)
+
+
+if TYPE_CHECKING:
+    from june.demography import Person
+    from june.records import Record
 
 
 class VaccinationCampaign:
@@ -382,7 +386,6 @@ class VaccinationCampaigns:
         dates_to_vaccinate = self.collect_all_dates_in_past(
             current_date=date,
         )
-        vaccinated = False
         for date_to_vax in dates_to_vaccinate:
             logger.info(f"Vaccinating at date {date_to_vax.date()}")
             for person in people:

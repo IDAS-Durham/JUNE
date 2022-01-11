@@ -2,10 +2,9 @@ import datetime
 import pytest
 import numpy as np
 
-from june.groups import CareHome
 from june.demography import Person, Population
 
-from june.epidemiology.vaccines.vaccines import Vaccine, Vaccines, VaccineTrajectory
+from june.epidemiology.vaccines.vaccines import Vaccine, VaccineTrajectory
 from june.epidemiology.vaccines.vaccination_campaign import (
     VaccinationCampaign,
     VaccinationCampaigns,
@@ -75,8 +74,8 @@ class TestWhenWho:
             group_by="age",
             group_type="50-100",
         )
-        assert campaign.is_active(datetime.datetime(2022, 1, 2)) == True
-        assert campaign.is_active(datetime.datetime(2022, 1, 12)) == False
+        assert campaign.is_active(datetime.datetime(2022, 1, 2)) is True
+        assert campaign.is_active(datetime.datetime(2022, 1, 12)) is False
 
     def test__is_target_group(self, vaccine):
         young_person = Person(age=5, sex="f")
@@ -86,16 +85,16 @@ class TestWhenWho:
             group_by="age",
             group_type="50-100",
         )
-        assert campaign.is_target_group(person=young_person) == False
-        assert campaign.is_target_group(person=old_person) == True
+        assert campaign.is_target_group(person=young_person) is False
+        assert campaign.is_target_group(person=old_person) is True
 
         campaign = make_campaign(
             vaccine=vaccine,
             group_by="sex",
             group_type="m",
         )
-        assert campaign.is_target_group(person=young_person) == False
-        assert campaign.is_target_group(person=old_person) == True
+        assert campaign.is_target_group(person=young_person) is False
+        assert campaign.is_target_group(person=old_person) is True
 
     def test__should_be_vaccinated(self, vaccine):
         person = Person(age=5, sex="f")
@@ -103,11 +102,11 @@ class TestWhenWho:
             vaccine=vaccine, group_by="age", group_type="50-100", dose_numbers=[0, 1]
         )
         person.vaccinated = None
-        assert campaign.has_right_dosage(person=person) == True
+        assert campaign.has_right_dosage(person=person) is True
         person.vaccinated = 1
-        assert campaign.has_right_dosage(person=person) == False
+        assert campaign.has_right_dosage(person=person) is False
         person.vaccinated = 0
-        assert campaign.has_right_dosage(person=person) == False
+        assert campaign.has_right_dosage(person=person) is False
 
     def test__should_be_vaccinated_booster(self, vaccine):
         person = Person(age=5, sex="f")
@@ -115,12 +114,12 @@ class TestWhenWho:
             vaccine=vaccine, group_by="age", group_type="50-100", dose_numbers=[2]
         )
         person.vaccinated = None
-        assert campaign.has_right_dosage(person=person) == False
+        assert campaign.has_right_dosage(person=person) is False
 
         person.vaccinated = 1
-        assert campaign.has_right_dosage(person=person) == True
+        assert campaign.has_right_dosage(person=person) is True
         person.vaccinated = 0
-        assert campaign.has_right_dosage(person=person) == False
+        assert campaign.has_right_dosage(person=person) is False
 
     def test__should_be_vaccinated_last_dose(self, vaccine):
         person = Person(age=5, sex="f")
@@ -133,11 +132,11 @@ class TestWhenWho:
         )
         person.vaccinated = 1
         person.vaccine_type = None
-        assert campaign.has_right_dosage(person=person) == False
+        assert campaign.has_right_dosage(person=person) is False
         person.vaccine_type = "Pfizer"
-        assert campaign.has_right_dosage(person=person) == True
+        assert campaign.has_right_dosage(person=person) is True
         person.vaccine_type = "Other"
-        assert campaign.has_right_dosage(person=person) == False
+        assert campaign.has_right_dosage(person=person) is False
 
 
 class TestCampaign:
@@ -231,6 +230,7 @@ class TestCampaigns:
         assert 0.6 * 0.5 * len(fast_population) == pytest.approx(n_pfizer, rel=0.1)
         assert 0.1 * 0.5 * len(fast_population) == pytest.approx(n_az, rel=0.15)
 
+
 @pytest.fixture(name="population")
 def make_population():
     people = []
@@ -240,16 +240,6 @@ def make_population():
             people.append(person)
     return Population(people)
 
-
-
-@pytest.fixture(name="fast_population")
-def make_fast_population():
-    people = []
-    for age in range(100):
-        for _ in range(10):
-            person = Person.from_attributes(age=age)
-            people.append(person)
-    return Population(people)
 
 @pytest.fixture(name="vax_campaigns")
 def make_campaigns():
@@ -288,12 +278,16 @@ def make_campaigns():
         ]
     )
 
+
 class TestVaccinationInitialization:
     def test__to_finished(
         self,
         vax_campaigns,
     ):
-        assert vax_campaigns.vaccination_campaigns[0].days_from_administered_to_finished == 38
+        assert (
+            vax_campaigns.vaccination_campaigns[0].days_from_administered_to_finished
+            == 38
+        )
 
     def test__vaccination_from_the_past(
         self,
@@ -323,9 +317,7 @@ class TestVaccinationInitialization:
                         0.3,
                     )
                     assert np.isclose(
-                        person.immunity.effective_multiplier_dict[
-                            omicron_id
-                        ],
+                        person.immunity.effective_multiplier_dict[omicron_id],
                         0.9,
                     )
         assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
@@ -354,7 +346,6 @@ class TestVaccinationInitialization:
         first_dose_df = vaccines_df[vaccines_df["dose_numbers"] == 0]
         second_dose_df = vaccines_df[vaccines_df["dose_numbers"] == 1]
         third_dose_df = vaccines_df[vaccines_df["dose_numbers"] == 2]
-        print(third_dose_df)
         assert len(first_dose_df) == n_vaccinated
         assert len(third_dose_df) == n_vaccinated
         assert len(first_dose_df) == len(second_dose_df)

@@ -163,8 +163,8 @@ class TestVaccineTrajectory:
         assert trajectory.get_dose_number(date=datetime.datetime(2022, 3, 20)) == 1
 
     def test_is_finished(self, trajectory):
-        assert trajectory.is_finished(date=datetime.datetime(2022, 1, 1)) == False
-        assert trajectory.is_finished(date=datetime.datetime(2022, 3, 19)) == True
+        assert trajectory.is_finished(date=datetime.datetime(2022, 1, 1)) is False
+        assert trajectory.is_finished(date=datetime.datetime(2022, 3, 19)) is True
 
     def test_time_evolution(self, trajectory, dates_values):
         n_days = 500
@@ -234,7 +234,7 @@ def make_vaccine():
 class TestVaccine:
     def test__infection_ids(self, vaccine):
         assert set(vaccine.infection_ids) == set([delta_id])
-        
+
     def test__vt_generation(self, vaccine):
         young_person = Person.from_attributes(age=20)
         old_person = Person.from_attributes(age=70)

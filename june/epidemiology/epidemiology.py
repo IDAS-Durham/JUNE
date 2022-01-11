@@ -4,9 +4,9 @@ from time import time as wall_clock
 import logging
 
 from .infection import InfectionSelectors, ImmunitySetter
-from .vaccines import Vaccines#, VaccinationCampaigns
 from june.demography import Activities
 from june.policy import MedicalCarePolicies
+from june.epidemiology.vaccines import VaccinationCampaigns
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
 from june.groups import MedicalFacilities
 from june.records import Record
@@ -52,7 +52,7 @@ class Epidemiology:
         immunity_setter: Optional[ImmunitySetter] = None,
         medical_care_policies: Optional[MedicalCarePolicies] = None,
         medical_facilities: Optional[MedicalFacilities] = None,
-        vaccination_campaigns: Optional["VaccinationCampaigns"] = None,
+        vaccination_campaigns: Optional[VaccinationCampaigns] = None,
     ):
         self.infection_selectors = infection_selectors
         self.infection_seeds = infection_seeds
@@ -241,9 +241,9 @@ class Epidemiology:
                 )
                 if person.vaccine_trajectory is not None:
                     person.vaccine_trajectory.update_vaccine_effect(
-                            person=person,
-                            date=date,
-                            record=record,
+                        person=person,
+                        date=date,
+                        record=record,
                     )
 
     def infect_people(

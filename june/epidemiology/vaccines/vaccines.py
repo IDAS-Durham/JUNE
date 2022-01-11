@@ -2,10 +2,9 @@ import yaml
 import operator
 from pathlib import Path
 import datetime
-from typing import List, Tuple, Dict, Optional
+from typing import List, Dict, Optional, TYPE_CHECKING
 from dataclasses import dataclass
 import numpy as np
-import pandas as pd
 
 from june import paths
 from june.epidemiology.infection import infection as infection_module
@@ -18,6 +17,10 @@ default_config_filename = (
 # TODO: apply doses from file
 # Start with (date, pseudo_id, region, age, dose, vaccine_type)
 # (person id, dose number, vaccine type) -> append to trajectory.doses
+
+if TYPE_CHECKING:
+    from june.demography import Person
+
 
 @dataclass
 class Efficacy:
@@ -660,5 +663,3 @@ class Vaccines:
     ):
         """get_max_effective_date."""
         return max([sum(vaccine.days_to_effective) for vaccine in self.vaccines])
-
-

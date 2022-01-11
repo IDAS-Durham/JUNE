@@ -42,4 +42,3 @@ from .regional_compliance import (
     TieredLockdown,
     TieredLockdowns,
 )
-

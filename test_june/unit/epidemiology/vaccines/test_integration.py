@@ -1,7 +1,7 @@
 import datetime
 import pytest
 from june.epidemiology.epidemiology import Epidemiology
-from june.epidemiology.vaccines.vaccines import Vaccine, Vaccines
+from june.epidemiology.vaccines.vaccines import Vaccine
 from june.epidemiology.vaccines.vaccination_campaign import (
     VaccinationCampaign,
     VaccinationCampaigns,
