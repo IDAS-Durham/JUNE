@@ -1,0 +1,33 @@
+# Groups 1-4 Pfizer/BioNTech
+1:
+    start_time: 2020-12-01 
+    end_time: 2020-12-20 
+    days_to_next_dose: [0,14]
+    group_by: 'residence'
+    group_type: 'care_home'
+    group_coverage: 0.3
+    vaccine_type: 'Pfizer'
+    dose_numbers: [0,1]
+2:
+    start_time: 2020-12-01 
+    end_time: 2020-12-20 
+    days_to_next_dose: [0,14]
+    group_by: 'residence'
+    group_type: 'care_home'
+    group_coverage: 0.3
+    vaccine_type: 'AstraZeneca'
+    dose_numbers: [0,1]
+
+3:
+    start_time: 2021-02-25 
+    end_time: 2021-02-27 
+    days_to_next_dose: [0]
+    group_by: 'residence'
+    group_type: 'care_home'
+    group_coverage: 1.
+    vaccine_type: 'Pfizer'
+    dose_numbers: [2]
+    last_dose_type: ['Pfizer', 'AstraZeneca']
+
+
+

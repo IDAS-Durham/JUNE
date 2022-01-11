@@ -34,8 +34,6 @@ class CareHome(Group):
         "n_residents",
         "area",
         "n_workers",
-        "relatives_in_care_homes",
-        "relatives_in_households",
         "quarantine_starting_date",
     )
 
@@ -104,6 +102,10 @@ class CareHome(Group):
 
     def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
         return self[self.SubgroupType.visitors]
+
+    @property
+    def type(self):
+        return "care_home"
 
 
 class CareHomes(Supergroup):

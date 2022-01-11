@@ -6,13 +6,14 @@ import logging
 from .infection import InfectionSelectors, ImmunitySetter
 from june.demography import Activities
 from june.policy import MedicalCarePolicies
+from june.epidemiology.vaccines import VaccinationCampaigns
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
 from june.groups import MedicalFacilities
 from june.records import Record
 from june.world import World
 from june.time import Timer
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from june.demography.person import Person
@@ -46,21 +47,30 @@ class Epidemiology:
 
     def __init__(
         self,
-        infection_selectors: InfectionSelectors = None,
-        infection_seeds: "InfectionSeeds" = None,
-        immunity_setter: ImmunitySetter = None,
-        medical_care_policies: MedicalCarePolicies = None,
-        medical_facilities: MedicalFacilities = None,
+        infection_selectors: Optional[InfectionSelectors] = None,
+        infection_seeds: Optional["InfectionSeeds"] = None,
+        immunity_setter: Optional[ImmunitySetter] = None,
+        medical_care_policies: Optional[MedicalCarePolicies] = None,
+        medical_facilities: Optional[MedicalFacilities] = None,
+        vaccination_campaigns: Optional[VaccinationCampaigns] = None,
     ):
         self.infection_selectors = infection_selectors
         self.infection_seeds = infection_seeds
         self.immunity_setter = immunity_setter
         self.medical_care_policies = medical_care_policies
         self.medical_facilities = medical_facilities
+        self.vaccination_campaigns = vaccination_campaigns
+        self.current_date = None
 
-    def set_immunity(self, population):
+    def set_immunity(self, world):
         if self.immunity_setter:
-            self.immunity_setter.set_immunity(population)
+            self.immunity_setter.set_immunity(world)
+
+    def set_past_vaccinations(self, people, date, record=None):
+        if self.vaccination_campaigns is not None:
+            self.vaccination_campaigns.apply_past_campaigns(
+                people=people, date=date, record=record
+            )
 
     def set_effective_multipliers(self, population):
         if self.effective_multiplier_setter:
@@ -75,7 +85,9 @@ class Epidemiology:
 
     def infection_seeds_timestep(self, timer, record: Record = None):
         if self.infection_seeds:
-            self.infection_seeds.unleash_virus_per_day(timer.date, record=record)
+            self.infection_seeds.unleash_virus_per_day(
+                date=timer.date, record=record, time=timer.now
+            )
 
     def do_timestep(
         self,
@@ -86,6 +98,14 @@ class Epidemiology:
         infection_ids: list = None,
         people_from_abroad_dict: dict = None,
     ):
+        if self.vaccination_campaigns is not None and (
+            self.current_date is None or timer.date.date() != self.current_date.date()
+        ):
+            self.current_date = timer.date
+            vaccinate = True
+        else:
+            vaccinate = False
+
         # infect the people that got exposed
         if self.infection_selectors:
             infect_in_domains = self.infect_people(
@@ -101,7 +121,12 @@ class Epidemiology:
 
         # update the health status of the population
         self.update_health_status(
-            world=world, time=timer.now, duration=timer.duration, record=record
+            world=world,
+            time=timer.now,
+            date=timer.date,
+            duration=timer.duration,
+            record=record,
+            vaccinate=vaccinate,
         )
         if record:
             record.summarise_time_step(timestamp=timer.date, world=world)
@@ -162,7 +187,13 @@ class Epidemiology:
         person.infection = None
 
     def update_health_status(
-        self, world: World, time: float, duration: float, record: Record = None
+        self,
+        world: World,
+        time: float,
+        duration: float,
+        date=None,
+        record: Record = None,
+        vaccinate: bool = False,
     ):
         """
         Update symptoms and health status of infected people.
@@ -176,29 +207,44 @@ class Epidemiology:
         duration:
             duration of time step
         """
-        for person in world.people.infected:
-            previous_tag = person.infection.tag
-            new_status = person.infection.update_health_status(time, duration)
-            if record is not None:
-                if previous_tag != person.infection.tag:
-                    record.accumulate(
-                        table_name="symptoms",
-                        infected_id=person.id,
-                        symptoms=person.infection.tag.value,
-                        infection_id=person.infection.infection_id(),
+        for person in world.people:
+            if person.infected:
+                previous_tag = person.infection.tag
+                new_status = person.infection.update_health_status(time, duration)
+                if record is not None:
+                    if previous_tag != person.infection.tag:
+                        record.accumulate(
+                            table_name="symptoms",
+                            infected_id=person.id,
+                            symptoms=person.infection.tag.value,
+                            infection_id=person.infection.infection_id(),
+                        )
+                # Take actions on new symptoms
+                if self.medical_care_policies:
+                    self.medical_care_policies.apply(
+                        person=person,
+                        medical_facilities=self.medical_facilities,
+                        days_from_start=time,
+                        record=record,
                     )
-            # Take actions on new symptoms
-            if self.medical_care_policies:
-                self.medical_care_policies.apply(
+                if new_status == "recovered":
+                    self.recover(person, record=record)
+                elif new_status == "dead":
+                    self.bury_the_dead(world, person, record=record)
+            if person.dead:
+                continue
+            if vaccinate:
+                self.vaccination_campaigns.apply(
                     person=person,
-                    medical_facilities=self.medical_facilities,
-                    days_from_start=time,
+                    date=date,
                     record=record,
                 )
-            if new_status == "recovered":
-                self.recover(person, record=record)
-            elif new_status == "dead":
-                self.bury_the_dead(world, person, record=record)
+                if person.vaccine_trajectory is not None:
+                    person.vaccine_trajectory.update_vaccine_effect(
+                        person=person,
+                        date=date,
+                        record=record,
+                    )
 
     def infect_people(
         self, world, time, infected_ids, infection_ids, people_from_abroad_dict
@@ -259,12 +305,7 @@ class Epidemiology:
         tick, tickw = perf_counter(), wall_clock()
 
         invalid_id = 4294967295  # largest possible uint32
-        empty = np.array(
-            [
-                invalid_id,
-            ],
-            dtype=np.uint32,
-        )
+        empty = np.array([invalid_id], dtype=np.uint32)
 
         # we want to make sure we transfer something for every domain.
         # (we have an np.concatenate which doesn't work on empty arrays)

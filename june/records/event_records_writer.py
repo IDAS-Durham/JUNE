@@ -59,8 +59,7 @@ class EventRecord:
 
 class InfectionRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -89,8 +88,7 @@ class InfectionRecord(EventRecord):
 
 class HospitalAdmissionsRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -107,8 +105,7 @@ class HospitalAdmissionsRecord(EventRecord):
 
 class ICUAdmissionsRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -125,8 +122,7 @@ class ICUAdmissionsRecord(EventRecord):
 
 class DischargesRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -143,8 +139,7 @@ class DischargesRecord(EventRecord):
 
 class DeathsRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -162,8 +157,7 @@ class DeathsRecord(EventRecord):
 
 class RecoveriesRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -180,8 +174,7 @@ class RecoveriesRecord(EventRecord):
 
 class SymptomsRecord(EventRecord):
     def __init__(
-        self,
-        hdf5_filename,
+        self, hdf5_filename,
     ):
         super().__init__(
             hdf5_filename=hdf5_filename,
@@ -195,3 +188,21 @@ class SymptomsRecord(EventRecord):
         self.infected_ids.append(infected_id)
         self.new_symptoms.append(symptoms)
         self.infection_ids.append(infection_id)
+
+
+class VaccinesRecord(EventRecord):
+    def __init__(
+        self, hdf5_filename,
+    ):
+        super().__init__(
+            hdf5_filename=hdf5_filename,
+            table_name="vaccines",
+            int_names=["vaccinated_ids", "dose_numbers"],
+            float_names=[],
+            str_names=['vaccine_names'],
+        )
+
+    def accumulate(self, vaccinated_id, vaccine_name, dose_number):
+        self.vaccinated_ids.append(vaccinated_id)
+        self.vaccine_names.append(vaccine_name)
+        self.dose_numbers.append(dose_number)

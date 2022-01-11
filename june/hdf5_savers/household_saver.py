@@ -46,6 +46,7 @@ def save_households_to_hdf5(
             areas = []
             super_areas = []
             types = []
+            composition_types = []
             max_sizes = []
             for household in households[idx1:idx2]:
                 ids.append(household.id)
@@ -59,12 +60,19 @@ def save_households_to_hdf5(
                     types.append(" ".encode("ascii", "ignore"))
                 else:
                     types.append(household.type.encode("ascii", "ignore"))
+                if household.composition_type is None:
+                    composition_types.append(" ".encode("ascii", "ignore"))
+                else:
+                    composition_types.append(
+                        household.composition_type.encode("ascii", "ignore")
+                    )
                 max_sizes.append(household.max_size)
 
             ids = np.array(ids, dtype=np.int64)
             areas = np.array(areas, dtype=np.int64)
             super_areas = np.array(super_areas, dtype=np.int64)
             types = np.array(types, dtype="S20")
+            composition_types = np.array(composition_types, dtype="S20")
             max_sizes = np.array(max_sizes, dtype=np.float64)
             if chunk == 0:
                 households_dset.attrs["n_households"] = n_households
@@ -74,6 +82,9 @@ def save_households_to_hdf5(
                     "super_area", data=super_areas, maxshape=(None,)
                 )
                 households_dset.create_dataset("type", data=types, maxshape=(None,))
+                households_dset.create_dataset(
+                    "composition_type", data=composition_types, maxshape=(None,)
+                )
                 households_dset.create_dataset(
                     "max_size", data=max_sizes, maxshape=(None,)
                 )
@@ -88,6 +99,8 @@ def save_households_to_hdf5(
                 households_dset["super_area"][idx1:idx2] = super_areas
                 households_dset["type"].resize(newshape)
                 households_dset["type"][idx1:idx2] = types
+                households_dset["composition_type"].resize(newshape)
+                households_dset["composition_type"][idx1:idx2] = composition_types
                 households_dset["max_size"].resize(newshape)
                 households_dset["max_size"][idx1:idx2] = max_sizes
 
@@ -170,6 +183,7 @@ def load_households_from_hdf5(
             length = idx2 - idx1
             ids = read_dataset(households["id"], idx1, idx2)
             types = read_dataset(households["type"], idx1, idx2)
+            composition_types = read_dataset(households["composition_type"], idx1, idx2)
             max_sizes = read_dataset(households["max_size"], idx1, idx2)
             super_areas = read_dataset(households["super_area"], idx1, idx2)
             for k in range(length):
@@ -182,7 +196,10 @@ def load_households_from_hdf5(
                     if super_area not in domain_super_areas:
                         continue
                 household = Household(
-                    area=None, type=types[k].decode(), max_size=max_sizes[k]
+                    area=None,
+                    type=types[k].decode(),
+                    max_size=max_sizes[k],
+                    composition_type=composition_types[k].decode(),
                 )
                 households_list.append(household)
                 household.id = ids[k]

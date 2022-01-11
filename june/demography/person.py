@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from june.geography.geography import Area
     from june.geography.geography import SuperArea
     from june.groups.travel.mode_of_transport import ModeOfTransport
-    from june.policy.vaccine_policy import VaccinePlan
+    from june.policy.vaccine_policy import VaccineTrajectory
 
 
 class Activities(dataobject):
@@ -41,8 +41,9 @@ class Person(dataobject):
     sub_sector: str = None
     lockdown_status: str = None
     # vaccine
-    vaccine_plan: "VaccinePlan" = None
-    vaccinated: bool = False
+    vaccine_trajectory: "VaccineTrajectory" = None
+    vaccinated: int = None
+    vaccine_type: str = None
     # comorbidity
     comorbidity: str = None
     # commute
@@ -181,12 +182,6 @@ class Person(dataobject):
         if self.work_super_area is None:
             return None
         return self.work_super_area.city
-
-    @property
-    def should_be_vaccinated(self):
-        if self.vaccine_plan is None and not self.vaccinated:
-            return True
-        return False
 
     @property
     def available(self):

@@ -86,7 +86,7 @@ class TestSaveHouses:
             test_results / "test.hdf5", chunk_size=600
         )
         for household, household2 in zip(households, households_recovered):
-            for attribute_name in ["id", "max_size", "type"]:
+            for attribute_name in ["id", "max_size", "type", "composition_type"]:
                 attribute = getattr(household, attribute_name)
                 attribute2 = getattr(household2, attribute_name)
                 if attribute is None:

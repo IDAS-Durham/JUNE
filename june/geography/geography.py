@@ -212,6 +212,10 @@ class SuperArea:
     def people(self):
         return list(chain.from_iterable(area.people for area in self.areas))
 
+    @property
+    def households(self):
+        return list(chain.from_iterable(area.households for area in self.areas))
+
     def __eq__(self, other):
         return self.name == other.name
 
@@ -358,6 +362,14 @@ class Region:
     @property
     def closed_venues(self):
         return self.policy["local_closed_venues"] | self.policy["global_closed_venues"]
+
+    @property
+    def households(self):
+        return list(
+            chain.from_iterable(
+                super_area.households for super_area in self.super_areas
+            )
+        )
 
 
 class Regions:

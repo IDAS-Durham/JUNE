@@ -9,6 +9,7 @@ from june import paths
 from june.records import Record
 from june.groups import Hospital, Hospitals, Household, Households, CareHome, CareHomes
 from june.policy import Policies
+from june.time import Timer
 from june.activity import ActivityManager
 from june.demography import Person, Population
 from june.interaction import Interaction
@@ -85,14 +86,7 @@ def create_dummy_world():
     areas = Areas(super_areas[0].areas + super_areas[1].areas + super_areas[2].areas)
     households = Households([Household(area=super_areas[0].areas[0])])
     hospitals = Hospitals(
-        [
-            Hospital(
-                n_beds=1,
-                n_icu_beds=1,
-                area=areas[5],
-                coordinates=(0.0, 0.0),
-            )
-        ]
+        [Hospital(n_beds=1, n_icu_beds=1, area=areas[5], coordinates=(0.0, 0.0),)]
     )
     care_homes = CareHomes([CareHome(area=super_areas[0].areas[0])])
     world = World()
@@ -225,10 +219,7 @@ def test__writing_death():
 
 
 def test__static_people(dummy_world):
-    record = Record(
-        record_path="results",
-        record_static_data=True,
-    )
+    record = Record(record_path="results", record_static_data=True,)
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -256,10 +247,7 @@ def test__static_people(dummy_world):
 
 
 def test__static_with_extras_people(dummy_world):
-    record = Record(
-        record_path="results",
-        record_static_data=True,
-    )
+    record = Record(record_path="results", record_static_data=True,)
     tonto = [0.1, 1.3, 5.0]
     listo = [0.9, 0.7, 0.0]
     vaccine_type = [0, 1, 2]
@@ -307,10 +295,7 @@ def test__static_with_extras_people(dummy_world):
 
 
 def test__static_location(dummy_world):
-    record = Record(
-        record_path="results",
-        record_static_data=True,
-    )
+    record = Record(record_path="results", record_static_data=True,)
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -340,10 +325,7 @@ def test__static_location(dummy_world):
 
 
 def test__static_geography(dummy_world):
-    record = Record(
-        record_path="results",
-        record_static_data=True,
-    )
+    record = Record(record_path="results", record_static_data=True,)
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -473,6 +455,7 @@ def test__parameters(dummy_world, selector, selectors):
         seed_strength=0.0,
         cases_per_capita=0,
         date="2020-03-01",
+        seed_past_infections=False,
     )
     infection_seeds = InfectionSeeds([infection_seed])
     infection_seed.min_date = datetime.datetime(2020, 10, 10)
@@ -482,7 +465,7 @@ def test__parameters(dummy_world, selector, selectors):
     activity_manager = ActivityManager(
         world=dummy_world,
         policies=policies,
-        timer=None,
+        timer=Timer(),
         all_activities=None,
         activity_to_super_groups={"residence": ["household"]},
     )

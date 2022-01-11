@@ -48,6 +48,9 @@ class Policy(ABC):
         """
         return self.start_time <= date < self.end_time
 
+    def initialize(self, world, date, record=None):
+        pass
+
 
 class Policies:
     def __init__(self, policies=None):
@@ -61,7 +64,6 @@ class Policies:
             LeisurePolicies,
             RegionalCompliances,
             TieredLockdowns,
-            VaccineDistributions,
         )
 
         self.individual_policies = IndividualPolicies.from_policies(self)
@@ -70,7 +72,6 @@ class Policies:
         self.leisure_policies = LeisurePolicies.from_policies(self)
         self.regional_compliance = RegionalCompliances.from_policies(self)
         self.tiered_lockdown = TieredLockdowns.from_policies(self)
-        self.vaccine_distribution = VaccineDistributions.from_policies(self)
 
     @classmethod
     def from_file(
@@ -103,20 +104,20 @@ class Policies:
         return Policies(policies=policies)
 
     def get_policies_for_type(self, policy_type):
-        return [policy for policy in self.policies if policy.policy_type == policy_type]
+        return [policy for policy in self if policy.policy_type == policy_type]
 
     def __iter__(self):
+        if self.policies is None:
+            return iter([])
         return iter(self.policies)
 
-    def init_policies(self, world):
+    def init_policies(self, world, date, record=None):
         """
         This function is meant to be used for those policies that need world information to initialise,
         like policies depending on workers' behaviours during lockdown.
         """
-        from june.policy import CloseCompanies, LimitLongCommute
-
-        CloseCompanies.set_ratios(world=world)
-        LimitLongCommute.get_long_commuters(people=world.people)
+        for policy in self:
+            policy.initialize(world=world, date=date, record=record)
 
 
 class PolicyCollection:

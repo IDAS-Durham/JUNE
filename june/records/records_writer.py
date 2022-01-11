@@ -21,6 +21,7 @@ from june.records.event_records_writer import (
     DeathsRecord,
     RecoveriesRecord,
     SymptomsRecord,
+    VaccinesRecord,
 )
 from june.records.static_records_writer import (
     PeopleRecord,
@@ -71,6 +72,7 @@ class Record:
             "deaths": DeathsRecord(hdf5_filename=filename),
             "recoveries": RecoveriesRecord(hdf5_filename=filename),
             "symptoms": SymptomsRecord(hdf5_filename=filename),
+            "vaccines": VaccinesRecord(hdf5_filename=filename),
         }
         if self.record_static_data:
             self.statics = {
@@ -338,6 +340,8 @@ def combine_summaries(record_path, remove_left_overs=False, save_dir=None):
     dfs = []
     for summary_file in summary_files:
         df = pd.read_csv(summary_file)
+        if len(df) == 0:
+            continue
         aggregator = {
             col: np.mean if "current" in col else sum for col in df.columns[2:]
         }
