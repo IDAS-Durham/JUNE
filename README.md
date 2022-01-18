@@ -55,6 +55,50 @@ pip install -e .
 
 This should automatically install any requirements as well. You can then get the data using the same command as the pip version.
 
+## Conda installation (Optional)
+As an alternative to the above, you can use conda:
+
+
+    # Change to fit your environment
+    export INSTALL_DIR=$HOME
+    # For Hartree
+    #export INSTALL_DIR=$HCBASE/miniconda_base
+
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    chmod +x Miniconda3-latest-Linux-x86_64.sh
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p $INSTALL_DIR/miniconda
+    source $INSTALL_DIR/miniconda/bin/activate
+
+    conda create -n june_env python=3.8 -y # need 3.8 for some deps
+    conda activate june_env
+
+    python --version
+
+    conda install -y -c conda-forge openmpi
+    conda install -y -c conda-forge mpi4py
+    conda install -y numba
+    conda install -y -c anaconda hdf5
+
+    python3 -m pip install -r JUNE-private/requirements.txt
+    python3 -m pip install -r june_runs/requirements.txt
+
+    pushd JUNE-private
+    python3 -m pip install -e .
+    popd
+
+    pushd june_runs
+    python3 -m pip install -e .
+    popd
+
+Now you should have a conda environment called `june_env` which all of the dependencies installed. To activate it, use:
+
+    . $HOME/miniconda/bin/activate
+    # For Hartree
+    #. $HCBASE/miniconda_base/miniconda/bin/activate
+    
+    conda activate june_env
+
+
 # How to use the code
 
 Have a look at ``Notebooks/quickstart.ipynb`` for a gentle introduction to how JUNE works. You can also check out some scripts in ``example_scripts``.
