@@ -69,13 +69,21 @@ As an alternative to the above, you can use conda:
     bash Miniconda3-latest-Linux-x86_64.sh -b -p $INSTALL_DIR/miniconda
     source $INSTALL_DIR/miniconda/bin/activate
 
+
+Now you will need to load OpenMPI, e.g -
+
+
+    # Hartree: module load openmpi-gcc/2.1.1
+    # Cosma: module load openmpi/3.0.1 gnu_comp/7.3.0
+
+
+And then set up your conda environment
+
     conda create -n june_env python=3.8 -y # need 3.8 for some deps
     conda activate june_env
 
     python --version
 
-    conda install -y -c conda-forge openmpi
-    conda install -y -c conda-forge mpi4py
     conda install -y numba
     conda install -y -c anaconda hdf5
 
