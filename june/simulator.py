@@ -13,6 +13,7 @@ from june.groups.leisure import Leisure
 from june.groups.travel import Travel
 from june.epidemiology.epidemiology import Epidemiology
 from june.interaction import Interaction
+from june.tracker import Tracker
 from june.policy import Policies
 from june.event import Events
 from june.time import Timer
@@ -75,6 +76,7 @@ class Simulator:
         timer: Timer,
         activity_manager: ActivityManager,
         epidemiology: Epidemiology,
+        tracker: Tracker,
         events: Optional[Events] = None,
         record: Optional[Record] = None,
         checkpoint_save_dates: List[datetime.date] = None,
@@ -102,6 +104,7 @@ class Simulator:
             self.epidemiology.set_past_vaccinations(
                 people=self.world.people, date=self.timer.date, record=record
             )
+        self.tracker = tracker
         if self.events is not None:
             self.events.init_events(world=world)
         # self.comment = comment
@@ -123,6 +126,7 @@ class Simulator:
         policies: Optional[Policies] = None,
         events: Optional[Events] = None,
         epidemiology: Optional[Epidemiology] = None,
+        tracker: Optional[Tracker] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
@@ -166,6 +170,7 @@ class Simulator:
             events=events,
             activity_manager=activity_manager,
             epidemiology=epidemiology,
+            tracker=tracker,
             record=record,
             checkpoint_save_dates=checkpoint_save_dates,
             checkpoint_save_path=checkpoint_save_path,
@@ -178,6 +183,7 @@ class Simulator:
         checkpoint_load_path: str,
         interaction: Interaction,
         epidemiology: Optional[Epidemiology] = None,
+        tracker: Optional[Tracker] = None,
         policies: Optional[Policies] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
@@ -194,6 +200,7 @@ class Simulator:
             interaction=interaction,
             policies=policies,
             epidemiology=epidemiology,
+            tracker=tracker,
             leisure=leisure,
             travel=travel,
             config_filename=config_filename,
@@ -283,6 +290,14 @@ class Simulator:
             f"number of deaths =  {n_people}, "
             f"number of infected = {len(self.world.people.infected)}"
         )
+
+        #Loop in here 
+        if isinstance(self.tracker, type(None)):
+            pass
+        else:
+            self.tracker.simulation_days = self.timer.total_days
+            self.tracker.delta_t = self.timer.delta_time.seconds
+            self.tracker.trackertimestep(self.activity_manager.all_super_groups, self.timer.date)
 
         # main interaction loop
         infected_ids = []  # ids of the newly infected people

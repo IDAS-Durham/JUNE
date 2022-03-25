@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+from june.groups.group.make_subgroups import Subgroup_Params
+
 
 class Group(AbstractGroup):
     """
@@ -40,15 +42,15 @@ class Group(AbstractGroup):
     a list of group specifiers - we could promote it to a dicitonary with
     default intensities (maybe mean+width with a pre-described range?).
     """
-
     external = False
+    subgroup_params = Subgroup_Params.from_file()
 
-    class SubgroupType(IntEnum):
-        """
-        Defines the indices of subgroups within the subgroups array
-        """
-
-        default = 0
+    @property
+    def SubgroupType(self):
+        if self.get_spec() in self.subgroup_params.specs:
+            return IntEnum("SubgroupType", self.subgroup_labels, start=0)
+        else:
+            return IntEnum("SubgroupType", ["default"], start=0)
 
     __slots__ = ("id", "subgroups", "spec")
 
@@ -220,3 +222,51 @@ class Group(AbstractGroup):
 
     def get_interactive_group(self, people_from_abroad=None):
         return InteractiveGroup(self, people_from_abroad=people_from_abroad)
+
+    def get_leisure_subgroup(self, person, subgroup_type=None, to_send_abroad=None):
+        if self.subgroup_type == "Age":
+            min_age = self.subgroup_bins[0]
+            max_age = self.subgroup_bins[-1]-1
+
+            if person.age >= min_age and person.age <= max_age:
+                subgroup_idx = (
+                    np.searchsorted(self.subgroup_bins, person.age, side="right") - 1
+                )
+                return self.subgroups[subgroup_idx]
+            else:
+                return
+        elif self.subgroup_type == "Discrete":
+            if len(self.subgroups) == 1:
+                return self.subgroups[0]
+            else:
+                return
+
+    @property
+    def subgroup_type(self):
+        return self.subgroup_params.subgroup_type(self.get_spec())
+
+    @property
+    def subgroup_labels(self):
+        return self.subgroup_params.subgroup_labels(self.get_spec())
+
+    @property
+    def subgroup_bins(self):
+        return self.subgroup_params.subgroup_bins(self.get_spec())
+
+    @property
+    def kids(self):
+        return [
+            person
+            for subgroup in self.subgroups
+            for person in subgroup.people
+            if person.age < self.subgroup_params.AgeAdult 
+        ]
+
+    @property
+    def adults(self):
+        return [
+            person
+            for subgroup in self.subgroups
+            for person in subgroup.people
+            if person.age >= self.subgroup_params.AgeAdult 
+        ]
