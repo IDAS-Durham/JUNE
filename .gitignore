@@ -26,3 +26,5 @@ dist/
 *.svg
 test_results
 .venv
+**/tester_*
+**/results/**
