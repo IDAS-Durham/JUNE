@@ -33,11 +33,11 @@ class Household(Group):
         "receiving_care",
     )
 
-    class SubgroupType(IntEnum):
-        kids = 0
-        young_adults = 1
-        adults = 2
-        old_adults = 3
+    # class SubgroupType(IntEnum):
+    #     kids = 0
+    #     young_adults = 1
+    #     adults = 2
+    #     old_adults = 3
 
     def __init__(self, type=None, area=None, max_size=np.inf, composition_type=None):
         """
@@ -67,7 +67,7 @@ class Household(Group):
             subgroup = self.SubgroupType.old_adults
         return subgroup
 
-    def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
+    def add(self, person, subgroup_type, activity="residence"):
         if activity == "leisure":
             subgroup_type = self.get_leisure_subgroup_type(person)
             person.subgroups.leisure = self[subgroup_type]
@@ -184,8 +184,9 @@ class Households(Supergroup):
     """
     Contains all households for the given area, and information about them.
     """
+    venue_class=Household
 
-    def __init__(self, households: List[Household]):
+    def __init__(self, households: List[venue_class]):
         super().__init__(members=households)
 
 

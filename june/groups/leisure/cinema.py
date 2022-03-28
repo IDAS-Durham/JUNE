@@ -13,7 +13,7 @@ class Cinema(SocialVenue):
 
 
 class Cinemas(SocialVenues):
-    social_venue_class = Cinema
+    venue_class = Cinema
     default_coordinates_filename = default_cinemas_coordinates_filename
 
 

@@ -152,7 +152,7 @@ class CareHomeDistributor:
                                 )
                                 if person is None:
                                     continue
-                                care_home.add(person)
+                                care_home.add(person, care_home.SubgroupType.residents)
                                 communal_women_sorted[age_range] -= 1
                                 total_care_home_residents += 1
                                 found_person = True
@@ -167,12 +167,12 @@ class CareHomeDistributor:
                                 )
                                 if person is None:
                                     continue
-                                care_home.add(person)
+                                care_home.add(person,care_home.SubgroupType.residents)
                                 communal_women_sorted[age_range] -= 1
                                 total_care_home_residents += 1
                                 found_person = True
                                 break
-                            care_home.add(person)
+                            care_home.add(person,care_home.SubgroupType.residents)
                             communal_men_sorted[age_range] -= 1
                             total_care_home_residents += 1
                             found_person = True

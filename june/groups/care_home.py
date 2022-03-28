@@ -37,10 +37,10 @@ class CareHome(Group):
         "quarantine_starting_date",
     )
 
-    class SubgroupType(IntEnum):
-        workers = 0
-        residents = 1
-        visitors = 2
+    # class SubgroupType(IntEnum):
+    #     workers = 0
+    #     residents = 1
+    #     visitors = 2
 
     def __init__(
         self, area: Area = None, n_residents: int = None, n_workers: int = None
@@ -54,7 +54,7 @@ class CareHome(Group):
     def add(
         self,
         person,
-        subgroup_type=SubgroupType.residents,
+        subgroup_type,
         activity: str = "residence",
     ):
         if activity == "leisure":
@@ -109,7 +109,9 @@ class CareHome(Group):
 
 
 class CareHomes(Supergroup):
-    def __init__(self, care_homes: List[CareHome]):
+    venue_class = CareHome
+
+    def __init__(self, care_homes: List[venue_class]):
         super().__init__(members=care_homes)
 
     @classmethod
@@ -160,6 +162,6 @@ class CareHomes(Supergroup):
                 int(np.ceil(n_residents / config["n_residents_per_worker"])), 1
             )
             if n_residents != 0:
-                area.care_home = CareHome(area, n_residents, n_worker)
+                area.care_home = cls.venue_class(area, n_residents, n_worker)
                 care_homes.append(area.care_home)
         return cls(care_homes)

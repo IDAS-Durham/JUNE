@@ -5,12 +5,6 @@ import numpy as np
 from june.paths import configs_path, data_path
 from june.geography import Cities, Stations
 from june.world import World
-from .transport import (
-    CityTransport,
-    CityTransports,
-    InterCityTransport,
-    InterCityTransports,
-)
 from .mode_of_transport import ModeOfTransport, ModeOfTransportGenerator
 
 
@@ -239,8 +233,6 @@ class Travel:
         InterCityStations respectively.
         """
         logger.info("Creating transport units for the population")
-        world.city_transports = CityTransports([])
-        world.inter_city_transports = InterCityTransports([])
         for city in world.cities:
             if city.has_stations:
                 seats_per_passenger = self.commute_config["seats_per_passenger"].get(
@@ -265,7 +257,7 @@ class Travel:
                 )
                 for station in city.city_stations:
                     for _ in range(transports_per_station):
-                        city_transport = CityTransport(station=station)
+                        city_transport = world.city_transports.venue_class(station=station)
                         station.city_transports.append(city_transport)
                         world.city_transports.add(city_transport)
                         number_city_transports -= 1
@@ -286,7 +278,7 @@ class Travel:
                     )
                     number_inter_city_transports_total += number_inter_city_transports
                     for _ in range(number_inter_city_transports):
-                        inter_city_transport = InterCityTransport(station=station)
+                        inter_city_transport = world.inter_city_transports.venue_class(station=station)
                         station.inter_city_transports.append(inter_city_transport)
                         world.inter_city_transports.add(inter_city_transport)
                 logger.info(

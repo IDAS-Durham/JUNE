@@ -114,10 +114,10 @@ class Hospital(Group, AbstractHospital, MedicalFacility):
     2 - ICU patients
     """
 
-    class SubgroupType(IntEnum):
-        workers = 0
-        patients = 1
-        icu_patients = 2
+    # class SubgroupType(IntEnum):
+    #     workers = 0
+    #     patients = 1
+    #     icu_patients = 2
 
     __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "area", "trust_code"
 
@@ -177,7 +177,7 @@ class Hospital(Group, AbstractHospital, MedicalFacility):
         """
         return self[self.SubgroupType.icu_patients].size >= self.n_icu_beds
 
-    def add(self, person, subgroup_type=SubgroupType.workers):
+    def add(self, person, subgroup_type):
         if subgroup_type in [
             self.SubgroupType.patients,
             self.SubgroupType.icu_patients,
@@ -204,6 +204,7 @@ class Hospital(Group, AbstractHospital, MedicalFacility):
 
 
 class Hospitals(Supergroup, MedicalFacilities):
+    venue_class = Hospital
     def __init__(
         self,
         hospitals: List["Hospital"],
@@ -307,7 +308,7 @@ class Hospitals(Supergroup, MedicalFacilities):
         n_beds = row["beds"]
         n_icu_beds = row["icu_beds"]
         trust_code = row["code"]
-        hospital = Hospital(
+        hospital = cls.venue_class(
             area=area,
             coordinates=coordinates,
             n_beds=n_beds,

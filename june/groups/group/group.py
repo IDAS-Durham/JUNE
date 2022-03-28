@@ -241,6 +241,24 @@ class Group(AbstractGroup):
             else:
                 return
 
+    def get_index_subgroup(self, person, subgroup_type=None, to_send_abroad=None):
+        if self.subgroup_type == "Age":
+            min_age = self.subgroup_bins[0]
+            max_age = self.subgroup_bins[-1]-1
+
+            if person.age >= min_age and person.age <= max_age:
+                subgroup_idx = (
+                    np.searchsorted(self.subgroup_bins, person.age, side="right") - 1
+                )
+                return subgroup_idx
+            else:
+                return
+        elif self.subgroup_type == "Discrete":
+            if len(self.subgroups) == 1:
+                return 0
+            else:
+                return
+
     @property
     def subgroup_type(self):
         return self.subgroup_params.subgroup_type(self.get_spec())

@@ -40,7 +40,7 @@ def Get_Defaults(spec):
     elif spec in [
         "household" 
         ]:
-        return ["kids","young adults","adults","old adults"], "Discrete"
+        return ["kids","young_adults","adults","old_adults"], "Discrete"
 
     #Cox defaults
     elif spec in [
@@ -180,6 +180,7 @@ class Subgroup_Params():
             config_filename = default_config_filename
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
+
         return Subgroup_Params(
             params = config["contact_matrices"]
         )

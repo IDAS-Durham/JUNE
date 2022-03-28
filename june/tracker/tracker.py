@@ -1,4 +1,3 @@
-from time import pthread_getcpuclockid
 import numpy as np
 import yaml
 import pandas as pd
@@ -16,7 +15,7 @@ import matplotlib.dates as mdates
 from june.groups.group import make_subgroups
 
 AgeAdult = 18
-ACArray = np.array([0,AgeAdult,60])
+ACArray = np.array([0,AgeAdult,100])
 
 default_interaction_path = (
     paths.configs_path / "defaults/interaction/interaction.yaml"

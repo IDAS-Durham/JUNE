@@ -46,9 +46,9 @@ class School(Group):
         "years",
     )
 
-    class SubgroupType(IntEnum):
-        teachers = 0
-        students = 1
+    # class SubgroupType(IntEnum):
+    #     teachers = 0
+    #     students = 1
 
     def __init__(
         self,
@@ -111,7 +111,7 @@ class School(Group):
     def get_interactive_group(self, people_from_abroad=None):
         return InteractiveSchool(self, people_from_abroad=people_from_abroad)
 
-    def add(self, person, subgroup_type=SubgroupType.students):
+    def add(self, person, subgroup_type):
         if subgroup_type == self.SubgroupType.students:
             subgroup = self.subgroups[1 + person.age - self.age_min]
             subgroup.append(person)
@@ -188,9 +188,10 @@ class School(Group):
 
 
 class Schools(Supergroup):
+    venue_class=School
     def __init__(
         self,
-        schools: List["School"],
+        schools: List["venue_class"],
         school_trees: Optional[Dict[int, BallTree]] = None,
         agegroup_to_global_indices: dict = None,
     ):
@@ -306,7 +307,7 @@ class Schools(Supergroup):
                 row[["latitude", "longitude"]].values, dtype=np.float64
             )
             area = areas.get_closest_area(coordinates)
-            school = School(
+            school = cls.venue_class(
                 coordinates=coordinates,
                 n_pupils_max=n_pupils_max,
                 age_min=int(row["age_min"]),

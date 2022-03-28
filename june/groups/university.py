@@ -63,7 +63,8 @@ class University(Group):
 
 
 class Universities(Supergroup):
-    def __init__(self, universities: List[University]):
+    venue_class=University
+    def __init__(self, universities: List[venue_class]):
         super().__init__(members=universities)
 
     @classmethod
@@ -100,7 +101,7 @@ class Universities(Supergroup):
             closest_area = closest_area[0]
             if distance > max_distance_to_area:
                 continue
-            university = University(
+            university = cls.venue_class(
                 area=closest_area, n_students_max=n_stud, ukprn=ukprn, coordinates=coord
             )
             universities.append(university)

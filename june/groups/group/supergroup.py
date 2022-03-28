@@ -1,6 +1,8 @@
 import re
 from collections import OrderedDict
 
+from june.groups.group.make_subgroups import Subgroup_Params
+
 
 class Supergroup:
     """
@@ -76,3 +78,7 @@ class Supergroup:
         raise NotImplementedError(
             "From file initialization not available for this supergroup."
         )
+
+    @classmethod    
+    def Get_Interaction(self, config_filename = None):
+        self.venue_class.subgroup_params = Subgroup_Params.from_file(config_filename)

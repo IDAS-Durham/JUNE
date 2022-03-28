@@ -59,8 +59,8 @@ class Company(Group):
         "n_workers_max",
     )
 
-    class SubgroupType(IntEnum):
-        workers = 0
+    # class SubgroupType(IntEnum):
+    #     workers = 0
 
     def __init__(self, super_area=None, n_workers_max=np.inf, sector=None):
         super().__init__()
@@ -71,7 +71,7 @@ class Company(Group):
     def add(self, person):
         super().add(
             person,
-            subgroup_type=self.SubgroupType.workers,
+            subgroup_type=self.get_index_subgroup(person),
             activity="primary_activity",
         )
 
@@ -79,9 +79,9 @@ class Company(Group):
     def n_workers(self):
         return len(self.people)
 
-    @property
-    def workers(self):
-        return self.subgroups[self.SubgroupType.workers]
+    # @property
+    # def workers(self):
+    #     return self.subgroups[self.SubgroupType.workers]
 
     @property
     def coordinates(self):
@@ -96,6 +96,7 @@ class Company(Group):
 
 
 class Companies(Supergroup):
+    venue_class=Company
     def __init__(self, companies: List["Companies"]):
         """
         Create companies and provide functionality to allocate workers.
@@ -226,7 +227,7 @@ class Companies(Supergroup):
 
     @classmethod
     def create_company(cls, super_area, company_size, company_sector):
-        company = Company(super_area, company_size, company_sector)
+        company = cls.venue_class(super_area, company_size, company_sector)
         return company
 
 

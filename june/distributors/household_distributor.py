@@ -89,7 +89,7 @@ class HouseholdDistributor:
         max_age_to_be_parent=64,
         max_household_size=8,
         allowed_household_compositions: dict = None,
-        ignore_orphans: bool = False,
+        ignore_orphans: bool = False
     ):
         """
         Tool to populate areas with households and fill them with the correct
