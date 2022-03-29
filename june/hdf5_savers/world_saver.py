@@ -73,29 +73,30 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     geo = Geography(world.areas, world.super_areas, world.regions)
     save_geography_to_hdf5(geo, file_path)
     logger.info("saving population...")
+    needs_to_be_saved = lambda x: (x is not None) and (len(x) > 0)
     save_population_to_hdf5(world.people, file_path, chunk_size)
-    if world.hospitals is not None:
+    if needs_to_be_saved(world.hospitals):
         logger.info("saving hospitals...")
         save_hospitals_to_hdf5(world.hospitals, file_path, chunk_size)
-    if world.schools is not None:
+    if needs_to_be_saved(world.schools):
         logger.info("saving schools...")
         save_schools_to_hdf5(world.schools, file_path, chunk_size)
-    if world.companies is not None:
+    if needs_to_be_saved(world.companies):
         logger.info("saving companies...")
         save_companies_to_hdf5(world.companies, file_path, chunk_size)
-    if world.households is not None:
+    if needs_to_be_saved(world.households):
         logger.info("saving households...")
         save_households_to_hdf5(world.households, file_path, chunk_size)
-    if world.care_homes is not None:
+    if needs_to_be_saved(world.care_homes):
         logger.info("saving care homes...")
         save_care_homes_to_hdf5(world.care_homes, file_path, chunk_size)
-    if world.cities is not None:
+    if needs_to_be_saved(world.cities):
         logger.info("saving cities...")
         save_cities_to_hdf5(world.cities, file_path)
-    if world.stations is not None:
+    if needs_to_be_saved(world.stations):
         logger.info("saving stations...")
         save_stations_to_hdf5(world.stations, file_path)
-    if world.universities is not None:
+    if needs_to_be_saved(world.universities):
         logger.info("saving universities...")
         save_universities_to_hdf5(world.universities, file_path)
     social_venue_possible_specs = [
