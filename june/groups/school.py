@@ -111,13 +111,13 @@ class School(Group):
     def get_interactive_group(self, people_from_abroad=None):
         return InteractiveSchool(self, people_from_abroad=people_from_abroad)
 
-    def add(self, person, subgroup_type):
-        if subgroup_type == self.SubgroupType.students:
+    def add(self, person):
+        if person.age <= self.age_max:
             subgroup = self.subgroups[1 + person.age - self.age_min]
             subgroup.append(person)
             person.subgroups.primary_activity = subgroup
         else:  # teacher
-            subgroup = self.subgroups[self.SubgroupType.teachers]
+            subgroup = self.subgroups[0]
             subgroup.append(person)
             person.subgroups.primary_activity = subgroup
 

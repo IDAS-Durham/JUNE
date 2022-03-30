@@ -15,7 +15,6 @@ def Get_Defaults(spec):
 
     if spec in [
         "pub",
-        "company",
         "grocery",
         "cinema",
         "city_transport",
@@ -41,6 +40,10 @@ def Get_Defaults(spec):
         "household" 
         ]:
         return ["kids","young_adults","adults","old_adults"], "Discrete"
+    elif spec in [
+        "company"
+        ]:
+        return ["workers"], "Discrete"
 
     #Cox defaults
     elif spec in [
@@ -87,14 +90,22 @@ class Subgroup_Params():
     -------
         Subgroup_Params class
     """
-    AgeAdult = 18
+    AgeYoungAdult = 18
+    AgeAdult = 35
+    AgeOldAdult = 65
+
     def __init__(
         self, 
         params = None,
     ) -> None:
 
-        self.params = params
-        self.specs = params.keys()
+        if params is None:
+            self.params = params
+            self.specs = None
+        else:
+            self.params = params
+            self.specs = params.keys()
+            
 
 
     def subgroup_bins(self,spec):
@@ -114,7 +125,7 @@ class Subgroup_Params():
             logger.info(f"{spec} interaction bins not specified. Using default values {Bins}")
             self.params[spec]["bins"] = Bins
             self.params[spec]["type"] = Type
-        elif spec in ["learning_center", "hospital", "shelter", "university", "school", "care_home", "household"]:
+        elif spec in ["learning_center", "hospital", "shelter", "university", "school", "care_home", "household", "company"]:
             Bins, Type = Get_Defaults(spec)
             if self.params[spec]["bins"] != Bins:
                 logger.info(f"{spec} interaction bins need default values for methods.")
@@ -174,13 +185,12 @@ class Subgroup_Params():
                     
         Returns
         -------
-            Subgroup_Params class instance
+            Subgroup_Params class instance 
         """
         if config_filename is None:
             config_filename = default_config_filename
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-
         return Subgroup_Params(
             params = config["contact_matrices"]
         )

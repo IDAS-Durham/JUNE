@@ -33,7 +33,7 @@ class TestSchool:
 
     def test__filling_school(self, school):
         person = Person(sex="f", age=7)
-        school.add(person, School.SubgroupType.students)
+        school.add(person)
         assert bool(school.subgroups[2].people) is True
 
 

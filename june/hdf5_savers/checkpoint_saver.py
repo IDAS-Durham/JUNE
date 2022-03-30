@@ -24,6 +24,8 @@ from june.hdf5_savers import (
 from june.groups.travel import Travel
 import june.simulator as june_simulator_module
 
+from june.tracker import Tracker
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -229,6 +231,7 @@ def generate_simulator_from_checkpoint(
     interaction: Interaction,
     chunk_size: Optional[int] = 50000,
     epidemiology: Optional[Epidemiology] = None,
+    tracker: Optional[Tracker] = None,
     policies: Optional[Policies] = None,
     leisure: Optional[Leisure] = None,
     travel: Optional[Travel] = None,
@@ -241,6 +244,7 @@ def generate_simulator_from_checkpoint(
         world=world,
         interaction=interaction,
         epidemiology=epidemiology,
+        tracker=tracker,
         policies=policies,
         leisure=leisure,
         travel=travel,

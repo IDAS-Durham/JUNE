@@ -14,13 +14,12 @@ import matplotlib.dates as mdates
 
 from june.groups.group import make_subgroups
 
-AgeAdult = 18
+AgeAdult = make_subgroups.Subgroup_Params.AgeYoungAdult
 ACArray = np.array([0,AgeAdult,100])
 
 default_interaction_path = (
     paths.configs_path / "defaults/interaction/interaction.yaml"
 )
-
 
 class Tracker:
     """
@@ -161,6 +160,15 @@ class Tracker:
             return list(Intersection[np.random.permutation(len(Intersection))])
         else:
             return list(Intersection)
+
+    def Probabilistic_Contacts(self, mean, mean_err):
+        #Possion variable. How many contacts statisticaly.
+        if mean_err != 0: #Errored input
+            C_i = max(0, np.random.normal(mean,mean_err))
+            C_i = self._random_round(np.random.poisson(C_i))
+        else: #Error on counts treated as zero
+            C_i = self._random_round(np.random.poisson(mean)) 
+        return C_i
 
     def contract_matrix(self, CM, bins, method = np.sum):
         cm = np.zeros( (len(bins)-1,len(bins)-1) )
@@ -415,7 +423,6 @@ class Tracker:
             self.interaction_matrices = interaction_config["contact_matrices"]
 
         for loc in self.interaction_matrices.keys():
-            print(loc)
             Bins, Type = make_subgroups.Get_Defaults(loc)
             if "type" not in self.interaction_matrices[loc].keys():
                 self.interaction_matrices[loc]["type"] = Type
@@ -517,7 +524,7 @@ class Tracker:
 
             colsWhich = [col for col in self.contacts_df.columns if col not in [key+"_idx" for key in self.age_bins.keys()] and col not in ["age", "sex"] ]
             self.contacts_df[colsWhich] /= self.simulation_days
-            AgesCount = self.contacts_df.groupby(self.contacts_df[bins_idx], dropna = False).mean()[colsWhich]
+            AgesCount = self.contacts_df.groupby(self.contacts_df[bins_idx], dropna = False).mean()[colsWhich] #TODO Mean if not zero?
             AgesCount = AgesCount.reindex(range(ExpN-1), fill_value=0)
 
             self.average_contacts[bin_type] = (
@@ -607,12 +614,12 @@ class Tracker:
                                     inList = True
                                     break
                             if not inList:
-                                age_profile = self.age_profiles["AC"][contact_type][sex]
-                                age_profile_G = self.age_profiles["AC"]["global"][sex]
+                                age_profile = self.age_profiles["syoa"][contact_type][sex]
+                                age_profile_G = self.age_profiles["syoa"]["global"][sex]
                         else:
 
-                            age_profile = self.age_profiles["AC"][contact_type][sex]
-                            age_profile_G = self.age_profiles["AC"]["global"][sex]
+                            age_profile = self.age_profiles["syoa"][contact_type][sex]
+                            age_profile_G = self.age_profiles["syoa"]["global"][sex]
 
                     else:
                         age_profile = self.age_profiles[bin_type][contact_type][sex]
@@ -1621,12 +1628,7 @@ class Tracker:
                 if potential_contacts == 0:
                     continue
 
-                #Possion variable. How many contacts statisticaly.
-                if subgroup_contacts_error != 0: #Errored input
-                    int_contacts = max(0, np.random.normal(subgroup_contacts,subgroup_contacts_error))
-                    int_contacts = self._random_round(np.random.poisson(int_contacts))
-                else: #Error on counts treated as zero
-                    int_contacts = self._random_round(np.random.poisson(subgroup_contacts)) 
+                int_contacts = self.Probabilistic_Contacts(subgroup_contacts, subgroup_contacts_error)
 
                 if int_contacts == 0:
                     continue
@@ -1730,7 +1732,7 @@ class Tracker:
 
         """
         self.location_counters["Timestamp"].append(date)
-
+ 
         for super_group_name in all_super_groups:
             if "visits" in super_group_name:
                 continue
@@ -1741,6 +1743,7 @@ class Tracker:
                 for group in grouptype.members: #Loop over all locations.
                     if group.spec in self.group_type_names:
                         self.simulate_1d_contacts(group)
+
 
                         if self.track_contacts_count == True and super_group_name in self.location_counters["loc"].keys():
                             self.location_counters["loc"][super_group_name][counter].append(len(group.people))

@@ -67,7 +67,10 @@ class Household(Group):
             subgroup = self.SubgroupType.old_adults
         return subgroup
 
-    def add(self, person, subgroup_type, activity="residence"):
+    def add(self, person, subgroup_type=None, activity="residence"):
+        if subgroup_type is None:
+            subgroup_type = self.get_leisure_subgroup_type(person)
+
         if activity == "leisure":
             subgroup_type = self.get_leisure_subgroup_type(person)
             person.subgroups.leisure = self[subgroup_type]
@@ -80,7 +83,6 @@ class Household(Group):
         else:
             raise NotImplementedError(f"Activity {activity} not supported in household")
 
-    @classmethod
     def get_leisure_subgroup_type(cls, person):
         """
         A person wants to come and visit this household. We need to assign the person
@@ -123,21 +125,21 @@ class Household(Group):
                     mate.residence  # person will be added later in the simulator.
                 )
 
-    @property
-    def kids(self):
-        return self.subgroups[self.SubgroupType.kids]
+    # @property
+    # def kids(self):
+    #     return self.subgroups[self.SubgroupType.kids]
 
-    @property
-    def young_adults(self):
-        return self.subgroups[self.SubgroupType.young_adults]
+    # @property
+    # def young_adults(self):
+    #     return self.subgroups[self.SubgroupType.young_adults]
 
-    @property
-    def adults(self):
-        return self.subgroups[self.SubgroupType.adults]
+    # @property
+    # def adults(self):
+    #     return self.subgroups[self.SubgroupType.adults]
 
-    @property
-    def old_adults(self):
-        return self.subgroups[self.SubgroupType.old_adults]
+    # @property
+    # def old_adults(self):
+    #     return self.subgroups[self.SubgroupType.old_adults]
 
     @property
     def coordinates(self):

@@ -6,6 +6,7 @@ from june.paths import configs_path, data_path
 from june.geography import Cities, Stations
 from june.world import World
 from .mode_of_transport import ModeOfTransport, ModeOfTransportGenerator
+from .transport import CityTransports, InterCityTransports
 
 
 logger = logging.getLogger("travel")
@@ -233,6 +234,12 @@ class Travel:
         InterCityStations respectively.
         """
         logger.info("Creating transport units for the population")
+        if not hasattr(world, 'city_transports'):
+            world.city_transports = CityTransports([])
+        if not hasattr(world, 'inter_city_transports'):
+            world.inter_city_transports = InterCityTransports([])
+        
+            
         for city in world.cities:
             if city.has_stations:
                 seats_per_passenger = self.commute_config["seats_per_passenger"].get(

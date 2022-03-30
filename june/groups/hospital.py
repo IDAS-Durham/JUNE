@@ -423,7 +423,7 @@ class ExternalHospital(ExternalGroup, AbstractHospital):
 
     def __init__(self, id, spec, domain_id, region_name):
         ExternalGroup.__init__(self, id=id, spec=spec, domain_id=domain_id)
-        AbstractHospital.__init__(self)
+        AbstractHospital.__init__(self) 
         self.region_name = region_name
         self.ward = ExternalSubgroup(
             group=self, subgroup_type=Hospital.SubgroupType.patients

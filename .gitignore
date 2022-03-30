@@ -28,3 +28,6 @@ test_results
 .venv
 **/tester_*
 **/results/**
+
+post_checkpoint_results/
+pre_checkpoint_results

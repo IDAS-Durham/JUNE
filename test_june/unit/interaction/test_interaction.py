@@ -151,7 +151,7 @@ def create_school(n_students, n_teachers):
         people.append(person)
     for _ in range(n_teachers):
         person = Person.from_attributes(sex="m", age=40)
-        school.add(person, subgroup_type=school.SubgroupType.teachers)
+        school.add(person)
         people.append(person)
     assert len(people) == n_students + n_teachers
     assert len(school.people) == n_students + n_teachers

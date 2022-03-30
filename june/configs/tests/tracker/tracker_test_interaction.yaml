@@ -1,12 +1,7 @@
-susceptibilities:
-  0-13 : 0.5
-  13-100: 1.0
-
 alpha_physical: 2.
 
 betas:
  pub: 0.42941
- gym: 0.42941 
  grocery: 0.04137
  cinema: 0.157461
  city_transport: 0.107969 
@@ -70,28 +65,23 @@ contact_matrices:
     bins: ["kids","young adults","adults","old adults"]
   
   pub:
-    contacts: [[3]]
-    proportion_physical: [[0.12]]
+    contacts: [[10]]
+    proportion_physical: [[0.2]]
     characteristic_time: 3
     type: Age
-    bins: [0,100]
-
-  gym:
-    contacts: [[3]]
-    proportion_physical: [[0.12]]
-    characteristic_time: 3
-    type: Age
-    bins: [0,100]
+    bins: [1,99]
 
   grocery:
-    contacts: [[1.5]]
+    contacts: [[20]]
+    error: [[0.2]]
     proportion_physical: [[0.12]]
     characteristic_time: 3
     type: Age
     bins: [0,100]
 
   cinema:
-    contacts: [[3]]
+    contacts: [[3,3],[3,3]]
+    error: [[1,1],[1,0]]
     proportion_physical: [[0.12]]
     characteristic_time: 3    
     type: Age
@@ -110,32 +100,3 @@ contact_matrices:
     characteristic_time: 2
     type: Age
     bins: [0,100]
-
-
-interactive_groups:
-  # configuration options for specific interactive groups.
-  company:
-    sector_betas:
-      A: 1.
-      B: 0.9
-      C: 1.
-      D: 1.
-      E: 1.
-      F: 1.
-      G: 0.75
-      H: 0.5
-      I: 1.
-      J: 0.7
-      K: 0.5
-      L: 0.3
-      M: 0.3
-      N: 0.2
-      O: 0.5
-      P: 1.
-      Q: 1.
-      R: 0.7
-      S: 0.8
-      T: 1.
-      U: 1.
-
-
