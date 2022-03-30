@@ -131,6 +131,7 @@ def generate_simulator():
         cases_per_capita=0.001,
         seed_strength=10,
         date="2020-02-28",
+        seed_past_infections=False
     )
     immunity_setter = ImmunitySetter()
 
