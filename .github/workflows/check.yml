@@ -64,4 +64,5 @@ jobs:
 
     - name: Test all cells in ipynb for errors
       run: |
+        pip install jupyter
         jupyter nbconvert --to notebook --inplace --execute Notebooks/quickstart.ipynb
