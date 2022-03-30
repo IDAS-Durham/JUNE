@@ -32,7 +32,7 @@ class TestSchool:
             assert len(subgroup.people) == 0
 
     def test__filling_school(self, school):
-        person = Person(sex="f", age=7)
+        person = Person.from_attributes(sex="f", age=7)
         school.add(person, School.SubgroupType.students)
         assert bool(school.subgroups[2].people) is True
 

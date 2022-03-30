@@ -50,9 +50,9 @@ class Person(dataobject):
     mode_of_transport: "ModeOfTransport" = None
     # activities
     busy: bool = False
-    subgroups: Activities = Activities(None, None, None, None, None, None)
+    subgroups: Activities = None #Activities(None, None, None, None, None, None)
     infection: Infection = None
-    immunity: Immunity()
+    immunity: Immunity = None
     # infection
     dead: bool = False
 

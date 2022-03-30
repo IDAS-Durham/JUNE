@@ -17,9 +17,9 @@ class MockGroup(Group):
 
     def __init__(self):
         super().__init__()
-        person = Person()
-        self.add(Person(), "primary_activity", self.SubgroupType.type1)
-        person = Person()
+        person = Person.from_attributes()
+        self.add(Person.from_attributes(), "primary_activity", self.SubgroupType.type1)
+        person = Person.from_attributes()
         self.add(person, "primary_activity", self.SubgroupType.type2)
 
 
