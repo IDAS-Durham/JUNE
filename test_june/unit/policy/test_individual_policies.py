@@ -383,15 +383,12 @@ class TestClosure:
         active_individual_policies = policies.individual_policies.get_active(
             date=time_after_policy
         )
-        assert (
-            policies.individual_policies.apply(
-                active_individual_policies,
-                person=student,
-                activities=activities,
-                days_from_start=0,
-            )
-            == ["primary_activity", "residence"]
-        )
+        assert policies.individual_policies.apply(
+            active_individual_policies,
+            person=student,
+            activities=activities,
+            days_from_start=0,
+        ) == ["primary_activity", "residence"]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -507,15 +504,12 @@ class TestClosure:
         active_individual_policies = policies.individual_policies.get_active(
             date=time_during_policy
         )
-        assert (
-            policies.individual_policies.apply(
-                active_individual_policies,
-                person=worker,
-                activities=activities,
-                days_from_start=0,
-            )
-            == ["residence"]
-        )
+        assert policies.individual_policies.apply(
+            active_individual_policies,
+            person=worker,
+            activities=activities,
+            days_from_start=0,
+        ) == ["residence"]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy
         )
@@ -526,15 +520,12 @@ class TestClosure:
         active_individual_policies = policies.individual_policies.get_active(
             date=time_after_policy
         )
-        assert (
-            policies.individual_policies.apply(
-                active_individual_policies,
-                person=worker,
-                activities=activities,
-                days_from_start=0,
-            )
-            == ["commute", "primary_activity", "residence"]
-        )
+        assert policies.individual_policies.apply(
+            active_individual_policies,
+            person=worker,
+            activities=activities,
+            days_from_start=0,
+        ) == ["commute", "primary_activity", "residence"]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -557,15 +548,12 @@ class TestClosure:
         active_individual_policies = policies.individual_policies.get_active(
             date=time_during_policy
         )
-        assert (
-            policies.individual_policies.apply(
-                active_individual_policies,
-                person=worker,
-                activities=activities,
-                days_from_start=0,
-            )
-            == ["commute", "primary_activity", "residence"]
-        )
+        assert policies.individual_policies.apply(
+            active_individual_policies,
+            person=worker,
+            activities=activities,
+            days_from_start=0,
+        ) == ["commute", "primary_activity", "residence"]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy
         )
@@ -576,15 +564,12 @@ class TestClosure:
         active_individual_policies = policies.individual_policies.get_active(
             date=time_after_policy
         )
-        assert (
-            policies.individual_policies.apply(
-                active_individual_policies,
-                person=worker,
-                activities=activities,
-                days_from_start=0,
-            )
-            == ["commute", "primary_activity", "residence"]
-        )
+        assert policies.individual_policies.apply(
+            active_individual_policies,
+            person=worker,
+            activities=activities,
+            days_from_start=0,
+        ) == ["commute", "primary_activity", "residence"]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy
         )
@@ -1067,15 +1052,12 @@ class TestClosure:
         active_individual_policies = policies.individual_policies.get_active(
             date=time_during_policy
         )
-        assert (
-            policies.individual_policies.apply(
-                active_individual_policies,
-                person=worker,
-                activities=activities,
-                days_from_start=0,
-            )
-            == ["residence"]
-        )
+        assert policies.individual_policies.apply(
+            active_individual_policies,
+            person=worker,
+            activities=activities,
+            days_from_start=0,
+        ) == ["residence"]
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy
         )

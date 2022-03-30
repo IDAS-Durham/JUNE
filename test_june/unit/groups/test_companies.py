@@ -24,7 +24,7 @@ def create_geography():
 
 @pytest.fixture(name="person")
 def create_person():
-    return Person(sex="m", age=44)
+    return Person.from_attributes(sex="m", age=44)
 
 
 class TestCompany:
