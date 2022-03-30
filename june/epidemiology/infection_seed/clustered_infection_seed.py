@@ -79,7 +79,9 @@ class ClusteredInfectionSeed(InfectionSeed):
                     self.infect_person(person=person, time=time, record=record)
                     if time < 0:
                         self.bring_infection_up_to_date(
-                            person=person, time_from_infection=-time, record=record,
+                            person=person,
+                            time_from_infection=-time,
+                            record=record,
                         )
                     total_to_infect -= 1
                     if total_to_infect < 1:

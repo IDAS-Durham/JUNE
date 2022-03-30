@@ -86,7 +86,14 @@ def create_dummy_world():
     areas = Areas(super_areas[0].areas + super_areas[1].areas + super_areas[2].areas)
     households = Households([Household(area=super_areas[0].areas[0])])
     hospitals = Hospitals(
-        [Hospital(n_beds=1, n_icu_beds=1, area=areas[5], coordinates=(0.0, 0.0),)]
+        [
+            Hospital(
+                n_beds=1,
+                n_icu_beds=1,
+                area=areas[5],
+                coordinates=(0.0, 0.0),
+            )
+        ]
     )
     care_homes = CareHomes([CareHome(area=super_areas[0].areas[0])])
     world = World()
@@ -219,7 +226,10 @@ def test__writing_death():
 
 
 def test__static_people(dummy_world):
-    record = Record(record_path="results", record_static_data=True,)
+    record = Record(
+        record_path="results",
+        record_static_data=True,
+    )
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -247,7 +257,10 @@ def test__static_people(dummy_world):
 
 
 def test__static_with_extras_people(dummy_world):
-    record = Record(record_path="results", record_static_data=True,)
+    record = Record(
+        record_path="results",
+        record_static_data=True,
+    )
     tonto = [0.1, 1.3, 5.0]
     listo = [0.9, 0.7, 0.0]
     vaccine_type = [0, 1, 2]
@@ -295,7 +308,10 @@ def test__static_with_extras_people(dummy_world):
 
 
 def test__static_location(dummy_world):
-    record = Record(record_path="results", record_static_data=True,)
+    record = Record(
+        record_path="results",
+        record_static_data=True,
+    )
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -325,7 +341,10 @@ def test__static_location(dummy_world):
 
 
 def test__static_geography(dummy_world):
-    record = Record(record_path="results", record_static_data=True,)
+    record = Record(
+        record_path="results",
+        record_static_data=True,
+    )
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
