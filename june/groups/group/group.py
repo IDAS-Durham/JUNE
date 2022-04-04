@@ -284,14 +284,14 @@ class Group(AbstractGroup):
     def subgroup_bins(self):
         return self.subgroup_params.subgroup_bins(self.get_spec())
 
-    # @property
-    # def kids(self):
-    #     return [
-    #         person
-    #         for subgroup in self.subgroups
-    #         for person in subgroup.people
-    #         if person.age < self.subgroup_params.AgeYoungAdult 
-    #     ]
+    @property
+    def kids(self):
+        return [
+            person
+            for subgroup in self.subgroups
+            for person in subgroup.people
+            if person.age < self.subgroup_params.AgeYoungAdult 
+        ]
 
     # @property
     # def young_adults(self):
@@ -302,14 +302,14 @@ class Group(AbstractGroup):
     #         if person.age >= self.subgroup_params.AgeYoungAdult and person.age < self.subgroup_params.AgeAdult
     #     ]
 
-    # @property
-    # def adults(self):
-    #     return [
-    #         person
-    #         for subgroup in self.subgroups
-    #         for person in subgroup.people
-    #         if person.age >= self.subgroup_params.AgeAdult and person.age < self.subgroup_params.AgeOldAdult
-    #     ]
+    @property
+    def adults(self):
+        return [
+            person
+            for subgroup in self.subgroups
+            for person in subgroup.people
+            if person.age >= self.subgroup_params.AgeAdult
+        ]
     
     # @property
     # def old_adults(self):

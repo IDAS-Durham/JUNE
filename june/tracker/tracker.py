@@ -1,3 +1,4 @@
+from cProfile import label
 import numpy as np
 import yaml
 import pandas as pd
@@ -74,6 +75,9 @@ class Tracker:
         contact_counts=None,
         location_counts=None,
         contact_matrices=None,
+
+        location_cum_pop=None,
+        location_cum_time=None,
     ):
         self.world = world
         self.age_bins = age_bins
@@ -88,6 +92,16 @@ class Tracker:
 
         if self.track_contacts_count == True and location_counts != None:
             self.location_counters = location_counts
+
+        if location_cum_pop == None:
+            self.intitalise_location_cum_pop()
+        else:
+            self.location_cum_pop = location_cum_pop
+
+        if location_cum_time == None:
+            self.intitalise_location_cum_time()
+        else:
+            self.location_cum_time = location_cum_time
 
         self.simulation_days = simulation_days
         self.delta_t = delta_t
@@ -268,14 +282,6 @@ class Tracker:
         group_type_names = []
         for groups in self.group_types:
             spec = groups[0].spec
-
-            # if spec[-1] == "y":
-            #     spec = spec[:-1]+"ies"
-            # elif spec[-1] == "s":
-            #     pass #TODO?
-            # else:
-            #     spec = spec+"s"
-
             group_type_names.append(spec)
             if spec == "shelter":
                 group_type_names.append(spec+"_intra")
@@ -377,6 +383,64 @@ class Tracker:
         }
         return 1
 
+
+    def intitalise_location_cum_pop(self):
+        """
+        class variable
+        Intitalise;
+            self.location_cum_pop
+
+        Parameters
+        ----------
+            None
+            
+        Returns
+        -------
+            None
+
+        """
+        self.location_cum_pop = {}
+        for bin_type, bins in self.age_bins.items():
+        # For each type of contact matrix binning, eg BBC, polymod, SYOA...
+            self.location_cum_pop[bin_type] = {}
+            CM = np.zeros(len(bins)-1)
+            append = {}
+            for sex in self.contact_sexes: #For each sex
+                append[sex] = np.zeros_like(CM)
+
+            self.location_cum_pop[bin_type]["global"] = append #Add in a global matrix tracker
+            
+            for spec in self.group_type_names: #Over location
+                append = {}
+                for sex in self.contact_sexes: 
+                    append[sex] = np.zeros_like(CM)
+                self.location_cum_pop[bin_type][spec] = (
+                    append
+                )
+        return 1
+
+
+    def intitalise_location_cum_time(self):
+        """
+        class variable
+        Intitalise;
+            self.location_cum_time
+
+        Parameters
+        ----------
+            None
+            
+        Returns
+        -------
+            None
+
+        """
+        self.location_cum_time = {
+                spec: 0 for spec in self.group_type_names 
+        }
+        self.location_cum_time["global"] = 0
+        return 1
+
     def hash_ages(self):
         """
         store all ages and age_bin indexes in python dict for quick lookup as class variable
@@ -473,7 +537,7 @@ class Tracker:
         -------
             None
         """
-        def BinCounts(bins_idx, contact_type):
+        def BinCounts(bins_idx, contact_type, ExpN):
             contacts_loc = self.contacts_df[self.contacts_df[contact_type] != 0]
             AgesCount = contacts_loc.groupby([bins_idx], dropna = False).size()
             AgesCount = AgesCount.reindex(range(ExpN-1), fill_value=0)
@@ -487,17 +551,34 @@ class Tracker:
 
         self.age_profiles = {}
         for bin_type in self.age_bins.keys():
+            self.age_profiles[bin_type] = {}
             bins_idx = f"{bin_type}_idx"
-            ExpN = len(self.age_bins[bin_type])
-            
-            self.age_profiles[bin_type] = (
-                {}
-            )
-            for contact_type in self.group_type_names:
-                self.age_profiles[bin_type][contact_type] = BinCounts(bins_idx, contact_type)
-            self.age_profiles[bin_type]["global"] = BinCounts(bins_idx, "global")
+            self.age_profiles[bin_type]["global"]= BinCounts(bins_idx, "global", len(self.age_bins[bin_type]))
+            for contact_type in self.location_cum_pop["syoa"].keys():
+                self.age_profiles[bin_type][contact_type]= BinCounts(bins_idx, contact_type, len(self.age_bins[bin_type]))
 
-            
+        def Contract(bins_idx, locs):
+            CM = np.zeros(len(bins_idx)-1)
+            APPEND = {}
+            for spec in locs: #Over location
+                append = {}
+                for sex in self.contact_sexes: 
+                    append[sex] = np.zeros_like(CM)
+                APPEND[spec] = (
+                    append
+                )
+
+            for spec in locs: #Over location
+                for sex in self.contact_sexes: #Over location
+                    for bin_x in range(len(bins_idx)-1):
+                        Win = [bins_idx[bin_x], bins_idx[bin_x+1]]
+                        APPEND[spec][sex][bin_x] = np.sum(self.location_cum_pop["syoa"][spec][sex][Win[0]:Win[1]])
+            return APPEND
+
+        for bin_type, bins in self.age_bins.items():
+            if bin_type == "syoa":
+                continue
+            self.location_cum_pop[bin_type] = Contract(bins, self.location_cum_pop["syoa"].keys())
         return 1
        
 
@@ -518,12 +599,12 @@ class Tracker:
 
         """
         self.average_contacts = {}
+
+        colsWhich = [col for col in self.contacts_df.columns if col not in [key+"_idx" for key in self.age_bins.keys()] and col not in ["age", "sex"] ]
+        self.contacts_df[colsWhich] /= self.simulation_days
         for bin_type in self.age_bins.keys():
             bins_idx = f"{bin_type}_idx"
             ExpN = len(self.age_bins[bin_type])
-
-            colsWhich = [col for col in self.contacts_df.columns if col not in [key+"_idx" for key in self.age_bins.keys()] and col not in ["age", "sex"] ]
-            self.contacts_df[colsWhich] /= self.simulation_days
             AgesCount = self.contacts_df.groupby(self.contacts_df[bins_idx], dropna = False).mean()[colsWhich] #TODO Mean if not zero?
             AgesCount = AgesCount.reindex(range(ExpN-1), fill_value=0)
 
@@ -609,80 +690,76 @@ class Tracker:
                             for key, value in self.age_bins.items():
                                 bins = list(self.interaction_matrices[contact_type]["bins"])
                                 if  bins == list(value):
-                                    age_profile = self.age_profiles[key][contact_type][sex]
+                                    age_profile = self.location_cum_pop[key][contact_type][sex]
                                     age_profile_G = self.age_profiles[key]["global"][sex]
                                     inList = True
                                     break
                             if not inList:
-                                age_profile = self.age_profiles["syoa"][contact_type][sex]
+                                age_profile = self.location_cum_pop["syoa"][contact_type][sex]
                                 age_profile_G = self.age_profiles["syoa"]["global"][sex]
                         else:
-
-                            age_profile = self.age_profiles["syoa"][contact_type][sex]
+                            age_profile = self.location_cum_pop["syoa"][contact_type][sex]
                             age_profile_G = self.age_profiles["syoa"]["global"][sex]
+                            bins = self.age_bins["syoa"]
 
                     else:
-                        age_profile = self.age_profiles[bin_type][contact_type][sex]
+                        age_profile = self.location_cum_pop[bin_type][contact_type][sex]
                         age_profile_G = self.age_profiles[bin_type]["global"][sex]
+                        bins = self.age_bins[bin_type]
 
                     if contact_type == "age_bins":
                         continue
-                    
-                        
-                    characteristic_time, _ = self.Get_characteristic_time(contact_type)
-                    #Normalise based on characteristic time.
-                    factor = self.simulation_days #* (characteristic_time / 24)
-                    cm = cm / factor
+                
+                    norm_cm, norm_cm_err = self.CM_Norm(cm, np.array(bins), np.array(age_profile_G), np.array(age_profile), contact_type=contact_type)
 
-                    #Create blanks to fill
-                    norm_cm = np.zeros( cm.shape )
-                    norm_cm_err = np.zeros( cm.shape )
-
-                    #Loop over elements
-                    for i,row in enumerate(norm_cm):
-                        for j,col in enumerate(norm_cm):
-                            F_i = 1
-                            F_j = 1
-                            if age_profile[i] == 0:
-                                F_j = 2
-                                F_i = 0
-                            if age_profile[j] == 0:
-                                F_j = 0
-                                F_i = 1
-
-                            w = age_profile_G[i] / age_profile_G[j]
-                            if age_profile_G[j] == 0:
-                                w = 0
-
-                            norm_cm[i,j] = (
-                                0.5*(F_i*cm[i,j]/age_profile[j] + (F_j*cm[j,i]/age_profile[i])*w) 
-                            )
-
-                            #TODO Think about this error? 
-                            norm_cm_err[i,j] = (
-                                0.5*( 
-                                    np.sqrt(F_i*cm[i,j]*factor)/(age_profile[j]*factor) + 
-                                    (np.sqrt(F_j*cm[j,i]*factor)/(age_profile[i]*factor)*w) 
-                                )
-                            )
-
-                            # norm_cm[i,j] = (
-                            #     (cm[i,j]/age_profile[i]) 
-                            # )
-
-                            # #TODO Think about this error? 
-                            # norm_cm_err[i,j] = (
-                            #         np.sqrt(cm[i,j]*factor)/(age_profile[i]*factor)
-                            # )
-           
                     self.normalised_contact_matrices[bin_type][contact_type][sex] = norm_cm
                     self.normalised_contact_matrices_err[bin_type][contact_type][sex] = norm_cm_err
 
                     #Basically just counts of interations so assume a poisson error
                     #TODO Think about this error?
                     self.contact_matrices_err[bin_type][contact_type][sex] = np.sqrt(self.contact_matrices_err[bin_type][contact_type][sex]) 
-                    self.contact_matrices[bin_type][contact_type][sex] /= self.simulation_days
         return 1
+
+    
+    def CM_Norm(self, cm, bins, global_age_profile, pop_tots, contact_type="global"):
+        #Normalise based on characteristic time.
+        
+        #Normalisation over charecteristic time and population
+        factor = (self.Get_characteristic_time(contact_type=contact_type)[0]*np.sum(pop_tots))/self.location_cum_time[contact_type]
+        #Create blanks to fill
+        norm_cm = np.zeros( cm.shape )
+        norm_cm_err = np.zeros( cm.shape )
+
+        if isinstance(bins[0], str):
+            Bindiffs = np.ones_like(global_age_profile)
+        else:
+            Bindiffs = np.abs(bins[1:]-bins[:-1])
+
+        global_age_profile = global_age_profile / Bindiffs
+        pop_tots = pop_tots
+
+        #Loop over elements
+        for i in range(cm.shape[0]):
+            for j in range(cm.shape[1]):
+                
+                F_i = 1
+                F_j = 1
+                #Population rescaling
+                w = (global_age_profile[i] / global_age_profile[j])
+                #w = (pop_tots[i] / pop_tots[j]) * (Bindiffs[i]/Bindiffs[j])
+   
+                norm_cm[i,j] = (
+                    0.5*(F_i*cm[i,j]/pop_tots[j] + (F_j*cm[j,i]/pop_tots[i])*w)*factor
+                )
+                #TODO Think about this error? 
+                norm_cm_err[i,j] = (
+                    0.5*( 
+                        np.sqrt(F_i*cm[i,j])/(pop_tots[j]) + 
+                        (np.sqrt(F_j*cm[j,i])/(pop_tots[i])*w) 
+                    )*factor
+                )
+
+        return norm_cm, norm_cm_err
 
     def post_process_simulation(self):
         """
@@ -1137,7 +1214,6 @@ class Tracker:
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
-
         plt.rcParams["figure.figsize"] = (10,5)
         f, (ax1,ax2) = plt.subplots(1,2)
         f.patch.set_facecolor('white')
@@ -1284,6 +1360,7 @@ class Tracker:
             ax:
                 matplotlib axes object
         """
+        distribution_global = self.location_cum_pop[bin_type]["global"][sex]
         distribution_global = self.age_profiles[bin_type]["global"][sex]
 
         f, ax = plt.subplots()
@@ -1291,7 +1368,7 @@ class Tracker:
 
         bins = self.age_bins[bin_type]
         mids = 0.5*(bins[:-1]+bins[1:])
-        for contact_type in self.age_profiles[bin_type].keys():
+        for contact_type in  self.location_cum_pop[bin_type].keys():
             if bin_type in ["global", "shelter_inter", "shelter_intra"]:
                 continue
             distribution_loc = self.age_profiles[bin_type][contact_type][sex]
@@ -1355,6 +1432,50 @@ class Tracker:
         plt.tight_layout()
         return ax
 
+    def plot_AgeProfileRatios(self, contact_type="global", bin_type="syoa", sex="unisex"):
+        ''''''
+        pop_tots = self.location_cum_pop[bin_type][contact_type][sex]
+        global_age_profile = self.age_profiles[bin_type]["global"][sex]
+
+        Bins = np.array(self.age_bins[bin_type])
+        Labels = self.CMPlots_GetLabels(Bins)
+        Bincenters = 0.5*(Bins[1:]+Bins[:-1])
+        Bindiffs = np.abs(Bins[1:]-Bins[:-1])
+
+        Height_G = global_age_profile/Bindiffs
+        Height_P = pop_tots/Bindiffs
+
+        ws = np.zeros((Bins.shape[0]-1,Bins.shape[0]-1))
+        #Loop over elements
+        for i in range(ws.shape[0]):
+            for j in range(ws.shape[1]):
+                #Population rescaling
+                ws[i,j] = Height_G[i] / Height_G[j]
+
+        plt.rcParams["figure.figsize"] = (15,5)
+        f, (ax1,ax2) = plt.subplots(1,2)
+        
+        f.patch.set_facecolor('white')
+
+        if np.isfinite(ws).sum() != 0:
+            vmax = ws[np.isfinite(ws)].max()*2
+        else:
+            vmax= 1e-1
+        vmin = 10**(-1*np.log10(vmax))
+
+
+        print(vmax, vmin)
+        im1 = self.PlotCM(ws, None, Labels, ax1, origin='lower',cmap='seismic',norm=colors.LogNorm(vmin=vmin, vmax=vmax))
+        f.colorbar(im1, ax=ax1, label=r"$\dfrac{Age_{y}}{Age_{x}}$")
+        plt.bar(x=Bincenters, height=Height_G/sum(Height_G), width=Bindiffs, tick_label=Labels, alpha=0.5, color="blue", label="global")
+        plt.bar(x=Bincenters, height=Height_P/sum(Height_P), width=Bindiffs, tick_label=Labels, alpha=0.5, color="red", label=contact_type)
+        ax2.set_ylabel("Normed Population size")
+        ax2.set_xlim([Bins[0], Bins[-1]])
+        plt.xticks(rotation=90)
+        f.suptitle(f"Age profile of {contact_type}")
+        plt.legend()
+        return (ax1,ax2)
+
 
     def make_plots(self, 
         plot_AvContactsLocation=True, 
@@ -1362,7 +1483,8 @@ class Tracker:
         plot_dTLocationPopulation=True, 
         plot_InteractionMatrices=True,
         plot_ContactMatrices=True, 
-        plot_CompareSexMatrices=True):
+        plot_CompareSexMatrices=True,
+        plot_AgeBinning=True):
         """
         Make plots.
 
@@ -1380,6 +1502,8 @@ class Tracker:
                 bool, To plot contact matrices
             plot_CompareSexMatrices:
                 bool, To plot comparison of sexes matrices
+            plot_AgeBinning:
+                bool, To plot w weight matrix to compare demographics
             
         Returns
         -------
@@ -1438,6 +1562,9 @@ class Tracker:
                 plot_dir_2.mkdir(exist_ok=True, parents=True)
 
                 for sex in self.contact_sexes:
+                    if sex in ["male", "female"]:
+                        continue
+
                     plot_dir_3 = plot_dir_2 / f"{sex}"
                     plot_dir_3.mkdir(exist_ok=True, parents=True)
 
@@ -1479,6 +1606,24 @@ class Tracker:
                             )
                         plt.savefig(plot_dir_3 / f"{rct}.png", dpi=150, bbox_inches='tight')
                         plt.close() 
+
+        if plot_AgeBinning:
+            plot_dir = self.record_path / "Age_Binning"
+            plot_dir.mkdir(exist_ok=True, parents=True)
+            # for rbt in relevant_bin_types:
+            #     if rbt == "Interaction":
+            #             continue
+            for rbt in ["syoa", "Paper"]:
+                for rct in relevant_contact_types:
+                    self.plot_AgeProfileRatios(
+                        contact_type = rct, bin_type=rbt, sex="unisex"
+                    )
+                    plt.savefig(plot_dir / f"{rbt}_{rct}.png", dpi=150, bbox_inches='tight')
+                    plt.close() 
+
+
+
+
         return 1
  
 #####################################################################################################################################################################
@@ -1556,12 +1701,10 @@ class Tracker:
             else:
                 subgroup_type = 1
 
-        delta_t = self.delta_t / 3600 #In hours
-        characteristic_time = self.interaction_matrices[spec]["characteristic_time"] #in hours
+        delta_t = self.delta_t / (3600*24) #In Days
+        characteristic_time = self.Get_characteristic_time(spec)[0] #In Days
 
-        #TODO Need this?
-        #factor = delta_t / characteristic_time
-        factor = 1
+        factor = delta_t / characteristic_time
         contacts_per_subgroup = [
             cms[subgroup_type][ii]*factor for ii in range(NSubgroups)
         ]
@@ -1589,6 +1732,9 @@ class Tracker:
 
         """
         #Loop over people
+        if len(group.people) < 2:
+            return 1
+
         for person in group.people:
             #Shelter we want family groups
             if group.spec == "shelter":
@@ -1630,6 +1776,7 @@ class Tracker:
 
                 int_contacts = self.Probabilistic_Contacts(subgroup_contacts, subgroup_contacts_error)
 
+
                 if int_contacts == 0:
                     continue
 
@@ -1642,7 +1789,6 @@ class Tracker:
                 else:
                     contacts_index = np.random.choice(len(subgroup_people), int_contacts, replace=True)
 
-                
 
                 #Get the ids
                 for contacts_index_i in contacts_index:  
@@ -1706,6 +1852,34 @@ class Tracker:
             if group.spec == "shelter":
                 self.contact_counts[person.id][group.spec+"_inter"] += total_contacts
                 self.contact_counts[person.id][group.spec+"_intra"] += total_contacts
+
+
+        for bins_name in self.contact_matrices.keys():
+            for person in group.people:
+                age_idx = self.age_idxs[bins_name][person.id]
+                self.location_cum_pop[bins_name]["global"]["unisex"][age_idx] += 1
+                self.location_cum_pop[bins_name][group.spec]["unisex"][age_idx] += 1
+                if group.spec == "shelter":
+                    self.location_cum_pop[bins_name][group.spec+"_inter"]["unisex"][age_idx] += 1
+                    self.location_cum_pop[bins_name][group.spec+"_intra"]["unisex"][age_idx] += 1
+                if person.sex == "m" and "male" in self.contact_sexes:
+                    self.location_cum_pop[bins_name]["global"]["male"][age_idx] += 1
+                    self.location_cum_pop[bins_name][group.spec]["male"][age_idx] += 1
+                    if group.spec == "shelter":
+                        self.location_cum_pop[bins_name][group.spec+"_inter"]["male"][age_idx] += 1
+                        self.location_cum_pop[bins_name][group.spec+"_intra"]["male"][age_idx] += 1
+                if person.sex == "f" and "female" in self.contact_sexes:
+                    self.location_cum_pop[bins_name]["global"]["female"][age_idx] += 1
+                    self.location_cum_pop[bins_name][group.spec]["female"][age_idx] += 1
+                    if group.spec == "shelter":
+                        self.location_cum_pop[bins_name][group.spec+"_inter"]["female"][age_idx] += 1
+                        self.location_cum_pop[bins_name][group.spec+"_intra"]["female"][age_idx] += 1
+
+        self.location_cum_time["global"] += (self.delta_t) / (3600*24) #In Days
+        self.location_cum_time[group.spec] += (len(group.people)*self.delta_t) / (3600*24) #In Days
+        if group.spec == "shelter":
+            self.location_cum_time[group.spec+"_inter"] += (len(group.people)*self.delta_t) / (3600*24) #In Days
+            self.location_cum_time[group.spec+"_intra"] += (len(group.people)*self.delta_t) / (3600*24) #In Days
         return 1
 
 #####################################################################################################################################################################
@@ -1789,7 +1963,7 @@ class Tracker:
         for bin_types in ["syoa", "AC"]:
             if bin_types not in self.age_profiles.keys():
                 continue
-            dat = self.age_profiles[bin_types]
+            dat = self.age_profiles[bin_types]["global"]
             bins = self.age_bins[bin_types]
             with pd.ExcelWriter(self.record_path / f'PersonCounts_{bin_types}.xlsx', mode="w") as writer:  
                 for local in dat.keys(): 
