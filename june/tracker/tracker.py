@@ -10,8 +10,10 @@ from june.world import World
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+from mpl_toolkits.axes_grid.inset_locator import inset_axes
 from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
+from datetime import timedelta
 
 from june.groups.group import make_subgroups
 
@@ -83,15 +85,38 @@ class Tracker:
         self.age_bins = age_bins
         self.contact_sexes = contact_sexes
         self.group_types = group_types
+        self.track_contacts_count = track_contacts_count
+        self.location_counters = location_counts
+        self.simulation_days = simulation_days
+        self.delta_t = delta_t
+        self.record_path = record_path
+        self.load_interactions_path = load_interactions_path
 
         #If we want to track total persons at each location
         self.initialise_group_names()
-        self.track_contacts_count = track_contacts_count
+
         if self.track_contacts_count == True and location_counts == None:
             self.intitalise_location_counters()
 
-        if self.track_contacts_count == True and location_counts != None:
-            self.location_counters = location_counts
+        self.load_interactions(self.load_interactions_path) #Load in premade contact matrices
+
+        if contact_matrices == None:
+            self.initialise_contact_matrices()
+        else:
+            self.contact_matrices = contact_matrices
+        self.contact_types = (
+            list(self.contact_matrices["syoa"].keys()) 
+            + ["care_home_visits", "household_visits"]
+        )
+        
+        # store all ages/ index to age bins in python dict for quick lookup.
+        self.hash_ages() 
+
+        #Initalize time, pop and contact counters
+        if contact_counts == None:
+            self.intitalise_contact_counters()
+        else:
+            self.contact_counts = contact_counts
 
         if location_cum_pop == None:
             self.intitalise_location_cum_pop()
@@ -103,27 +128,6 @@ class Tracker:
         else:
             self.location_cum_time = location_cum_time
 
-        self.simulation_days = simulation_days
-        self.delta_t = delta_t
-        self.record_path = record_path
-        self.load_interactions_path = load_interactions_path
-        
-        if contact_matrices == None:
-            self.initialise_contact_matrices()
-        else:
-            self.contact_matrices = contact_matrices
-        self.contact_types = (
-            list(self.contact_matrices["syoa"].keys()) 
-            + ["care_home_visits", "household_visits"]
-        )
-        
-        self.hash_ages() # store all ages/ index to age bins in python dict for quick lookup.
-        self.load_interactions(self.load_interactions_path) #Load in premade contact matrices
-
-        if contact_counts == None:
-            self.intitalise_contact_counters()
-        else:
-            self.contact_counts = contact_counts
 
 #####################################################################################################################################################################
                                 ################################### Useful functions ##################################
@@ -176,7 +180,21 @@ class Tracker:
             return list(Intersection)
 
     def Probabilistic_Contacts(self, mean, mean_err):
-        #Possion variable. How many contacts statisticaly.
+        """
+        Possion variable. How many contacts statisticaly.
+
+        Parameters
+        ----------
+            mean:
+                float, the mean expected counts
+            mean_err:
+                float, the 1 sigma error on the mean
+            
+        Returns
+        -------
+            C_i:
+                The randomly distributed number of errors.
+        """
         if mean_err != 0: #Errored input
             C_i = max(0, np.random.normal(mean,mean_err))
             C_i = self._random_round(np.random.poisson(C_i))
@@ -185,6 +203,24 @@ class Tracker:
         return C_i
 
     def contract_matrix(self, CM, bins, method = np.sum):
+        """
+        Rebin the matrix from "syoa" bin type to general given by bins with method.
+
+        Parameters
+        ----------
+            CM:
+                np.array The contact matrix (unnormalised)
+            bins:
+                np.array, bin edges used for rebinning
+            method:
+                np.method, The method of contraction. np.sum, np.mean etc 
+            
+        Returns
+        -------
+            CM:
+                np.array The contracted matrix
+        """
+
         cm = np.zeros( (len(bins)-1,len(bins)-1) )
         for bin_xi in range(len(bins)-1):
             for bin_yi in range(len(bins)-1):
@@ -216,27 +252,10 @@ class Tracker:
         self.contact_matrices[Name] = {}
 
         for group in cm.keys():
-            if Name == "Interaction":
-                if group in self.interaction_matrices.keys():
-                    #Because we can't rebin age bins over not ages!
-                    if self.interaction_matrices[group]["type"] == "Discrete":
-                        bins = ACArray
-                    elif self.interaction_matrices[group]["type"] == "Age":
-                        bins = self.interaction_matrices[group]["bins"]
-                    
-
-                else:
-                    bins = ACArray
-
             #Recreate new hash ages for the new bins and add bins to bin list.
             Test = [list(item) for item in self.age_bins.values()]
             if list(bins) not in Test:
-                NameBins = Name
-                if Name == "Interaction":
-                    NameBins += "_"+group
-                self.age_bins = {NameBins: bins, **self.age_bins}      
-                      
-            
+                self.age_bins = {Name: bins, **self.age_bins}      
             append = {}
             for sex in self.contact_sexes:
                 append[sex] = np.zeros( (len(bins)-1,len(bins)-1) )
@@ -322,6 +341,13 @@ class Tracker:
                 self.contact_matrices[bin_type][spec] = (
                     append
                 )
+
+        #Initialize for the input contact matrices.
+        self.contact_matrices["Interaction"] = {}
+        for spec in self.interaction_matrices.keys(): #Over location
+            IM = self.interaction_matrices[spec]["contacts"]
+            append =  np.zeros_like(IM)
+            self.contact_matrices["Interaction"][spec] = append
         return 1
         
     def intitalise_contact_counters(self):
@@ -369,7 +395,7 @@ class Tracker:
             if locs[-1] == "y":
                 locations.append(locs[:-1]+"ies")
             elif locs[-1] == "s":
-                pass #TODO?
+                pass
             else:
                 locations.append(locs+"s")
 
@@ -417,6 +443,10 @@ class Tracker:
                 self.location_cum_pop[bin_type][spec] = (
                     append
                 )
+
+        self.location_cum_pop["Interaction"] = {}
+        for spec in  self.interaction_matrices.keys(): #Over location
+            self.location_cum_pop["Interaction"][spec] = np.zeros(self.contact_matrices["Interaction"][spec].shape[0])
         return 1
 
 
@@ -605,7 +635,7 @@ class Tracker:
         for bin_type in self.age_bins.keys():
             bins_idx = f"{bin_type}_idx"
             ExpN = len(self.age_bins[bin_type])
-            AgesCount = self.contacts_df.groupby(self.contacts_df[bins_idx], dropna = False).mean()[colsWhich] #TODO Mean if not zero?
+            AgesCount = self.contacts_df.groupby(self.contacts_df[bins_idx], dropna = False).mean()[colsWhich]
             AgesCount = AgesCount.reindex(range(ExpN-1), fill_value=0)
 
             self.average_contacts[bin_type] = (
@@ -641,8 +671,12 @@ class Tracker:
                     }
                 for loc in self.contact_matrices[bin_type].keys()
                 }
-            for bin_type in self.contact_matrices.keys()   
+            for bin_type in self.contact_matrices.keys() if bin_type != "Interaction" 
         }
+        self.normalised_contact_matrices["Interaction"] = { 
+                loc: self.contact_matrices["Interaction"][loc] for loc in self.contact_matrices["Interaction"].keys()
+        }
+
         self.normalised_contact_matrices_err = { 
             bin_type : { 
                 loc: {
@@ -651,8 +685,12 @@ class Tracker:
                     }
                 for loc in self.contact_matrices[bin_type].keys()
                 }
-            for bin_type in self.contact_matrices.keys()   
+            for bin_type in self.contact_matrices.keys() if bin_type != "Interaction" 
         }
+        self.normalised_contact_matrices_err["Interaction"] = { 
+                loc: self.contact_matrices["Interaction"][loc] for loc in self.contact_matrices["Interaction"].keys()
+        }
+
         self.contact_matrices_err = { 
             bin_type : { 
                 loc: {
@@ -661,67 +699,81 @@ class Tracker:
                     }
                 for loc in self.contact_matrices[bin_type].keys()
                 }
-            for bin_type in self.contact_matrices.keys()   
+            for bin_type in self.contact_matrices.keys() if bin_type != "Interaction" 
         }
+        self.contact_matrices_err["Interaction"] = { 
+                loc: self.contact_matrices["Interaction"][loc] for loc in self.contact_matrices["Interaction"].keys()
+        }
+
         #Preform normalisation
-        InterCount = 0
         bin_Keys = list(self.age_bins.keys())
 
         if "Interaction" not in bin_Keys:
             bin_Keys.append("Interaction")
-        for bin_type in bin_Keys:
 
-            if "Interaction" in bin_type and InterCount > 0:
-                continue
-            if "Interaction" in bin_type and InterCount == 0:
-                bin_type = "Interaction"
-                InterCount+=1
+        for bin_type in bin_Keys:
                 
             matrices = self.contact_matrices[bin_type]
             for contact_type, cm_spec in matrices.items():
                 for sex in self.contact_sexes:
-                    cm = cm_spec[sex]
+                    
 
                     if bin_type == "Interaction":
-                        if contact_type in self.interaction_matrices.keys():
-
-
-                            inList = False
-                            for key, value in self.age_bins.items():
-                                bins = list(self.interaction_matrices[contact_type]["bins"])
-                                if  bins == list(value):
-                                    age_profile = self.location_cum_pop[key][contact_type][sex]
-                                    age_profile_G = self.age_profiles[key]["global"][sex]
-                                    inList = True
-                                    break
-                            if not inList:
-                                age_profile = self.location_cum_pop["syoa"][contact_type][sex]
-                                age_profile_G = self.age_profiles["syoa"]["global"][sex]
-                        else:
-                            age_profile = self.location_cum_pop["syoa"][contact_type][sex]
-                            age_profile_G = self.age_profiles["syoa"]["global"][sex]
-                            bins = self.age_bins["syoa"]
-
+                        cm = cm_spec
+                        age_profile = self.location_cum_pop["Interaction"][contact_type]
+                        age_profile_G = np.ones(age_profile.shape[0])
+                        bins = np.arange(age_profile.shape[0]+1) #TODO Find appropirate renorm scale.
                     else:
+                        cm = cm_spec[sex]
                         age_profile = self.location_cum_pop[bin_type][contact_type][sex]
                         age_profile_G = self.age_profiles[bin_type]["global"][sex]
                         bins = self.age_bins[bin_type]
-
-                    if contact_type == "age_bins":
-                        continue
-                
+ 
                     norm_cm, norm_cm_err = self.CM_Norm(cm, np.array(bins), np.array(age_profile_G), np.array(age_profile), contact_type=contact_type)
 
-                    self.normalised_contact_matrices[bin_type][contact_type][sex] = norm_cm
-                    self.normalised_contact_matrices_err[bin_type][contact_type][sex] = norm_cm_err
 
-                    #Basically just counts of interations so assume a poisson error
-                    #TODO Think about this error?
-                    self.contact_matrices_err[bin_type][contact_type][sex] = np.sqrt(self.contact_matrices_err[bin_type][contact_type][sex]) 
+                    if bin_type == "Interaction":
+                        self.normalised_contact_matrices["Interaction"][contact_type] = norm_cm
+                        self.normalised_contact_matrices_err["Interaction"][contact_type] = norm_cm_err
+
+                        #Basically just counts of interations so assume a poisson error
+                        #TODO Think about this error?
+                        self.contact_matrices_err["Interaction"][contact_type] = np.sqrt(self.contact_matrices_err[bin_type][contact_type])
+
+                    else:
+                        self.normalised_contact_matrices[bin_type][contact_type][sex] = norm_cm
+                        self.normalised_contact_matrices_err[bin_type][contact_type][sex] = norm_cm_err
+
+                        #Basically just counts of interations so assume a poisson error
+                        #TODO Think about this error?
+                        self.contact_matrices_err[bin_type][contact_type][sex] = np.sqrt(self.contact_matrices_err[bin_type][contact_type][sex]) 
         return 1
 
     
     def CM_Norm(self, cm, bins, global_age_profile, pop_tots, contact_type="global"):
+        """
+        Normalise the contact matrices using population at location data and time of simulation run time.
+
+        Parameters
+        ----------
+            cm:
+                np.array contact matrix
+            bins:
+                np.array Bin edges 
+            global_age_profile:
+                np.array total counts of persons in each bin for entire population
+            pop_tots:
+                np.array total counts of visits of each age bin for entire simulation time. (1 person can go to same location more than once)
+            contact_type:
+                List of the contact_type locations (or none to grab all of them)
+        Returns
+        -------
+            cm:
+                np.array contact matrix
+            cm_err:
+                np.array contact matrix errors
+
+        """
         #Normalise based on characteristic time.
         
         #Normalisation over charecteristic time and population
@@ -780,8 +832,6 @@ class Tracker:
             None
 
         """
-        self.contract_matrices("Interaction", np.array([]))
-
         self.convert_dict_to_df()
         self.calc_age_profiles()
         self.calc_average_contacts()
@@ -861,11 +911,13 @@ class Tracker:
         """
         im = ax.imshow(cm, **plt_kwargs)
         if labels is not None:
-            ax.set_xticks(np.arange(len(cm)))
-            ax.set_xticklabels(labels,rotation=45)
-            ax.set_yticks(np.arange(len(cm)))
-            ax.set_yticklabels(labels)
-
+            if len(labels) < 25:
+                ax.set_xticks(np.arange(len(cm)))
+                ax.set_xticklabels(labels,rotation=45)
+                ax.set_yticks(np.arange(len(cm)))
+                ax.set_yticklabels(labels)
+            else:
+                pass
         # Loop over data dimensions and create text annotations.
         if cm.shape[0]*cm.shape[1] < 26:
             self.AnnotateCM(cm, cm_err, ax)
@@ -914,12 +966,20 @@ class Tracker:
             cm_err:
                 np.array contact matrix errors
         """
-        if normalized == True:
-            cm =  self.normalised_contact_matrices[bin_type][contact_type][sex]
-            cm_err = self.normalised_contact_matrices_err[bin_type][contact_type][sex]
+        if bin_type != "Interaction":
+            if normalized == True:
+                cm =  self.normalised_contact_matrices[bin_type][contact_type][sex]
+                cm_err = self.normalised_contact_matrices_err[bin_type][contact_type][sex]
+            else:
+                cm = self.contact_matrices[bin_type][contact_type][sex]/self.simulation_days 
+                cm_err = self.contact_matrices_err[bin_type][contact_type][sex]/self.simulation_days 
         else:
-            cm = self.contact_matrices[bin_type][contact_type][sex]/self.simulation_days 
-            cm_err = self.contact_matrices_err[bin_type][contact_type][sex]/self.simulation_days 
+            if normalized == True:
+                cm =  self.normalised_contact_matrices[bin_type][contact_type]
+                cm_err = self.normalised_contact_matrices_err[bin_type][contact_type]
+            else:
+                cm = self.contact_matrices[bin_type][contact_type]/self.simulation_days 
+                cm_err = self.contact_matrices_err[bin_type][contact_type]/self.simulation_days 
         return cm, cm_err
 
     def MaxAgeBinIndex(self, bins, MaxAgeBin=60):
@@ -1100,76 +1160,57 @@ class Tracker:
 
         IM = np.nan_to_num(IM, posinf=IM_Max, neginf=0, nan=0)
 
-        CanCompare = True
-        ACBins = any(x in ["students", "teachers", "adults", "children"] for x in self.interaction_matrices[contact_type]["bins"])
-        if (self.interaction_matrices[contact_type]["type"] == "Age" or ACBins) and contact_type in self.normalised_contact_matrices["syoa"].keys():
-            binType = "Interaction"
-            labels_CM = labels_IM
-            cm, cm_err = self.CMPlots_GetCM(binType, contact_type, normalized=True)
-            cm, cm_err, labels_CM = self.IMPlots_UsefulCM(contact_type, cm, cm_err=cm_err, labels=labels_CM)
+ 
+        labels_CM = labels_IM
+        cm, cm_err = self.CMPlots_GetCM("Interaction", contact_type, normalized=True)
+        cm, cm_err, _ = self.IMPlots_UsefulCM(contact_type, cm, cm_err=cm_err, labels=labels_CM)
 
-
-            #cm_Min = cm[np.isfinite(cm)].min()
-            if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
-                cm_Min = np.nanmin(cm[np.nonzero(cm)])
-            else:
-                cm_Min = 1e-1
-            if np.isfinite(cm).sum() != 0:
-                cm_Max = cm[np.isfinite(cm)].max()
-            else:
-                cm_Max = 1
-
-
-            if np.isnan(cm_Min):
-                cm_Min = 1e-1
-            if np.isnan(cm_Max) or cm_Max == 0:
-                cm_Max = 1
-            cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
-
+        if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
+            cm_Min = np.nanmin(cm[np.nonzero(cm)])
         else:
-            CanCompare=False
-
-        if CanCompare:
-            vMax = max(cm_Max, IM_Max)
+            cm_Min = 1e-1
+        if np.isfinite(cm).sum() != 0:
+            cm_Max = cm[np.isfinite(cm)].max()
         else:
-            vMax = IM_Max
+            cm_Max = 1
+
+
+        if np.isnan(cm_Min):
+            cm_Min = 1e-1
+        if np.isnan(cm_Max) or cm_Max == 0:
+            cm_Max = 1
+        cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
+
+        vMax = max(cm_Max, IM_Max)
         vMin = 1e-2
         norm=colors.Normalize(vmin=vMin, vmax=vMax)
+        plt.rcParams["figure.figsize"] = (15,5)
+        f, (ax1,ax2, ax3) = plt.subplots(1,3)
+        f.patch.set_facecolor('white')
 
+        im1 = self.PlotCM(IM, IM_err, labels_IM, ax1, origin='lower',cmap='RdYlBu_r', norm=norm)
+        im2 = self.PlotCM(cm, cm_err, labels_CM, ax2, origin='lower',cmap='RdYlBu_r',norm=norm)
 
-        if CanCompare and IM.shape == cm.shape:
-            plt.rcParams["figure.figsize"] = (15,5)
-            f, (ax1,ax2, ax3) = plt.subplots(1,3)
-            f.patch.set_facecolor('white')
-
-            im1 = self.PlotCM(IM, IM_err, labels_IM, ax1, origin='lower',cmap='RdYlBu_r', norm=norm)
-            im2 = self.PlotCM(cm, cm_err, labels_CM, ax2, origin='lower',cmap='RdYlBu_r',norm=norm)
-
-            ratio = cm/IM
-            ratio = np.nan_to_num(ratio)
-            ratio_values = ratio[np.nonzero(ratio) and ratio<1e3]
-            if len(ratio_values) != 0:
-                ratio_max = np.nanmax(ratio_values)
-                ratio_min = np.nanmin(ratio_values)
-                diff_max = max(abs(ratio_max-1),abs(ratio_min-1))
-            else:
+        ratio = cm/IM
+        ratio = np.nan_to_num(ratio)
+        ratio_values = ratio[np.nonzero(ratio) and ratio<1e3]
+        if len(ratio_values) != 0:
+            ratio_max = np.nanmax(ratio_values)
+            ratio_min = np.nanmin(ratio_values)
+            diff_max = np.max([abs(ratio_max-1),abs(ratio_min-1)])
+            if diff_max < 0.5:
                 diff_max = 0.5
-
-            im3 = self.PlotCM(ratio, None, labels_CM, ax3, origin='lower',cmap='seismic',vmin=1-diff_max,vmax=1+diff_max)
-            f.colorbar(im3, ax=ax3)
-            f.colorbar(im1, ax=ax1)
-            f.colorbar(im2, ax=ax2)
-            ax1.set_title("Input Interaction Matrix")
-            ax2.set_title("Output Contact Matrix")
-            ax3.set_title("Output/Input")
         else:
-            plt.rcParams["figure.figsize"] = (5,5)
-            f, (ax1) = plt.subplots(1,1)
-            f.patch.set_facecolor('white')
+            diff_max = 0.5
 
-            im1 = self.PlotCM(IM, IM_err, labels_IM, ax1, origin='lower',cmap='RdYlBu_r',vmin=vMin,vmax=vMax, norm=norm)
-            f.colorbar(im1, ax=ax1)
-            ax1.set_title("Input Interaction Matrix")
+        im3 = self.PlotCM(ratio, None, labels_CM, ax3, origin='lower',cmap='seismic',vmin=1-diff_max,vmax=1+diff_max)
+        f.colorbar(im1, ax=ax1)
+        f.colorbar(im2, ax=ax2)
+        f.colorbar(im3, ax=ax3)
+        ax1.set_title("Input Interaction Matrix")
+        ax2.set_title("Output Contact Matrix")
+        ax3.set_title("Output/Input")
+
         f.suptitle(f"Survey interaction binned contacts in {contact_type}")
         plt.tight_layout()
         return ax1
@@ -1400,7 +1441,6 @@ class Tracker:
                 matplotlib axes object
 
         """
-        from datetime import timedelta
         Interval = timedelta(days=max_days)
 
         xs = np.array(self.location_counters["Timestamp"])
@@ -1433,7 +1473,25 @@ class Tracker:
         return ax
 
     def plot_AgeProfileRatios(self, contact_type="global", bin_type="syoa", sex="unisex"):
-        ''''''
+        """
+        Plot demographic counts for each location and ratio of counts in age bins.
+
+        Parameters
+        ----------
+            contact_types:
+                List of the contact_type locations (or none to grab all of them)
+            binType:
+                Name of bin type syoa, AC etc
+            sex:
+                Which sex of population ["male", "female", "unisex"]
+
+
+        Returns
+        -------
+            ax:
+                matplotlib axes object
+
+        """
         pop_tots = self.location_cum_pop[bin_type][contact_type][sex]
         global_age_profile = self.age_profiles[bin_type]["global"][sex]
 
@@ -1445,30 +1503,40 @@ class Tracker:
         Height_G = global_age_profile/Bindiffs
         Height_P = pop_tots/Bindiffs
 
-        ws = np.zeros((Bins.shape[0]-1,Bins.shape[0]-1))
+        ws_G = np.zeros((Bins.shape[0]-1,Bins.shape[0]-1))
+        ws_P = np.zeros((Bins.shape[0]-1,Bins.shape[0]-1))
         #Loop over elements
-        for i in range(ws.shape[0]):
-            for j in range(ws.shape[1]):
+        for i in range(ws_G.shape[0]):
+            for j in range(ws_G.shape[1]):
                 #Population rescaling
-                ws[i,j] = Height_G[i] / Height_G[j]
+                ws_G[i,j] = Height_G[j] / Height_G[i]
+                ws_P[i,j] = Height_P[j] / Height_P[i]
 
         plt.rcParams["figure.figsize"] = (15,5)
         f, (ax1,ax2) = plt.subplots(1,2)
         
         f.patch.set_facecolor('white')
 
-        if np.isfinite(ws).sum() != 0:
-            vmax = ws[np.isfinite(ws)].max()*2
-        else:
+        vmax_G = np.nan
+        vmax_P = np.nan
+        if np.isfinite(ws_G).sum() != 0:
+            vmax_G = ws_G[np.isfinite(ws_G)].max()*2
+        if np.isfinite(ws_P).sum() != 0:
+            vmax_P = ws_P[np.isfinite(ws_P)].max()*2
+
+        vmax = np.nanmax([vmax_G, vmax_P])
+        if np.isnan(vmax) or vmax == None:
             vmax= 1e-1
+
         vmin = 10**(-1*np.log10(vmax))
 
-
-        print(vmax, vmin)
-        im1 = self.PlotCM(ws, None, Labels, ax1, origin='lower',cmap='seismic',norm=colors.LogNorm(vmin=vmin, vmax=vmax))
-        f.colorbar(im1, ax=ax1, label=r"$\dfrac{Age_{y}}{Age_{x}}$")
-        plt.bar(x=Bincenters, height=Height_G/sum(Height_G), width=Bindiffs, tick_label=Labels, alpha=0.5, color="blue", label="global")
-        plt.bar(x=Bincenters, height=Height_P/sum(Height_P), width=Bindiffs, tick_label=Labels, alpha=0.5, color="red", label=contact_type)
+        ax1_ins = ax1.inset_axes([0.8,1.0,0.2,0.2])
+        im_P = self.PlotCM(ws_P, None, Labels, ax1, origin='lower',cmap='seismic',norm=colors.LogNorm(vmin=vmin, vmax=vmax))
+        im_G = self.PlotCM(ws_G, None, Labels, ax1_ins, origin='lower',cmap='seismic',norm=colors.LogNorm(vmin=vmin, vmax=vmax))
+            
+        f.colorbar(im_P, ax=ax1, label=r"$\dfrac{Age_{y}}{Age_{x}}$")
+        plt.bar(x=Bincenters, height=Height_G/sum(Height_G), width=Bindiffs, tick_label=Labels, alpha=0.5, color="blue", label="Ground truth")
+        plt.bar(x=Bincenters, height=Height_P/sum(Height_P), width=Bindiffs, tick_label=Labels, alpha=0.5, color="red", label=contact_type+" tracker")
         ax2.set_ylabel("Normed Population size")
         ax2.set_xlim([Bins[0], Bins[-1]])
         plt.xticks(rotation=90)
@@ -1610,20 +1678,15 @@ class Tracker:
         if plot_AgeBinning:
             plot_dir = self.record_path / "Age_Binning"
             plot_dir.mkdir(exist_ok=True, parents=True)
-            # for rbt in relevant_bin_types:
-            #     if rbt == "Interaction":
-            #             continue
             for rbt in ["syoa", "Paper"]:
+                if rbt not in self.age_bins.keys():
+                    continue
                 for rct in relevant_contact_types:
                     self.plot_AgeProfileRatios(
                         contact_type = rct, bin_type=rbt, sex="unisex"
                     )
                     plt.savefig(plot_dir / f"{rbt}_{rct}.png", dpi=150, bbox_inches='tight')
                     plt.close() 
-
-
-
-
         return 1
  
 #####################################################################################################################################################################
@@ -1758,6 +1821,7 @@ class Tracker:
 
             contacts_per_subgroup, contacts_per_subgroup_error = self.get_contacts_per_subgroup(person_subgroup_idx, group)
             total_contacts = 0
+            contact_subgroup_idx = 0
             for subgroup_contacts, subgroup_contacts_error, subgroup in zip(contacts_per_subgroup, contacts_per_subgroup_error, groups_inter):
                 # potential contacts is one less if you're in that subgroup - can't contact yourself!
                 subgroup_people = list(subgroup.people)
@@ -1789,6 +1853,15 @@ class Tracker:
                 else:
                     contacts_index = np.random.choice(len(subgroup_people), int_contacts, replace=True)
 
+                #Interaction Matrix
+                if group.spec == "school":
+                    if person_subgroup_idx > 0:
+                        person_subgroup_idx = 1
+                    if contact_subgroup_idx > 0:
+                        contact_subgroup_idx = 1
+                self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts
+                
+
 
                 #Get the ids
                 for contacts_index_i in contacts_index:  
@@ -1804,48 +1877,49 @@ class Tracker:
                             contact_ids_inter.append(contact.id)
                     contact_ids.append(contact.id)
 
-                # For each type of contact matrix binning, eg BBC, polymod, SYOA...
-                for bins_name in self.contact_matrices.keys():
-                    age_idx = self.age_idxs[bins_name][person.id]
+                age_idx = self.age_idxs["syoa"][person.id]
+                contact_age_idxs = [
+                    self.age_idxs["syoa"][contact_id] for contact_id in contact_ids
+                ]
+                for cidx in contact_age_idxs:
+                    self.contact_matrices["syoa"]["global"]["unisex"][age_idx,cidx] += 1
+                    self.contact_matrices["syoa"][group.spec]["unisex"][age_idx,cidx] += 1
+                    if person.sex == "m" and "male" in self.contact_sexes:
+                        self.contact_matrices["syoa"]["global"]["male"][age_idx,cidx] += 1
+                        self.contact_matrices["syoa"][group.spec]["male"][age_idx,cidx] += 1
+                    if person.sex == "f" and "female" in self.contact_sexes:
+                        self.contact_matrices["syoa"]["global"]["female"][age_idx,cidx] += 1
+                        self.contact_matrices["syoa"][group.spec]["female"][age_idx,cidx] += 1
+
+                    total_contacts += 1
+
+                #For shelter only. We check over inter and intra groups
+                if subgroup.spec == "shelter":
+                    #Inter
                     contact_age_idxs = [
-                        self.age_idxs[bins_name][contact_id] for contact_id in contact_ids
+                        self.age_idxs["syoa"][contact_id] for contact_id in contact_ids_inter
                     ]
                     for cidx in contact_age_idxs:
-                        self.contact_matrices[bins_name]["global"]["unisex"][age_idx,cidx] += 1
-                        self.contact_matrices[bins_name][group.spec]["unisex"][age_idx,cidx] += 1
+                        self.contact_matrices["syoa"][group.spec+"_inter"]["unisex"][age_idx,cidx] += 1
                         if person.sex == "m" and "male" in self.contact_sexes:
-                            self.contact_matrices[bins_name]["global"]["male"][age_idx,cidx] += 1
-                            self.contact_matrices[bins_name][group.spec]["male"][age_idx,cidx] += 1
+                            self.contact_matrices["syoa"][group.spec+"_inter"]["male"][age_idx,cidx] += 1
                         if person.sex == "f" and "female" in self.contact_sexes:
-                            self.contact_matrices[bins_name]["global"]["female"][age_idx,cidx] += 1
-                            self.contact_matrices[bins_name][group.spec]["female"][age_idx,cidx] += 1
-
-                        total_contacts += 1
-
-                    #For shelter only. We check over inter and intra groups
-                    if subgroup.spec == "shelter":
-                        #Inter
-                        contact_age_idxs = [
-                            self.age_idxs[bins_name][contact_id] for contact_id in contact_ids_inter
-                        ]
-                        for cidx in contact_age_idxs:
-                            self.contact_matrices[bins_name][group.spec+"_inter"]["unisex"][age_idx,cidx] += 1
-                            if person.sex == "m" and "male" in self.contact_sexes:
-                                self.contact_matrices[bins_name][group.spec+"_inter"]["male"][age_idx,cidx] += 1
-                            if person.sex == "f" and "female" in self.contact_sexes:
-                                self.contact_matrices[bins_name][group.spec+"_inter"]["female"][age_idx,cidx] += 1
+                            self.contact_matrices["syoa"][group.spec+"_inter"]["female"][age_idx,cidx] += 1
 
 
-                        #Intra
-                        contact_age_idxs = [
-                            self.age_idxs[bins_name][contact_id] for contact_id in contact_ids_intra
-                        ]
-                        for cidx in contact_age_idxs:
-                            self.contact_matrices[bins_name][group.spec+"_intra"]["unisex"][age_idx,cidx] += 1
-                            if person.sex == "m" and "male" in self.contact_sexes:
-                                self.contact_matrices[bins_name][group.spec+"_intra"]["male"][age_idx,cidx] += 1
-                            if person.sex == "f" and "female" in self.contact_sexes:
-                                self.contact_matrices[bins_name][group.spec+"_intra"]["female"][age_idx,cidx] += 1
+                    #Intra
+                    contact_age_idxs = [
+                        self.age_idxs["syoa"][contact_id] for contact_id in contact_ids_intra
+                    ]
+                    for cidx in contact_age_idxs:
+                        self.contact_matrices["syoa"][group.spec+"_intra"]["unisex"][age_idx,cidx] += 1
+                        if person.sex == "m" and "male" in self.contact_sexes:
+                            self.contact_matrices["syoa"][group.spec+"_intra"]["male"][age_idx,cidx] += 1
+                        if person.sex == "f" and "female" in self.contact_sexes:
+                            self.contact_matrices["syoa"][group.spec+"_intra"]["female"][age_idx,cidx] += 1
+
+                #Interact contact_idx for interation matrix
+                contact_subgroup_idx += 1
 
             self.contact_counts[person.id]["global"] += total_contacts
             self.contact_counts[person.id][group.spec] += total_contacts
@@ -1853,27 +1927,31 @@ class Tracker:
                 self.contact_counts[person.id][group.spec+"_inter"] += total_contacts
                 self.contact_counts[person.id][group.spec+"_intra"] += total_contacts
 
+        for subgroup, sub_i in zip(group.subgroups, range(len(group.subgroups))):
+            if group.spec == "school":
+                if sub_i > 0:
+                    sub_i = 1
+            self.location_cum_pop["Interaction"][group.spec][sub_i] += len(subgroup.people)
 
-        for bins_name in self.contact_matrices.keys():
-            for person in group.people:
-                age_idx = self.age_idxs[bins_name][person.id]
-                self.location_cum_pop[bins_name]["global"]["unisex"][age_idx] += 1
-                self.location_cum_pop[bins_name][group.spec]["unisex"][age_idx] += 1
+        for person in group.people:
+            age_idx = self.age_idxs["syoa"][person.id]
+            self.location_cum_pop["syoa"]["global"]["unisex"][age_idx] += 1
+            self.location_cum_pop["syoa"][group.spec]["unisex"][age_idx] += 1
+            if group.spec == "shelter":
+                self.location_cum_pop["syoa"][group.spec+"_inter"]["unisex"][age_idx] += 1
+                self.location_cum_pop["syoa"][group.spec+"_intra"]["unisex"][age_idx] += 1
+            if person.sex == "m" and "male" in self.contact_sexes:
+                self.location_cum_pop["syoa"]["global"]["male"][age_idx] += 1
+                self.location_cum_pop["syoa"][group.spec]["male"][age_idx] += 1
                 if group.spec == "shelter":
-                    self.location_cum_pop[bins_name][group.spec+"_inter"]["unisex"][age_idx] += 1
-                    self.location_cum_pop[bins_name][group.spec+"_intra"]["unisex"][age_idx] += 1
-                if person.sex == "m" and "male" in self.contact_sexes:
-                    self.location_cum_pop[bins_name]["global"]["male"][age_idx] += 1
-                    self.location_cum_pop[bins_name][group.spec]["male"][age_idx] += 1
-                    if group.spec == "shelter":
-                        self.location_cum_pop[bins_name][group.spec+"_inter"]["male"][age_idx] += 1
-                        self.location_cum_pop[bins_name][group.spec+"_intra"]["male"][age_idx] += 1
-                if person.sex == "f" and "female" in self.contact_sexes:
-                    self.location_cum_pop[bins_name]["global"]["female"][age_idx] += 1
-                    self.location_cum_pop[bins_name][group.spec]["female"][age_idx] += 1
-                    if group.spec == "shelter":
-                        self.location_cum_pop[bins_name][group.spec+"_inter"]["female"][age_idx] += 1
-                        self.location_cum_pop[bins_name][group.spec+"_intra"]["female"][age_idx] += 1
+                    self.location_cum_pop["syoa"][group.spec+"_inter"]["male"][age_idx] += 1
+                    self.location_cum_pop["syoa"][group.spec+"_intra"]["male"][age_idx] += 1
+            if person.sex == "f" and "female" in self.contact_sexes:
+                self.location_cum_pop["syoa"]["global"]["female"][age_idx] += 1
+                self.location_cum_pop["syoa"][group.spec]["female"][age_idx] += 1
+                if group.spec == "shelter":
+                    self.location_cum_pop["syoa"][group.spec+"_inter"]["female"][age_idx] += 1
+                    self.location_cum_pop["syoa"][group.spec+"_intra"]["female"][age_idx] += 1
 
         self.location_cum_time["global"] += (self.delta_t) / (3600*24) #In Days
         self.location_cum_time[group.spec] += (len(group.people)*self.delta_t) / (3600*24) #In Days
@@ -2190,8 +2268,8 @@ class Tracker:
             WhichLocals = self.contact_matrices[binType].keys()
 
         for local in WhichLocals:            
-            contact = self.normalised_contact_matrices[binType][local][sex]
-            contact_err = self.normalised_contact_matrices_err[binType][local][sex]
+            contact = self.normalised_contact_matrices[binType][local]
+            contact_err = self.normalised_contact_matrices_err[binType][local]
 
             
             if local in self.interaction_matrices.keys():
@@ -2203,19 +2281,7 @@ class Tracker:
 
             self.PolicyText(local, contact, contact_err, proportional_physical, characteristic_time)
             print("")
-            
-            if local not in self.interaction_matrices.keys():
-                continue
-
-            ACBins = any(x in ["students", "teachers", "adults", "children"] for x in self.interaction_matrices[local]["bins"])
-            if self.interaction_matrices[local]["type"] != "Age":
-                if ACBins == True:
-                    pass
-                else: continue
-
             interact = np.array(self.interaction_matrices[local]["contacts"]) 
-            if contact.shape[0] != interact.shape[0] or contact.shape[1] != interact.shape[1]:
-                continue
             print("    Ratio of contacts and feed in values: %s" % self.MatrixString(contact/interact))
             print("")
         return 1
