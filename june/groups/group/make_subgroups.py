@@ -31,7 +31,7 @@ def Get_Defaults(spec):
     elif spec in [
         "university"
         ]:
-        return ["Professors", "1", "2", "3", "4", "5"], "Discrete"
+        return ["1", "2", "3", "4", "5"], "Discrete"
     elif spec in [
         "school"
         ]:

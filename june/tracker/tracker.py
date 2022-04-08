@@ -728,7 +728,7 @@ class Tracker:
                         age_profile = self.location_cum_pop[bin_type][contact_type][sex]
                         age_profile_G = self.age_profiles[bin_type]["global"][sex]
                         bins = self.age_bins[bin_type]
- 
+                                                            #Bins           global age profiles      #pop totals
                     norm_cm, norm_cm_err = self.CM_Norm(cm, np.array(bins), np.array(age_profile_G), np.array(age_profile), contact_type=contact_type)
 
 
@@ -782,11 +782,7 @@ class Tracker:
         norm_cm = np.zeros( cm.shape )
         norm_cm_err = np.zeros( cm.shape )
 
-        if isinstance(bins[0], str):
-            Bindiffs = np.ones_like(global_age_profile)
-        else:
-            Bindiffs = np.abs(bins[1:]-bins[:-1])
-
+        Bindiffs = np.abs(bins[1:]-bins[:-1])
         global_age_profile = global_age_profile / Bindiffs
         pop_tots = pop_tots
 
@@ -1492,14 +1488,36 @@ class Tracker:
                 matplotlib axes object
 
         """
-        pop_tots = self.location_cum_pop[bin_type][contact_type][sex]
-        global_age_profile = self.age_profiles[bin_type]["global"][sex]
 
-        Bins = np.array(self.age_bins[bin_type])
-        Labels = self.CMPlots_GetLabels(Bins)
-        Bincenters = 0.5*(Bins[1:]+Bins[:-1])
-        Bindiffs = np.abs(Bins[1:]-Bins[:-1])
+        if bin_type != "Interaction":
+            pop_tots = self.location_cum_pop[bin_type][contact_type][sex]
+            global_age_profile = self.age_profiles[bin_type]["global"][sex]
+            Bins = np.array(self.age_bins[bin_type])
 
+            Labels = self.CMPlots_GetLabels(Bins)
+            Bincenters = 0.5*(Bins[1:]+Bins[:-1])
+            Bindiffs = np.abs(Bins[1:]-Bins[:-1])
+        else:
+            Bins = np.array(self.interaction_matrices[contact_type]["bins"])
+            AgeDiscrete = self.interaction_matrices[contact_type]["type"]
+            if AgeDiscrete == "Age":
+                pop_tots = self.location_cum_pop[bin_type][contact_type][sex]
+                
+
+                contacts_loc = self.contacts_df[self.contacts_df[contact_type] != 0]
+                AgesCount = contacts_loc.groupby([Bins], dropna = False).size()
+                AgesCount = AgesCount.reindex(len(Bins), fill_value=0)
+                global_age_profile = self.age_profiles[bin_type]["global"][sex]
+
+
+                Labels = self.CMPlots_GetLabels(Bins)
+                Bincenters = 0.5*(Bins[1:]+Bins[:-1])
+                Bindiffs = np.abs(Bins[1:]-Bins[:-1])
+
+            if AgeDiscrete == "Discrete":
+                Labels = Bins
+                pass
+                
         Height_G = global_age_profile/Bindiffs
         Height_P = pop_tots/Bindiffs
 
@@ -1509,8 +1527,8 @@ class Tracker:
         for i in range(ws_G.shape[0]):
             for j in range(ws_G.shape[1]):
                 #Population rescaling
-                ws_G[i,j] = Height_G[j] / Height_G[i]
-                ws_P[i,j] = Height_P[j] / Height_P[i]
+                ws_G[i,j] = Height_G[i] / Height_G[j]
+                ws_P[i,j] = Height_P[i] / Height_P[j]
 
         plt.rcParams["figure.figsize"] = (15,5)
         f, (ax1,ax2) = plt.subplots(1,2)
@@ -1801,45 +1819,52 @@ class Tracker:
         for person in group.people:
             #Shelter we want family groups
             if group.spec == "shelter":
-                groups_inter = group.families
+                groups_inter = [list(sub.people) for sub in group.families]
             else: #Want subgroups as defined in groups
-                groups_inter = group.subgroups
+                groups_inter = [list(sub.people) for sub in group.subgroups]
 
-            
             
 
             #Work out which subgroup they are in...
             person_subgroup_idx = -1
             for sub_i in range(len(groups_inter)):
-                if person in groups_inter[sub_i].people:
+                if person in groups_inter[sub_i]:
                     person_subgroup_idx = sub_i
                     break
             if person_subgroup_idx == -1:
                 continue
+
+            if group.spec == "school":
+                #Allow teachers to mix with ALL students
+                if person_subgroup_idx == 0:
+                    groups_inter = [list(group.teachers.people), list(group.students)]
+                    person_subgroup_idx = 0
+                #Allow students to only mix in their classes.
+                else:
+                    groups_inter = [list(group.teachers.people), list(group.subgroups[person_subgroup_idx].people)]
+                    person_subgroup_idx = 1
+   
    
             #Get contacts person expects
-
             contacts_per_subgroup, contacts_per_subgroup_error = self.get_contacts_per_subgroup(person_subgroup_idx, group)
+            
             total_contacts = 0
             contact_subgroup_idx = 0
-            for subgroup_contacts, subgroup_contacts_error, subgroup in zip(contacts_per_subgroup, contacts_per_subgroup_error, groups_inter):
+            for subgroup_contacts, subgroup_contacts_error, subgroup_people in zip(contacts_per_subgroup, contacts_per_subgroup_error, groups_inter):
                 # potential contacts is one less if you're in that subgroup - can't contact yourself!
-                subgroup_people = list(subgroup.people)
+                subgroup_people_without = subgroup_people.copy()
+
                 #Person in this subgroup
-                if person in subgroup.people:
+                if person in subgroup_people:
                     inside = True
-                    subgroup_people_without = list(subgroup.people)
                     subgroup_people_without.remove(person)
                 else:
                     inside = False
 
                 #is_same_subgroup = subgroup.subgroup_type == subgroup_idx
-                potential_contacts = len(subgroup_people) - inside
-                if potential_contacts == 0:
+                if len(subgroup_people) - inside <= 0:
                     continue
-
                 int_contacts = self.Probabilistic_Contacts(subgroup_contacts, subgroup_contacts_error)
-
 
                 if int_contacts == 0:
                     continue
@@ -1854,15 +1879,8 @@ class Tracker:
                     contacts_index = np.random.choice(len(subgroup_people), int_contacts, replace=True)
 
                 #Interaction Matrix
-                if group.spec == "school":
-                    if person_subgroup_idx > 0:
-                        person_subgroup_idx = 1
-                    if contact_subgroup_idx > 0:
-                        contact_subgroup_idx = 1
                 self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts
                 
-
-
                 #Get the ids
                 for contacts_index_i in contacts_index:  
                     if inside:
@@ -1870,7 +1888,7 @@ class Tracker:
                     else: 
                         contact = subgroup_people[contacts_index_i]
 
-                    if subgroup.spec == "shelter":
+                    if group.spec == "shelter":
                         if inside:
                             contact_ids_intra.append(contact.id)
                         else: 
@@ -1894,7 +1912,7 @@ class Tracker:
                     total_contacts += 1
 
                 #For shelter only. We check over inter and intra groups
-                if subgroup.spec == "shelter":
+                if group.spec == "shelter":
                     #Inter
                     contact_age_idxs = [
                         self.age_idxs["syoa"][contact_id] for contact_id in contact_ids_inter
@@ -1989,7 +2007,6 @@ class Tracker:
             if "visits" in super_group_name:
                 continue
             grouptype = getattr(self.world, super_group_name)
-
             if grouptype is not None:
                 counter = 0              
                 for group in grouptype.members: #Loop over all locations.
@@ -1999,6 +2016,8 @@ class Tracker:
 
                         if self.track_contacts_count == True and super_group_name in self.location_counters["loc"].keys():
                             self.location_counters["loc"][super_group_name][counter].append(len(group.people))
+
+                       
                             
                         counter += 1
         return 1

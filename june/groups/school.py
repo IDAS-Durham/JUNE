@@ -31,7 +31,6 @@ class SchoolClass(Subgroup):
         super().__init__(group, subgroup_type)
         self.quarantine_starting_date = -np.inf
 
-
 class School(Group):
 
     __slots__ = (
@@ -94,7 +93,9 @@ class School(Group):
         # for i, _ in enumerate(range(age_min, age_max + 2)):
         if n_classrooms is None:
             n_classrooms = age_max - age_min
+
         self.subgroups = [SchoolClass(self, i) for i in range(n_classrooms + 2)]
+
         self.n_classrooms = n_classrooms
         self.coordinates = coordinates
         self.area = area
@@ -413,6 +414,15 @@ class Schools(Supergroup):
             sort_results=True,
         )
         return neighbours[0]
+
+    @property
+    def n_teachers(self):
+        return sum([school.n_teachers for school in self.members])
+
+    @property
+    def n_pupils(self):
+        return sum([school.n_pupils for school in self.members])
+
 
 
 @nb.jit(nopython=True)

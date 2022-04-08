@@ -8,7 +8,7 @@ from june.groups import Group, Subgroup, Supergroup
 from june.geography import Areas, Geography
 from june.paths import data_path
 
-age_to_years = {19: 1, 20: 2, 21: 3, 22: 4, 23: 5}
+age_to_years = {19: 0, 20: 1, 21: 2, 22: 3, 23: 4}
 
 default_universities_filename = data_path / "input/universities/uk_universities.csv"
 
@@ -25,19 +25,15 @@ class University(Group):
         self.area = area
         self.coordinates = coordinates
         super().__init__()
-        self.subgroups = [Subgroup(self, i) for i in range(self.n_years + 1)]
+        self.subgroups = [Subgroup(self, i) for i in range(self.n_years)]
 
     @property
     def students(self):
-        return [person for subgroup in self.subgroups for person in subgroup]
+        return [person for subgroup in self.subgroups[:] for person in subgroup]
 
     @property
     def n_students(self):
-        return sum([subgroup.size for subgroup in self.subgroups])
-
-    @property
-    def professors(self):
-        return self.subgroups[0].people
+        return sum([self.subgroups[i].size for i in range(1,len(self.subgroups))])
 
     @property
     def super_area(self):
@@ -54,6 +50,7 @@ class University(Group):
             if person.work_super_area is not None:
                 person.work_super_area.remove_worker(person)
         elif subgroup == "professors":
+            #No professors in the modeling of the code!
             self.subgroups[0].append(person)
             person.subgroups.primary_activity = self.subgroups[0]
 
@@ -120,3 +117,11 @@ class Universities(Supergroup):
             universities_filename=universities_filename,
             max_distance_to_area=max_distance_to_area,
         )
+
+    # @property
+    # def n_professors(self):
+    #     return sum([uni.n_professors for uni in self.members])
+
+    @property
+    def n_students(self):
+        return sum([uni.n_students for uni in self.members])
