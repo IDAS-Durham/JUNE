@@ -395,20 +395,21 @@ class Tracker:
             if locs[-1] == "y":
                 locations.append(locs[:-1]+"ies")
             elif locs[-1] == "s":
-                pass
+                locations.append(locs+"s")
             else:
                 locations.append(locs+"s")
-
         self.location_counters = {
             "Timestamp" : [],
+            "delta_t": [],
             "loc" : {
                 spec : {
-                    N: [] for N in range(len(getattr(self.world, spec).members))
+                    N: {
+                        sex : [] for sex in self.contact_sexes 
+                    } for N in range(len(getattr(self.world, spec).members))
                 } for spec in locations
             }
         }
         return 1
-
 
     def intitalise_location_cum_pop(self):
         """
@@ -809,7 +810,7 @@ class Tracker:
 
         return norm_cm, norm_cm_err
 
-    def post_process_simulation(self):
+    def post_process_simulation(self, save=True):
         """
         Perform some post simulation checks and calculations.
             Create contact dataframes
@@ -833,7 +834,8 @@ class Tracker:
         self.calc_average_contacts()
         self.normalise_contact_matrices()
 
-        self.tracker_results_to_yaml()
+        if save:
+            self.tracker_results_to_yaml()
         return 1
 
 #####################################################################################################################################################################
@@ -1440,33 +1442,85 @@ class Tracker:
         Interval = timedelta(days=max_days)
 
         xs = np.array(self.location_counters["Timestamp"])
-
         max_index = None
         if xs[-1] - xs[0] > Interval:
             max_index = np.sum(xs < xs[0]+Interval)
         xs = xs[:max_index]
-
-        f, ax = plt.subplots()
+    
+        widths = [timedelta(hours=w) for w in self.location_counters["delta_t"][:max_index]]
+ 
+   
+        f, (ax1,ax2) = plt.subplots(1,2)
         f.patch.set_facecolor('white')
-        ax.set_title(locations)
-        for i in self.location_counters["loc"][locations].keys():
-            ys = self.location_counters["loc"][locations][i][:max_index]
+        Nlocals = len(self.location_counters["loc"][locations])
+        ymax = -1
+        i_counts = 0
 
-            ax.plot(xs, ys)
-                    
-            if i == 0:
+        ax1.set_title(f"{Nlocals} locations")
+        for i in self.location_counters["loc"][locations].keys():
+            if Nlocals > 100:
+                Nlocals = 100
+            if np.sum(self.location_counters["loc"][locations][i]["unisex"]) == 0:
+                continue
+
+
+            ys = self.location_counters["loc"][locations][i]["unisex"][:max_index]
+            if np.nanmax(ys) > ymax:
+                ymax = np.nanmax(ys)
+
+            
+            ax1.bar(xs, ys, width=widths, align="edge", color="b", alpha=1/Nlocals)
+
+            if i_counts == 0:
                 Total = np.array(ys)
             else:
                 Total += np.array(ys)
+
+            i_counts += 1
+            if i_counts >= Nlocals:
+                break
+                    
+            
         # Define the date format
-        ax.xaxis.set_major_locator(mdates.HourLocator(byhour=[0]))
-        ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=None, interval=1))
-        ax.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+        ax1.xaxis.set_major_locator(mdates.HourLocator(byhour=[0]))
+        ax1.xaxis.set_minor_locator(mdates.HourLocator(byhour=None, interval=1))
+        ax1.xaxis.set_major_formatter(DateFormatter("%d/%m"))
 
         #ax.set_xlabel("Timestep")
-        ax.set_ylabel("N people at location")
+        ax1.set_ylabel("N people at location")
+        ax1.set_yscale("log")
+        ax1.set_ylim([1, ymax])
+        
+
+
+        df = pd.DataFrame()
+        df["t"] = np.array(self.location_counters["Timestamp"])
+        NVenues = len(self.location_counters["loc"][locations].keys())
+        for loc_i in range(NVenues):
+            df[loc_i] = self.location_counters["loc"][locations][loc_i]["unisex"]
+        df = df.groupby(df['t'].dt.date).sum()
+
+        Max_attendance = max(df.max())
+        Steps = 1
+        if Max_attendance < 20:
+            Steps = 1
+        elif Max_attendance < 100:
+            Steps = 5
+        elif Max_attendance < 1000:
+            Steps = 10
+        else:
+            Steps = 50
+        bins = np.concatenate([np.zeros(1)-0.5, np.arange(0.5,Max_attendance+Steps,Steps)])
+
+        for day_i in range(df.shape[0]):
+            ax2.hist(df.iloc[day_i,:].values,bins=bins, align="mid", alpha=1/df.shape[0], color="b")
+        ax2.set_yscale("log")
+        ax2.set_ylim([1, None])
+        ax2.set_ylabel(r"N Venues")
+        ax2.set_xlabel(r"People per day")
+
         plt.tight_layout()
-        return ax
+        return (ax1,ax2)
 
     def plot_AgeProfileRatios(self, contact_type="global", bin_type="syoa", sex="unisex"):
         """
@@ -2002,6 +2056,7 @@ class Tracker:
 
         """
         self.location_counters["Timestamp"].append(date)
+        self.location_counters["delta_t"].append(self.delta_t/3600)
  
         for super_group_name in all_super_groups:
             if "visits" in super_group_name:
@@ -2015,10 +2070,11 @@ class Tracker:
 
 
                         if self.track_contacts_count == True and super_group_name in self.location_counters["loc"].keys():
-                            self.location_counters["loc"][super_group_name][counter].append(len(group.people))
-
-                       
-                            
+                            self.location_counters["loc"][super_group_name][counter]["unisex"].append(len(group.people))
+                            if "male" in self.contact_sexes:
+                                self.location_counters["loc"][super_group_name][counter]["male"].append(len([p.id for p in group.people if p.sex == "m"]))
+                            if "female" in self.contact_sexes:
+                                self.location_counters["loc"][super_group_name][counter]["female"].append(len([p.id for p in group.people if p.sex == "f"])) 
                         counter += 1
         return 1
 
@@ -2056,14 +2112,14 @@ class Tracker:
                 sort_keys=False,
             )
 
-        #Will need to get module openpyxl TODO 
-        for bin_types in ["syoa", "AC"]:
+        for bin_types in ["syoa"]:
             if bin_types not in self.age_profiles.keys():
                 continue
-            dat = self.age_profiles[bin_types]["global"]
+            dat = self.age_profiles[bin_types]
             bins = self.age_bins[bin_types]
             with pd.ExcelWriter(self.record_path / f'PersonCounts_{bin_types}.xlsx', mode="w") as writer:  
                 for local in dat.keys(): 
+
                     df = pd.DataFrame(dat[local])
                     if bin_types == "syoa":
                         df["Ages"] = [f"{low}" for low,high in zip(bins[:-1], bins[1:])]
@@ -2072,6 +2128,50 @@ class Tracker:
                     df = df.set_index("Ages")
                     df.loc['Total']= df.sum()
                     df.to_excel(writer, sheet_name=f'{local}')
+
+
+            
+        timestamps = self.location_counters["Timestamp"]
+        delta_ts = self.location_counters["delta_t"]
+        for sex in self.contact_sexes:
+            with pd.ExcelWriter(self.record_path / f'Venues_{sex}_Counts_BydT.xlsx', mode="w") as writer:  
+                for loc in self.location_counters["loc"].keys():
+                    df = pd.DataFrame()
+                    df["t"] = timestamps
+                    df["dt"] = delta_ts
+                    NVenues = len(self.location_counters["loc"][loc].keys())
+
+                    loc_j=0
+                    for loc_i in range(NVenues):
+                        if np.sum(self.location_counters["loc"][loc][loc_i]["unisex"]) == 0:
+                            continue
+                        df[loc_j] = self.location_counters["loc"][loc][loc_i][sex]
+                        loc_j+=1
+
+
+                    df.to_excel(writer, sheet_name=f'{loc}')
+
+        timestamps = self.location_counters["Timestamp"]
+        delta_ts = self.location_counters["delta_t"]
+        for sex in self.contact_sexes:
+            with pd.ExcelWriter(self.record_path / f'Venues_{sex}_Counts_ByDate.xlsx', mode="w") as writer:  
+                for loc in self.location_counters["loc"].keys():
+                    df = pd.DataFrame()
+                    df["t"] = timestamps
+                    df["dt"] = delta_ts
+                    NVenues = len(self.location_counters["loc"][loc].keys())
+
+                    loc_j=0
+                    for loc_i in range(NVenues):
+                        if np.sum(self.location_counters["loc"][loc][loc_i]["unisex"]) == 0:
+                            continue
+                        df[loc_j] = self.location_counters["loc"][loc][loc_i][sex]
+                        loc_j+=1
+
+  
+                    df = df.groupby(df['t'].dt.date).sum()
+                    df.to_excel(writer, sheet_name=f'{loc}')
+        
         return 1
 
     def tracker_StartParams(self):
