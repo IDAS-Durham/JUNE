@@ -1513,10 +1513,15 @@ class Tracker:
         bins = np.concatenate([np.zeros(1)-0.5, np.arange(0.5,Max_attendance+Steps,Steps)])
 
         for day_i in range(df.shape[0]):
-            ax2.hist(df.iloc[day_i,:].values,bins=bins, align="mid", alpha=1/df.shape[0], color="b")
-        ax2.set_yscale("log")
-        ax2.set_ylim([1, None])
-        ax2.set_ylabel(r"N Venues")
+            hist, bin_edges = np.histogram(df.iloc[day_i,:].values, bins=bins, density=False)
+            ax2.bar(x=(bin_edges[1:]+bin_edges[:-1])/2, height=(100*hist)/len(self.location_counters["loc"][locations]), width=(bin_edges[:-1]-bin_edges[1:]),alpha=1/df.shape[0], color="b")
+
+            print(locations, Nlocals, sum((100*hist)/len(self.location_counters["loc"][locations])))
+            print((100*hist)/len(self.location_counters["loc"][locations]))
+        
+        #ax2.set_yscale("log")
+        ax2.set_ylim([0, None])
+        ax2.set_ylabel(r"Percent N Venues")
         ax2.set_xlabel(r"People per day")
 
         plt.tight_layout()
