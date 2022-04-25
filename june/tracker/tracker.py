@@ -1516,8 +1516,6 @@ class Tracker:
             hist, bin_edges = np.histogram(df.iloc[day_i,:].values, bins=bins, density=False)
             ax2.bar(x=(bin_edges[1:]+bin_edges[:-1])/2, height=(100*hist)/len(self.location_counters["loc"][locations]), width=(bin_edges[:-1]-bin_edges[1:]),alpha=1/df.shape[0], color="b")
 
-            print(locations, Nlocals, sum((100*hist)/len(self.location_counters["loc"][locations])))
-            print((100*hist)/len(self.location_counters["loc"][locations]))
         
         #ax2.set_yscale("log")
         ax2.set_ylim([0, None])
