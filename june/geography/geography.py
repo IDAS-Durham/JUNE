@@ -636,7 +636,9 @@ class Geography:
             super_areas_coord.super_area.isin(geo_hierarchy.super_area)
         ].drop_duplicates()
         areas_coord.set_index("area", inplace=True)
+        areas_coord = areas_coord[["latitude", "longitude"]]
         super_areas_coord.set_index("super_area", inplace=True)
+        super_areas_coord = super_areas_coord[["latitude", "longitude"]]
         geo_hierarchy.set_index("super_area", inplace=True)
         if area_socioeconomic_index_filename:
             area_socioeconomic_df = pd.read_csv(area_socioeconomic_index_filename)

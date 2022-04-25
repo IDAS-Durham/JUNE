@@ -177,7 +177,9 @@ class TestInfectionSavers:
         )
         assert len(infections_recovered) == len(infections)
         for infection, infection_recovered in zip(infections, infections_recovered):
-            assert infection.__class__.__name__ == infection_recovered.__class__.__name__
+            assert (
+                infection.__class__.__name__ == infection_recovered.__class__.__name__
+            )
             for attribute_name in [
                 "start_time",
             ]:

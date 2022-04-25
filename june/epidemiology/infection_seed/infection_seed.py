@@ -57,14 +57,19 @@ class InfectionSeed:
         self.world = world
         self.infection_selector = infection_selector
         self.daily_cases_per_capita_per_age_per_region = self._parse_input_dataframe(
-            df=daily_cases_per_capita_per_age_per_region, seed_strength=seed_strength,
+            df=daily_cases_per_capita_per_age_per_region,
+            seed_strength=seed_strength,
         )
-        self.min_date = self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
-            "date"
-        ).min()
-        self.max_date = self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
-            "date"
-        ).max()
+        self.min_date = (
+            self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
+                "date"
+            ).min()
+        )
+        self.max_date = (
+            self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
+                "date"
+            ).max()
+        )
         self.dates_seeded = set()
         self.past_infections_seeded = not (seed_past_infections)
         self.seed_past_infections = seed_past_infections
@@ -238,11 +243,13 @@ class InfectionSeed:
                     region.name
                 ]
             if self._need_to_seed_accounting_secondary_infections(date=date):
-                cases_per_capita_per_age = self._adjust_seed_accounting_secondary_infections(
-                    cases_per_capita_per_age=cases_per_capita_per_age,
-                    region=region,
-                    date=date,
-                    time=time,
+                cases_per_capita_per_age = (
+                    self._adjust_seed_accounting_secondary_infections(
+                        cases_per_capita_per_age=cases_per_capita_per_age,
+                        region=region,
+                        date=date,
+                        time=time,
+                    )
                 )
             for super_area in region.super_areas:
                 self.infect_super_area(
@@ -253,7 +260,10 @@ class InfectionSeed:
                 )
 
     def unleash_virus_per_day(
-        self, date: datetime, time, record: Optional[Record] = None,
+        self,
+        date: datetime,
+        time,
+        record: Optional[Record] = None,
     ):
         """
         Infect super areas at a given ```date```
@@ -283,9 +293,9 @@ class InfectionSeed:
             seed_logger.info(
                 f"Seeding {self.infection_selector.infection_class.__name__} infections at date {date.date()}"
             )
-            cases_per_capita_per_age_per_region = self.daily_cases_per_capita_per_age_per_region.loc[
-                date
-            ]
+            cases_per_capita_per_age_per_region = (
+                self.daily_cases_per_capita_per_age_per_region.loc[date]
+            )
             self.infect_super_areas(
                 cases_per_capita_per_age_per_region=cases_per_capita_per_age_per_region,
                 time=time,
@@ -382,7 +392,9 @@ class InfectionSeeds:
     ):
         for seed in self.infection_seeds:
             seed.unleash_virus_per_day(
-                date=date, record=record, time=time,
+                date=date,
+                record=record,
+                time=time,
             )
 
     def __iter__(self):

@@ -71,7 +71,10 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             super_areas = np.array(super_areas, dtype=np.int64)
             coordinates = np.array(coordinates, dtype=np.float64)
             n_classrooms = np.array(n_classrooms, dtype=np.int64)
-            years = np.array(years, dtype=int_vlen_type)
+            if len(years) < 2:
+                years = np.array(years, dtype=np.int64)
+            else:
+                years = np.array(years, dtype=int_vlen_type)
             if chunk == 0:
                 schools_dset.attrs["n_schools"] = n_schools
                 schools_dset.create_dataset("id", data=ids, maxshape=(None,))

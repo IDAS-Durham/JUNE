@@ -35,7 +35,7 @@ def create_men_by_age_dict(age_min=0, age_max=99, people_per_age=5):
     for age in ages:
         men_by_age[age] = []
         for _ in range(0, people_per_age):
-            man = Person(sex=0, age=age)
+            man = Person.from_attributes(sex=0, age=age)
             men_by_age[age].append(man)
     return men_by_age
 
@@ -46,7 +46,7 @@ def create_women_by_age_dict(age_min=0, age_max=99, people_per_age=5):
     for age in ages:
         women_by_age[age] = []
         for _ in range(0, people_per_age):
-            woman = Person(sex=1, age=age)
+            woman = Person.from_attributes(sex=1, age=age)
             women_by_age[age].append(woman)
     return women_by_age
 
@@ -123,20 +123,20 @@ class TestAuxiliaryFunctions:
 
     def test__get_matching_partner_is_correct(self, household_distributor):
         area = create_area(people_per_age=5)
-        man = Person(sex=0, age=40)
+        man = Person.from_attributes(sex=0, age=40)
         woman = household_distributor._get_matching_partner(
             man, area.men_by_age, area.women_by_age
         )
         assert woman.sex == 1
         assert (woman.age == 40) or (woman.age == 41)
-        woman = Person(sex=1, age=40)
+        woman = Person.from_attributes(sex=1, age=40)
         man = household_distributor._get_matching_partner(
             woman, area.men_by_age, area.women_by_age
         )
         assert man.sex == 0
         assert (man.age == 40) or (man.age == 41)
         # check option to get under or over 65
-        person = Person(sex=1, age=76)
+        person = Person.from_attributes(sex=1, age=76)
         partner = household_distributor._get_matching_partner(
             person, area.men_by_age, area.women_by_age, under_65=True
         )
@@ -159,7 +159,7 @@ class TestAuxiliaryFunctions:
 
     def test__get_matching_parent(self, household_distributor):
         area = create_area()
-        kid = Person(age=10)
+        kid = Person.from_attributes(age=10)
         parent = household_distributor._get_matching_parent(
             kid,
             area.men_by_age,
@@ -193,21 +193,21 @@ class TestAuxiliaryFunctions:
 
     def test__get_matching_second_kid(self, household_distributor):
         area = create_area()
-        parent = Person(age=20)
+        parent = Person.from_attributes(age=20)
         kid = household_distributor._get_matching_second_kid(
             parent,
             area.men_by_age,
             area.women_by_age,
         )
         assert kid.age == 0
-        parent = Person(age=35)
+        parent = Person.from_attributes(age=35)
         kid = household_distributor._get_matching_second_kid(
             parent,
             area.men_by_age,
             area.women_by_age,
         )
         assert kid.age == 5 or kid.age == 4
-        parent = Person(age=80)
+        parent = Person.from_attributes(age=80)
         kid = household_distributor._get_matching_second_kid(
             parent,
             area.men_by_age,
@@ -460,7 +460,7 @@ class TestMultipleHouseholdCompositions:
         for age in men_by_age_counts.keys():
             area.men_by_age[age] = []
             for _ in range(men_by_age_counts[age]):
-                person = Person(age=age)
+                person = Person.from_attributes(age=age)
                 area.men_by_age[age].append(person)
         composition_numbers = {
             "1 0 >=0 1 0": 4,
@@ -515,7 +515,7 @@ class TestMultipleHouseholdCompositions:
         for age in men_by_age_counts.keys():
             area.men_by_age[age] = []
             for _ in range(men_by_age_counts[age]):
-                person = Person(age=age)
+                person = Person.from_attributes(age=age)
                 area.men_by_age[age].append(person)
         composition_numbers = {
             "0 0 0 2 0": 2,
@@ -571,7 +571,7 @@ class TestMultipleHouseholdCompositions:
         for age in men_by_age_counts.keys():
             area.men_by_age[age] = []
             for _ in range(men_by_age_counts[age]):
-                person = Person(age=age)
+                person = Person.from_attributes(age=age)
                 area.men_by_age[age].append(person)
         composition_numbers = {
             "1 0 >=0 2 0": 1,

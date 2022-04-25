@@ -72,7 +72,14 @@ def create_world():
     world.super_areas = super_areas
     world.regions = Regions([region])
     world.hospitals = Hospitals(
-        [Hospital(n_beds=1000, n_icu_beds=1000, area=None, coordinates=None,)],
+        [
+            Hospital(
+                n_beds=1000,
+                n_icu_beds=1000,
+                area=None,
+                coordinates=None,
+            )
+        ],
         ball_tree=False,
     )
     world.cemeteries = Cemeteries()
