@@ -67,7 +67,7 @@ class SocialVenues(Supergroup):
         cls,
         coordinates: List[np.array],
         super_areas: Optional[Areas],
-        max_distance_to_area=15,
+        max_distance_to_area=1,
         **kwargs,
     ):
         if len(coordinates) == 0:
@@ -80,6 +80,7 @@ class SocialVenues(Supergroup):
             distances_close = np.where(distances < max_distance_to_area)
             coordinates = coordinates[distances_close]
         social_venues = []
+
         for i, coord in enumerate(coordinates):
             sv = cls.venue_class()
             if super_areas:
@@ -88,7 +89,11 @@ class SocialVenues(Supergroup):
                 super_area = None
             sv.coordinates = coord
             if super_areas:
-                area = Areas(super_area.areas).get_closest_area(coordinates=coord)
+                area, dist = Areas(super_area.areas).get_closest_area(coordinates=coord,return_distance=True)
+                
+                if dist > max_distance_to_area:
+                    continue
+
                 sv.area = area
             social_venues.append(sv)
         return cls(social_venues, **kwargs)

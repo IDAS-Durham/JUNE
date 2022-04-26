@@ -68,7 +68,6 @@ class Tracker:
         age_bins = {"syoa": np.arange(0,101,1)},
         contact_sexes = ["unisex"],
         group_types=None,
-        track_contacts_count=False,
         simulation_days=0,
         delta_t=24,
         record_path=Path(""),
@@ -76,6 +75,7 @@ class Tracker:
 
         contact_counts=None,
         location_counts=None,
+        location_counts_day=None,
         contact_matrices=None,
 
         location_cum_pop=None,
@@ -85,8 +85,8 @@ class Tracker:
         self.age_bins = age_bins
         self.contact_sexes = contact_sexes
         self.group_types = group_types
-        self.track_contacts_count = track_contacts_count
         self.location_counters = location_counts
+        self.location_counters_day = location_counts_day
         self.simulation_days = simulation_days
         self.delta_t = delta_t
         self.record_path = record_path
@@ -95,7 +95,7 @@ class Tracker:
         #If we want to track total persons at each location
         self.initialise_group_names()
 
-        if self.track_contacts_count == True and location_counts == None:
+        if location_counts == None and location_counts_day == None:
             self.intitalise_location_counters()
 
         self.load_interactions(self.load_interactions_path) #Load in premade contact matrices
@@ -178,6 +178,26 @@ class Tracker:
             return list(Intersection[np.random.permutation(len(Intersection))])
         else:
             return list(Intersection)
+
+    def union(self, list_A, list_B):
+        """
+        Get all unique elements in two lists
+
+        Parameters
+        ----------
+            list_A:
+                list of objects
+            list_B:
+                second list of objects
+
+            
+        Returns
+        -------
+            list of all unique elements
+
+        """
+        Union = sorted(list(set(list_A + list_B)))
+        return Union
 
     def Probabilistic_Contacts(self, mean, mean_err):
         """
@@ -401,6 +421,27 @@ class Tracker:
         self.location_counters = {
             "Timestamp" : [],
             "delta_t": [],
+            "loc" : {
+                spec : {
+                    N: {
+                        sex : [] for sex in self.contact_sexes 
+                    } for N in range(len(getattr(self.world, spec).members))
+                } for spec in locations
+            }
+        }
+
+        self.location_counters_day = {
+            "Timestamp" : [],
+            "loc" : {
+                spec : {
+                    N: {
+                        sex : [] for sex in self.contact_sexes 
+                    } for N in range(len(getattr(self.world, spec).members))
+                } for spec in locations
+            }
+        }
+
+        self.location_counters_day_i = {
             "loc" : {
                 spec : {
                     N: {
@@ -785,7 +826,6 @@ class Tracker:
 
         Bindiffs = np.abs(bins[1:]-bins[:-1])
         global_age_profile = global_age_profile / Bindiffs
-        pop_tots = pop_tots
 
         #Loop over elements
         for i in range(cm.shape[0]):
@@ -807,6 +847,7 @@ class Tracker:
                         (np.sqrt(F_j*cm[j,i])/(pop_tots[i])*w) 
                     )*factor
                 )
+
 
         return norm_cm, norm_cm_err
 
@@ -1494,13 +1535,11 @@ class Tracker:
 
 
         df = pd.DataFrame()
-        df["t"] = np.array(self.location_counters["Timestamp"])
-        NVenues = len(self.location_counters["loc"][locations].keys())
+        df["t"] = np.array(self.location_counters_day["Timestamp"])
+        NVenues = len(self.location_counters_day["loc"][locations].keys())
         for loc_i in range(NVenues):
-            df[loc_i] = self.location_counters["loc"][locations][loc_i]["unisex"]
-        df = df.groupby(df['t'].dt.date).sum()
-
-        Max_attendance = max(df.max())
+            df[loc_i] = self.location_counters_day["loc"][locations][loc_i]["unisex"]
+        Max_attendance = max(df.iloc[:,1:].max())
         Steps = 1
         if Max_attendance < 20:
             Steps = 1
@@ -1513,7 +1552,7 @@ class Tracker:
         bins = np.concatenate([np.zeros(1)-0.5, np.arange(0.5,Max_attendance+Steps,Steps)])
 
         for day_i in range(df.shape[0]):
-            hist, bin_edges = np.histogram(df.iloc[day_i,:].values, bins=bins, density=False)
+            hist, bin_edges = np.histogram(df.iloc[day_i,1:].values, bins=bins, density=False)
             ax2.bar(x=(bin_edges[1:]+bin_edges[:-1])/2, height=(100*hist)/len(self.location_counters["loc"][locations]), width=(bin_edges[:-1]-bin_edges[1:]),alpha=1/df.shape[0], color="b")
 
         
@@ -2060,7 +2099,12 @@ class Tracker:
         """
         self.location_counters["Timestamp"].append(date)
         self.location_counters["delta_t"].append(self.delta_t/3600)
- 
+
+        if date.hour == 0 and date.minute== 0 and date.second == 0:
+            self.location_counters_day["Timestamp"].append(date)
+
+        
+         
         for super_group_name in all_super_groups:
             if "visits" in super_group_name:
                 continue
@@ -2071,13 +2115,40 @@ class Tracker:
                     if group.spec in self.group_type_names:
                         self.simulate_1d_contacts(group)
 
+                        people = [p.id for p in group.people]
+                        men = [p.id for p in group.people if p.sex == "m"]
+                        women = [p.id for p in group.people if p.sex == "f"]
 
-                        if self.track_contacts_count == True and super_group_name in self.location_counters["loc"].keys():
-                            self.location_counters["loc"][super_group_name][counter]["unisex"].append(len(group.people))
+
+
+                        if super_group_name in self.location_counters["loc"].keys():
+                            #By dt
+                            self.location_counters["loc"][super_group_name][counter]["unisex"].append(len(people))
                             if "male" in self.contact_sexes:
-                                self.location_counters["loc"][super_group_name][counter]["male"].append(len([p.id for p in group.people if p.sex == "m"]))
+                                self.location_counters["loc"][super_group_name][counter]["male"].append(len(men))
                             if "female" in self.contact_sexes:
-                                self.location_counters["loc"][super_group_name][counter]["female"].append(len([p.id for p in group.people if p.sex == "f"])) 
+                                self.location_counters["loc"][super_group_name][counter]["female"].append(len(women)) 
+
+                            #By Date    
+                            if date.hour == 0 and date.minute== 0 and date.second == 0:
+                                self.location_counters_day_i["loc"][super_group_name][counter]["unisex"] = people
+                                self.location_counters_day["loc"][super_group_name][counter]["unisex"].append(len(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"]))
+                                if "male" in self.contact_sexes:
+                                    self.location_counters_day_i["loc"][super_group_name][counter]["male"] = men
+                                    self.location_counters_day["loc"][super_group_name][counter]["male"].append(len(men))
+                                if "female" in self.contact_sexes:
+                                    self.location_counters_day_i["loc"][super_group_name][counter]["female"] = women
+                                    self.location_counters_day["loc"][super_group_name][counter]["female"].append(len(women))
+                            else:
+                                self.location_counters_day_i["loc"][super_group_name][counter]["unisex"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"], people)
+                                self.location_counters_day["loc"][super_group_name][counter]["unisex"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"])
+
+                                if "male" in self.contact_sexes:
+                                    self.location_counters_day_i["loc"][super_group_name][counter]["male"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["male"],men)
+                                    self.location_counters_day["loc"][super_group_name][counter]["male"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["male"] )
+                                if "female" in self.contact_sexes:
+                                    self.location_counters_day_i["loc"][super_group_name][counter]["female"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["female"],women)
+                                    self.location_counters_day["loc"][super_group_name][counter]["female"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["female"] )
                         counter += 1
         return 1
 
@@ -2154,25 +2225,22 @@ class Tracker:
 
                     df.to_excel(writer, sheet_name=f'{loc}')
 
-        timestamps = self.location_counters["Timestamp"]
-        delta_ts = self.location_counters["delta_t"]
+        timestamps = self.location_counters_day["Timestamp"]
         for sex in self.contact_sexes:
             with pd.ExcelWriter(self.record_path / f'Venues_{sex}_Counts_ByDate.xlsx', mode="w") as writer:  
-                for loc in self.location_counters["loc"].keys():
+                for loc in self.location_counters_day["loc"].keys():
                     df = pd.DataFrame()
                     df["t"] = timestamps
-                    df["dt"] = delta_ts
-                    NVenues = len(self.location_counters["loc"][loc].keys())
 
+                    NVenues = len(self.location_counters_day["loc"][loc].keys())
                     loc_j=0
                     for loc_i in range(NVenues):
-                        if np.sum(self.location_counters["loc"][loc][loc_i]["unisex"]) == 0:
+                        if np.sum(self.location_counters_day["loc"][loc][loc_i]["unisex"]) == 0:
                             continue
-                        df[loc_j] = self.location_counters["loc"][loc][loc_i][sex]
+                        df[loc_j] = self.location_counters_day["loc"][loc][loc_i][sex]
                         loc_j+=1
 
-  
-                    df = df.groupby(df['t'].dt.date).sum()
+                    
                     df.to_excel(writer, sheet_name=f'{loc}')
         
         return 1

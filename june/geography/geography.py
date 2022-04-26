@@ -158,8 +158,12 @@ class Areas:
             areas = [all_areas[idx] for idx in indcs.flatten()]
             return areas
 
-    def get_closest_area(self, coordinates):
-        return self.get_closest_areas(coordinates, k=1, return_distance=False)[0]
+    def get_closest_area(self, coordinates, return_distance=False):
+        if return_distance:
+            closest_areas, dists = self.get_closest_areas(coordinates, k=1, return_distance=return_distance)
+            return closest_areas[0], dists[0]
+        else:
+            return self.get_closest_areas(coordinates, k=1, return_distance=return_distance)[0]
 
 
 class SuperArea:
@@ -302,8 +306,12 @@ class SuperAreas:
             super_areas = [all_super_areas[idx] for idx in indcs.flatten()]
             return super_areas
 
-    def get_closest_super_area(self, coordinates):
-        return self.get_closest_super_areas(coordinates, k=1, return_distance=False)[0]
+    def get_closest_super_area(self, coordinates, return_distance=False):
+        if return_distance:
+            closest_areas, distances = self.get_closest_super_areas(coordinates, k=1, return_distance=return_distance)
+            return closest_areas[0], distances[0]
+        else:
+            return self.get_closest_super_areas(coordinates, k=1, return_distance=return_distance)[0]
 
 
 class ExternalSuperArea:
