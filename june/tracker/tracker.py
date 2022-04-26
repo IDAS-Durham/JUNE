@@ -13,7 +13,7 @@ import matplotlib.colors as colors
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
 from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
-from datetime import timedelta
+import datetime
 
 from june.groups.group import make_subgroups
 
@@ -1294,7 +1294,7 @@ class Tracker:
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
-        plt.rcParams["figure.figsize"] = (10,5)
+        plt.rcParams["figure.figsize"] = (15,5)
         f, (ax1,ax2) = plt.subplots(1,2)
         f.patch.set_facecolor('white')
 
@@ -1326,7 +1326,7 @@ class Tracker:
             (ax1,ax2):
                 matplotlib axes objects (Linear and Log)
         """
-        plt.rcParams["figure.figsize"] = (10,5)
+        plt.rcParams["figure.figsize"] = (15,5)
         f, (ax1,ax2) = plt.subplots(1,2)
         f.patch.set_facecolor('white')
 
@@ -1379,6 +1379,7 @@ class Tracker:
                 matplotlib axes object
 
         """
+        plt.rcParams["figure.figsize"] = (10,5)
         f, ax = plt.subplots()
         f.patch.set_facecolor('white')
 
@@ -1443,6 +1444,7 @@ class Tracker:
         distribution_global = self.location_cum_pop[bin_type]["global"][sex]
         distribution_global = self.age_profiles[bin_type]["global"][sex]
 
+        plt.rcParams["figure.figsize"] = (10,5)
         f, ax = plt.subplots()
         f.patch.set_facecolor('white')
 
@@ -1480,7 +1482,7 @@ class Tracker:
                 matplotlib axes object
 
         """
-        Interval = timedelta(days=max_days)
+        Interval = datetime.timedelta(days=max_days)
 
         xs = np.array(self.location_counters["Timestamp"])
         max_index = None
@@ -1488,9 +1490,9 @@ class Tracker:
             max_index = np.sum(xs < xs[0]+Interval)
         xs = xs[:max_index]
     
-        widths = [timedelta(hours=w) for w in self.location_counters["delta_t"][:max_index]]
+        widths = [datetime.timedelta(hours=w) for w in self.location_counters["delta_t"][:max_index]]
  
-   
+        plt.rcParams["figure.figsize"] = (10,5)
         f, (ax1,ax2) = plt.subplots(1,2)
         f.patch.set_facecolor('white')
         Nlocals = len(self.location_counters["loc"][locations])
@@ -1563,6 +1565,125 @@ class Tracker:
 
         plt.tight_layout()
         return (ax1,ax2)
+
+    def plot_population_at_locs_variations(self, locations, max_days=7):
+        """
+        Plot total population of each location for each timestep.
+
+        Parameters
+        ----------
+            locations:
+                list of locations to plot for
+            max_days:
+                The maximum number of days to plot over
+
+        Returns
+        -------
+            ax:
+                matplotlib axes object
+
+        """
+        df = pd.DataFrame()
+        df["t"] = np.array(self.location_counters_day["Timestamp"])
+        df["day"] = [day.day_name() for day in df["t"]]
+
+        NVenues = len(self.location_counters_day["loc"][locations].keys())
+        for loc_i in range(NVenues):
+            df[loc_i] = self.location_counters_day["loc"][locations][loc_i]["unisex"]
+            
+        day_names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        means = np.zeros(7)
+        stds = np.zeros(7)
+        medians = np.zeros(7)
+
+        for day_i in range(len(day_names)):
+            day = day_names[day_i]
+            
+            data = df[df["day"] == day][df.columns[~df.columns.isin(["t", "day"])]].values.flatten()
+            data = data[data>1]
+
+            if len(data) == 0:
+                continue
+            means[day_i] = np.nanmean(data)
+            stds[day_i] = np.nanstd(data, ddof=1)#/np.sqrt(NVenues)
+            medians[day_i] = np.nanmedian(data)
+        
+        plt.rcParams["figure.figsize"] = (15,5)
+        f, (ax1,ax2) = plt.subplots(1,2)
+        f.patch.set_facecolor('white')
+        ax1.bar(day_names, means, alpha=0.4, color="b", label="mean")
+        ax1.bar(day_names, medians, alpha=0.4, color="g", label="median")
+        ax1.errorbar(day_names, means, [stds, stds], color="black", label="std errorbar")
+        ax1.set_ylabel("Unique Attendees per day")
+        ax1.set_ylim([0, None])
+        ax1.legend()
+
+        df = pd.DataFrame()
+        df["t"] = np.array(self.location_counters["Timestamp"])
+        df["dt"] = np.array(self.location_counters["delta_t"])
+        df["day"] = [day.day_name() for day in df["t"]]
+        for loc_i in range(NVenues):
+            df[loc_i] = self.location_counters["loc"][locations][loc_i]["unisex"]
+            
+        dts = []
+        times = [datetime.datetime(year=2020, month=1, day=1, hour = 8, minute = 0, second = 0)]
+        timesmid = []
+        for i in range(len(df["dt"].values)):
+            dts.append(df["dt"].values[i])
+            timesmid.append(times[-1]+datetime.timedelta(hours=dts[-1])/2)
+            times.append(times[-1]+datetime.timedelta(hours=dts[-1]))
+            
+            if sum(dts) >=24:
+                break
+        times = np.array(times)
+        dts = np.array(dts)
+
+        medians_days = np.zeros((7,len(dts)))
+        for day_i in range(len(day_names)):
+            day = day_names[day_i]
+            data = df[df["day"] == day][df.columns[~df.columns.isin(["day"])]]
+            timesteps_open = data[data.columns[~data.columns.isin(["t", "dt"])]].sum(axis=1).values > 0
+            hoursopen = np.sum(dts[timesteps_open])
+
+            total_persons = data[data.columns[~data.columns.isin(["dt", "t"])]].sum(axis=0).values
+            total_persons = total_persons[total_persons>0]
+            medianSum = np.median(total_persons)
+                
+            for time_i in range(len(dts)):
+                if timesteps_open[time_i] == False:
+                    continue
+                dt = data["dt"].iloc[time_i]
+                data_dt = data[data.columns[~data.columns.isin(["dt", "t"])]].values[time_i]
+                data_dt = data_dt[data_dt>1]
+                
+                medians_days[day_i, time_i] = np.nanmedian(data_dt)-(dt*medianSum/hoursopen)  
+                
+            
+        xlim = [times[0], times[-1]]
+        timesmid = np.insert(timesmid, 0, timesmid[-1]-datetime.timedelta(days=1), axis=0)
+        timesmid = np.insert(timesmid, len(timesmid), timesmid[1]+datetime.timedelta(days=1), axis=0)
+        medians_days = np.insert(medians_days, 0, medians_days[:,-1], axis=1) 
+        medians_days = np.insert(medians_days, len(medians_days[0,:]), medians_days[:,1], axis=1) 
+
+        for day_i in range(len(day_names)):
+            ax2.plot(timesmid, medians_days[day_i,:], label=day_names[day_i])
+            
+        alphas = [0.1,0.2]
+        ylim = [-abs(np.min(medians_days)*1.1),np.max(medians_days)*1.1]
+        for time_i in range(len(dts)): 
+            ax2.fill_between([times[time_i], times[time_i+1]],ylim[0], ylim[1], color ='g', alpha=alphas[time_i % 2])
+        ax2.axhline(0, color="grey", linestyle="--")
+                            
+        ax2.set_ylabel("Unique Attendees per timeslot - mean expected")
+        # Define the date format
+        ax2.xaxis.set_major_locator(mdates.HourLocator(byhour=None, interval=1))
+        ax2.xaxis.set_major_formatter(DateFormatter("%H"))
+        ax2.set_xlim(xlim)
+        ax2.set_ylim(ylim)
+        ax2.legend()
+        plt.tight_layout()
+        return (ax1, ax2)
+    
 
     def plot_AgeProfileRatios(self, contact_type="global", bin_type="syoa", sex="unisex"):
         """
@@ -1717,6 +1838,10 @@ class Tracker:
             plot_dir = self.record_path / "Location_Pops" 
             plot_dir.mkdir(exist_ok=True, parents=True)
             for locations in self.location_counters["loc"].keys():
+                self.plot_population_at_locs_variations(locations)
+                plt.savefig(plot_dir / f"{locations}_Variations.png", dpi=150, bbox_inches='tight')
+                plt.close()
+
                 self.plot_population_at_locs(locations)
                 plt.savefig(plot_dir / f"{locations}.png", dpi=150, bbox_inches='tight')
                 plt.close()
