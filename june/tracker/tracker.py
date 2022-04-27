@@ -1644,6 +1644,8 @@ class Tracker:
             data = df[df["day"] == day][df.columns[~df.columns.isin(["day"])]]
             timesteps_open = data[data.columns[~data.columns.isin(["t", "dt"])]].sum(axis=1).values > 0
             hoursopen = np.sum(dts[timesteps_open])
+            if hoursopen == 0:
+                continue
 
             total_persons = data[data.columns[~data.columns.isin(["dt", "t"])]].sum(axis=0).values
             total_persons = total_persons[total_persons>0]
@@ -1669,7 +1671,7 @@ class Tracker:
             ax2.plot(timesmid, medians_days[day_i,:], label=day_names[day_i])
             
         alphas = [0.1,0.2]
-        ylim = [-abs(np.min(medians_days)*1.1),np.max(medians_days)*1.1]
+        ylim = [-abs(np.nanmin(medians_days)*1.1),np.nanmax(medians_days)*1.1]
         for time_i in range(len(dts)): 
             ax2.fill_between([times[time_i], times[time_i+1]],ylim[0], ylim[1], color ='g', alpha=alphas[time_i % 2])
         ax2.axhline(0, color="grey", linestyle="--")
