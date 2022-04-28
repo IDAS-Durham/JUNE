@@ -19,6 +19,7 @@ from june.groups.group import make_subgroups
 
 AgeAdult = make_subgroups.Subgroup_Params.AgeYoungAdult
 ACArray = np.array([0,AgeAdult,100])
+DaysOfWeek_Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 default_interaction_path = (
     paths.configs_path / "defaults/interaction/interaction.yaml"
@@ -286,12 +287,24 @@ class Tracker:
         self.hash_ages()
         return 1
 
-    def Get_characteristic_time(self,contact_type):
-        #Pull out relevent characteristic times. TODO Do we use this?
-        if contact_type not in ["global", "shelter_intra", "shelter_inter"]:
-            characteristic_time = self.interaction_matrices[contact_type]["characteristic_time"] / 24
-            proportion_pysical = self.interaction_matrices[contact_type]["proportion_physical"]
-        elif contact_type in [ "shelter_intra", "shelter_inter"]:
+    def Get_characteristic_time(self,location):
+        """
+        Get the characteristic time and proportion_pysical time for location. (In hours)
+
+        Parameters
+        ----------
+            location:
+                Location 
+            
+        Returns
+        -------
+            None
+
+        """
+        if location not in ["global", "shelter_intra", "shelter_inter"]:
+            characteristic_time = self.interaction_matrices[location]["characteristic_time"] / 24
+            proportion_pysical = self.interaction_matrices[location]["proportion_physical"]
+        elif location in [ "shelter_intra", "shelter_inter"]:
             characteristic_time = self.interaction_matrices["shelter"]["characteristic_time"] / 24
             proportion_pysical = self.interaction_matrices["shelter"]["proportion_physical"]
         else:
@@ -819,7 +832,7 @@ class Tracker:
         #Normalise based on characteristic time.
         
         #Normalisation over charecteristic time and population
-        factor = (self.Get_characteristic_time(contact_type=contact_type)[0]*np.sum(pop_tots))/self.location_cum_time[contact_type]
+        factor = (self.Get_characteristic_time(location=contact_type)[0]*np.sum(pop_tots))/self.location_cum_time[contact_type]
         #Create blanks to fill
         norm_cm = np.zeros( cm.shape )
         norm_cm_err = np.zeros( cm.shape )
@@ -907,15 +920,6 @@ class Tracker:
                     cm[i,j] = 0
                 if cm[i,j] > 1e8:
                     cm[i,j] = np.inf
-
-
-                # if cm[i,j] >= 1:
-                #     fmt = ".1f"
-                # else:
-                #     fmt = ".1f"
-                    
-                # if cm[i,j] == 0:
-                #     fmt = ".1f"
 
                 if cm_err is not None:
                     text =  r"$ %s \pm %s$" % (format(cm[i, j], fmt), format(cm_err[i, j], fmt))
@@ -1022,6 +1026,21 @@ class Tracker:
         return cm, cm_err
 
     def MaxAgeBinIndex(self, bins, MaxAgeBin=60):
+        """
+        Get index for truncation of bins upto max age MaxAgeBin
+            self.group_type_names
+
+        Parameters
+        ----------
+            bins:
+                Age bins
+            MaxAgeBin:
+                The maximum age at which to truncate the bins
+
+        Returns
+        -------
+            Index
+        """
         Array = [index for index in range(len(bins)) if bins[index] >= MaxAgeBin]
         if len(Array) != 0:
             return min(Array)
@@ -1181,7 +1200,6 @@ class Tracker:
         labels_IM = self.IMPlots_GetLabels(contact_type, IM)
         IM, IM_err, labels_IM = self.IMPlots_UsefulCM(contact_type, IM, cm_err=IM_err, labels=labels_IM)
 
-        #IM_Min = IM[np.isfinite(IM)].min()
         if len(np.nonzero(IM)[0]) != 0 and len(np.nonzero(IM)[1]) != 0:
             IM_Min = np.nanmin(IM[np.nonzero(IM)])
         else:
@@ -1528,8 +1546,6 @@ class Tracker:
         ax1.xaxis.set_major_locator(mdates.HourLocator(byhour=[0]))
         ax1.xaxis.set_minor_locator(mdates.HourLocator(byhour=None, interval=1))
         ax1.xaxis.set_major_formatter(DateFormatter("%d/%m"))
-
-        #ax.set_xlabel("Timestep")
         ax1.set_ylabel("N people at location")
         ax1.set_yscale("log")
         ax1.set_ylim([1, ymax])
@@ -1557,8 +1573,6 @@ class Tracker:
             hist, bin_edges = np.histogram(df.iloc[day_i,1:].values, bins=bins, density=False)
             ax2.bar(x=(bin_edges[1:]+bin_edges[:-1])/2, height=(100*hist)/len(self.location_counters["loc"][locations]), width=(bin_edges[:-1]-bin_edges[1:]),alpha=1/df.shape[0], color="b")
 
-        
-        #ax2.set_yscale("log")
         ax2.set_ylim([0, None])
         ax2.set_ylabel(r"Percent N Venues")
         ax2.set_xlabel(r"People per day")
@@ -1566,16 +1580,24 @@ class Tracker:
         plt.tight_layout()
         return (ax1,ax2)
 
-    def plot_population_at_locs_variations(self, locations, max_days=7):
+    def plot_population_at_locs_variations(self, locations, 
+        DayStartHour= 7, #7am
+        Weekend_Names = ["Saturday", "Sunday"],
+        Weekday_Names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+        ):
         """
-        Plot total population of each location for each timestep.
+        Plot variations of median values of attendence across all venues of each type
 
         Parameters
         ----------
             locations:
                 list of locations to plot for
-            max_days:
-                The maximum number of days to plot over
+            DayStartHour:
+                The hour the simulation begins in the code (An offset value)
+            Weekend_Names:
+                List of "weekend" days
+            Weekday_Names:
+                List of "weekday" days
 
         Returns
         -------
@@ -1583,6 +1605,7 @@ class Tracker:
                 matplotlib axes object
 
         """
+        #Get variations between days
         df = pd.DataFrame()
         df["t"] = np.array(self.location_counters_day["Timestamp"])
         df["day"] = [day.day_name() for day in df["t"]]
@@ -1591,13 +1614,11 @@ class Tracker:
         for loc_i in range(NVenues):
             df[loc_i] = self.location_counters_day["loc"][locations][loc_i]["unisex"]
             
-        day_names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-        means = np.zeros(7)
-        stds = np.zeros(7)
-        medians = np.zeros(7)
-
-        for day_i in range(len(day_names)):
-            day = day_names[day_i]
+        means = np.zeros(len(DaysOfWeek_Names))
+        stds = np.zeros(len(DaysOfWeek_Names))
+        medians = np.zeros(len(DaysOfWeek_Names))
+        for day_i in range(len(DaysOfWeek_Names)):
+            day = DaysOfWeek_Names[day_i]
             
             data = df[df["day"] == day][df.columns[~df.columns.isin(["t", "day"])]].values.flatten()
             data = data[data>1]
@@ -1605,19 +1626,21 @@ class Tracker:
             if len(data) == 0:
                 continue
             means[day_i] = np.nanmean(data)
-            stds[day_i] = np.nanstd(data, ddof=1)#/np.sqrt(NVenues)
+            stds[day_i] = np.nanstd(data, ddof=1)
             medians[day_i] = np.nanmedian(data)
         
         plt.rcParams["figure.figsize"] = (15,5)
         f, (ax1,ax2) = plt.subplots(1,2)
         f.patch.set_facecolor('white')
-        ax1.bar(day_names, means, alpha=0.4, color="b", label="mean")
-        ax1.bar(day_names, medians, alpha=0.4, color="g", label="median")
-        ax1.errorbar(day_names, means, [stds, stds], color="black", label="std errorbar")
-        ax1.set_ylabel("Unique Attendees per day")
+        ax1.bar(np.arange(len(DaysOfWeek_Names)), means, alpha=0.4, color="b", label="mean")
+        ax1.bar(np.arange(len(DaysOfWeek_Names)),medians, alpha=0.4, color="g", label="median")
+        ax1.errorbar(np.arange(len(DaysOfWeek_Names)),means, [stds, stds], color="black", label="std errorbar")
+        ax1.set_xticklabels([""]+DaysOfWeek_Names)
+        ax1.set_ylabel("Median Unique Attendees per day")
         ax1.set_ylim([0, None])
         ax1.legend()
 
+        #Get variations between days and time of day
         df = pd.DataFrame()
         df["t"] = np.array(self.location_counters["Timestamp"])
         df["dt"] = np.array(self.location_counters["delta_t"])
@@ -1625,58 +1648,81 @@ class Tracker:
         for loc_i in range(NVenues):
             df[loc_i] = self.location_counters["loc"][locations][loc_i]["unisex"]
             
-        dts = []
-        times = [datetime.datetime(year=2020, month=1, day=1, hour = 8, minute = 0, second = 0)]
-        timesmid = []
-        for i in range(len(df["dt"].values)):
-            dts.append(df["dt"].values[i])
-            timesmid.append(times[-1]+datetime.timedelta(hours=dts[-1])/2)
-            times.append(times[-1]+datetime.timedelta(hours=dts[-1]))
-            
-            if sum(dts) >=24:
-                break
-        times = np.array(times)
-        dts = np.array(dts)
+        dts = {}
+        times = {}
+        timesmid = {}
 
-        medians_days = np.zeros((7,len(dts)))
-        for day_i in range(len(day_names)):
-            day = day_names[day_i]
+        for day_i in range(len(DaysOfWeek_Names)):
+            day = DaysOfWeek_Names[day_i]
+            data = df[df["day"] == day]
+
+            dts[day] = []
+            times[day] = [datetime.datetime(year=2020, month=1, day=1, hour = DayStartHour, minute = 0, second = 0)]
+            timesmid[day] = []
+
+            for i in range(len(data["dt"].values)):
+                dts[day].append(df["dt"].values[i])
+                timesmid[day].append(times[day][-1]+datetime.timedelta(hours=dts[day][-1])/2)
+                times[day].append(times[day][-1]+datetime.timedelta(hours=dts[day][-1]))
+                if sum(dts[day]) >=24:
+                    break
+
+            dts[day] = np.array(dts[day])
+            times[day] = np.array(times[day])
+            timesmid[day] = np.array(timesmid[day])
+
+        medians_days = {}
+        stds_days = {}
+
+        ymax = -1e3
+        ymin = 1e3
+        for day_i in range(len(DaysOfWeek_Names)):
+            day = DaysOfWeek_Names[day_i]
             data = df[df["day"] == day][df.columns[~df.columns.isin(["day"])]]
-            timesteps_open = data[data.columns[~data.columns.isin(["t", "dt"])]].sum(axis=1).values > 0
-            hoursopen = np.sum(dts[timesteps_open])
-            if hoursopen == 0:
-                continue
-
             total_persons = data[data.columns[~data.columns.isin(["dt", "t"])]].sum(axis=0).values
             total_persons = total_persons[total_persons>0]
-            medianSum = np.median(total_persons)
-                
-            for time_i in range(len(dts)):
-                if timesteps_open[time_i] == False:
-                    continue
-                dt = data["dt"].iloc[time_i]
+
+            medians_days[day] = []
+            stds_days[day] = []
+            for time_i in range(len(dts[day])):
                 data_dt = data[data.columns[~data.columns.isin(["dt", "t"])]].values[time_i]
                 data_dt = data_dt[data_dt>1]
-                
-                medians_days[day_i, time_i] = np.nanmedian(data_dt)-(dt*medianSum/hoursopen)  
-                
-            
-        xlim = [times[0], times[-1]]
-        timesmid = np.insert(timesmid, 0, timesmid[-1]-datetime.timedelta(days=1), axis=0)
-        timesmid = np.insert(timesmid, len(timesmid), timesmid[1]+datetime.timedelta(days=1), axis=0)
-        medians_days = np.insert(medians_days, 0, medians_days[:,-1], axis=1) 
-        medians_days = np.insert(medians_days, len(medians_days[0,:]), medians_days[:,1], axis=1) 
+                if len(data_dt) == 0:
+                    medians_days[day].append(0)
+                    stds_days[day].append(0)
+                else:
+                    medians_days[day].append(np.nanmedian(data_dt))
+                    stds_days[day].append(np.nanstd(data_dt, ddof=1))
 
-        for day_i in range(len(day_names)):
-            ax2.plot(timesmid, medians_days[day_i,:], label=day_names[day_i])
+            if ymax < np.nanmax(medians_days[day]):
+                ymax = np.nanmax(medians_days[day])     
+            if ymin > np.nanmin(medians_days[day]):
+                ymin = np.nanmin(medians_days[day])
+
+        xlim = [times[Weekday_Names[0]][0], times[Weekday_Names[0]][-1]]
+        for day_i in range(len(DaysOfWeek_Names)):
+            day = DaysOfWeek_Names[day_i]
+            timesmid[day] = np.insert(timesmid[day], 0, timesmid[day][-1]-datetime.timedelta(days=1), axis=0)
+            timesmid[day] = np.insert(timesmid[day], len(timesmid[day]), timesmid[day][1]+datetime.timedelta(days=1), axis=0)
+            medians_days[day] = np.insert(medians_days[day], 0, medians_days[day][-1], axis=0) 
+            medians_days[day] = np.insert(medians_days[day], len(medians_days[day]), medians_days[day][1], axis=0) 
+
+        for day_i in range(len(DaysOfWeek_Names)):
+            day = DaysOfWeek_Names[day_i]
+            if day in Weekend_Names:
+                linestyle="--"
+            else:
+                linestyle="-"
+            ax2.plot(timesmid[day], medians_days[day], label=DaysOfWeek_Names[day_i], linestyle=linestyle)
+            
             
         alphas = [0.1,0.2]
-        ylim = [-abs(np.nanmin(medians_days)*1.1),np.nanmax(medians_days)*1.1]
-        for time_i in range(len(dts)): 
-            ax2.fill_between([times[time_i], times[time_i+1]],ylim[0], ylim[1], color ='g', alpha=alphas[time_i % 2])
+        ylim = [-abs(ymin*1.1),abs(ymax*1.1)]
+        for time_i in range(len(dts[Weekday_Names[0]])): 
+            ax2.fill_between([times[Weekday_Names[0]][time_i], times[Weekday_Names[0]][time_i+1]],ylim[0], ylim[1], color ='g', alpha=alphas[time_i % 2])
         ax2.axhline(0, color="grey", linestyle="--")
                             
-        ax2.set_ylabel("Unique Attendees per timeslot - mean expected")
+        ax2.set_ylabel("Median Unique Attendees per timeslot")
         # Define the date format
         ax2.xaxis.set_major_locator(mdates.HourLocator(byhour=None, interval=1))
         ax2.xaxis.set_major_formatter(DateFormatter("%H"))
@@ -2006,7 +2052,7 @@ class Tracker:
                 subgroup_type = 1
 
         delta_t = self.delta_t / (3600*24) #In Days
-        characteristic_time = self.Get_characteristic_time(spec)[0] #In Days
+        characteristic_time = self.Get_characteristic_time(location=spec)[0] #In Days
 
         factor = delta_t / characteristic_time
         contacts_per_subgroup = [
@@ -2201,6 +2247,61 @@ class Tracker:
             self.location_cum_time[group.spec+"_intra"] += (len(group.people)*self.delta_t) / (3600*24) #In Days
         return 1
 
+    def simulate_attendance(self, group, super_group_name, date, counter):
+        """
+        Update person counts at location
+
+        Sets;
+            self.location_counters
+
+        Parameters
+        ----------
+            group:
+                The group of interest to build contacts
+            super_groups_name:
+                location name
+            date:
+                timestamp of the time step
+            counter:
+                venue number in locations list
+            
+        Returns
+        -------
+            None
+
+        """
+        people = [p.id for p in group.people]
+        men = [p.id for p in group.people if p.sex == "m"]
+        women = [p.id for p in group.people if p.sex == "f"]
+        if super_group_name in self.location_counters["loc"].keys():
+            #By dt
+            self.location_counters["loc"][super_group_name][counter]["unisex"].append(len(people))
+            if "male" in self.contact_sexes:
+                self.location_counters["loc"][super_group_name][counter]["male"].append(len(men))
+            if "female" in self.contact_sexes:
+                self.location_counters["loc"][super_group_name][counter]["female"].append(len(women)) 
+
+            #By Date    
+            if date.hour == 0 and date.minute== 0 and date.second == 0:
+                self.location_counters_day_i["loc"][super_group_name][counter]["unisex"] = people
+                self.location_counters_day["loc"][super_group_name][counter]["unisex"].append(len(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"]))
+                if "male" in self.contact_sexes:
+                    self.location_counters_day_i["loc"][super_group_name][counter]["male"] = men
+                    self.location_counters_day["loc"][super_group_name][counter]["male"].append(len(men))
+                if "female" in self.contact_sexes:
+                    self.location_counters_day_i["loc"][super_group_name][counter]["female"] = women
+                    self.location_counters_day["loc"][super_group_name][counter]["female"].append(len(women))
+            else:
+                self.location_counters_day_i["loc"][super_group_name][counter]["unisex"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"], people)
+                self.location_counters_day["loc"][super_group_name][counter]["unisex"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"])
+
+                if "male" in self.contact_sexes:
+                    self.location_counters_day_i["loc"][super_group_name][counter]["male"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["male"],men)
+                    self.location_counters_day["loc"][super_group_name][counter]["male"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["male"] )
+                if "female" in self.contact_sexes:
+                    self.location_counters_day_i["loc"][super_group_name][counter]["female"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["female"],women)
+                    self.location_counters_day["loc"][super_group_name][counter]["female"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["female"] )
+
 #####################################################################################################################################################################
                                 ################################### Tracker running ##################################
 #####################################################################################################################################################################
@@ -2208,9 +2309,6 @@ class Tracker:
     def trackertimestep(self, all_super_groups, date):
         """
         Loop over all locations at each timestamp to get contact matrices and location population counts.
-
-        Sets;
-            self.location_counters
 
         Parameters
         ----------
@@ -2241,41 +2339,7 @@ class Tracker:
                 for group in grouptype.members: #Loop over all locations.
                     if group.spec in self.group_type_names:
                         self.simulate_1d_contacts(group)
-
-                        people = [p.id for p in group.people]
-                        men = [p.id for p in group.people if p.sex == "m"]
-                        women = [p.id for p in group.people if p.sex == "f"]
-
-
-
-                        if super_group_name in self.location_counters["loc"].keys():
-                            #By dt
-                            self.location_counters["loc"][super_group_name][counter]["unisex"].append(len(people))
-                            if "male" in self.contact_sexes:
-                                self.location_counters["loc"][super_group_name][counter]["male"].append(len(men))
-                            if "female" in self.contact_sexes:
-                                self.location_counters["loc"][super_group_name][counter]["female"].append(len(women)) 
-
-                            #By Date    
-                            if date.hour == 0 and date.minute== 0 and date.second == 0:
-                                self.location_counters_day_i["loc"][super_group_name][counter]["unisex"] = people
-                                self.location_counters_day["loc"][super_group_name][counter]["unisex"].append(len(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"]))
-                                if "male" in self.contact_sexes:
-                                    self.location_counters_day_i["loc"][super_group_name][counter]["male"] = men
-                                    self.location_counters_day["loc"][super_group_name][counter]["male"].append(len(men))
-                                if "female" in self.contact_sexes:
-                                    self.location_counters_day_i["loc"][super_group_name][counter]["female"] = women
-                                    self.location_counters_day["loc"][super_group_name][counter]["female"].append(len(women))
-                            else:
-                                self.location_counters_day_i["loc"][super_group_name][counter]["unisex"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"], people)
-                                self.location_counters_day["loc"][super_group_name][counter]["unisex"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"])
-
-                                if "male" in self.contact_sexes:
-                                    self.location_counters_day_i["loc"][super_group_name][counter]["male"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["male"],men)
-                                    self.location_counters_day["loc"][super_group_name][counter]["male"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["male"] )
-                                if "female" in self.contact_sexes:
-                                    self.location_counters_day_i["loc"][super_group_name][counter]["female"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["female"],women)
-                                    self.location_counters_day["loc"][super_group_name][counter]["female"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["female"] )
+                        self.simulate_attendance(group, super_group_name, date, counter)
                         counter += 1
         return 1
 
@@ -2349,6 +2413,8 @@ class Tracker:
                         df[loc_j] = self.location_counters["loc"][loc][loc_i][sex]
                         loc_j+=1
 
+                        if loc_j > 100:
+                            break
 
                     df.to_excel(writer, sheet_name=f'{loc}')
 
@@ -2367,7 +2433,8 @@ class Tracker:
                         df[loc_j] = self.location_counters_day["loc"][loc][loc_i][sex]
                         loc_j+=1
 
-                    
+                        if loc_j > 100:
+                            break
                     df.to_excel(writer, sheet_name=f'{loc}')
         
         return 1
