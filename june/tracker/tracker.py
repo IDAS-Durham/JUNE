@@ -14,6 +14,7 @@ from mpl_toolkits.axes_grid.inset_locator import inset_axes
 from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
 import datetime
+import geopy.distance
 
 from june.groups.group import make_subgroups
 
@@ -77,6 +78,7 @@ class Tracker:
         contact_counts=None,
         location_counts=None,
         location_counts_day=None,
+        travel_distance = None,
         contact_matrices=None,
 
         location_cum_pop=None,
@@ -128,6 +130,11 @@ class Tracker:
             self.intitalise_location_cum_time()
         else:
             self.location_cum_time = location_cum_time
+
+        if travel_distance == None:
+            self.travel_distance = {}
+        else:
+            self.travel_distance = travel_distance
 
 
 #####################################################################################################################################################################
@@ -1827,6 +1834,40 @@ class Tracker:
         plt.legend()
         return (ax1,ax2)
 
+    def plot_DistanceTraveled(self, location, day):
+        """
+        Plot histogram of commuting distances from home
+
+        Parameters
+        ----------
+            location:
+                The venue to look at
+            day:
+                The day of the week
+
+        Returns
+        -------
+            ax:
+                matplotlib axes object
+
+        """
+
+        Nlocals = len(self.location_counters["loc"][location])
+        dat = self.travel_distance[day][location]
+        if len(dat) == 0:
+            return 
+        maxkm = np.nanmax(dat)
+        plt.rcParams["figure.figsize"] = (10,5)
+        f, ax = plt.subplots(1,1)
+        f.patch.set_facecolor('white')
+        
+        hist, bin_edges = np.histogram(dat, bins = np.arange(0,int(maxkm)+1,.1), density=False)
+        ax.bar(x=(bin_edges[1:]+bin_edges[:-1])/2, height=(100*hist)/len(dat), width=(bin_edges[:-1]-bin_edges[1:]), color="b")
+        ax.set_title(f"{location} {Nlocals} locations")
+        ax.set_ylabel("percentage of people")
+        ax.set_xlabel("distrance traveled from shelter / km")
+        ax.set_xlim([0, None])
+        return ax
 
     def make_plots(self, 
         plot_AvContactsLocation=True, 
@@ -1835,7 +1876,8 @@ class Tracker:
         plot_InteractionMatrices=True,
         plot_ContactMatrices=True, 
         plot_CompareSexMatrices=True,
-        plot_AgeBinning=True):
+        plot_AgeBinning=True,
+        plot_Distances=True):
         """
         Make plots.
 
@@ -1855,6 +1897,8 @@ class Tracker:
                 bool, To plot comparison of sexes matrices
             plot_AgeBinning:
                 bool, To plot w weight matrix to compare demographics
+            plot_DistanceTraveled:
+                bool, To plot the distance traveled from shelter to locations
             
         Returns
         -------
@@ -1974,6 +2018,17 @@ class Tracker:
                     )
                     plt.savefig(plot_dir / f"{rbt}_{rct}.png", dpi=150, bbox_inches='tight')
                     plt.close() 
+
+        if plot_Distances:
+            plot_dir = self.record_path / "Distance_Traveled" 
+            plot_dir.mkdir(exist_ok=True, parents=True)
+            for locations in self.location_counters["loc"].keys():
+                for day in self.travel_distance.keys():
+                    self.plot_DistanceTraveled(locations, day)
+                    plt.savefig(plot_dir / f"{locations}.png", dpi=150, bbox_inches='tight')
+                    plt.close()
+                    break
+
         return 1
  
 #####################################################################################################################################################################
@@ -2302,6 +2357,26 @@ class Tracker:
                     self.location_counters_day_i["loc"][super_group_name][counter]["female"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["female"],women)
                     self.location_counters_day["loc"][super_group_name][counter]["female"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["female"] )
 
+    def simulate_traveldistance(self, day):
+        if day != "Monday":
+            return 1
+
+        self.travel_distance[day] = {}
+        for loc in self.location_counters_day_i["loc"].keys():
+            self.travel_distance[day][loc] = []
+            grouptype = getattr(self.world, loc)
+            if grouptype is not None:
+                counter = 0                 
+                for group in grouptype.members: #Loop over all locations.
+                    venue_coords = group.coordinates
+
+                    for ID in self.location_counters_day_i["loc"][loc][counter]["unisex"]:
+                        person = self.world.people.get_from_id(ID)
+                        household_coords = person.residence.group.area.coordinates
+                        self.travel_distance[day][loc].append(geopy.distance.geodesic(household_coords, venue_coords).km)
+                    counter += 1
+        return 1
+
 #####################################################################################################################################################################
                                 ################################### Tracker running ##################################
 #####################################################################################################################################################################
@@ -2328,14 +2403,18 @@ class Tracker:
         if date.hour == 0 and date.minute== 0 and date.second == 0:
             self.location_counters_day["Timestamp"].append(date)
 
-        
-         
+        DaysElapsed = len(self.location_counters_day["Timestamp"])-1
+        day = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][date.weekday()]
+        if DaysElapsed > 0 and DaysElapsed <= 7:
+            #Only run after first day completed first day
+            self.simulate_traveldistance(day)
+
         for super_group_name in all_super_groups:
             if "visits" in super_group_name:
                 continue
             grouptype = getattr(self.world, super_group_name)
             if grouptype is not None:
-                counter = 0              
+                counter = 0                 
                 for group in grouptype.members: #Loop over all locations.
                     if group.spec in self.group_type_names:
                         self.simulate_1d_contacts(group)
