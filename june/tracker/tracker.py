@@ -579,10 +579,11 @@ class Tracker:
             self.interaction_matrices = interaction_config["contact_matrices"]
 
         for loc in self.interaction_matrices.keys():
-            Bins, Type = make_subgroups.Get_Defaults(loc)
             if "type" not in self.interaction_matrices[loc].keys():
+                Bins, Type = make_subgroups.Get_Defaults(loc)
                 self.interaction_matrices[loc]["type"] = Type
             if "bins" not in self.interaction_matrices[loc].keys():
+                Bins, Type = make_subgroups.Get_Defaults(loc)
                 self.interaction_matrices[loc]["bins"] = Bins
         return 1
 
@@ -1865,7 +1866,7 @@ class Tracker:
         ax.bar(x=(bin_edges[1:]+bin_edges[:-1])/2, height=(100*hist)/len(dat), width=(bin_edges[:-1]-bin_edges[1:]), color="b")
         ax.set_title(f"{location} {Nlocals} locations")
         ax.set_ylabel("percentage of people")
-        ax.set_xlabel("distrance traveled from shelter / km")
+        ax.set_xlabel("distance traveled from shelter / km")
         ax.set_xlim([0, None])
         return ax
 
@@ -1897,7 +1898,7 @@ class Tracker:
                 bool, To plot comparison of sexes matrices
             plot_AgeBinning:
                 bool, To plot w weight matrix to compare demographics
-            plot_DistanceTraveled:
+            plot_Distances:
                 bool, To plot the distance traveled from shelter to locations
             
         Returns

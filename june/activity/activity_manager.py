@@ -81,6 +81,8 @@ class ActivityManager:
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
     ):
+        print(config_filename)
+        
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         try:

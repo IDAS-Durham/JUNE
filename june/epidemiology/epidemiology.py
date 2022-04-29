@@ -31,6 +31,7 @@ def _get_medical_facilities(world, activity_manager):
     for group_name in activity_manager.all_super_groups:
         if "visits" in group_name:
             continue
+
         grouptype = getattr(world, group_name)
         if grouptype is not None:
             if isinstance(grouptype, MedicalFacilities):

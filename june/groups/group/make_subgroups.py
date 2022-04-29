@@ -73,6 +73,10 @@ def Get_Defaults(spec):
         "shelter"
         ]:
         return ["inter", "intra"], "Discrete"
+    elif spec in [
+        "informal_work"
+    ]:
+        return [0,100], "Age"
 
 
 class Subgroup_Params():
