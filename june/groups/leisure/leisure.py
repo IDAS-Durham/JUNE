@@ -22,7 +22,7 @@ default_config_filename = paths.configs_path / "config_example.yaml"
 logger = logging.getLogger("leisure")
 
 
-def generate_leisure_for_world(list_of_leisure_groups, world):
+def generate_leisure_for_world(list_of_leisure_groups, world, daytypes):
     """
     Generates an instance of the leisure class for the specified geography and leisure groups.
 
@@ -36,12 +36,12 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         if not hasattr(world, "pubs") or world.pubs is None or len(world.pubs) == 0:
             logger.warning("No pubs in this world/domain")
         else:
-            leisure_distributors["pub"] = PubDistributor.from_config(world.pubs)
+            leisure_distributors["pub"] = PubDistributor.from_config(world.pubs, daytypes=daytypes)
     if "gyms" in list_of_leisure_groups:
         if not hasattr(world, "gyms") or world.gyms is None or len(world.gyms) == 0:
             logger.warning("No gyms in this world/domain")
         else:
-            leisure_distributors["gym"] = GymDistributor.from_config(world.gyms)
+            leisure_distributors["gym"] = GymDistributor.from_config(world.gyms, daytypes=daytypes)
     if "cinemas" in list_of_leisure_groups:
         if (
             not hasattr(world, "cinemas")
@@ -51,7 +51,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
             logger.warning("No cinemas in this world/domain")
         else:
             leisure_distributors["cinema"] = CinemaDistributor.from_config(
-                world.cinemas
+                world.cinemas, daytypes=daytypes
             )
     if "groceries" in list_of_leisure_groups:
         if (
@@ -62,7 +62,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
             logger.warning("No groceries in this world/domain")
         else:
             leisure_distributors["grocery"] = GroceryDistributor.from_config(
-                world.groceries
+                world.groceries, daytypes=daytypes
             )
     if (
         "household_visits" in list_of_leisure_groups
@@ -74,7 +74,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
             )
         leisure_distributors[
             "residence_visits"
-        ] = ResidenceVisitsDistributor.from_config()
+        ] = ResidenceVisitsDistributor.from_config(daytypes=daytypes)
     leisure = Leisure(leisure_distributors=leisure_distributors, regions=world.regions)
     return leisure
 
@@ -93,7 +93,18 @@ def generate_leisure_for_config(world, config_filename=default_config_filename):
         list_of_leisure_groups = config["activity_to_super_groups"]["leisure"]
     except Exception:
         list_of_leisure_groups = config["activity_to_groups"]["leisure"]
-    leisure_instance = generate_leisure_for_world(list_of_leisure_groups, world)
+    
+    if "weekday" in config.keys() and "weekend" in config.keys():
+        daytypes = {
+            "weekday": config["weekday"],
+            "weekend": config["weekend"]
+        }
+    else:
+        daytypes = {
+            "weekday":["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"]
+        }
+    leisure_instance = generate_leisure_for_world(list_of_leisure_groups, world, daytypes)
     return leisure_instance
 
 
@@ -255,7 +266,6 @@ class Leisure:
         drags_household_probabilities = []
         activities = []
         for activity, distributor in self.leisure_distributors.items():
-            print(activity, distributor)
             drags_household_probabilities.append(
                 distributor.drags_household_probability
             )

@@ -21,6 +21,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         self,
         residence_type_probabilities,
         times_per_week,
+        daytypes,
         hours_per_day,
         drags_household_probability=0,
     ):
@@ -30,6 +31,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         super().__init__(
             social_venues=None,
             times_per_week=times_per_week,
+            daytypes=daytypes,
             hours_per_day=hours_per_day,
             drags_household_probability=drags_household_probability,
             neighbours_to_consider=None,
@@ -38,10 +40,10 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         )
 
     @classmethod
-    def from_config(cls, config_filename: str = default_config_filename):
+    def from_config(cls, daytypes, config_filename: str = default_config_filename):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(**config)
+        return cls(daytypes=daytypes, **config)
 
     def link_households_to_households(self, super_areas):
         """

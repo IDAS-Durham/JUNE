@@ -27,11 +27,16 @@ class SocialVenueDistributor:
         self,
         social_venues: SocialVenues,
         times_per_week: Dict[Dict, float],
+        daytypes: Dict[str, str],
         hours_per_day: Dict[Dict, float] = None,
         drags_household_probability=0.0,
         neighbours_to_consider=5,
         maximum_distance=5,
         leisure_subgroup_type=0,
+        open={
+            "weekday": 8-17,
+            "weekend": 8-17
+        },
     ):
         """
         A sex/age profile for the social venue attendees can be specified as
@@ -82,14 +87,16 @@ class SocialVenueDistributor:
         self.leisure_subgroup_type = leisure_subgroup_type
         self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
         self.spec = "_".join(self.spec).lower()
+        self.open = open
+        self.daytypes = daytypes
 
     @classmethod
-    def from_config(cls, social_venues: SocialVenues, config_filename: str = None):
+    def from_config(cls, social_venues: SocialVenues, daytypes: dict, config_filename: str = None):
         if config_filename is None:
             config_filename = cls.default_config_filename
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(social_venues, **config)
+        return cls(social_venues, daytypes=daytypes, **config)
 
     def _compute_poisson_parameter_from_times_per_week(
         self, times_per_week, hours_per_day, day_type

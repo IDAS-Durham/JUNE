@@ -93,7 +93,6 @@ class ActivityManager:
             activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
    
-        print(config)
         cls.check_inputs(time_config)
         weekday_activities = [
             activity for activity in time_config["step_activities"]["weekday"].values()
