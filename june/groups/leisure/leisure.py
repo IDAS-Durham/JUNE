@@ -255,6 +255,7 @@ class Leisure:
         drags_household_probabilities = []
         activities = []
         for activity, distributor in self.leisure_distributors.items():
+            print(activity, distributor)
             drags_household_probabilities.append(
                 distributor.drags_household_probability
             )

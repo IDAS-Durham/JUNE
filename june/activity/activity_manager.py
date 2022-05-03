@@ -81,8 +81,6 @@ class ActivityManager:
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
     ):
-        print(config_filename)
-        
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         try:
@@ -94,6 +92,8 @@ class ActivityManager:
             )
             activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
+   
+        print(config)
         cls.check_inputs(time_config)
         weekday_activities = [
             activity for activity in time_config["step_activities"]["weekday"].values()
