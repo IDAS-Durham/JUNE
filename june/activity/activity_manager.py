@@ -93,6 +93,7 @@ class ActivityManager:
             activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
    
+
         cls.check_inputs(time_config)
         weekday_activities = [
             activity for activity in time_config["step_activities"]["weekday"].values()
@@ -207,7 +208,7 @@ class ActivityManager:
                 self.policies.leisure_policies.apply(date=date, leisure=self.leisure)
             self.leisure.generate_leisure_probabilities_for_timestep(
                 delta_time=delta_time,
-                day_type=day_type,
+                date=date,
                 working_hours="primary_activity" in activities,
             )
         # move people to subgroups and get going abroad people

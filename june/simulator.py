@@ -295,9 +295,7 @@ class Simulator:
         if isinstance(self.tracker, type(None)):
             pass
         else:
-            self.tracker.simulation_days = self.timer.total_days
-            self.tracker.delta_t = self.timer.delta_time.seconds
-            self.tracker.trackertimestep(self.activity_manager.all_super_groups, self.timer.date)
+            self.tracker.trackertimestep(self.activity_manager.all_super_groups, self.timer)
 
         # main interaction loop
         infected_ids = []  # ids of the newly infected people

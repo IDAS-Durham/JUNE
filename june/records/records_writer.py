@@ -168,6 +168,7 @@ class Record:
             current_hospitalised,
             current_intensive_care,
         ) = self.summarise_hospitalisations(world=world)
+        
         daily_deaths, daily_deaths_in_hospital = self.summarise_deaths(world=world)
         all_hospital_regions = [hospital.region_name for hospital in world.hospitals]
         all_world_regions = [region.name for region in world.regions]

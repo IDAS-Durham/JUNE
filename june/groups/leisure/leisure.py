@@ -15,6 +15,7 @@ from june.groups.leisure import (
 )
 from june.utils import random_choice_numba
 from june import paths
+from june.utils.parse_probabilities import parse_opens
 
 
 default_config_filename = paths.configs_path / "config_example.yaml"
@@ -156,7 +157,7 @@ class Leisure:
         self,
         delta_time: float,
         working_hours: bool,
-        day_type: str,
+        date: str,
     ):
         self.probabilities_by_region_sex_age = {}
         if self.regions:
@@ -166,7 +167,7 @@ class Leisure:
                 ] = self._generate_leisure_probabilities_for_age_and_sex(
                     delta_time=delta_time,
                     working_hours=working_hours,
-                    day_type=day_type,
+                    date=date,
                     region=region,
                 )
         else:
@@ -174,7 +175,7 @@ class Leisure:
                 self._generate_leisure_probabilities_for_age_and_sex(
                     delta_time=delta_time,
                     working_hours=working_hours,
-                    day_type=day_type,
+                    date=date,
                     region=None,
                 )
             )
@@ -220,7 +221,7 @@ class Leisure:
             return subgroup
 
     def _generate_leisure_probabilities_for_age_and_sex(
-        self, delta_time: float, working_hours: bool, day_type: str, region: Region
+        self, delta_time: float, working_hours: bool, date: str, region: Region
     ):
         ret = {}
         for sex in ["m", "f"]:
@@ -229,13 +230,14 @@ class Leisure:
                     age=age,
                     sex=sex,
                     delta_time=delta_time,
-                    day_type=day_type,
+                    date=date,
                     working_hours=working_hours,
                     region=region,
                 )
                 for age in range(0, 100)
             ]
             ret[sex] = probs
+
         return ret
 
     def _get_leisure_probability_for_age_and_sex(
@@ -243,7 +245,7 @@ class Leisure:
         age: int,
         sex: str,
         delta_time: float,
-        day_type: str,
+        date: str,
         working_hours: bool,
         region: Region,
     ):
@@ -269,12 +271,13 @@ class Leisure:
             drags_household_probabilities.append(
                 distributor.drags_household_probability
             )
+
             activity_poisson_parameter = self._get_activity_poisson_parameter(
                 activity=activity,
                 distributor=distributor,
                 age=age,
                 sex=sex,
-                day_type=day_type,
+                date=date,
                 working_hours=working_hours,
                 region=region,
             )
@@ -306,7 +309,7 @@ class Leisure:
         distributor: SocialVenueDistributor,
         age: int,
         sex: str,
-        day_type: str,
+        date: str,
         working_hours: bool,
         region: Region,
     ):
@@ -314,10 +317,27 @@ class Leisure:
         Computes an activity poisson parameter taking into account active policies,
         regional compliances and lockdown tiers.
         """
+        day = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][date.weekday()]
+        if day in distributor.daytypes["weekday"]:
+            day_type = "weekday"
+        elif day in distributor.daytypes["weekend"]:
+            day_type = "weekend"
+        
+        #TODO check closures etc!
+        open_times = parse_opens(distributor.open)[day_type]
+        open = 1
+        if open_times[1] - open_times[0] == 0:
+            open = 0
+        if date.hour < open_times[0] or date.hour >= open_times[1]:
+            open =0
+        
+        
+
         if activity in self.policy_reductions:
             policy_reduction = self.policy_reductions[activity][day_type][sex][age]
         else:
             policy_reduction = 1
+
         activity_poisson_parameter = distributor.get_poisson_parameter(
             sex=sex,
             age=age,
@@ -326,7 +346,7 @@ class Leisure:
             policy_reduction=policy_reduction,
             region=region,
         )
-        return activity_poisson_parameter
+        return activity_poisson_parameter*open
 
     def _drags_household_to_activity(self, person, activity):
         """

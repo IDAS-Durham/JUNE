@@ -34,8 +34,8 @@ class SocialVenueDistributor:
         maximum_distance=5,
         leisure_subgroup_type=0,
         open={
-            "weekday": 8-17,
-            "weekend": 8-17
+            "weekday": "0-24",
+            "weekend": "0-24"
         },
     ):
         """
@@ -69,6 +69,8 @@ class SocialVenueDistributor:
             Subgroup of the venue that the person will be appended to
             (for instance, the visitors subgroup of the care home)
         """
+        self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
+        self.spec = "_".join(self.spec).lower()
         if hours_per_day is None:
             hours_per_day = {
                 "weekday": {
@@ -78,6 +80,9 @@ class SocialVenueDistributor:
                 "weekend": {"male": {"0-100": 12}, "female": {"0-100": 12}},
             }
         self.social_venues = social_venues
+        self.open = open
+        self.daytypes = daytypes
+
         self.poisson_parameters = self._parse_poisson_parameters(
             times_per_week=times_per_week, hours_per_day=hours_per_day
         )
@@ -85,10 +90,8 @@ class SocialVenueDistributor:
         self.maximum_distance = maximum_distance
         self.drags_household_probability = drags_household_probability
         self.leisure_subgroup_type = leisure_subgroup_type
-        self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
-        self.spec = "_".join(self.spec).lower()
-        self.open = open
-        self.daytypes = daytypes
+        
+        
 
     @classmethod
     def from_config(cls, social_venues: SocialVenues, daytypes: dict, config_filename: str = None):
@@ -103,15 +106,14 @@ class SocialVenueDistributor:
     ):
         if times_per_week == 0:
             return 0
-        if day_type == "weekend":
-            days = 2
-        else:
-            days = 5
-        return times_per_week / days * 24 / hours_per_day
+        ndays = len(self.daytypes[day_type])
+        print(day_type, ndays)
+        return (times_per_week / ndays) * (24 / hours_per_day)
 
     def _parse_poisson_parameters(self, times_per_week, hours_per_day):
         ret = {}
         _sex_t = {"male": "m", "female": "f"}
+        
         for day_type in ["weekday", "weekend"]:
             ret[day_type] = {}
             for sex in ["male", "female"]:
@@ -121,6 +123,7 @@ class SocialVenueDistributor:
                 parsed_hours_per_day = parse_age_probabilities(
                     hours_per_day[day_type][sex]
                 )
+                
                 ret[day_type][_sex_t[sex]] = [
                     self._compute_poisson_parameter_from_times_per_week(
                         times_per_week=parsed_times_per_week[i],
