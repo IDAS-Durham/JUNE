@@ -107,7 +107,6 @@ class SocialVenueDistributor:
         if times_per_week == 0:
             return 0
         ndays = len(self.daytypes[day_type])
-        print(day_type, ndays)
         return (times_per_week / ndays) * (24 / hours_per_day)
 
     def _parse_poisson_parameters(self, times_per_week, hours_per_day):
