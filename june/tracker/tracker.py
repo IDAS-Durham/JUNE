@@ -1,4 +1,5 @@
 from cProfile import label
+from matplotlib.style import available
 import numpy as np
 import yaml
 import pandas as pd
@@ -893,6 +894,7 @@ class Tracker:
         """
         if self.group_type_names == []:
             return 1
+
         self.convert_dict_to_df()
         self.calc_age_profiles()
         self.calc_average_contacts()
@@ -1229,8 +1231,15 @@ class Tracker:
 
  
         labels_CM = labels_IM
-        cm, cm_err = self.CMPlots_GetCM("Interaction", contact_type, normalized=True)
-        cm, cm_err, _ = self.IMPlots_UsefulCM(contact_type, cm, cm_err=cm_err, labels=labels_CM)
+        if contact_type in self.contact_matrices.keys():
+            cm, cm_err = self.CMPlots_GetCM("Interaction", contact_type, normalized=True)
+            cm, cm_err, _ = self.IMPlots_UsefulCM(contact_type, cm, cm_err=cm_err, labels=labels_CM)
+        else: #The venue wasn't tracked
+            cm = np.zeros_like(IM)
+            cm_err = np.zeros_like(cm)
+
+
+
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
             cm_Min = np.nanmin(cm[np.nonzero(cm)])
@@ -1650,6 +1659,8 @@ class Tracker:
         df["t"] = np.array(self.location_counters["Timestamp"])
         df["dt"] = np.array(self.location_counters["delta_t"])
         df["day"] = [day.day_name() for day in df["t"]]
+
+        available_days = np.unique(df["day"].values)
         for loc_i in range(NVenues):
             df[loc_i] = self.location_counters["loc"][locations][loc_i]["unisex"]
             
@@ -1680,13 +1691,19 @@ class Tracker:
         means_days = {}
         stds_days = {}
 
+       
+
         ymax = -1e3
         ymin = 1e3
         for day_i in range(len(DaysOfWeek_Names)):
             day = DaysOfWeek_Names[day_i]
+            if day not in available_days:
+                continue
             data = df[df["day"] == day][df.columns[~df.columns.isin(["day"])]]
             total_persons = data[data.columns[~data.columns.isin(["dt", "t"])]].sum(axis=0).values
             total_persons = total_persons[total_persons>0]
+
+            
 
             medians_days[day] = []
             means_days[day] = []
@@ -1703,14 +1720,18 @@ class Tracker:
                     means_days[day].append(np.nanmean(data_dt))
                     stds_days[day].append(np.nanstd(data_dt, ddof=1))
 
+
             if ymax < np.nanmax(means_days[day]):
                 ymax = np.nanmax(means_days[day])     
             if ymin > np.nanmin(means_days[day]):
                 ymin = np.nanmin(means_days[day])
+ 
 
         xlim = [times[Weekday_Names[0]][0], times[Weekday_Names[0]][-1]]
         for day_i in range(len(DaysOfWeek_Names)):
             day = DaysOfWeek_Names[day_i]
+            if day not in available_days:
+                continue
             timesmid[day] = np.insert(timesmid[day], 0, timesmid[day][-1]-datetime.timedelta(days=1), axis=0)
             timesmid[day] = np.insert(timesmid[day], len(timesmid[day]), timesmid[day][1]+datetime.timedelta(days=1), axis=0)
             medians_days[day] = np.insert(medians_days[day], 0, medians_days[day][-1], axis=0) 
@@ -1720,6 +1741,8 @@ class Tracker:
 
         for day_i in range(len(DaysOfWeek_Names)):
             day = DaysOfWeek_Names[day_i]
+            if day not in available_days:
+                continue
             if day in Weekend_Names:
                 linestyle="--"
             else:
@@ -1909,6 +1932,8 @@ class Tracker:
         -------
             None
         """
+        if self.group_type_names == []:
+            return 1
 
         relevant_bin_types = self.contact_matrices.keys()
         relevant_bin_types_short = ["syoa"]
