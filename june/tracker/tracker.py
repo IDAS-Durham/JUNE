@@ -204,7 +204,7 @@ class Tracker:
         Union = sorted(list(set(list_A + list_B)))
         return Union
 
-    def Probabilistic_Contacts(self, mean, mean_err):
+    def Probabilistic_Contacts(self, mean, mean_err, Probabilistic=True):
         """
         Possion variable. How many contacts statisticaly.
 
@@ -220,12 +220,15 @@ class Tracker:
             C_i:
                 The randomly distributed number of errors.
         """
-        if mean_err != 0: #Errored input
-            C_i = max(0, np.random.normal(mean,mean_err))
-            C_i = self._random_round(np.random.poisson(C_i))
-        else: #Error on counts treated as zero
-            C_i = self._random_round(np.random.poisson(mean)) 
-        return C_i
+        if Probabilistic:
+            if mean_err != 0: #Errored input
+                C_i = max(0, np.random.normal(mean,mean_err))
+                C_i = self._random_round(np.random.poisson(C_i))
+            else: #Error on counts treated as zero
+                C_i = self._random_round(np.random.poisson(mean)) 
+            return C_i
+        else:
+            return self._random_round(mean) 
 
     def contract_matrix(self, CM, bins, method = np.sum):
         """
@@ -245,7 +248,6 @@ class Tracker:
             CM:
                 np.array The contracted matrix
         """
-
         cm = np.zeros( (len(bins)-1,len(bins)-1) )
         for bin_xi in range(len(bins)-1):
             for bin_yi in range(len(bins)-1):
@@ -286,8 +288,8 @@ class Tracker:
                 append[sex] = np.zeros( (len(bins)-1,len(bins)-1) )
             self.contact_matrices[Name][group] = append    
             for sex in self.contact_sexes:    
-                self.contact_matrices[Name][group][sex] =  self.contract_matrix(cm[group][sex], bins, np.sum)
                 
+                self.contact_matrices[Name][group][sex] =  self.contract_matrix(cm[group][sex], bins, np.sum)                
         self.hash_ages()
         return 1
 
@@ -785,16 +787,11 @@ class Tracker:
                     if bin_type == "Interaction":
                         cm = cm_spec
                         age_profile = self.location_cum_pop["Interaction"][contact_type]
-                        age_profile_G = np.ones(age_profile.shape[0])
-                        bins = np.arange(age_profile.shape[0]+1) #TODO Find appropirate renorm scale.
                     else:
                         cm = cm_spec[sex]
                         age_profile = self.location_cum_pop[bin_type][contact_type][sex]
-                        age_profile_G = self.age_profiles[bin_type]["global"][sex]
-                        bins = self.age_bins[bin_type]
-                                                            #Bins           global age profiles      #pop totals
-                    norm_cm, norm_cm_err = self.CM_Norm(cm, np.array(bins), np.array(age_profile_G), np.array(age_profile), contact_type=contact_type)
 
+                    norm_cm, norm_cm_err = self.CM_Norm(cm, np.array(age_profile), contact_type=contact_type)
 
                     if bin_type == "Interaction":
                         self.normalised_contact_matrices["Interaction"][contact_type] = norm_cm
@@ -814,7 +811,7 @@ class Tracker:
         return 1
 
     
-    def CM_Norm(self, cm, bins, global_age_profile, pop_tots, contact_type="global"):
+    def CM_Norm(self, cm, pop_tots, contact_type="global"):
         """
         Normalise the contact matrices using population at location data and time of simulation run time.
 
@@ -846,9 +843,6 @@ class Tracker:
         norm_cm = np.zeros( cm.shape )
         norm_cm_err = np.zeros( cm.shape )
 
-        Bindiffs = np.abs(bins[1:]-bins[:-1])
-        global_age_profile = global_age_profile / Bindiffs
-
         #Loop over elements
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
@@ -856,8 +850,7 @@ class Tracker:
                 F_i = 1
                 F_j = 1
                 #Population rescaling
-                w = (global_age_profile[i] / global_age_profile[j])
-                #w = (pop_tots[i] / pop_tots[j]) * (Bindiffs[i]/Bindiffs[j])
+                w = (pop_tots[i] / pop_tots[j])
    
                 norm_cm[i,j] = (
                     0.5*(F_i*cm[i,j]/pop_tots[j] + (F_j*cm[j,i]/pop_tots[i])*w)*factor
@@ -1231,7 +1224,7 @@ class Tracker:
 
  
         labels_CM = labels_IM
-        if contact_type in self.contact_matrices.keys():
+        if contact_type in self.contact_matrices["Interaction"].keys():
             cm, cm_err = self.CMPlots_GetCM("Interaction", contact_type, normalized=True)
             cm, cm_err, _ = self.IMPlots_UsefulCM(contact_type, cm, cm_err=cm_err, labels=labels_CM)
         else: #The venue wasn't tracked
@@ -1519,6 +1512,23 @@ class Tracker:
                 matplotlib axes object
 
         """
+        df = pd.DataFrame()
+        df["t"] = np.array(self.location_counters_day["Timestamp"])
+        df["day"] = [day.day_name() for day in df["t"]]
+
+        NVenues = len(self.location_counters_day["loc"][locations].keys())
+        for loc_i in range(NVenues):
+            df[loc_i] = self.location_counters_day["loc"][locations][loc_i]["unisex"]
+        Weekday_Names = self.timer.day_types["weekday"]
+
+        df = df[df["day"] == Weekday_Names[0]].iloc[0]
+        df_weekeday_att = np.array(df.iloc[2:].values)
+
+        NVenues_Per = sum(df_weekeday_att > 0)/NVenues
+        NVenues = sum(df_weekeday_att > 0)
+
+       
+            
         Interval = datetime.timedelta(days=max_days)
 
         xs = np.array(self.location_counters["Timestamp"])
@@ -1536,7 +1546,7 @@ class Tracker:
         ymax = -1
         i_counts = 0
 
-        ax1.set_title(f"{Nlocals} locations")
+        ax1.set_title("%s locations (frac:%.2f)" % (NVenues, NVenues_Per))
         for i in self.location_counters["loc"][locations].keys():
             if Nlocals > 100:
                 Nlocals = 100
@@ -2166,6 +2176,23 @@ class Tracker:
             None
 
         """
+        #Used to get print out for debugging which CM element is playing up...
+        # CM_Which_dict = {}
+        # if self.interaction_matrices[group.spec]["type"] == "Age":
+        #     for bin_i in range(len(self.interaction_matrices[group.spec]["bins"])-1):
+        #         bin_i_name = "%s-%s" % (self.interaction_matrices[group.spec]["bins"][bin_i],self.interaction_matrices[group.spec]["bins"][bin_i+1]-1)
+        #         CM_Which_dict[bin_i] = {}
+        #         for bin_j in range(len(self.interaction_matrices[group.spec]["bins"])-1):
+        #             bin_j_name = "%s-%s" % (self.interaction_matrices[group.spec]["bins"][bin_j],self.interaction_matrices[group.spec]["bins"][bin_j+1]-1)
+        #             CM_Which_dict[bin_i][bin_j] = f"{bin_i_name}:{bin_j_name}"
+        # elif self.interaction_matrices[group.spec]["type"] == "Discrete":
+        #     for bin_i in range(len(self.interaction_matrices[group.spec]["bins"])):
+        #         bin_i_name = self.interaction_matrices[group.spec]["bins"][bin_i]
+        #         CM_Which_dict[bin_i] = {}
+        #         for bin_j in range(len(self.interaction_matrices[group.spec]["bins"])):
+        #             bin_j_name = self.interaction_matrices[group.spec]["bins"][bin_j]
+        #             CM_Which_dict[bin_i][bin_j] = f"{bin_i_name}:{bin_j_name}"
+
         #Loop over people
         if len(group.people) < 2:
             return 1
@@ -2203,11 +2230,14 @@ class Tracker:
             contacts_per_subgroup, contacts_per_subgroup_error = self.get_contacts_per_subgroup(person_subgroup_idx, group)
             
             total_contacts = 0
-            contact_subgroup_idx = 0
-            for subgroup_contacts, subgroup_contacts_error, subgroup_people in zip(contacts_per_subgroup, contacts_per_subgroup_error, groups_inter):
+            contact_subgroups = np.arange(0, len(groups_inter), 1)
+            for subgroup_contacts, subgroup_contacts_error, contact_subgroup_idx in zip(contacts_per_subgroup, contacts_per_subgroup_error, contact_subgroups):
+                #Degugging print out...
+                #CM_Which = CM_Which_dict[person_subgroup_idx][contact_subgroup_idx]
                 # potential contacts is one less if you're in that subgroup - can't contact yourself!
+                subgroup_people = groups_inter[contact_subgroup_idx]
                 subgroup_people_without = subgroup_people.copy()
-
+                
                 #Person in this subgroup
                 if person in subgroup_people:
                     inside = True
@@ -2218,14 +2248,14 @@ class Tracker:
                 #is_same_subgroup = subgroup.subgroup_type == subgroup_idx
                 if len(subgroup_people) - inside <= 0:
                     continue
-                int_contacts = self.Probabilistic_Contacts(subgroup_contacts, subgroup_contacts_error)
-
-                if int_contacts == 0:
-                    continue
+                int_contacts = self.Probabilistic_Contacts(subgroup_contacts, subgroup_contacts_error, Probabilistic=True)
+                #if int_contacts == 0:
+                #    continue
 
                 contact_ids_inter = []
                 contact_ids_intra = []
                 contact_ids = []
+                contact_ages = []
 
                 if inside:
                     contacts_index = np.random.choice(len(subgroup_people_without), int_contacts, replace=True)
@@ -2248,8 +2278,10 @@ class Tracker:
                         else: 
                             contact_ids_inter.append(contact.id)
                     contact_ids.append(contact.id)
-
+                    contact_ages.append(contact.age)
+                
                 age_idx = self.age_idxs["syoa"][person.id]
+                
                 contact_age_idxs = [
                     self.age_idxs["syoa"][contact_id] for contact_id in contact_ids
                 ]
@@ -2289,9 +2321,6 @@ class Tracker:
                             self.contact_matrices["syoa"][group.spec+"_intra"]["male"][age_idx,cidx] += 1
                         if person.sex == "f" and "female" in self.contact_sexes:
                             self.contact_matrices["syoa"][group.spec+"_intra"]["female"][age_idx,cidx] += 1
-
-                #Interact contact_idx for interation matrix
-                contact_subgroup_idx += 1
 
             self.contact_counts[person.id]["global"] += total_contacts
             self.contact_counts[person.id][group.spec] += total_contacts
@@ -2431,7 +2460,6 @@ class Tracker:
         self.location_counters["Timestamp"].append(self.timer.date)
         self.location_counters["delta_t"].append(self.timer.delta_time.seconds/3600)
 
-        #TODO Pull in the initial start time
         if self.timer.date.hour == self.timer.initial_date.hour and self.timer.date.minute== 0 and self.timer.date.second == 0:
             self.location_counters_day["Timestamp"].append(self.timer.date)
 
