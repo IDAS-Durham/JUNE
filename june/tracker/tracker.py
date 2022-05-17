@@ -339,7 +339,11 @@ class Tracker:
         """
         group_type_names = []
         for groups in self.group_types:
-            spec = groups[0].spec
+            if groups[0] is not None:
+                spec = groups[0].spec
+            else:
+                continue
+            
             group_type_names.append(spec)
             if spec == "shelter":
                 group_type_names.append(spec+"_intra")
