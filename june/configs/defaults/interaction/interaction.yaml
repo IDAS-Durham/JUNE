@@ -67,7 +67,7 @@ contact_matrices:
     proportion_physical: [[0.79,0.7,0.7,0.7],[0.7,0.34,0.4,0.4],[0.7,0.4,0.62,0.62],[0.7,0.62,0.62,0.45]] 
     characteristic_time: 12
     type: Discrete
-    bins: ["kids","young adults","adults","old adults"]
+    bins: ["kids","young_adults","adults","old_adults"]
   
   pub:
     contacts: [[3]]
