@@ -1,5 +1,3 @@
-from cProfile import label
-from matplotlib.style import available
 import numpy as np
 import yaml
 import pandas as pd
@@ -11,7 +9,6 @@ from june.world import World
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-from mpl_toolkits.axes_grid.inset_locator import inset_axes
 from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
 import datetime
@@ -713,7 +710,7 @@ class Tracker:
             )
         return 1
 
-    def normalise_contact_matrices(self):          
+    def normalise_contact_matrices(self, duplicate=True):          
         """
         Normalise the contact matrices based on likelyhood to interact with each demographic. 
         Sets and rescales;
@@ -795,7 +792,7 @@ class Tracker:
                         cm = cm_spec[sex]
                         age_profile = self.location_cum_pop[bin_type][contact_type][sex]
 
-                    norm_cm, norm_cm_err = self.CM_Norm(cm, np.array(age_profile), contact_type=contact_type)
+                    norm_cm, norm_cm_err = self.CM_Norm(cm, np.array(age_profile), contact_type=contact_type, duplicate=duplicate)
 
                     if bin_type == "Interaction":
                         self.normalised_contact_matrices["Interaction"][contact_type] = norm_cm
@@ -815,7 +812,7 @@ class Tracker:
         return 1
 
     
-    def CM_Norm(self, cm, pop_tots, contact_type="global"):
+    def CM_Norm(self, cm, pop_tots, contact_type="global", duplicate=True):
         """
         Normalise the contact matrices using population at location data and time of simulation run time.
 
@@ -850,9 +847,13 @@ class Tracker:
         #Loop over elements
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
-                
-                F_i = 1
-                F_j = 1
+                if duplicate: #Count contacts j to i also
+                    F_i = 1
+                    F_j = 1
+                else: #Only count contacts i to j
+                    F_i = 2
+                    F_j = 0
+
                 #Population rescaling
                 w = (pop_tots[i] / pop_tots[j])
    
@@ -870,7 +871,7 @@ class Tracker:
 
         return norm_cm, norm_cm_err
 
-    def post_process_simulation(self, save=True):
+    def post_process_simulation(self, save=True, duplicate = True ):
         """
         Perform some post simulation checks and calculations.
             Create contact dataframes
@@ -895,7 +896,7 @@ class Tracker:
         self.convert_dict_to_df()
         self.calc_age_profiles()
         self.calc_average_contacts()
-        self.normalise_contact_matrices()
+        self.normalise_contact_matrices(duplicate=duplicate)
 
         if save:
             self.tracker_results_to_yaml()
@@ -1640,6 +1641,7 @@ class Tracker:
 
         NVenues = len(self.location_counters_day["loc"][locations].keys())
         for loc_i in range(NVenues):
+            
             df[loc_i] = self.location_counters_day["loc"][locations][loc_i]["unisex"]
             
         means = np.zeros(len(DaysOfWeek_Names))
@@ -2162,7 +2164,7 @@ class Tracker:
         ]
         return contacts_per_subgroup, contacts_per_subgroup_error
         
-    def simulate_1d_contacts(self, group):
+    def simulate_1d_contacts(self, group, Contact_All = False):
         """
         Construct contact matrices. 
         For group at a location we loop over all people and sample from the selection of availible contacts to build more grainual contact matrices.
@@ -2252,7 +2254,7 @@ class Tracker:
                 #is_same_subgroup = subgroup.subgroup_type == subgroup_idx
                 if len(subgroup_people) - inside <= 0:
                     continue
-                int_contacts = self.Probabilistic_Contacts(subgroup_contacts, subgroup_contacts_error, Probabilistic=True)
+                int_contacts = self.Probabilistic_Contacts(subgroup_contacts, subgroup_contacts_error, Probabilistic=False)
                 #if int_contacts == 0:
                 #    continue
 
@@ -2261,13 +2263,26 @@ class Tracker:
                 contact_ids = []
                 contact_ages = []
 
-                if inside:
-                    contacts_index = np.random.choice(len(subgroup_people_without), int_contacts, replace=True)
-                else:
-                    contacts_index = np.random.choice(len(subgroup_people), int_contacts, replace=True)
+                if Contact_All == False:
+                    if inside:
+                        contacts_index = np.random.choice(len(subgroup_people_without), int_contacts, replace=True)
+                    else:
+                        contacts_index = np.random.choice(len(subgroup_people), int_contacts, replace=True)
 
-                #Interaction Matrix
-                self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts
+                    #Interaction Matrix
+                    self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts/2
+                    self.contact_matrices["Interaction"][group.spec][contact_subgroup_idx, person_subgroup_idx] += int_contacts/2
+                else:
+                    if inside:
+                        N_Potential_Contacts = len(subgroup_people_without)
+                        contacts_index = np.random.choice(len(subgroup_people_without), N_Potential_Contacts, replace=False)
+                    else:
+                        N_Potential_Contacts = len(subgroup_people)
+                        contacts_index = np.random.choice(len(subgroup_people), N_Potential_Contacts, replace=False)
+
+                    #Interaction Matrix
+                    self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += N_Potential_Contacts/2
+                    self.contact_matrices["Interaction"][group.spec][contact_subgroup_idx, person_subgroup_idx] += N_Potential_Contacts/2
                 
                 #Get the ids
                 for contacts_index_i in contacts_index:  
@@ -2290,14 +2305,20 @@ class Tracker:
                     self.age_idxs["syoa"][contact_id] for contact_id in contact_ids
                 ]
                 for cidx in contact_age_idxs:
-                    self.contact_matrices["syoa"]["global"]["unisex"][age_idx,cidx] += 1
-                    self.contact_matrices["syoa"][group.spec]["unisex"][age_idx,cidx] += 1
+                    self.contact_matrices["syoa"]["global"]["unisex"][age_idx,cidx] += 1/2
+                    self.contact_matrices["syoa"][group.spec]["unisex"][age_idx,cidx] += 1/2
+                    self.contact_matrices["syoa"]["global"]["unisex"][cidx,age_idx] += 1/2
+                    self.contact_matrices["syoa"][group.spec]["unisex"][cidx,age_idx] += 1/2
                     if person.sex == "m" and "male" in self.contact_sexes:
-                        self.contact_matrices["syoa"]["global"]["male"][age_idx,cidx] += 1
-                        self.contact_matrices["syoa"][group.spec]["male"][age_idx,cidx] += 1
+                        self.contact_matrices["syoa"]["global"]["male"][age_idx,cidx] += 1/2
+                        self.contact_matrices["syoa"][group.spec]["male"][age_idx,cidx] += 1/2
+                        self.contact_matrices["syoa"]["global"]["male"][cidx,age_idx] += 1/2
+                        self.contact_matrices["syoa"][group.spec]["male"][cidx,age_idx] += 1/2
                     if person.sex == "f" and "female" in self.contact_sexes:
-                        self.contact_matrices["syoa"]["global"]["female"][age_idx,cidx] += 1
-                        self.contact_matrices["syoa"][group.spec]["female"][age_idx,cidx] += 1
+                        self.contact_matrices["syoa"]["global"]["female"][age_idx,cidx] += 1/2
+                        self.contact_matrices["syoa"][group.spec]["female"][age_idx,cidx] += 1/2
+                        self.contact_matrices["syoa"]["global"]["female"][cidx,age_idx] += 1/2
+                        self.contact_matrices["syoa"][group.spec]["female"][cidx,age_idx] += 1/2
 
                     total_contacts += 1
 
@@ -2308,11 +2329,14 @@ class Tracker:
                         self.age_idxs["syoa"][contact_id] for contact_id in contact_ids_inter
                     ]
                     for cidx in contact_age_idxs:
-                        self.contact_matrices["syoa"][group.spec+"_inter"]["unisex"][age_idx,cidx] += 1
+                        self.contact_matrices["syoa"][group.spec+"_inter"]["unisex"][age_idx,cidx] += 1/2
+                        self.contact_matrices["syoa"][group.spec+"_inter"]["unisex"][cidx,age_idx] += 1/2
                         if person.sex == "m" and "male" in self.contact_sexes:
-                            self.contact_matrices["syoa"][group.spec+"_inter"]["male"][age_idx,cidx] += 1
+                            self.contact_matrices["syoa"][group.spec+"_inter"]["male"][age_idx,cidx] += 1/2
+                            self.contact_matrices["syoa"][group.spec+"_inter"]["male"][cidx,age_idx] += 1/2
                         if person.sex == "f" and "female" in self.contact_sexes:
-                            self.contact_matrices["syoa"][group.spec+"_inter"]["female"][age_idx,cidx] += 1
+                            self.contact_matrices["syoa"][group.spec+"_inter"]["female"][age_idx,cidx] += 1/2
+                            self.contact_matrices["syoa"][group.spec+"_inter"]["female"][cidx,age_idx] += 1/2
 
 
                     #Intra
@@ -2320,11 +2344,14 @@ class Tracker:
                         self.age_idxs["syoa"][contact_id] for contact_id in contact_ids_intra
                     ]
                     for cidx in contact_age_idxs:
-                        self.contact_matrices["syoa"][group.spec+"_intra"]["unisex"][age_idx,cidx] += 1
+                        self.contact_matrices["syoa"][group.spec+"_intra"]["unisex"][age_idx,cidx] += 1/2
+                        self.contact_matrices["syoa"][group.spec+"_intra"]["unisex"][cidx,age_idx] += 1/2
                         if person.sex == "m" and "male" in self.contact_sexes:
-                            self.contact_matrices["syoa"][group.spec+"_intra"]["male"][age_idx,cidx] += 1
+                            self.contact_matrices["syoa"][group.spec+"_intra"]["male"][age_idx,cidx] += 1/2
+                            self.contact_matrices["syoa"][group.spec+"_intra"]["male"][cidx,age_idx] += 1/2
                         if person.sex == "f" and "female" in self.contact_sexes:
-                            self.contact_matrices["syoa"][group.spec+"_intra"]["female"][age_idx,cidx] += 1
+                            self.contact_matrices["syoa"][group.spec+"_intra"]["female"][age_idx,cidx] += 1/2
+                            self.contact_matrices["syoa"][group.spec+"_intra"]["female"][cidx,age_idx] += 1/2
 
             self.contact_counts[person.id]["global"] += total_contacts
             self.contact_counts[person.id][group.spec] += total_contacts
@@ -2420,6 +2447,7 @@ class Tracker:
                     self.location_counters_day_i["loc"][super_group_name][counter]["female"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["female"],women)
                     self.location_counters_day["loc"][super_group_name][counter]["female"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["female"] )
 
+
     def simulate_traveldistance(self, day):
         if day != "Monday":
             return 1
@@ -2482,7 +2510,7 @@ class Tracker:
                 counter = 0                 
                 for group in grouptype.members: #Loop over all locations.
                     if group.spec in self.group_type_names:
-                        self.simulate_1d_contacts(group)
+                        self.simulate_1d_contacts(group, Contact_All= False)
                         self.simulate_attendance(group, super_group_name, self.timer, counter)
                         counter += 1
         return 1

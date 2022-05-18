@@ -260,7 +260,9 @@ class ActivityManager:
             date=date
         )
         to_send_abroad = MovablePeople()
+        counter = 0
         for person in self.world.people:
+            counter += 1
             if person.dead or person.busy:
                 continue
             allowed_activities = self.policies.individual_policies.apply(
@@ -275,6 +277,7 @@ class ActivityManager:
             if external_subgroup is not None:
                 to_send_abroad.add_person(person, external_subgroup)
 
+        
         tock = perf_counter()
         mpi_logger.info(f"{self.timer.date},{mpi_rank},activity,{tock-tick}")
         return to_send_abroad

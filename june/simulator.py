@@ -284,6 +284,7 @@ class Simulator:
         # count people in the cemetery
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
+
         output_logger.info(
             f"Info for rank {mpi_rank}, "
             f"Date = {self.timer.date}, "
@@ -300,6 +301,8 @@ class Simulator:
         # main interaction loop
         infected_ids = []  # ids of the newly infected people
         infection_ids = []  # ids of the viruses they got
+
+        
         for super_group in super_group_instances:
             for group in super_group:
                 if group.external:
@@ -318,13 +321,19 @@ class Simulator:
                         delta_time=self.timer.duration,
                         record=self.record,
                     )
+                    
                     infected_ids += new_infected_ids
                     infection_ids += new_infection_ids
                     n_people += group_size
+
+
+        
+
         tock_interaction = perf_counter()
         rank_logger.info(
             f"Rank {mpi_rank} -- interaction -- {tock_interaction-tick_interaction}"
         )
+
         self.epidemiology.do_timestep(
             world=self.world,
             timer=self.timer,
@@ -333,6 +342,7 @@ class Simulator:
             infection_ids=infection_ids,
             people_from_abroad_dict=people_from_abroad_dict,
         )
+
         tick, tickw = perf_counter(), wall_clock()
         mpi_comm.Barrier()
         tock, tockw = perf_counter(), wall_clock()
@@ -343,6 +353,9 @@ class Simulator:
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
         )
         if n_people != people_active:
+
+
+
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {people_active}.\n"
