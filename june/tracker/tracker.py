@@ -786,22 +786,27 @@ class Tracker:
                     
 
                     if bin_type == "Interaction":
-                        cm = cm_spec
-                        age_profile = self.location_cum_pop["Interaction"][contact_type]
+                        if  sex == "unisex":
+                            cm = cm_spec
+                            age_profile = self.location_cum_pop["Interaction"][contact_type]
+                        else:
+                            continue
                     else:
                         cm = cm_spec[sex]
                         age_profile = self.location_cum_pop[bin_type][contact_type][sex]
 
-                    norm_cm, norm_cm_err = self.CM_Norm(cm, np.array(age_profile), contact_type=contact_type, duplicate=duplicate)
+                    norm_cm, norm_cm_err = self.CM_Norm(cm, np.array(age_profile), bin_type, contact_type=contact_type, duplicate=duplicate)
 
                     if bin_type == "Interaction":
-                        self.normalised_contact_matrices["Interaction"][contact_type] = norm_cm
-                        self.normalised_contact_matrices_err["Interaction"][contact_type] = norm_cm_err
+                        if  sex == "unisex":
+                            self.normalised_contact_matrices["Interaction"][contact_type] = norm_cm
+                            self.normalised_contact_matrices_err["Interaction"][contact_type] = norm_cm_err
 
-                        #Basically just counts of interations so assume a poisson error
-                        #TODO Think about this error?
-                        self.contact_matrices_err["Interaction"][contact_type] = np.sqrt(self.contact_matrices_err[bin_type][contact_type])
-
+                            #Basically just counts of interations so assume a poisson error
+                            #TODO Think about this error?
+                            self.contact_matrices_err["Interaction"][contact_type] = np.sqrt(self.contact_matrices_err[bin_type][contact_type])
+                        else:
+                            continue
                     else:
                         self.normalised_contact_matrices[bin_type][contact_type][sex] = norm_cm
                         self.normalised_contact_matrices_err[bin_type][contact_type][sex] = norm_cm_err
@@ -812,7 +817,7 @@ class Tracker:
         return 1
 
     
-    def CM_Norm(self, cm, pop_tots, contact_type="global", duplicate=True):
+    def CM_Norm(self, cm, pop_tots, bin_type, contact_type="global", duplicate=True):
         """
         Normalise the contact matrices using population at location data and time of simulation run time.
 
@@ -843,6 +848,16 @@ class Tracker:
         #Create blanks to fill
         norm_cm = np.zeros( cm.shape )
         norm_cm_err = np.zeros( cm.shape )
+
+        if bin_type == "Interaction":
+            print("")
+            print("contact_type='%s'" % contact_type)
+            print("Duplicate=%s" % duplicate)
+            print("CM=np.array(%s)" % [list(cm[i]) for i in range(cm.shape[0])])
+            print("C=%s" % self.Get_characteristic_time(location=contact_type)[0])
+            print("CT=%s" % self.location_cum_time[contact_type])
+            print("Pop_Tots=np.array(%s)" % list(pop_tots))
+            print("IM=np.array(%s)" % self.interaction_matrices[contact_type]["contacts"])
 
         #Loop over elements
         for i in range(cm.shape[0]):
