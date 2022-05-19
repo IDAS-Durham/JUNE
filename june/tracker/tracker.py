@@ -1,3 +1,4 @@
+from concurrent.futures import thread
 import numpy as np
 import yaml
 import pandas as pd
@@ -876,10 +877,11 @@ class Tracker:
                     0.5*(F_i*cm[i,j]/pop_tots[j] + (F_j*cm[j,i]/pop_tots[i])*w)*factor
                 )
                 #TODO Think about this error? 
+
                 norm_cm_err[i,j] = (
-                    0.5*( 
-                        np.sqrt(F_i*cm[i,j])/(pop_tots[j]) + 
-                        (np.sqrt(F_j*cm[j,i])/(pop_tots[i])*w) 
+                    0.5*np.sqrt( 
+                        (F_i*np.sqrt(cm[i,j]*pop_tots[i])/pop_tots[j])**2 + 
+                        (F_j*np.sqrt(cm[j,i]*pop_tots[j])/pop_tots[i]*w)**2 
                     )*factor
                 )
 
@@ -938,6 +940,12 @@ class Tracker:
         -------
             ax
         """
+        size=15
+        if cm.shape[0] == 3:
+            size=12
+        if cm.shape[0] > 3:
+            size=10
+
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
                 fmt = ".2f"
@@ -945,17 +953,32 @@ class Tracker:
                     cm[i,j] = 0
                 if cm[i,j] > 1e8:
                     cm[i,j] = np.inf
+                
+                
+
 
                 if cm_err is not None:
+                    if np.isnan(cm_err[i,j]):
+                        cm_err[i,j]=0
+
+                    if cm_err[i,j] + cm[i,j] == 0:
+                        fmt = ".0f"
+
                     text =  r"$ %s \pm %s$" % (format(cm[i, j], fmt), format(cm_err[i, j], fmt))
                 else: 
                     text =  r"$ %s $" % (format(cm[i, j], fmt))
-                ax.text(j, i,text,
-                    ha="center", va="center",
-                    color="white" if cm[i, j] > thresh else "black",size=15)
+
+                if thresh == 1e8:
+                    ax.text(j, i,text,
+                        ha="center", va="center",
+                        color="black",size=size)
+                else:
+                    ax.text(j, i,text,
+                        ha="center", va="center",
+                        color="white" if abs(cm[i, j] - 1) > thresh else "black",size=size)
         return ax
 
-    def PlotCM(self, cm, cm_err, labels, ax, **plt_kwargs):
+    def PlotCM(self, cm, cm_err, labels, ax, thresh=1e10, **plt_kwargs):
         """
         Function to imshow plot the CM.
 
@@ -988,7 +1011,7 @@ class Tracker:
                 pass
         # Loop over data dimensions and create text annotations.
         if cm.shape[0]*cm.shape[1] < 26:
-            self.AnnotateCM(cm, cm_err, ax)
+            self.AnnotateCM(cm, cm_err, ax, thresh=thresh)
         return im
 
     def CMPlots_GetLabels(self, bins):
@@ -1291,8 +1314,10 @@ class Tracker:
                 diff_max = 0.5
         else:
             diff_max = 0.5
-
-        im3 = self.PlotCM(ratio, None, labels_CM, ax3, origin='lower',cmap='seismic',vmin=1-diff_max,vmax=1+diff_max)
+        if IM_err is None:
+            IM_err = np.zeros_like(IM)
+        ratio_errors = ratio * np.sqrt((cm_err/cm)**2+(IM_err/IM)**2)
+        im3 = self.PlotCM(ratio, ratio_errors, labels_CM, ax3, thresh=diff_max/3, origin='lower',cmap='seismic',vmin=1-diff_max,vmax=1+diff_max)
         f.colorbar(im1, ax=ax1)
         f.colorbar(im2, ax=ax2)
         f.colorbar(im3, ax=ax3)
