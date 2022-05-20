@@ -2294,7 +2294,7 @@ class Tracker:
                 #is_same_subgroup = subgroup.subgroup_type == subgroup_idx
                 if len(subgroup_people) - inside <= 0:
                     continue
-                int_contacts = self.Probabilistic_Contacts(subgroup_contacts, subgroup_contacts_error, Probabilistic=False)
+                int_contacts = self.Probabilistic_Contacts(subgroup_contacts, subgroup_contacts_error, Probabilistic=True)
                 #if int_contacts == 0:
                 #    continue
 
@@ -2310,8 +2310,9 @@ class Tracker:
                         contacts_index = np.random.choice(len(subgroup_people), int_contacts, replace=True)
 
                     #Interaction Matrix
-                    self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts/2
-                    self.contact_matrices["Interaction"][group.spec][contact_subgroup_idx, person_subgroup_idx] += int_contacts/2
+                    self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts
+                    #self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts/2
+                    #self.contact_matrices["Interaction"][group.spec][contact_subgroup_idx, person_subgroup_idx] += int_contacts/2
                 else:
                     if inside:
                         N_Potential_Contacts = len(subgroup_people_without)
@@ -2321,8 +2322,9 @@ class Tracker:
                         contacts_index = np.random.choice(len(subgroup_people), N_Potential_Contacts, replace=False)
 
                     #Interaction Matrix
-                    self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += N_Potential_Contacts/2
-                    self.contact_matrices["Interaction"][group.spec][contact_subgroup_idx, person_subgroup_idx] += N_Potential_Contacts/2
+                    self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += N_Potential_Contacts
+                    #self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += N_Potential_Contacts/2
+                    #self.contact_matrices["Interaction"][group.spec][contact_subgroup_idx, person_subgroup_idx] += N_Potential_Contacts/2
                 
                 #Get the ids
                 for contacts_index_i in contacts_index:  
@@ -2345,20 +2347,29 @@ class Tracker:
                     self.age_idxs["syoa"][contact_id] for contact_id in contact_ids
                 ]
                 for cidx in contact_age_idxs:
-                    self.contact_matrices["syoa"]["global"]["unisex"][age_idx,cidx] += 1/2
-                    self.contact_matrices["syoa"][group.spec]["unisex"][age_idx,cidx] += 1/2
-                    self.contact_matrices["syoa"]["global"]["unisex"][cidx,age_idx] += 1/2
-                    self.contact_matrices["syoa"][group.spec]["unisex"][cidx,age_idx] += 1/2
+                    self.contact_matrices["syoa"]["global"]["unisex"][age_idx,cidx] += 1
+                    self.contact_matrices["syoa"][group.spec]["unisex"][age_idx,cidx] += 1
+
+                    #self.contact_matrices["syoa"]["global"]["unisex"][age_idx,cidx] += 1/2
+                    #self.contact_matrices["syoa"][group.spec]["unisex"][age_idx,cidx] += 1/2
+                    #self.contact_matrices["syoa"]["global"]["unisex"][cidx,age_idx] += 1/2
+                    #self.contact_matrices["syoa"][group.spec]["unisex"][cidx,age_idx] += 1/2
                     if person.sex == "m" and "male" in self.contact_sexes:
-                        self.contact_matrices["syoa"]["global"]["male"][age_idx,cidx] += 1/2
-                        self.contact_matrices["syoa"][group.spec]["male"][age_idx,cidx] += 1/2
-                        self.contact_matrices["syoa"]["global"]["male"][cidx,age_idx] += 1/2
-                        self.contact_matrices["syoa"][group.spec]["male"][cidx,age_idx] += 1/2
+                        self.contact_matrices["syoa"]["global"]["male"][age_idx,cidx] += 1
+                        self.contact_matrices["syoa"][group.spec]["male"][age_idx,cidx] += 1
+
+                        #self.contact_matrices["syoa"]["global"]["male"][age_idx,cidx] += 1/2
+                        #self.contact_matrices["syoa"][group.spec]["male"][age_idx,cidx] += 1/2
+                        #self.contact_matrices["syoa"]["global"]["male"][cidx,age_idx] += 1/2
+                        #self.contact_matrices["syoa"][group.spec]["male"][cidx,age_idx] += 1/2
                     if person.sex == "f" and "female" in self.contact_sexes:
-                        self.contact_matrices["syoa"]["global"]["female"][age_idx,cidx] += 1/2
-                        self.contact_matrices["syoa"][group.spec]["female"][age_idx,cidx] += 1/2
-                        self.contact_matrices["syoa"]["global"]["female"][cidx,age_idx] += 1/2
-                        self.contact_matrices["syoa"][group.spec]["female"][cidx,age_idx] += 1/2
+                        self.contact_matrices["syoa"]["global"]["female"][age_idx,cidx] += 1
+                        self.contact_matrices["syoa"][group.spec]["female"][age_idx,cidx] += 1
+
+                        #self.contact_matrices["syoa"]["global"]["female"][age_idx,cidx] += 1/2
+                        #self.contact_matrices["syoa"][group.spec]["female"][age_idx,cidx] += 1/2
+                        #self.contact_matrices["syoa"]["global"]["female"][cidx,age_idx] += 1/2
+                        #self.contact_matrices["syoa"][group.spec]["female"][cidx,age_idx] += 1/2
 
                     total_contacts += 1
 
@@ -2369,14 +2380,20 @@ class Tracker:
                         self.age_idxs["syoa"][contact_id] for contact_id in contact_ids_inter
                     ]
                     for cidx in contact_age_idxs:
-                        self.contact_matrices["syoa"][group.spec+"_inter"]["unisex"][age_idx,cidx] += 1/2
-                        self.contact_matrices["syoa"][group.spec+"_inter"]["unisex"][cidx,age_idx] += 1/2
+                        self.contact_matrices["syoa"][group.spec+"_inter"]["unisex"][age_idx,cidx] += 1
+
+                        #self.contact_matrices["syoa"][group.spec+"_inter"]["unisex"][age_idx,cidx] += 1/2
+                        #self.contact_matrices["syoa"][group.spec+"_inter"]["unisex"][cidx,age_idx] += 1/2
                         if person.sex == "m" and "male" in self.contact_sexes:
-                            self.contact_matrices["syoa"][group.spec+"_inter"]["male"][age_idx,cidx] += 1/2
-                            self.contact_matrices["syoa"][group.spec+"_inter"]["male"][cidx,age_idx] += 1/2
+                            self.contact_matrices["syoa"][group.spec+"_inter"]["male"][age_idx,cidx] += 1
+
+                            #self.contact_matrices["syoa"][group.spec+"_inter"]["male"][age_idx,cidx] += 1/2
+                            #self.contact_matrices["syoa"][group.spec+"_inter"]["male"][cidx,age_idx] += 1/2
                         if person.sex == "f" and "female" in self.contact_sexes:
-                            self.contact_matrices["syoa"][group.spec+"_inter"]["female"][age_idx,cidx] += 1/2
-                            self.contact_matrices["syoa"][group.spec+"_inter"]["female"][cidx,age_idx] += 1/2
+                            self.contact_matrices["syoa"][group.spec+"_inter"]["female"][age_idx,cidx] += 1
+
+                            #self.contact_matrices["syoa"][group.spec+"_inter"]["female"][age_idx,cidx] += 1/2
+                            #self.contact_matrices["syoa"][group.spec+"_inter"]["female"][cidx,age_idx] += 1/2
 
 
                     #Intra
@@ -2384,14 +2401,20 @@ class Tracker:
                         self.age_idxs["syoa"][contact_id] for contact_id in contact_ids_intra
                     ]
                     for cidx in contact_age_idxs:
-                        self.contact_matrices["syoa"][group.spec+"_intra"]["unisex"][age_idx,cidx] += 1/2
-                        self.contact_matrices["syoa"][group.spec+"_intra"]["unisex"][cidx,age_idx] += 1/2
+                        self.contact_matrices["syoa"][group.spec+"_intra"]["unisex"][age_idx,cidx] += 1
+
+                        #self.contact_matrices["syoa"][group.spec+"_intra"]["unisex"][age_idx,cidx] += 1/2
+                        #self.contact_matrices["syoa"][group.spec+"_intra"]["unisex"][cidx,age_idx] += 1/2
                         if person.sex == "m" and "male" in self.contact_sexes:
-                            self.contact_matrices["syoa"][group.spec+"_intra"]["male"][age_idx,cidx] += 1/2
-                            self.contact_matrices["syoa"][group.spec+"_intra"]["male"][cidx,age_idx] += 1/2
+                            self.contact_matrices["syoa"][group.spec+"_intra"]["male"][age_idx,cidx] += 1
+
+                            #self.contact_matrices["syoa"][group.spec+"_intra"]["male"][age_idx,cidx] += 1/2
+                            #self.contact_matrices["syoa"][group.spec+"_intra"]["male"][cidx,age_idx] += 1/2
                         if person.sex == "f" and "female" in self.contact_sexes:
-                            self.contact_matrices["syoa"][group.spec+"_intra"]["female"][age_idx,cidx] += 1/2
-                            self.contact_matrices["syoa"][group.spec+"_intra"]["female"][cidx,age_idx] += 1/2
+                            self.contact_matrices["syoa"][group.spec+"_intra"]["female"][age_idx,cidx] += 1
+
+                            #self.contact_matrices["syoa"][group.spec+"_intra"]["female"][age_idx,cidx] += 1/2
+                            #self.contact_matrices["syoa"][group.spec+"_intra"]["female"][cidx,age_idx] += 1/2
 
             self.contact_counts[person.id]["global"] += total_contacts
             self.contact_counts[person.id][group.spec] += total_contacts
