@@ -857,6 +857,7 @@ class Tracker:
             print("CT=%s" % self.location_cum_time[contact_type])
             print("Pop_Tots=np.array(%s)" % list(pop_tots))
             print("IM=np.array(%s)" % self.interaction_matrices[contact_type]["contacts"])
+            print("")
 
         #Loop over elements
         for i in range(cm.shape[0]):
@@ -872,14 +873,14 @@ class Tracker:
                 w = (pop_tots[i] / pop_tots[j])
    
                 norm_cm[i,j] = (
-                    0.5*(F_i*cm[i,j]/pop_tots[j] + (F_j*cm[j,i]/pop_tots[i])*w)*factor
+                    0.5*(F_i*cm[i,j]/pop_tots[i] + (F_j*cm[j,i]/pop_tots[j])*w)*factor
                 )
                 #TODO Think about this error? 
 
                 norm_cm_err[i,j] = (
                     0.5*np.sqrt( 
-                        (F_i*np.sqrt(cm[i,j]*pop_tots[i])/pop_tots[j])**2 + 
-                        (F_j*np.sqrt(cm[j,i]*pop_tots[j])/pop_tots[i]*w)**2 
+                        (F_i*np.sqrt(cm[i,j]*pop_tots[i])/pop_tots[i])**2 + 
+                        (F_j*np.sqrt(cm[j,i]*pop_tots[j])/pop_tots[j]*w)**2 
                     )*factor
                 )
 
