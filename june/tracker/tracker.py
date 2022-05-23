@@ -804,7 +804,6 @@ class Tracker:
                             self.normalised_contact_matrices_err["Interaction"][contact_type] = norm_cm_err
 
                             #Basically just counts of interations so assume a poisson error
-                            #TODO Think about this error?
                             self.contact_matrices_err["Interaction"][contact_type] = np.sqrt(self.contact_matrices_err[bin_type][contact_type])
                         else:
                             continue
@@ -813,12 +812,11 @@ class Tracker:
                         self.normalised_contact_matrices_err[bin_type][contact_type][sex] = norm_cm_err
 
                         #Basically just counts of interations so assume a poisson error
-                        #TODO Think about this error?
                         self.contact_matrices_err[bin_type][contact_type][sex] = np.sqrt(self.contact_matrices_err[bin_type][contact_type][sex]) 
         return 1
 
     
-    def CM_Norm(self, cm, pop_tots, bin_type, contact_type="global", duplicate=True):
+    def CM_Norm(self, cm, pop_tots, bin_type, contact_type="global", duplicate=False):
         """
         Normalise the contact matrices using population at location data and time of simulation run time.
 
@@ -888,7 +886,7 @@ class Tracker:
 
         return norm_cm, norm_cm_err
 
-    def post_process_simulation(self, save=True, duplicate = True ):
+    def post_process_simulation(self, save=True, duplicate = False):
         """
         Perform some post simulation checks and calculations.
             Create contact dataframes
@@ -2243,6 +2241,8 @@ class Tracker:
         if len(group.people) < 2:
             return 1
 
+        
+
         for person in group.people:
             #Shelter we want family groups
             if group.spec == "shelter":
@@ -2276,6 +2276,8 @@ class Tracker:
             contacts_per_subgroup, contacts_per_subgroup_error = self.get_contacts_per_subgroup(person_subgroup_idx, group)
             
             total_contacts = 0
+
+
             contact_subgroups = np.arange(0, len(groups_inter), 1)
             for subgroup_contacts, subgroup_contacts_error, contact_subgroup_idx in zip(contacts_per_subgroup, contacts_per_subgroup_error, contact_subgroups):
                 #Degugging print out...
@@ -2295,8 +2297,6 @@ class Tracker:
                 if len(subgroup_people) - inside <= 0:
                     continue
                 int_contacts = self.Probabilistic_Contacts(subgroup_contacts, subgroup_contacts_error, Probabilistic=True)
-                #if int_contacts == 0:
-                #    continue
 
                 contact_ids_inter = []
                 contact_ids_intra = []
@@ -2311,8 +2311,7 @@ class Tracker:
 
                     #Interaction Matrix
                     self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts
-                    #self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts/2
-                    #self.contact_matrices["Interaction"][group.spec][contact_subgroup_idx, person_subgroup_idx] += int_contacts/2
+
                 else:
                     if inside:
                         N_Potential_Contacts = len(subgroup_people_without)
@@ -2323,8 +2322,8 @@ class Tracker:
 
                     #Interaction Matrix
                     self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += N_Potential_Contacts
-                    #self.contact_matrices["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += N_Potential_Contacts/2
-                    #self.contact_matrices["Interaction"][group.spec][contact_subgroup_idx, person_subgroup_idx] += N_Potential_Contacts/2
+
+
                 
                 #Get the ids
                 for contacts_index_i in contacts_index:  
@@ -2340,6 +2339,7 @@ class Tracker:
                             contact_ids_inter.append(contact.id)
                     contact_ids.append(contact.id)
                     contact_ages.append(contact.age)
+
                 
                 age_idx = self.age_idxs["syoa"][person.id]
                 
@@ -2422,13 +2422,18 @@ class Tracker:
                 self.contact_counts[person.id][group.spec+"_inter"] += total_contacts
                 self.contact_counts[person.id][group.spec+"_intra"] += total_contacts
 
+
+
         for subgroup, sub_i in zip(group.subgroups, range(len(group.subgroups))):
             if group.spec == "school":
                 if sub_i > 0:
                     sub_i = 1
             self.location_cum_pop["Interaction"][group.spec][sub_i] += len(subgroup.people)
-
+          
+        
         for person in group.people:
+            #Only sum those which had any contacts
+
             age_idx = self.age_idxs["syoa"][person.id]
             self.location_cum_pop["syoa"]["global"]["unisex"][age_idx] += 1
             self.location_cum_pop["syoa"][group.spec]["unisex"][age_idx] += 1
@@ -2448,7 +2453,8 @@ class Tracker:
                     self.location_cum_pop["syoa"][group.spec+"_inter"]["female"][age_idx] += 1
                     self.location_cum_pop["syoa"][group.spec+"_intra"]["female"][age_idx] += 1
 
-        self.location_cum_time["global"] += (self.timer.delta_time.seconds) / (3600*24) #In Days
+        
+        self.location_cum_time["global"] += (len(group.people)*self.timer.delta_time.seconds) / (3600*24) #In Days
         self.location_cum_time[group.spec] += (len(group.people)*self.timer.delta_time.seconds) / (3600*24) #In Days
         if group.spec == "shelter":
             self.location_cum_time[group.spec+"_inter"] += (len(group.people)*self.timer.delta_time.seconds) / (3600*24) #In Days
