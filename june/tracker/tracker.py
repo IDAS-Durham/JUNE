@@ -338,6 +338,7 @@ class Tracker:
         group_type_names = []
         for groups in self.group_types:
             if groups is not None:
+                print(groups)
                 spec = groups[0].spec
             else:
                 continue
@@ -707,7 +708,7 @@ class Tracker:
             AgesCount = AgesCount.reindex(range(ExpN-1), fill_value=0)
 
             self.average_contacts[bin_type] = (
-                AgesCount
+                AgesCount 
             )
         return 1
 
@@ -1475,6 +1476,7 @@ class Tracker:
                 print(f"No contact_type {contact_type}")
                 continue
             if contact_type == "global":
+                ax.plot(mids, average_contacts[contact_type] , linestyle="-", color="black", label="Total")
                 continue
 
             if plotted > 9:
@@ -1482,7 +1484,8 @@ class Tracker:
             else:
                 hatch=None
 
-            heights = average_contacts[contact_type]
+        
+            heights = average_contacts[contact_type] 
             ax.bar(
                 mids, heights, widths, bottom=lower,
                 hatch=hatch, label=contact_type,
@@ -1991,7 +1994,7 @@ class Tracker:
             return 1
 
         relevant_bin_types = self.contact_matrices.keys()
-        relevant_bin_types_short = ["syoa"]
+        relevant_bin_types_short = ["syoa", "AC"]
         relevant_contact_types = self.contact_matrices["syoa"].keys()
 
         if plot_AvContactsLocation:
