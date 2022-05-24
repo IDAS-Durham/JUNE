@@ -337,8 +337,8 @@ class Tracker:
         """
         group_type_names = []
         for groups in self.group_types:
-            if groups is not None:
-                print(groups)
+            print(groups, len(groups))
+            if groups is not None and len(groups) != 0:
                 spec = groups[0].spec
             else:
                 continue
