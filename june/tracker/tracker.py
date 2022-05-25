@@ -337,7 +337,6 @@ class Tracker:
         """
         group_type_names = []
         for groups in self.group_types:
-            print(groups, len(groups))
             if groups is not None and len(groups) != 0:
                 spec = groups[0].spec
             else:
@@ -2536,6 +2535,8 @@ class Tracker:
 
                     for ID in self.location_counters_day_i["loc"][loc][counter]["unisex"]:
                         person = self.world.people.get_from_id(ID)
+                        if person.residence == None:
+                            continue
                         household_coords = person.residence.group.area.coordinates
                         self.travel_distance[day][loc].append(geopy.distance.geodesic(household_coords, venue_coords).km)
                     counter += 1
