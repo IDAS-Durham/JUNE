@@ -116,7 +116,7 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     save_data_for_domain_decomposition(world, file_path)
 
 
-def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
+def generate_world_from_hdf5(file_path: str, chunk_size=500000, interaction_config=None,) -> World:
     """
     Loads the world from an hdf5 file. All id references are substituted
     by actual references to the relevant instances.
@@ -139,26 +139,26 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
     if "hospitals" in f_keys:
         logger.info("loading hospitals...")
         world.hospitals = load_hospitals_from_hdf5(
-            file_path=file_path, chunk_size=chunk_size
+            file_path=file_path, chunk_size=chunk_size, config_filename= interaction_config
         )
     if "schools" in f_keys:
         logger.info("loading schools...")
         world.schools = load_schools_from_hdf5(
-            file_path=file_path, chunk_size=chunk_size
+            file_path=file_path, chunk_size=chunk_size, config_filename= interaction_config
         )
     if "companies" in f_keys:
         world.companies = load_companies_from_hdf5(
-            file_path=file_path, chunk_size=chunk_size
+            file_path=file_path, chunk_size=chunk_size, config_filename= interaction_config
         )
     if "care_homes" in f_keys:
         logger.info("loading care homes...")
         world.care_homes = load_care_homes_from_hdf5(
-            file_path=file_path, chunk_size=chunk_size
+            file_path=file_path, chunk_size=chunk_size, config_filename= interaction_config
         )
     if "universities" in f_keys:
         logger.info("loading universities...")
         world.universities = load_universities_from_hdf5(
-            file_path=file_path, chunk_size=chunk_size
+            file_path=file_path, chunk_size=chunk_size, config_filename= interaction_config
         )
     if "cities" in f_keys:
         logger.info("loading cities...")
@@ -169,14 +169,14 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000) -> World:
             world.stations,
             world.inter_city_transports,
             world.city_transports,
-        ) = load_stations_from_hdf5(file_path)
+        ) = load_stations_from_hdf5(file_path, config_filename= interaction_config)
     if "households" in f_keys:
-        world.households = load_households_from_hdf5(file_path, chunk_size=chunk_size)
+        world.households = load_households_from_hdf5(file_path, chunk_size=chunk_size, config_filename= interaction_config)
     if "population" in f_keys:
         world.people = load_population_from_hdf5(file_path, chunk_size=chunk_size)
     if "social_venues" in f_keys:
         logger.info("loading social venues...")
-        social_venues_dict = load_social_venues_from_hdf5(file_path)
+        social_venues_dict = load_social_venues_from_hdf5(file_path, config_filename= interaction_config)
         for social_venues_spec, social_venues in social_venues_dict.items():
             setattr(world, social_venues_spec, social_venues)
 

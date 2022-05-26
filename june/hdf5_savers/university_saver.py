@@ -2,6 +2,7 @@ import h5py
 import numpy as np
 
 from june.groups import University, Universities
+from june.groups.group.make_subgroups import Subgroup_Params
 from .utils import read_dataset
 
 nan_integer = -999
@@ -59,7 +60,7 @@ def save_universities_to_hdf5(universities: Universities, file_path: str):
 
 
 def load_universities_from_hdf5(
-    file_path: str, chunk_size: int = 50000, domain_areas=None
+    file_path: str, chunk_size: int = 50000, domain_areas=None, config_filename = None,
 ):
     """
     Loads universities from an hdf5 file located at ``file_path``.
@@ -67,6 +68,10 @@ def load_universities_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+
+    University_Class = University
+    University_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         universities = f["universities"]
         universities_list = []
@@ -86,7 +91,7 @@ def load_universities_from_hdf5(
                     )
                 if area not in domain_areas:
                     continue
-            university = University(
+            university = University_Class(
                 n_students_max=n_students_max[k],
                 n_years=n_years[k],
                 ukprn=ukprns[k],

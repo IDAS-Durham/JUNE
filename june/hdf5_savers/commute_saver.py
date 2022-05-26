@@ -21,6 +21,7 @@ from june.groups.travel import (
     InterCityTransport,
     InterCityTransports,
 )
+from june.groups.group.make_subgroups import Subgroup_Params
 
 nan_integer = -999
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
@@ -223,6 +224,7 @@ def load_stations_from_hdf5(
     file_path: str,
     domain_super_areas: List[int] = None,
     super_areas_to_domain_dict: dict = None,
+    config_filename = None,
 ):
     """
     Loads cities from an hdf5 file located at ``file_path``.
@@ -230,6 +232,13 @@ def load_stations_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+
+    InterCityTransport_Class = InterCityTransport
+    InterCityTransport_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+
+    CityTransport_Class = CityTransport
+    CityTransport_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         stations = f["stations"]
         n_stations = stations.attrs["n_stations"]
@@ -257,9 +266,9 @@ def load_stations_from_hdf5(
                 station.id = ids[k]
                 for transport_id in transport_ids[k]:
                     if station_type == "inter":
-                        transport = InterCityTransport(station=station)
+                        transport = InterCityTransport_Class(station=station)
                     else:
-                        transport = CityTransport(station=station)
+                        transport = CityTransport_Class(station=station)
                     transport.id = transport_id
                     transports_station.append(transport)
             else:

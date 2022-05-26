@@ -3,6 +3,7 @@ import numpy as np
 
 from june.groups import CareHome, CareHomes
 from june.world import World
+from june.groups.group.make_subgroups import Subgroup_Params
 from .utils import read_dataset
 
 nan_integer = -999
@@ -81,7 +82,7 @@ def save_care_homes_to_hdf5(
 
 
 def load_care_homes_from_hdf5(
-    file_path: str, chunk_size=50000, domain_super_areas=None
+    file_path: str, chunk_size=50000, domain_super_areas=None, config_filename = None,
 ):
     """
     Loads carehomes from an hdf5 file located at ``file_path``.
@@ -89,6 +90,9 @@ def load_care_homes_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+    CareHome_Class = CareHome
+    CareHome_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         care_homes = f["care_homes"]
         care_homes_list = []
@@ -110,7 +114,7 @@ def load_care_homes_from_hdf5(
                         )
                     if super_area not in domain_super_areas:
                         continue
-                care_home = CareHome(
+                care_home = CareHome_Class(
                     area=None, n_residents=n_residents[k], n_workers=n_workers[k]
                 )
                 care_home.id = ids[k]
