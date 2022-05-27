@@ -711,7 +711,7 @@ class Tracker:
             )
         return 1
 
-    def normalise_contact_matrices(self, duplicate=True):          
+    def normalise_contact_matrices(self, PM=True):          
         """
         Normalise the contact matrices based on likelyhood to interact with each demographic. 
         Sets and rescales;
@@ -795,8 +795,8 @@ class Tracker:
                     else:
                         cm = cm_spec[sex]
                         age_profile = self.location_cum_pop[bin_type][contact_type][sex]
-
-                    norm_cm, norm_cm_err = self.CM_Norm(cm, np.array(age_profile), bin_type, contact_type=contact_type, duplicate=duplicate)
+  
+                    norm_cm, norm_cm_err = self.CM_Norm(cm, np.array(age_profile), bin_type, contact_type=contact_type, PM=PM)
 
                     if bin_type == "Interaction":
                         if  sex == "unisex":
@@ -816,7 +816,7 @@ class Tracker:
         return 1
 
     
-    def CM_Norm(self, cm, pop_tots, bin_type, contact_type="global", duplicate=False):
+    def CM_Norm(self, cm, pop_tots, bin_type, contact_type="global", PM=True):
         """
         Normalise the contact matrices using population at location data and time of simulation run time.
 
@@ -851,7 +851,7 @@ class Tracker:
         if bin_type == "Interaction":
             print("")
             print("contact_type='%s'" % contact_type)
-            print("Duplicate=%s" % duplicate)
+            print("Population matrix=%s" % PM)
             print("CM=np.array(%s)" % [list(cm[i]) for i in range(cm.shape[0])])
             print("C=%s" % self.Get_characteristic_time(location=contact_type)[0])
             print("CT=%s" % self.location_cum_time[contact_type])
@@ -862,7 +862,7 @@ class Tracker:
         #Loop over elements
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
-                if duplicate: #Count contacts j to i also
+                if PM: #Count contacts j to i also
                     F_i = 1
                     F_j = 1
                 else: #Only count contacts i to j
@@ -870,13 +870,13 @@ class Tracker:
                     F_j = 0
 
                 #Population rescaling
-                w = (pop_tots[i] / pop_tots[j])
+                w = (pop_tots[j] / pop_tots[i])
    
                 norm_cm[i,j] = (
                     0.5*(F_i*cm[i,j]/pop_tots[i] + (F_j*cm[j,i]/pop_tots[j])*w)*factor
                 )
-                #TODO Think about this error? 
 
+                #TODO Think about this error? 
                 norm_cm_err[i,j] = (
                     0.5*np.sqrt( 
                         (F_i*np.sqrt(cm[i,j]*pop_tots[i])/pop_tots[i])**2 + 
@@ -885,9 +885,10 @@ class Tracker:
                 )
 
 
+        
         return norm_cm, norm_cm_err
 
-    def post_process_simulation(self, save=True, duplicate = False):
+    def post_process_simulation(self, save=True, PM = True):
         """
         Perform some post simulation checks and calculations.
             Create contact dataframes
@@ -912,7 +913,7 @@ class Tracker:
         self.convert_dict_to_df()
         self.calc_age_profiles()
         self.calc_average_contacts()
-        self.normalise_contact_matrices(duplicate=duplicate)
+        self.normalise_contact_matrices(PM=PM)
 
         if save:
             self.tracker_results_to_yaml()
@@ -1011,6 +1012,9 @@ class Tracker:
         # Loop over data dimensions and create text annotations.
         if cm.shape[0]*cm.shape[1] < 26:
             self.AnnotateCM(cm, cm_err, ax, thresh=thresh)
+
+        ax.set_ylabel("age group")
+        ax.set_xlabel("contact age group")
         return im
 
     def CMPlots_GetLabels(self, bins):
