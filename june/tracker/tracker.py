@@ -1000,7 +1000,6 @@ class Tracker:
             im:
                 referance to plot object
         """
-        #Transpose to put contact on y axis
         im = ax.imshow(cm.T, **plt_kwargs)
         if labels is not None:
             if len(labels) < 25:
