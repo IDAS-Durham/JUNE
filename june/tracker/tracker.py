@@ -1000,7 +1000,8 @@ class Tracker:
             im:
                 referance to plot object
         """
-        im = ax.imshow(cm, **plt_kwargs)
+        #Transpose to put contact on y axis
+        im = ax.imshow(cm.T, **plt_kwargs)
         if labels is not None:
             if len(labels) < 25:
                 ax.set_xticks(np.arange(len(cm)))
@@ -1011,10 +1012,10 @@ class Tracker:
                 pass
         # Loop over data dimensions and create text annotations.
         if cm.shape[0]*cm.shape[1] < 26:
-            self.AnnotateCM(cm, cm_err, ax, thresh=thresh)
+            self.AnnotateCM(cm.T, cm_err.T, ax, thresh=thresh)
 
-        ax.set_ylabel("age group")
-        ax.set_xlabel("contact age group")
+        ax.set_xlabel("age group")
+        ax.set_ylabel("contact age group")
         return im
 
     def CMPlots_GetLabels(self, bins):
