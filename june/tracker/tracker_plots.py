@@ -124,9 +124,13 @@ class PlotClass:
 
                 for sex in self.contact_sexes:
                     filename = f"Venues_{sex}_Counts_BydT.xlsx"
+                    if loc[-1] == "y":
+                        sheet_name = loc[:-1] + "ies"
+                    else:
+                        sheet_name = loc + "s"
                     df = pd.read_excel(
                     self.record_path / "data_output" / "Venue_UniquePops" / filename,
-                    sheet_name=loc+"s",
+                    sheet_name=sheet_name,
                     index_col=0,
                 )
                     self.location_counters["loc"][loc][sex] = df.iloc[:,2:]
@@ -147,9 +151,13 @@ class PlotClass:
 
                 for sex in self.contact_sexes:
                     filename = f"Venues_{sex}_Counts_ByDate.xlsx"
+                    if loc[-1] == "y":
+                        sheet_name = loc[:-1] + "ies"
+                    else:
+                        sheet_name = loc + "s"
                     df = pd.read_excel(
                     self.record_path / "data_output" / "Venue_UniquePops" / filename,
-                    sheet_name=loc+"s",
+                    sheet_name=sheet_name,
                     index_col=0,
                 )
                     self.location_counters_day["loc"][loc][sex] = df.iloc[:,0:]
@@ -202,9 +210,13 @@ class PlotClass:
             for loc in self.group_type_names:
                 if loc in ["global", "shelter_inter", "shelter_intra"]:
                     continue
+                if loc[-1] == "y":
+                    sheet_name = loc[:-1] + "ies"
+                else:
+                    sheet_name = loc + "s"
                 df = pd.read_excel(
                     filename,
-                    sheet_name=loc+"s",
+                    sheet_name=sheet_name,
                     index_col=0,
                 )
                 self.travel_distance[loc] = df
@@ -359,7 +371,6 @@ class PlotClass:
             cm_err:
                 np.array contact matrix errors
         """
-        print(bin_type, contact_type, sex)
         if bin_type != "Interaction":
             if normalized == True:
                 cm =  np.array(self.normalised_contact_matrices[bin_type][contact_type]["sex"][sex]["contacts"])
@@ -865,7 +876,7 @@ class PlotClass:
             if Nlocals > 100:
                 Nlocals = 100
 
-            #print(self.location_counters["loc"][locations]["unisex"][Cols].iloc[:,i])
+
             if np.sum(self.location_counters["loc"][locations]["unisex"][Cols].iloc[:,i].values) == 0:
                 continue
 
