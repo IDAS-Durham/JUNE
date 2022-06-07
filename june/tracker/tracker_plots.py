@@ -38,6 +38,8 @@ class PlotClass:
     def __init__(
         self,        
         record_path=Path(""),
+        Tracker_Contact_Type="1D",
+
         Params=None,
 
         IM=None,
@@ -55,6 +57,7 @@ class PlotClass:
         travel_distance = None,
     ):
         self.record_path = record_path
+        self.Tracker_Contact_Type = Tracker_Contact_Type
 
 
         if Params is None:
@@ -70,19 +73,19 @@ class PlotClass:
             self.IM = IM
 
         if CM_T is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / "tracker_Total_CM.yaml") as f:
+            with open(self.record_path / "data_output" / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_Total_CM.yaml") as f:
                 self.CM_T = yaml.load(f, Loader=yaml.FullLoader)
         else:
             self.CM_T = CM_T
 
         if NCM is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / "tracker_NCM.yaml") as f:
+            with open(self.record_path / "data_output" / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_NCM.yaml") as f:
                 self.NCM = yaml.load(f, Loader=yaml.FullLoader)
         else:
             self.NCM = NCM
 
         if NCM_R is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / "tracker_NCM_R.yaml") as f:
+            with open(self.record_path / "data_output" / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_NCM_R.yaml") as f:
                 self.NCM_R = yaml.load(f, Loader=yaml.FullLoader)
         else:
             self.NCM_R = NCM_R
@@ -1322,7 +1325,7 @@ class PlotClass:
                 plt.close()
 
         if plot_InteractionMatrices:
-            plot_dir = self.record_path / "IM" 
+            plot_dir = self.record_path / "Graphs" / f"IM_{self.Tracker_Contact_Type}" 
             plot_dir.mkdir(exist_ok=True, parents=True)
             for rct in self.IM.keys():
                 self.plot_interaction_matrix(
@@ -1334,7 +1337,7 @@ class PlotClass:
 
         if plot_ContactMatrices:
             for CMType in CMTypes:
-                plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices" / CMType
+                plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices" / self.Tracker_Contact_Type / CMType
                 plot_dir_1.mkdir(exist_ok=True, parents=True)
 
                 for rbt in relevant_bin_types:
@@ -1358,7 +1361,7 @@ class PlotClass:
 
         if plot_CompareSexMatrices:
             for CMType in CMTypes:
-                plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices" / CMType
+                plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices" / self.Tracker_Contact_Type /  CMType
                 plot_dir_1.mkdir(exist_ok=True, parents=True)
 
                 for rbt in relevant_bin_types:

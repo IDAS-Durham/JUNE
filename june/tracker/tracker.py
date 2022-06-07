@@ -903,9 +903,12 @@ class Tracker:
         
         #Normalisation over charecteristic time and population
         factor = (self.Get_characteristic_time(location=contact_type)[0]*np.sum(pop_tots))/self.location_cum_time[contact_type]
+        if np.isnan(factor):
+            factor = 0
+            
         #Create blanks to fill
-        norm_cm = np.zeros( cm.shape )
-        norm_cm_err = np.zeros( cm.shape )
+        norm_cm = np.zeros_like( cm )
+        norm_cm_err = np.zeros_like( cm )
 
         #Loop over elements
         for i in range(cm.shape[0]):
@@ -919,7 +922,10 @@ class Tracker:
 
                 #Population rescaling
                 w = (pop_tots[j] / pop_tots[i])
-   
+
+                if pop_tots[i] == 0 or pop_tots[j] == 0:
+                    continue
+
                 norm_cm[i,j] = (
                     0.5*(F_i*cm[i,j]/pop_tots[i] + (F_j*cm[j,i]/pop_tots[j])*w)*factor
                 )
@@ -1791,13 +1797,15 @@ class Tracker:
 
         ################################### Saving 1D Contacts tracker results ##################################
         if "1D" in self.Tracker_Contact_Type:
+            Tracker_Type = "1D"
+
             jsonfile = {}
             for binType in list(self.CM_T.keys()):
                 jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.CM_T, CM_err=self.CM_T_err)  
             # Save out the CM totals
             Save_CM_JSON(
                 dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-                filename="tracker_Total_CM.yaml", 
+                filename=f"tracker_{Tracker_Type}_Total_CM.yaml", 
                 jsonfile=jsonfile
             )
 
@@ -1807,7 +1815,7 @@ class Tracker:
             # Save out the Normalised CM 
             Save_CM_JSON(
                 dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-                filename="tracker_NCM.yaml", 
+                filename=f"tracker_{Tracker_Type}_NCM.yaml", 
                 jsonfile=jsonfile
             )
 
@@ -1817,19 +1825,21 @@ class Tracker:
             # Save out the Normalised CM with Reciprocal contacts 
             Save_CM_JSON(
                 dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-                filename="tracker_NCM_R.yaml", 
+                filename=f"tracker_{Tracker_Type}_NCM_R.yaml", 
                 jsonfile=jsonfile
             )
 
         ################################### Saving All Contacts tracker results ##################################
         if "All" in self.Tracker_Contact_Type:
+            Tracker_Type = "All"
+
             jsonfile = {}
             for binType in list(self.CM_AC.keys()):
                 jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.CM_AC, CM_err=self.CM_AC_err)  
             # Save out the CM totals
             Save_CM_JSON(
                 dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-                filename="tracker_Total_CM_AC.yaml", 
+                filename=f"tracker_{Tracker_Type}_Total_CM.yaml", 
                 jsonfile=jsonfile
             )
 
@@ -1839,7 +1849,7 @@ class Tracker:
             # Save out the Normalised CM 
             Save_CM_JSON(
                 dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-                filename="tracker_NCM_AC.yaml", 
+                filename=f"tracker_{Tracker_Type}_NCM.yaml", 
                 jsonfile=jsonfile
             )
 
@@ -1849,7 +1859,7 @@ class Tracker:
             # Save out the Normalised CM with Reciprocal contacts 
             Save_CM_JSON(
                 dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-                filename="tracker_NCM_AC_R.yaml", 
+                filename=f"tracker_{Tracker_Type}_NCM_R.yaml", 
                 jsonfile=jsonfile
             )
 
