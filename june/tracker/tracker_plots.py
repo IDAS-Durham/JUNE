@@ -30,9 +30,33 @@ class PlotClass:
     record_path:
         path for results directory
 
+    Tracker_Contact_Type:
+
+    Params:
+
+    IM:
+
+    CM_T:
+
+    NCM:
+
+    NCM_R:
+    
+    average_contacts:
+
+    location_counters:
+
+    location_counters_day:
+
+    location_cum_pop:
+
+    age_profiles:
+
+    travel_distance:
+
     Returns
     -------
-        A Tracker
+        The tracker plotting class
 
     """
     def __init__(
@@ -249,6 +273,9 @@ class PlotClass:
                 np.array contact matrix errors
             ax:
                 matplotlib axes
+            thresh:
+                threshhold value for CM text change colour
+
             
         Returns
         -------
@@ -303,6 +330,8 @@ class PlotClass:
                 list of string bins labels (or none type)
             ax:
                 matplotlib axes
+            thresh:
+                threshhold value for CM text change colour
             **plt_kwargs:
                 plot keyword arguements
 
@@ -454,10 +483,8 @@ class PlotClass:
 
         Parameters
         ----------
-            binType:
-                Name of bin type syoa, AC etc
-            bin_ageDiscrete:
-                Name type, Age or Discrete
+            contact_type:
+                Location of contacts
             cm:
                 np.array contact matrix
             cm_err:
@@ -505,8 +532,8 @@ class PlotClass:
                 Location of contacts
             sex:
                 Sex contact matrix
-            normalized:
-                bool, if we use the normalised matrix or the total counts per day
+            which:
+                str, which matrix type to collect "NCM", "NCM_R", "CM_T"
             
         Returns
         -------
@@ -672,8 +699,8 @@ class PlotClass:
                 Location of contacts
             sex:
                 Sex contact matrix
-            normalized:
-                bool, if we use the normalised matrix or the total counts per day
+            which:
+                str, which matrix type to collect "NCM", "NCM_R", "CM_T"
             
         Returns
         -------
@@ -726,8 +753,8 @@ class PlotClass:
                 Name of bin type syoa, AC etc
             contact_type:
                 Location of contacts
-            normalized:
-                bool, if we use the normalised matrix or the total counts per day
+            which:
+                str, which matrix type to collect "NCM", "NCM_R", "CM_T"
             
         Returns
         -------
@@ -974,8 +1001,6 @@ class PlotClass:
         ----------
             locations:
                 list of locations to plot for
-            DayStartHour:
-                The hour the simulation begins in the code (An offset value)
         Returns
         -------
             ax:
