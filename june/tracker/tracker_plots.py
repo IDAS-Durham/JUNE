@@ -40,9 +40,10 @@ class PlotClass:
         record_path=Path(""),
         Params=None,
 
-        interaction_matrices=None,
-        contact_matrices=None,
-        normalised_contact_matrices=None,
+        IM=None,
+        CM_T=None,
+        NCM=None,
+        NCM_R=None,
 
         average_contacts=None,
         location_counters=None,
@@ -57,46 +58,52 @@ class PlotClass:
 
 
         if Params is None:
-            with open(self.record_path / "data_output" / "tracker_Params.yaml") as f:
+            with open(self.record_path / "data_output" / "tracker_Simulation_Params.yaml") as f:
                 self.Params = yaml.load(f, Loader=yaml.FullLoader)
         else:
             self.Params = Params
 
-        if interaction_matrices is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / "tracker_Input.yaml") as f:
-                self.interaction_matrices = yaml.load(f, Loader=yaml.FullLoader)
+        if IM is None:
+            with open(self.record_path / "data_output" / "CM_yamls" / "tracker_IM.yaml") as f:
+                self.IM = yaml.load(f, Loader=yaml.FullLoader)
         else:
-            self.interaction_matrices = interaction_matrices
+            self.IM = IM
 
-        if contact_matrices is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / "tracker_CM.yaml") as f:
-                self.contact_matrices = yaml.load(f, Loader=yaml.FullLoader)
+        if CM_T is None:
+            with open(self.record_path / "data_output" / "CM_yamls" / "tracker_Total_CM.yaml") as f:
+                self.CM_T = yaml.load(f, Loader=yaml.FullLoader)
         else:
-            self.contact_matrices = contact_matrices
+            self.CM_T = CM_T
 
-        if normalised_contact_matrices is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / "tracker_NormCM.yaml") as f:
-                self.normalised_contact_matrices = yaml.load(f, Loader=yaml.FullLoader)
+        if NCM is None:
+            with open(self.record_path / "data_output" / "CM_yamls" / "tracker_NCM.yaml") as f:
+                self.NCM = yaml.load(f, Loader=yaml.FullLoader)
         else:
-            self.normalised_contact_matrices = normalised_contact_matrices
+            self.NCM = NCM
+
+        if NCM_R is None:
+            with open(self.record_path / "data_output" / "CM_yamls" / "tracker_NCM_R.yaml") as f:
+                self.NCM_R = yaml.load(f, Loader=yaml.FullLoader)
+        else:
+            self.NCM_R = NCM_R
 
         #Get Parameters of simulation
         self.total_days = self.Params["total_days"]
         self.day_types = {"weekend":self.Params["Weekend_Names"],"weekday":self.Params["Weekday_Names"]}
         #Get all the bin types
-        self.relevant_bin_types = list(self.contact_matrices.keys())
+        self.relevant_bin_types = list(self.CM_T.keys())
         #Get all location names
-        self.group_type_names = list(self.contact_matrices["syoa"].keys())
+        self.group_type_names = list(self.CM_T["syoa"].keys())
         #Get all CM options
-        self.CM_Keys = list(self.contact_matrices["syoa"][self.group_type_names[0]].keys())
+        self.CM_Keys = list(self.CM_T["syoa"][self.group_type_names[0]].keys())
         #Get all contact sexes
-        self.contact_sexes = list(self.contact_matrices["syoa"][self.group_type_names[0]]["sex"].keys())
+        self.contact_sexes = list(self.CM_T["syoa"][self.group_type_names[0]]["sex"].keys())
     
         self.age_bins = {}
         for rbt in self.relevant_bin_types:
             if rbt == "Interaction":
                 continue
-            self.age_bins[rbt] = np.array(self.contact_matrices[rbt][self.group_type_names[0]]["bins"])
+            self.age_bins[rbt] = np.array(self.CM_T[rbt][self.group_type_names[0]]["bins"])
 
         if average_contacts is None:
             self.average_contacts = {}
@@ -223,6 +230,9 @@ class PlotClass:
         else:
             self.travel_distance = travel_distance
 
+#####################################################################################################################################################################
+                                ################################### General Plotting ##################################
+#####################################################################################################################################################################
 
     def AnnotateCM(self, cm, cm_err, ax, thresh=1e10):
         """
@@ -255,9 +265,6 @@ class PlotClass:
                 if cm[i,j] > 1e8:
                     cm[i,j] = np.inf
                 
-                
-
-
                 if cm_err is not None:
                     if np.isnan(cm_err[i,j]):
                         cm_err[i,j]=0
@@ -348,44 +355,6 @@ class PlotClass:
             ]
         else:
             return None
-        
-    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", normalized=True):
-        """
-        Get cm out of dictionary. 
-
-        Parameters
-        ----------
-            binType:
-                Name of bin type syoa, AC etc
-            contact_type:
-                Location of contacts
-            sex:
-                Sex contact matrix
-            normalized:
-                bool, if we use the normalised matrix or the total counts per day
-            
-        Returns
-        -------
-            cm:
-                np.array contact matrix
-            cm_err:
-                np.array contact matrix errors
-        """
-        if bin_type != "Interaction":
-            if normalized == True:
-                cm =  np.array(self.normalised_contact_matrices[bin_type][contact_type]["sex"][sex]["contacts"])
-                cm_err = np.array(self.normalised_contact_matrices[bin_type][contact_type]["sex"][sex]["contacts_err"])
-            else:
-                cm = np.array(self.contact_matrices[bin_type][contact_type]["sex"][sex]["contacts"])/self.total_days
-                cm_err = np.array(self.contact_matrices[bin_type][contact_type]["sex"][sex]["contacts_err"])/self.total_days
-        else:
-            if normalized == True:
-                cm =  np.array(self.normalised_contact_matrices[bin_type][contact_type]["contacts"])
-                cm_err = np.array(self.normalised_contact_matrices[bin_type][contact_type]["contacts_err"])
-            else:
-                cm = np.array(self.contact_matrices[bin_type][contact_type]["contacts"])/self.total_days
-                cm_err = np.array(self.contact_matrices[bin_type][contact_type]["contacts_err"])/self.total_days
-        return cm, cm_err
 
     def MaxAgeBinIndex(self, bins, MaxAgeBin=60):
         """
@@ -463,8 +432,8 @@ class PlotClass:
                 list of strings for bin labels or none type
         """
 
-        bintype = self.interaction_matrices[contact_type]["type"]
-        bins = np.array(self.interaction_matrices[contact_type]["bins"])
+        bintype = self.IM[contact_type]["type"]
+        bins = np.array(self.IM[contact_type]["bins"])
 
         if len(bins) < 25 and bintype == "Age":
             labels = [
@@ -475,29 +444,6 @@ class PlotClass:
         else:
             labels = None
         return labels
-
-    def IMPlots_GetCM(self, contact_type):
-        """
-        Get IM out of dictionary. 
-
-        Parameters
-        ----------
-            contact_type:
-                Location of contacts
-
-        Returns
-        -------
-            cm:
-                np.array interactiojn matrix
-            cm_err:
-                np.array interaction matrix errors (could be none)
-        """
-        cm = np.array(self.interaction_matrices[contact_type]["contacts"], dtype=float)
-        if "contacts_err" not in self.interaction_matrices[contact_type].keys():
-            cm_err = None
-        else:
-            cm_err = np.array(self.interaction_matrices[contact_type]["contacts_err"], dtype=float)
-        return cm, cm_err
 
     def IMPlots_UsefulCM(self, contact_type, cm, cm_err=None, labels=None):
         """
@@ -526,8 +472,8 @@ class PlotClass:
             labels:
                 list of strings for bin labels or none type
         """
-        bintype = self.interaction_matrices[contact_type]["type"]
-        bins = np.array(self.interaction_matrices[contact_type]["bins"])
+        bintype = self.IM[contact_type]["type"]
+        bins = np.array(self.IM[contact_type]["bins"])
 
         if bintype == "Discrete":
             return cm, cm_err, labels
@@ -539,6 +485,78 @@ class PlotClass:
         if labels is not None:
             labels=labels[:index]
         return cm, cm_err, labels
+
+#####################################################################################################################################################################
+                                ################################### Grab CM  ##################################
+#####################################################################################################################################################################
+        
+    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="NCM"):
+        """
+        Get cm out of dictionary. 
+
+        Parameters
+        ----------
+            binType:
+                Name of bin type syoa, AC etc
+            contact_type:
+                Location of contacts
+            sex:
+                Sex contact matrix
+            normalized:
+                bool, if we use the normalised matrix or the total counts per day
+            
+        Returns
+        -------
+            cm:
+                np.array contact matrix
+            cm_err:
+                np.array contact matrix errors
+        """
+        if bin_type != "Interaction":
+            if which == "CM_T":
+                cm = self.CM_T[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.CM_T[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM":
+                cm = self.NCM[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM_R":
+                cm = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts_err"]
+        else:
+            if which == "CM_T":
+                cm = self.CM_T[bin_type][contact_type]["contacts"]
+                cm_err = self.CM_T[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM":
+                cm = self.NCM[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM_R":
+                cm = self.NCM_R[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM_R[bin_type][contact_type]["contacts_err"]
+        return np.array(cm), np.array(cm_err)
+
+    def IMPlots_GetIM(self, contact_type):
+        """
+        Get IM out of dictionary. 
+
+        Parameters
+        ----------
+            contact_type:
+                Location of contacts
+
+        Returns
+        -------
+            cm:
+                np.array interactiojn matrix
+            cm_err:
+                np.array interaction matrix errors (could be none)
+        """
+        im = np.array(self.IM[contact_type]["contacts"], dtype=float)
+        if "contacts_err" not in self.IM[contact_type].keys():
+            im_err = None
+        else:
+            im_err = np.array(self.IM[contact_type]["contacts_err"], dtype=float)
+        return im, im_err
+
 
     #####################################################################################################################################################################
                                 ################################### Plotting ##################################
@@ -558,7 +576,7 @@ class PlotClass:
             ax1:
                 matplotlib axes object
         """
-        IM, IM_err = self.IMPlots_GetCM(contact_type)
+        IM, IM_err = self.IMPlots_GetIM(contact_type)
         labels_IM = self.IMPlots_GetLabels(contact_type, IM)
         IM, IM_err, labels_IM = self.IMPlots_UsefulCM(contact_type, IM, cm_err=IM_err, labels=labels_IM)
 
@@ -581,15 +599,12 @@ class PlotClass:
 
 
         labels_CM = labels_IM
-        if contact_type in self.contact_matrices["Interaction"].keys():
-            cm, cm_err = self.CMPlots_GetCM("Interaction", contact_type, normalized=True)
+        if contact_type in self.CM_T["Interaction"].keys():
+            cm, cm_err = self.CMPlots_GetCM("Interaction", contact_type, which="NCM")
             cm, cm_err, _ = self.IMPlots_UsefulCM(contact_type, cm, cm_err=cm_err, labels=labels_CM)
         else: #The venue wasn't tracked
             cm = np.zeros_like(IM)
             cm_err = np.zeros_like(cm)
-
-
-
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
             cm_Min = np.nanmin(cm[np.nonzero(cm)])
@@ -599,7 +614,6 @@ class PlotClass:
             cm_Max = cm[np.isfinite(cm)].max()
         else:
             cm_Max = 1
-
 
         if np.isnan(cm_Min):
             cm_Min = 1e-1
@@ -635,15 +649,15 @@ class PlotClass:
         f.colorbar(im1, ax=ax1)
         f.colorbar(im2, ax=ax2)
         f.colorbar(im3, ax=ax3)
-        ax1.set_title("Input Interaction Matrix")
-        ax2.set_title("Output Contact Matrix")
-        ax3.set_title("Output/Input")
+        ax1.set_title("Interaction Matrix (IM)")
+        ax2.set_title("Normalised Contact Matrix (NCM)")
+        ax3.set_title("NCM / IM")
 
         f.suptitle(f"Survey interaction binned contacts in {contact_type}")
         plt.tight_layout()
         return ax1
         
-    def plot_contact_matrix(self, bin_type, contact_type, sex="unisex", normalized=True):
+    def plot_contact_matrix(self, bin_type, contact_type, sex="unisex", which="NCM"):
         """
         Function to plot contact matrix for bin_type, contact_type and sex.
 
@@ -664,7 +678,7 @@ class PlotClass:
                 matplotlib axes objects (Linear and Log)
         """
         labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
-        cm, cm_err = self.CMPlots_GetCM(bin_type, contact_type, sex=sex, normalized=normalized)
+        cm, cm_err = self.CMPlots_GetCM(bin_type, contact_type, sex=sex, which=which)
         cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels)
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
@@ -693,11 +707,13 @@ class PlotClass:
         f.colorbar(im1, ax=ax1)
         f.colorbar(im2, ax=ax2, extend="min")
 
+        ax1.set_title("Linear Scale")
+        ax2.set_title("Log Scale")
         f.suptitle(f"{bin_type} binned contacts in {contact_type} for {sex}")
         plt.tight_layout()
         return (ax1,ax2)
 
-    def plot_comparesexes_contact_matrix(self, bin_type, contact_type, normalized=True):
+    def plot_comparesexes_contact_matrix(self, bin_type, contact_type, which="NCM"):
         """
         Function to plot difference in contact matrices between men and women for bin_type, contact_type.
 
@@ -721,8 +737,8 @@ class PlotClass:
 
         labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
 
-        cm_M, _ = self.CMPlots_GetCM(bin_type, contact_type, "male", normalized)
-        cm_F, _ = self.CMPlots_GetCM(bin_type, contact_type, "female", normalized)
+        cm_M, _ = self.CMPlots_GetCM(bin_type, contact_type, "male", which)
+        cm_F, _ = self.CMPlots_GetCM(bin_type, contact_type, "female", which)
         cm = cm_M - cm_F    
 
         cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, None, labels)
@@ -747,7 +763,11 @@ class PlotClass:
 
         f.colorbar(im1, ax=ax1)
         f.colorbar(im2, ax=ax2, extend="min")
-        f.suptitle(f"cm_M - cm_F {bin_type} binned contacts in {contact_type}")
+
+        ax1.set_title("Linear Scale")
+        ax2.set_title("Log Scale")
+
+        f.suptitle(f"Male - female {bin_type} binned contacts in {contact_type}")
         plt.tight_layout()
         return (ax1,ax2)
 
@@ -1140,8 +1160,8 @@ class PlotClass:
             Bincenters = 0.5*(Bins[1:]+Bins[:-1])
             Bindiffs = np.abs(Bins[1:]-Bins[:-1])
         else:
-            Bins = np.array(self.interaction_matrices[contact_type]["bins"])
-            AgeDiscrete = self.interaction_matrices[contact_type]["type"]
+            Bins = np.array(self.IM[contact_type]["bins"])
+            AgeDiscrete = self.IM[contact_type]["type"]
             if AgeDiscrete == "Age":
                 pop_tots = self.location_cum_pop[bin_type][contact_type][sex]
                 
@@ -1197,6 +1217,7 @@ class PlotClass:
         f.colorbar(im_P, ax=ax1, label=r"$\dfrac{Age_{y}}{Age_{x}}$")
         plt.bar(x=Bincenters, height=Height_G/sum(Height_G), width=Bindiffs, tick_label=Labels, alpha=0.5, color="blue", label="Ground truth")
         plt.bar(x=Bincenters, height=Height_P/sum(Height_P), width=Bindiffs, tick_label=Labels, alpha=0.5, color="red", label=contact_type+" tracker")
+        ax2.set_xlabel("Age")
         ax2.set_ylabel("Normed Population size")
         ax2.set_xlim([Bins[0], Bins[-1]])
         plt.xticks(rotation=90)
@@ -1221,8 +1242,7 @@ class PlotClass:
                 matplotlib axes object
 
         """
-
-        Nlocals = len(self.location_counters["loc"][location])
+        Nlocals = self.location_counters["loc"][location]["unisex"].shape[1]
         dat = self.travel_distance[location]
         
         maxkm = np.nanmax(dat)
@@ -1238,7 +1258,6 @@ class PlotClass:
 
     def make_plots(self, 
         plot_AvContactsLocation=True, 
-        plot_FractionalDemographicsLocation=True, 
         plot_dTLocationPopulation=True, 
         plot_InteractionMatrices=True,
         plot_ContactMatrices=True, 
@@ -1252,8 +1271,6 @@ class PlotClass:
         ----------
             plot_AvContactsLocation:
                 bool, To plot average contacts per location plots
-            plot_FractionalDemographicsLocation:
-                bool, To plot fraction of subgroup at locations
             plot_dTLocationPopulation:
                 bool, To plot average people per location at timestamp
             plot_InteractionMatrices:
@@ -1274,12 +1291,14 @@ class PlotClass:
         if self.group_type_names == []:
             return 1
 
-        relevant_bin_types = self.contact_matrices.keys()
+
+        relevant_bin_types = self.CM_T.keys()
         relevant_bin_types_short = ["syoa", "AC"]
-        relevant_contact_types = self.contact_matrices["syoa"].keys()
+        relevant_contact_types = self.CM_T["syoa"].keys()
+        CMTypes = ["NCM", "NCM_R", "CM_T"]
 
         if plot_AvContactsLocation:
-            plot_dir = self.record_path / "Average_Contacts" 
+            plot_dir = self.record_path / "Graphs" / "Average_Contacts" 
             plot_dir.mkdir(exist_ok=True, parents=True)
             for rbt in relevant_bin_types_short:  
                 stacked_contacts_plot = self.plot_stacked_contacts(
@@ -1291,7 +1310,7 @@ class PlotClass:
             
             
         if plot_dTLocationPopulation:
-            plot_dir = self.record_path / "Location_Pops" 
+            plot_dir = self.record_path / "Graphs" / "Location_Pops" 
             plot_dir.mkdir(exist_ok=True, parents=True)
             for locations in self.location_counters["loc"].keys():
                 self.plot_population_at_locs_variations(locations)
@@ -1303,75 +1322,65 @@ class PlotClass:
                 plt.close()
 
         if plot_InteractionMatrices:
-            plot_dir = self.record_path / "Interaction_Matrices" 
+            plot_dir = self.record_path / "IM" 
             plot_dir.mkdir(exist_ok=True, parents=True)
-            for rct in self.interaction_matrices.keys():
+            for rct in self.IM.keys():
                 self.plot_interaction_matrix(
                     contact_type=rct
                 )
                 plt.savefig(plot_dir / f"{rct}.png", dpi=150, bbox_inches='tight')
                 plt.close()
 
-        plot_totals = True
+
         if plot_ContactMatrices:
-            plot_dir_1 = self.record_path / "Contact_Matrices"
-            plot_dir_1.mkdir(exist_ok=True, parents=True)
+            for CMType in CMTypes:
+                plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices" / CMType
+                plot_dir_1.mkdir(exist_ok=True, parents=True)
 
-            for rbt in relevant_bin_types:
-                if rbt == "Interaction":
-                    continue
-
-                plot_dir_2 = plot_dir_1 / f"{rbt}"
-                plot_dir_2.mkdir(exist_ok=True, parents=True)
-
-                for sex in self.contact_sexes:
-                    if sex in ["male", "female"]:
+                for rbt in relevant_bin_types:
+                    if rbt == "Interaction":
                         continue
 
-                    plot_dir_3 = plot_dir_2 / f"{sex}"
-                    plot_dir_3.mkdir(exist_ok=True, parents=True)
+                    plot_dir_2 = plot_dir_1 / f"{rbt}"
+                    plot_dir_2.mkdir(exist_ok=True, parents=True)
 
-                    plot_dir_tot = plot_dir_3 / "Total"
-                    plot_dir_tot.mkdir(exist_ok=True, parents=True)
-
-                    for rct in relevant_contact_types:
-                        self.plot_contact_matrix(
-                            bin_type=rbt, contact_type=rct, sex=sex,
-                        )
-                        plt.savefig(plot_dir_3 / f"{rct}.png", dpi=150, bbox_inches='tight')
-                        plt.close()
-
-                        if plot_totals:
-                            self.plot_contact_matrix(
-                                bin_type=rbt, contact_type=rct, sex=sex, normalized=False
-                            )
-                            plt.savefig(plot_dir_tot / f"{rct}.png", dpi=150, bbox_inches='tight')
-                            plt.close()
-
-        if plot_CompareSexMatrices:
-            plot_dir_1 = self.record_path / "Contact_Matrices"
-            plot_dir_1.mkdir(exist_ok=True, parents=True)
-
-            for rbt in relevant_bin_types:
-                if rbt == "Interaction":
-                    continue
-
-                plot_dir_2 = plot_dir_1 / f"{rbt}"
-                plot_dir_2.mkdir(exist_ok=True, parents=True)
-
-                for rct in relevant_contact_types:
-                    if "male" in self.contact_sexes and "female" in self.contact_sexes:
-                        plot_dir_3 = plot_dir_2 / "CompareSexes"
+                    for sex in self.contact_sexes:
+                        plot_dir_3 = plot_dir_2 / f"{sex}"
                         plot_dir_3.mkdir(exist_ok=True, parents=True)
 
-                        self.plot_comparesexes_contact_matrix(
-                            bin_type=rbt, contact_type=rct, normalized=True
+                        for rct in relevant_contact_types:
+                            self.plot_contact_matrix(
+                                bin_type=rbt, contact_type=rct, sex=sex, which=CMType
                             )
-                        plt.savefig(plot_dir_3 / f"{rct}.png", dpi=150, bbox_inches='tight')
-                        plt.close() 
+                            plt.savefig(plot_dir_3 / f"{rct}.png", dpi=150, bbox_inches='tight')
+                            plt.close()
+
+
+        if plot_CompareSexMatrices:
+            for CMType in CMTypes:
+                plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices" / CMType
+                plot_dir_1.mkdir(exist_ok=True, parents=True)
+
+                for rbt in relevant_bin_types:
+                    if rbt == "Interaction":
+                        continue
+
+                    plot_dir_2 = plot_dir_1 / f"{rbt}"
+                    plot_dir_2.mkdir(exist_ok=True, parents=True)
+
+                    for rct in relevant_contact_types:
+                        if "male" in self.contact_sexes and "female" in self.contact_sexes:
+                            plot_dir_3 = plot_dir_2 / "CompareSexes"
+                            plot_dir_3.mkdir(exist_ok=True, parents=True)
+
+                            self.plot_comparesexes_contact_matrix(
+                                bin_type=rbt, contact_type=rct, which=CMType
+                                )
+                            plt.savefig(plot_dir_3 / f"{rct}.png", dpi=150, bbox_inches='tight')
+                            plt.close() 
 
         if plot_AgeBinning:
-            plot_dir = self.record_path / "Age_Binning"
+            plot_dir = self.record_path / "Graphs" / "Age_Binning"
             plot_dir.mkdir(exist_ok=True, parents=True)
             for rbt in ["syoa", "Paper"]:
                 if rbt not in self.age_bins.keys():
@@ -1384,7 +1393,7 @@ class PlotClass:
                     plt.close() 
 
         if plot_Distances:
-            plot_dir = self.record_path / "Distance_Traveled" 
+            plot_dir = self.record_path / "Graphs" / "Distance_Traveled" 
             plot_dir.mkdir(exist_ok=True, parents=True)
             for locations in self.location_counters["loc"].keys():
                 for day in self.travel_distance.keys():
