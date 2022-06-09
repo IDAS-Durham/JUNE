@@ -280,7 +280,7 @@ class InfectionSeed:
         if (not self.past_infections_seeded) and self.seed_past_infections:
             self._seed_past_infections(date=date, time=time, record=record)
             self.past_infections_seeded = True
-        is_seeding_date = self.max_date >= date >= self.min_date
+        is_seeding_date = self.max_date >= date.date() >= self.min_date
         date_str = date.date().strftime("%Y-%m-%d")
         not_yet_seeded_date = (
             date_str not in self.dates_seeded
@@ -313,7 +313,7 @@ class InfectionSeed:
         ) in self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
             "date"
         ).unique():
-            if past_date.date() < date.date():
+            if past_date < date.date():
                 past_dates.append(past_date)
         for past_date in past_dates:
             seed_logger.info(f"Seeding past infections at {past_date.date()}")
