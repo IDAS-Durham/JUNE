@@ -1351,8 +1351,18 @@ class Tracker:
                 else:
                     contacts_index = np.random.choice(len(subgroup_people), int_contacts, replace=True)
 
+                #Shelters a special case...
                 #Interaction Matrix
-                self.CM_T["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts
+                if group.spec == "shelter": 
+                    if inside:
+                        self.CM_T["Interaction"][group.spec][0, 0] += int_contacts
+                        self.CM_T["Interaction"][group.spec][1, 1] += int_contacts
+                    else:
+                        self.CM_T["Interaction"][group.spec][0,1] += int_contacts
+                        self.CM_T["Interaction"][group.spec][1,0] += int_contacts
+
+                else:
+                    self.CM_T["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts
                 
                 #Get the ids
                 for contacts_index_i in contacts_index:  
@@ -1477,7 +1487,19 @@ class Tracker:
                 else:
                     inside = False
                 #Interaction Matrix
-                self.CM_AC["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += len(subgroup_people_without)
+
+                #Shelters a special case...
+                #Interaction Matrix #TODO
+                if group.spec == "shelter": 
+                    if inside:
+                        self.CM_AC["Interaction"][group.spec][0, 0] += len(subgroup_people_without)
+                        self.CM_AC["Interaction"][group.spec][1, 1] += len(subgroup_people_without)
+                    else:
+                        self.CM_AC["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += len(subgroup_people_without)
+                        self.CM_AC["Interaction"][group.spec][contact_subgroup_idx, person_subgroup_idx] += len(subgroup_people_without)
+                else:
+                    self.CM_AC["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += len(subgroup_people_without)
+                
 
                 contact_ids_inter = []
                 contact_ids_intra = []
@@ -1558,10 +1580,13 @@ class Tracker:
 
 
         for subgroup, sub_i in zip(group.subgroups, range(len(group.subgroups))):
-            if group.spec == "school":
+            if group.spec == "school": #change subgroups to Teachers, Students
                 if sub_i > 0:
                     sub_i = 1
-            self.location_cum_pop["Interaction"][group.spec][sub_i] += len(subgroup.people)
+            if group.spec == "shelter":
+                self.location_cum_pop["Interaction"][group.spec][sub_i] += len(group.people)
+            else:
+                self.location_cum_pop["Interaction"][group.spec][sub_i] += len(subgroup.people)
           
         
         for person in group.people:

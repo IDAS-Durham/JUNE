@@ -1,3 +1,4 @@
+from cProfile import label
 from concurrent.futures import thread
 import numpy as np
 import yaml
@@ -15,6 +16,14 @@ import matplotlib.dates as mdates
 import datetime
 
 DaysOfWeek_Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+try:
+    plt.style.use(['science','no-latex'])
+    print("Using 'science' matplotlib style")
+except:
+    plt.style.use('default')
+    print("Using default matplotlib style")
+    pass
 
 
 #####################################################################################################################################################################
@@ -771,32 +780,21 @@ class PlotClass:
         cm_F, _ = self.CMPlots_GetCM(bin_type, contact_type, "female", which)
         cm = cm_M - cm_F    
 
+
         cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, None, labels)
 
-        if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
-            cm_Min = np.nanmin(cm[np.nonzero(cm)])
-        else:
-            cm_Min = 1e-1
-        if np.isfinite(cm).sum() != 0:
-            cm_Max = cm[np.isfinite(cm)].max()
-        else:
-            cm_Max = 1
-
-        if np.isnan(cm_Min):
-            cm_Min = 1e-1
-        if np.isnan(cm_Max) or cm_Max == 0:
-            cm_Max = 1
+        cm_Min = -1e-1
+        cm_Max = 1e-1
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
         im1 = self.PlotCM(cm, cm_err, labels, ax1, origin='lower',cmap='RdYlBu_r',vmin=cm_Min,vmax=cm_Max)
         im2 = self.PlotCM(cm+1e-16, cm_err, labels, ax2, origin='lower',cmap='RdYlBu_r', norm=colors.SymLogNorm(linthresh = 1, vmin=cm_Min, vmax=cm_Max))
 
-        f.colorbar(im1, ax=ax1)
+        f.colorbar(im1, ax=ax1, extend="min")
         f.colorbar(im2, ax=ax2, extend="min")
 
         ax1.set_title("Linear Scale")
         ax2.set_title("Log Scale")
-
         f.suptitle(f"Male - female {bin_type} binned contacts in {contact_type}")
         plt.tight_layout()
         return (ax1,ax2)
@@ -1277,7 +1275,7 @@ class PlotClass:
         plt.rcParams["figure.figsize"] = (10,5)
         f, ax = plt.subplots(1,1)
         f.patch.set_facecolor('white')
-        ax.bar(x=dat["bins"], height=(100*dat.iloc[:,1])/len(dat), width=(dat["bins"].iloc[1]-dat["bins"].iloc[0]), color="b")
+        ax.bar(x=dat["bins"], height=(100*dat.iloc[:,1])/len(dat), width=(dat["bins"].iloc[1]-dat["bins"].iloc[0]), color="b", alpha=0.4)
         ax.set_title(f"{location} {Nlocals} locations")
         ax.set_ylabel("percentage of people")
         ax.set_xlabel("distance traveled from shelter / km")
@@ -1333,7 +1331,7 @@ class PlotClass:
                     bin_type=rbt, contact_types=relevant_contact_types
                 )
                 stacked_contacts_plot.plot()
-                plt.savefig(plot_dir / f"{rbt}_contacts.png", dpi=150, bbox_inches='tight')
+                plt.savefig(plot_dir / f"{rbt}_contacts.pdf", dpi=150, bbox_inches='tight')
                 plt.close()
             
             
@@ -1342,11 +1340,11 @@ class PlotClass:
             plot_dir.mkdir(exist_ok=True, parents=True)
             for locations in self.location_counters["loc"].keys():
                 self.plot_population_at_locs_variations(locations)
-                plt.savefig(plot_dir / f"{locations}_Variations.png", dpi=150, bbox_inches='tight')
+                plt.savefig(plot_dir / f"{locations}_Variations.pdf", dpi=150, bbox_inches='tight')
                 plt.close()
 
                 self.plot_population_at_locs(locations)
-                plt.savefig(plot_dir / f"{locations}.png", dpi=150, bbox_inches='tight')
+                plt.savefig(plot_dir / f"{locations}.pdf", dpi=150, bbox_inches='tight')
                 plt.close()
 
         if plot_InteractionMatrices:
@@ -1356,7 +1354,7 @@ class PlotClass:
                 self.plot_interaction_matrix(
                     contact_type=rct
                 )
-                plt.savefig(plot_dir / f"{rct}.png", dpi=150, bbox_inches='tight')
+                plt.savefig(plot_dir / f"{rct}.pdf", dpi=150, bbox_inches='tight')
                 plt.close()
 
 
@@ -1380,7 +1378,7 @@ class PlotClass:
                             self.plot_contact_matrix(
                                 bin_type=rbt, contact_type=rct, sex=sex, which=CMType
                             )
-                            plt.savefig(plot_dir_3 / f"{rct}.png", dpi=150, bbox_inches='tight')
+                            plt.savefig(plot_dir_3 / f"{rct}.pdf", dpi=150, bbox_inches='tight')
                             plt.close()
 
 
@@ -1404,7 +1402,7 @@ class PlotClass:
                             self.plot_comparesexes_contact_matrix(
                                 bin_type=rbt, contact_type=rct, which=CMType
                                 )
-                            plt.savefig(plot_dir_3 / f"{rct}.png", dpi=150, bbox_inches='tight')
+                            plt.savefig(plot_dir_3 / f"{rct}.pdf", dpi=150, bbox_inches='tight')
                             plt.close() 
 
         if plot_AgeBinning:
@@ -1417,7 +1415,7 @@ class PlotClass:
                     self.plot_AgeProfileRatios(
                         contact_type = rct, bin_type=rbt, sex="unisex"
                     )
-                    plt.savefig(plot_dir / f"{rbt}_{rct}.png", dpi=150, bbox_inches='tight')
+                    plt.savefig(plot_dir / f"{rbt}_{rct}.pdf", dpi=150, bbox_inches='tight')
                     plt.close() 
 
         if plot_Distances:
@@ -1426,7 +1424,7 @@ class PlotClass:
             for locations in self.location_counters["loc"].keys():
                 for day in self.travel_distance.keys():
                     self.plot_DistanceTraveled(locations, day)
-                    plt.savefig(plot_dir / f"{locations}.png", dpi=150, bbox_inches='tight')
+                    plt.savefig(plot_dir / f"{locations}.pdf", dpi=150, bbox_inches='tight')
                     plt.close()
                     break
 
