@@ -1762,6 +1762,8 @@ class Tracker:
         for grouptype in grouptypes:
             counter = 0                 
             for group in grouptype.members: #Loop over all locations.
+                print("")
+                print(group.spec)
                 if group.spec in self.group_type_names:
                     self.simulate_pop_time_venues(group)
                     self.simulate_attendance(group, super_group_name, self.timer, counter)

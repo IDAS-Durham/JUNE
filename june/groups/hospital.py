@@ -421,10 +421,8 @@ class Hospitals(Supergroup, MedicalFacilities):
 class ExternalHospital(ExternalGroup, AbstractHospital, MedicalFacility):
     external = True
     __slots__ = "spec", "id", "domain_id", "region_name", "ward_ids", "icu_ids"
-
-    #subgroup_params = Subgroup_Params.from_file()
+    
     venue_class = Hospital
-
     def __init__(self, id, spec, domain_id, region_name):
         ExternalGroup.__init__(self, id=id, spec=spec, domain_id=domain_id)
         AbstractHospital.__init__(self) 
@@ -437,6 +435,4 @@ class ExternalHospital(ExternalGroup, AbstractHospital, MedicalFacility):
             group=self, subgroup_type=self.venue_class.SubgroupType.icu_patients
         )
 
-    #@classmethod    
-    #def Get_Interaction(self, config_filename = None):
-    #    self.subgroup_params = Subgroup_Params.from_file(config_filename)
+
