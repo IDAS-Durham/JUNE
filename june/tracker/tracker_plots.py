@@ -126,6 +126,7 @@ class PlotClass:
         #Get Parameters of simulation
         self.total_days = self.Params["total_days"]
         self.day_types = {"weekend":self.Params["Weekend_Names"],"weekday":self.Params["Weekday_Names"]}
+        self.NVenues = self.Params["NVenues"]
         #Get all the bin types
         self.relevant_bin_types = list(self.CM_T.keys())
         #Get all location names
@@ -915,7 +916,12 @@ class PlotClass:
         plt.rcParams["figure.figsize"] = (10,5)
         f, (ax1,ax2) = plt.subplots(1,2)
         f.patch.set_facecolor('white')
-        Nlocals = len(self.location_counters["loc"][locations]["unisex"][Cols])
+
+        if locations[-1] == "y":
+            Nlocals = self.NVenues[locations[:-1]+"ies"]
+        else:
+            Nlocals = self.NVenues[locations+"s"]
+
         ymax = -1
         i_counts = 0
 
@@ -960,9 +966,6 @@ class PlotClass:
         df = self.location_counters_day["loc"][locations]["unisex"]
         df["t"] = np.array(self.location_counters_day["Timestamp"])
         Cols = df.columns[~df.columns.isin(["t", "day"])]
-
-        NVenues = len(self.location_counters_day["loc"][locations]["unisex"].keys())
-        
 
         if df[Cols].shape[1] == 0:
             Max_attendance = 20
@@ -1013,7 +1016,6 @@ class PlotClass:
         
         df = pd.DataFrame()
         df = self.location_counters_day["loc"][locations]["unisex"]
-        NVenues = df.shape[1]
         df["t"] = pd.to_datetime(self.location_counters_day["Timestamp"].values)
         df["day"] = [day.day_name() for day in df["t"]]
          
@@ -1268,7 +1270,10 @@ class PlotClass:
                 matplotlib axes object
 
         """
-        Nlocals = self.location_counters["loc"][location]["unisex"].shape[1]
+        if location[-1] == "y":
+            Nlocals = self.NVenues[location[:-1]+"ies"]
+        else:
+            Nlocals = self.NVenues[location+"s"]
         dat = self.travel_distance[location]
         
         maxkm = np.nanmax(dat)
@@ -1276,7 +1281,7 @@ class PlotClass:
         f, ax = plt.subplots(1,1)
         f.patch.set_facecolor('white')
         ax.bar(x=dat["bins"], height=(100*dat.iloc[:,1])/len(dat), width=(dat["bins"].iloc[1]-dat["bins"].iloc[0]), color="b", alpha=0.4)
-        ax.set_title(f"{location} {Nlocals} locations")
+        ax.set_title(f"{Nlocals} of {location}")
         ax.set_ylabel("percentage of people")
         ax.set_xlabel("distance traveled from shelter / km")
         ax.set_xlim([0, None])

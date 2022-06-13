@@ -235,7 +235,7 @@ class Simulator:
         We then pass the interactive group to the interaction module, which returns the ids
         of the people who got infected. We record the infection locations, update the health
         status of the population, and distribute scores among the infectors to calculate R0.
-        """
+        """ 
         output_logger.info("==================== timestep ====================")
         tick, tickw = perf_counter(), wall_clock()
         if self.activity_manager.policies is not None:
@@ -291,13 +291,7 @@ class Simulator:
             f"number of deaths =  {n_people}, "
             f"number of infected = {len(self.world.people.infected)}"
         )
-
-        #Loop in here 
-        if isinstance(self.tracker, type(None)):
-            pass
-        else:
-            self.tracker.trackertimestep(self.activity_manager.all_super_groups, self.timer)
-
+        
         # main interaction loop
         infected_ids = []  # ids of the newly infected people
         infection_ids = []  # ids of the viruses they got
@@ -332,6 +326,17 @@ class Simulator:
         tock_interaction = perf_counter()
         rank_logger.info(
             f"Rank {mpi_rank} -- interaction -- {tock_interaction-tick_interaction}"
+        )
+
+        tick_tracker = perf_counter()
+        #Loop in here 
+        if isinstance(self.tracker, type(None)):
+            pass
+        else:
+            self.tracker.trackertimestep(self.activity_manager.all_super_groups, self.timer)
+        tock_tracker = perf_counter()
+        rank_logger.info(
+            f"Rank {mpi_rank} -- tracker -- {tock_tracker-tick_tracker}"
         )
 
         self.epidemiology.do_timestep(

@@ -234,7 +234,7 @@ def generate_world_from_hdf5(file_path: str, chunk_size=500000, interaction_conf
 
 
 def generate_domain_from_hdf5(
-    domain_id, super_areas_to_domain_dict: dict, file_path: str, chunk_size=500000
+    domain_id, super_areas_to_domain_dict: dict, file_path: str, chunk_size=500000, interaction_config= None,
 ) -> "Domain":
     """
     Loads the world from an hdf5 file. All id references are substituted
@@ -276,6 +276,7 @@ def generate_domain_from_hdf5(
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
             super_areas_to_domain_dict=super_areas_to_domain_dict,
+            config_filename= interaction_config
         )
     if "schools" in f_keys:
         logger.info("loading schools...")
@@ -283,12 +284,14 @@ def generate_domain_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
+            config_filename= interaction_config
         )
     if "companies" in f_keys:
         domain.companies = load_companies_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
+            config_filename= interaction_config
         )
     if "care_homes" in f_keys:
         logger.info("loading care homes...")
@@ -296,6 +299,7 @@ def generate_domain_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
+            config_filename= interaction_config
         )
     if "universities" in f_keys:
         logger.info("loading universities...")
@@ -303,6 +307,7 @@ def generate_domain_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
             domain_areas=area_ids,
+            config_filename= interaction_config
         )
     if "cities" in f_keys:
         logger.info("loading cities...")
@@ -310,6 +315,7 @@ def generate_domain_from_hdf5(
             file_path=file_path,
             domain_super_areas=super_area_ids,
             super_areas_to_domain_dict=super_areas_to_domain_dict,
+            config_filename= interaction_config
         )
     if "stations" in f_keys:
         logger.info("loading stations...")
@@ -321,10 +327,11 @@ def generate_domain_from_hdf5(
             file_path,
             domain_super_areas=super_area_ids,
             super_areas_to_domain_dict=super_areas_to_domain_dict,
+            config_filename= interaction_config
         )
     if "households" in f_keys:
         domain.households = load_households_from_hdf5(
-            file_path, chunk_size=chunk_size, domain_super_areas=super_area_ids
+            file_path, chunk_size=chunk_size, domain_super_areas=super_area_ids,config_filename= interaction_config
         )
     if "population" in f_keys:
         domain.people = load_population_from_hdf5(
@@ -333,7 +340,7 @@ def generate_domain_from_hdf5(
     if "social_venues" in f_keys:
         logger.info("loading social venues...")
         social_venues_dict = load_social_venues_from_hdf5(
-            file_path, domain_areas=area_ids
+            file_path, domain_areas=area_ids,config_filename= interaction_config
         )
         for social_venues_spec, social_venues in social_venues_dict.items():
             setattr(domain, social_venues_spec, social_venues)

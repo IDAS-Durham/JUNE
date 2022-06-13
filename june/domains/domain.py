@@ -23,7 +23,7 @@ class Domain:
         self.id = id
 
     def __iter__(self):
-        return iter(self.super_areas)
+        return iter(self.super_areas) 
 
     @classmethod
     def from_hdf5(
@@ -31,11 +31,13 @@ class Domain:
         domain_id,
         super_areas_to_domain_dict: dict,
         hdf5_file_path: str,
+        interaction_config: str = None,
     ):
         domain = generate_domain_from_hdf5(
             domain_id=domain_id,
             super_areas_to_domain_dict=super_areas_to_domain_dict,
             file_path=hdf5_file_path,
+            interaction_config = interaction_config,
         )
         domain.id = domain_id
         return domain

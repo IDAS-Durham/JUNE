@@ -1,4 +1,6 @@
 import numpy as np
+from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+
 import yaml
 import pandas as pd
 
@@ -1749,22 +1751,25 @@ class Tracker:
             #Only run after first day completed first day
             self.simulate_traveldistance(day)
 
+        grouptypes = []
         for super_group_name in all_super_groups:
             if "visits" in super_group_name:
                 continue
             grouptype = getattr(self.world, super_group_name)
             if grouptype is not None:
-                counter = 0                 
-                for group in grouptype.members: #Loop over all locations.
-                    if group.spec in self.group_type_names:
-                        self.simulate_pop_time_venues(group)
-                        self.simulate_attendance(group, super_group_name, self.timer, counter)
-                        if "1D" in self.Tracker_Contact_Type:
-                            self.simulate_1d_contacts(group)
-                        if "All" in self.Tracker_Contact_Type:
-                            self.simulate_All_contacts(group)
+                grouptypes.append(grouptype)
 
-                        counter += 1
+        for grouptype in grouptypes:
+            counter = 0                 
+            for group in grouptype.members: #Loop over all locations.
+                if group.spec in self.group_type_names:
+                    self.simulate_pop_time_venues(group)
+                    self.simulate_attendance(group, super_group_name, self.timer, counter)
+                    if "1D" in self.Tracker_Contact_Type:
+                        self.simulate_1d_contacts(group)
+                    if "All" in self.Tracker_Contact_Type:
+                        self.simulate_All_contacts(group)
+                    counter += 1
         return 1
 
 #####################################################################################################################################################################
@@ -1787,6 +1792,13 @@ class Tracker:
             None
 
         """
+
+        if mpi_size == 1:
+            mpi_rankname = ""
+        else:
+            mpi_rankname = f"_r{mpi_rank}_"
+
+
         def Save_CM_JSON(dir, filename, jsonfile):
             junk_dir = self.record_path / "Tracker" / "data_output" / "junk"
             junk_dir.mkdir(exist_ok=True, parents=True)
@@ -1809,14 +1821,14 @@ class Tracker:
 
         Save_CM_JSON(
             dir=tracker_path, 
-            filename="tracker_Simulation_Params.yaml", 
+            filename=f"tracker_Simulation_Params{mpi_rankname}.yaml", 
             jsonfile=self.tracker_Simulation_Params()
         )
 
         # Save out the IM
         Save_CM_JSON(
             dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-            filename="tracker_IM.yaml", 
+            filename=f"tracker_IM{mpi_rankname}.yaml", 
             jsonfile=self.tracker_IMJSON()
         )
 
@@ -1830,7 +1842,7 @@ class Tracker:
             # Save out the CM totals
             Save_CM_JSON(
                 dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-                filename=f"tracker_{Tracker_Type}_Total_CM.yaml", 
+                filename=f"tracker_{Tracker_Type}_Total_CM{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
 
@@ -1840,7 +1852,7 @@ class Tracker:
             # Save out the Normalised CM 
             Save_CM_JSON(
                 dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-                filename=f"tracker_{Tracker_Type}_NCM.yaml", 
+                filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
 
@@ -1850,7 +1862,7 @@ class Tracker:
             # Save out the Normalised CM with Reciprocal contacts 
             Save_CM_JSON(
                 dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-                filename=f"tracker_{Tracker_Type}_NCM_R.yaml", 
+                filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
 
@@ -1864,7 +1876,7 @@ class Tracker:
             # Save out the CM totals
             Save_CM_JSON(
                 dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-                filename=f"tracker_{Tracker_Type}_Total_CM.yaml", 
+                filename=f"tracker_{Tracker_Type}_Total_CM{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
 
@@ -1874,7 +1886,7 @@ class Tracker:
             # Save out the Normalised CM 
             Save_CM_JSON(
                 dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-                filename=f"tracker_{Tracker_Type}_NCM.yaml", 
+                filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
 
@@ -1884,7 +1896,7 @@ class Tracker:
             # Save out the Normalised CM with Reciprocal contacts 
             Save_CM_JSON(
                 dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
-                filename=f"tracker_{Tracker_Type}_NCM_R.yaml", 
+                filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
 
@@ -1894,7 +1906,7 @@ class Tracker:
         for bin_types in self.age_profiles.keys():
             dat = self.age_profiles[bin_types]
             bins = self.age_bins[bin_types]
-            with pd.ExcelWriter(VD_dir / f'PersonCounts_{bin_types}.xlsx', mode="w") as writer:  
+            with pd.ExcelWriter(VD_dir / f'PersonCounts_{bin_types}{mpi_rankname}.xlsx', mode="w") as writer:  
                 for local in dat.keys(): 
 
                     df = pd.DataFrame(dat[local])
@@ -1910,7 +1922,7 @@ class Tracker:
         VTD_dir.mkdir(exist_ok=True, parents=True)
         for bin_types in self.location_cum_pop.keys(): 
             dat = self.location_cum_pop[bin_types]
-            with pd.ExcelWriter(VTD_dir / f'CumPersonCounts_{bin_types}.xlsx', mode="w") as writer:  
+            with pd.ExcelWriter(VTD_dir / f'CumPersonCounts_{bin_types}{mpi_rankname}.xlsx', mode="w") as writer:  
                 for local in dat.keys(): 
 
                     df = pd.DataFrame(dat[local])
@@ -1919,13 +1931,13 @@ class Tracker:
         Dist_dir = self.record_path / "Tracker" / "data_output" / "Venue_TravelDist"
         Dist_dir.mkdir(exist_ok=True, parents=True)
         days = list(self.travel_distance.keys())
-        with pd.ExcelWriter(Dist_dir / f'Distance_traveled.xlsx', mode="w") as writer:  
+        with pd.ExcelWriter(Dist_dir / f'Distance_traveled{mpi_rankname}.xlsx', mode="w") as writer:  
             for local in self.travel_distance[days[0]].keys(): 
                 df = pd.DataFrame()
                 bins = np.arange( 0, 6, 0.2)
                 df["bins"] = (bins[:-1]+bins[1:]) / 2
                 for day in days:
-                    df[day] = np.histogram( self.travel_distance[day][local], bins=bins, density=True)[0]
+                    df[day] = np.histogram( self.travel_distance[day][local], bins=bins, density=False)[0]
                 df.to_excel(writer, sheet_name=f'{local}')
                     
 
@@ -1936,7 +1948,7 @@ class Tracker:
         timestamps = self.location_counters["Timestamp"]
         delta_ts = self.location_counters["delta_t"]
         for sex in self.contact_sexes:
-            with pd.ExcelWriter(V_dir / f'Venues_{sex}_Counts_BydT.xlsx', mode="w") as writer:  
+            with pd.ExcelWriter(V_dir / f'Venues_{sex}_Counts_BydT{mpi_rankname}.xlsx', mode="w") as writer:  
                 for loc in self.location_counters["loc"].keys():
                     df = pd.DataFrame()
                     df["t"] = timestamps
@@ -1950,14 +1962,14 @@ class Tracker:
                         df[loc_j] = self.location_counters["loc"][loc][loc_i][sex]
                         loc_j+=1
 
-                        if loc_j > 100:
+                        if loc_j > 600:
                             break
 
                     df.to_excel(writer, sheet_name=f'{loc}')
 
         timestamps = self.location_counters_day["Timestamp"]
         for sex in self.contact_sexes:
-            with pd.ExcelWriter(V_dir/ f'Venues_{sex}_Counts_ByDate.xlsx', mode="w") as writer:  
+            with pd.ExcelWriter(V_dir/ f'Venues_{sex}_Counts_ByDate{mpi_rankname}.xlsx', mode="w") as writer:  
                 for loc in self.location_counters_day["loc"].keys():
                     df = pd.DataFrame()
                     df["t"] = timestamps
@@ -1970,14 +1982,14 @@ class Tracker:
                         df[loc_j] = self.location_counters_day["loc"][loc][loc_i][sex]
                         loc_j+=1
 
-                        if loc_j > 100:
+                        if loc_j > 600:
                             break
                     df.to_excel(writer, sheet_name=f'{loc}')
 
         # Save contacts per location
         Av_dir = self.record_path / "Tracker" / "data_output" / "Venue_AvContacts"
         Av_dir.mkdir(exist_ok=True, parents=True)
-        with pd.ExcelWriter(Av_dir / f'Average_contacts.xlsx', mode="w") as writer:  
+        with pd.ExcelWriter(Av_dir / f'Average_contacts{mpi_rankname}.xlsx', mode="w") as writer:  
             for rbt in self.average_contacts.keys():
                 df = self.average_contacts[rbt]
                 df.to_excel(writer, sheet_name=f'{rbt}')
@@ -1999,9 +2011,16 @@ class Tracker:
 
         """
         jsonfile = {}
+        jsonfile["MPI_size"] = mpi_size
+        jsonfile["MPI_rank"] = mpi_rank
         jsonfile["total_days"] = self.timer.total_days
         jsonfile["Weekend_Names"] =  self.MatrixString(np.array(self.timer.day_types["weekend"]))
         jsonfile["Weekday_Names"] = self.MatrixString(np.array(self.timer.day_types["weekday"]))
+
+        jsonfile["NVenues"] = {}
+        for locations in self.location_counters_day["loc"].keys():
+            jsonfile["NVenues"][locations] = len(self.location_counters_day["loc"][locations])
+
         return jsonfile
 
     def tracker_IMJSON(self):
