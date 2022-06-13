@@ -123,6 +123,9 @@ def load_hospitals_from_hdf5(
     Hospital_Class = Hospital
     Hospital_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename) 
 
+    print(Hospital_Class.subgroup_params)
+    print(Hospital_Class.SubgroupType.patients)
+
     ExternalHospital_Class = ExternalHospital
     ExternalHospital_Class.venue_class = Hospital_Class
     #ExternalHospital_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
