@@ -125,10 +125,6 @@ def load_hospitals_from_hdf5(
 
     ExternalHospital_Class = ExternalHospital
     ExternalHospital_Class.venue_class = Hospital_Class(n_beds=1, n_icu_beds= 1)#dummy
-
-    print(ExternalHospital_Class.venue_class.subgroup_bins)
-    #ExternalHospital_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
-
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         hospitals = f["hospitals"]
         hospitals_list = []
