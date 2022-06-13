@@ -1763,6 +1763,9 @@ class Tracker:
             counter = 0                 
             for group in grouptype.members: #Loop over all locations.
                 if group.spec in self.group_type_names:
+                    if mpi_rank == 0:
+                        print(group)
+                        print(len(group.people))
                     self.simulate_pop_time_venues(group)
                     self.simulate_attendance(group, super_group_name, self.timer, counter)
                     if "1D" in self.Tracker_Contact_Type:
