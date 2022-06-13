@@ -9,6 +9,7 @@ from sklearn.neighbors import BallTree
 
 from june.groups import Group, Supergroup, ExternalGroup, ExternalSubgroup
 from june.exc import HospitalError
+from june.groups.group.make_subgroups import Subgroup_Params
 
 logger = logging.getLogger("hospitals")
 
@@ -417,17 +418,25 @@ class Hospitals(Supergroup, MedicalFacilities):
         return [self.members[index] for index in neighbours[0]]
 
 
-class ExternalHospital(ExternalGroup, AbstractHospital):
+class ExternalHospital(ExternalGroup, AbstractHospital, MedicalFacility):
     external = True
     __slots__ = "spec", "id", "domain_id", "region_name", "ward_ids", "icu_ids"
+
+    #subgroup_params = Subgroup_Params.from_file()
+    venue_class = Hospital
 
     def __init__(self, id, spec, domain_id, region_name):
         ExternalGroup.__init__(self, id=id, spec=spec, domain_id=domain_id)
         AbstractHospital.__init__(self) 
         self.region_name = region_name
+
         self.ward = ExternalSubgroup(
-            group=self, subgroup_type=Hospital.SubgroupType.patients
+            group=self, subgroup_type=self.venue_class.SubgroupType.patients
         )
         self.icu = ExternalSubgroup(
-            group=self, subgroup_type=Hospital.SubgroupType.icu_patients
+            group=self, subgroup_type=self.venue_class.SubgroupType.icu_patients
         )
+
+    #@classmethod    
+    #def Get_Interaction(self, config_filename = None):
+    #    self.subgroup_params = Subgroup_Params.from_file(config_filename)

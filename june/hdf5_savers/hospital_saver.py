@@ -121,9 +121,11 @@ def load_hospitals_from_hdf5(
     This function should be rarely be called oustide world.py
     """
     Hospital_Class = Hospital
+    Hospital_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename) 
+
     ExternalHospital_Class = ExternalHospital
-    Hospital_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
-    ExternalHospital_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+    ExternalHospital_Class.venue_class = Hospital_Class
+    #ExternalHospital_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
 
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         hospitals = f["hospitals"]
