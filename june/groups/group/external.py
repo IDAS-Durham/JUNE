@@ -1,3 +1,6 @@
+from typing import List, Tuple
+from june.demography.person import Person
+
 class ExternalGroup:
     external = True
     __slots__ = "spec", "id", "domain_id"
@@ -12,6 +15,15 @@ class ExternalGroup:
 
     def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
         return ExternalSubgroup(group=self, subgroup_type=subgroup_type)
+    
+    @property
+    def people(self) -> Tuple[Person]:
+        """
+        All the people in this group
+        """
+        return tuple(
+            person for subgroup in self.subgroups for person in subgroup.people
+        )
 
 
 class ExternalSubgroup:
@@ -19,7 +31,7 @@ class ExternalSubgroup:
     __slots__ = ("subgroup_type", "group")
     """
     This is a place holder group for groups that live in other domains.
-    """
+    """ 
 
     def __init__(self, group, subgroup_type):
         self.group = group
@@ -39,3 +51,5 @@ class ExternalSubgroup:
     @property
     def spec(self):
         return self.group.spec
+
+    
