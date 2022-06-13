@@ -33,6 +33,7 @@ class Domain:
         hdf5_file_path: str,
         interaction_config: str = None,
     ):
+        print(interaction_config)
         domain = generate_domain_from_hdf5(
             domain_id=domain_id,
             super_areas_to_domain_dict=super_areas_to_domain_dict,
