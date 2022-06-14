@@ -1,3 +1,4 @@
+from re import I
 import numpy as np
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 import logging
@@ -1650,6 +1651,7 @@ class Tracker:
         women = [p.id for p in group.people if p.sex == "f"]
         if super_group_name in self.location_counters["loc"].keys():
             #By dt
+            print(mpi_rank, "loc",super_group_name,counter,"unisex", len(people), len(men),len(women))
             self.location_counters["loc"][super_group_name][counter]["unisex"].append(len(people))
             if "male" in self.contact_sexes:
                 self.location_counters["loc"][super_group_name][counter]["male"].append(len(men))
@@ -1780,7 +1782,8 @@ class Tracker:
                         self.simulate_1d_contacts(group)
                     if "All" in self.Tracker_Contact_Type:
                         self.simulate_All_contacts(group)
-            logger.info(f"Rank {mpi_rank} -- external skipped -- {Skipped_E} out of {counter} for {group.spec}")
+            if counter > 0:
+                logger.info(f"Rank {mpi_rank} -- external skipped -- {Skipped_E} out of {counter} for {group.spec}")
         return 1
 
 #####################################################################################################################################################################
