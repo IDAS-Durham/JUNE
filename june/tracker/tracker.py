@@ -1651,8 +1651,6 @@ class Tracker:
         women = [p.id for p in group.people if p.sex == "f"]
         if super_group_name in self.location_counters["loc"].keys():
             #By dt
-            #print(mpi_rank, "loc",super_group_name, counter,"unisex", len(self.location_counters["loc"][super_group_name]))
- 
             self.location_counters["loc"][super_group_name][counter]["unisex"].append(len(people))
             if "male" in self.contact_sexes:
                 self.location_counters["loc"][super_group_name][counter]["male"].append(len(men))
@@ -1761,8 +1759,7 @@ class Tracker:
             grouptype = getattr(self.world, super_group_name)
             if grouptype is not None:
                 counter = 0       
-                Skipped_E = 0     
-                print(mpi_rank,super_group_name, len(grouptype.members), len(getattr(self.world, super_group_name).members))
+                Skipped_E = 0
                 for group in grouptype.members: #Loop over all locations.
                     
                     if group.spec in self.group_type_names:
