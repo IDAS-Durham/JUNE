@@ -1651,7 +1651,7 @@ class Tracker:
         women = [p.id for p in group.people if p.sex == "f"]
         if super_group_name in self.location_counters["loc"].keys():
             #By dt
-            #print(mpi_rank, "loc",super_group_name,counter,"unisex", len(self.location_counters["loc"][super_group_name]))
+            print(mpi_rank, "loc",super_group_name, counter,"unisex", len(self.location_counters["loc"][super_group_name]))
  
             self.location_counters["loc"][super_group_name][counter]["unisex"].append(len(people))
             if "male" in self.contact_sexes:
