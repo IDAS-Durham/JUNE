@@ -1768,7 +1768,7 @@ class Tracker:
             for group in grouptype.members: #Loop over all locations.
                 if group.spec in self.group_type_names:
                     if counter == 0:
-                        mpi_logger.info(f"Tracking contacts in {len(grouptype.members)} of {group.spec}")                    
+                        logger.info(f"Rank {mpi_rank} -- tracking contacts -- {len(grouptype.members)} of {group.spec}")                    
                     counter += 1
                     if group.external:
                         Skipped_E += 1
@@ -1780,7 +1780,7 @@ class Tracker:
                         self.simulate_1d_contacts(group)
                     if "All" in self.Tracker_Contact_Type:
                         self.simulate_All_contacts(group)
-            mpi_logger.info(f"Skipped {Skipped_E} out of {counter} for {group.spec}")
+            logger.info(f"Rank {mpi_rank} -- external skipped -- {Skipped_E} out of {counter} for {group.spec}")
         return 1
 
 #####################################################################################################################################################################
