@@ -1755,40 +1755,33 @@ class Tracker:
             #Only run after first day completed first day
             self.simulate_traveldistance(day)
 
-        grouptypes = []
         for super_group_name in all_super_groups:
             if "visits" in super_group_name:
                 continue
             grouptype = getattr(self.world, super_group_name)
             if grouptype is not None:
-                grouptypes.append(grouptype)
+                counter = 0       
+                Skipped_E = 0     
+                print(mpi_rank,super_group_name, len(grouptype.members), len(getattr(self.world, super_group_name).members))
+                for group in grouptype.members: #Loop over all locations.
+                    
+                    if group.spec in self.group_type_names:
+                        if counter == 0:
+                            logger.info(f"Rank {mpi_rank} -- tracking contacts -- {len(grouptype.members)} of {group.spec}")                    
+                        if group.external:
+                            Skipped_E += 1
+                            counter += 1
+                            continue #Skip external venues to the domain.
 
-        
-        for grouptype in grouptypes:
-            counter = 0       
-            Skipped_E = 0     
-
-            
-            print(mpi_rank,super_group_name, len(grouptype.members), len(getattr(self.world, super_group_name).members))
-            for group in grouptype.members: #Loop over all locations.
-                
-                if group.spec in self.group_type_names:
-                    if counter == 0:
-                        logger.info(f"Rank {mpi_rank} -- tracking contacts -- {len(grouptype.members)} of {group.spec}")                    
-                    if group.external:
-                        Skipped_E += 1
+                        self.simulate_pop_time_venues(group)
+                        self.simulate_attendance(group, super_group_name, self.timer, counter)
+                        if "1D" in self.Tracker_Contact_Type:
+                            self.simulate_1d_contacts(group)
+                        if "All" in self.Tracker_Contact_Type:
+                            self.simulate_All_contacts(group)
                         counter += 1
-                        continue #Skip external venues to the domain.
-
-                    self.simulate_pop_time_venues(group)
-                    self.simulate_attendance(group, super_group_name, self.timer, counter)
-                    if "1D" in self.Tracker_Contact_Type:
-                        self.simulate_1d_contacts(group)
-                    if "All" in self.Tracker_Contact_Type:
-                        self.simulate_All_contacts(group)
-                    counter += 1
-            if counter > 0:
-                logger.info(f"Rank {mpi_rank} -- external skipped -- {Skipped_E} out of {len(grouptype.members)} for {group.spec}")
+                if counter > 0:
+                    logger.info(f"Rank {mpi_rank} -- external skipped -- {Skipped_E} out of {len(grouptype.members)} for {group.spec}")
         return 1
 
 #####################################################################################################################################################################
