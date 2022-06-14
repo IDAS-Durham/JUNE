@@ -1648,8 +1648,6 @@ class Tracker:
         men = [p.id for p in group.people if p.sex == "m"]
         women = [p.id for p in group.people if p.sex == "f"]
         if super_group_name in self.location_counters["loc"].keys():
-            print("loc",super_group_name,counter,"unisex")
-
             #By dt
             self.location_counters["loc"][super_group_name][counter]["unisex"].append(len(people))
             if "male" in self.contact_sexes:
@@ -1761,12 +1759,18 @@ class Tracker:
             if grouptype is not None:
                 grouptypes.append(grouptype)
 
+        
         for grouptype in grouptypes:
-            counter = 0                 
+            counter = 0       
+
+            Skipped_E = 0          
             for group in grouptype.members: #Loop over all locations.
                 if group.spec in self.group_type_names:
+
                     if group.external:
-                        print("external", group.spec, group.external)
+                        Skipped_E += 1
+                        continue #Skip external venues to the domain.
+
                     self.simulate_pop_time_venues(group)
                     self.simulate_attendance(group, super_group_name, self.timer, counter)
                     if "1D" in self.Tracker_Contact_Type:
@@ -1774,6 +1778,8 @@ class Tracker:
                     if "All" in self.Tracker_Contact_Type:
                         self.simulate_All_contacts(group)
                     counter += 1
+
+                print(f"Skipped {Skipped_E} out of {counter}")
         return 1
 
 #####################################################################################################################################################################
