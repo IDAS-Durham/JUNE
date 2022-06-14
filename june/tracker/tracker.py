@@ -1766,7 +1766,7 @@ class Tracker:
             Skipped_E = 0          
             for group in grouptype.members: #Loop over all locations.
                 if group.spec in self.group_type_names:
-
+                    counter += 1
                     if group.external:
                         Skipped_E += 1
                         continue #Skip external venues to the domain.
@@ -1777,9 +1777,9 @@ class Tracker:
                         self.simulate_1d_contacts(group)
                     if "All" in self.Tracker_Contact_Type:
                         self.simulate_All_contacts(group)
-                    counter += 1
-
-                print(f"Skipped {Skipped_E} out of {counter}")
+                    
+            if mpi_rank == 0:
+                print(f"Skipped {Skipped_E} out of {counter} for {group.spec}")
         return 1
 
 #####################################################################################################################################################################
