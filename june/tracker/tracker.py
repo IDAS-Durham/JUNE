@@ -1,5 +1,6 @@
 import numpy as np
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+import logging
 
 import yaml
 import pandas as pd
@@ -8,12 +9,6 @@ from pathlib import Path
 from june import paths
 
 from june.world import World
-
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-from matplotlib.dates import DateFormatter
-import matplotlib.dates as mdates
-import datetime
 import geopy.distance
 
 from june.groups.group import make_subgroups
@@ -25,6 +20,12 @@ DaysOfWeek_Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Fri
 default_interaction_path = (
     paths.configs_path / "defaults/interaction/interaction.yaml"
 )
+
+logger = logging.getLogger("tracker")
+mpi_logger = logging.getLogger("mpi")
+
+if mpi_rank > 0:
+    logger.propagate = False
 
 class Tracker:
     """
@@ -1763,9 +1764,11 @@ class Tracker:
         for grouptype in grouptypes:
             counter = 0       
 
-            Skipped_E = 0          
+            Skipped_E = 0       
             for group in grouptype.members: #Loop over all locations.
                 if group.spec in self.group_type_names:
+                    if counter == 0:
+                        mpi_logger.info(f"Tracking contacts in {len(grouptype.members)} of {group.spec}")                    
                     counter += 1
                     if group.external:
                         Skipped_E += 1
@@ -1777,9 +1780,7 @@ class Tracker:
                         self.simulate_1d_contacts(group)
                     if "All" in self.Tracker_Contact_Type:
                         self.simulate_All_contacts(group)
-                    
-            if mpi_rank == 0:
-                print(f"Skipped {Skipped_E} out of {counter} for {group.spec}")
+            mpi_logger.info(f"Skipped {Skipped_E} out of {counter} for {group.spec}")
         return 1
 
 #####################################################################################################################################################################
