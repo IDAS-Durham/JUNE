@@ -1651,7 +1651,7 @@ class Tracker:
         women = [p.id for p in group.people if p.sex == "f"]
         if super_group_name in self.location_counters["loc"].keys():
             #By dt
-            print(mpi_rank, "loc",super_group_name,counter,"unisex", len(self.location_counters["loc"][super_group_name]))
+            #print(mpi_rank, "loc",super_group_name,counter,"unisex", len(self.location_counters["loc"][super_group_name]))
  
             self.location_counters["loc"][super_group_name][counter]["unisex"].append(len(people))
             if "male" in self.contact_sexes:
@@ -1772,9 +1772,9 @@ class Tracker:
                 if group.spec in self.group_type_names:
                     if counter == 0:
                         logger.info(f"Rank {mpi_rank} -- tracking contacts -- {len(grouptype.members)} of {group.spec}")                    
-                    counter += 1
                     if group.external:
                         Skipped_E += 1
+                        counter += 1
                         continue #Skip external venues to the domain.
 
                     self.simulate_pop_time_venues(group)
@@ -1783,8 +1783,9 @@ class Tracker:
                         self.simulate_1d_contacts(group)
                     if "All" in self.Tracker_Contact_Type:
                         self.simulate_All_contacts(group)
+                    counter += 1
             if counter > 0:
-                logger.info(f"Rank {mpi_rank} -- external skipped -- {Skipped_E} out of {counter} for {group.spec}")
+                logger.info(f"Rank {mpi_rank} -- external skipped -- {Skipped_E} out of {len(grouptype.members)} for {group.spec}")
         return 1
 
 #####################################################################################################################################################################
