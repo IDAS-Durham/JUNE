@@ -237,6 +237,7 @@ class Simulator:
         status of the population, and distribute scores among the infectors to calculate R0.
         """ 
         output_logger.info("==================== timestep ====================")
+        tick_s, tickw_s = perf_counter(), wall_clock()
         tick, tickw = perf_counter(), wall_clock()
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
@@ -374,10 +375,10 @@ class Simulator:
         self.clear_world()
         tock, tockw = perf_counter(), wall_clock()
         output_logger.info(
-            f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick},"
-            f"{tockw-tickw} - {self.timer.date}\n"
+            f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick_s},"
+            f"{tockw-tickw_s} - {self.timer.date}\n"
         )
-        mpi_logger.info(f"{self.timer.date},{mpi_rank},timestep,{tock-tick}")
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},timestep,{tock-tick_s}")
 
     def run(self):
         """

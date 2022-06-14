@@ -1777,8 +1777,8 @@ class Tracker:
                         if "All" in self.Tracker_Contact_Type:
                             self.simulate_All_contacts(group)
                         counter += 1
-                if counter > 0:
-                    logger.info(f"Rank {mpi_rank} -- external skipped -- {Skipped_E} out of {len(grouptype.members)} for {group.spec}")
+                #if counter > 0:
+                #    logger.info(f"Rank {mpi_rank} -- external skipped -- {Skipped_E} out of {len(grouptype.members)} for {group.spec}")
         return 1
 
 #####################################################################################################################################################################
