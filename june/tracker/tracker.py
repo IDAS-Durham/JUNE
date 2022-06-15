@@ -1943,7 +1943,7 @@ class Tracker:
         with pd.ExcelWriter(Dist_dir / f'Distance_traveled{mpi_rankname}.xlsx', mode="w") as writer:  
             for local in self.travel_distance[days[0]].keys(): 
                 df = pd.DataFrame()
-                bins = np.arange( 0, 6, 0.2)
+                bins = np.arange( 0, 6, 0.05)
                 df["bins"] = (bins[:-1]+bins[1:]) / 2
                 for day in days:
                     df[day] = np.histogram( self.travel_distance[day][local], bins=bins, density=False)[0]

@@ -602,6 +602,86 @@ class PlotClass:
                                 ################################### Plotting ##################################
     #####################################################################################################################################################################
 
+    
+    def plot_contact_matrix_INOUT(self, bin_type, contact_type, sex="unisex", which="NCM_R"):
+        """
+        Function to plot input contact matrix vs output for bin_type, contact_type and sex.
+
+        Parameters
+        ----------
+            binType:
+                Name of bin type syoa, AC etc
+            contact_type:
+                Location of contacts
+            sex:
+                Sex contact matrix
+            which:
+                str, which matrix type to collect "NCM", "NCM_R", "CM_T"
+            
+        Returns
+        -------
+            (ax1,ax2):
+                matplotlib axes objects (Linear and Log)
+        """
+  
+        IM, IM_err = self.IMPlots_GetIM(contact_type)
+        labels_IM = self.IMPlots_GetLabels(contact_type, IM)
+        IM, IM_err, labels_IM = self.IMPlots_UsefulCM(contact_type, IM, cm_err=IM_err, labels=labels_IM)
+
+        if len(np.nonzero(IM)[0]) != 0 and len(np.nonzero(IM)[1]) != 0:
+            IM_Min = np.nanmin(IM[np.nonzero(IM)])
+        else:
+            IM_Min = 1e-1
+        if np.isfinite(IM).sum() != 0:
+            IM_Max = IM[np.isfinite(IM)].max()
+        else:
+            IM_Max = 1
+
+        if np.isnan(IM_Min):
+            IM_Min = 1e-1
+        if np.isnan(IM_Max) or IM_Max == 0:
+            IM_Max = 1
+
+        IM = np.nan_to_num(IM, posinf=IM_Max, neginf=0, nan=0)
+
+        labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
+        cm, cm_err = self.CMPlots_GetCM(bin_type, contact_type, sex=sex, which=which)
+        cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels)
+
+        if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
+            cm_Min = np.nanmin(cm[np.nonzero(cm)])
+        else:
+            cm_Min = 1e-1
+        if np.isfinite(cm).sum() != 0:
+            cm_Max = cm[np.isfinite(cm)].max()
+        else:
+            cm_Max = 1
+
+        if np.isnan(cm_Min):
+            cm_Min = 1e-1
+        if np.isnan(cm_Max) or cm_Max == 0:
+            cm_Max = 1
+
+        cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
+
+
+
+        plt.rcParams["figure.figsize"] = (15,5)
+        f, (ax1,ax2) = plt.subplots(1,2)
+        f.patch.set_facecolor('white')
+
+        im1 = self.PlotCM(IM, IM_err, labels_IM, ax1, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=IM_Max)
+        im2 = self.PlotCM(cm, cm_err, labels, ax2, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=cm_Max)
+
+        f.colorbar(im1, ax=ax1)
+        f.colorbar(im2, ax=ax2)
+
+        ax1.set_title(f"Interaction Matrix (IM)")
+        ax2.set_title(f"Output Contact Matrix ({which})")
+        f.suptitle(f"{bin_type} binned contacts in {contact_type}")
+        plt.tight_layout()
+        return (ax1,ax2)
+    
     def plot_interaction_matrix(self, contact_type):
         """
         Function to plot interaction matrix for contact_type
@@ -956,7 +1036,8 @@ class PlotClass:
         ax1.xaxis.set_major_locator(mdates.HourLocator(byhour=[0]))
         ax1.xaxis.set_minor_locator(mdates.HourLocator(byhour=None, interval=1))
         ax1.xaxis.set_major_formatter(DateFormatter("%d/%m"))
-        ax1.set_ylabel("N people at location")
+        ax1.set_ylabel("Number of people at venue")
+        ax1.set_xlabel("time")
         ax1.set_yscale("log")
         ax1.set_ylim([1, ymax])
         
@@ -988,7 +1069,7 @@ class PlotClass:
             ax2.bar(x=(bin_edges[1:]+bin_edges[:-1])/2, height=(100*hist)/len(self.location_counters["loc"][locations]), width=(bin_edges[:-1]-bin_edges[1:]),alpha=1/df.shape[0], color="b")
 
         ax2.set_ylim([0, None])
-        ax2.set_ylabel(r"Percent N Venues")
+        ax2.set_ylabel(r"% of venue type")
         ax2.set_xlabel(r"People per day")
 
         plt.tight_layout()
@@ -1042,6 +1123,7 @@ class PlotClass:
         ax1.errorbar(np.arange(len(DaysOfWeek_Names)),means, [stds, stds], color="black", label="std errorbar")
         ax1.set_xticklabels([""]+DaysOfWeek_Names)
         ax1.set_ylabel("Unique Attendees per day")
+        ax1.set_xlabel("Day of week")
         ax1.set_ylim([0, None])
         ax1.legend()
 
@@ -1148,6 +1230,7 @@ class PlotClass:
         ax2.axhline(0, color="grey", linestyle="--")
                             
         ax2.set_ylabel("Mean Unique Attendees per timeslot")
+        ax2.set_xlabel("Time of day [hour]")
         # Define the date format
         ax2.xaxis.set_major_locator(mdates.HourLocator(byhour=None, interval=1))
         ax2.xaxis.set_major_formatter(DateFormatter("%H"))
@@ -1275,19 +1358,22 @@ class PlotClass:
         else:
             Nlocals = self.NVenues[location+"s"]
         dat = self.travel_distance[location]
+        Total = dat.iloc[:,1].sum()
         
         maxkm = np.nanmax(dat)
         plt.rcParams["figure.figsize"] = (10,5)
         f, ax = plt.subplots(1,1)
         f.patch.set_facecolor('white')
-        ax.bar(x=dat["bins"], height=(100*dat.iloc[:,1])/len(dat), width=(dat["bins"].iloc[1]-dat["bins"].iloc[0]), color="b", alpha=0.4)
-        ax.set_title(f"{Nlocals} of {location}")
-        ax.set_ylabel("percentage of people")
-        ax.set_xlabel("distance traveled from shelter / km")
+        ax.bar(x=dat["bins"], height=(100*dat.iloc[:,1])/Total, width=(dat["bins"].iloc[1]-dat["bins"].iloc[0]), color="b", alpha=0.4)
+        ax.set_title(f"{Nlocals} available {location}")
+        ax.set_ylabel(r"Frequency [%]")
+        ax.set_xlabel(r"Travel distance from shelter [km]")
         ax.set_xlim([0, None])
         return ax
 
+
     def make_plots(self, 
+        plot_INPUTOUTPUT=True,
         plot_AvContactsLocation=True, 
         plot_dTLocationPopulation=True, 
         plot_InteractionMatrices=True,
@@ -1328,6 +1414,20 @@ class PlotClass:
         relevant_contact_types = self.CM_T["syoa"].keys()
         CMTypes = ["NCM", "NCM_R", "CM_T"]
 
+        if plot_INPUTOUTPUT:
+            plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices_INOUT"
+            plot_dir_1.mkdir(exist_ok=True, parents=True)
+            rbt = "syoa"
+            for rct in self.IM.keys():
+                if rct not in relevant_contact_types:
+                    continue
+                self.plot_contact_matrix_INOUT(
+                    bin_type=rbt, contact_type=rct, sex="unisex", which="NCM_R"
+                )
+                plt.savefig(plot_dir_1 / f"{rct}.pdf", dpi=150, bbox_inches='tight')
+                plt.close() 
+
+
         if plot_AvContactsLocation:
             plot_dir = self.record_path / "Graphs" / "Average_Contacts" 
             plot_dir.mkdir(exist_ok=True, parents=True)
@@ -1361,7 +1461,6 @@ class PlotClass:
                 )
                 plt.savefig(plot_dir / f"{rct}.pdf", dpi=150, bbox_inches='tight')
                 plt.close()
-
 
         if plot_ContactMatrices:
             for CMType in CMTypes:
@@ -1432,5 +1531,4 @@ class PlotClass:
                     plt.savefig(plot_dir / f"{locations}.pdf", dpi=150, bbox_inches='tight')
                     plt.close()
                     break
-
         return 1
