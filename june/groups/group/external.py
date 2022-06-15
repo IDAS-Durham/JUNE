@@ -16,15 +16,6 @@ class ExternalGroup:
     def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
         return ExternalSubgroup(group=self, subgroup_type=subgroup_type)
     
-    @property
-    def people(self) -> Tuple[Person]:
-        """
-        All the people in this group
-        """
-        return tuple(
-            person for subgroup in self.subgroups for person in subgroup.people
-        )
-
 
 class ExternalSubgroup:
     external = True

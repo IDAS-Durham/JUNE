@@ -95,7 +95,7 @@ class Subgroup_Params():
         Subgroup_Params class
     """
     AgeYoungAdult = 18
-    AgeAdult = 35
+    AgeAdult = 18
     AgeOldAdult = 65
 
     def __init__(

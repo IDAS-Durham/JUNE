@@ -406,6 +406,60 @@ def generate_simulator():
 
     travel = Travel()
     
+    domainVenues = {}
+    if len(domain.households) > 0:
+    	domainVenues["households"] = {N: len(domain.households), bins: domain.households[0].subgroup_bins}
+    else:
+    	domainVenues["households"] = {N: 0, bins: "NaN"}
+    if len(domain.care_homes) > 0:
+    	domainVenues["care_homes"] = {N: len(domain.care_homes), bins: domain.care_homes[0].subgroup_bins}
+    else:
+    	domainVenues["care_homes"] = {N: 0, bins: "NaN"}
+    if len(domain.schools) > 0:
+    	domainVenues["schools"] = {N: len(domain.schools), bins: domain.schools[0].subgroup_bins}
+    else:
+    	domainVenues["schools"] = {N: 0, bins: "NaN"}
+    if len(domain.hospitals) > 0:
+    	domainVenues["hospitals"] = {N: len(domain.hospitals), bins: domain.hospitals[0].subgroup_bins}
+    else:
+    	domainVenues["hospitals"] = {N: 0, bins: "NaN"}
+    if len(domain.companies) > 0:
+    	domainVenues["companies"] = {N: len(domain.companies), bins: domain.companies[0].subgroup_bins}
+    else:
+    	domainVenues["companies"] = {N: 0, bins: "NaN"}
+    	
+    if len(domain.universities) > 0:
+    	domainVenues["universities"] = {N: len(domain.universities), bins: domain.universities[0].subgroup_bins}
+    else:
+    	domainVenues["universities"] = {N: 0, bins: "NaN"}
+    if len(domain.pubs) > 0:
+    	domainVenues["pubs"] = {N: len(domain.pubs), bins: domain.pubs[0].subgroup_bins}
+    else:
+    	domainVenues["pubs"] = {N: 0, bins: "NaN"}
+    	
+    if len(domain.groceries) > 0:
+    	domainVenues["groceries"] = {N: len(domain.groceries), bins: domain.groceries[0].subgroup_bins}
+    else:
+    	domainVenues["groceries"] = {N: 0, bins: "NaN"}
+    if len(domain.cinemas) > 0:
+    	domainVenues["cinemas"] = {N: len(domain.cinemas), bins: domain.cinemas[0].subgroup_bins}
+    else:
+    	domainVenues["cinemas"] = {N: 0, bins: "NaN"}
+    if len(domain.gyms) > 0:
+    	domainVenues["gyms"] = {N: len(domain.gyms), bins: domain.gyms[0].subgroup_bins}
+    else:
+    	domainVenues["gyms"] = {N: 0, bins: "NaN"}
+    if len(domain.city_transports) > 0:
+    	domainVenues["city_transports"] = {N: len(domain.city_transports), bins: domain.city_transports[0].subgroup_bins}
+    else:
+    	domainVenues["city_transports"] = {N: 0, bins: "NaN"}
+    if len(domain.inter_city_transports) > 0:
+    	domainVenues["inter_city_transports"] = {N: len(domain.inter_city_transports), bins: domain.inter_city_transports[0].subgroup_bins}
+    else:
+    	domainVenues["inter_city_transports"] = {N: 0, bins: "NaN"}
+    print(mpi_rank, domainVenues)
+    	
+
         
     # ==================================================================================#
 
