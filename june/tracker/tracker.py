@@ -782,6 +782,19 @@ class Tracker:
 
                     if bin_type == "Interaction":
                         if sex == "unisex":
+                            if contact_type == "shelter":
+                                shelter_shared = 0.75
+                                NCM[0,0] *= shelter_shared**2
+                                NCM[1,1] *= shelter_shared**2
+                                NCM_err[0,0] *= shelter_shared**2
+                                NCM_err[1,1] *= shelter_shared**2
+                                NCM_R[0,0] *= shelter_shared**2
+                                NCM_R[1,1] *= shelter_shared**2
+                                NCM_R_err[0,0] *= shelter_shared**2
+                                NCM_R_err[1,1] *= shelter_shared**2
+                                cm[0,0] *= shelter_shared**2
+                                cm[1,1] *= shelter_shared**2
+
                             self.NCM["Interaction"][contact_type] = NCM
                             self.NCM_err["Interaction"][contact_type] = NCM_err
 
