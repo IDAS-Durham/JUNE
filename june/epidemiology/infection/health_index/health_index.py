@@ -89,10 +89,10 @@ class HealthIndexGenerator:
         )
 
     def physiological_age(self,person_age,sex):
-        if sex==0:
+        if sex=='f':
             exp_baseline_age = self.f_exp_baseline
             exp_age = self.f_exp
-        else:
+        elif sex=='m':
             exp_baseline_age = self.m_exp_baseline
             exp_age = self.m_exp
 
