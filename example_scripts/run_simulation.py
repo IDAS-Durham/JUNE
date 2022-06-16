@@ -419,10 +419,10 @@ def generate_simulator():
     	domainVenues["schools"] = {"N": len(domain.schools), "bins": domain.schools[0].subgroup_bins}
     else:
     	domainVenues["schools"] = {"N": 0, "bins": "NaN"}
-    if len(domain.hospitals) > 0:
-    	domainVenues["hospitals"] = {"N": len(domain.hospitals), "bins": domain.hospitals[0].subgroup_bins}
-    else:
-    	domainVenues["hospitals"] = {"N": 0, "bins": "NaN"}
+    #if len(domain.hospitals) > 0:
+    #	domainVenues["hospitals"] = {"N": len(domain.hospitals), "bins": domain.hospitals[0].subgroup_bins}
+    #else:
+    #	domainVenues["hospitals"] = {"N": 0, "bins": "NaN"}
     if len(domain.companies) > 0:
     	domainVenues["companies"] = {"N": len(domain.companies), "bins": domain.companies[0].subgroup_bins}
     else:
