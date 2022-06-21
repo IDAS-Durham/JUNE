@@ -409,73 +409,91 @@ def generate_simulator():
     group_types = []
     domainVenues = {}
     if domain.households is not None:
-    	group_types.append(domain.households)
-    	domainVenues["households"] = {"N": len(domain.households), "bins": domain.households[0].subgroup_bins}
-    else:
-    	domainVenues["households"] = {"N": 0, "bins": "NaN"}
+        if len(domain.households) > 0:
+            group_types.append(domain.households)
+            domainVenues["households"] = {"N": len(domain.households), "bins": domain.households[0].subgroup_bins}
+        else:
+            domainVenues["households"] = {"N": 0, "bins": "NaN"}
+            
     if domain.care_homes is not None:
-    	group_types.append(domain.care_homes)
-    	domainVenues["care_homes"] = {"N": len(domain.care_homes), "bins": domain.care_homes[0].subgroup_bins}
-    else:
-    	domainVenues["care_homes"] = {"N": 0, "bins": "NaN"}
+       if len(domain.care_homes) > 0:
+           group_types.append(domain.care_homes)
+           domainVenues["care_homes"] = {"N": len(domain.care_homes), "bins": domain.care_homes[0].subgroup_bins}
+       else:
+           domainVenues["care_homes"] = {"N": 0, "bins": "NaN"}
+           
     if domain.schools is not None:
-    	group_types.append(domain.schools)
-    	domainVenues["schools"] = {"N": len(domain.schools), "bins": domain.schools[0].subgroup_bins}
-    else:
-    	domainVenues["schools"] = {"N": 0, "bins": "NaN"}
+        if len(domain.schools) > 0:
+            group_types.append(domain.schools)
+            domainVenues["schools"] = {"N": len(domain.schools), "bins": domain.schools[0].subgroup_bins}
+        else:
+            domainVenues["schools"] = {"N": 0, "bins": "NaN"}
+            
     if domain.hospitals is not None:
-    	group_types.append(domain.hospitals)
-    	domainVenues["hospitals"] = {"N": len(domain.hospitals)}
-    else:
-    	domainVenues["hospitals"] = {"N": 0, "bins": "NaN"}
+        if len(domain.hospitals) > 0:
+            group_types.append(domain.hospitals)
+            domainVenues["hospitals"] = {"N": len(domain.hospitals)}
+        else:
+            domainVenues["hospitals"] = {"N": 0, "bins": "NaN"}
+            
     if domain.companies is not None:
-    	group_types.append(domain.companies)
-    	domainVenues["companies"] = {"N": len(domain.companies), "bins": domain.companies[0].subgroup_bins}
-    else:
-    	domainVenues["companies"] = {"N": 0, "bins": "NaN"}
+        if len(domain.companies) > 0:
+            group_types.append(domain.companies)
+            domainVenues["companies"] = {"N": len(domain.companies), "bins": domain.companies[0].subgroup_bins}
+        else:
+            domainVenues["companies"] = {"N": 0, "bins": "NaN"}
     	
     if domain.universities is not None:
-    	group_types.append(domain.universities)
-    	domainVenues["universities"] = {"N": len(domain.universities), "bins": domain.universities[0].subgroup_bins}
-    else:
-    	domainVenues["universities"] = {"N": 0, "bins": "NaN"}
+        if len(domain.universities) > 0:
+            group_types.append(domain.universities)
+            domainVenues["universities"] = {"N": len(domain.universities), "bins": domain.universities[0].subgroup_bins}
+        else:
+            domainVenues["universities"] = {"N": 0, "bins": "NaN"}
+            
     if domain.pubs is not None:
-    	group_types.append(domain.pubs)
-    	domainVenues["pubs"] = {"N": len(domain.pubs), "bins": domain.pubs[0].subgroup_bins}
-    else:
-    	domainVenues["pubs"] = {"N": 0, "bins": "NaN"}
+        if len(domain.pubs) > 0:
+            group_types.append(domain.pubs)
+            domainVenues["pubs"] = {"N": len(domain.pubs), "bins": domain.pubs[0].subgroup_bins}
+        else:
+            domainVenues["pubs"] = {"N": 0, "bins": "NaN"}
     	
     if domain.groceries is not None:
-    	group_types.append(domain.groceries)
-    	domainVenues["groceries"] = {"N": len(domain.groceries), "bins": domain.groceries[0].subgroup_bins}
-    else:
-    	domainVenues["groceries"] = {"N": 0, "bins": "NaN"}
+        if len(domain.groceries) > 0:
+            group_types.append(domain.groceries)
+            domainVenues["groceries"] = {"N": len(domain.groceries), "bins": domain.groceries[0].subgroup_bins}
+        else:
+            domainVenues["groceries"] = {"N": 0, "bins": "NaN"}
+            
     if domain.cinemas is not None:
-    	group_types.append(domain.cinemas)
-    	domainVenues["cinemas"] = {"N": len(domain.cinemas), "bins": domain.cinemas[0].subgroup_bins}
-    else:
-    	domainVenues["cinemas"] = {"N": 0, "bins": "NaN"}
+        if len(domain.cinemas) > 0:
+            group_types.append(domain.cinemas)
+            domainVenues["cinemas"] = {"N": len(domain.cinemas), "bins": domain.cinemas[0].subgroup_bins}
+        else:
+            domainVenues["cinemas"] = {"N": 0, "bins": "NaN"}
+            
     if domain.gyms is not None:
-    	group_types.append(domain.gyms)
-    	domainVenues["gyms"] = {"N": len(domain.gyms), "bins": domain.gyms[0].subgroup_bins}
-    else:
-    	domainVenues["gyms"] = {"N": 0, "bins": "NaN"}
+        if len(domain.gyms) > 0:
+            group_types.append(domain.gyms)
+            domainVenues["gyms"] = {"N": len(domain.gyms), "bins": domain.gyms[0].subgroup_bins}
+        else:
+            domainVenues["gyms"] = {"N": 0, "bins": "NaN"}
+            
     if domain.city_transports is not None:
-    	group_types.append(domain.city_transports)
-    	domainVenues["city_transports"] = {"N": len(domain.city_transports)}
-    else:
-    	domainVenues["city_transports"] = {"N": 0, "bins": "NaN"}
+        if len(domain.city_transports) > 0:
+           group_types.append(domain.city_transports)
+           domainVenues["city_transports"] = {"N": len(domain.city_transports)}
+        else:
+           domainVenues["city_transports"] = {"N": 0, "bins": "NaN"}
+           
     if domain.inter_city_transports is not None:
-    	group_types.append(domain.inter_city_transports)
-    	domainVenues["inter_city_transports"] = {"N": len(domain.inter_city_transports)}
-    else:
-    	domainVenues["inter_city_transports"] = {"N": 0, "bins": "NaN"}
+        if len(domain.inter_city_transports) > 0:
+            group_types.append(domain.inter_city_transports)
+            domainVenues["inter_city_transports"] = {"N": len(domain.inter_city_transports)}
+        else:
+            domainVenues["inter_city_transports"] = {"N": 0, "bins": "NaN"}
+            
     print(mpi_rank, domainVenues)
-    
-    
 
-
-        
     # ==================================================================================#
 
     # =================================== tracker ===============================#

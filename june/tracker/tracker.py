@@ -494,7 +494,7 @@ class Tracker:
                 spec : {
                     N: {
                         sex : [] for sex in self.contact_sexes 
-                    } for N in range(max(len(getattr(self.world, spec).members), self.MaxVenueTrackingSize))
+                    } for N in range(min(len(getattr(self.world, spec).members), self.MaxVenueTrackingSize))
                 } for spec in locations
             }
         }
@@ -505,7 +505,7 @@ class Tracker:
                 spec : {
                     N: {
                         sex : [] for sex in self.contact_sexes 
-                    } for N in range(max(len(getattr(self.world, spec).members), self.MaxVenueTrackingSize))
+                    } for N in range(min(len(getattr(self.world, spec).members), self.MaxVenueTrackingSize))
                 } for spec in locations
             }
         }
@@ -515,7 +515,7 @@ class Tracker:
                 spec : {
                     N: {
                         sex : [] for sex in self.contact_sexes 
-                    } for N in range(max(len(getattr(self.world, spec).members), self.MaxVenueTrackingSize))
+                    } for N in range(min(len(getattr(self.world, spec).members), self.MaxVenueTrackingSize))
                 } for spec in locations
             }
         }
