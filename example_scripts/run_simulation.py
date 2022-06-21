@@ -504,7 +504,7 @@ def generate_simulator():
             group_types=group_types,
             load_interactions_path=args.parameters,
             contact_sexes=["unisex", "male", "female"],
-            Tracker_Contact_Type=["1D", "All"],
+            Tracker_Contact_Type=["1D"],
             MaxVenueTrackingSize=10000
         )
     else:
