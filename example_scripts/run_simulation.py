@@ -425,7 +425,7 @@ def generate_simulator():
     	domainVenues["schools"] = {"N": 0, "bins": "NaN"}
     if domain.hospitals is not None:
     	group_types.append(domain.hospitals)
-    	domainVenues["hospitals"] = {"N": len(domain.hospitals), "bins": domain.hospitals[0].subgroup_bins}
+    	domainVenues["hospitals"] = {"N": len(domain.hospitals)}
     else:
     	domainVenues["hospitals"] = {"N": 0, "bins": "NaN"}
     if domain.companies is not None:
@@ -462,12 +462,12 @@ def generate_simulator():
     	domainVenues["gyms"] = {"N": 0, "bins": "NaN"}
     if domain.city_transports is not None:
     	group_types.append(domain.city_transports)
-    	domainVenues["city_transports"] = {"N": len(domain.city_transports), "bins": domain.city_transports[0].subgroup_bins}
+    	domainVenues["city_transports"] = {"N": len(domain.city_transports)}
     else:
     	domainVenues["city_transports"] = {"N": 0, "bins": "NaN"}
     if domain.inter_city_transports is not None:
     	group_types.append(domain.inter_city_transports)
-    	domainVenues["inter_city_transports"] = {"N": len(domain.inter_city_transports), "bins": domain.inter_city_transports[0].subgroup_bins}
+    	domainVenues["inter_city_transports"] = {"N": len(domain.inter_city_transports)}
     else:
     	domainVenues["inter_city_transports"] = {"N": 0, "bins": "NaN"}
     print(mpi_rank, domainVenues)
