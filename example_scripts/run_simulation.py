@@ -406,87 +406,88 @@ def generate_simulator():
 
     travel = Travel()
     
+    group_types = []
     domainVenues = {}
-    if len(domain.households) > 0:
+    if domain.households is not None:
+    	group_types.append(domain.households)
     	domainVenues["households"] = {"N": len(domain.households), "bins": domain.households[0].subgroup_bins}
     else:
     	domainVenues["households"] = {"N": 0, "bins": "NaN"}
-    if len(domain.care_homes) > 0:
+    if domain.care_homes is not None:
+    	group_types.append(domain.care_homes)
     	domainVenues["care_homes"] = {"N": len(domain.care_homes), "bins": domain.care_homes[0].subgroup_bins}
     else:
     	domainVenues["care_homes"] = {"N": 0, "bins": "NaN"}
-    if len(domain.schools) > 0:
+    if domain.schools is not None:
+    	group_types.append(domain.schools)
     	domainVenues["schools"] = {"N": len(domain.schools), "bins": domain.schools[0].subgroup_bins}
     else:
     	domainVenues["schools"] = {"N": 0, "bins": "NaN"}
-    #if len(domain.hospitals) > 0:
-    #	domainVenues["hospitals"] = {"N": len(domain.hospitals), "bins": domain.hospitals[0].subgroup_bins}
-    #else:
-    #	domainVenues["hospitals"] = {"N": 0, "bins": "NaN"}
-    if len(domain.companies) > 0:
+    if domain.hospitals is not None:
+    	group_types.append(domain.hospitals)
+    	domainVenues["hospitals"] = {"N": len(domain.hospitals), "bins": domain.hospitals[0].subgroup_bins}
+    else:
+    	domainVenues["hospitals"] = {"N": 0, "bins": "NaN"}
+    if domain.companies is not None:
+    	group_types.append(domain.companies)
     	domainVenues["companies"] = {"N": len(domain.companies), "bins": domain.companies[0].subgroup_bins}
     else:
     	domainVenues["companies"] = {"N": 0, "bins": "NaN"}
     	
-    if len(domain.universities) > 0:
+    if domain.universities is not None:
+    	group_types.append(domain.universities)
     	domainVenues["universities"] = {"N": len(domain.universities), "bins": domain.universities[0].subgroup_bins}
     else:
     	domainVenues["universities"] = {"N": 0, "bins": "NaN"}
-    if len(domain.pubs) > 0:
+    if domain.pubs is not None:
+    	group_types.append(domain.pubs)
     	domainVenues["pubs"] = {"N": len(domain.pubs), "bins": domain.pubs[0].subgroup_bins}
     else:
     	domainVenues["pubs"] = {"N": 0, "bins": "NaN"}
     	
-    if len(domain.groceries) > 0:
+    if domain.groceries is not None:
+    	group_types.append(domain.groceries)
     	domainVenues["groceries"] = {"N": len(domain.groceries), "bins": domain.groceries[0].subgroup_bins}
     else:
     	domainVenues["groceries"] = {"N": 0, "bins": "NaN"}
-    if len(domain.cinemas) > 0:
+    if domain.cinemas is not None:
+    	group_types.append(domain.cinemas)
     	domainVenues["cinemas"] = {"N": len(domain.cinemas), "bins": domain.cinemas[0].subgroup_bins}
     else:
     	domainVenues["cinemas"] = {"N": 0, "bins": "NaN"}
-    if len(domain.gyms) > 0:
+    if domain.gyms is not None:
+    	group_types.append(domain.gyms)
     	domainVenues["gyms"] = {"N": len(domain.gyms), "bins": domain.gyms[0].subgroup_bins}
     else:
     	domainVenues["gyms"] = {"N": 0, "bins": "NaN"}
-    if len(domain.city_transports) > 0:
+    if domain.city_transports is not None:
+    	group_types.append(domain.city_transports)
     	domainVenues["city_transports"] = {"N": len(domain.city_transports), "bins": domain.city_transports[0].subgroup_bins}
     else:
     	domainVenues["city_transports"] = {"N": 0, "bins": "NaN"}
-    if len(domain.inter_city_transports) > 0:
+    if domain.inter_city_transports is not None:
+    	group_types.append(domain.inter_city_transports)
     	domainVenues["inter_city_transports"] = {"N": len(domain.inter_city_transports), "bins": domain.inter_city_transports[0].subgroup_bins}
     else:
     	domainVenues["inter_city_transports"] = {"N": 0, "bins": "NaN"}
     print(mpi_rank, domainVenues)
-    	
+    
+    
+
 
         
     # ==================================================================================#
 
     # =================================== tracker ===============================#
-    if args.tracker:
-        group_types=[
-            domain.households,
-            domain.care_homes,
-            domain.schools,
-            domain.hospitals,
-            domain.companies,
-            domain.universities,
-            domain.pubs,
-            domain.groceries,
-            domain.cinemas,
-            domain.gyms,
-            domain.city_transports,
-            domain.inter_city_transports
-        ]
-    
+    if args.tracker:    
         tracker = Tracker(
             world=domain,
             record_path=args.save_path,
             group_types=group_types,
             load_interactions_path=args.parameters,
             contact_sexes=["unisex", "male", "female"],
-            Tracker_Contact_Type=["1D", "All"]
+            Tracker_Contact_Type=["1D", "All"],
+            MaxVenueTrackingSize=10000
         )
     else:
         tracker=None

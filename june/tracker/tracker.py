@@ -1,3 +1,4 @@
+from dataclasses import replace
 from re import I
 import numpy as np
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
@@ -62,7 +63,8 @@ class Tracker:
         group_types=None,
         record_path=Path(""),
         load_interactions_path=default_interaction_path,
-        Tracker_Contact_Type = ["1D"]
+        Tracker_Contact_Type = ["1D"],
+        MaxVenueTrackingSize = np.inf
     ):
         self.world = world
         self.age_bins = age_bins
@@ -75,8 +77,32 @@ class Tracker:
         #TODO Add check to make sure only contains "1D" or "All"
         self.Tracker_Contact_Type = Tracker_Contact_Type
 
+        self.MaxVenueTrackingSize = MaxVenueTrackingSize
+
         #If we want to track total persons at each location
         self.initialise_group_names()
+
+        #Maximum number of locations...
+        locations = []
+        for locs in self.group_type_names:
+            if locs in ["global", "shelter_inter", "shelter_intra"]:
+                continue
+            if locs[-1] == "y":
+                locations.append(locs[:-1]+"ies")
+            elif locs[-1] == "s":
+                locations.append(locs+"s")
+            else:
+                locations.append(locs+"s")
+
+        self.venues_which = {}
+        for spec in locations:
+            if len(getattr(self.world, spec).members) > MaxVenueTrackingSize:
+                self.venues_which[spec] = np.random.choice(np.arange(0,len(getattr(self.world, spec).members),1), size=self.MaxVenueTrackingSize, replace=False)
+            else:
+                self.venues_which[spec] = np.arange(0,len(getattr(self.world, spec).members),1)
+  
+            
+
 
         self.intitalise_location_counters()
 
@@ -468,7 +494,7 @@ class Tracker:
                 spec : {
                     N: {
                         sex : [] for sex in self.contact_sexes 
-                    } for N in range(len(getattr(self.world, spec).members))
+                    } for N in range(max(len(getattr(self.world, spec).members), self.MaxVenueTrackingSize))
                 } for spec in locations
             }
         }
@@ -479,7 +505,7 @@ class Tracker:
                 spec : {
                     N: {
                         sex : [] for sex in self.contact_sexes 
-                    } for N in range(len(getattr(self.world, spec).members))
+                    } for N in range(max(len(getattr(self.world, spec).members), self.MaxVenueTrackingSize))
                 } for spec in locations
             }
         }
@@ -489,7 +515,7 @@ class Tracker:
                 spec : {
                     N: {
                         sex : [] for sex in self.contact_sexes 
-                    } for N in range(len(getattr(self.world, spec).members))
+                    } for N in range(max(len(getattr(self.world, spec).members), self.MaxVenueTrackingSize))
                 } for spec in locations
             }
         }
@@ -1719,8 +1745,9 @@ class Tracker:
             self.travel_distance[day][loc] = []
             grouptype = getattr(self.world, loc)
             if grouptype is not None:
-                counter = 0                 
-                for group in grouptype.members: #Loop over all locations.
+                counter = 0  
+                groups_which = np.array(grouptype.members)[np.array(self.venues_which[loc])]               
+                for group in groups_which: #Loop over all locations.
                     venue_coords = group.coordinates
 
                     for ID in self.location_counters_day_i["loc"][loc][counter]["unisex"]:
@@ -1773,11 +1800,11 @@ class Tracker:
             if grouptype is not None:
                 counter = 0       
                 Skipped_E = 0
-                for group in grouptype.members: #Loop over all locations.
-                    
+                groups_which = np.array(grouptype.members)[np.array(self.venues_which[super_group_name])]
+                for group in groups_which: #Loop over all locations.
                     if group.spec in self.group_type_names:
                         if counter == 0:
-                            logger.info(f"Rank {mpi_rank} -- tracking contacts -- {len(grouptype.members)} of {group.spec}")                    
+                            logger.info(f"Rank {mpi_rank} -- tracking contacts -- {len(self.venues_which[super_group_name])} of {len(grouptype.members)} of type {group.spec}")                    
                         if group.external:
                             Skipped_E += 1
                             counter += 1
