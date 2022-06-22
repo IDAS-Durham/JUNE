@@ -45,22 +45,22 @@ class Group(AbstractGroup):
     external = False
     subgroup_params = Subgroup_Params.from_file()
 
-    @property
-    def SubgroupType(self):
-        if self.get_spec() in self.subgroup_params.specs:
-            return IntEnum("SubgroupType", self.subgroup_labels, start=0)
-        else:
-            self.subgroup_params.params = {
-                self.get_spec(): {
-                    'contacts': [[0]], 
-                    'proportion_physical': [[0]], 
-                    'characteristic_time': 0, 
-                    'type': 'Age', 
-                    'bins': [0,100]
-                }
-            }
-            self.subgroup_params.specs = self.subgroup_params.params.keys()
-            return IntEnum("SubgroupType", ["default"], start=0)
+    # @property
+    # def SubgroupType(self):
+    #     if self.get_spec() in self.subgroup_params.specs:
+    #         return IntEnum("SubgroupType", self.subgroup_labels, start=0)
+    #     else:
+    #         self.subgroup_params.params = {
+    #             self.get_spec(): {
+    #                 'contacts': [[0]], 
+    #                 'proportion_physical': [[0]], 
+    #                 'characteristic_time': 0, 
+    #                 'type': 'Age', 
+    #                 'bins': [0,100]
+    #             }
+    #         }
+    #         self.subgroup_params.specs = self.subgroup_params.params.keys()
+    #         return IntEnum("SubgroupType", ["default"], start=0)
 
     __slots__ = ("id", "subgroups", "spec")
 
@@ -83,6 +83,7 @@ class Group(AbstractGroup):
         """
         self.id = self._next_id()
         self.spec = self.get_spec()
+        self.SubgroupType = IntEnum("SubgroupType", self.subgroup_params.subgroup_labels(self.spec), start=0)
         # noinspection PyTypeChecker
         self.subgroups = [Subgroup(self, i) for i in range(len(self.SubgroupType))]
 
@@ -121,7 +122,7 @@ class Group(AbstractGroup):
             if person in grouping:
                 grouping.remove(person)
 
-    def __getitem__(self, item: SubgroupType) -> "Subgroup":
+    def __getitem__(self, item) -> "Subgroup":
         """
         A subgroup with a given index
         """
@@ -131,7 +132,7 @@ class Group(AbstractGroup):
         self,
         person: Person,
         activity: str,
-        subgroup_type: SubgroupType=None,  # , dynamic=False
+        subgroup_type: None,  # , dynamic=False
     ):
         """
         Add a person to a given subgroup. For example, in a school

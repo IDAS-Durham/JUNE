@@ -78,6 +78,9 @@ def Get_Defaults(spec):
     ]:
         return [0,100], "Age"
 
+    else:
+        return ["defualt"], "Discrete"
+
 
 class Subgroup_Params():
     """
@@ -120,7 +123,9 @@ class Subgroup_Params():
 
     def subgroup_labels(self, spec):
         if spec not in self.params.keys():
-            raise ValueError(f"{spec} not defined in interaction yaml") 
+            print(f"{spec} not defined in interaction yaml")
+            return list(["default"])
+
 
         
 
