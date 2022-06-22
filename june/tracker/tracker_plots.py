@@ -15,6 +15,9 @@ from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
 import datetime
 
+from june.paths import data_path, configs_path
+default_BBC_Pandemic_loc = data_path / "BBC_Pandemic"
+
 DaysOfWeek_Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 try:
@@ -603,7 +606,7 @@ class PlotClass:
     #####################################################################################################################################################################
 
     
-    def plot_contact_matrix_INOUT(self, bin_type, contact_type, sex="unisex", which="NCM_R"):
+    def plot_contact_matrix_INOUT(self, bin_type, contact_type, sex="unisex", which="NCM_R", plot_BBC_Sheet=False):
         """
         Function to plot input contact matrix vs output for bin_type, contact_type and sex.
 
@@ -665,22 +668,51 @@ class PlotClass:
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
 
+        if plot_BBC_Sheet == False:
+            plt.rcParams["figure.figsize"] = (15,5)
+            f, (ax1,ax2) = plt.subplots(1,2)
+            f.patch.set_facecolor('white')
 
-        plt.rcParams["figure.figsize"] = (15,5)
-        f, (ax1,ax2) = plt.subplots(1,2)
-        f.patch.set_facecolor('white')
+            im1 = self.PlotCM(IM, IM_err, labels_IM, ax1, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=IM_Max)
+            im2 = self.PlotCM(cm, cm_err, labels, ax2, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=cm_Max)
 
-        im1 = self.PlotCM(IM, IM_err, labels_IM, ax1, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=IM_Max)
-        im2 = self.PlotCM(cm, cm_err, labels, ax2, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=cm_Max)
+            f.colorbar(im1, ax=ax1)
+            f.colorbar(im2, ax=ax2)
 
-        f.colorbar(im1, ax=ax1)
-        f.colorbar(im2, ax=ax2)
+            ax1.set_title(f"Interaction Matrix (IM)")
+            ax2.set_title(f"Output Contact Matrix ({which})")
+            #f.suptitle(f"{bin_type} binned contacts in {contact_type}")
+            plt.tight_layout()
+            return (ax1,ax2)
+        else:
+            df = pd.read_excel(default_BBC_Pandemic_loc / "BBC reciprocal matrices by type and context.xls", sheet_name =plot_BBC_Sheet)
+            bbc_cm = df.iloc[:,1:].values.T
+            bbc_labels = df.iloc[:,0].values
 
-        ax1.set_title(f"Interaction Matrix (IM)")
-        ax2.set_title(f"Output Contact Matrix ({which})")
-        #f.suptitle(f"{bin_type} binned contacts in {contact_type}")
-        plt.tight_layout()
-        return (ax1,ax2)
+            bbc_Max = np.nanmax(bbc_cm)
+            bbc_Min = np.nanmin(bbc_cm)
+
+            cm_Max = max(bbc_Max, cm_Max)
+
+            plt.rcParams["figure.figsize"] = (15,5)
+            f, (ax1,ax2, ax3) = plt.subplots(1,3)
+            f.patch.set_facecolor('white')
+
+            im1 = self.PlotCM(IM, IM_err, labels_IM, ax1, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=IM_Max)
+            im2 = self.PlotCM(cm, cm_err, labels, ax2, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=cm_Max)
+            im3 = self.PlotCM(bbc_cm, None, bbc_labels, ax3, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=cm_Max)
+
+            f.colorbar(im1, ax=ax1)
+            f.colorbar(im2, ax=ax2)
+            f.colorbar(im3, ax=ax3)
+
+            ax1.set_title(f"Interaction Matrix (IM)")
+            ax2.set_title(f"Output Contact Matrix ({which})")
+            ax3.set_title(f"BBC Pandemic Matrix ({plot_BBC_Sheet})")
+            #f.suptitle(f"{bin_type} binned contacts in {contact_type}")
+            plt.tight_layout()
+            return (ax1,ax2, ax3)
+
     
     def plot_interaction_matrix(self, contact_type):
         """
@@ -1374,6 +1406,7 @@ class PlotClass:
 
     def make_plots(self, 
         plot_INPUTOUTPUT=True,
+        plot_BBC = False,
         plot_AvContactsLocation=True, 
         plot_dTLocationPopulation=True, 
         plot_InteractionMatrices=True,
@@ -1424,8 +1457,20 @@ class PlotClass:
             for rct in self.IM.keys():
                 if rct not in relevant_contact_types:
                     continue
+
+                plot_BBC_Sheet = False
+                if plot_BBC == True and rct in ["household", "school", "company"] and rbt == "Paper":
+                    if rct == "household":
+                        plot_BBC_Sheet = "all_home"
+                    if rct == "school":
+                        plot_BBC_Sheet = "all_school"
+                    if rct == "company":
+                        plot_BBC_Sheet = "all_work"
+
+
+
                 self.plot_contact_matrix_INOUT(
-                    bin_type=rbt, contact_type=rct, sex="unisex", which="NCM_R"
+                    bin_type=rbt, contact_type=rct, sex="unisex", which="NCM_R", plot_BBC_Sheet=plot_BBC_Sheet,
                 )
                 plt.savefig(plot_dir_1 / f"{rct}.pdf", dpi=150, bbox_inches='tight')
                 plt.close() 

@@ -38,3 +38,4 @@ score-clustering==0.1.4
 tables==3.7.0
 tqdm==4.63.1
 geopy==2.2.0
+xlrd==2.0.1
