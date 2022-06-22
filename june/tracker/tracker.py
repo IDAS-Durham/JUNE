@@ -90,7 +90,7 @@ class Tracker:
             if locs[-1] == "y":
                 locations.append(locs[:-1]+"ies")
             elif locs[-1] == "s":
-                locations.append(locs)
+                locations.append(locs+"s")
             else:
                 locations.append(locs+"s")
 
