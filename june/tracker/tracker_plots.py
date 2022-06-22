@@ -678,7 +678,7 @@ class PlotClass:
 
         ax1.set_title(f"Interaction Matrix (IM)")
         ax2.set_title(f"Output Contact Matrix ({which})")
-        f.suptitle(f"{bin_type} binned contacts in {contact_type}")
+        #f.suptitle(f"{bin_type} binned contacts in {contact_type}")
         plt.tight_layout()
         return (ax1,ax2)
     
@@ -773,7 +773,7 @@ class PlotClass:
         ax2.set_title("Normalised Contact Matrix (NCM)")
         ax3.set_title("NCM / IM")
 
-        f.suptitle(f"Survey interaction binned contacts in {contact_type}")
+        #f.suptitle(f"Survey interaction binned contacts in {contact_type}")
         plt.tight_layout()
         return ax1
         
@@ -829,7 +829,7 @@ class PlotClass:
 
         ax1.set_title("Linear Scale")
         ax2.set_title("Log Scale")
-        f.suptitle(f"{bin_type} binned contacts in {contact_type} for {sex}")
+        #f.suptitle(f"{bin_type} binned contacts in {contact_type} for {sex}")
         plt.tight_layout()
         return (ax1,ax2)
 
@@ -871,12 +871,12 @@ class PlotClass:
         im1 = self.PlotCM(cm, cm_err, labels, ax1, origin='lower',cmap='RdYlBu_r',vmin=cm_Min,vmax=cm_Max)
         im2 = self.PlotCM(cm+1e-16, cm_err, labels, ax2, origin='lower',cmap='RdYlBu_r', norm=colors.SymLogNorm(linthresh = 1, vmin=cm_Min, vmax=cm_Max))
 
-        f.colorbar(im1, ax=ax1, extend="min")
-        f.colorbar(im2, ax=ax2, extend="min")
+        f.colorbar(im1, ax=ax1, extend="min", label="$M - F$")
+        f.colorbar(im2, ax=ax2, extend="min", label="$M - F$")
 
         ax1.set_title("Linear Scale")
         ax2.set_title("Log Scale")
-        f.suptitle(f"Male - female {bin_type} binned contacts in {contact_type}")
+        #f.suptitle(f"Male - female {bin_type} binned contacts in {contact_type}")
         plt.tight_layout()
         return (ax1,ax2)
 
@@ -1005,7 +1005,7 @@ class PlotClass:
         ymax = -1
         i_counts = 0
 
-        ax1.set_title("%s locations (frac:%.2f)" % (NVenues, NVenues_Per))
+        #ax1.set_title("%s locations (frac:%.2f)" % (NVenues, NVenues_Per))
         for i in self.location_counters["loc"][locations]["unisex"][Cols].keys():
             if Nlocals > 100:
                 Nlocals = 100
@@ -1332,7 +1332,7 @@ class PlotClass:
         ax2.set_ylabel("Normed Population size")
         ax2.set_xlim([Bins[0], Bins[-1]])
         plt.xticks(rotation=90)
-        f.suptitle(f"Age profile of {contact_type}")
+        #f.suptitle(f"Age profile of {contact_type}")
         plt.legend()
         return (ax1,ax2)
 
@@ -1365,7 +1365,7 @@ class PlotClass:
         f, ax = plt.subplots(1,1)
         f.patch.set_facecolor('white')
         ax.bar(x=dat["bins"], height=(100*dat.iloc[:,1])/Total, width=(dat["bins"].iloc[1]-dat["bins"].iloc[0]), color="b", alpha=0.4)
-        ax.set_title(f"{Nlocals} available {location}")
+        #ax.set_title(f"{Nlocals} available {location}")
         ax.set_ylabel(r"Frequency [%]")
         ax.set_xlabel(r"Travel distance from shelter [km]")
         ax.set_xlim([0, None])
@@ -1417,7 +1417,7 @@ class PlotClass:
         if plot_INPUTOUTPUT:
             plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices_INOUT"
             plot_dir_1.mkdir(exist_ok=True, parents=True)
-            if "paper" in relevant_bin_types:
+            if "Paper" in relevant_bin_types:
                 rbt = "Paper"
             else:
                 rbt = "syoa"
