@@ -90,7 +90,7 @@ class Tracker:
             if locs[-1] == "y":
                 locations.append(locs[:-1]+"ies")
             elif locs[-1] == "s":
-                locations.append(locs+"s")
+                locations.append(locs)
             else:
                 locations.append(locs+"s")
 
@@ -100,6 +100,7 @@ class Tracker:
                 self.venues_which[spec] = np.random.choice(np.arange(0,len(getattr(self.world, spec).members),1), size=self.MaxVenueTrackingSize, replace=False)
             else:
                 self.venues_which[spec] = np.arange(0,len(getattr(self.world, spec).members),1)
+        print(self.venues_which.keys())
   
             
 

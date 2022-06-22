@@ -1417,7 +1417,10 @@ class PlotClass:
         if plot_INPUTOUTPUT:
             plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices_INOUT"
             plot_dir_1.mkdir(exist_ok=True, parents=True)
-            rbt = "syoa"
+            if "paper" in relevant_bin_types:
+                rbt = "Paper"
+            else:
+                rbt = "syoa"
             for rct in self.IM.keys():
                 if rct not in relevant_contact_types:
                     continue
