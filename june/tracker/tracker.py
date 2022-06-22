@@ -100,10 +100,7 @@ class Tracker:
                 self.venues_which[spec] = np.random.choice(np.arange(0,len(getattr(self.world, spec).members),1), size=self.MaxVenueTrackingSize, replace=False)
             else:
                 self.venues_which[spec] = np.arange(0,len(getattr(self.world, spec).members),1)
-        print(self.venues_which.keys())
-  
             
-
 
         self.intitalise_location_counters()
 
@@ -1799,6 +1796,11 @@ class Tracker:
                 continue
             grouptype = getattr(self.world, super_group_name)
             if grouptype is not None:
+
+                #Venue type not in domain
+                if super_group_name not in self.venues_which.keys():
+                    continue
+
                 counter = 0       
                 Skipped_E = 0
                 groups_which = np.array(grouptype.members)[np.array(self.venues_which[super_group_name])]
