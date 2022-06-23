@@ -422,17 +422,21 @@ class ExternalHospital(ExternalGroup, AbstractHospital, MedicalFacility):
     external = True
     __slots__ = "spec", "id", "domain_id", "region_name", "ward_ids", "icu_ids"
     
-    venue_class = Hospital
+    class SubgroupType(IntEnum):
+        workers = 0
+        patients = 1
+        icu_patients = 2
+
     def __init__(self, id, spec, domain_id, region_name):
         ExternalGroup.__init__(self, id=id, spec=spec, domain_id=domain_id)
         AbstractHospital.__init__(self) 
         self.region_name = region_name
 
         self.ward = ExternalSubgroup(
-            group=self, subgroup_type=self.venue_class.SubgroupType.patients
+            group=self, subgroup_type=self.SubgroupType.patients
         )
         self.icu = ExternalSubgroup(
-            group=self, subgroup_type=self.venue_class.SubgroupType.icu_patients
+            group=self, subgroup_type=self.SubgroupType.icu_patients
         )
 
 

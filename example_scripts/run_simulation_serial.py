@@ -449,18 +449,18 @@ if args.tracker:
         plot_Distances=True 
     )
     
-    #Make Plots
-    Plots = PlotClass(
-        record_path=args.save_path / "Tracker",
-        Tracker_Contact_Type = "All"
-    )
-    Plots.make_plots(
-    	plot_INPUTOUTPUT=False,
-        plot_AvContactsLocation=False, 
-        plot_dTLocationPopulation=False, 
-        plot_InteractionMatrices=True, 
-        plot_ContactMatrices=True,
-        plot_CompareSexMatrices=True,
-        plot_AgeBinning=False, 
-        plot_Distances=False 
-    )
+    ##Make Plots
+    #Plots = PlotClass(
+    #    record_path=args.save_path / "Tracker",
+    #    Tracker_Contact_Type = "All"
+    #)
+    #Plots.make_plots(
+    #	plot_INPUTOUTPUT=False,
+    #    plot_AvContactsLocation=False, 
+    #    plot_dTLocationPopulation=False, 
+    #    plot_InteractionMatrices=True, 
+    #    plot_ContactMatrices=True,
+    #    plot_CompareSexMatrices=True,
+    #    plot_AgeBinning=False, 
+    #    plot_Distances=False 
+    #)
