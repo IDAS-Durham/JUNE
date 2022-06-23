@@ -335,9 +335,14 @@ class ActivityManager:
                 continue
             keys, data, n_this_rank = movable_people.serialise(rank)
             if n_this_rank:
-                print(keys, data, rank)
-                reqs.append(mpi_comm.isend(keys, dest=rank, tag=100))
-                reqs.append(mpi_comm.isend(data, dest=rank, tag=200))
+                try:
+                    reqs.append(mpi_comm.isend(keys, dest=rank, tag=100))
+                    reqs.append(mpi_comm.isend(data, dest=rank, tag=200))
+                except:
+                    print(rank, data, keys)
+                    
+                    exit()
+                
                 n_people_going_abroad += n_this_rank
             else:
                 reqs.append(mpi_comm.isend(None, dest=rank, tag=100))
