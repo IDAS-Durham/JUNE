@@ -1211,7 +1211,8 @@ class Tracker:
             self.initalize_CM_All_Normalisations()
             self.normalise_All_CM()
 
-        self.PrintOutResults()
+        if mpi_rank == 0:
+            self.PrintOutResults()
 
         if save:
             tracker_dir = self.record_path / "Tracker" / "data_output"

@@ -549,10 +549,18 @@ mpi_comm.Barrier()
 # =================================== tracker figures ===============================#
 
 if args.tracker:
-    print("Tracker stuff now")
+    if mpi_rank == 0:
+    	print("Tracker stuff now")
+    	
     simulator.tracker.contract_matrices("AC", np.array([0,18,100]))
     simulator.tracker.contract_matrices("Paper",[0,5,10,13,15,18,20,22,25,30,35,40,45,50,55,60,65,70,75,100])                                  
     simulator.tracker.post_process_simulation(save=True)
+    
+    if mpi_rank == 0:
+        print("Merge TODO")
+        #tracker_combine_records(args.save_path)
+
+    mpi_comm.Barrier()
     
     #Make Plots
 #    Plots = PlotClass(
