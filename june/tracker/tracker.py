@@ -1746,6 +1746,10 @@ class Tracker:
                 counter = 0  
                 groups_which = np.array(grouptype.members)[np.array(self.venues_which[loc])]               
                 for group in groups_which: #Loop over all locations.
+                    if group.external:
+                        counter += 1
+                        continue
+
                     venue_coords = group.coordinates
 
                     for ID in self.location_counters_day_i["loc"][loc][counter]["unisex"]:
