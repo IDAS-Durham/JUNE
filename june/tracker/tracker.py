@@ -2077,7 +2077,7 @@ class Tracker:
         jsonfile["NVenues"] = {}
         for locations in self.location_counters_day["loc"].keys():
             jsonfile["NVenues"][locations] = len(self.location_counters_day["loc"][locations])
-
+        jsonfile["NPeople"] = len(self.world.people)
         return jsonfile
 
     def tracker_IMJSON(self):
