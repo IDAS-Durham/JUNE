@@ -123,7 +123,7 @@ To activate it, use:
 
 ## Installation FAQs
 
-**Q:** I get errors with using mpi4y on a Mac
+**Q:** I get errors with using mpi4y on a Mac<br/>
 **A:** Try using homebrew to install the software by running: ``brew install mpi4py``
   
 
