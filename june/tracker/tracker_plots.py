@@ -16,6 +16,8 @@ from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
 import datetime
 
+from june.tracker.tracker import Tracker
+
 from june.paths import data_path, configs_path
 default_BBC_Pandemic_loc = data_path / "BBC_Pandemic"
 
@@ -176,10 +178,7 @@ class PlotClass:
 
                 for sex in self.contact_sexes:
                     filename = f"Venues_{sex}_Counts_BydT.xlsx"
-                    if loc[-1] == "y":
-                        sheet_name = loc[:-1] + "ies"
-                    else:
-                        sheet_name = loc + "s"
+                    sheet_name = Tracker.pluralise(self, loc)
                     df = pd.read_excel(
                     self.record_path / folder_name / "Venue_UniquePops" / filename,
                     sheet_name=sheet_name,
@@ -203,10 +202,7 @@ class PlotClass:
 
                 for sex in self.contact_sexes:
                     filename = f"Venues_{sex}_Counts_ByDate.xlsx"
-                    if loc[-1] == "y":
-                        sheet_name = loc[:-1] + "ies"
-                    else:
-                        sheet_name = loc + "s"
+                    sheet_name = Tracker.pluralise(self, loc)
                     df = pd.read_excel(
                     self.record_path / folder_name / "Venue_UniquePops" / filename,
                     sheet_name=sheet_name,
@@ -262,10 +258,7 @@ class PlotClass:
             for loc in self.group_type_names:
                 if loc in ["global", "shelter_inter", "shelter_intra"]:
                     continue
-                if loc[-1] == "y":
-                    sheet_name = loc[:-1] + "ies"
-                else:
-                    sheet_name = loc + "s"
+                sheet_name = Tracker.pluralise(self, loc)
                 df = pd.read_excel(
                     filename,
                     sheet_name=sheet_name,
@@ -1034,10 +1027,8 @@ class PlotClass:
         f, (ax1,ax2) = plt.subplots(1,2)
         f.patch.set_facecolor('white')
 
-        if locations[-1] == "y":
-            Nlocals = self.NVenues[locations[:-1]+"ies"]
-        else:
-            Nlocals = self.NVenues[locations+"s"]
+        plural_locations = Tracker.pluralise(self, locations)
+        Nlocals = self.NVenues[plural_locations]
 
         ymax = -1
         i_counts = 0
@@ -1390,10 +1381,8 @@ class PlotClass:
                 matplotlib axes object
 
         """
-        if location[-1] == "y":
-            Nlocals = self.NVenues[location[:-1]+"ies"]
-        else:
-            Nlocals = self.NVenues[location+"s"]
+        plural_locations = Tracker.pluralise(self, location)
+        Nlocals = self.NVenues[plural_locations]
         dat = self.travel_distance[location]
         Total = dat.iloc[:,1].sum()
         

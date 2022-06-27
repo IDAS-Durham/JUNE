@@ -1,27 +1,13 @@
-from cProfile import label
-from concurrent.futures import thread
+from operator import index
 import numpy as np
 import yaml
 import pandas as pd
-
 from pathlib import Path
-from june import paths
+import glob
 
+from june.tracker.tracker import Tracker
 
-from june.world import World
-
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-from matplotlib.dates import DateFormatter
-import matplotlib.dates as mdates
-import datetime
-
-from june.paths import data_path, configs_path
-default_BBC_Pandemic_loc = data_path / "BBC_Pandemic"
-
-DaysOfWeek_Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-
-#####################################################################################################################################################################
+################################################################################################################################################################
                             ################################### Plotting functions ##################################
 #####################################################################################################################################################################
 
@@ -31,239 +17,340 @@ class MergerClass:
 
     Parameters
     ----------
-    record_path:
-        path for results directory
-
-    Tracker_Contact_Type:
-
-    Params:
-
-    IM:
-
-    CM_T:
-
-    NCM:
-
-    NCM_R:
-    
-    average_contacts:
-
-    location_counters:
-
-    location_counters_day:
-
-    location_cum_pop:
-
-    age_profiles:
-
-    travel_distance:
 
     Returns
     -------
-        The tracker plotting class
-
     """
     def __init__(
         self,        
-        record_path=Path(""),
-        Tracker_Contact_Type="1D",
-
-        Params=None,
-
-        IM=None,
-        CM_T=None,
-        NCM=None,
-        NCM_R=None,
-
-        average_contacts=None,
-        location_counters=None,
-        location_counters_day=None,
-
-        location_cum_pop = None,
-        age_profiles = None,
-
-        travel_distance = None,
+        record_path=Path("")
     ):
+
         self.record_path = record_path
-        self.Tracker_Contact_Type = Tracker_Contact_Type
 
-
-        if Params is None:
-            with open(self.record_path / "data_output" / "tracker_Simulation_Params.yaml") as f:
-                self.Params = yaml.load(f, Loader=yaml.FullLoader)
+        if (self.record_path / "Tracker" / "raw_data_output").exists():
+            self.MPI = True
         else:
-            self.Params = Params
-
-        if IM is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / "tracker_IM.yaml") as f:
-                self.IM = yaml.load(f, Loader=yaml.FullLoader)
+            self.MPI = False
+            
+            
+        if self.MPI == False:
+            pass
         else:
-            self.IM = IM
+            self.raw_data_path = self.record_path / "Tracker" / "raw_data_output"
+            self.merged_data_path = self.record_path / "Tracker" / "merged_data_output"
+            self.merged_data_path.mkdir(exist_ok=True, parents=True)
 
-        if CM_T is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_Total_CM.yaml") as f:
-                self.CM_T = yaml.load(f, Loader=yaml.FullLoader)
-        else:
-            self.CM_T = CM_T
+            self.NRanks = len(glob.glob(str(self.raw_data_path / "*.yaml")))
+            
+            with open(self.raw_data_path / "tracker_Simulation_Params_r0_.yaml") as f:
+                Params = yaml.load(f, Loader=yaml.FullLoader)
+                
+            self.group_type_names = {} 
+            self.group_type_names[0] = list(Params["NVenues"].keys()) + ["care_home_visits", "household_visits", "global"]
+            self.group_type_names["all"] = list(Params["NVenues"].keys())
+            self.binTypes = list(Params["binTypes"])
+            self.contact_sexes = ["unisex", "male", "female"] #list(Params["sexes"])
+            
+            Params["MPI_rank"] = "Combined"
+            Params["Weekday_Names"] = Tracker.MatrixString(self, matrix=np.array(Params["Weekday_Names"]))
+            Params["Weekend_Names"] = Tracker.MatrixString(self, matrix=np.array(Params["Weekend_Names"]))
+            Params["binTypes"] = Tracker.MatrixString(self=None, matrix=np.array(Params["binTypes"]))
 
-        if NCM is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_NCM.yaml") as f:
-                self.NCM = yaml.load(f, Loader=yaml.FullLoader)
-        else:
-            self.NCM = NCM
+        
+            for rank in range(1,self.NRanks):
+                with open(self.raw_data_path / f"tracker_Simulation_Params_r{rank}_.yaml") as f:
+                    Params_rank = yaml.load(f, Loader=yaml.FullLoader)
 
-        if NCM_R is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_NCM_R.yaml") as f:
-                self.NCM_R = yaml.load(f, Loader=yaml.FullLoader)
-        else:
-            self.NCM_R = NCM_R
+                
+                self.group_type_names[rank] = list(Params_rank["NVenues"].keys()) + ["care_home_visits", "household_visits", "global"]
 
-        #Get Parameters of simulation
-        self.total_days = self.Params["total_days"]
-        self.day_types = {"weekend":self.Params["Weekend_Names"],"weekday":self.Params["Weekday_Names"]}
-        self.NVenues = self.Params["NVenues"]
-        #Get all the bin types
-        self.relevant_bin_types = list(self.CM_T.keys())
-        #Get all location names
-        self.group_type_names = list(self.CM_T["syoa"].keys())
-        #Get all CM options
-        self.CM_Keys = list(self.CM_T["syoa"][self.group_type_names[0]].keys())
-        #Get all contact sexes
-        self.contact_sexes = list(self.CM_T["syoa"][self.group_type_names[0]]["sex"].keys())
-    
-        self.age_bins = {}
-        for rbt in self.relevant_bin_types:
-            if rbt == "Interaction":
-                continue
-            self.age_bins[rbt] = np.array(self.CM_T[rbt][self.group_type_names[0]]["bins"])
+                group_names_update = list( set(self.group_type_names["all"] + self.group_type_names[rank]) )
+                self.group_type_names["all"] = group_names_update
 
-        if average_contacts is None:
-            self.average_contacts = {}
-            for rbt in self.relevant_bin_types:
-                if rbt == "Interaction":
-                    continue
-                self.average_contacts[rbt] = pd.read_excel(
-                    self.record_path / "data_output" / "Venue_AvContacts" / "Average_contacts.xlsx",
-                    sheet_name=rbt,
-                    index_col=0,
-                )
-        else:
-            self.average_contacts = average_contacts  
+                venues = list(set(Params_rank["NVenues"].keys()) & set(self.group_type_names[rank]))
 
-
-        if location_counters is None:
-            self.location_counters = {"loc": {}}
-            for loc in self.group_type_names:
-                if loc in ["global", "shelter_inter", "shelter_intra"]:
-                    continue
-                self.location_counters["loc"][loc] = {}
-                self.location_counters["Timestamp"] = None
-                self.location_counters["dt"] = None
-
-
-                for sex in self.contact_sexes:
-                    filename = f"Venues_{sex}_Counts_BydT.xlsx"
-                    if loc[-1] == "y":
-                        sheet_name = loc[:-1] + "ies"
+                for v in venues:
+                    if v in Params["NVenues"].keys() and v in Params_rank["NVenues"].keys():
+                        Params["NVenues"][v] += Params_rank["NVenues"][v]
+                    elif v not in Params["NVenues"].keys() and v in Params_rank["NVenues"].keys():
+                        Params["NVenues"][v] = Params_rank["NVenues"][v]
                     else:
-                        sheet_name = loc + "s"
-                    df = pd.read_excel(
-                    self.record_path / "data_output" / "Venue_UniquePops" / filename,
-                    sheet_name=sheet_name,
-                    index_col=0,
-                )
-                    self.location_counters["loc"][loc][sex] = df.iloc[:,2:]
-                    if self.location_counters["Timestamp"] is None:
-                        self.location_counters["Timestamp"] = df["t"]
-                        self.location_counters["delta_t"] = df["dt"]
-        else:
-            self.location_counters = location_counters
+                        continue
+                        
+                Params["NPeople"] += Params_rank["NPeople"]  
+            Tracker.Save_CM_JSON(
+                self,
+                dir=self.merged_data_path, 
+                folder="",
+                filename="tracker_Simulation_Params.yaml", 
+                jsonfile=Params
+            )
 
-        if location_counters_day is None:
-            self.location_counters_day = {"loc": {}}
-            for loc in self.group_type_names:
-                if loc in ["global", "shelter_inter", "shelter_intra"]:
+        print(self.group_type_names["all"])
+
+            
+#####################################################################################################################################################################
+                                ################################### Individual Merge ##################################
+#####################################################################################################################################################################
+ 
+    def Travel_Distance(self):
+        travel_distance = {}
+        for rank in range(0,self.NRanks):
+            filename = self.raw_data_path / "Venue_TravelDist" / f"Distance_traveled_r{rank}_.xlsx"
+            for loc in self.group_type_names[rank]:
+                if loc in ["global", "shelter_inter", "shelter_intra", "care_home_visits", "household_visits"]:
                     continue
-                self.location_counters_day["loc"][loc] = {}
-                self.location_counters_day["Timestamp"] = None
-
-
-                for sex in self.contact_sexes:
-                    filename = f"Venues_{sex}_Counts_ByDate.xlsx"
-                    if loc[-1] == "y":
-                        sheet_name = loc[:-1] + "ies"
-                    else:
-                        sheet_name = loc + "s"
-                    df = pd.read_excel(
-                    self.record_path / "data_output" / "Venue_UniquePops" / filename,
-                    sheet_name=sheet_name,
-                    index_col=0,
-                )
-                    self.location_counters_day["loc"][loc][sex] = df.iloc[:,0:]
-                    if self.location_counters_day["Timestamp"] is None:
-                        self.location_counters_day["Timestamp"] = df["t"]
-        else:
-            self.location_counters_day = location_counters_day
-
-        if location_cum_pop is None:
-            self.location_cum_pop = {}
-            for rbt in self.relevant_bin_types:
-                self.location_cum_pop[rbt] = {}
-                filename = self.record_path / "data_output" / "Venue_TotalDemographics" / f"CumPersonCounts_{rbt}.xlsx"
-                for loc in self.group_type_names:
-                    self.location_cum_pop[rbt][loc] = {}
-                    if rbt == "Interaction" and loc in ["global", "shelter_inter", "shelter_intra"]:
-                            continue
-                    df = pd.read_excel(
-                        filename,
-                        sheet_name=loc,
-                        index_col=0,
-                    )
-                    self.location_cum_pop[rbt][loc] = df
-        else:
-            self.location_cum_pop = location_cum_pop
-
-        if age_profiles is None:
-            self.age_profiles = {}
-            for rbt in self.relevant_bin_types:
-                if rbt == "Interaction":
-                    continue
-                self.age_profiles[rbt] = {}
-                filename = self.record_path / "data_output" / "Venue_Demographics" / f"PersonCounts_{rbt}.xlsx"
-                for loc in self.group_type_names:
-                    self.age_profiles[rbt][loc] = {}
-
-                    df = pd.read_excel(
-                        filename,
-                        sheet_name=loc,
-                        index_col=0,
-                    )
-                    self.age_profiles[rbt][loc] = df
-
-        else:
-            self.age_profiles = age_profiles
-
-        if travel_distance is None:
-            filename = self.record_path / "data_output" / "Venue_TravelDist" / "Distance_traveled.xlsx"
-            self.travel_distance= {}
-            for loc in self.group_type_names:
-                if loc in ["global", "shelter_inter", "shelter_intra"]:
-                    continue
-                if loc[-1] == "y":
-                    sheet_name = loc[:-1] + "ies"
-                else:
-                    sheet_name = loc + "s"
                 df = pd.read_excel(
                     filename,
-                    sheet_name=sheet_name,
+                    sheet_name=loc,
                     index_col=0,
-                )
-                self.travel_distance[loc] = df
-        else:
-            self.travel_distance = travel_distance
+                )                
+                if loc not in travel_distance.keys():
+                    travel_distance[loc] = df
+                else:
+                    travel_distance[loc].iloc[:, 1:] += df.iloc[:,1:]   
+        Save_dir = self.merged_data_path / "Venue_TravelDist"
+        Save_dir.mkdir(exist_ok=True, parents=True)
+        with pd.ExcelWriter(Save_dir / f'Distance_traveled.xlsx', mode="w") as writer:  
+            for local in travel_distance.keys(): 
+                travel_distance[local].to_excel(writer, sheet_name=f'{local}')
+        return 1
 
-#####################################################################################################################################################################
-                                ################################### General Plotting ##################################
-#####################################################################################################################################################################
+    def CumPersonCounts(self):
+        self.location_cum_pop = {}
+        for rbt in self.binTypes:
+            self.location_cum_pop[rbt] = {}
+            for rank in range(0, self.NRanks):
+                filename = self.raw_data_path / "Venue_TotalDemographics" / f"CumPersonCounts_{rbt}_r{rank}_.xlsx"
+                for loc in self.group_type_names[rank]: 
+                    if loc in ["care_home_visits", "household_visits"]:
+                        continue
+                   
+                    loc = Tracker.pluralise_r(self, loc)
 
+                    if loc == "global" and rbt == "Interaction":
+                        continue
+
+                    df = pd.read_excel(
+                        filename,
+                        sheet_name=loc,
+                        index_col=0,
+                    )    
+
+                    if loc not in self.location_cum_pop[rbt].keys():
+                        self.location_cum_pop[rbt][loc] = df
+                    else:
+                        self.location_cum_pop[rbt][loc] += df
+
+            Save_dir = self.merged_data_path / "Venue_TotalDemographics"
+            Save_dir.mkdir(exist_ok=True, parents=True)
+            with pd.ExcelWriter(Save_dir / f'CumPersonCounts_{rbt}.xlsx', mode="w") as writer:  
+                for local in self.location_cum_pop[rbt].keys(): 
+                    df = pd.DataFrame(self.location_cum_pop[rbt][local])
+                    df.to_excel(writer, sheet_name=f'{local}')
+        return 1
+
+    def VenueUniquePops(self):
+        location_counters = {}
+        for sex in self.contact_sexes:
+            location_counters[sex] = {}
+            for plural_loc in self.group_type_names["all"]: 
+                loc = Tracker.pluralise_r(self, plural_loc)
+                if loc in ["global","care_home_visits", "household_visits"]:
+                    continue
+                NVenues_so_far = 0
+                for rank in range(0, self.NRanks):
+
+                    if plural_loc not in self.group_type_names[rank]:
+                        continue
+
+                    filename = self.raw_data_path / "Venue_UniquePops" / f"Venues_{sex}_Counts_ByDate_r{rank}_.xlsx"
+            
+                    df = pd.read_excel(
+                        filename,
+                        sheet_name=plural_loc,
+                        index_col=0,
+                    ) 
+
+                    NVenues_rank_loc = df.shape[1]-1
+                    if NVenues_rank_loc == 0: 
+                        #No venues available
+                        continue
+                    Pick = int(600 / self.NRanks)
+                    if NVenues_rank_loc > Pick:
+                        pass
+                    else:
+                        Pick = NVenues_rank_loc
+
+                    rands = np.random.choice(np.arange(1,NVenues_rank_loc+1,1), size=Pick, replace=False)
+                    if plural_loc not in location_counters[sex].keys():
+                        location_counters[sex][plural_loc] = pd.DataFrame({"t":df["t"]})
+                        location_counters[sex][plural_loc][np.arange(NVenues_so_far, NVenues_so_far+Pick, 1)] = df.iloc[:,[0] + rands].values
+                    else:
+                        location_counters[sex][plural_loc][np.arange(NVenues_so_far, NVenues_so_far+Pick, 1)] = df.iloc[:, rands].values
+
+                    NVenues_so_far += Pick
+
+            Save_dir = self.merged_data_path / "Venue_UniquePops"
+            Save_dir.mkdir(exist_ok=True, parents=True)
+            with pd.ExcelWriter(Save_dir / f"Venues_{sex}_Counts_ByDate.xlsx", mode="w") as writer:  
+                for local in location_counters[sex].keys(): 
+                    df = pd.DataFrame(location_counters[sex][local])
+                    df.to_excel(writer, sheet_name=f'{local}')
+                
+        location_counters = {}
+        for sex in self.contact_sexes:
+            location_counters[sex] = {}
+            for plural_loc in self.group_type_names["all"]: 
+                loc = Tracker.pluralise_r(self, plural_loc)
+                if loc in ["global","care_home_visits", "household_visits"]:
+                    continue
+                NVenues_so_far = 0
+                for rank in range(0, self.NRanks):
+
+                    if plural_loc not in self.group_type_names[rank]:
+                        continue
+
+                    filename = self.raw_data_path / "Venue_UniquePops" / f"Venues_{sex}_Counts_BydT_r{rank}_.xlsx"
+            
+                    df = pd.read_excel(
+                        filename,
+                        sheet_name=plural_loc,
+                        index_col=0,
+                    ) 
+
+                    NVenues_rank_loc = df.shape[1]-1
+                    if NVenues_rank_loc == 0: 
+                        #No venues available
+                        continue
+                    Pick = int(600 / self.NRanks)
+                    if NVenues_rank_loc > Pick:
+                        pass
+                    else:
+                        Pick = NVenues_rank_loc
+
+                    rands = np.random.choice(np.arange(1,NVenues_rank_loc+1,1), size=Pick, replace=False)
+                    if plural_loc not in location_counters[sex].keys():
+                        location_counters[sex][plural_loc] = pd.DataFrame({"t":df["t"], "dt":df["dt"]})
+                        location_counters[sex][plural_loc][np.arange(NVenues_so_far, NVenues_so_far+Pick, 1)] = df.iloc[:,[0] + rands]
+                    else:
+                        location_counters[sex][plural_loc][np.arange(NVenues_so_far, NVenues_so_far+Pick, 1)] = df.iloc[:, rands].values
+
+                    NVenues_so_far += Pick
+
+            Save_dir = self.merged_data_path / "Venue_UniquePops"
+            Save_dir.mkdir(exist_ok=True, parents=True)
+            with pd.ExcelWriter(Save_dir / f"Venues_{sex}_Counts_BydT.xlsx", mode="w") as writer:  
+                for local in location_counters[sex].keys(): 
+                    df = pd.DataFrame(location_counters[sex][local])
+                    df.to_excel(writer, sheet_name=f'{local}')
+        return 1
+
+
+    
+    def VenuePersonCounts(self):
+        age_profiles = {}
+        self.rank_age_profiles = {}
+        for rbt in self.binTypes:
+            if rbt == "Interaction":
+                continue
+
+            self.rank_age_profiles[rbt] = {}
+
+            age_profiles[rbt] = {}
+            for rank in range(0, self.NRanks):
+                
+                filename = self.raw_data_path / "Venue_Demographics" / f"PersonCounts_{rbt}_r{rank}_.xlsx"
+                for loc in self.group_type_names[rank]: 
+                    if loc in ["care_home_visits", "household_visits"]:
+                        continue
+
+
+                    
+                    loc = Tracker.pluralise_r(self, loc)
+                    df = pd.read_excel(
+                        filename,
+                        sheet_name=loc,
+                        index_col=0,
+                    )    
+
+                    if loc == "global":
+                        self.rank_age_profiles[rbt][rank] = df.copy()["unisex"].iloc[:-1]
+                        if "all" not in self.rank_age_profiles[rbt].keys():
+                            self.rank_age_profiles[rbt]["all"] = df["unisex"].iloc[:-1]
+                        else:
+                            self.rank_age_profiles[rbt]["all"] += df["unisex"].iloc[:-1].values
+
+                    if loc not in age_profiles[rbt].keys():
+                        age_profiles[rbt][loc] = df
+                    else:
+                        age_profiles[rbt][loc] += df.values
+
+                   
+
+            Save_dir = self.merged_data_path / "Venue_Demographics"
+            Save_dir.mkdir(exist_ok=True, parents=True)
+            with pd.ExcelWriter(Save_dir / f'PersonCounts_{rbt}.xlsx', mode="w") as writer:  
+                for local in age_profiles[rbt].keys(): 
+                    df = pd.DataFrame(age_profiles[rbt][local])
+                    df.to_excel(writer, sheet_name=f'{local}')
+        return 1
+
+    def AvContacts(self):
+        AvContacts = {}
+        for rbt in self.binTypes:
+            if rbt == "Interaction":
+                continue
+            for rank in range(0, self.NRanks):
+                filename = self.raw_data_path / "Venue_AvContacts" / f'Average_contacts_r{rank}_.xlsx'
+                df = pd.read_excel(
+                    filename,
+                    sheet_name=rbt,
+                    index_col=0,
+                )   
+
+                if rank == 0:
+                    dat = {df.columns[0] : df.iloc[0]}
+                    nbins = len(self.rank_age_profiles[rbt]["all"])
+                    for col in self.group_type_names["all"]:
+                        col = Tracker.pluralise_r(self, col) 
+                        if "visit" in col:
+                            col += "s"
+                        dat[col] = np.zeros(nbins)
+                
+                    AvContacts[rbt] = pd.DataFrame(dat)
+
+                
+                factor = (self.rank_age_profiles[rbt][rank].values/self.rank_age_profiles[rbt]["all"].values)
+                for col in df.columns:
+                    AvContacts[rbt][col] += (df[col] * factor).values
+                
+
+
+        Save_dir = self.merged_data_path / "Venue_AvContacts"
+        Save_dir.mkdir(exist_ok=True, parents=True)
+        with pd.ExcelWriter(Save_dir / f'Average_contacts.xlsx', mode="w") as writer:  
+            for rbt in self.binTypes:
+                if rbt == "Interaction":
+                    continue
+                df = pd.DataFrame(AvContacts[rbt])
+                df.to_excel(writer, sheet_name=f'{rbt}')
+        return 1
+
+
+                       
+            
+#####################################################################################################################################################################
+                                ################################### Master Merge ##################################
+#####################################################################################################################################################################
  
+    def Merge(self):
+        if self.MPI == True:
+            self.Travel_Distance()
+            self.CumPersonCounts()
+            self.VenueUniquePops()
+            #self.VenuePersonCounts()
+            #self.AvContacts()
+        else:
+            print("Run was on one core")
