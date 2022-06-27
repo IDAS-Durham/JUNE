@@ -1858,9 +1858,11 @@ class Tracker:
         if mpi_size == 1:
             mpi_rankname = ""
             folder_name = "merged_data_output"
+            MPI = False
         else:
             mpi_rankname = f"_r{mpi_rank}_"
             folder_name = "raw_data_output"
+            MPI = True
 
 
         def Save_CM_JSON(dir, filename, jsonfile):
@@ -1910,25 +1912,26 @@ class Tracker:
                 jsonfile=jsonfile
             )
 
-            jsonfile = {}
-            for binType in list(self.NCM.keys()):
-                jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM, CM_err=self.NCM_err) 
-            # Save out the Normalised CM 
-            Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
-                filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml", 
-                jsonfile=jsonfile
-            )
+            if MPI == False:
+                jsonfile = {}
+                for binType in list(self.NCM.keys()):
+                    jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM, CM_err=self.NCM_err) 
+                # Save out the Normalised CM 
+                Save_CM_JSON(
+                    dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
+                    filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml", 
+                    jsonfile=jsonfile
+                )
 
-            jsonfile = {}
-            for binType in list(self.NCM_R.keys()):
-                jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM_R, CM_err=self.NCM_R_err)  
-            # Save out the Normalised CM with Reciprocal contacts 
-            Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
-                filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml", 
-                jsonfile=jsonfile
-            )
+                jsonfile = {}
+                for binType in list(self.NCM_R.keys()):
+                    jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM_R, CM_err=self.NCM_R_err)  
+                # Save out the Normalised CM with Reciprocal contacts 
+                Save_CM_JSON(
+                    dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
+                    filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml", 
+                    jsonfile=jsonfile
+                )
 
         ################################### Saving All Contacts tracker results ##################################
         if "All" in self.Tracker_Contact_Type:
@@ -1944,25 +1947,26 @@ class Tracker:
                 jsonfile=jsonfile
             )
 
-            jsonfile = {}
-            for binType in list(self.NCM_AC.keys()):
-                jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM_AC, CM_err=self.NCM_AC_err) 
-            # Save out the Normalised CM 
-            Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
-                filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml", 
-                jsonfile=jsonfile
-            )
+            if MPI == False:
+                jsonfile = {}
+                for binType in list(self.NCM_AC.keys()):
+                    jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM_AC, CM_err=self.NCM_AC_err) 
+                # Save out the Normalised CM 
+                Save_CM_JSON(
+                    dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
+                    filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml", 
+                    jsonfile=jsonfile
+                )
 
-            jsonfile = {}
-            for binType in list(self.NCM_AC_R.keys()):
-                jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM_AC_R, CM_err=self.NCM_AC_R_err)  
-            # Save out the Normalised CM with Reciprocal contacts 
-            Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
-                filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml", 
-                jsonfile=jsonfile
-            )
+                jsonfile = {}
+                for binType in list(self.NCM_AC_R.keys()):
+                    jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM_AC_R, CM_err=self.NCM_AC_R_err)  
+                # Save out the Normalised CM with Reciprocal contacts 
+                Save_CM_JSON(
+                    dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
+                    filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml", 
+                    jsonfile=jsonfile
+                )
 
         ################################### Saving Venue tracker results ##################################
         VD_dir = self.record_path / "Tracker" / folder_name / "Venue_Demographics"
@@ -2085,6 +2089,7 @@ class Tracker:
         for locations in self.location_counters_day["loc"].keys():
             jsonfile["NVenues"][locations] = len(self.location_counters_day["loc"][locations])
         jsonfile["NPeople"] = len(self.world.people)
+        jsonfile["binTypes"] = self.MatrixString(np.array(list(self.CM_T.keys())))
         return jsonfile
 
     def tracker_IMJSON(self):
