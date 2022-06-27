@@ -125,6 +125,11 @@ To activate it, use:
 
 **Q:** I get errors with using mpi4y on a Mac<br/>
 **A:** Try using homebrew to install the software by running: ``brew install mpi4py``
+
+**Q:** I get building errors for h5py, mpi4py and tables when trying to ``pip install -e .``<br/>
+**A:** Try installing these packages (e.g., with ``conda install`` if working in a conda environment) *before* attempting the 
+full pip install, while enforcing the versions listed in the ``requirements.txt``. 
+This may help to avoid incompatibilities with the hdf5 on your system (if any).
   
 
 # How to use the code
