@@ -1215,7 +1215,12 @@ class Tracker:
             self.PrintOutResults()
 
         if save:
-            tracker_dir = self.record_path / "Tracker" / "data_output"
+            if mpi_size == 1:
+                folder_name = "merged_data_output"
+            else:
+                folder_name = "raw_data_output"
+
+            tracker_dir = self.record_path / "Tracker" / folder_name
             tracker_dir.mkdir(exist_ok=True, parents=True)
             self.tracker_tofile(tracker_dir)
         return 1
@@ -1852,12 +1857,14 @@ class Tracker:
 
         if mpi_size == 1:
             mpi_rankname = ""
+            folder_name = "merged_data_output"
         else:
             mpi_rankname = f"_r{mpi_rank}_"
+            folder_name = "raw_data_output"
 
 
         def Save_CM_JSON(dir, filename, jsonfile):
-            junk_dir = self.record_path / "Tracker" / "data_output" / "junk"
+            junk_dir = self.record_path / "Tracker" / folder_name / "junk"
             junk_dir.mkdir(exist_ok=True, parents=True)
 
             dir.mkdir(exist_ok=True, parents=True)
@@ -1884,7 +1891,7 @@ class Tracker:
 
         # Save out the IM
         Save_CM_JSON(
-            dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
+            dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
             filename=f"tracker_IM{mpi_rankname}.yaml", 
             jsonfile=self.tracker_IMJSON()
         )
@@ -1898,7 +1905,7 @@ class Tracker:
                 jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.CM_T, CM_err=self.CM_T_err)  
             # Save out the CM totals
             Save_CM_JSON(
-                dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
                 filename=f"tracker_{Tracker_Type}_Total_CM{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
@@ -1908,7 +1915,7 @@ class Tracker:
                 jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM, CM_err=self.NCM_err) 
             # Save out the Normalised CM 
             Save_CM_JSON(
-                dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
                 filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
@@ -1918,7 +1925,7 @@ class Tracker:
                 jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM_R, CM_err=self.NCM_R_err)  
             # Save out the Normalised CM with Reciprocal contacts 
             Save_CM_JSON(
-                dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
                 filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
@@ -1932,7 +1939,7 @@ class Tracker:
                 jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.CM_AC, CM_err=self.CM_AC_err)  
             # Save out the CM totals
             Save_CM_JSON(
-                dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
                 filename=f"tracker_{Tracker_Type}_Total_CM{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
@@ -1942,7 +1949,7 @@ class Tracker:
                 jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM_AC, CM_err=self.NCM_AC_err) 
             # Save out the Normalised CM 
             Save_CM_JSON(
-                dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
                 filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
@@ -1952,13 +1959,13 @@ class Tracker:
                 jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM_AC_R, CM_err=self.NCM_AC_R_err)  
             # Save out the Normalised CM with Reciprocal contacts 
             Save_CM_JSON(
-                dir=self.record_path / "Tracker" / "data_output" / "CM_yamls", 
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
                 filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
 
         ################################### Saving Venue tracker results ##################################
-        VD_dir = self.record_path / "Tracker" / "data_output" / "Venue_Demographics"
+        VD_dir = self.record_path / "Tracker" / folder_name / "Venue_Demographics"
         VD_dir.mkdir(exist_ok=True, parents=True)
         for bin_types in self.age_profiles.keys():
             dat = self.age_profiles[bin_types]
@@ -1975,7 +1982,7 @@ class Tracker:
                     df.loc['Total']= df.sum()
                     df.to_excel(writer, sheet_name=f'{local}')
 
-        VTD_dir = self.record_path / "Tracker" / "data_output" / "Venue_TotalDemographics"
+        VTD_dir = self.record_path / "Tracker" / folder_name / "Venue_TotalDemographics"
         VTD_dir.mkdir(exist_ok=True, parents=True)
         for bin_types in self.location_cum_pop.keys(): 
             dat = self.location_cum_pop[bin_types]
@@ -1985,20 +1992,20 @@ class Tracker:
                     df = pd.DataFrame(dat[local])
                     df.to_excel(writer, sheet_name=f'{local}')
 
-        Dist_dir = self.record_path / "Tracker" / "data_output" / "Venue_TravelDist"
+        Dist_dir = self.record_path / "Tracker" / folder_name / "Venue_TravelDist"
         Dist_dir.mkdir(exist_ok=True, parents=True)
         days = list(self.travel_distance.keys())
         with pd.ExcelWriter(Dist_dir / f'Distance_traveled{mpi_rankname}.xlsx', mode="w") as writer:  
             for local in self.travel_distance[days[0]].keys(): 
                 df = pd.DataFrame()
-                bins = np.arange( 0, 6, 0.05)
+                bins = np.arange( 0, 50, 0.05)
                 df["bins"] = (bins[:-1]+bins[1:]) / 2
                 for day in days:
                     df[day] = np.histogram( self.travel_distance[day][local], bins=bins, density=False)[0]
                 df.to_excel(writer, sheet_name=f'{local}')
                     
 
-        V_dir = self.record_path / "Tracker" / "data_output" / "Venue_UniquePops"
+        V_dir = self.record_path / "Tracker" / folder_name / "Venue_UniquePops"
         V_dir.mkdir(exist_ok=True, parents=True)
 
         # Save out persons per location
@@ -2044,7 +2051,7 @@ class Tracker:
                     df.to_excel(writer, sheet_name=f'{loc}')
 
         # Save contacts per location
-        Av_dir = self.record_path / "Tracker" / "data_output" / "Venue_AvContacts"
+        Av_dir = self.record_path / "Tracker" / folder_name / "Venue_AvContacts"
         Av_dir.mkdir(exist_ok=True, parents=True)
         with pd.ExcelWriter(Av_dir / f'Average_contacts{mpi_rankname}.xlsx', mode="w") as writer:  
             for rbt in self.average_contacts.keys():

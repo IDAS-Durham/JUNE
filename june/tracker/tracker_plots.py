@@ -4,6 +4,7 @@ import numpy as np
 import yaml
 import pandas as pd
 
+from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 from pathlib import Path
 from june import paths
 
@@ -22,10 +23,12 @@ DaysOfWeek_Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Fri
 
 try:
     plt.style.use(['science','no-latex'])
-    print("Using 'science' matplotlib style")
+    if mpi_rank == 0:
+        print("Using 'science' matplotlib style")
 except:
     plt.style.use('default')
-    print("Using default matplotlib style")
+    if mpi_rank == 0:
+        print("Using default matplotlib style")
     pass
 
 
@@ -95,33 +98,35 @@ class PlotClass:
         self.record_path = record_path
         self.Tracker_Contact_Type = Tracker_Contact_Type
 
+        folder_name = "merged_data_output"
+
 
         if Params is None:
-            with open(self.record_path / "data_output" / "tracker_Simulation_Params.yaml") as f:
+            with open(self.record_path / folder_name / "tracker_Simulation_Params.yaml") as f:
                 self.Params = yaml.load(f, Loader=yaml.FullLoader)
         else:
             self.Params = Params
 
         if IM is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / "tracker_IM.yaml") as f:
+            with open(self.record_path / folder_name / "CM_yamls" / "tracker_IM.yaml") as f:
                 self.IM = yaml.load(f, Loader=yaml.FullLoader)
         else:
             self.IM = IM
 
         if CM_T is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_Total_CM.yaml") as f:
+            with open(self.record_path / folder_name / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_Total_CM.yaml") as f:
                 self.CM_T = yaml.load(f, Loader=yaml.FullLoader)
         else:
             self.CM_T = CM_T
 
         if NCM is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_NCM.yaml") as f:
+            with open(self.record_path / folder_name / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_NCM.yaml") as f:
                 self.NCM = yaml.load(f, Loader=yaml.FullLoader)
         else:
             self.NCM = NCM
 
         if NCM_R is None:
-            with open(self.record_path / "data_output" / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_NCM_R.yaml") as f:
+            with open(self.record_path / folder_name / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_NCM_R.yaml") as f:
                 self.NCM_R = yaml.load(f, Loader=yaml.FullLoader)
         else:
             self.NCM_R = NCM_R
@@ -151,7 +156,7 @@ class PlotClass:
                 if rbt == "Interaction":
                     continue
                 self.average_contacts[rbt] = pd.read_excel(
-                    self.record_path / "data_output" / "Venue_AvContacts" / "Average_contacts.xlsx",
+                    self.record_path / folder_name / "Venue_AvContacts" / "Average_contacts.xlsx",
                     sheet_name=rbt,
                     index_col=0,
                 )
@@ -176,7 +181,7 @@ class PlotClass:
                     else:
                         sheet_name = loc + "s"
                     df = pd.read_excel(
-                    self.record_path / "data_output" / "Venue_UniquePops" / filename,
+                    self.record_path / folder_name / "Venue_UniquePops" / filename,
                     sheet_name=sheet_name,
                     index_col=0,
                 )
@@ -203,7 +208,7 @@ class PlotClass:
                     else:
                         sheet_name = loc + "s"
                     df = pd.read_excel(
-                    self.record_path / "data_output" / "Venue_UniquePops" / filename,
+                    self.record_path / folder_name / "Venue_UniquePops" / filename,
                     sheet_name=sheet_name,
                     index_col=0,
                 )
@@ -217,7 +222,7 @@ class PlotClass:
             self.location_cum_pop = {}
             for rbt in self.relevant_bin_types:
                 self.location_cum_pop[rbt] = {}
-                filename = self.record_path / "data_output" / "Venue_TotalDemographics" / f"CumPersonCounts_{rbt}.xlsx"
+                filename = self.record_path / folder_name / "Venue_TotalDemographics" / f"CumPersonCounts_{rbt}.xlsx"
                 for loc in self.group_type_names:
                     self.location_cum_pop[rbt][loc] = {}
                     if rbt == "Interaction" and loc in ["global", "shelter_inter", "shelter_intra"]:
@@ -237,7 +242,7 @@ class PlotClass:
                 if rbt == "Interaction":
                     continue
                 self.age_profiles[rbt] = {}
-                filename = self.record_path / "data_output" / "Venue_Demographics" / f"PersonCounts_{rbt}.xlsx"
+                filename = self.record_path / folder_name / "Venue_Demographics" / f"PersonCounts_{rbt}.xlsx"
                 for loc in self.group_type_names:
                     self.age_profiles[rbt][loc] = {}
 
@@ -252,7 +257,7 @@ class PlotClass:
             self.age_profiles = age_profiles
 
         if travel_distance is None:
-            filename = self.record_path / "data_output" / "Venue_TravelDist" / "Distance_traveled.xlsx"
+            filename = self.record_path / folder_name / "Venue_TravelDist" / "Distance_traveled.xlsx"
             self.travel_distance= {}
             for loc in self.group_type_names:
                 if loc in ["global", "shelter_inter", "shelter_intra"]:

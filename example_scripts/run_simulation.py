@@ -566,9 +566,11 @@ if args.tracker:
 #    Plots = PlotClass(
 #        record_path=args.save_path / "Tracker",
 #        Tracker_Contact_Type = "1D"
-#
 #    )
+
 #    Plots.make_plots(
+#    	 plot_BBC=True,
+#    	 plot_INPUTOUTPUT=True,
 #        plot_AvContactsLocation=True, 
 #        plot_dTLocationPopulation=True, 
 #        plot_InteractionMatrices=True, 
@@ -585,6 +587,7 @@ if args.tracker:
 
 #    )
 #    Plots.make_plots(
+#     	 plot_INPUTOUTPUT=False,
 #        plot_AvContactsLocation=False, 
 #        plot_dTLocationPopulation=False, 
 #        plot_InteractionMatrices=True, 

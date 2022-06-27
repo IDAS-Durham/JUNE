@@ -439,6 +439,7 @@ if args.tracker:
 
     )
     Plots.make_plots(
+    	plot_BBC=True,
     	plot_INPUTOUTPUT=True,
         plot_AvContactsLocation=True, 
         plot_dTLocationPopulation=True, 
