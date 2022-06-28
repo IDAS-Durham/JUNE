@@ -189,11 +189,13 @@ class Tracker:
 
         if loc[-3:] == "ies":
             loc = loc[:-3]+"y"
-        else:
+        elif loc[-1] == "s":
             loc = loc[:-1] 
         return loc
 
     def pluralise(self, loc):
+        if loc == "global":
+            return loc
         
         if loc[-1] == "y":
             loc = loc[:-1] + "ies"
@@ -1706,15 +1708,18 @@ class Tracker:
         if super_group_name in self.location_counters["loc"].keys():
             #By dt
             self.location_counters["loc"][super_group_name][counter]["unisex"].append(len(people))
+            NewPeople = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"], people)
             if "male" in self.contact_sexes:
                 self.location_counters["loc"][super_group_name][counter]["male"].append(len(men))
+                NewMen = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["male"], men)
             if "female" in self.contact_sexes:
                 self.location_counters["loc"][super_group_name][counter]["female"].append(len(women)) 
+                NewWomen = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["female"], women)
 
             #By Date 
             if timer.date.hour == timer.initial_date.hour and timer.date.minute== 0 and timer.date.second == 0:
                 self.location_counters_day_i["loc"][super_group_name][counter]["unisex"] = people
-                self.location_counters_day["loc"][super_group_name][counter]["unisex"].append(len(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"]))
+                self.location_counters_day["loc"][super_group_name][counter]["unisex"].append(len(people))
                 if "male" in self.contact_sexes:
                     self.location_counters_day_i["loc"][super_group_name][counter]["male"] = men
                     self.location_counters_day["loc"][super_group_name][counter]["male"].append(len(men))
@@ -1722,16 +1727,15 @@ class Tracker:
                     self.location_counters_day_i["loc"][super_group_name][counter]["female"] = women
                     self.location_counters_day["loc"][super_group_name][counter]["female"].append(len(women))
             else:
-                self.location_counters_day_i["loc"][super_group_name][counter]["unisex"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"], people)
-                self.location_counters_day["loc"][super_group_name][counter]["unisex"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["unisex"])
+                self.location_counters_day_i["loc"][super_group_name][counter]["unisex"] = NewPeople
+                self.location_counters_day["loc"][super_group_name][counter]["unisex"][-1] = len(NewPeople)
 
                 if "male" in self.contact_sexes:
-                    self.location_counters_day_i["loc"][super_group_name][counter]["male"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["male"],men)
-                    self.location_counters_day["loc"][super_group_name][counter]["male"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["male"] )
+                    self.location_counters_day_i["loc"][super_group_name][counter]["male"] = NewMen
+                    self.location_counters_day["loc"][super_group_name][counter]["male"][-1] = len(NewMen)
                 if "female" in self.contact_sexes:
-                    self.location_counters_day_i["loc"][super_group_name][counter]["female"] = self.union(self.location_counters_day_i["loc"][super_group_name][counter]["female"],women)
-                    self.location_counters_day["loc"][super_group_name][counter]["female"][-1] = len(self.location_counters_day_i["loc"][super_group_name][counter]["female"] )
-
+                    self.location_counters_day_i["loc"][super_group_name][counter]["female"] = NewWomen
+                    self.location_counters_day["loc"][super_group_name][counter]["female"][-1] = len(NewWomen)
 
     def simulate_traveldistance(self, day):
         """

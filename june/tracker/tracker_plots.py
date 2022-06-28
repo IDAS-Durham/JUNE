@@ -1,10 +1,7 @@
-from cProfile import label
-from concurrent.futures import thread
 import numpy as np
 import yaml
 import pandas as pd
 
-from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 from pathlib import Path
 from june import paths
 
@@ -17,6 +14,14 @@ import matplotlib.dates as mdates
 import datetime
 
 from june.tracker.tracker import Tracker
+
+from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+import logging
+logger = logging.getLogger("tracker plotter")
+mpi_logger = logging.getLogger("mpi")
+
+if mpi_rank > 0:
+    logger.propagate = False
 
 from june.paths import data_path, configs_path
 default_BBC_Pandemic_loc = data_path / "BBC_Pandemic"
@@ -101,6 +106,8 @@ class PlotClass:
         self.Tracker_Contact_Type = Tracker_Contact_Type
 
         folder_name = "merged_data_output"
+
+        logger.info(f"Rank {mpi_rank} -- Begin loading")
 
 
         if Params is None:
@@ -267,6 +274,8 @@ class PlotClass:
                 self.travel_distance[loc] = df
         else:
             self.travel_distance = travel_distance
+
+        logger.info(f"Rank {mpi_rank} -- Data loaded")
 
 #####################################################################################################################################################################
                                 ################################### General Plotting ##################################
@@ -1432,6 +1441,8 @@ class PlotClass:
         -------
             None
         """
+
+        logger.info(f"Rank {mpi_rank} -- Begin plotting")
         if self.group_type_names == []:
             return 1
 
@@ -1468,6 +1479,7 @@ class PlotClass:
                 )
                 plt.savefig(plot_dir_1 / f"{rct}.pdf", dpi=150, bbox_inches='tight')
                 plt.close() 
+        logger.info(f"Rank {mpi_rank} -- Input vs output done")
 
 
         if plot_AvContactsLocation:
@@ -1480,6 +1492,7 @@ class PlotClass:
                 stacked_contacts_plot.plot()
                 plt.savefig(plot_dir / f"{rbt}_contacts.pdf", dpi=150, bbox_inches='tight')
                 plt.close()
+        logger.info(f"Rank {mpi_rank} -- Av contacts done")
             
             
         if plot_dTLocationPopulation:
@@ -1493,6 +1506,7 @@ class PlotClass:
                 self.plot_population_at_locs(locations)
                 plt.savefig(plot_dir / f"{locations}.pdf", dpi=150, bbox_inches='tight')
                 plt.close()
+        logger.info(f"Rank {mpi_rank} -- Pop at locations done")
 
         if plot_InteractionMatrices:
             plot_dir = self.record_path / "Graphs" / f"IM_{self.Tracker_Contact_Type}" 
@@ -1503,6 +1517,7 @@ class PlotClass:
                 )
                 plt.savefig(plot_dir / f"{rct}.pdf", dpi=150, bbox_inches='tight')
                 plt.close()
+        logger.info(f"Rank {mpi_rank} -- Interaction matrix plots done")
 
         if plot_ContactMatrices:
             for CMType in CMTypes:
@@ -1526,6 +1541,7 @@ class PlotClass:
                             )
                             plt.savefig(plot_dir_3 / f"{rct}.pdf", dpi=150, bbox_inches='tight')
                             plt.close()
+        logger.info(f"Rank {mpi_rank} -- CM plots done")
 
 
         if plot_CompareSexMatrices:
@@ -1550,6 +1566,7 @@ class PlotClass:
                                 )
                             plt.savefig(plot_dir_3 / f"{rct}.pdf", dpi=150, bbox_inches='tight')
                             plt.close() 
+        logger.info(f"Rank {mpi_rank} -- CM between sexes done")
 
         if plot_AgeBinning:
             plot_dir = self.record_path / "Graphs" / "Age_Binning"
@@ -1563,6 +1580,7 @@ class PlotClass:
                     )
                     plt.savefig(plot_dir / f"{rbt}_{rct}.pdf", dpi=150, bbox_inches='tight')
                     plt.close() 
+        logger.info(f"Rank {mpi_rank} -- Age bin matrix done")
 
         if plot_Distances:
             plot_dir = self.record_path / "Graphs" / "Distance_Traveled" 
@@ -1573,4 +1591,5 @@ class PlotClass:
                     plt.savefig(plot_dir / f"{locations}.pdf", dpi=150, bbox_inches='tight')
                     plt.close()
                     break
+        logger.info(f"Rank {mpi_rank} -- Distance plots done")
         return 1
