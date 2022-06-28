@@ -810,6 +810,7 @@ class Tracker:
                     else:
                         cm = cm_spec[sex]
                         age_profile = self.location_cum_pop[bin_type][contact_type][sex]
+
   
                     NCM, NCM_err = self.CM_Norm(cm, np.array(age_profile), contact_type=contact_type, Reciprocal=False)
                     NCM_R, NCM_R_err = self.CM_Norm(cm, np.array(age_profile), contact_type=contact_type, Reciprocal=True)

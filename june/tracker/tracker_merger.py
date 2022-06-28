@@ -21,12 +21,20 @@ class MergerClass:
     Returns
     -------
     """
+
+    class Timer:
+        def __init__(
+            self,        
+        ):
+            self.total_days = 1
+
     def __init__(
         self,        
         record_path=Path("")
     ):
 
         self.record_path = record_path
+        self.timer = self.Timer()
 
         if (self.record_path / "Tracker" / "raw_data_output").exists():
             self.MPI = True
@@ -51,11 +59,14 @@ class MergerClass:
             self.group_type_names["all"] = list(Params["NVenues"].keys())
             self.binTypes = list(Params["binTypes"])
             self.contact_sexes = list(Params["sexes"])
+            self.Tracker_Contact_Type = list(Params["trackerTypes"])
             
             Params["MPI_rank"] = "Combined"
             Params["Weekday_Names"] = self.MatrixString(matrix=np.array(Params["Weekday_Names"]))
             Params["Weekend_Names"] = self.MatrixString(matrix=np.array(Params["Weekend_Names"]))
             Params["binTypes"] = self.MatrixString(matrix=np.array(Params["binTypes"]))
+            Params["sexes"]= self.MatrixString(matrix=np.array(Params["sexes"]))
+            Params["trackerTypes"]= self.MatrixString(matrix=np.array(Params["trackerTypes"]))
 
         
             for rank in range(1,self.NRanks):
@@ -79,8 +90,7 @@ class MergerClass:
                         continue
                         
                 Params["NPeople"] += Params_rank["NPeople"]  
-            Tracker.Save_CM_JSON(
-                self,
+            self.Save_CM_JSON(
                 dir=self.merged_data_path, 
                 folder="",
                 filename="tracker_Simulation_Params.yaml", 
@@ -344,75 +354,247 @@ class MergerClass:
             self.IM = yaml.load(f, Loader=yaml.FullLoader)
         return 1
 
-
-
     def LoadContactMatrices(self):
-        self.Tracker_Contact_Type = "1D"
+        self.age_bins = {}
+        if "1D" in self.Tracker_Contact_Type:
 
-        for rank in range(0, 2):#self.NRanks):
-            with open(self.raw_data_path / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_Total_CM_r{rank}_.yaml") as f:
-                self.CM_T_rank = yaml.load(f, Loader=yaml.FullLoader)
-                #[bin_type][contact_type]["sex"][sex]["contacts"]
+            for rank in range(0, self.NRanks):
+                with open(self.raw_data_path / "CM_yamls" / f"tracker_1D_Total_CM_r{rank}_.yaml") as f:
+                    self.CM_T_rank = yaml.load(f, Loader=yaml.FullLoader)
+                    #[bin_type][contact_type]["sex"][sex]["contacts"]
 
-            if rank == 0:
-                #Create copies of the contact_matrices to be filled in.
-                #Error Matrix
-                self.CM_T = { 
-                    bin_type : { 
-                        loc: {
-                            sex : self.CM_T_rank[bin_type][loc]["sex"][sex]["contacts"]
-                            for sex in self.CM_T_rank[bin_type][loc]["sex"].keys() 
+                if rank == 0:
+                    #Create copies of the contact_matrices to be filled in.
+                    #Error Matrix
+                    self.CM_T = { 
+                        bin_type : { 
+                            loc: {
+                                sex : self.CM_T_rank[bin_type][loc]["sex"][sex]["contacts"]
+                                for sex in self.CM_T_rank[bin_type][loc]["sex"].keys() 
+                                }
+                            for loc in self.CM_T_rank[bin_type].keys()
                             }
-                        for loc in self.CM_T_rank[bin_type].keys()
-                        }
-                    for bin_type in self.CM_T_rank.keys() if bin_type != "Interaction" 
-                }
-                self.CM_T["Interaction"] = { 
-                        loc: self.CM_T_rank["Interaction"][loc]["contacts"] for loc in self.CM_T_rank["Interaction"].keys()
-                }
-
-      
-
-            else:
-                for bin_type in self.binTypes:
-                    for loc_plural in self.group_type_names["all"]:
-                        loc = self.pluralise_r(loc_plural)
-                        NEW = False
-                        if loc_plural not in self.group_type_names[rank]:
+                        for bin_type in self.CM_T_rank.keys() if bin_type != "Interaction" 
+                    }
+                    self.CM_T["Interaction"] = { 
+                            loc: self.CM_T_rank["Interaction"][loc]["contacts"] for loc in self.CM_T_rank["Interaction"].keys()
+                    }
+                    
+                    for rbt in self.binTypes:
+                        if rbt == "Interaction" or rbt in self.age_bins.keys():
                             continue
-                        if loc_plural in ["global","care_home_visits", "household_visits"]:
-                            continue
+                        loc = list(self.CM_T_rank[rbt].keys())[0]
+                        self.age_bins[rbt] = self.CM_T_rank[rbt][loc]["bins"]
 
-                        if loc not in self.CM_T[bin_type].keys():
-                            NEW = True
 
-                        if bin_type != "Interaction":
-                            if NEW:
-                                self.CM_T[bin_type][loc] = {}
 
-                            for sex in self.contact_sexes:
-                                if NEW:
-                                    self.CM_T[bin_type][loc][sex] = np.array(self.CM_T_rank[bin_type][loc]["sex"][sex]["contacts"])
-                                else:
-                                    self.CM_T[bin_type][loc][sex] += np.array(self.CM_T_rank[bin_type][loc]["sex"][sex]["contacts"])
+        
 
-                        else:
-                            if loc in ["global","care_home_visits", "household_visits"]:
+                else:
+                    for bin_type in self.binTypes:
+                        for loc_plural in self.group_type_names["all"]:
+                            loc = self.pluralise_r(loc_plural)
+                            NEW = False
+                            if loc_plural not in self.group_type_names[rank]:
                                 continue
-                            if NEW:
-                                self.CM_T[bin_type][loc] = np.array(self.CM_T_rank[bin_type][loc]["contacts"])
-                            else:
-                                self.CM_T[bin_type][loc] += np.array(self.CM_T_rank[bin_type][loc]["contacts"])
-            print(rank, "done")
+                            if loc_plural in ["care_home_visits", "household_visits"]:
+                                continue
 
-        Tracker.initalize_CM_Normalisations(self)
-        print(self.CM_T.keys())
+                            if loc not in self.CM_T[bin_type].keys():
+                                NEW = True
+
+                            if bin_type != "Interaction":
+                                if NEW:
+                                    self.CM_T[bin_type][loc] = {}
+
+                                for sex in self.contact_sexes:
+                                    if NEW:
+                                        self.CM_T[bin_type][loc][sex] = np.array(self.CM_T_rank[bin_type][loc]["sex"][sex]["contacts"])
+                                    else:
+                                        self.CM_T[bin_type][loc][sex] += np.array(self.CM_T_rank[bin_type][loc]["sex"][sex]["contacts"])
+
+                            else:
+                                if loc in ["global","care_home_visits", "household_visits"]:
+                                    continue
+                                if NEW:
+                                    self.CM_T[bin_type][loc] = np.array(self.CM_T_rank[bin_type][loc]["contacts"])
+                                else:
+                                    self.CM_T[bin_type][loc] += np.array(self.CM_T_rank[bin_type][loc]["contacts"])
+            print(rank, "1D Done")
+
+        if "All" in self.Tracker_Contact_Type:
+            for rank in range(0, 2):#self.NRanks):
+                with open(self.raw_data_path / "CM_yamls" / f"tracker_All_Total_CM_r{rank}_.yaml") as f:
+                    self.CM_AC_rank = yaml.load(f, Loader=yaml.FullLoader)
+                    #[bin_type][contact_type]["sex"][sex]["contacts"]
+
+                if rank == 0:
+                    #Create copies of the contact_matrices to be filled in.
+                    #Error Matrix
+                    self.CM_AC = { 
+                        bin_type : { 
+                            loc: {
+                                sex : self.CM_AC_rank[bin_type][loc]["sex"][sex]["contacts"]
+                                for sex in self.CM_AC_rank[bin_type][loc]["sex"].keys() 
+                                }
+                            for loc in self.CM_AC_rank[bin_type].keys()
+                            }
+                        for bin_type in self.CM_AC_rank.keys() if bin_type != "Interaction" 
+                    }
+                    self.CM_T["Interaction"] = { 
+                            loc: self.CM_AC_rank["Interaction"][loc]["contacts"] for loc in self.CM_AC_rank["Interaction"].keys()
+                    }
+
+                    for rbt in self.binTypes:
+                        if rbt == "Interaction" or rbt in self.age_bins.keys():
+                            continue
+                        loc = list(self.CM_T_rank[rbt].keys())[0]
+                        self.age_bins[rbt] = self.CM_T_rank[rbt][loc]["bins"]
+
+        
+
+                else:
+                    for bin_type in self.binTypes:
+                        for loc_plural in self.group_type_names["all"]:
+                            loc = self.pluralise_r(loc_plural)
+                            NEW = False
+                            if loc_plural not in self.group_type_names[rank]:
+                                continue
+                            if loc_plural in ["global","care_home_visits", "household_visits"]:
+                                continue
+
+                            if loc not in self.CM_AC[bin_type].keys():
+                                NEW = True
+
+                            if bin_type != "Interaction":
+                                if NEW:
+                                    self.CM_AC[bin_type][loc] = {}
+
+                                for sex in self.contact_sexes:
+                                    if NEW:
+                                        self.CM_AC[bin_type][loc][sex] = np.array(self.CM_AC_rank[bin_type][loc]["sex"][sex]["contacts"])
+                                    else:
+                                        self.CM_AC[bin_type][loc][sex] += np.array(self.CM_AC_rank[bin_type][loc]["sex"][sex]["contacts"])
+
+                            else:
+                                if loc in ["global","care_home_visits", "household_visits"]:
+                                    continue
+                                if NEW:
+                                    self.CM_AC[bin_type][loc] = np.array(self.CM_AC_rank[bin_type][loc]["contacts"])
+                                else:
+                                    self.CM_AC[bin_type][loc] += np.array(self.CM_AC_rank[bin_type][loc]["contacts"])
+            print(rank, "1D Done")
         return 1
 
+    def LoadCumtimes(self):
+        self.location_cum_time = {}
+        for rank in range(0,self.NRanks):
+            filename = self.raw_data_path / "Venue_CumTime" / f"CumTime_r{rank}_.xlsx"
+ 
+            df = pd.read_excel(
+                filename,
+                index_col=0,
+            )    
 
 
-                       
-            
+            for plural_col in self.group_type_names["all"]:
+                if plural_col in ["care_home_visits", "household_visits"]:
+                    continue
+                col = self.pluralise_r(plural_col)
+                if col not in df.columns:
+                    continue
+
+                if col not in self.location_cum_time.keys():
+                    self.location_cum_time[col] = df[col].values[0]
+                else:
+                    self.location_cum_time[col] += df[col].values[0]
+
+        Save_dir = self.merged_data_path / "Venue_CumTime"
+        Save_dir.mkdir(exist_ok=True, parents=True)
+        df = pd.DataFrame.from_dict(self.location_cum_time, orient='index').T
+        with pd.ExcelWriter(Save_dir / f'CumTime.xlsx', mode="w") as writer:  
+            df.to_excel(writer)
+        return 1
+
+    def SaveOutCM(self):
+        folder_name = self.merged_data_path
+        mpi_rankname = ""
+        ################################### Saving 1D Contacts tracker results ##################################
+        if "1D" in self.Tracker_Contact_Type:
+            Tracker_Type = "1D"
+
+            jsonfile = {}
+            for binType in list(self.CM_T.keys()):
+                jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.CM_T, CM_err=self.CM_T_err)  
+            # Save out the CM totals
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
+                folder=folder_name,
+                filename=f"tracker_{Tracker_Type}_Total_CM{mpi_rankname}.yaml", 
+                jsonfile=jsonfile
+            )
+
+            jsonfile = {}
+            for binType in list(self.NCM.keys()):
+                jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM, CM_err=self.NCM_err) 
+            # Save out the Normalised CM 
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
+                folder=folder_name,
+                filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml", 
+                jsonfile=jsonfile
+            )
+
+            jsonfile = {}
+            for binType in list(self.NCM_R.keys()):
+                jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM_R, CM_err=self.NCM_R_err)  
+            # Save out the Normalised CM with Reciprocal contacts 
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
+                folder=folder_name,
+                filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml", 
+                jsonfile=jsonfile
+            )
+
+        ################################### Saving All Contacts tracker results ##################################
+        if "All" in self.Tracker_Contact_Type:
+            Tracker_Type = "All"
+
+            jsonfile = {}
+            for binType in list(self.CM_AC.keys()):
+                jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.CM_AC, CM_err=self.CM_AC_err)  
+            # Save out the CM totals
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
+                folder=folder_name,
+                filename=f"tracker_{Tracker_Type}_Total_CM{mpi_rankname}.yaml", 
+                jsonfile=jsonfile
+            )
+
+
+            jsonfile = {}
+            for binType in list(self.NCM_AC.keys()):
+                jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM_AC, CM_err=self.NCM_AC_err) 
+            # Save out the Normalised CM 
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
+                folder=folder_name,
+                filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml", 
+                jsonfile=jsonfile
+            )
+
+            jsonfile = {}
+            for binType in list(self.NCM_AC_R.keys()):
+                jsonfile[binType] = self.tracker_CMJSON(binType=binType, CM=self.NCM_AC_R, CM_err=self.NCM_AC_R_err)  
+            # Save out the Normalised CM with Reciprocal contacts 
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
+                folder=folder_name,
+                filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml", 
+                jsonfile=jsonfile
+            )
+        return 1
+   
 #####################################################################################################################################################################
                                 ################################### Master Merge ##################################
 #####################################################################################################################################################################
@@ -435,28 +617,53 @@ class MergerClass:
     def pluralise(self, loc):
         return Tracker.pluralise(self, loc)
 
+    def initalize_CM_Normalisations(self):
+        return Tracker.initalize_CM_Normalisations(self)
+
+    def initalize_CM_All_Normalisations(self):
+        return Tracker.initalize_CM_All_Normalisations(self)
+
+    def normalise_1D_CM(self):
+        return Tracker.normalise_1D_CM(self)
+
+    def normalise_All_CM(self):
+        return Tracker.normalise_All_CM(self)
+
+    def PrintOutResults(self):
+        return Tracker.PrintOutResults(self)
+
+    def Save_CM_JSON(self, dir, folder, filename, jsonfile):
+        return Tracker.Save_CM_JSON(self, dir, folder, filename, jsonfile)
+
+    def tracker_CMJSON(self, binType, CM, CM_err):
+        return Tracker.tracker_CMJSON(self, binType, CM, CM_err)
+
+    def contract_matrix(self, CM, bins, method = np.sum):
+        return Tracker.contract_matrix(self, CM, bins, method)
+
     def Merge(self):
         if self.MPI == True:        
-            #self.Travel_Distance()
+            self.Travel_Distance()
 
+            self.LoadCumtimes()
             self.CumPersonCounts()
             self.LoadIMatrices()
             self.LoadContactMatrices()
-
-            
-
             if "1D" in self.Tracker_Contact_Type:
-                Tracker.initalize_CM_Normalisations(self)
-                Tracker.normalise_1D_CM(self)
+                print("1D Norms")
+                self.initalize_CM_Normalisations()
+                self.normalise_1D_CM()
 
             if "All" in self.Tracker_Contact_Type:
-                Tracker.initalize_CM_All_Normalisations(self)
-                Tracker.normalise_All_CM(self)
-            Tracker.PrintOutResults(self)
+                print("All Norms")
+                self.initalize_CM_All_Normalisations()
+                self.normalise_All_CM()
+            self.PrintOutResults()
 
-            #self.VenueUniquePops()
-            #self.VenuePersonCounts()
-            #self.AvContacts()
-            pass
+            self.SaveOutCM()
+
+            self.VenueUniquePops()
+            self.VenuePersonCounts()
+            self.AvContacts()
         else:
             print("Run was on one core")
