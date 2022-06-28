@@ -560,7 +560,7 @@ if args.tracker:
     mpi_comm.Barrier()
     
     if mpi_rank == 0:
-    	print("Combine Tracker results)
+    	print("Combine Tracker results")
 	Merger = MergerClass(record_path=args.save_path)
 	Merger.Merge()
         
