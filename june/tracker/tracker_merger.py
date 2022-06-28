@@ -50,12 +50,12 @@ class MergerClass:
             self.group_type_names[0] = list(Params["NVenues"].keys()) + ["care_home_visits", "household_visits", "global"]
             self.group_type_names["all"] = list(Params["NVenues"].keys())
             self.binTypes = list(Params["binTypes"])
-            self.contact_sexes = ["unisex", "male", "female"] #list(Params["sexes"])
+            self.contact_sexes = list(Params["sexes"])
             
             Params["MPI_rank"] = "Combined"
-            Params["Weekday_Names"] = Tracker.MatrixString(self, matrix=np.array(Params["Weekday_Names"]))
-            Params["Weekend_Names"] = Tracker.MatrixString(self, matrix=np.array(Params["Weekend_Names"]))
-            Params["binTypes"] = Tracker.MatrixString(self=None, matrix=np.array(Params["binTypes"]))
+            Params["Weekday_Names"] = self.MatrixString(matrix=np.array(Params["Weekday_Names"]))
+            Params["Weekend_Names"] = self.MatrixString(matrix=np.array(Params["Weekend_Names"]))
+            Params["binTypes"] = self.MatrixString(matrix=np.array(Params["binTypes"]))
 
         
             for rank in range(1,self.NRanks):
@@ -127,7 +127,7 @@ class MergerClass:
                     if loc in ["care_home_visits", "household_visits"]:
                         continue
                    
-                    loc = Tracker.pluralise_r(self, loc)
+                    loc = self.pluralise_r(loc)
 
                     if loc == "global" and rbt == "Interaction":
                         continue
@@ -156,9 +156,9 @@ class MergerClass:
         for sex in self.contact_sexes:
             location_counters[sex] = {}
             for plural_loc in self.group_type_names["all"]: 
-                loc = Tracker.pluralise_r(self, plural_loc)
-                if loc in ["global","care_home_visits", "household_visits"]:
+                if plural_loc in ["global","care_home_visits", "household_visits"]:
                     continue
+                loc = self.pluralise_r(plural_loc)
                 NVenues_so_far = 0
                 for rank in range(0, self.NRanks):
 
@@ -203,9 +203,10 @@ class MergerClass:
         for sex in self.contact_sexes:
             location_counters[sex] = {}
             for plural_loc in self.group_type_names["all"]: 
-                loc = Tracker.pluralise_r(self, plural_loc)
-                if loc in ["global","care_home_visits", "household_visits"]:
+                if plural_loc in ["global","care_home_visits", "household_visits"]:
                     continue
+                loc = self.pluralise_r(plural_loc)
+                
                 NVenues_so_far = 0
                 for rank in range(0, self.NRanks):
 
@@ -268,7 +269,7 @@ class MergerClass:
 
 
                     
-                    loc = Tracker.pluralise_r(self, loc)
+                    loc = self.pluralise_r(loc)
                     df = pd.read_excel(
                         filename,
                         sheet_name=loc,
@@ -314,7 +315,7 @@ class MergerClass:
                     dat = {df.columns[0] : df.iloc[0]}
                     nbins = len(self.rank_age_profiles[rbt]["all"])
                     for col in self.group_type_names["all"]:
-                        col = Tracker.pluralise_r(self, col) 
+                        col = self.pluralise_r(col) 
                         if "visit" in col:
                             col += "s"
                         dat[col] = np.zeros(nbins)
@@ -338,6 +339,77 @@ class MergerClass:
                 df.to_excel(writer, sheet_name=f'{rbt}')
         return 1
 
+    def LoadIMatrices(self):
+        with open(self.merged_data_path / "CM_yamls" / f"tracker_IM.yaml") as f:
+            self.IM = yaml.load(f, Loader=yaml.FullLoader)
+        return 1
+
+
+
+    def LoadContactMatrices(self):
+        self.Tracker_Contact_Type = "1D"
+
+        for rank in range(0, 2):#self.NRanks):
+            with open(self.raw_data_path / "CM_yamls" / f"tracker_{self.Tracker_Contact_Type}_Total_CM_r{rank}_.yaml") as f:
+                self.CM_T_rank = yaml.load(f, Loader=yaml.FullLoader)
+                #[bin_type][contact_type]["sex"][sex]["contacts"]
+
+            if rank == 0:
+                #Create copies of the contact_matrices to be filled in.
+                #Error Matrix
+                self.CM_T = { 
+                    bin_type : { 
+                        loc: {
+                            sex : self.CM_T_rank[bin_type][loc]["sex"][sex]["contacts"]
+                            for sex in self.CM_T_rank[bin_type][loc]["sex"].keys() 
+                            }
+                        for loc in self.CM_T_rank[bin_type].keys()
+                        }
+                    for bin_type in self.CM_T_rank.keys() if bin_type != "Interaction" 
+                }
+                self.CM_T["Interaction"] = { 
+                        loc: self.CM_T_rank["Interaction"][loc]["contacts"] for loc in self.CM_T_rank["Interaction"].keys()
+                }
+
+      
+
+            else:
+                for bin_type in self.binTypes:
+                    for loc_plural in self.group_type_names["all"]:
+                        loc = self.pluralise_r(loc_plural)
+                        NEW = False
+                        if loc_plural not in self.group_type_names[rank]:
+                            continue
+                        if loc_plural in ["global","care_home_visits", "household_visits"]:
+                            continue
+
+                        if loc not in self.CM_T[bin_type].keys():
+                            NEW = True
+
+                        if bin_type != "Interaction":
+                            if NEW:
+                                self.CM_T[bin_type][loc] = {}
+
+                            for sex in self.contact_sexes:
+                                if NEW:
+                                    self.CM_T[bin_type][loc][sex] = np.array(self.CM_T_rank[bin_type][loc]["sex"][sex]["contacts"])
+                                else:
+                                    self.CM_T[bin_type][loc][sex] += np.array(self.CM_T_rank[bin_type][loc]["sex"][sex]["contacts"])
+
+                        else:
+                            if loc in ["global","care_home_visits", "household_visits"]:
+                                continue
+                            if NEW:
+                                self.CM_T[bin_type][loc] = np.array(self.CM_T_rank[bin_type][loc]["contacts"])
+                            else:
+                                self.CM_T[bin_type][loc] += np.array(self.CM_T_rank[bin_type][loc]["contacts"])
+            print(rank, "done")
+
+        Tracker.initalize_CM_Normalisations(self)
+        print(self.CM_T.keys())
+        return 1
+
+
 
                        
             
@@ -345,12 +417,46 @@ class MergerClass:
                                 ################################### Master Merge ##################################
 #####################################################################################################################################################################
  
+    def CM_Norm(self, cm, pop_tots, contact_type="global", Reciprocal=True):
+        return Tracker.CM_Norm(self, cm, pop_tots, contact_type, Reciprocal)
+
+    def Get_characteristic_time(self,location):
+        return Tracker.Get_characteristic_time(self,location)
+
+    def PolicyText(self, Type, contacts, contacts_err, proportional_physical, characteristic_time):
+        return Tracker.PolicyText(self, Type, contacts, contacts_err, proportional_physical, characteristic_time)
+
+    def MatrixString(self, matrix, dtypeString="float"):
+        return Tracker.MatrixString(self, matrix, dtypeString)
+
+    def pluralise_r(self, loc):
+        return Tracker.pluralise_r(self, loc)
+
+    def pluralise(self, loc):
+        return Tracker.pluralise(self, loc)
+
     def Merge(self):
-        if self.MPI == True:
-            self.Travel_Distance()
+        if self.MPI == True:        
+            #self.Travel_Distance()
+
             self.CumPersonCounts()
-            self.VenueUniquePops()
+            self.LoadIMatrices()
+            self.LoadContactMatrices()
+
+            
+
+            if "1D" in self.Tracker_Contact_Type:
+                Tracker.initalize_CM_Normalisations(self)
+                Tracker.normalise_1D_CM(self)
+
+            if "All" in self.Tracker_Contact_Type:
+                Tracker.initalize_CM_All_Normalisations(self)
+                Tracker.normalise_All_CM(self)
+            Tracker.PrintOutResults(self)
+
+            #self.VenueUniquePops()
             #self.VenuePersonCounts()
             #self.AvContacts()
+            pass
         else:
             print("Run was on one core")

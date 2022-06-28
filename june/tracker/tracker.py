@@ -2069,6 +2069,14 @@ class Tracker:
                 df = self.average_contacts[rbt]
                 df.to_excel(writer, sheet_name=f'{rbt}')
 
+        #Save out cumulative time 
+        CT_dir = self.record_path / "Tracker" / folder_name / "Venue_CumTime"
+        CT_dir.mkdir(exist_ok=True, parents=True)
+        df = pd.DataFrame.from_dict(self.location_cum_time, orient='index').T
+        with pd.ExcelWriter(CT_dir / f'CumTime{mpi_rankname}.xlsx', mode="w") as writer:  
+            df.to_excel(writer)
+        
+
         return 1
 
     def Save_CM_JSON(self, dir, folder, filename, jsonfile):
@@ -2117,6 +2125,7 @@ class Tracker:
         jsonfile["NPeople"] = len(self.world.people)
         jsonfile["binTypes"] = self.MatrixString(np.array(list(self.CM_T.keys())))
         jsonfile["sexes"] = self.MatrixString(np.array(self.contact_sexes))
+        jsonfile["trackerTypes"] = self.MatrixString(np.array(self.Tracker_Contact_Type))
         return jsonfile
 
     def tracker_IMJSON(self):
