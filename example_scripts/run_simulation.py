@@ -554,15 +554,15 @@ if args.tracker:
     	print("Tracker stuff now")
     	
     simulator.tracker.contract_matrices("AC", np.array([0,18,100]))
-    simulator.tracker.contract_matrices("Paper",[0,5,10,13,15,18,20,22,25,30,35,40,45,50,55,60,65,70,75,100])                                  
+    simulator.tracker.contract_matrices("Paper",[0,5,10,13,15,18,20,22,25,30,35,40,45,50,55,60,65,70,75,100])
     simulator.tracker.post_process_simulation(save=True)
     
     mpi_comm.Barrier()
     
     if mpi_rank == 0:
-    	print("Combine Tracker results")
-	Merger = MergerClass(record_path=args.save_path)
-	Merger.Merge()
+        print("Combine Tracker results")
+        Merger = MergerClass(record_path=args.save_path)
+        Merger.Merge()
         
         #Make Plots
         Plots = PlotClass(
@@ -571,8 +571,8 @@ if args.tracker:
         )
 
         Plots.make_plots(
-      	    plot_BBC=True,
-    	    plot_INPUTOUTPUT=True,
+            plot_BBC=True,
+            plot_INPUTOUTPUT=True,
             plot_AvContactsLocation=True, 
             plot_dTLocationPopulation=True, 
             plot_InteractionMatrices=True, 
@@ -581,14 +581,13 @@ if args.tracker:
             plot_AgeBinning=True, 
             plot_Distances=True 
         )
-    
 #       Plots = PlotClass(
 #           record_path=args.save_path / "Tracker",
 #           Tracker_Contact_Type = "All"
 
 #       )
 #       Plots.make_plots(
-#     	    plot_INPUTOUTPUT=False,
+#           plot_INPUTOUTPUT=False,
 #           plot_AvContactsLocation=False, 
 #           plot_dTLocationPopulation=False, 
 #           plot_InteractionMatrices=True, 
