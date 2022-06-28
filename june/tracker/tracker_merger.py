@@ -668,33 +668,33 @@ class MergerClass:
     def Merge(self):
         logger.info(f"Rank {mpi_rank} -- Begin Merging from {self.NRanks} ranks")
         if self.MPI == True:        
-            # self.Travel_Distance()
-            # logger.info(f"Rank {mpi_rank} -- Distance sheet done")   
+            self.Travel_Distance()
+            logger.info(f"Rank {mpi_rank} -- Distance sheet done")   
 
-            # self.LoadCumtimes()
-            # logger.info(f"Rank {mpi_rank} -- Cumulative time done")   
-            # self.CumPersonCounts()
-            # logger.info(f"Rank {mpi_rank} -- Person counts done")  
-            # self.LoadIMatrices()
-            # self.LoadContactMatrices()
-            # logger.info(f"Rank {mpi_rank} -- Load IM and CMs done")  
-            # if "1D" in self.Tracker_Contact_Type:
-            #     print("1D Norms")
-            #     self.initalize_CM_Normalisations()
-            #     self.normalise_1D_CM()
+            self.LoadCumtimes()
+            logger.info(f"Rank {mpi_rank} -- Cumulative time done")   
+            self.CumPersonCounts()
+            logger.info(f"Rank {mpi_rank} -- Person counts done")  
+            self.LoadIMatrices()
+            self.LoadContactMatrices()
+            logger.info(f"Rank {mpi_rank} -- Load IM and CMs done")  
+            if "1D" in self.Tracker_Contact_Type:
+                print("1D Norms")
+                self.initalize_CM_Normalisations()
+                self.normalise_1D_CM()
 
-            # if "All" in self.Tracker_Contact_Type:
-            #     print("All Norms")
-            #     self.initalize_CM_All_Normalisations()
-            #     self.normalise_All_CM()
-            # logger.info(f"Rank {mpi_rank} -- Normalised CMs done")  
-            # self.PrintOutResults()
+            if "All" in self.Tracker_Contact_Type:
+                print("All Norms")
+                self.initalize_CM_All_Normalisations()
+                self.normalise_All_CM()
+            logger.info(f"Rank {mpi_rank} -- Normalised CMs done")  
+            self.PrintOutResults()
 
-            # self.SaveOutCM()
-            # logger.info(f"Rank {mpi_rank} -- Saved CM done")  
+            self.SaveOutCM()
+            logger.info(f"Rank {mpi_rank} -- Saved CM done")  
 
-            # self.VenueUniquePops()
-            # logger.info(f"Rank {mpi_rank} -- Unique Venue pops done")  
+            self.VenueUniquePops()
+            logger.info(f"Rank {mpi_rank} -- Unique Venue pops done")  
             self.VenuePersonCounts()
             logger.info(f"Rank {mpi_rank} -- Total Venue pops done")  
             self.AvContacts()
