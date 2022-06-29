@@ -493,7 +493,7 @@ def generate_simulator():
         else:
             domainVenues["inter_city_transports"] = {"N": 0, "bins": "NaN"}
             
-    print(mpi_rank, domainVenues)
+    #print(mpi_rank, domainVenues)
 
     # ==================================================================================#
 

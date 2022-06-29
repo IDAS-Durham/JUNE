@@ -1047,12 +1047,13 @@ class PlotClass:
             if Nlocals > 100:
                 Nlocals = 100
 
-
-            if np.sum(self.location_counters["loc"][locations]["unisex"][Cols].iloc[:,i].values) == 0:
+            print(locations, Cols, i)
+            #Error?
+            if np.sum(self.location_counters["loc"][locations]["unisex"][Cols][i].values) == 0:
                 continue
 
 
-            ys = self.location_counters["loc"][locations]["unisex"][Cols].iloc[:max_index,i]
+            ys = self.location_counters["loc"][locations]["unisex"][Cols][i].iloc[:max_index]
             if np.nanmax(ys) > ymax:
                 ymax = np.nanmax(ys)
 
@@ -1368,6 +1369,7 @@ class PlotClass:
         ax2.set_xlabel("Age")
         ax2.set_ylabel("Normed Population size")
         ax2.set_xlim([Bins[0], Bins[-1]])
+        ax2.set_yscale("log")
         plt.xticks(rotation=90)
         #f.suptitle(f"Age profile of {contact_type}")
         plt.legend()

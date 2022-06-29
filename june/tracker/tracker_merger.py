@@ -172,6 +172,7 @@ class MergerClass:
         return 1
 
     def VenueUniquePops(self):
+        np.random.seed(1234)
         location_counters = {}
         for sex in self.contact_sexes:
             location_counters[sex] = {}
@@ -219,7 +220,8 @@ class MergerClass:
                 for local in location_counters[sex].keys(): 
                     df = pd.DataFrame(location_counters[sex][local])
                     df.to_excel(writer, sheet_name=f'{local}')
-                
+
+        np.random.seed(1234)        
         location_counters = {}
         for sex in self.contact_sexes:
             location_counters[sex] = {}
