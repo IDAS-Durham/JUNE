@@ -67,7 +67,7 @@ class SocialVenues(Supergroup):
         cls,
         coordinates: List[np.array],
         super_areas: Optional[Areas],
-        max_distance_to_area=1000,
+        max_distance_to_area=10,
         **kwargs,
     ):
         if len(coordinates) == 0:
@@ -130,7 +130,7 @@ class SocialVenues(Supergroup):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
 
-        print(cls.venue_class.spec, cls.default_gym_coordinates_filename)
+        print(cls.venue_class.spec, coordinates_filename)
         return cls.for_super_areas(geography.super_areas, coordinates_filename)
 
     @classmethod

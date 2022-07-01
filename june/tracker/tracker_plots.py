@@ -38,6 +38,9 @@ except:
         print("Using default matplotlib style")
     pass
 
+cmap_A = 'RdYlBu_r'
+cmap_B = 'seismic'
+
 
 #####################################################################################################################################################################
                             ################################### Plotting functions ##################################
@@ -336,7 +339,7 @@ class PlotClass:
                         color="white" if abs(cm[i, j] - 1) > thresh else "black",size=size)
         return ax
 
-    def PlotCM(self, cm, cm_err, labels, ax, thresh=1e10, **plt_kwargs):
+    def PlotCM(self, cm, cm_err, labels, ax, thresh=1e10, thumb=False, **plt_kwargs):
         """
         Function to imshow plot the CM.
 
@@ -369,22 +372,27 @@ class PlotClass:
             pass
         else:
             cm_err = cm_err.T
-        
-        im = ax.imshow(cm, **plt_kwargs)
+
+        im = ax.matshow(cm, **plt_kwargs)
+        ax.xaxis.tick_bottom()
         if labels is not None:
             if len(labels) < 25:
                 ax.set_xticks(np.arange(len(cm)))
                 ax.set_xticklabels(labels,rotation=45)
                 ax.set_yticks(np.arange(len(cm)))
                 ax.set_yticklabels(labels)
-            else:
-                pass
+
         # Loop over data dimensions and create text annotations.
         if cm.shape[0]*cm.shape[1] < 26:
             self.AnnotateCM(cm, cm_err, ax, thresh=thresh)
-
-        ax.set_xlabel("age group")
-        ax.set_ylabel("contact age group")
+        if thumb == False:
+            ax.set_xlabel("age group")
+            ax.set_ylabel("contact age group")
+        else:
+            ax.axes.xaxis.set_visible(False)
+            ax.axes.yaxis.set_visible(False)
+            ax.set_xlabel("")
+            ax.set_ylabel("")
         return im
 
     def CMPlots_GetLabels(self, bins):
@@ -467,7 +475,7 @@ class PlotClass:
             labels=labels[:index]
         return cm, cm_err, labels
 
-    def IMPlots_GetLabels(self, contact_type, cm):
+    def IMPlots_GetLabels(self, contact_type):
         """
         Create list of labels for the bins in the input IM plots. More nuisanced as subgroups not always age bins.
 
@@ -475,8 +483,7 @@ class PlotClass:
         ----------
             contact_type:
                 Location of contacts
-            cm:
-                np.array contact matrix
+
 
         Returns
         -------
@@ -635,7 +642,7 @@ class PlotClass:
         """
   
         IM, IM_err = self.IMPlots_GetIM(contact_type)
-        labels_IM = self.IMPlots_GetLabels(contact_type, IM)
+        labels_IM = self.IMPlots_GetLabels(contact_type)
         IM, IM_err, labels_IM = self.IMPlots_UsefulCM(contact_type, IM, cm_err=IM_err, labels=labels_IM)
 
         if len(np.nonzero(IM)[0]) != 0 and len(np.nonzero(IM)[1]) != 0:
@@ -674,17 +681,25 @@ class PlotClass:
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
+        if self.SameCMAP == False:
+            norm1 = colors.Normalize(vmin=0,vmax=IM_Max)
+            norm2 = colors.Normalize(vmin=0,vmax=cm_Max)
+        else:
+            norm1 = self.Get_SAMECMAP_Norm(IM.shape[0])
+            norm2 = self.Get_SAMECMAP_Norm(cm.shape[0])
 
         if plot_BBC_Sheet == False:
             plt.rcParams["figure.figsize"] = (15,5)
             f, (ax1,ax2) = plt.subplots(1,2)
             f.patch.set_facecolor('white')
 
-            im1 = self.PlotCM(IM, IM_err, labels_IM, ax1, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=IM_Max)
-            im2 = self.PlotCM(cm, cm_err, labels, ax2, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=cm_Max)
+            
+            
+            im1 = self.PlotCM(IM+1e-16, IM_err, labels_IM, ax1, origin='lower',cmap=cmap_A,norm=norm1)
+            im2 = self.PlotCM(cm+1e-16, cm_err, labels, ax2, origin='lower',cmap=cmap_A,norm=norm2)
 
-            f.colorbar(im1, ax=ax1)
-            f.colorbar(im2, ax=ax2)
+            f.colorbar(im1, ax=ax1, extend="both")
+            f.colorbar(im2, ax=ax2, extend="both")
 
             ax1.set_title(f"Interaction Matrix (IM)")
             ax2.set_title(f"Output Contact Matrix ({which})")
@@ -705,13 +720,14 @@ class PlotClass:
             f, (ax1,ax2, ax3) = plt.subplots(1,3)
             f.patch.set_facecolor('white')
 
-            im1 = self.PlotCM(IM, IM_err, labels_IM, ax1, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=IM_Max)
-            im2 = self.PlotCM(cm, cm_err, labels, ax2, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=cm_Max)
-            im3 = self.PlotCM(bbc_cm, None, bbc_labels, ax3, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=cm_Max)
 
-            f.colorbar(im1, ax=ax1)
-            f.colorbar(im2, ax=ax2)
-            f.colorbar(im3, ax=ax3)
+            im1 = self.PlotCM(IM+1e-16, IM_err, labels_IM, ax1, origin='lower',cmap=cmap_A,norm=norm1)
+            im2 = self.PlotCM(cm+1e-16, cm_err, labels, ax2, origin='lower',cmap=cmap_A,norm=norm2)
+            im3 = self.PlotCM(bbc_cm, None, bbc_labels, ax3, origin='lower',cmap=cmap_A,norm=norm2)
+
+            f.colorbar(im1, ax=ax1, extend="both")
+            f.colorbar(im2, ax=ax2, extend="both")
+            f.colorbar(im3, ax=ax3, extend="both")
 
             ax1.set_title(f"Interaction Matrix (IM)")
             ax2.set_title(f"Output Contact Matrix ({which})")
@@ -736,7 +752,7 @@ class PlotClass:
                 matplotlib axes object
         """
         IM, IM_err = self.IMPlots_GetIM(contact_type)
-        labels_IM = self.IMPlots_GetLabels(contact_type, IM)
+        labels_IM = self.IMPlots_GetLabels(contact_type)
         IM, IM_err, labels_IM = self.IMPlots_UsefulCM(contact_type, IM, cm_err=IM_err, labels=labels_IM)
 
         if len(np.nonzero(IM)[0]) != 0 and len(np.nonzero(IM)[1]) != 0:
@@ -782,13 +798,22 @@ class PlotClass:
 
         vMax = max(cm_Max, IM_Max)
         vMin = 1e-2
-        norm=colors.Normalize(vmin=vMin, vmax=vMax)
+        
         plt.rcParams["figure.figsize"] = (15,5)
         f, (ax1,ax2, ax3) = plt.subplots(1,3)
         f.patch.set_facecolor('white')
 
-        im1 = self.PlotCM(IM, IM_err, labels_IM, ax1, origin='lower',cmap='RdYlBu_r', norm=norm)
-        im2 = self.PlotCM(cm, cm_err, labels_CM, ax2, origin='lower',cmap='RdYlBu_r',norm=norm)
+
+        if self.SameCMAP == False:
+            norm1=colors.Normalize(vmin=vMin, vmax=vMax)
+            norm2=colors.Normalize(vmin=vMin, vmax=vMax)
+        else:
+            
+            norm1 = self.Get_SAMECMAP_Norm(IM.shape[0])
+            norm2 = self.Get_SAMECMAP_Norm(cm.shape[0])
+
+        im1 = self.PlotCM(IM+1e-16, IM_err, labels_IM, ax1, origin='lower',cmap=cmap_A, norm=norm1)
+        im2 = self.PlotCM(cm+1e-16, cm_err, labels_CM, ax2, origin='lower',cmap=cmap_A,norm=norm2)
 
         ratio = cm/IM
         ratio = np.nan_to_num(ratio)
@@ -804,10 +829,13 @@ class PlotClass:
         if IM_err is None:
             IM_err = np.zeros_like(IM)
         ratio_errors = ratio * np.sqrt((cm_err/cm)**2+(IM_err/IM)**2)
-        im3 = self.PlotCM(ratio, ratio_errors, labels_CM, ax3, thresh=diff_max/3, origin='lower',cmap='seismic',vmin=1-diff_max,vmax=1+diff_max)
-        f.colorbar(im1, ax=ax1)
-        f.colorbar(im2, ax=ax2)
-        f.colorbar(im3, ax=ax3)
+
+        norm=colors.Normalize(vmin=1-diff_max,vmax=1+diff_max)
+        norm=colors.Normalize(vmin=1-1,vmax=1+1)
+        im3 = self.PlotCM(ratio, ratio_errors, labels_CM, ax3, thresh=diff_max/3, origin='lower',cmap=cmap_B, norm=norm)
+        f.colorbar(im1, ax=ax1, extend="both")
+        f.colorbar(im2, ax=ax2, extend="both")
+        f.colorbar(im3, ax=ax3, extend="both")
         ax1.set_title("Interaction Matrix (IM)")
         ax2.set_title("Normalised Contact Matrix (NCM)")
         ax3.set_title("NCM / IM")
@@ -836,9 +864,12 @@ class PlotClass:
             (ax1,ax2):
                 matplotlib axes objects (Linear and Log)
         """
-        labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
         cm, cm_err = self.CMPlots_GetCM(bin_type, contact_type, sex=sex, which=which)
-        cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels)
+        if bin_type == "Interaction":
+            labels = self.IMPlots_GetLabels(contact_type)
+        else:
+            labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
+            cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels)
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
             cm_Min = np.nanmin(cm[np.nonzero(cm)])
@@ -856,21 +887,98 @@ class PlotClass:
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
+        if self.SameCMAP == False:
+            normlin= colors.Normalize(vmin=0,vmax=cm_Max)
+            normlog = colors.LogNorm(vmin=cm_Min, vmax=cm_Max)
+        else:
+            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], override="Lin")
+            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="Log")
+
+
         plt.rcParams["figure.figsize"] = (15,5)
         f, (ax1,ax2) = plt.subplots(1,2)
         f.patch.set_facecolor('white')
 
-        im1 = self.PlotCM(cm, cm_err, labels, ax1, origin='lower',cmap='RdYlBu_r',vmin=0,vmax=cm_Max)
-        im2 = self.PlotCM(cm+1e-16, cm_err, labels, ax2, origin='lower',cmap='RdYlBu_r', norm=colors.LogNorm(vmin=cm_Min, vmax=cm_Max))
+        
+        im1 = self.PlotCM(cm+1e-16, cm_err, labels, ax1, origin='lower',cmap=cmap_A,norm=normlin)
+        im2 = self.PlotCM(cm+1e-16, cm_err, labels, ax2, origin='lower',cmap=cmap_A, norm=normlog)
 
-        f.colorbar(im1, ax=ax1)
-        f.colorbar(im2, ax=ax2, extend="min")
+        f.colorbar(im1, ax=ax1, extend="both")
+        f.colorbar(im2, ax=ax2, extend="both")
 
         ax1.set_title("Linear Scale")
         ax2.set_title("Log Scale")
         #f.suptitle(f"{bin_type} binned contacts in {contact_type} for {sex}")
         plt.tight_layout()
         return (ax1,ax2)
+
+    def plot_contact_matrix_thumb(self, log, bin_type, contact_type, sex="unisex", which="NCM"):
+        """
+        Function to plot contact matrix for bin_type, contact_type and sex.
+
+        Parameters
+        ----------
+            log:
+                bool, shold be log plot?
+            binType:
+                Name of bin type syoa, AC etc
+            contact_type:
+                Location of contacts
+            sex:
+                Sex contact matrix
+            which:
+                str, which matrix type to collect "NCM", "NCM_R", "CM_T"
+            
+        Returns
+        -------
+            (ax1,ax2):
+                matplotlib axes objects (Linear and Log)
+        """
+        
+        cm, cm_err = self.CMPlots_GetCM(bin_type, contact_type, sex=sex, which=which)
+        if bin_type == "Interaction":
+            labels = self.IMPlots_GetLabels(contact_type)
+        else:
+            labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
+            cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels)
+
+        if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
+            cm_Min = np.nanmin(cm[np.nonzero(cm)])
+        else:
+            cm_Min = 1e-1
+        if np.isfinite(cm).sum() != 0:
+            cm_Max = cm[np.isfinite(cm)].max()
+        else:
+            cm_Max = 1
+
+        if np.isnan(cm_Min):
+            cm_Min = 1e-1
+        if np.isnan(cm_Max) or cm_Max == 0:
+            cm_Max = 1
+
+        cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
+
+        plt.rcParams["figure.figsize"] = (5,5)
+        f, ax1 = plt.subplots(1,1)
+        f.patch.set_facecolor('white')
+
+        if self.SameCMAP == False:
+            normlin = colors.Normalize(vmin=0,vmax=cm_Max)
+            normlog = colors.LogNorm(vmin=cm_Min, vmax=cm_Max)
+        else:
+            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], override="Lin")
+            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="Log")
+            
+        if log == False:
+            im1 = self.PlotCM(cm+1e-16, cm_err, None, ax1, origin='lower',cmap=cmap_A,norm=normlin, thumb=True)
+            f.colorbar(im1, ax=ax1, extend="both")
+        else:
+            im1 = self.PlotCM(cm+1e-16, cm_err, None, ax1, origin='lower',cmap=cmap_A, norm=normlog, thumb=True)
+            f.colorbar(im1, ax=ax1, extend="both")
+
+        #cax1 = f.add_axes([ax1.get_position().x1+0.01,ax1.get_position().y0,0.02,ax1.get_position().height])
+        plt.tight_layout()
+        return (ax1)
 
     def plot_comparesexes_contact_matrix(self, bin_type, contact_type, which="NCM"):
         """
@@ -906,12 +1014,20 @@ class PlotClass:
         cm_Min = -1e-1
         cm_Max = 1e-1
 
-        cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
-        im1 = self.PlotCM(cm, cm_err, labels, ax1, origin='lower',cmap='RdYlBu_r',vmin=cm_Min,vmax=cm_Max)
-        im2 = self.PlotCM(cm+1e-16, cm_err, labels, ax2, origin='lower',cmap='RdYlBu_r', norm=colors.SymLogNorm(linthresh = 1, vmin=cm_Min, vmax=cm_Max))
+        if self.SameCMAP == False:
+            normlin=colors.Normalize(vmin=cm_Max,vmax=cm_Max)
+            normlog = colors.SymLogNorm(linthresh = 1, vmin=cm_Min, vmax=cm_Max)
+        else:
+            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], override="SymLin")
+            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="SymLog")
 
-        f.colorbar(im1, ax=ax1, extend="min", label="$M - F$")
-        f.colorbar(im2, ax=ax2, extend="min", label="$M - F$")
+        cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
+        
+        im1 = self.PlotCM(cm+1e-16, cm_err, labels, ax1, origin='lower',cmap=cmap_A,norm=normlin)
+        im2 = self.PlotCM(cm+1e-16, cm_err, labels, ax2, origin='lower',cmap=cmap_B, norm=normlog)
+
+        f.colorbar(im1, ax=ax1, extend="both", label="$M - F$")
+        f.colorbar(im2, ax=ax2, extend="both", label="$M - F$")
 
         ax1.set_title("Linear Scale")
         ax2.set_title("Log Scale")
@@ -1047,8 +1163,6 @@ class PlotClass:
             if Nlocals > 100:
                 Nlocals = 100
 
-            print(locations, Cols, i)
-            #Error?
             if np.sum(self.location_counters["loc"][locations]["unisex"][Cols][i].values) == 0:
                 continue
 
@@ -1358,12 +1472,14 @@ class PlotClass:
             vmax= 1e-1
 
         vmin = 10**(-1*np.log10(vmax))
-
         ax1_ins = ax1.inset_axes([0.8,1.0,0.2,0.2])
-        im_P = self.PlotCM(ws_P, None, Labels, ax1, origin='lower',cmap='seismic',norm=colors.LogNorm(vmin=vmin, vmax=vmax))
-        im_G = self.PlotCM(ws_G, None, Labels, ax1_ins, origin='lower',cmap='seismic',norm=colors.LogNorm(vmin=vmin, vmax=vmax))
+
+
+        norm = colors.LogNorm(vmin=vmin, vmax=vmax)
+        im_P = self.PlotCM(ws_P, None, Labels, ax1, origin='lower',cmap=cmap_B,norm=norm)
+        im_G = self.PlotCM(ws_G, None, Labels, ax1_ins, origin='lower',cmap=cmap_B,norm=norm)
             
-        f.colorbar(im_P, ax=ax1, label=r"$\dfrac{Age_{y}}{Age_{x}}$")
+        f.colorbar(im_P, ax=ax1, label=r"$\dfrac{Age_{y}}{Age_{x}}$", extend="both")
         plt.bar(x=Bincenters, height=Height_G/sum(Height_G), width=Bindiffs, tick_label=Labels, alpha=0.5, color="blue", label="Ground truth")
         plt.bar(x=Bincenters, height=Height_P/sum(Height_P), width=Bindiffs, tick_label=Labels, alpha=0.5, color="red", label=contact_type+" tracker")
         ax2.set_xlabel("Age")
@@ -1408,10 +1524,47 @@ class PlotClass:
         ax.set_xlim([0, None])
         return ax
 
+    def Get_SAMECMAP_Norm(self, dim, override=None):
+        SAMElinvmin = {"small_dim" : 0, "large_dim" : 0}
+        SAMElogvmin = {"small_dim" : 1e-1, "large_dim" : 1e-1}
+        
+        SAMElinvmax = {"small_dim" : 2.5e1, "large_dim" : 3e0}
+        SAMElogvmax = {"small_dim" : 2.5e1, "large_dim" : 3e0}
+
+
+        SAMEsymlogvmax = {"small_dim" : 3e0, "large_dim" : 3e0}
+        SAMEsymlinvmax = {"small_dim" : 1e0, "large_dim" : .5e0}
+
+
+        if dim < 5:
+            kind = "small_dim"
+        else:
+            kind = "large_dim"
+
+        if override is None:
+            if self.SameCMAP == "Log":
+                return colors.LogNorm(vmin=SAMElogvmin[kind], vmax=SAMElogvmax[kind])
+            elif self.SameCMAP == "Lin":
+                return colors.Normalize(vmin=SAMElinvmin[kind], vmax=SAMElinvmax[kind])
+        elif override == "SymLog":
+            return colors.SymLogNorm(linthresh = 1e-1, vmin=-SAMEsymlogvmax[kind], vmax=SAMEsymlogvmax[kind])
+        elif override == "SymLin":
+            return colors.Normalize(vmin=-SAMEsymlinvmax[kind], vmax=SAMEsymlinvmax[kind])
+        elif override == "Log":
+                return colors.LogNorm(vmin=SAMElogvmin[kind], vmax=SAMElogvmax[kind])
+        elif override == "Lin":
+            return colors.Normalize(vmin=SAMElinvmin[kind], vmax=SAMElinvmax[kind])
+        return None
+        
+        
+
 
     def make_plots(self, 
-        plot_INPUTOUTPUT=True,
         plot_BBC = False,
+        plot_thumbprints = False,
+        SameCMAP=False,
+
+        plot_INPUTOUTPUT=True,
         plot_AvContactsLocation=True, 
         plot_dTLocationPopulation=True, 
         plot_InteractionMatrices=True,
@@ -1439,6 +1592,19 @@ class PlotClass:
             plot_Distances:
                 bool, To plot the distance traveled from shelter to locations
             
+
+                plot_BBC = True,
+    plot_thumbprints = False,
+    SameCMAP=None,
+    
+    plot_INPUTOUTPUT=False,
+    plot_AvContactsLocation=False, 
+    plot_dTLocationPopulation=False, 
+    plot_InteractionMatrices=False, 
+    plot_ContactMatrices=False,
+    plot_CompareSexMatrices=False,
+    plot_AgeBinning=False, 
+    plot_Distances=False 
         Returns
         -------
             None
@@ -1447,15 +1613,18 @@ class PlotClass:
         logger.info(f"Rank {mpi_rank} -- Begin plotting")
         if self.group_type_names == []:
             return 1
-
+    
+        self.SameCMAP = SameCMAP
 
         relevant_bin_types = self.CM_T.keys()
         relevant_bin_types_short = ["syoa", "AC"]
         relevant_contact_types = self.CM_T["syoa"].keys()
+        IM_contact_types = self.CM_T["Interaction"].keys()
         CMTypes = ["NCM", "NCM_R", "CM_T"]
+        CMTypes = ["CM_T"]
 
         if plot_INPUTOUTPUT:
-            plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices_INOUT"
+            plot_dir_1 = self.record_path / "Graphs" / f"Contact_Matrices_INOUT_{self.Tracker_Contact_Type}"
             plot_dir_1.mkdir(exist_ok=True, parents=True)
             if "Paper" in relevant_bin_types:
                 rbt = "Paper"
@@ -1477,7 +1646,8 @@ class PlotClass:
 
 
                 self.plot_contact_matrix_INOUT(
-                    bin_type=rbt, contact_type=rct, sex="unisex", which="NCM_R", plot_BBC_Sheet=plot_BBC_Sheet,
+                    bin_type=rbt, contact_type=rct, sex="unisex", which="NCM_R",
+                    plot_BBC_Sheet=plot_BBC_Sheet,
                 )
                 plt.savefig(plot_dir_1 / f"{rct}.pdf", dpi=150, bbox_inches='tight')
                 plt.close() 
@@ -1527,22 +1697,55 @@ class PlotClass:
                 plot_dir_1.mkdir(exist_ok=True, parents=True)
 
                 for rbt in relevant_bin_types:
-                    if rbt == "Interaction":
-                        continue
+                    
 
                     plot_dir_2 = plot_dir_1 / f"{rbt}"
                     plot_dir_2.mkdir(exist_ok=True, parents=True)
 
-                    for sex in self.contact_sexes:
-                        plot_dir_3 = plot_dir_2 / f"{sex}"
-                        plot_dir_3.mkdir(exist_ok=True, parents=True)
+                    if rbt != "Interaction":
+                        for sex in self.contact_sexes:
+                            plot_dir_3 = plot_dir_2 / f"{sex}"
+                            plot_dir_3.mkdir(exist_ok=True, parents=True)
 
-                        for rct in relevant_contact_types:
+                            for rct in relevant_contact_types:
+                                self.plot_contact_matrix(
+                                    bin_type=rbt, contact_type=rct, sex=sex, which=CMType
+                                )
+                                plt.savefig(plot_dir_3 / f"{rct}.pdf", dpi=150, bbox_inches='tight')
+                                plt.close()
+
+                                if plot_thumbprints:
+                                    self.plot_contact_matrix_thumb(
+                                        log=False, bin_type=rbt, contact_type=rct, sex=sex, which=CMType
+                                    )
+                                    plt.savefig(plot_dir_3 / f"{rct}_thumbnail.pdf", dpi=100, bbox_inches='tight')
+                                    plt.close()
+
+                                    self.plot_contact_matrix_thumb(
+                                        log=True, bin_type=rbt, contact_type=rct, sex=sex, which=CMType
+                                    )
+                                    plt.savefig(plot_dir_3 / f"{rct}_thumbnail_log.pdf", dpi=100, bbox_inches='tight')
+                                    plt.close()
+                    else:
+                        for rct in IM_contact_types:
                             self.plot_contact_matrix(
                                 bin_type=rbt, contact_type=rct, sex=sex, which=CMType
                             )
-                            plt.savefig(plot_dir_3 / f"{rct}.pdf", dpi=150, bbox_inches='tight')
+                            plt.savefig(plot_dir_2 / f"{rct}.pdf", dpi=150, bbox_inches='tight')
                             plt.close()
+
+                            if plot_thumbprints:
+                                self.plot_contact_matrix_thumb(
+                                    log=False, bin_type=rbt, contact_type=rct, sex=sex, which=CMType
+                                )
+                                plt.savefig(plot_dir_2 / f"{rct}_thumbnail.pdf", dpi=100, bbox_inches='tight')
+                                plt.close()
+
+                                self.plot_contact_matrix_thumb(
+                                    log=True, bin_type=rbt, contact_type=rct, sex=sex, which=CMType
+                                )
+                                plt.savefig(plot_dir_2 / f"{rct}_thumbnail_log.pdf", dpi=100, bbox_inches='tight')
+                                plt.close()
         logger.info(f"Rank {mpi_rank} -- CM plots done")
 
 

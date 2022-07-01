@@ -564,14 +564,11 @@ if args.tracker:
         Merger = MergerClass(record_path=args.save_path)
         Merger.Merge()
         
-        #Make Plots
-        Plots = PlotClass(
-            record_path=args.save_path / "Tracker",
-            Tracker_Contact_Type = "1D"
-        )
-
         Plots.make_plots(
-            plot_BBC=True,
+            plot_BBC = True,
+            plot_thumbprints = True,
+            SameCMAP="Log",
+    
             plot_INPUTOUTPUT=True,
             plot_AvContactsLocation=True, 
             plot_dTLocationPopulation=True, 
@@ -581,18 +578,22 @@ if args.tracker:
             plot_AgeBinning=True, 
             plot_Distances=True 
         )
-#       Plots = PlotClass(
-#           record_path=args.save_path / "Tracker",
-#           Tracker_Contact_Type = "All"
 
-#       )
-#       Plots.make_plots(
-#           plot_INPUTOUTPUT=False,
-#           plot_AvContactsLocation=False, 
-#           plot_dTLocationPopulation=False, 
-#           plot_InteractionMatrices=True, 
-#           plot_ContactMatrices=True,
-#           plot_CompareSexMatrices=True,
-#           plot_AgeBinning=False, 
-#           plot_Distances=False 
-#       )
+        #Plots = PlotClass(
+        #    record_path=args.save_path / "Tracker",
+        #    Tracker_Contact_Type = "All"
+        #)
+        #Plots.make_plots(
+        #    plot_BBC = True,
+        #    plot_thumbprints = True,
+        #    SameCMAP="Log",
+    
+        #    plot_INPUTOUTPUT=False,
+        #    plot_AvContactsLocation=False, 
+        #    plot_dTLocationPopulation=False, 
+        #    plot_InteractionMatrices=True, 
+        #    plot_ContactMatrices=True,
+        #    plot_CompareSexMatrices=True,
+        #    plot_AgeBinning=False, 
+        #    plot_Distances=False 
+        #)

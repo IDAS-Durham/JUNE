@@ -1020,7 +1020,7 @@ class Tracker:
         self.CM_T_err = { 
             bin_type : { 
                 loc: {
-                    sex : self.CM_T[bin_type][loc][sex]
+                    sex : np.zeros_like(self.CM_T[bin_type][loc][sex])
                     for sex in self.CM_T[bin_type][loc].keys() 
                     }
                 for loc in self.CM_T[bin_type].keys()
@@ -1028,14 +1028,14 @@ class Tracker:
             for bin_type in self.CM_T.keys() if bin_type != "Interaction" 
         }
         self.CM_T_err["Interaction"] = { 
-                loc: self.CM_T["Interaction"][loc] for loc in self.CM_T["Interaction"].keys()
+                loc: np.zeros_like(self.CM_T["Interaction"][loc]) for loc in self.CM_T["Interaction"].keys()
         }
 
         #Normalised Matrices
         self.NCM = { 
             bin_type : { 
                 loc: {
-                    sex : self.CM_T[bin_type][loc][sex]
+                    sex : np.zeros_like(self.CM_T[bin_type][loc][sex])
                     for sex in self.CM_T[bin_type][loc].keys() 
                     }
                 for loc in self.CM_T[bin_type].keys()
@@ -1043,13 +1043,13 @@ class Tracker:
             for bin_type in self.CM_T.keys() if bin_type != "Interaction" 
         }
         self.NCM["Interaction"] = { 
-                loc: self.CM_T["Interaction"][loc] for loc in self.CM_T["Interaction"].keys()
+                loc: np.zeros_like(self.CM_T["Interaction"][loc]) for loc in self.CM_T["Interaction"].keys()
         }
 
         self.NCM_err = { 
             bin_type : { 
                 loc: {
-                    sex : self.CM_T[bin_type][loc][sex]
+                    sex : np.zeros_like(self.CM_T[bin_type][loc][sex])
                     for sex in self.CM_T[bin_type][loc].keys() 
                     }
                 for loc in self.CM_T[bin_type].keys()
@@ -1057,14 +1057,14 @@ class Tracker:
             for bin_type in self.CM_T.keys() if bin_type != "Interaction" 
         }
         self.NCM_err["Interaction"] = { 
-                loc: self.CM_T["Interaction"][loc] for loc in self.CM_T["Interaction"].keys()
+                loc: np.zeros_like(self.CM_T["Interaction"][loc]) for loc in self.CM_T["Interaction"].keys()
         }
 
         #Normalised Matrices with reciprocal contacts
         self.NCM_R = { 
             bin_type : { 
                 loc: {
-                    sex : self.CM_T[bin_type][loc][sex]
+                    sex : np.zeros_like(self.CM_T[bin_type][loc][sex])
                     for sex in self.CM_T[bin_type][loc].keys() 
                     }
                 for loc in self.CM_T[bin_type].keys()
@@ -1072,13 +1072,13 @@ class Tracker:
             for bin_type in self.CM_T.keys() if bin_type != "Interaction" 
         }
         self.NCM_R["Interaction"] = { 
-                loc: self.CM_T["Interaction"][loc] for loc in self.CM_T["Interaction"].keys()
+                loc: np.zeros_like(self.CM_T["Interaction"][loc]) for loc in self.CM_T["Interaction"].keys()
         }
 
         self.NCM_R_err = { 
             bin_type : { 
                 loc: {
-                    sex : self.CM_T[bin_type][loc][sex]
+                    sex : np.zeros_like(self.CM_T[bin_type][loc][sex])
                     for sex in self.CM_T[bin_type][loc].keys() 
                     }
                 for loc in self.CM_T[bin_type].keys()
@@ -1086,7 +1086,7 @@ class Tracker:
             for bin_type in self.CM_T.keys() if bin_type != "Interaction" 
         }
         self.NCM_R_err["Interaction"] = { 
-                loc: self.CM_T["Interaction"][loc] for loc in self.CM_T["Interaction"].keys()
+                loc: np.zeros_like(self.CM_T["Interaction"][loc]) for loc in self.CM_T["Interaction"].keys()
         }
         return 1
 
@@ -1117,7 +1117,7 @@ class Tracker:
         self.CM_AC_err = { 
             bin_type : { 
                 loc: {
-                    sex : self.CM_AC[bin_type][loc][sex]
+                    sex : np.zeros_like(self.CM_AC[bin_type][loc][sex])
                     for sex in self.CM_AC[bin_type][loc].keys() 
                     }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1125,14 +1125,14 @@ class Tracker:
             for bin_type in self.CM_AC.keys() if bin_type != "Interaction" 
         }
         self.CM_AC_err["Interaction"] = { 
-                loc: self.CM_AC["Interaction"][loc] for loc in self.CM_AC["Interaction"].keys()
+                loc: np.zeros_like(self.CM_AC["Interaction"][loc]) for loc in self.CM_AC["Interaction"].keys()
         }
 
         #Normalised Matrices
         self.NCM_AC = { 
             bin_type : { 
                 loc: {
-                    sex : self.CM_AC[bin_type][loc][sex]
+                    sex : np.zeros_like(self.CM_AC[bin_type][loc][sex])
                     for sex in self.CM_AC[bin_type][loc].keys() 
                     }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1140,13 +1140,13 @@ class Tracker:
             for bin_type in self.CM_AC.keys() if bin_type != "Interaction" 
         }
         self.NCM_AC["Interaction"] = { 
-                loc: self.CM_AC["Interaction"][loc] for loc in self.CM_AC["Interaction"].keys()
+                loc: np.zeros_like(self.CM_AC["Interaction"][loc]) for loc in self.CM_AC["Interaction"].keys()
         }
 
         self.NCM_AC_err = { 
             bin_type : { 
                 loc: {
-                    sex : self.CM_AC[bin_type][loc][sex]
+                    sex : np.zeros_like(self.CM_AC[bin_type][loc][sex])
                     for sex in self.CM_AC[bin_type][loc].keys() 
                     }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1154,14 +1154,14 @@ class Tracker:
             for bin_type in self.CM_AC.keys() if bin_type != "Interaction" 
         }
         self.NCM_AC_err["Interaction"] = { 
-                loc: self.CM_AC["Interaction"][loc] for loc in self.CM_AC["Interaction"].keys()
+                loc: np.zeros_like(self.CM_AC["Interaction"][loc]) for loc in self.CM_AC["Interaction"].keys()
         }
 
         #Normalised Matrices with reciprocal contacts
         self.NCM_AC_R = { 
             bin_type : { 
                 loc: {
-                    sex : self.CM_AC[bin_type][loc][sex]
+                    sex : np.zeros_like(self.CM_AC[bin_type][loc][sex])
                     for sex in self.CM_AC[bin_type][loc].keys() 
                     }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1169,13 +1169,13 @@ class Tracker:
             for bin_type in self.CM_AC.keys() if bin_type != "Interaction" 
         }
         self.NCM_AC_R["Interaction"] = { 
-                loc: self.CM_AC["Interaction"][loc] for loc in self.CM_AC["Interaction"].keys()
+                loc: np.zeros_like(self.CM_AC["Interaction"][loc]) for loc in self.CM_AC["Interaction"].keys()
         }
 
         self.NCM_AC_R_err = { 
             bin_type : { 
                 loc: {
-                    sex : self.CM_AC[bin_type][loc][sex]
+                    sex : np.zeros_like(self.CM_AC[bin_type][loc][sex])
                     for sex in self.CM_AC[bin_type][loc].keys() 
                     }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1183,7 +1183,7 @@ class Tracker:
             for bin_type in self.CM_AC.keys() if bin_type != "Interaction" 
         }
         self.NCM_AC_R_err["Interaction"] = { 
-                loc: self.CM_AC["Interaction"][loc] for loc in self.CM_AC["Interaction"].keys()
+                loc: np.zeros_like(self.CM_AC["Interaction"][loc]) for loc in self.CM_AC["Interaction"].keys()
         }
         return 1
 
@@ -1211,9 +1211,13 @@ class Tracker:
         if self.group_type_names == []:
             return 1
 
+  
+
         self.convert_dict_to_df()
         self.calc_age_profiles()
         self.calc_average_contacts()
+
+
 
 
         if "1D" in self.Tracker_Contact_Type:
@@ -1223,6 +1227,7 @@ class Tracker:
         if "All" in self.Tracker_Contact_Type:
             self.initalize_CM_All_Normalisations()
             self.normalise_All_CM()
+
 
         if mpi_rank == 0:
             self.PrintOutResults()
@@ -1350,6 +1355,7 @@ class Tracker:
 
         
         for person in group.people:
+            
             #Shelter we want family groups
             if group.spec == "shelter":
                 groups_inter = [list(sub.people) for sub in group.families]
@@ -1445,6 +1451,7 @@ class Tracker:
                 contact_age_idxs = [
                     self.age_idxs["syoa"][contact_id] for contact_id in contact_ids
                 ]
+
                 for cidx in contact_age_idxs:
                     self.CM_T["syoa"]["global"]["unisex"][age_idx,cidx] += 1
                     self.CM_T["syoa"][group.spec]["unisex"][age_idx,cidx] += 1
@@ -1463,6 +1470,7 @@ class Tracker:
                         self.age_idxs["syoa"][contact_id] for contact_id in contact_ids_inter
                     ]
                     for cidx in contact_age_idxs:
+                        
                         self.CM_T["syoa"][group.spec+"_inter"]["unisex"][age_idx,cidx] += 1
                         if person.sex == "m" and "male" in self.contact_sexes:
                             self.CM_T["syoa"][group.spec+"_inter"]["male"][age_idx,cidx] += 1

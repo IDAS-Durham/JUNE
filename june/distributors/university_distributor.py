@@ -38,10 +38,11 @@ class UniversityDistributor:
             for household in area.households:
                 if household.type == "student":
                     for student in household.residents:
-                        if student.primary_activity is None:
-                            students_dict[university.ukprn]["student"].append(
-                                student.id
-                            )
+                        if self.min_student_age <= student.age <= self.max_student_age:
+                            if student.primary_activity is None:
+                                students_dict[university.ukprn]["student"].append(
+                                    student.id
+                                )
                 elif household.type == "communal":
                     for person in household.residents:
                         if self.min_student_age <= person.age <= self.max_student_age:
