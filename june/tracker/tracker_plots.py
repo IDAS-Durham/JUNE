@@ -56,28 +56,20 @@ class PlotClass:
         path for results directory
 
     Tracker_Contact_Type:
+        list, list of tracker contact types to be loaded ["1D", "All"]
 
-    Params:
-
-    IM:
-
-    CM_T:
-
-    NCM:
-
-    NCM_R:
-    
-    average_contacts:
-
-    location_counters:
-
-    location_counters_day:
-
-    location_cum_pop:
-
-    age_profiles:
-
-    travel_distance:
+    Following parameters can be preloaded data from another plot class. If None data automatically loaded.
+        Params,
+        IM,
+        CM_T,
+        NCM,
+        NCM_R,
+        average_contacts,
+        location_counters,
+        location_counters_day,
+        location_cum_pop,
+        age_profiles,
+        travel_distance
 
     Returns
     -------
@@ -108,10 +100,10 @@ class PlotClass:
         self.record_path = record_path
         self.Tracker_Contact_Type = Tracker_Contact_Type
 
+        #Only plot fully merged data (Only applies to MPI runs, auto saved to merge if single core)
         folder_name = "merged_data_output"
 
         logger.info(f"Rank {mpi_rank} -- Begin loading")
-
 
         if Params is None:
             with open(self.record_path / folder_name / "tracker_Simulation_Params.yaml") as f:
@@ -284,6 +276,54 @@ class PlotClass:
                                 ################################### General Plotting ##################################
 #####################################################################################################################################################################
 
+    def Get_SAMECMAP_Norm(self, dim, override=None):
+        """
+        If same colour map required this produces standarised colourmaps for different size matrices.
+
+        Parameters
+        ----------
+            dim:
+                int, the dimension (length) of square matrix
+            override:
+                string, Log, Lin, SymLog or SymLin. Override if SAMECMAP was False. (Applies to certain plots)
+
+        Returns
+        -------
+            Norm:
+                matplotlib.colors.Norm object
+
+        """
+        SAMElinvmin = {"small_dim" : 0, "large_dim" : 0}
+        SAMElogvmin = {"small_dim" : 1e-1, "large_dim" : 1e-1}
+        
+        SAMElinvmax = {"small_dim" : 2.5e1, "large_dim" : 3e0}
+        SAMElogvmax = {"small_dim" : 2.5e1, "large_dim" : 3e0}
+
+
+        SAMEsymlogvmax = {"small_dim" : 3e0, "large_dim" : 3e0}
+        SAMEsymlinvmax = {"small_dim" : 1e0, "large_dim" : .5e0}
+
+
+        if dim < 5:
+            kind = "small_dim"
+        else:
+            kind = "large_dim"
+
+        if override is None:
+            if self.SameCMAP == "Log":
+                return colors.LogNorm(vmin=SAMElogvmin[kind], vmax=SAMElogvmax[kind])
+            elif self.SameCMAP == "Lin":
+                return colors.Normalize(vmin=SAMElinvmin[kind], vmax=SAMElinvmax[kind])
+        elif override == "SymLog":
+            return colors.SymLogNorm(linthresh = 1e-1, vmin=-SAMEsymlogvmax[kind], vmax=SAMEsymlogvmax[kind])
+        elif override == "SymLin":
+            return colors.Normalize(vmin=-SAMEsymlinvmax[kind], vmax=SAMEsymlinvmax[kind])
+        elif override == "Log":
+                return colors.LogNorm(vmin=SAMElogvmin[kind], vmax=SAMElogvmax[kind])
+        elif override == "Lin":
+            return colors.Normalize(vmin=SAMElinvmin[kind], vmax=SAMElinvmax[kind])
+        return None
+    
     def AnnotateCM(self, cm, cm_err, ax, thresh=1e10):
         """
         Function to annotate the CM with text. Including error catching for Nonetype errors.
@@ -355,6 +395,8 @@ class PlotClass:
                 matplotlib axes
             thresh:
                 threshhold value for CM text change colour
+            thumb:
+                bool, make thumbnail style plots. e.g. no axis labels 
             **plt_kwargs:
                 plot keyword arguements
 
@@ -1512,8 +1554,12 @@ class PlotClass:
         Nlocals = self.NVenues[plural_locations]
         dat = self.travel_distance[location]
         Total = dat.iloc[:,1].sum()
-        
-        maxkm = np.nanmax(dat)
+
+        #Truncate plot on relvent bins.
+        CumSum = np.cumsum(dat.iloc[:,1].values)
+        indexlast = len(CumSum) - np.sum(CumSum == CumSum[-1])
+        maxkm = dat.iloc[indexlast,0]+3.5*(dat.iloc[1,0]-dat.iloc[0,0])
+
         plt.rcParams["figure.figsize"] = (10,5)
         f, ax = plt.subplots(1,1)
         f.patch.set_facecolor('white')
@@ -1521,44 +1567,13 @@ class PlotClass:
         #ax.set_title(f"{Nlocals} available {location}")
         ax.set_ylabel(r"Frequency [%]")
         ax.set_xlabel(r"Travel distance from shelter [km]")
-        ax.set_xlim([0, None])
+        ax.set_xlim([0, maxkm])
         return ax
 
-    def Get_SAMECMAP_Norm(self, dim, override=None):
-        SAMElinvmin = {"small_dim" : 0, "large_dim" : 0}
-        SAMElogvmin = {"small_dim" : 1e-1, "large_dim" : 1e-1}
-        
-        SAMElinvmax = {"small_dim" : 2.5e1, "large_dim" : 3e0}
-        SAMElogvmax = {"small_dim" : 2.5e1, "large_dim" : 3e0}
-
-
-        SAMEsymlogvmax = {"small_dim" : 3e0, "large_dim" : 3e0}
-        SAMEsymlinvmax = {"small_dim" : 1e0, "large_dim" : .5e0}
-
-
-        if dim < 5:
-            kind = "small_dim"
-        else:
-            kind = "large_dim"
-
-        if override is None:
-            if self.SameCMAP == "Log":
-                return colors.LogNorm(vmin=SAMElogvmin[kind], vmax=SAMElogvmax[kind])
-            elif self.SameCMAP == "Lin":
-                return colors.Normalize(vmin=SAMElinvmin[kind], vmax=SAMElinvmax[kind])
-        elif override == "SymLog":
-            return colors.SymLogNorm(linthresh = 1e-1, vmin=-SAMEsymlogvmax[kind], vmax=SAMEsymlogvmax[kind])
-        elif override == "SymLin":
-            return colors.Normalize(vmin=-SAMEsymlinvmax[kind], vmax=SAMEsymlinvmax[kind])
-        elif override == "Log":
-                return colors.LogNorm(vmin=SAMElogvmin[kind], vmax=SAMElogvmax[kind])
-        elif override == "Lin":
-            return colors.Normalize(vmin=SAMElinvmin[kind], vmax=SAMElinvmax[kind])
-        return None
-        
-        
-
-
+#####################################################################################################################################################################
+                                ################################### Master plotter ##################################
+#####################################################################################################################################################################
+    
     def make_plots(self, 
         plot_BBC = False,
         plot_thumbprints = False,
@@ -1577,6 +1592,14 @@ class PlotClass:
 
         Parameters
         ----------
+            plot_BBC:
+                bool, if we want to compare to BBC Pandemic data.
+            plot_thumbprints:
+                bool, To plot thumbnail style plots for plot_ContactMatrices and plot_CompareSexMatrices
+            SameCMAP:
+                bool, To plot same colour map accross all similar dimension contact matrices
+            plot_INPUTOUTPUT:
+                bool,
             plot_AvContactsLocation:
                 bool, To plot average contacts per location plots
             plot_dTLocationPopulation:
@@ -1591,20 +1614,6 @@ class PlotClass:
                 bool, To plot w weight matrix to compare demographics
             plot_Distances:
                 bool, To plot the distance traveled from shelter to locations
-            
-
-                plot_BBC = True,
-    plot_thumbprints = False,
-    SameCMAP=None,
-    
-    plot_INPUTOUTPUT=False,
-    plot_AvContactsLocation=False, 
-    plot_dTLocationPopulation=False, 
-    plot_InteractionMatrices=False, 
-    plot_ContactMatrices=False,
-    plot_CompareSexMatrices=False,
-    plot_AgeBinning=False, 
-    plot_Distances=False 
         Returns
         -------
             None

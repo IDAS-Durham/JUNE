@@ -7,12 +7,9 @@ import logging
 
 default_config_filename = paths.configs_path / "defaults/interaction/interaction.yaml"
 
-#TODO Add exceptions code to catch default values etc etc
 logger = logging.getLogger("subgroup maker")
 
 def Get_Defaults(spec):
-    #JUNE Default
-
     if spec in [
         "pub",
         "grocery",
@@ -81,6 +78,8 @@ def Get_Defaults(spec):
     else:
         return ["defualt"], "Discrete"
 
+    
+
 
 class Subgroup_Params():
     """
@@ -100,6 +99,33 @@ class Subgroup_Params():
     AgeYoungAdult = 18
     AgeAdult = 18
     AgeOldAdult = 65
+
+    PossibleLocs = [
+        "pub",
+        "grocery",
+        "cinema",
+        "city_transport",
+        "inter_city_transport",
+        "gym",
+        "care_home",
+        "university",
+        "school",
+        "household",
+        "company",
+        "communal",
+        "distribution_center",
+        "e_voucher",
+        "female_communal",
+        "isolation_unit",
+        "n_f_distribution_center",
+        "pump_latrine",
+        "religious",
+        "play_group",
+        "learning_center",
+        "hospital",
+        "shelter",
+        "informal_work"
+        ]
 
     def __init__(
         self, 
@@ -123,11 +149,14 @@ class Subgroup_Params():
 
     def subgroup_labels(self, spec):
         if spec not in self.params.keys():
-            print(f"{spec} not defined in interaction yaml")
-            return list(["default"])
-
-
-        
+            
+            if spec not in self.PossibleLocs:
+                print(f"{spec} not defined in interaction yaml or defualt options")
+                return list(["default"])
+            else:
+                Bins, Type = Get_Defaults(spec)
+                logger.info(f"{spec} interaction bins not specified. Using default values {Bins}")
+                self.params[spec] = {"bins": Bins, "type" : Type}
 
         if "bins" not in self.params[spec].keys() or "type" not in self.params[spec].keys():
             Bins, Type = Get_Defaults(spec)

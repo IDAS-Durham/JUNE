@@ -1,11 +1,11 @@
-from dataclasses import replace
-from re import I
 import numpy as np
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 import logging
 
 import yaml
 import pandas as pd
+import warnings
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 from pathlib import Path
 from june import paths
@@ -49,6 +49,8 @@ class Tracker:
         path for interactions yaml directory
     Tracker_Contact_Type:
         List of type of contact tracking to be implemented ["1D", "All"].
+    MaxVenueTrackingSize:
+        int, Maximum number for venue type to track. Default is all venues in world.VENUE are tracked
 
     Returns
     -------
@@ -74,7 +76,6 @@ class Tracker:
         self.record_path = record_path
         self.load_interactions_path = load_interactions_path
 
-        #TODO Add check to make sure only contains "1D" or "All"
         self.Tracker_Contact_Type = Tracker_Contact_Type
 
         self.MaxVenueTrackingSize = MaxVenueTrackingSize
@@ -184,9 +185,22 @@ class Tracker:
         return Union
 
     def pluralise_r(self, loc):
+        """
+        Some naming conventions of the venues are plurals or not. 
+        Here is a function for consistent conversion to de-pluralise
+
+        Parameters
+        ----------
+            loc:
+                string            
+        Returns
+        -------
+            string, singular
+
+        """
+        #Global is exception
         if loc == "global":
             return loc
-
         if loc[-3:] == "ies":
             loc = loc[:-3]+"y"
         elif loc[-1] == "s":
@@ -194,14 +208,32 @@ class Tracker:
         return loc
 
     def pluralise(self, loc):
+        """
+        Some naming conventions of the venues are plurals or not. 
+        Here is a function for consistent conversion to pluralise
+
+        Parameters
+        ----------
+            loc:
+                string            
+        Returns
+        -------
+            string, pluralised
+
+        """
+        #Global is exception
         if loc == "global":
             return loc
-        
         if loc[-1] == "y":
             loc = loc[:-1] + "ies"
         else:
             loc = loc + "s"
         return loc
+
+#####################################################################################################################################################################
+                                ################################### Useful CM functions ##################################
+#####################################################################################################################################################################
+   
 
     def Probabilistic_Contacts(self, mean, mean_err, Probabilistic=True):
         """
@@ -261,7 +293,7 @@ class Tracker:
     def contract_matrices(self, Name, bins=np.arange(0, 100 + 5, 5)):
         """
         Rebin the integer year binning to custom bins specified by list useing produced contact matrix
-        Appends new rebinning to self.CM_T.
+        Appends new rebinning to self.CM_T or self.CM_AC for "1D" and "All" contact tracing types.
 
         Parameters
         ----------
@@ -321,7 +353,7 @@ class Tracker:
         Parameters
         ----------
             location:
-                Location 
+                string, location 
             
         Returns
         -------
@@ -712,6 +744,20 @@ class Tracker:
                 self.age_profiles[bin_type][contact_type]= BinCounts(bins_idx, contact_type, len(self.age_bins[bin_type]))
 
         def Contract(bins_idx, locs):
+            """
+            Take full syoa year by year binning of full unnormalised contact matrix and reduce to matrix with age bins bins_idx. 
+
+            Parameters
+            ----------
+                bins_udx:
+                    array, bin edges indices from syoa binning
+                locs:
+                    string, location considered
+                
+            Returns
+            -------
+                dict, new matrices for location by sex
+            """
             CM = np.zeros(len(bins_idx)-1)
             APPEND = {}
             for spec in locs: #Over location
@@ -790,12 +836,7 @@ class Tracker:
             None
         """
         #Preform normalisation
-        #bin_Keys = list(self.age_bins.keys())
         bin_Keys = self.CM_T.keys()
-
-        # if "Interaction" not in bin_Keys:
-        #     bin_Keys.append("Interaction")
-
         for bin_type in bin_Keys:
                 
             matrices = self.CM_T[bin_type]
@@ -820,6 +861,8 @@ class Tracker:
                     if bin_type == "Interaction":
                         if sex == "unisex":
                             if contact_type == "shelter":
+                                #TODO Feed this in so not to be hard coded
+                                #Special normalisation for shelters. Reweight based on households sharing shelters
                                 shelter_shared = 0.75
                                 NCM[0,0] *= shelter_shared**2
                                 NCM[1,1] *= shelter_shared**2
@@ -879,11 +922,7 @@ class Tracker:
             None
         """
         #Preform normalisation
-        #bin_Keys = list(self.age_bins.keys())
         bin_Keys = self.CM_AC.keys()
-
-        # if "Interaction" not in bin_Keys:
-        #     bin_Keys.append("Interaction")
 
         for bin_type in bin_Keys:
                 
@@ -907,6 +946,21 @@ class Tracker:
 
                     if bin_type == "Interaction":
                         if sex == "unisex":
+                            if contact_type == "shelter":
+                                #TODO Feed this in so not to be hard coded
+                                #Special normalisation for shelters. Reweight based on households sharing shelters
+                                shelter_shared = 0.75
+                                NCM[0,0] *= shelter_shared**2
+                                NCM[1,1] *= shelter_shared**2
+                                NCM_err[0,0] *= shelter_shared**2
+                                NCM_err[1,1] *= shelter_shared**2
+                                NCM_R[0,0] *= shelter_shared**2
+                                NCM_R[1,1] *= shelter_shared**2
+                                NCM_R_err[0,0] *= shelter_shared**2
+                                NCM_R_err[1,1] *= shelter_shared**2
+                                cm[0,0] *= shelter_shared**2
+                                cm[1,1] *= shelter_shared**2
+
                             self.NCM_AC["Interaction"][contact_type] = NCM
                             self.NCM_AC_err["Interaction"][contact_type] = NCM_err
 
@@ -1211,14 +1265,9 @@ class Tracker:
         if self.group_type_names == []:
             return 1
 
-  
-
         self.convert_dict_to_df()
         self.calc_age_profiles()
         self.calc_average_contacts()
-
-
-
 
         if "1D" in self.Tracker_Contact_Type:
             self.initalize_CM_Normalisations()
@@ -1227,7 +1276,6 @@ class Tracker:
         if "All" in self.Tracker_Contact_Type:
             self.initalize_CM_All_Normalisations()
             self.normalise_All_CM()
-
 
         if mpi_rank == 0:
             self.PrintOutResults()
@@ -1238,9 +1286,12 @@ class Tracker:
             else:
                 folder_name = "raw_data_output"
 
-            tracker_dir = self.record_path / "Tracker" / folder_name
-            tracker_dir.mkdir(exist_ok=True, parents=True)
-            self.tracker_tofile(tracker_dir)
+            merged = self.record_path / "Tracker" / "merged_data_output"
+            merged.mkdir(exist_ok=True, parents=True)
+            raw = self.record_path / "Tracker" / "raw_data_output"
+            raw.mkdir(exist_ok=True, parents=True)
+
+            self.tracker_tofile(self.record_path / "Tracker" / folder_name)
         return 1
 
 
@@ -1424,8 +1475,8 @@ class Tracker:
                         self.CM_T["Interaction"][group.spec][0, 0] += int_contacts
                         self.CM_T["Interaction"][group.spec][1, 1] += int_contacts
                     else:
-                        self.CM_T["Interaction"][group.spec][0,1] += int_contacts
-                        self.CM_T["Interaction"][group.spec][1,0] += int_contacts
+                        self.CM_T["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts
+                        self.CM_T["Interaction"][group.spec][contact_subgroup_idx, person_subgroup_idx] += int_contacts
 
                 else:
                     self.CM_T["Interaction"][group.spec][person_subgroup_idx, contact_subgroup_idx] += int_contacts
@@ -1556,8 +1607,6 @@ class Tracker:
                     inside = False
                 #Interaction Matrix
 
-                #Shelters a special case...
-                #Interaction Matrix #TODO
                 if group.spec == "shelter": 
                     if inside:
                         self.CM_AC["Interaction"][group.spec][0, 0] += len(subgroup_people_without)
@@ -1802,8 +1851,8 @@ class Tracker:
         ----------
             all_super_groups:
                 List of all groups to track contacts over
-            date:
-                timestamp of the time step (for location populations over time)
+            timer:
+                timer object from simulator class
             
         Returns
         -------
@@ -1853,8 +1902,6 @@ class Tracker:
                         if "All" in self.Tracker_Contact_Type:
                             self.simulate_All_contacts(group)
                         counter += 1
-                #if counter > 0:
-                #    logger.info(f"Rank {mpi_rank} -- external skipped -- {Skipped_E} out of {len(grouptype.members)} for {group.spec}")
         return 1
 
 #####################################################################################################################################################################
@@ -1893,14 +1940,6 @@ class Tracker:
             filename=f"tracker_Simulation_Params{mpi_rankname}.yaml", 
             jsonfile=self.tracker_Simulation_Params()
         )
-
-        # Save out the IM
-        # self.Save_CM_JSON(
-        #     dir=self.record_path / "Tracker" / folder_name / "CM_yamls", 
-        #     folder=folder_name,
-        #     filename=f"tracker_IM{mpi_rankname}.yaml", 
-        #     jsonfile=self.tracker_IMJSON()
-        # )
 
         #All Identical so don't need to do anything here
         if mpi_rank == 0:
@@ -2093,6 +2132,26 @@ class Tracker:
         return 1
 
     def Save_CM_JSON(self, dir, folder, filename, jsonfile):
+        """
+        Save yaml file for any given json dict.
+        Note saves dummy yaml in junk folder then resaves removing quotation marks 
+
+        Parameters
+        ----------
+            dir:
+                string, the directory to save
+            folder:
+                string, raw or merged folder name
+            filename:
+                string, the filename
+            jsonfile:
+                dict, save to be saved out 
+            
+        Returns
+        -------
+            None
+
+        """
         junk_dir = self.record_path / "Tracker" / folder / "junk"
         junk_dir.mkdir(exist_ok=True, parents=True)
 

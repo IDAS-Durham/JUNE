@@ -96,7 +96,6 @@ class SocialVenues(Supergroup):
 
                 sv.area = area
             social_venues.append(sv)
-        print(cls.venue_class.spec, len(social_venues))
         return cls(social_venues, **kwargs)
 
     @classmethod
@@ -129,8 +128,6 @@ class SocialVenues(Supergroup):
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
-
-        print(cls.venue_class.spec, coordinates_filename)
         return cls.for_super_areas(geography.super_areas, coordinates_filename)
 
     @classmethod
