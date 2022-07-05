@@ -157,7 +157,24 @@ class MergerClass:
     def contract_matrix(self, CM, bins, method = np.sum):
         return Tracker.contract_matrix(self, CM, bins, method)
 
-            
+    def Calculate_CM_Metrics(self, bin_type, contact_type, CM, CM_err, sex="unisex"):
+        return Tracker.Calculate_CM_Metrics(self, bin_type, contact_type, CM, CM_err, sex)
+
+    def Population_Metrics(self, pop_by_bin, pop_bins):
+        return Tracker.Population_Metrics(self, pop_by_bin, pop_bins)
+
+    def Expectation_Assortativeness(self, NPCDM, pop_bins):
+        return Tracker.Expectation_Assortativeness(self, NPCDM, pop_bins)
+
+    def Calc_NPCDM(self, cm, pop_by_bin, pop_width):
+        return Tracker.Calc_NPCDM(self, cm, pop_by_bin, pop_width)
+
+    def Calc_QIndex(self, cm):
+        return Tracker.Calc_QIndex(self, cm)
+
+    def Canberra_distance(self, x,y):
+        return Tracker.Canberra_distance(self, x,y)
+  
 #####################################################################################################################################################################
                                 ################################### Individual Merge ##################################
 #####################################################################################################################################################################
@@ -322,7 +339,7 @@ class MergerClass:
 
     
     def VenuePersonCounts(self):
-        age_profiles = {}
+        self.age_profiles = {}
         self.rank_age_profiles = {}
         for rbt in self.binTypes:
             if rbt == "Interaction":
@@ -330,7 +347,7 @@ class MergerClass:
 
             self.rank_age_profiles[rbt] = {}
 
-            age_profiles[rbt] = {}
+            self.age_profiles[rbt] = {}
             for rank in range(0, self.NRanks):
                 
                 filename = self.raw_data_path / "Venue_Demographics" / f"PersonCounts_{rbt}_r{rank}_.xlsx"
@@ -357,19 +374,24 @@ class MergerClass:
                     else:
                         self.rank_age_profiles[rbt][loc]["all"] += df["unisex"].iloc[:-1].values
 
-                    if loc not in age_profiles[rbt].keys():
-                        age_profiles[rbt][loc] = df
+                    if loc not in self.age_profiles[rbt].keys():
+                        self.age_profiles[rbt][loc] = df
                     else:
-                        age_profiles[rbt][loc] += df.values
+                        self.age_profiles[rbt][loc] += df.values
 
                    
 
             Save_dir = self.merged_data_path / "Venue_Demographics"
             Save_dir.mkdir(exist_ok=True, parents=True)
             with pd.ExcelWriter(Save_dir / f'PersonCounts_{rbt}.xlsx', mode="w") as writer:  
-                for local in age_profiles[rbt].keys(): 
-                    df = pd.DataFrame(age_profiles[rbt][local])
+                for local in self.age_profiles[rbt].keys(): 
+                    df = pd.DataFrame(self.age_profiles[rbt][local])
                     df.to_excel(writer, sheet_name=f'{local}')
+
+        #Remove the total row.
+        for rbt in self.age_profiles.keys():
+            for loc in self.age_profiles[rbt].keys(): 
+                self.age_profiles[rbt][loc] = self.age_profiles[rbt][loc].iloc[:-1,:]       
         return 1
 
     def AvContacts(self):
@@ -493,7 +515,7 @@ class MergerClass:
             print(rank, "1D Done")
 
         if "All" in self.Tracker_Contact_Type:
-            for rank in range(0, 2):#self.NRanks):
+            for rank in range(0, self.NRanks):
                 with open(self.raw_data_path / "CM_yamls" / f"tracker_All_Total_CM_r{rank}_.yaml") as f:
                     self.CM_AC_rank = yaml.load(f, Loader=yaml.FullLoader)
                     #[bin_type][contact_type]["sex"][sex]["contacts"]
@@ -626,6 +648,31 @@ class MergerClass:
                 jsonfile=jsonfile
             )
 
+            #Save out metric calculations
+            jsonfile = {}
+            for binType in list(self.NCM.keys()):
+                jsonfile[binType] = {}
+                for loc in list(self.NCM[binType].keys()):
+                    jsonfile[binType][loc] = self.Calculate_CM_Metrics(bin_type=binType, contact_type=loc, CM=self.NCM, CM_err=self.NCM_err) 
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics", 
+                folder=folder_name,
+                filename=f"tracker_{Tracker_Type}_Metrics_NCM_{mpi_rankname}.yaml", 
+                jsonfile=jsonfile
+            )
+
+            jsonfile = {}
+            for binType in list(self.NCM.keys()):
+                jsonfile[binType] = {}
+                for loc in list(self.NCM[binType].keys()):
+                    jsonfile[binType][loc] = self.Calculate_CM_Metrics(bin_type=binType, contact_type=loc, CM=self.NCM_R, CM_err=self.NCM_R_err) 
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics", 
+                folder=folder_name,
+                filename=f"tracker_{Tracker_Type}_Metrics_NCM_R_{mpi_rankname}.yaml", 
+                jsonfile=jsonfile
+            )
+
         ################################### Saving All Contacts tracker results ##################################
         if "All" in self.Tracker_Contact_Type:
             Tracker_Type = "All"
@@ -663,6 +710,31 @@ class MergerClass:
                 filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml", 
                 jsonfile=jsonfile
             )
+
+            #Save out metric calculations
+            jsonfile = {}
+            for binType in list(self.NCM.keys()):
+                jsonfile[binType] = {}
+                for loc in list(self.NCM[binType].keys()):
+                    jsonfile[binType][loc] = self.Calculate_CM_Metrics(bin_type=binType, contact_type=loc, CM=self.NCM_AC, CM_err=self.NCM_AC_err) 
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics", 
+                folder=folder_name,
+                filename=f"tracker_{Tracker_Type}_Metrics_NCM_{mpi_rankname}.yaml", 
+                jsonfile=jsonfile
+            )
+
+            jsonfile = {}
+            for binType in list(self.NCM.keys()):
+                jsonfile[binType] = {}
+                for loc in list(self.NCM[binType].keys()):
+                    jsonfile[binType][loc] = self.Calculate_CM_Metrics(bin_type=binType, contact_type=loc, CM=self.NCM_AC_R, CM_err=self.NCM_AC_R_err) 
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics", 
+                folder=folder_name,
+                filename=f"tracker_{Tracker_Type}_Metrics_NCM_R_{mpi_rankname}.yaml", 
+                jsonfile=jsonfile
+            )
         return 1
    
 #####################################################################################################################################################################
@@ -679,6 +751,13 @@ class MergerClass:
             logger.info(f"Rank {mpi_rank} -- Cumulative time done")   
             self.CumPersonCounts()
             logger.info(f"Rank {mpi_rank} -- Person counts done")  
+            self.VenueUniquePops()
+            logger.info(f"Rank {mpi_rank} -- Unique Venue pops done")  
+            self.VenuePersonCounts()
+            logger.info(f"Rank {mpi_rank} -- Total Venue pops done")  
+            self.AvContacts()
+            logger.info(f"Rank {mpi_rank} -- Average contacts done")  
+
             self.LoadIMatrices()
             self.LoadContactMatrices()
             logger.info(f"Rank {mpi_rank} -- Load IM and CMs done")  
@@ -697,12 +776,7 @@ class MergerClass:
             self.SaveOutCM()
             logger.info(f"Rank {mpi_rank} -- Saved CM done")  
 
-            self.VenueUniquePops()
-            logger.info(f"Rank {mpi_rank} -- Unique Venue pops done")  
-            self.VenuePersonCounts()
-            logger.info(f"Rank {mpi_rank} -- Total Venue pops done")  
-            self.AvContacts()
-            logger.info(f"Rank {mpi_rank} -- Average contacts done")  
+            
         else:
             logger.info(f"Rank {mpi_rank} -- Skip run was on 1 core")
         logger.info(f"Rank {mpi_rank} -- Merging done")

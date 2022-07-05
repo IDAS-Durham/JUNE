@@ -231,6 +231,172 @@ class Tracker:
         return loc
 
 #####################################################################################################################################################################
+                                ################################### CM Metric functions ##################################
+#####################################################################################################################################################################
+   
+    def Canberra_distance(self, x,y):
+        """
+        calculate the Canberra distance between two matrices, x and y
+
+        Parameters
+        ----------
+            x:
+                np.array, a matrix
+            y:
+                np.array, a matrix
+        Returns
+        -------
+            CD:
+                float, CD the Canberra distance
+        """
+        x = x.flatten()
+        y = y.flatten()
+        return np.nansum(abs(x-y)/(abs(x)+abs(y)))
+
+    def Calc_QIndex(self, cm):
+        """
+        calculate the normalised population contact density matrix, NPCDM
+
+        Parameters
+        ----------
+            cm:
+                np.array, the contact matrix. Should be normalised per capita eg. NCM or NCM_R types.
+        Returns
+        -------
+            Q:
+                float, Q index of assortiveness
+        """
+        P = np.zeros_like(cm)
+        P = np.nan_to_num(cm / np.nansum(cm, axis=1), nan=0.0)
+        return (np.trace(P)-1) / (P.shape[0]-1)
+
+    def Calc_NPCDM(self, cm, pop_by_bin, pop_width):
+        """
+        calculate the normalised population contact density matrix, NPCDM
+
+        Parameters
+        ----------
+            cm:
+                np.array, the contact matrix. Should be normalised per capita eg. NCM or NCM_R types.
+            pop_by_bin:
+                np.array, unnormalised population counts per age bin
+            pop_width:
+                np.array, age bin widths
+
+        Returns
+        -------
+            NPCDM:
+                np.array, The normalised population contact density matrix
+        """
+        NPCDM = np.zeros_like(cm)
+        NPCDM = cm*np.multiply.outer(pop_by_bin, pop_by_bin)
+        
+        V = np.nansum(np.multiply.outer(pop_width, pop_width)*NPCDM)
+        return NPCDM / V
+
+    def Expectation_Assortativeness(self, NPCDM, pop_bins):
+        """
+        Expectation of assortativeness E(age_i - age_j)^2 over the normalised population contact density matrix, NPCDM
+
+        Parameters
+        ----------
+            NPCDM:
+                np.array, The normalised population contact density matrix
+            pop_bins:
+                np.array, The age binning bin edges for the population bin type
+
+        Returns
+        -------
+            I_sq:
+                float, The expectation value for assortativeness I^2 
+        """
+        pop_width = np.diff(pop_bins)    
+        ages = (pop_bins[1:]+pop_bins[:-1])/2
+        
+        I_sq = 0
+        for i in range(NPCDM.shape[0]):
+            for j in range(NPCDM.shape[1]):
+                w = pop_width[i]*pop_width[j]
+                I_sq+=w*NPCDM[i,j]*((ages[i]-ages[j])/np.sqrt(2))**2
+        return I_sq/2.0
+
+    def Population_Metrics(self, pop_by_bin, pop_bins):
+        """
+        Get the mean the variance of the population using binned population data
+
+        Parameters
+        ----------
+            pop_by_bin:
+                np.array, unnormalised population counts per age bin
+            pop_bins:
+                np.array, The age binning bin edges for the population bin type
+
+        Returns
+        -------
+            mean:
+                float, mean age of population
+            variance:
+                float, variance of population
+        """
+        ages = (pop_bins[1:]+pop_bins[:-1])/2
+        Npeople = np.sum(pop_by_bin)
+        mean = np.sum(pop_by_bin*ages)/ Npeople
+        variance = np.sqrt(np.nansum(pop_by_bin*(ages - mean)**2 ) / (Npeople-1))
+        return mean, variance 
+
+    def Calculate_CM_Metrics(self, bin_type, contact_type, CM, CM_err, sex="unisex"):
+        """
+        Calculate key metrics for CM, {Q, I^2, I^2_s} and return as formated string dict for saving
+
+        Parameters
+        ----------
+            binType:
+                string, Name of bin type syoa, AC etc
+            contact_type:
+                string, location to be considered
+            CM:
+                dict, dictionary of all matrices of type. eg self.CM_T
+            CM_err:
+                dict, dictionary of all matrices of type. eg self.CM_T_err
+            sex:
+                string, sex matrix to use
+            
+        Returns
+        -------
+            jsonfile:
+                json of interaction matrices metrics
+
+        """
+        if bin_type == "Interaction":
+            return None
+
+        cm = CM[bin_type][contact_type][sex]
+        cm_err = CM_err[bin_type][contact_type][sex]
+
+        cm = np.nan_to_num(cm, nan=0.0)
+        cm_err = np.nan_to_num(cm_err, nan=0.0)
+
+        pop_by_bin = np.array(self.age_profiles[bin_type][contact_type][sex])
+        pop_bins = np.array(self.age_bins[bin_type])
+        pop_width = np.diff(pop_bins)
+        
+        pop_density = pop_by_bin / (np.nansum(pop_by_bin) * pop_width)
+
+        pop_by_bin_true = np.array(self.age_profiles["syoa"][contact_type][sex])
+        pop_bins_true = np.array(self.age_bins["syoa"])
+        mean, var = self.Population_Metrics(pop_by_bin_true, pop_bins_true)
+
+        Q = self.Calc_QIndex(cm)
+        NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width) 
+        I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
+        I_sq_s = I_sq / var**2
+        return {"Q" : f"{Q}", "I_sq" : f"{I_sq}", "I_sq_s" : f"{I_sq_s}"}
+
+
+
+
+
+#####################################################################################################################################################################
                                 ################################### Useful CM functions ##################################
 #####################################################################################################################################################################
    
@@ -1989,6 +2155,33 @@ class Tracker:
                     jsonfile=jsonfile
                 )
 
+                #Save out metric calculations
+                jsonfile = {}
+                for binType in list(self.NCM.keys()):
+                    jsonfile[binType] = {}
+                    for loc in list(self.NCM[binType].keys()):
+                        jsonfile[binType][loc] = self.Calculate_CM_Metrics(bin_type=binType, contact_type=loc, CM=self.NCM, CM_err=self.NCM_err) 
+                self.Save_CM_JSON(
+                    dir=self.record_path / "Tracker" / folder_name / "CM_Metrics", 
+                    folder=folder_name,
+                    filename=f"tracker_{Tracker_Type}_Metrics_NCM_{mpi_rankname}.yaml", 
+                    jsonfile=jsonfile
+                )
+
+                jsonfile = {}
+                for binType in list(self.NCM.keys()):
+                    jsonfile[binType] = {}
+                    for loc in list(self.NCM[binType].keys()):
+                        jsonfile[binType][loc] = self.Calculate_CM_Metrics(bin_type=binType, contact_type=loc, CM=self.NCM_R, CM_err=self.NCM_R_err) 
+                self.Save_CM_JSON(
+                    dir=self.record_path / "Tracker" / folder_name / "CM_Metrics", 
+                    folder=folder_name,
+                    filename=f"tracker_{Tracker_Type}_Metrics_NCM_R_{mpi_rankname}.yaml", 
+                    jsonfile=jsonfile
+                )
+
+
+
         ################################### Saving All Contacts tracker results ##################################
         if "All" in self.Tracker_Contact_Type:
             Tracker_Type = "All"
@@ -2027,6 +2220,31 @@ class Tracker:
                     jsonfile=jsonfile
                 )
 
+                #Save out metric calculations
+                jsonfile = {}
+                for binType in list(self.NCM.keys()):
+                    jsonfile[binType] = {}
+                    for loc in list(self.NCM[binType].keys()):
+                        jsonfile[binType][loc] = self.Calculate_CM_Metrics(bin_type=binType, contact_type=loc, CM=self.NCM_AC, CM_err=self.NCM_AC_err) 
+                self.Save_CM_JSON(
+                    dir=self.record_path / "Tracker" / folder_name / "CM_Metrics", 
+                    folder=folder_name,
+                    filename=f"tracker_{Tracker_Type}_Metrics_NCM_{mpi_rankname}.yaml", 
+                    jsonfile=jsonfile
+                )
+
+                jsonfile = {}
+                for binType in list(self.NCM.keys()):
+                    jsonfile[binType] = {}
+                    for loc in list(self.NCM[binType].keys()):
+                        jsonfile[binType][loc] = self.Calculate_CM_Metrics(bin_type=binType, contact_type=loc, CM=self.NCM_AC_R, CM_err=self.NCM_AC_R_err) 
+                self.Save_CM_JSON(
+                    dir=self.record_path / "Tracker" / folder_name / "CM_Metrics", 
+                    folder=folder_name,
+                    filename=f"tracker_{Tracker_Type}_Metrics_NCM_R_{mpi_rankname}.yaml", 
+                    jsonfile=jsonfile
+                )
+
         ################################### Saving Venue tracker results ##################################
         VD_dir = self.record_path / "Tracker" / folder_name / "Venue_Demographics"
         VD_dir.mkdir(exist_ok=True, parents=True)
@@ -2058,15 +2276,15 @@ class Tracker:
         Dist_dir = self.record_path / "Tracker" / folder_name / "Venue_TravelDist"
         Dist_dir.mkdir(exist_ok=True, parents=True)
         days = list(self.travel_distance.keys())
-        with pd.ExcelWriter(Dist_dir / f'Distance_traveled{mpi_rankname}.xlsx', mode="w") as writer:  
-            for local in self.travel_distance[days[0]].keys(): 
-                df = pd.DataFrame()
-                bins = np.arange( 0, 50, 0.05)
-                df["bins"] = (bins[:-1]+bins[1:]) / 2
-                for day in days:
-                    df[day] = np.histogram( self.travel_distance[day][local], bins=bins, density=False)[0]
-                df.to_excel(writer, sheet_name=f'{local}')
-                    
+        if len(days) != 0:
+            with pd.ExcelWriter(Dist_dir / f'Distance_traveled{mpi_rankname}.xlsx', mode="w") as writer:  
+                for local in self.travel_distance[days[0]].keys(): 
+                    df = pd.DataFrame()
+                    bins = np.arange( 0, 50, 0.05)
+                    df["bins"] = (bins[:-1]+bins[1:]) / 2
+                    for day in days:
+                        df[day] = np.histogram( self.travel_distance[day][local], bins=bins, density=False)[0]
+                    df.to_excel(writer, sheet_name=f'{local}')                    
 
         V_dir = self.record_path / "Tracker" / folder_name / "Venue_UniquePops"
         V_dir.mkdir(exist_ok=True, parents=True)
@@ -2235,10 +2453,10 @@ class Tracker:
         ----------
             binType:
                 Name of bin type syoa, AC etc
-            sex:
-                Sex contact matrix
-            SkipLocs:
-                list of location names which to skip in the output json
+            CM:
+                dict, dictionary of all matrices of type. eg self.CM_T
+            CM_err:
+                dict, dictionary of all matrices of type. eg self.CM_T_err
             
         Returns
         -------
