@@ -29,7 +29,7 @@ default_BBC_Pandemic_loc = data_path / "BBC_Pandemic"
 DaysOfWeek_Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 try:
-    plt.style.use(['science','no-latex'])
+    plt.style.use(['science','no-latex', "bright"])
     if mpi_rank == 0:
         print("Using 'science' matplotlib style")
 except:
@@ -1119,16 +1119,15 @@ class PlotClass:
                 ax.plot(mids, average_contacts[contact_type] , linestyle="-", color="black", label="Total")
                 continue
 
-            if plotted > 9:
-                hatch="/"
+
+            if plotted > len(plt.rcParams['axes.prop_cycle'].by_key()["color"])-1:
+                hatch='//'
             else:
                 hatch=None
-
         
             heights = average_contacts[contact_type] 
             ax.bar(
-                mids, heights, widths, bottom=lower,
-                hatch=hatch, label=contact_type,
+                mids, heights, widths, bottom=lower, hatch=hatch, label=contact_type, edgecolor="black",linewidth=0
             )
             plotted += 1
 
