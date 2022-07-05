@@ -20,10 +20,12 @@ if mpi_rank > 0:
 
 class MergerClass:
     """
-    Class to plot everything tracker related
+    Class to merge trackers results from multiple MPI runs
 
     Parameters
     ----------
+        record_path:
+            location of results directory
 
     Returns
     -------
@@ -108,6 +110,52 @@ class MergerClass:
             )
 
         logger.info(f"Rank {mpi_rank} -- Initial params loaded -- have following group types { self.group_type_names['all'] }")   
+
+#####################################################################################################################################################################
+                                ################################### Import the useful functions from other Tracker modules ##################################
+#####################################################################################################################################################################
+ 
+    def CM_Norm(self, cm, pop_tots, contact_type="global", Reciprocal=True):
+        return Tracker.CM_Norm(self, cm, pop_tots, contact_type, Reciprocal)
+
+    def Get_characteristic_time(self,location):
+        return Tracker.Get_characteristic_time(self,location)
+
+    def PolicyText(self, Type, contacts, contacts_err, proportional_physical, characteristic_time):
+        return Tracker.PolicyText(self, Type, contacts, contacts_err, proportional_physical, characteristic_time)
+
+    def MatrixString(self, matrix, dtypeString="float"):
+        return Tracker.MatrixString(self, matrix, dtypeString)
+
+    def pluralise_r(self, loc):
+        return Tracker.pluralise_r(self, loc)
+
+    def pluralise(self, loc):
+        return Tracker.pluralise(self, loc)
+
+    def initalize_CM_Normalisations(self):
+        return Tracker.initalize_CM_Normalisations(self)
+
+    def initalize_CM_All_Normalisations(self):
+        return Tracker.initalize_CM_All_Normalisations(self)
+
+    def normalise_1D_CM(self):
+        return Tracker.normalise_1D_CM(self)
+
+    def normalise_All_CM(self):
+        return Tracker.normalise_All_CM(self)
+
+    def PrintOutResults(self):
+        return Tracker.PrintOutResults(self)
+
+    def Save_CM_JSON(self, dir, folder, filename, jsonfile):
+        return Tracker.Save_CM_JSON(self, dir, folder, filename, jsonfile)
+
+    def tracker_CMJSON(self, binType, CM, CM_err):
+        return Tracker.tracker_CMJSON(self, binType, CM, CM_err)
+
+    def contract_matrix(self, CM, bins, method = np.sum):
+        return Tracker.contract_matrix(self, CM, bins, method)
 
             
 #####################################################################################################################################################################
@@ -412,10 +460,6 @@ class MergerClass:
                         loc = list(self.CM_T_rank[rbt].keys())[0]
                         self.age_bins[rbt] = self.CM_T_rank[rbt][loc]["bins"]
 
-
-
-        
-
                 else:
                     for bin_type in self.binTypes:
                         for loc_plural in self.group_type_names["all"]:
@@ -624,48 +668,6 @@ class MergerClass:
 #####################################################################################################################################################################
                                 ################################### Master Merge ##################################
 #####################################################################################################################################################################
- 
-    def CM_Norm(self, cm, pop_tots, contact_type="global", Reciprocal=True):
-        return Tracker.CM_Norm(self, cm, pop_tots, contact_type, Reciprocal)
-
-    def Get_characteristic_time(self,location):
-        return Tracker.Get_characteristic_time(self,location)
-
-    def PolicyText(self, Type, contacts, contacts_err, proportional_physical, characteristic_time):
-        return Tracker.PolicyText(self, Type, contacts, contacts_err, proportional_physical, characteristic_time)
-
-    def MatrixString(self, matrix, dtypeString="float"):
-        return Tracker.MatrixString(self, matrix, dtypeString)
-
-    def pluralise_r(self, loc):
-        return Tracker.pluralise_r(self, loc)
-
-    def pluralise(self, loc):
-        return Tracker.pluralise(self, loc)
-
-    def initalize_CM_Normalisations(self):
-        return Tracker.initalize_CM_Normalisations(self)
-
-    def initalize_CM_All_Normalisations(self):
-        return Tracker.initalize_CM_All_Normalisations(self)
-
-    def normalise_1D_CM(self):
-        return Tracker.normalise_1D_CM(self)
-
-    def normalise_All_CM(self):
-        return Tracker.normalise_All_CM(self)
-
-    def PrintOutResults(self):
-        return Tracker.PrintOutResults(self)
-
-    def Save_CM_JSON(self, dir, folder, filename, jsonfile):
-        return Tracker.Save_CM_JSON(self, dir, folder, filename, jsonfile)
-
-    def tracker_CMJSON(self, binType, CM, CM_err):
-        return Tracker.tracker_CMJSON(self, binType, CM, CM_err)
-
-    def contract_matrix(self, CM, bins, method = np.sum):
-        return Tracker.contract_matrix(self, CM, bins, method)
 
     def Merge(self):
         logger.info(f"Rank {mpi_rank} -- Begin Merging from {self.NRanks} ranks")

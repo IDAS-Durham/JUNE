@@ -249,7 +249,7 @@ class PlotClass:
                         sheet_name=loc,
                         index_col=0,
                     )
-                    self.age_profiles[rbt][loc] = df
+                    self.age_profiles[rbt][loc] = df.iloc[:-1,:]
 
         else:
             self.age_profiles = age_profiles
@@ -1458,7 +1458,7 @@ class PlotClass:
 
         if bin_type != "Interaction":
             pop_tots = self.location_cum_pop[bin_type][contact_type][sex]
-            global_age_profile = self.age_profiles[bin_type]["global"][sex].values[:-1]
+            global_age_profile = self.age_profiles[bin_type]["global"][sex]
             Bins = np.array(self.age_bins[bin_type])
 
             Labels = self.CMPlots_GetLabels(Bins)
