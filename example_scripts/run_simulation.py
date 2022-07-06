@@ -564,6 +564,10 @@ if args.tracker:
         Merger = MergerClass(record_path=args.save_path)
         Merger.Merge()
         
+        Plots = PlotClass(
+            record_path=args.save_path / "Tracker",
+            Tracker_Contact_Type = "1D"
+        )
         Plots.make_plots(
             plot_BBC = True,
             plot_thumbprints = True,
