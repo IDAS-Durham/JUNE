@@ -1667,7 +1667,7 @@ class PlotClass:
 
 
         if plot_AvContactsLocation:
-            plot_dir = self.record_path / "Graphs" / "Average_Contacts" 
+            plot_dir = self.record_path / "Graphs" / f"Average_Contacts_{self.Tracker_Contact_Type}" 
             plot_dir.mkdir(exist_ok=True, parents=True)
             for rbt in relevant_bin_types_short:  
                 stacked_contacts_plot = self.plot_stacked_contacts(
