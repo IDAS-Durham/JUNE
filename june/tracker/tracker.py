@@ -236,7 +236,7 @@ class Tracker:
    
     def Canberra_distance(self, x,y):
         """
-        calculate the Canberra distance between two matrices, x and y
+        calculate the Canberra distance metric between two matrices, x and y
 
         Parameters
         ----------
@@ -251,7 +251,10 @@ class Tracker:
         """
         x = x.flatten()
         y = y.flatten()
-        return np.nansum(abs(x-y)/(abs(x)+abs(y)))
+
+        n = len(x)
+        Z = np.nansum( (x-y) == 0 )
+        return np.nansum(abs(x-y)/(abs(x)+abs(y))) / (n-Z)
 
     def Calc_QIndex(self, cm):
         """
