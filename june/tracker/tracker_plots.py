@@ -274,8 +274,31 @@ class PlotClass:
         logger.info(f"Rank {mpi_rank} -- Data loaded")
 
 #####################################################################################################################################################################
+                                ################################### Useful functions ##################################
+#####################################################################################################################################################################
+
+    def Calculate_CM_Metrics(self, bin_type, contact_type, CM, CM_err, sex="unisex"):
+        return Tracker.Calculate_CM_Metrics(self, bin_type, contact_type, CM, CM_err, sex)
+
+    def Population_Metrics(self, pop_by_bin, pop_bins):
+        return Tracker.Population_Metrics(self, pop_by_bin, pop_bins)
+
+    def Expectation_Assortativeness(self, NPCDM, pop_bins):
+        return Tracker.Expectation_Assortativeness(self, NPCDM, pop_bins)
+
+    def Calc_NPCDM(self, cm, pop_by_bin, pop_width):
+        return Tracker.Calc_NPCDM(self, cm, pop_by_bin, pop_width)
+
+    def Calc_QIndex(self, cm):
+        return Tracker.Calc_QIndex(self, cm)
+
+    def Canberra_distance(self, x,y):
+        return Tracker.Canberra_distance(self, x,y)
+
+#####################################################################################################################################################################
                                 ################################### General Plotting ##################################
 #####################################################################################################################################################################
+
 
     def Get_SAMECMAP_Norm(self, dim, override=None):
         """
@@ -769,6 +792,35 @@ class PlotClass:
             im1 = self.PlotCM(IM+1e-16, IM_err, labels_IM, ax1, origin='lower',cmap=cmap_A,norm=norm1)
             im2 = self.PlotCM(cm+1e-16, cm_err, labels, ax2, origin='lower',cmap=cmap_A,norm=norm2)
             im3 = self.PlotCM(bbc_cm, None, bbc_labels, ax3, origin='lower',cmap=cmap_A,norm=norm2)
+
+
+            #TODO Remove This is for convience only.
+            cm = np.nan_to_num(cm, nan=0.0)
+            bbc_cm = np.nan_to_num(bbc_cm, nan=0.0)
+
+            print(contact_type, self.Canberra_distance(cm, bbc_cm))
+            pop_by_bin = np.array(self.age_profiles[bin_type][contact_type][sex])
+            pop_bins = np.array(self.age_bins[bin_type])
+            pop_width = np.diff(pop_bins)
+            
+            pop_density = pop_by_bin / (np.nansum(pop_by_bin) * pop_width)
+
+            pop_by_bin_true = np.array(self.age_profiles["syoa"][contact_type][sex])
+            pop_bins_true = np.array(self.age_bins["syoa"])
+            mean, var = self.Population_Metrics(pop_by_bin_true, pop_bins_true)
+
+            Q = self.Calc_QIndex(cm)
+            NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width) 
+            I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
+            I_sq_s = I_sq / var**2
+            print("JUNE", {"Q" : f"{Q}", "I_sq" : f"{I_sq}", "I_sq_s" : f"{I_sq_s}"})
+
+            Q = self.Calc_QIndex(bbc_cm)
+            NPCDM = self.Calc_NPCDM(bbc_cm, pop_density, pop_width) 
+            I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
+            I_sq_s = I_sq / var**2
+            print("BBC", {"Q" : f"{Q}", "I_sq" : f"{I_sq}", "I_sq_s" : f"{I_sq_s}"})
+            print("")
 
             f.colorbar(im1, ax=ax1, extend="both")
             f.colorbar(im2, ax=ax2, extend="both")
