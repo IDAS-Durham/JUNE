@@ -1,3 +1,4 @@
+from configparser import Interpolation
 import numpy as np
 import yaml
 import pandas as pd
@@ -294,10 +295,10 @@ class PlotClass:
 
         """
         SAMElinvmin = {"small_dim" : 0, "large_dim" : 0}
-        SAMElogvmin = {"small_dim" : 1e-1, "large_dim" : 1e-1}
+        SAMElogvmin = {"small_dim" : 1e-1, "large_dim" : 1e-2}
         
-        SAMElinvmax = {"small_dim" : 2.5e1, "large_dim" : 3e0}
-        SAMElogvmax = {"small_dim" : 2.5e1, "large_dim" : 3e0}
+        SAMElinvmax = {"small_dim" : 2.5e1, "large_dim" : 4e0}
+        SAMElogvmax = {"small_dim" : 2.5e1, "large_dim" : 4e0}
 
 
         SAMEsymlogvmax = {"small_dim" : 3e0, "large_dim" : 3e0}
@@ -415,7 +416,9 @@ class PlotClass:
         else:
             cm_err = cm_err.T
 
-        im = ax.matshow(cm, **plt_kwargs)
+        #im = ax.matshow(cm, **plt_kwargs)
+        Interpolation = "None"
+        im = ax.imshow(cm, **plt_kwargs, interpolation = Interpolation)
         ax.xaxis.tick_bottom()
         if labels is not None:
             if len(labels) < 25:
@@ -929,7 +932,7 @@ class PlotClass:
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
-        if self.SameCMAP == False:
+        if self.SameCMAP == False or which=="CM_T":
             normlin= colors.Normalize(vmin=0,vmax=cm_Max)
             normlog = colors.LogNorm(vmin=cm_Min, vmax=cm_Max)
         else:
@@ -1004,7 +1007,7 @@ class PlotClass:
         f, ax1 = plt.subplots(1,1)
         f.patch.set_facecolor('white')
 
-        if self.SameCMAP == False:
+        if self.SameCMAP == False or which=="CM_T":
             normlin = colors.Normalize(vmin=0,vmax=cm_Max)
             normlog = colors.LogNorm(vmin=cm_Min, vmax=cm_Max)
         else:
@@ -1624,12 +1627,13 @@ class PlotClass:
     
         self.SameCMAP = SameCMAP
 
+
         relevant_bin_types = self.CM_T.keys()
         relevant_bin_types_short = ["syoa", "AC"]
         relevant_contact_types = self.CM_T["syoa"].keys()
         IM_contact_types = self.CM_T["Interaction"].keys()
         CMTypes = ["NCM", "NCM_R", "CM_T"]
-        CMTypes = ["CM_T"]
+        #CMTypes = ["CM_T"]
 
         if plot_INPUTOUTPUT:
             plot_dir_1 = self.record_path / "Graphs" / f"Contact_Matrices_INOUT_{self.Tracker_Contact_Type}"
