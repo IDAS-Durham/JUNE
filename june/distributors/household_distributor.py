@@ -312,15 +312,30 @@ class HouseholdDistributor:
             n_students_df.iterrows(),
             n_communal_df.iterrows(),
         ):
-            men_by_age, women_by_age = self._create_people_dicts(area)
-            area.households = self.distribute_people_to_households(
-                men_by_age,
-                women_by_age,
-                area,
-                number_households.to_dict(),
-                n_students.values[0],
-                n_communal.values[0],
-            )
+
+            #TODO REMOVE TRY EXCEPT
+            try: 
+                men_by_age, women_by_age = self._create_people_dicts(area)
+                area.households = self.distribute_people_to_households(
+                    men_by_age,
+                    women_by_age,
+                    area,
+                    number_households.to_dict(),
+                    n_students.values[0],
+                    n_communal.values[0],
+                )
+            except:
+                print(counter)
+                print(area_names[counter])
+                print(      
+                    men_by_age,
+                    women_by_age,
+                    area,
+                    number_households.to_dict(),
+                    n_students.values[0],
+                    n_communal.values[0]
+                )
+
             households_total += area.households
             counter += 1
             if counter % 5000 == 0:
