@@ -312,30 +312,15 @@ class HouseholdDistributor:
             n_students_df.iterrows(),
             n_communal_df.iterrows(),
         ):
-
-            #TODO REMOVE TRY EXCEPT
-            try: 
-                men_by_age, women_by_age = self._create_people_dicts(area)
-                area.households = self.distribute_people_to_households(
-                    men_by_age,
-                    women_by_age,
-                    area,
-                    number_households.to_dict(),
-                    n_students.values[0],
-                    n_communal.values[0],
-                )
-            except:
-                print(counter)
-                print(area_names[counter])
-                print(      
-                    men_by_age,
-                    women_by_age,
-                    area,
-                    number_households.to_dict(),
-                    n_students.values[0],
-                    n_communal.values[0]
-                )
-
+            men_by_age, women_by_age = self._create_people_dicts(area)
+            area.households = self.distribute_people_to_households(
+                men_by_age,
+                women_by_age,
+                area,
+                number_households.to_dict(),
+                n_students.values[0],
+                n_communal.values[0],
+            )
             households_total += area.households
             counter += 1
             if counter % 5000 == 0:
@@ -409,6 +394,8 @@ class HouseholdDistributor:
         self._refresh_random_numbers_list(total_people)
         # import time
         # time.sleep(0.01)
+
+        print(area.name, number_households_per_composition)
 
         if not men_by_age and not women_by_age:
             raise HouseholdError("No people in Area!")

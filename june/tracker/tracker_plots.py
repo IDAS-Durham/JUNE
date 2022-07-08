@@ -784,6 +784,9 @@ class PlotClass:
 
             cm_Max = max(bbc_Max, cm_Max)
 
+            if self.SameCMAP == False:
+                norm2 = colors.Normalize(vmin=0,vmax=cm_Max)
+
             plt.rcParams["figure.figsize"] = (15,5)
             f, (ax1,ax2, ax3) = plt.subplots(1,3)
             f.patch.set_facecolor('white')
@@ -792,7 +795,6 @@ class PlotClass:
             im1 = self.PlotCM(IM+1e-16, IM_err, labels_IM, ax1, origin='lower',cmap=cmap_A,norm=norm1)
             im2 = self.PlotCM(cm+1e-16, cm_err, labels, ax2, origin='lower',cmap=cmap_A,norm=norm2)
             im3 = self.PlotCM(bbc_cm, None, bbc_labels, ax3, origin='lower',cmap=cmap_A,norm=norm2)
-
 
             #TODO Remove This is for convience only.
             cm = np.nan_to_num(cm, nan=0.0)
@@ -832,6 +834,7 @@ class PlotClass:
             #f.suptitle(f"{bin_type} binned contacts in {contact_type}")
             plt.tight_layout()
             return (ax1,ax2, ax3)
+            
 
     
     def plot_interaction_matrix(self, contact_type):

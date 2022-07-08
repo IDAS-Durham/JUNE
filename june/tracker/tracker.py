@@ -1572,10 +1572,8 @@ class Tracker:
         #Loop over people
         if len(group.people) < 2:
             return 1
-
         
         for person in group.people:
-            
             #Shelter we want family groups
             if group.spec == "shelter":
                 groups_inter = [list(sub.people) for sub in group.families]
@@ -1864,7 +1862,6 @@ class Tracker:
         if len(group.people) < 2:
             return 1
 
-
         for subgroup, sub_i in zip(group.subgroups, range(len(group.subgroups))):
             if group.spec == "school": #change subgroups to Teachers, Students
                 if sub_i > 0:
@@ -2063,6 +2060,15 @@ class Tracker:
                             Skipped_E += 1
                             counter += 1
                             continue #Skip external venues to the domain.
+
+                        # if group.spec in ["household"]:
+                        #     if group.being_visited:
+                        #         #We want to track household visits separately
+                        #         # and person.residence.group != group
+                        #         # or 9 <= self.timer.date.hour < 18
+                        #         counter += 1
+                        #         continue
+                        #     #Carehomes already deal with visitors
 
                         self.simulate_pop_time_venues(group)
                         self.simulate_attendance(group, super_group_name, self.timer, counter)

@@ -59,7 +59,7 @@ class Household(Group):
     def _get_leisure_subgroup_for_person(self, person):
         if person.age < 18:
             subgroup = self.SubgroupType.kids
-        elif person.age <= 35:
+        elif person.age <= 25:
             subgroup = self.SubgroupType.young_adults
         elif person.age < 65:
             subgroup = self.SubgroupType.adults
@@ -91,7 +91,7 @@ class Household(Group):
         """
         if person.age < 18:
             return cls.SubgroupType.kids
-        elif person.age <= 35:
+        elif person.age <= 25:
             return cls.SubgroupType.young_adults
         elif person.age < 65:
             return cls.SubgroupType.adults
