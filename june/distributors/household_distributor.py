@@ -395,7 +395,8 @@ class HouseholdDistributor:
         # import time
         # time.sleep(0.01)
 
-        print(area.name, number_households_per_composition)
+        if area.name == "E00132644": 
+            print(area.name, number_households_per_composition)
 
         if not men_by_age and not women_by_age:
             raise HouseholdError("No people in Area!")
@@ -407,6 +408,9 @@ class HouseholdDistributor:
 
         # student households
         key = "0 >=1 0 0 0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -421,6 +425,9 @@ class HouseholdDistributor:
 
         # single person old
         key = "0 0 0 0 1"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -439,6 +446,9 @@ class HouseholdDistributor:
                 )
         # couples old
         key = "0 0 0 0 2"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -458,6 +468,9 @@ class HouseholdDistributor:
 
         # old people houses with possibly more old people
         key = "0 0 0 0 >=2"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -475,6 +488,9 @@ class HouseholdDistributor:
         # even though the number of old people is >=0, we put one old person
         # always if possible.
         key = "1 0 >=0 >=1 >=0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -495,6 +511,9 @@ class HouseholdDistributor:
                 )
         # same as the previous one but with 2 kids minimum.
         key = ">=2 0 >=0 >=1 >=0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -517,6 +536,9 @@ class HouseholdDistributor:
 
         # one kid and one parent for sure, possibly extra young adults.
         key = "1 0 >=0 1 0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -536,6 +558,9 @@ class HouseholdDistributor:
                 )
         # same as above with two kids instead.
         key = ">=2 0 >=0 1 0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -556,6 +581,9 @@ class HouseholdDistributor:
                 )
         # 1 kid and two parents with possibly young adults.
         key = "1 0 >=0 2 0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -575,6 +603,9 @@ class HouseholdDistributor:
                 )
         # same as above but two kids.
         key = ">=2 0 >=0 2 0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -595,6 +626,9 @@ class HouseholdDistributor:
                 )
         # couple adult, it's possible to have a person < 65 with one > 65
         key = "0 0 0 2 0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -613,6 +647,9 @@ class HouseholdDistributor:
                 )
         # one adult (parent) and one young adult (non-dependable child)
         key = "0 0 >=1 1 0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -628,6 +665,9 @@ class HouseholdDistributor:
 
         # same as above but two adults
         key = "0 0 >=1 2 0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -643,6 +683,9 @@ class HouseholdDistributor:
 
         # single person adult
         key = "0 0 0 1 0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -658,6 +701,9 @@ class HouseholdDistributor:
 
         # other to be filled with remaining young adults, adults, and old people
         key = "0 0 >=0 >=0 >=0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             if house_number > 0:
@@ -678,6 +724,9 @@ class HouseholdDistributor:
         remaining_people = count_remaining_people(men_by_age, women_by_age)
         communal_houses = 0  # this is used to count houses later
         key = ">=0 >=0 >=0 >=0 >=0"
+        if area.name == "E00132644" and key in number_households_per_composition: 
+            print(key, number_households_per_composition[key])
+
         if key in number_households_per_composition:
             house_number = number_households_per_composition[key]
             communal_houses = house_number
@@ -704,6 +753,9 @@ class HouseholdDistributor:
             all_households,
         )
 
+        if area.name == "E00132644": 
+            print("END?")
+
         # make sure we have the correct number of households
         if not (
             total_number_of_households - communal_houses
@@ -715,6 +767,10 @@ class HouseholdDistributor:
         # convert permanent residents list to tuples
         for household in all_households:
             people_in_households += len(household.people)
+
+        if area.name == "E00132644": 
+            print(total_people, people_in_households)
+
         assert total_people == people_in_households
         return all_households
 
