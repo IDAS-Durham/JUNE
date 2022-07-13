@@ -201,7 +201,19 @@ class Leisure:
         person
             an instance of person
         """
+
+        ###########################################
+        age_before  = person.age
+        age = person.age
+        # AorC_value = self.AorC(person.age) 
+        # if age < 18 and AorC_value == "Adult":
+        #     age = 18
+
+        #Does this change actual persons name above?
+        person.age = age
+
         if person.residence.group.spec == "care_home":
+            person.age = age_before
             return
         prob_age_sex = self._get_activity_probabilities_for_person(person=person)
         if random() < prob_age_sex["does_activity"]:
@@ -214,11 +226,14 @@ class Leisure:
             subgroup = activity_distributor.get_leisure_subgroup(
                 person, to_send_abroad=to_send_abroad
             )
-            person.subgroups.leisure = subgroup
+            person.subgroups.leisure = subgroup            
             activity_distributor.send_household_with_person_if_necessary(
                 person=person, to_send_abroad=to_send_abroad
             )
+            person.age = age_before
             return subgroup
+        person.age = age_before
+        
 
     def _generate_leisure_probabilities_for_age_and_sex(
         self, delta_time: float, working_hours: bool, date: str, region: Region
@@ -371,7 +386,34 @@ class Leisure:
                 ][person.sex][person.age]["drags_household"][activity]
         return random() < prob
 
+     #TESTING TODO
+    ######################################################################
+    def P_IsAdult(self, age):
+        tanh_halfpeak_age = 15#17.1
+        tanh_width = .7#1
+        
+        minageadult = 13
+        maxagechild = 17
+        if age < minageadult:
+            return 0
+        elif age > maxagechild:
+            return 1
+        else:
+            return (np.tanh(tanh_width*(age-tanh_halfpeak_age))+1)/2
+        
+    def P_IsChild(self, age):
+        return 1 - self.P_IsAdult(age)
+
+    def AorC(self, age):
+        r = np.random.rand(1)[0]
+        if r < self.P_IsAdult(age):
+            return "Adult"
+        else:
+            return "Child"
+    ######################################################################
+
     def _get_activity_probabilities_for_person(self, person: Person):
+            
         try:
             return self.probabilities_by_region_sex_age[person.region.name][person.sex][
                 person.age

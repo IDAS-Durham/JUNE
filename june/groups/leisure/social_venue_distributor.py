@@ -162,6 +162,7 @@ class SocialVenueDistributor:
             if self.spec in region.closed_venues:
                 return 0
             regional_compliance = region.regional_compliance
+
         original_poisson_parameter = self.poisson_parameters[day_type][sex][age]
         if policy_reduction is None:
             return original_poisson_parameter
