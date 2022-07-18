@@ -446,9 +446,9 @@ class PlotClass:
         if labels is not None:
             if len(labels) < 25:
                 ax.set_xticks(np.arange(len(cm)))
-                ax.set_xticklabels(labels,rotation=45)
+                ax.set_xticklabels(labels,rotation=45, size=12)
                 ax.set_yticks(np.arange(len(cm)))
-                ax.set_yticklabels(labels)
+                ax.set_yticklabels(labels, size =12)
 
         # Loop over data dimensions and create text annotations.
         if cm.shape[0]*cm.shape[1] < 26:
@@ -457,10 +457,11 @@ class PlotClass:
             ax.set_xlabel("age group")
             ax.set_ylabel("contact age group")
         else:
-            ax.axes.xaxis.set_visible(False)
-            ax.axes.yaxis.set_visible(False)
+            #ax.axes.xaxis.set_visible(False)
+            #ax.axes.yaxis.set_visible(False)
             ax.set_xlabel("")
             ax.set_ylabel("")
+            pass
         return im
 
     def CMPlots_GetLabels(self, bins):
@@ -943,6 +944,66 @@ class PlotClass:
         #f.suptitle(f"Survey interaction binned contacts in {contact_type}")
         plt.tight_layout()
         return ax1
+
+    def plot_interaction_matrix_thumb(self, log, contact_type):
+        """
+        Function to plot interaction matrix for contact_type
+
+        Parameters
+        ----------
+            log: 
+
+            contact_type:
+                Location of contacts
+            
+        Returns
+        -------
+            ax1:
+                matplotlib axes object
+        """
+        IM, IM_err = self.IMPlots_GetIM(contact_type)
+        labels_IM = self.IMPlots_GetLabels(contact_type)
+        IM, IM_err, labels_IM = self.IMPlots_UsefulCM(contact_type, IM, cm_err=IM_err, labels=labels_IM)
+
+        if len(np.nonzero(IM)[0]) != 0 and len(np.nonzero(IM)[1]) != 0:
+            IM_Min = np.nanmin(IM[np.nonzero(IM)])
+        else:
+            IM_Min = 1e-1
+        if np.isfinite(IM).sum() != 0:
+            IM_Max = IM[np.isfinite(IM)].max()
+        else:
+            IM_Max = 1
+
+
+        if np.isnan(IM_Min):
+            IM_Min = 1e-1
+        if np.isnan(IM_Max) or IM_Max == 0:
+            IM_Max = 1
+
+        IM = np.nan_to_num(IM, posinf=IM_Max, neginf=0, nan=0)
+
+
+        labels_CM = labels_IM
+
+        plt.rcParams["figure.figsize"] = (5,5)
+        f, ax1 = plt.subplots(1,1)
+        f.patch.set_facecolor('white')
+
+        if self.SameCMAP == False:
+            normlin = colors.Normalize(vmin=0,vmax=IM_Max)
+            normlog = colors.LogNorm(vmin=IM_Max, vmax=IM_Max)
+        else:
+            normlin = self.Get_SAMECMAP_Norm(IM.shape[0], override="Lin")
+            normlog = self.Get_SAMECMAP_Norm(IM.shape[0], override="Log")
+            
+        if log == False:
+            im1 = self.PlotCM(IM+1e-16, IM_err, labels_IM, ax1, origin='lower',cmap=cmap_A,norm=normlin, thumb=True)
+        else:
+            im1 = self.PlotCM(IM+1e-16, IM_err, labels_IM, ax1, origin='lower',cmap=cmap_A, norm=normlog, thumb=True)
+
+        #f.suptitle(f"Survey interaction binned contacts in {contact_type}")
+        plt.tight_layout()
+        return f, ax1, im1
         
     def plot_contact_matrix(self, bin_type, contact_type, sex="unisex", which="NCM"):
         """
@@ -1071,14 +1132,13 @@ class PlotClass:
             
         if log == False:
             im1 = self.PlotCM(cm+1e-16, cm_err, None, ax1, origin='lower',cmap=cmap_A,norm=normlin, thumb=True)
-            f.colorbar(im1, ax=ax1, extend="both")
         else:
             im1 = self.PlotCM(cm+1e-16, cm_err, None, ax1, origin='lower',cmap=cmap_A, norm=normlog, thumb=True)
-            f.colorbar(im1, ax=ax1, extend="both")
+
 
         #cax1 = f.add_axes([ax1.get_position().x1+0.01,ax1.get_position().y0,0.02,ax1.get_position().height])
         plt.tight_layout()
-        return (ax1)
+        return f, ax1, im1
 
     def plot_comparesexes_contact_matrix(self, bin_type, contact_type, which="NCM"):
         """
@@ -1675,6 +1735,7 @@ class PlotClass:
         -------
             None
         """
+        CbarMultiplier=3
 
         logger.info(f"Rank {mpi_rank} -- Begin plotting")
         if self.group_type_names == []:
@@ -1756,6 +1817,29 @@ class PlotClass:
                 )
                 plt.savefig(plot_dir / f"{rct}.pdf", dpi=150, bbox_inches='tight')
                 plt.close()
+
+                if plot_thumbprints:
+                    fig, ax1, im1 = self.plot_interaction_matrix_thumb(
+                        log=False, contact_type=rct
+                    )
+                    plt.savefig(plot_dir / f"{rct}_thumbnail.pdf", dpi=100, bbox_inches='tight')
+                    if rct == list(self.IM.keys())[0] and SameCMAP: 
+                        fig.colorbar(im1, ax=ax1, extend="both", orientation="horizontal",aspect=40)
+                        ax1.remove()
+                        fig.set_size_inches(fig.get_size_inches()[0]*CbarMultiplier, fig.get_size_inches()[1])
+                        plt.savefig(plot_dir / f"colourbar_Interaction.pdf", dpi=100, bbox_inches='tight')
+                    plt.close()
+
+                    fig, ax1, im1 = self.plot_interaction_matrix_thumb(
+                        log=True, contact_type=rct,
+                    )
+                    plt.savefig(plot_dir / f"{rct}_thumbnail_log.pdf", dpi=100, bbox_inches='tight')
+                    if rct == list(self.IM.keys())[0] and SameCMAP: 
+                        fig.colorbar(im1, ax=ax1, extend="both", orientation="horizontal",aspect=40)
+                        ax1.remove()
+                        fig.set_size_inches(fig.get_size_inches()[0]*CbarMultiplier, fig.get_size_inches()[1])
+                        plt.savefig(plot_dir / f"colourbar_Interaction_log.pdf", dpi=100, bbox_inches='tight')
+                    plt.close()
         logger.info(f"Rank {mpi_rank} -- Interaction matrix plots done")
 
         if plot_ContactMatrices:
@@ -1782,16 +1866,26 @@ class PlotClass:
                                 plt.close()
 
                                 if plot_thumbprints:
-                                    self.plot_contact_matrix_thumb(
+                                    fig, ax1, im1 = self.plot_contact_matrix_thumb(
                                         log=False, bin_type=rbt, contact_type=rct, sex=sex, which=CMType
                                     )
                                     plt.savefig(plot_dir_3 / f"{rct}_thumbnail.pdf", dpi=100, bbox_inches='tight')
+                                    if rct == list(self.IM.keys())[0] and SameCMAP: 
+                                        fig.colorbar(im1, ax=ax1, extend="both", orientation="horizontal")
+                                        ax1.remove()
+                                        fig.set_size_inches(fig.get_size_inches()[0]*CbarMultiplier, fig.get_size_inches()[1])
+                                        plt.savefig(plot_dir_3 / f"colourbar_{rbt}.pdf", dpi=100, bbox_inches='tight')
                                     plt.close()
 
-                                    self.plot_contact_matrix_thumb(
+                                    fig, ax1, im1 = self.plot_contact_matrix_thumb(
                                         log=True, bin_type=rbt, contact_type=rct, sex=sex, which=CMType
                                     )
                                     plt.savefig(plot_dir_3 / f"{rct}_thumbnail_log.pdf", dpi=100, bbox_inches='tight')
+                                    if rct == list(self.IM.keys())[0] and SameCMAP: 
+                                        fig.colorbar(im1, ax=ax1, extend="both", orientation="horizontal")
+                                        ax1.remove()
+                                        fig.set_size_inches(fig.get_size_inches()[0]*CbarMultiplier, fig.get_size_inches()[1])
+                                        plt.savefig(plot_dir_3 / f"colourbar_{rbt}_log.pdf", dpi=100, bbox_inches='tight')
                                     plt.close()
                     else:
                         for rct in IM_contact_types:
@@ -1802,16 +1896,24 @@ class PlotClass:
                             plt.close()
 
                             if plot_thumbprints:
-                                self.plot_contact_matrix_thumb(
+                                fig, ax1, im1 = self.plot_contact_matrix_thumb(
                                     log=False, bin_type=rbt, contact_type=rct, sex=sex, which=CMType
                                 )
                                 plt.savefig(plot_dir_2 / f"{rct}_thumbnail.pdf", dpi=100, bbox_inches='tight')
+                                if rct == list(self.IM.keys())[-1]:
+                                    fig.colorbar(im1, ax=ax1, extend="both")
+                                    ax1.remove()
+                                    plt.savefig(plot_dir_2 / f"colourbar_CM.pdf", dpi=100, bbox_inches='tight')
                                 plt.close()
 
-                                self.plot_contact_matrix_thumb(
+                                fig, ax1, im1 = self.plot_contact_matrix_thumb(
                                     log=True, bin_type=rbt, contact_type=rct, sex=sex, which=CMType
                                 )
                                 plt.savefig(plot_dir_2 / f"{rct}_thumbnail_log.pdf", dpi=100, bbox_inches='tight')
+                                if rct == list(self.IM.keys())[-1]:
+                                    fig.colorbar(im1, ax=ax1, extend="both")
+                                    ax1.remove()
+                                    plt.savefig(plot_dir_2 / f"colourbar_CM_log.pdf", dpi=100, bbox_inches='tight')
                                 plt.close()
         logger.info(f"Rank {mpi_rank} -- CM plots done")
 
