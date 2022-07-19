@@ -1736,6 +1736,7 @@ class PlotClass:
             None
         """
         CbarMultiplier=3
+        aspect=40
 
         logger.info(f"Rank {mpi_rank} -- Begin plotting")
         if self.group_type_names == []:
@@ -1744,10 +1745,10 @@ class PlotClass:
         self.SameCMAP = SameCMAP
 
 
-        relevant_bin_types = self.CM_T.keys()
+        relevant_bin_types = list(self.CM_T.keys())
         relevant_bin_types_short = ["syoa", "AC"]
-        relevant_contact_types = self.CM_T["syoa"].keys()
-        IM_contact_types = self.CM_T["Interaction"].keys()
+        relevant_contact_types = list(self.CM_T["syoa"].keys())
+        IM_contact_types = list(self.CM_T["Interaction"].keys())
         CMTypes = ["NCM", "NCM_R", "CM_T"]
         #CMTypes = ["CM_T"]
 
@@ -1824,7 +1825,7 @@ class PlotClass:
                     )
                     plt.savefig(plot_dir / f"{rct}_thumbnail.pdf", dpi=100, bbox_inches='tight')
                     if rct == list(self.IM.keys())[0] and SameCMAP: 
-                        fig.colorbar(im1, ax=ax1, extend="both", orientation="horizontal",aspect=40)
+                        fig.colorbar(im1, ax=ax1, extend="both", orientation="horizontal",aspect=aspect)
                         ax1.remove()
                         fig.set_size_inches(fig.get_size_inches()[0]*CbarMultiplier, fig.get_size_inches()[1])
                         plt.savefig(plot_dir / f"colourbar_Interaction.pdf", dpi=100, bbox_inches='tight')
@@ -1835,7 +1836,7 @@ class PlotClass:
                     )
                     plt.savefig(plot_dir / f"{rct}_thumbnail_log.pdf", dpi=100, bbox_inches='tight')
                     if rct == list(self.IM.keys())[0] and SameCMAP: 
-                        fig.colorbar(im1, ax=ax1, extend="both", orientation="horizontal",aspect=40)
+                        fig.colorbar(im1, ax=ax1, extend="both", orientation="horizontal",aspect=aspect)
                         ax1.remove()
                         fig.set_size_inches(fig.get_size_inches()[0]*CbarMultiplier, fig.get_size_inches()[1])
                         plt.savefig(plot_dir / f"colourbar_Interaction_log.pdf", dpi=100, bbox_inches='tight')
@@ -1870,8 +1871,8 @@ class PlotClass:
                                         log=False, bin_type=rbt, contact_type=rct, sex=sex, which=CMType
                                     )
                                     plt.savefig(plot_dir_3 / f"{rct}_thumbnail.pdf", dpi=100, bbox_inches='tight')
-                                    if rct == list(self.IM.keys())[0] and SameCMAP: 
-                                        fig.colorbar(im1, ax=ax1, extend="both", orientation="horizontal")
+                                    if rct == relevant_contact_types[0] and SameCMAP: 
+                                        fig.colorbar(im1, ax=ax1, extend="both", orientation="horizontal",aspect=aspect)
                                         ax1.remove()
                                         fig.set_size_inches(fig.get_size_inches()[0]*CbarMultiplier, fig.get_size_inches()[1])
                                         plt.savefig(plot_dir_3 / f"colourbar_{rbt}.pdf", dpi=100, bbox_inches='tight')
@@ -1881,8 +1882,8 @@ class PlotClass:
                                         log=True, bin_type=rbt, contact_type=rct, sex=sex, which=CMType
                                     )
                                     plt.savefig(plot_dir_3 / f"{rct}_thumbnail_log.pdf", dpi=100, bbox_inches='tight')
-                                    if rct == list(self.IM.keys())[0] and SameCMAP: 
-                                        fig.colorbar(im1, ax=ax1, extend="both", orientation="horizontal")
+                                    if rct == relevant_contact_types[0] and SameCMAP: 
+                                        fig.colorbar(im1, ax=ax1, extend="both", orientation="horizontal",aspect=aspect)
                                         ax1.remove()
                                         fig.set_size_inches(fig.get_size_inches()[0]*CbarMultiplier, fig.get_size_inches()[1])
                                         plt.savefig(plot_dir_3 / f"colourbar_{rbt}_log.pdf", dpi=100, bbox_inches='tight')
@@ -1900,9 +1901,10 @@ class PlotClass:
                                     log=False, bin_type=rbt, contact_type=rct, sex=sex, which=CMType
                                 )
                                 plt.savefig(plot_dir_2 / f"{rct}_thumbnail.pdf", dpi=100, bbox_inches='tight')
-                                if rct == list(self.IM.keys())[-1]:
-                                    fig.colorbar(im1, ax=ax1, extend="both")
+                                if rct == IM_contact_types[0]:
+                                    fig.colorbar(im1, ax=ax1, extend="both",aspect=aspect)
                                     ax1.remove()
+                                    fig.set_size_inches(fig.get_size_inches()[0]*CbarMultiplier, fig.get_size_inches()[1])
                                     plt.savefig(plot_dir_2 / f"colourbar_CM.pdf", dpi=100, bbox_inches='tight')
                                 plt.close()
 
@@ -1910,9 +1912,10 @@ class PlotClass:
                                     log=True, bin_type=rbt, contact_type=rct, sex=sex, which=CMType
                                 )
                                 plt.savefig(plot_dir_2 / f"{rct}_thumbnail_log.pdf", dpi=100, bbox_inches='tight')
-                                if rct == list(self.IM.keys())[-1]:
-                                    fig.colorbar(im1, ax=ax1, extend="both")
+                                if rct == IM_contact_types[0]:
+                                    fig.colorbar(im1, ax=ax1, extend="both",aspect=aspect)
                                     ax1.remove()
+                                    fig.set_size_inches(fig.get_size_inches()[0]*CbarMultiplier, fig.get_size_inches()[1])
                                     plt.savefig(plot_dir_2 / f"colourbar_CM_log.pdf", dpi=100, bbox_inches='tight')
                                 plt.close()
         logger.info(f"Rank {mpi_rank} -- CM plots done")
