@@ -823,6 +823,7 @@ class PlotClass:
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
             I_sq_s = I_sq / var**2
             print("BBC", {"Q" : f"{Q}", "I_sq" : f"{I_sq}", "I_sq_s" : f"{I_sq_s}"})
+            print({"Camberra" : self.Canberra_distance(cm, bbc_cm)})
             print("")
 
             f.colorbar(im1, ax=ax1, extend="both")
@@ -993,8 +994,8 @@ class PlotClass:
             normlin = colors.Normalize(vmin=0,vmax=IM_Max)
             normlog = colors.LogNorm(vmin=IM_Max, vmax=IM_Max)
         else:
-            normlin = self.Get_SAMECMAP_Norm(IM.shape[0], override="Lin")
-            normlog = self.Get_SAMECMAP_Norm(IM.shape[0], override="Log")
+            normlin = self.Get_SAMECMAP_Norm(IM.shape[0])
+            normlog = self.Get_SAMECMAP_Norm(IM.shape[0])
             
         if log == False:
             im1 = self.PlotCM(IM+1e-16, IM_err, labels_IM, ax1, origin='lower',cmap=cmap_A,norm=normlin, thumb=True)
@@ -1131,9 +1132,9 @@ class PlotClass:
             normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="Log")
             
         if log == False:
-            im1 = self.PlotCM(cm+1e-16, cm_err, None, ax1, origin='lower',cmap=cmap_A,norm=normlin, thumb=True)
+            im1 = self.PlotCM(cm+1e-16, cm_err, labels, ax1, origin='lower',cmap=cmap_A,norm=normlin, thumb=True)
         else:
-            im1 = self.PlotCM(cm+1e-16, cm_err, None, ax1, origin='lower',cmap=cmap_A, norm=normlog, thumb=True)
+            im1 = self.PlotCM(cm+1e-16, cm_err, labels, ax1, origin='lower',cmap=cmap_A, norm=normlog, thumb=True)
 
 
         #cax1 = f.add_axes([ax1.get_position().x1+0.01,ax1.get_position().y0,0.02,ax1.get_position().height])
