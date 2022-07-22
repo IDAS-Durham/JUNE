@@ -275,6 +275,10 @@ def make_dummy_world():
             "household_visits",
             "care_home_visits",
         ],
+        daytypes = {
+            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"],
+        }
     )
     leisure.distribute_social_venues_to_areas(
         areas=world.areas, super_areas=world.super_areas
@@ -342,6 +346,10 @@ def create_full_world(full_world_geography, test_results):
             "care_home_visits",
         ],
         world,
+        daytypes = {
+            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"],
+        }
     )
     leisure.distribute_social_venues_to_areas(
         areas=world.areas, super_areas=world.super_areas
@@ -376,6 +384,10 @@ def create_domains_world():
             "care_home_visits",
         ],
         world,
+        daytypes = {
+            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"],
+        }
     )
     leisure.distribute_social_venues_to_areas(
         areas=world.areas, super_areas=world.super_areas

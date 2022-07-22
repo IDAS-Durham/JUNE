@@ -23,7 +23,7 @@ default_config_filename = paths.configs_path / "config_example.yaml"
 logger = logging.getLogger("leisure")
 
 
-def generate_leisure_for_world(list_of_leisure_groups, world, daytypes):
+def generate_leisure_for_world(list_of_leisure_groups, world, daytypes): 
     """
     Generates an instance of the leisure class for the specified geography and leisure groups.
 

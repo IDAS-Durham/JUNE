@@ -5,11 +5,10 @@ test_june/unit/results/
 .DS_Store
 test_june/results/
 .idea/
-data
+data/
 *__pycache__*
 *.ipynb_checkpoints*
 *.pyc
-*.csv
 *.pkl
 *.egg-info
 .env
