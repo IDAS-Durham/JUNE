@@ -95,9 +95,9 @@ class City:
             ]
             return internal_station.get_commute_subgroup()
         else:
-            closest_inter_city_station = (
-                person.super_area.closest_inter_city_station_for_city[self.name]
-            )
+            closest_inter_city_station = person.super_area.closest_inter_city_station_for_city[
+                self.name
+            ]
             if person.id in closest_inter_city_station.commuter_ids:
                 return closest_inter_city_station.get_commute_subgroup()
 
@@ -248,8 +248,8 @@ class ExternalCity(ExternalGroup):
             ]
             return internal_station.get_commute_subgroup()
         else:
-            closest_inter_city_station = (
-                person.super_area.closest_inter_city_station_for_city[self.name]
-            )
+            closest_inter_city_station = person.super_area.closest_inter_city_station_for_city[
+                self.name
+            ]
             if person.id in closest_inter_city_station.commuter_ids:
                 return closest_inter_city_station.get_commute_subgroup()

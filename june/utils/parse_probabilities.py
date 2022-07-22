@@ -35,6 +35,7 @@ def parse_age_probabilities(age_dict: dict, fill_value=0):
         probabilities_per_age.append(probabilities_binned[idx])
     return probabilities_per_age
 
+
 def parse_opens(dict: dict, fill_value=0):
     """
     Parses the opening time dictionary into an array

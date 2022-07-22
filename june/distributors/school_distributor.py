@@ -16,11 +16,7 @@ logger = logging.getLogger("school_distributor")
 
 EARTH_RADIUS = 6371  # km
 
-default_decoder = {
-    2314: "secondary",
-    2315: "primary",
-    2316: "special_needs",
-}
+default_decoder = {2314: "secondary", 2315: "primary", 2316: "special_needs"}
 
 
 class SchoolDistributor:
@@ -127,9 +123,7 @@ class SchoolDistributor:
             for agegroup in self.schools.school_trees:
                 closest_schools = []
                 closest_schools_idx = self.schools.get_closest_schools(
-                    agegroup,
-                    area.coordinates,
-                    self.neighbour_schools,
+                    agegroup, area.coordinates, self.neighbour_schools
                 )
                 for idx in closest_schools_idx:
                     real_idx = self.schools.school_agegroup_to_global_indices[agegroup][
@@ -385,9 +379,7 @@ class SchoolDistributor:
             if all_filled:
                 break
 
-    def limit_classroom_sizes(
-        self,
-    ):
+    def limit_classroom_sizes(self,):
         """
         Limit subgroup sizes that represent class rooms to a maximum number of students.
         If maximum number is exceeded create new subgroups to distribute students homogeneously

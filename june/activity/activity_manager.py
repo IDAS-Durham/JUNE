@@ -11,12 +11,7 @@ from june.exc import SimulatorError
 from june.groups import Subgroup
 from june.groups.leisure import Leisure
 from june.groups.travel import Travel
-from june.mpi_setup import (
-    mpi_comm,
-    mpi_size,
-    mpi_rank,
-    MovablePeople,
-)
+from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, MovablePeople
 from june.records import Record
 
 logger = logging.getLogger("activity_manager")
@@ -50,11 +45,7 @@ class ActivityManager:
     ):
         self.policies = policies
         if self.policies is not None:
-            self.policies.init_policies(
-                world=world,
-                date=timer.date,
-                record=record,
-            )
+            self.policies.init_policies(world=world, date=timer.date, record=record)
         self.world = world
         self.timer = timer
         self.leisure = leisure
@@ -92,7 +83,6 @@ class ActivityManager:
             )
             activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
-   
 
         cls.check_inputs(time_config)
         weekday_activities = [
@@ -192,10 +182,7 @@ class ActivityManager:
     def get_personal_subgroup(self, person: "Person", activity: str):
         return getattr(person, activity)
 
-    def do_timestep(
-        self,
-        record=None,
-    ):
+    def do_timestep(self, record=None):
         # get time data
         tick_interaction_timestep = perf_counter()
         date = self.timer.date
@@ -277,7 +264,6 @@ class ActivityManager:
             if external_subgroup is not None:
                 to_send_abroad.add_person(person, external_subgroup)
 
-        
         tock = perf_counter()
         mpi_logger.info(f"{self.timer.date},{mpi_rank},activity,{tock-tick}")
         return to_send_abroad

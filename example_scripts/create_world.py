@@ -1,11 +1,5 @@
 from june.geography import Geography
-from june.groups import (
-    Hospitals,
-    Schools,
-    Companies,
-    CareHomes,
-    Universities,
-)
+from june.groups import Hospitals, Schools, Companies, CareHomes, Universities
 from june.groups.leisure import (
     Pubs,
     Cinemas,
@@ -30,16 +24,7 @@ london_areas = np.concatenate((london_areas, ["E02003719", "E02003720", "E020037
 #
 ## add Bath as well to have a city with no stations
 london_areas = np.concatenate(
-    (
-        london_areas,
-        [
-            "E02002988",
-            "E02002989",
-            "E02002990",
-            "E02002991",
-            "E02002992",
-        ],
-    )
+    (london_areas, ["E02002988", "E02002989", "E02002990", "E02002991", "E02002992"])
 )
 
 t1 = time.time()

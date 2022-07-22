@@ -195,9 +195,7 @@ class InfectionSelector:
         self.probability = CompletionTime.from_dict(transmission_config["probability"])
 
     def _select_transmission(
-        self,
-        time_to_symptoms_onset: float,
-        max_symptoms_tag: "SymptomTag",
+        self, time_to_symptoms_onset: float, max_symptoms_tag: "SymptomTag"
     ) -> "Transmission":
         """
         Selects the transmission type specified by the user in the init,

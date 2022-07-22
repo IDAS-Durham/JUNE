@@ -192,9 +192,7 @@ def test__average_time_to_infect(n_teachers, mode, selector):
     teacher_teacher = transmission_probability * (n_teachers - 1)
     student_teacher = transmission_probability / n_students
     np.testing.assert_allclose(
-        np.mean(n_days),
-        1.0 / (teacher_teacher + student_teacher),
-        rtol=0.1,
+        np.mean(n_days), 1.0 / (teacher_teacher + student_teacher), rtol=0.1
     )
 
 
@@ -287,8 +285,4 @@ def test__super_spreaders(selector):
     culpable_ids, culpable_counts = np.unique(to_blame_ids, return_counts=True)
     for culpable_id, culpable_count in zip(culpable_ids, culpable_counts):
         expected = (id_to_trans[culpable_id] / total * n_infections,)
-        assert np.isclose(
-            culpable_count,
-            expected,
-            rtol=0.25,
-        )
+        assert np.isclose(culpable_count, expected, rtol=0.25)

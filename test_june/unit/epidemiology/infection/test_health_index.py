@@ -40,10 +40,7 @@ class TestMultipliers:
 
     def test__comorbidities_effect(self):
         comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
-        dummy = Person.from_attributes(
-            sex="f",
-            age=60,
-        )
+        dummy = Person.from_attributes(sex="f", age=60)
         dummy.infection = Covid19(None, None)
         feo = Person.from_attributes(sex="f", age=60, comorbidity="feo")
         feo.infection = Covid19(None, None)

@@ -10,9 +10,7 @@ float_vlen_type = h5py.vlen_dtype(np.dtype("float64"))
 
 
 def save_symptoms_to_hdf5(
-    hdf5_file_path: str,
-    symptoms_list: List[Symptoms],
-    chunk_size: int = 50000,
+    hdf5_file_path: str, symptoms_list: List[Symptoms], chunk_size: int = 50000
 ):
     """
     Saves symptoms data to hdf5.

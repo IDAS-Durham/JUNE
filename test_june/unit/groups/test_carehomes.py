@@ -8,11 +8,7 @@ default_config_file = paths.configs_path / "defaults/groups/carehome.yaml"
 class TestCareHome:
     @pytest.fixture(name="carehome")
     def create_carehome(self):
-        return CareHome(
-            n_residents=30,
-            n_workers=8,
-            area="asd",
-        )
+        return CareHome(n_residents=30, n_workers=8, area="asd")
 
     def test__carehome_grouptype(self, carehome):
         assert carehome.SubgroupType.workers == 0

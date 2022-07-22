@@ -41,9 +41,7 @@ def make_dose(efficacy, prior_efficacy):
     )
 
 
-@pytest.fixture(
-    name="dates_values",
-)
+@pytest.fixture(name="dates_values")
 def make_dates_and_values():
     return {
         datetime.datetime(2022, 1, 1): 0.1,
@@ -82,18 +80,11 @@ class TestDose:
             datetime.datetime(2022, 1, 9),
             datetime.datetime(2022, 1, 20),
         ]
-        values = [
-            0.1,
-            (0.9 - 0.1) / 5 + 0.1,
-            (0.45 - 0.9) / 10 + 0.9,
-            0.45,
-        ]
+        values = [0.1, (0.9 - 0.1) / 5 + 0.1, (0.45 - 0.9) / 10 + 0.9, 0.45]
         for date, value in zip(dates, values):
             assert (
                 dose.get_efficacy(
-                    date=date,
-                    infection_id=delta_id,
-                    protection_type="infection",
+                    date=date, infection_id=delta_id, protection_type="infection"
                 )
                 == value
             )
@@ -173,16 +164,11 @@ class TestVaccineTrajectory:
             trajectory.update_trajectory_stage(date=date)
             if date in dates_values:
                 efficacy = trajectory.get_efficacy(
-                    date=date,
-                    infection_id=delta_id,
-                    protection_type="infection",
+                    date=date, infection_id=delta_id, protection_type="infection"
                 )
                 assert dates_values[date] == pytest.approx(efficacy)
 
-    def test__update_vaccine_effect(
-        self,
-        trajectory,
-    ):
+    def test__update_vaccine_effect(self, trajectory):
         person = Person.from_attributes(age=5, sex="f")
         person.immunity.susceptibility_dict = {delta_id: 0.9, omicron_id: 0.9}
         person.immunity.effective_multiplier_dict = {delta_id: 0.9, omicron_id: 0.9}
@@ -196,9 +182,7 @@ class TestVaccineTrajectory:
             0.55
         )
 
-    def test__update_vaccine_effect_high_initial_immunity(
-        self,
-    ):
+    def test__update_vaccine_effect_high_initial_immunity(self,):
         trajectory = get_trajectory_initial_efficacy(0.9)
         person = Person.from_attributes(age=5, sex="f")
         person.immunity.susceptibility_dict = {delta_id: 0.1, omicron_id: 0.1}
@@ -257,10 +241,7 @@ class TestVaccine:
         assert vts[0].doses[0].efficacy.symptoms[delta_id] == 0.9
         assert vts[1].doses[0].efficacy.symptoms[delta_id] == 0.99
 
-    def test__vt_generation_time_evolution(
-        self,
-        dates_values,
-    ):
+    def test__vt_generation_time_evolution(self, dates_values):
         effectiveness = [
             {"Delta": {"0-100": 0.3}, "Omicron": {"0-100": 0.3}},
             {"Delta": {"0-100": 0.9}, "Omicron": {"0-100": 0.9}},
@@ -294,8 +275,6 @@ class TestVaccine:
             trajectory.update_trajectory_stage(date=date)
             if date in dates_values:
                 efficacy = trajectory.get_efficacy(
-                    date=date,
-                    infection_id=delta_id,
-                    protection_type="infection",
+                    date=date, infection_id=delta_id, protection_type="infection"
                 )
                 assert dates_values[date] == pytest.approx(efficacy)

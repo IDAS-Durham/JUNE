@@ -20,14 +20,7 @@ from pathlib import Path
 
 from june.interaction import Interaction
 from june import paths
-from june.geography import (
-    Geography,
-    Areas,
-    SuperAreas,
-    Regions,
-    Cities,
-    City,
-)
+from june.geography import Geography, Areas, SuperAreas, Regions, Cities, City
 from june.geography.station import CityStation
 from june.groups.travel import (
     ModeOfTransport,
@@ -205,10 +198,7 @@ def make_dummy_world():
     area.households.append(household)
     area.households.append(household2)
     hospital = Hospital(
-        n_beds=40,
-        n_icu_beds=5,
-        area=area,
-        coordinates=super_area.coordinates,
+        n_beds=40, n_icu_beds=5, area=area, coordinates=super_area.coordinates
     )
     super_area.closest_hospitals = [hospital]
     worker = Person.from_attributes(age=40)

@@ -30,12 +30,7 @@ class CareHome(Group):
     2 - visitors
     """
 
-    __slots__ = (
-        "n_residents",
-        "area",
-        "n_workers",
-        "quarantine_starting_date",
-    )
+    __slots__ = ("n_residents", "area", "n_workers", "quarantine_starting_date")
 
     # class SubgroupType(IntEnum):
     #     workers = 0
@@ -51,17 +46,10 @@ class CareHome(Group):
         self.area = area
         self.quarantine_starting_date = None
 
-    def add(
-        self,
-        person,
-        subgroup_type,
-        activity: str = "residence",
-    ):
+    def add(self, person, subgroup_type, activity: str = "residence"):
         if activity == "leisure":
             super().add(
-                person,
-                subgroup_type=self.SubgroupType.visitors,
-                activity="leisure",
+                person, subgroup_type=self.SubgroupType.visitors, activity="leisure"
             )
         else:
             super().add(person, subgroup_type=subgroup_type, activity=activity)

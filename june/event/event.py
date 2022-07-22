@@ -44,9 +44,7 @@ class Events:
 
     @classmethod
     def from_file(
-        cls,
-        config_file=default_config_filename,
-        base_event_modules=("june.event",),
+        cls, config_file=default_config_filename, base_event_modules=("june.event",)
     ):
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader) or {}
@@ -75,14 +73,7 @@ class Events:
             event.initialise(world=world)
             logger.info(f"Event {event.__class__.__name__} initialised")
 
-    def apply(
-        self,
-        date,
-        world,
-        simulator,
-        activities: List[str],
-        day_type: bool,
-    ):
+    def apply(self, date, world, simulator, activities: List[str], day_type: bool):
         for event in self.events:
             if event.is_active(date=date):
                 event.apply(

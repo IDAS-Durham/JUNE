@@ -60,7 +60,7 @@ def save_universities_to_hdf5(universities: Universities, file_path: str):
 
 
 def load_universities_from_hdf5(
-    file_path: str, chunk_size: int = 50000, domain_areas=None, config_filename = None,
+    file_path: str, chunk_size: int = 50000, domain_areas=None, config_filename=None
 ):
     """
     Loads universities from an hdf5 file located at ``file_path``.
@@ -70,7 +70,9 @@ def load_universities_from_hdf5(
     """
 
     University_Class = University
-    University_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+    University_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
 
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         universities = f["universities"]

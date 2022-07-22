@@ -74,16 +74,9 @@ class Area:
         self.people.append(person)
         person.area = self
 
-    def populate(
-        self,
-        demography,
-        ethnicity=True,
-        comorbidity=True,
-    ):
+    def populate(self, demography, ethnicity=True, comorbidity=True):
         for person in demography.populate(
-            self.name,
-            ethnicity=ethnicity,
-            comorbidity=comorbidity,
+            self.name, ethnicity=ethnicity, comorbidity=comorbidity
         ):
             self.add(person)
 
@@ -160,10 +153,14 @@ class Areas:
 
     def get_closest_area(self, coordinates, return_distance=False):
         if return_distance:
-            closest_areas, dists = self.get_closest_areas(coordinates, k=1, return_distance=return_distance)
+            closest_areas, dists = self.get_closest_areas(
+                coordinates, k=1, return_distance=return_distance
+            )
             return closest_areas[0], dists[0]
         else:
-            return self.get_closest_areas(coordinates, k=1, return_distance=return_distance)[0]
+            return self.get_closest_areas(
+                coordinates, k=1, return_distance=return_distance
+            )[0]
 
 
 class SuperArea:
@@ -308,10 +305,14 @@ class SuperAreas:
 
     def get_closest_super_area(self, coordinates, return_distance=False):
         if return_distance:
-            closest_areas, distances = self.get_closest_super_areas(coordinates, k=1, return_distance=return_distance)
+            closest_areas, distances = self.get_closest_super_areas(
+                coordinates, k=1, return_distance=return_distance
+            )
             return closest_areas[0], distances[0]
         else:
-            return self.get_closest_super_areas(coordinates, k=1, return_distance=return_distance)[0]
+            return self.get_closest_super_areas(
+                coordinates, k=1, return_distance=return_distance
+            )[0]
 
 
 class ExternalSuperArea:
@@ -339,9 +340,7 @@ class Region:
     _id = count()
 
     def __init__(
-        self,
-        name: Optional[str] = None,
-        super_areas: List[SuperAreas] = None,
+        self, name: Optional[str] = None, super_areas: List[SuperAreas] = None
     ):
         self.id = next(self._id)
         self.name = name
@@ -671,10 +670,7 @@ class Geography:
         return cls(areas, super_areas, regions)
 
 
-def _filtering(
-    data: pd.DataFrame,
-    filter_key: Dict[str, list],
-) -> pd.DataFrame:
+def _filtering(data: pd.DataFrame, filter_key: Dict[str, list]) -> pd.DataFrame:
     """
     Filter DataFrame for given geo-unit and it's listed names
     """

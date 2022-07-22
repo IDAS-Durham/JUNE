@@ -52,7 +52,9 @@ class Household(Group):
         self.residents = ()
         self.residences_to_visit = defaultdict(tuple)
         self.household_to_care = None
-        self.being_visited = False  # this is True when people from other households have been added to the group
+        self.being_visited = (
+            False
+        )  # this is True when people from other households have been added to the group
         self.receiving_care = False
         self.composition_type = composition_type
 
@@ -186,7 +188,8 @@ class Households(Supergroup):
     """
     Contains all households for the given area, and information about them.
     """
-    venue_class=Household
+
+    venue_class = Household
 
     def __init__(self, households: List[venue_class]):
         super().__init__(members=households)

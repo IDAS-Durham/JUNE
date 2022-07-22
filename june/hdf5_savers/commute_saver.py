@@ -224,7 +224,7 @@ def load_stations_from_hdf5(
     file_path: str,
     domain_super_areas: List[int] = None,
     super_areas_to_domain_dict: dict = None,
-    config_filename = None,
+    config_filename=None,
 ):
     """
     Loads cities from an hdf5 file located at ``file_path``.
@@ -234,10 +234,14 @@ def load_stations_from_hdf5(
     """
 
     InterCityTransport_Class = InterCityTransport
-    InterCityTransport_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+    InterCityTransport_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
 
     CityTransport_Class = CityTransport
-    CityTransport_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+    CityTransport_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
 
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         stations = f["stations"]

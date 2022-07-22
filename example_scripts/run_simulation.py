@@ -54,6 +54,7 @@ def set_random_seed(seed=999):
     """
     Sets global seeds for testing in numpy, random, and numbaized numpy.
     """
+
     @nb.njit(cache=True)
     def set_seed_numba(seed):
         random.seed(seed)
@@ -63,7 +64,7 @@ def set_random_seed(seed=999):
     set_seed_numba(seed)
     random.seed(seed)
     return
-    
+
 
 set_random_seed(0)
 
@@ -74,6 +75,7 @@ if mpi_rank > 0:
 
 def keys_to_int(x):
     return {int(k): v for k, v in x.items()}
+
 
 # =============== Argparse =========================#
 
@@ -118,21 +120,25 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "-ro",
-    "--region_only",
-    help="Run only one region",
-    required=False,
-    default="False",
+    "-ro", "--region_only", help="Run only one region", required=False, default="False"
 )
 
 parser.add_argument(
     "-hb", "--household_beta", help="Household beta", required=False, default=0.25
 )
 parser.add_argument(
-    "-nnv", "--no_vaccines", help="Implement no vaccine policies", required=False, default="False"
+    "-nnv",
+    "--no_vaccines",
+    help="Implement no vaccine policies",
+    required=False,
+    default="False",
 )
 parser.add_argument(
-    "-v", "--vaccines", help="Implement vaccine policies", required=False, default="False"
+    "-v",
+    "--vaccines",
+    help="Implement vaccine policies",
+    required=False,
+    default="False",
 )
 parser.add_argument(
     "-nv", "--no_visits", help="No shelter visits", required=False, default="False"
@@ -173,11 +179,7 @@ parser.add_argument(
     default="False",
 )
 parser.add_argument(
-    "-t",
-    "--isolation_testing",
-    help="Mean testing time",
-    required=False,
-    default=3,
+    "-t", "--isolation_testing", help="Mean testing time", required=False, default=3
 )
 parser.add_argument(
     "-i", "--isolation_time", help="Ouput file name", required=False, default=7
@@ -220,10 +222,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--n_seeding_days",
-    help="number of seeding days",
-    required=False,
-    default=10,
+    "--n_seeding_days", help="number of seeding days", required=False, default=10
 )
 parser.add_argument(
     "--n_seeding_case_per_day",
@@ -237,17 +236,17 @@ args.save_path = Path(args.save_path)
 
 if mpi_rank == 0:
     counter = 1
-    OG_save_path = args.save_path 
+    OG_save_path = args.save_path
     while args.save_path.is_dir() == True:
-        args.save_path = Path( str(OG_save_path) + "_%s" % counter)
+        args.save_path = Path(str(OG_save_path) + "_%s" % counter)
         counter += 1
     args.save_path.mkdir(parents=True, exist_ok=False)
-    
+
 mpi_comm.Barrier()
 args.save_path = mpi_comm.bcast(args.save_path, root=0)
 mpi_comm.Barrier()
 
-     
+
 if args.tracker == "True":
     args.tracker = True
 else:
@@ -262,12 +261,12 @@ if args.child_susceptibility == "True":
     args.child_susceptibility = True
 else:
     args.child_susceptibility = False
-    
+
 if args.no_vaccines == "True":
     args.no_vaccines = True
 else:
     args.no_vaccines = False
-    
+
 if args.vaccines == "True":
     args.vaccines = True
 else:
@@ -288,8 +287,6 @@ if args.mask_wearing == "True":
 else:
     args.mask_wearing = False
 
-
-    
 
 if args.infectiousness_path == "nature":
     transmission_config_path = paths.configs_path / "defaults/transmission/nature.yaml"
@@ -313,36 +310,39 @@ else:
     raise NotImplementedError
 
 if mpi_rank == 0:
-	print("Comorbidities set to: {}".format(args.comorbidities))
-	print("Parameters path set to: {}".format(args.parameters))
-	print("Indoor beta ratio is set to: {}".format(args.indoor_beta_ratio))
-	print("Outdoor beta ratio set to: {}".format(args.outdoor_beta_ratio))
-	print("Infectiousness path set to: {}".format(args.infectiousness_path))
-	print("Child susceptibility change set to: {}".format(args.child_susceptibility))
+    print("Comorbidities set to: {}".format(args.comorbidities))
+    print("Parameters path set to: {}".format(args.parameters))
+    print("Indoor beta ratio is set to: {}".format(args.indoor_beta_ratio))
+    print("Outdoor beta ratio set to: {}".format(args.outdoor_beta_ratio))
+    print("Infectiousness path set to: {}".format(args.infectiousness_path))
+    print("Child susceptibility change set to: {}".format(args.child_susceptibility))
 
-	print("Isolation units set to: {}".format(args.isolation_units))
-	print("Household beta set to: {}".format(args.household_beta))
-	if args.isolation_units:
-	    print("Testing time set to: {}".format(args.isolation_testing))
-	    print("Isolation time set to: {}".format(args.isolation_time))
-	    print("Isolation compliance set to: {}".format(args.isolation_compliance))
+    print("Isolation units set to: {}".format(args.isolation_units))
+    print("Household beta set to: {}".format(args.household_beta))
+    if args.isolation_units:
+        print("Testing time set to: {}".format(args.isolation_testing))
+        print("Isolation time set to: {}".format(args.isolation_time))
+        print("Isolation compliance set to: {}".format(args.isolation_compliance))
 
-	print("Mask wearing set to: {}".format(args.mask_wearing))
-	if args.mask_wearing:
-	    print("Mask compliance set to: {}".format(args.mask_compliance))
-	    print("Mask beta factor set up: {}".format(args.mask_beta_factor))
+    print("Mask wearing set to: {}".format(args.mask_wearing))
+    if args.mask_wearing:
+        print("Mask compliance set to: {}".format(args.mask_compliance))
+        print("Mask beta factor set up: {}".format(args.mask_beta_factor))
 
-	print("World path set to: {}".format(args.world_path))
-	print("Save path set to: {}".format(args.save_path))
+    print("World path set to: {}".format(args.world_path))
+    print("Save path set to: {}".format(args.save_path))
 
-	print("\n", args.__dict__, "\n")
+    print("\n", args.__dict__, "\n")
 
 
 # =============== world creation =========================#
 CONFIG_PATH = args.config
 
+
 def generate_simulator():
-    record = Record(record_path=args.save_path, record_static_data=True, mpi_rank=mpi_rank)
+    record = Record(
+        record_path=args.save_path, record_static_data=True, mpi_rank=mpi_rank
+    )
     if mpi_rank == 0:
         with h5py.File(args.world_path, "r") as f:
             super_area_ids = f["geography"]["super_area_id"]
@@ -385,16 +385,20 @@ def generate_simulator():
     selectors = InfectionSelectors([selector])
 
     infection_seed = InfectionSeed.from_uniform_cases(
-        world=domain, infection_selector=selector, cases_per_capita=0.01, date="2020-03-02 9:00",     seed_past_infections=False,
+        world=domain,
+        infection_selector=selector,
+        cases_per_capita=0.01,
+        date="2020-03-02 9:00",
+        seed_past_infections=False,
     )
     infection_seeds = InfectionSeeds([infection_seed])
 
-    epidemiology = Epidemiology(infection_selectors=selectors, infection_seeds=infection_seeds)
-
-    interaction = Interaction.from_file(
-        config_filename=args.parameters
+    epidemiology = Epidemiology(
+        infection_selectors=selectors, infection_seeds=infection_seeds
     )
-    
+
+    interaction = Interaction.from_file(config_filename=args.parameters)
+
     policies = Policies.from_file(
         paths.configs_path / "defaults/policy/policy.yaml",
         base_policy_modules=("june.policy", "camps.policy"),
@@ -406,99 +410,128 @@ def generate_simulator():
     # create simulator
 
     travel = Travel()
-    
+
     group_types = []
     domainVenues = {}
     if domain.households is not None:
         if len(domain.households) > 0:
             group_types.append(domain.households)
-            domainVenues["households"] = {"N": len(domain.households), "bins": domain.households[0].subgroup_bins}
+            domainVenues["households"] = {
+                "N": len(domain.households),
+                "bins": domain.households[0].subgroup_bins,
+            }
         else:
             domainVenues["households"] = {"N": 0, "bins": "NaN"}
-            
+
     if domain.care_homes is not None:
-       if len(domain.care_homes) > 0:
-           group_types.append(domain.care_homes)
-           domainVenues["care_homes"] = {"N": len(domain.care_homes), "bins": domain.care_homes[0].subgroup_bins}
-       else:
-           domainVenues["care_homes"] = {"N": 0, "bins": "NaN"}
-           
+        if len(domain.care_homes) > 0:
+            group_types.append(domain.care_homes)
+            domainVenues["care_homes"] = {
+                "N": len(domain.care_homes),
+                "bins": domain.care_homes[0].subgroup_bins,
+            }
+        else:
+            domainVenues["care_homes"] = {"N": 0, "bins": "NaN"}
+
     if domain.schools is not None:
         if len(domain.schools) > 0:
             group_types.append(domain.schools)
-            domainVenues["schools"] = {"N": len(domain.schools), "bins": domain.schools[0].subgroup_bins}
+            domainVenues["schools"] = {
+                "N": len(domain.schools),
+                "bins": domain.schools[0].subgroup_bins,
+            }
         else:
             domainVenues["schools"] = {"N": 0, "bins": "NaN"}
-            
+
     if domain.hospitals is not None:
         if len(domain.hospitals) > 0:
             group_types.append(domain.hospitals)
             domainVenues["hospitals"] = {"N": len(domain.hospitals)}
         else:
             domainVenues["hospitals"] = {"N": 0, "bins": "NaN"}
-            
+
     if domain.companies is not None:
         if len(domain.companies) > 0:
             group_types.append(domain.companies)
-            domainVenues["companies"] = {"N": len(domain.companies), "bins": domain.companies[0].subgroup_bins}
+            domainVenues["companies"] = {
+                "N": len(domain.companies),
+                "bins": domain.companies[0].subgroup_bins,
+            }
         else:
             domainVenues["companies"] = {"N": 0, "bins": "NaN"}
-    	
+
     if domain.universities is not None:
         if len(domain.universities) > 0:
             group_types.append(domain.universities)
-            domainVenues["universities"] = {"N": len(domain.universities), "bins": domain.universities[0].subgroup_bins}
+            domainVenues["universities"] = {
+                "N": len(domain.universities),
+                "bins": domain.universities[0].subgroup_bins,
+            }
         else:
             domainVenues["universities"] = {"N": 0, "bins": "NaN"}
-            
+
     if domain.pubs is not None:
         if len(domain.pubs) > 0:
             group_types.append(domain.pubs)
-            domainVenues["pubs"] = {"N": len(domain.pubs), "bins": domain.pubs[0].subgroup_bins}
+            domainVenues["pubs"] = {
+                "N": len(domain.pubs),
+                "bins": domain.pubs[0].subgroup_bins,
+            }
         else:
             domainVenues["pubs"] = {"N": 0, "bins": "NaN"}
-    	
+
     if domain.groceries is not None:
         if len(domain.groceries) > 0:
             group_types.append(domain.groceries)
-            domainVenues["groceries"] = {"N": len(domain.groceries), "bins": domain.groceries[0].subgroup_bins}
+            domainVenues["groceries"] = {
+                "N": len(domain.groceries),
+                "bins": domain.groceries[0].subgroup_bins,
+            }
         else:
             domainVenues["groceries"] = {"N": 0, "bins": "NaN"}
-            
+
     if domain.cinemas is not None:
         if len(domain.cinemas) > 0:
             group_types.append(domain.cinemas)
-            domainVenues["cinemas"] = {"N": len(domain.cinemas), "bins": domain.cinemas[0].subgroup_bins}
+            domainVenues["cinemas"] = {
+                "N": len(domain.cinemas),
+                "bins": domain.cinemas[0].subgroup_bins,
+            }
         else:
             domainVenues["cinemas"] = {"N": 0, "bins": "NaN"}
-            
+
     if domain.gyms is not None:
         if len(domain.gyms) > 0:
             group_types.append(domain.gyms)
-            domainVenues["gyms"] = {"N": len(domain.gyms), "bins": domain.gyms[0].subgroup_bins}
+            domainVenues["gyms"] = {
+                "N": len(domain.gyms),
+                "bins": domain.gyms[0].subgroup_bins,
+            }
         else:
             domainVenues["gyms"] = {"N": 0, "bins": "NaN"}
-            
+
     if domain.city_transports is not None:
         if len(domain.city_transports) > 0:
-           group_types.append(domain.city_transports)
-           domainVenues["city_transports"] = {"N": len(domain.city_transports)}
+            group_types.append(domain.city_transports)
+            domainVenues["city_transports"] = {"N": len(domain.city_transports)}
         else:
-           domainVenues["city_transports"] = {"N": 0, "bins": "NaN"}
-           
+            domainVenues["city_transports"] = {"N": 0, "bins": "NaN"}
+
     if domain.inter_city_transports is not None:
         if len(domain.inter_city_transports) > 0:
             group_types.append(domain.inter_city_transports)
-            domainVenues["inter_city_transports"] = {"N": len(domain.inter_city_transports)}
+            domainVenues["inter_city_transports"] = {
+                "N": len(domain.inter_city_transports)
+            }
         else:
             domainVenues["inter_city_transports"] = {"N": 0, "bins": "NaN"}
-            
-    #print(mpi_rank, domainVenues)
+
+    # print(mpi_rank, domainVenues)
 
     # ==================================================================================#
 
     # =================================== tracker ===============================#
-    if args.tracker:    
+    if args.tracker:
         tracker = Tracker(
             world=domain,
             record_path=args.save_path,
@@ -506,12 +539,11 @@ def generate_simulator():
             load_interactions_path=args.parameters,
             contact_sexes=["unisex", "male", "female"],
             Tracker_Contact_Type=["1D"],
-            MaxVenueTrackingSize=100000
+            MaxVenueTrackingSize=100000,
         )
     else:
-        tracker=None
-    
-    
+        tracker = None
+
     simulator = Simulator.from_file(
         world=domain,
         policies=policies,
@@ -525,6 +557,7 @@ def generate_simulator():
         tracker=tracker,
     )
     return simulator
+
 
 # ==================================================================================#
 
@@ -551,53 +584,54 @@ mpi_comm.Barrier()
 
 if args.tracker:
     if mpi_rank == 0:
-    	print("Tracker stuff now")
-    	
-    simulator.tracker.contract_matrices("AC", np.array([0,18,100]))
-    simulator.tracker.contract_matrices("Paper",[0,5,10,13,15,18,20,22,25,30,35,40,45,50,55,60,65,70,75,100])
+        print("Tracker stuff now")
+
+    simulator.tracker.contract_matrices("AC", np.array([0, 18, 100]))
+    simulator.tracker.contract_matrices(
+        "Paper",
+        [0, 5, 10, 13, 15, 18, 20, 22, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 100],
+    )
     simulator.tracker.post_process_simulation(save=True)
-    
+
     mpi_comm.Barrier()
-    
+
     if mpi_rank == 0:
         print("Combine Tracker results")
         Merger = MergerClass(record_path=args.save_path)
         Merger.Merge()
-        
+
         Plots = PlotClass(
-            record_path=args.save_path / "Tracker",
-            Tracker_Contact_Type = "1D"
+            record_path=args.save_path / "Tracker", Tracker_Contact_Type="1D"
         )
         Plots.make_plots(
-            plot_BBC = True,
-            plot_thumbprints = True,
+            plot_BBC=True,
+            plot_thumbprints=True,
             SameCMAP="Log",
-    
             plot_INPUTOUTPUT=True,
-            plot_AvContactsLocation=True, 
-            plot_dTLocationPopulation=True, 
-            plot_InteractionMatrices=True, 
+            plot_AvContactsLocation=True,
+            plot_dTLocationPopulation=True,
+            plot_InteractionMatrices=True,
             plot_ContactMatrices=True,
             plot_CompareSexMatrices=True,
-            plot_AgeBinning=True, 
-            plot_Distances=True 
+            plot_AgeBinning=True,
+            plot_Distances=True,
         )
 
-        #Plots = PlotClass(
+        # Plots = PlotClass(
         #    record_path=args.save_path / "Tracker",
         #    Tracker_Contact_Type = "All"
-        #)
-        #Plots.make_plots(
+        # )
+        # Plots.make_plots(
         #    plot_BBC = True,
         #    plot_thumbprints = True,
         #    SameCMAP="Log",
-    
+
         #    plot_INPUTOUTPUT=False,
-        #    plot_AvContactsLocation=False, 
-        #    plot_dTLocationPopulation=False, 
-        #    plot_InteractionMatrices=True, 
+        #    plot_AvContactsLocation=False,
+        #    plot_dTLocationPopulation=False,
+        #    plot_InteractionMatrices=True,
         #    plot_ContactMatrices=True,
         #    plot_CompareSexMatrices=True,
-        #    plot_AgeBinning=False, 
-        #    plot_Distances=False 
-        #)
+        #    plot_AgeBinning=False,
+        #    plot_Distances=False
+        # )

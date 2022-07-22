@@ -19,23 +19,25 @@ class Timer:
             ("residence",),
         ),
         weekend_activities: List[List[str]] = (("residence",),),
-        day_types = None,
+        day_types=None,
     ):
 
-        day_i = datetime.datetime(*[int(value) for value in initial_day.split(" ")[0].split("-")])
+        day_i = datetime.datetime(
+            *[int(value) for value in initial_day.split(" ")[0].split("-")]
+        )
         hour_i = 0
         if len(initial_day.split(" ")) > 1:
             hour_i = int(initial_day.split(" ")[1].split(":")[0])
         self.initial_date = day_i + datetime.timedelta(hours=hour_i)
-        
+
         if day_types == None:
             self.day_types = {
-                "weekday":["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                "weekend": ["Saturday", "Sunday"]
+                "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "weekend": ["Saturday", "Sunday"],
             }
         else:
             self.day_types = day_types
-        
+
         self.total_days = total_days
         self.weekday_step_duration = weekday_step_duration
         self.weekend_step_duration = weekend_step_duration
@@ -43,7 +45,11 @@ class Timer:
         self.weekend_activities = weekend_activities
 
         self.previous_date = self.initial_date
-        self.final_date = self.initial_date + datetime.timedelta(days=total_days) + datetime.timedelta(hours=24-hour_i)
+        self.final_date = (
+            self.initial_date
+            + datetime.timedelta(days=total_days)
+            + datetime.timedelta(hours=24 - hour_i)
+        )
         self.date = self.initial_date
         self.shift = 0
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
@@ -54,10 +60,7 @@ class Timer:
             config = yaml.load(f, Loader=yaml.FullLoader)
         time_config = config["time"]
         if "weekday" in config.keys() and "weekend" in config.keys():
-            day_types = {
-                "weekday":config["weekday"],
-                "weekend": config["weekend"]
-            }
+            day_types = {"weekday": config["weekday"], "weekend": config["weekend"]}
         else:
             day_types = None
 
@@ -68,7 +71,7 @@ class Timer:
             weekend_step_duration=time_config["step_duration"]["weekend"],
             weekday_activities=time_config["step_activities"]["weekday"],
             weekend_activities=time_config["step_activities"]["weekend"],
-            day_types = day_types
+            day_types=day_types,
         )
 
     @property

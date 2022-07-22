@@ -58,10 +58,7 @@ class EventRecord:
 
 
 class InfectionRecord(EventRecord):
-    def __init__(
-        self,
-        hdf5_filename,
-    ):
+    def __init__(self, hdf5_filename):
         super().__init__(
             hdf5_filename=hdf5_filename,
             table_name="infections",
@@ -88,10 +85,7 @@ class InfectionRecord(EventRecord):
 
 
 class HospitalAdmissionsRecord(EventRecord):
-    def __init__(
-        self,
-        hdf5_filename,
-    ):
+    def __init__(self, hdf5_filename):
         super().__init__(
             hdf5_filename=hdf5_filename,
             table_name="hospital_admissions",
@@ -106,10 +100,7 @@ class HospitalAdmissionsRecord(EventRecord):
 
 
 class ICUAdmissionsRecord(EventRecord):
-    def __init__(
-        self,
-        hdf5_filename,
-    ):
+    def __init__(self, hdf5_filename):
         super().__init__(
             hdf5_filename=hdf5_filename,
             table_name="icu_admissions",
@@ -124,10 +115,7 @@ class ICUAdmissionsRecord(EventRecord):
 
 
 class DischargesRecord(EventRecord):
-    def __init__(
-        self,
-        hdf5_filename,
-    ):
+    def __init__(self, hdf5_filename):
         super().__init__(
             hdf5_filename=hdf5_filename,
             table_name="discharges",
@@ -142,10 +130,7 @@ class DischargesRecord(EventRecord):
 
 
 class DeathsRecord(EventRecord):
-    def __init__(
-        self,
-        hdf5_filename,
-    ):
+    def __init__(self, hdf5_filename):
         super().__init__(
             hdf5_filename=hdf5_filename,
             table_name="deaths",
@@ -161,10 +146,7 @@ class DeathsRecord(EventRecord):
 
 
 class RecoveriesRecord(EventRecord):
-    def __init__(
-        self,
-        hdf5_filename,
-    ):
+    def __init__(self, hdf5_filename):
         super().__init__(
             hdf5_filename=hdf5_filename,
             table_name="recoveries",
@@ -179,10 +161,7 @@ class RecoveriesRecord(EventRecord):
 
 
 class SymptomsRecord(EventRecord):
-    def __init__(
-        self,
-        hdf5_filename,
-    ):
+    def __init__(self, hdf5_filename):
         super().__init__(
             hdf5_filename=hdf5_filename,
             table_name="symptoms",
@@ -198,10 +177,7 @@ class SymptomsRecord(EventRecord):
 
 
 class VaccinesRecord(EventRecord):
-    def __init__(
-        self,
-        hdf5_filename,
-    ):
+    def __init__(self, hdf5_filename):
         super().__init__(
             hdf5_filename=hdf5_filename,
             table_name="vaccines",

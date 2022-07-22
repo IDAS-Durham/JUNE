@@ -235,14 +235,13 @@ class Simulator:
         We then pass the interactive group to the interaction module, which returns the ids
         of the people who got infected. We record the infection locations, update the health
         status of the population, and distribute scores among the infectors to calculate R0.
-        """ 
+        """
         output_logger.info("==================== timestep ====================")
         tick_s, tickw_s = perf_counter(), wall_clock()
         tick, tickw = perf_counter(), wall_clock()
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
-                date=self.timer.date,
-                interaction=self.interaction,
+                date=self.timer.date, interaction=self.interaction
             )
             self.activity_manager.policies.regional_compliance.apply(
                 date=self.timer.date, regions=self.world.regions
@@ -265,9 +264,7 @@ class Simulator:
             n_people_from_abroad,
             n_people_going_abroad,
             to_send_abroad,  # useful for knowing who's MPI-ing, so can send extra info as needed.
-        ) = self.activity_manager.do_timestep(
-            record=self.record,
-        )
+        ) = self.activity_manager.do_timestep(record=self.record)
         tick_interaction = perf_counter()
 
         # get the supergroup instances that are active in this time step:
@@ -292,12 +289,11 @@ class Simulator:
             f"number of deaths =  {n_people}, "
             f"number of infected = {len(self.world.people.infected)}"
         )
-        
+
         # main interaction loop
         infected_ids = []  # ids of the newly infected people
         infection_ids = []  # ids of the viruses they got
 
-        
         for super_group in super_group_instances:
             for group in super_group:
                 if group.external:
@@ -316,13 +312,10 @@ class Simulator:
                         delta_time=self.timer.duration,
                         record=self.record,
                     )
-                    
+
                     infected_ids += new_infected_ids
                     infection_ids += new_infection_ids
                     n_people += group_size
-
-
-        
 
         tock_interaction = perf_counter()
         rank_logger.info(
@@ -330,15 +323,15 @@ class Simulator:
         )
 
         tick_tracker = perf_counter()
-        #Loop in here 
+        # Loop in here
         if isinstance(self.tracker, type(None)):
             pass
         else:
-            self.tracker.trackertimestep(self.activity_manager.all_super_groups, self.timer)
+            self.tracker.trackertimestep(
+                self.activity_manager.all_super_groups, self.timer
+            )
         tock_tracker = perf_counter()
-        rank_logger.info(
-            f"Rank {mpi_rank} -- tracker -- {tock_tracker-tick_tracker}"
-        )
+        rank_logger.info(f"Rank {mpi_rank} -- tracker -- {tock_tracker-tick_tracker}")
 
         self.epidemiology.do_timestep(
             world=self.world,
@@ -359,8 +352,6 @@ class Simulator:
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
         )
         if n_people != people_active:
-
-
 
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "

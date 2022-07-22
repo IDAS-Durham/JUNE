@@ -37,12 +37,16 @@ def generate_leisure_for_world(list_of_leisure_groups, world, daytypes):
         if not hasattr(world, "pubs") or world.pubs is None or len(world.pubs) == 0:
             logger.warning("No pubs in this world/domain")
         else:
-            leisure_distributors["pub"] = PubDistributor.from_config(world.pubs, daytypes=daytypes)
+            leisure_distributors["pub"] = PubDistributor.from_config(
+                world.pubs, daytypes=daytypes
+            )
     if "gyms" in list_of_leisure_groups:
         if not hasattr(world, "gyms") or world.gyms is None or len(world.gyms) == 0:
             logger.warning("No gyms in this world/domain")
         else:
-            leisure_distributors["gym"] = GymDistributor.from_config(world.gyms, daytypes=daytypes)
+            leisure_distributors["gym"] = GymDistributor.from_config(
+                world.gyms, daytypes=daytypes
+            )
     if "cinemas" in list_of_leisure_groups:
         if (
             not hasattr(world, "cinemas")
@@ -94,18 +98,17 @@ def generate_leisure_for_config(world, config_filename=default_config_filename):
         list_of_leisure_groups = config["activity_to_super_groups"]["leisure"]
     except Exception:
         list_of_leisure_groups = config["activity_to_groups"]["leisure"]
-    
+
     if "weekday" in config.keys() and "weekend" in config.keys():
-        daytypes = {
-            "weekday": config["weekday"],
-            "weekend": config["weekend"]
-        }
+        daytypes = {"weekday": config["weekday"], "weekend": config["weekend"]}
     else:
         daytypes = {
-            "weekday":["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-            "weekend": ["Saturday", "Sunday"]
+            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"],
         }
-    leisure_instance = generate_leisure_for_world(list_of_leisure_groups, world, daytypes)
+    leisure_instance = generate_leisure_for_world(
+        list_of_leisure_groups, world, daytypes
+    )
     return leisure_instance
 
 
@@ -154,10 +157,7 @@ class Leisure:
         logger.info(f"Distributed in {len(areas)} of {len(areas)} areas.")
 
     def generate_leisure_probabilities_for_timestep(
-        self,
-        delta_time: float,
-        working_hours: bool,
-        date: str,
+        self, delta_time: float, working_hours: bool, date: str
     ):
         self.probabilities_by_region_sex_age = {}
         if self.regions:
@@ -171,13 +171,11 @@ class Leisure:
                     region=region,
                 )
         else:
-            self.probabilities_by_region_sex_age = (
-                self._generate_leisure_probabilities_for_age_and_sex(
-                    delta_time=delta_time,
-                    working_hours=working_hours,
-                    date=date,
-                    region=None,
-                )
+            self.probabilities_by_region_sex_age = self._generate_leisure_probabilities_for_age_and_sex(
+                delta_time=delta_time,
+                working_hours=working_hours,
+                date=date,
+                region=None,
             )
 
     def get_subgroup_for_person_and_housemates(
@@ -203,13 +201,13 @@ class Leisure:
         """
 
         ###########################################
-        age_before  = person.age
+        age_before = person.age
         age = person.age
-        # AorC_value = self.AorC(person.age) 
+        # AorC_value = self.AorC(person.age)
         # if age < 18 and AorC_value == "Adult":
         #     age = 18
 
-        #Does this change actual persons name above?
+        # Does this change actual persons name above?
         person.age = age
 
         if person.residence.group.spec == "care_home":
@@ -226,14 +224,13 @@ class Leisure:
             subgroup = activity_distributor.get_leisure_subgroup(
                 person, to_send_abroad=to_send_abroad
             )
-            person.subgroups.leisure = subgroup            
+            person.subgroups.leisure = subgroup
             activity_distributor.send_household_with_person_if_necessary(
                 person=person, to_send_abroad=to_send_abroad
             )
             person.age = age_before
             return subgroup
         person.age = age_before
-        
 
     def _generate_leisure_probabilities_for_age_and_sex(
         self, delta_time: float, working_hours: bool, date: str, region: Region
@@ -332,21 +329,27 @@ class Leisure:
         Computes an activity poisson parameter taking into account active policies,
         regional compliances and lockdown tiers.
         """
-        day = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][date.weekday()]
+        day = [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        ][date.weekday()]
         if day in distributor.daytypes["weekday"]:
             day_type = "weekday"
         elif day in distributor.daytypes["weekend"]:
             day_type = "weekend"
-        
-        #TODO check closures etc!
+
+        # TODO check closures etc!
         open_times = parse_opens(distributor.open)[day_type]
         open = 1
         if open_times[1] - open_times[0] == 0:
             open = 0
         if date.hour < open_times[0] or date.hour >= open_times[1]:
-            open =0
-        
-        
+            open = 0
 
         if activity in self.policy_reductions:
             policy_reduction = self.policy_reductions[activity][day_type][sex][age]
@@ -361,7 +364,7 @@ class Leisure:
             policy_reduction=policy_reduction,
             region=region,
         )
-        return activity_poisson_parameter*open
+        return activity_poisson_parameter * open
 
     def _drags_household_to_activity(self, person, activity):
         """
@@ -386,12 +389,12 @@ class Leisure:
                 ][person.sex][person.age]["drags_household"][activity]
         return random() < prob
 
-     #TESTING TODO
+    # TESTING TODO
     ######################################################################
     def P_IsAdult(self, age):
-        tanh_halfpeak_age = 15#17.1
-        tanh_width = .7#1
-        
+        tanh_halfpeak_age = 15  # 17.1
+        tanh_width = 0.7  # 1
+
         minageadult = 13
         maxagechild = 17
         if age < minageadult:
@@ -399,8 +402,8 @@ class Leisure:
         elif age > maxagechild:
             return 1
         else:
-            return (np.tanh(tanh_width*(age-tanh_halfpeak_age))+1)/2
-        
+            return (np.tanh(tanh_width * (age - tanh_halfpeak_age)) + 1) / 2
+
     def P_IsChild(self, age):
         return 1 - self.P_IsAdult(age)
 
@@ -410,10 +413,11 @@ class Leisure:
             return "Adult"
         else:
             return "Child"
+
     ######################################################################
 
     def _get_activity_probabilities_for_person(self, person: Person):
-            
+
         try:
             return self.probabilities_by_region_sex_age[person.region.name][person.sex][
                 person.age

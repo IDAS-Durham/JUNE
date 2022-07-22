@@ -33,10 +33,7 @@ class SocialVenueDistributor:
         neighbours_to_consider=5,
         maximum_distance=5,
         leisure_subgroup_type=0,
-        open={
-            "weekday": "0-24",
-            "weekend": "0-24"
-        },
+        open={"weekday": "0-24", "weekend": "0-24"},
     ):
         """
         A sex/age profile for the social venue attendees can be specified as
@@ -90,11 +87,11 @@ class SocialVenueDistributor:
         self.maximum_distance = maximum_distance
         self.drags_household_probability = drags_household_probability
         self.leisure_subgroup_type = leisure_subgroup_type
-        
-        
 
     @classmethod
-    def from_config(cls, social_venues: SocialVenues, daytypes: dict, config_filename: str = None):
+    def from_config(
+        cls, social_venues: SocialVenues, daytypes: dict, config_filename: str = None
+    ):
         if config_filename is None:
             config_filename = cls.default_config_filename
         with open(config_filename) as f:
@@ -112,7 +109,7 @@ class SocialVenueDistributor:
     def _parse_poisson_parameters(self, times_per_week, hours_per_day):
         ret = {}
         _sex_t = {"male": "m", "female": "f"}
-        
+
         for day_type in ["weekday", "weekend"]:
             ret[day_type] = {}
             for sex in ["male", "female"]:
@@ -122,7 +119,7 @@ class SocialVenueDistributor:
                 parsed_hours_per_day = parse_age_probabilities(
                     hours_per_day[day_type][sex]
                 )
-                
+
                 ret[day_type][_sex_t[sex]] = [
                     self._compute_poisson_parameter_from_times_per_week(
                         times_per_week=parsed_times_per_week[i],
@@ -134,13 +131,7 @@ class SocialVenueDistributor:
         return ret
 
     def get_poisson_parameter(
-        self,
-        sex,
-        age,
-        day_type,
-        working_hours,
-        region=None,
-        policy_reduction=None,
+        self, sex, age, day_type, working_hours, region=None, policy_reduction=None
     ):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their

@@ -68,11 +68,7 @@ def save_checkpoint_to_hdf5(
         f.create_group("people_data")
         for name, data in zip(
             ["people_id", "infected_id", "dead_id"],
-            [
-                people_ids,
-                infected_people_ids,
-                dead_people_ids,
-            ],
+            [people_ids, infected_people_ids, dead_people_ids],
         ):
             write_dataset(
                 group=f["people_data"],
@@ -80,9 +76,7 @@ def save_checkpoint_to_hdf5(
                 data=np.array(data, dtype=np.int64),
             )
     save_infections_to_hdf5(
-        hdf5_file_path=hdf5_file_path,
-        infections=infection_list,
-        chunk_size=chunk_size,
+        hdf5_file_path=hdf5_file_path, infections=infection_list, chunk_size=chunk_size
     )
     immunities = [person.immunity for person in population]
     save_immunities_to_hdf5(hdf5_file_path=hdf5_file_path, immunities=immunities)
@@ -161,8 +155,7 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
         chunk_size=1000000,
     )
     save_immunities_to_hdf5(
-        hdf5_file_path=unified_checkpoint_path,
-        immunities=ret["immunity_list"],
+        hdf5_file_path=unified_checkpoint_path, immunities=ret["immunity_list"]
     )
 
 

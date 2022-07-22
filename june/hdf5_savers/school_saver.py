@@ -123,7 +123,10 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
 
 
 def load_schools_from_hdf5(
-    file_path: str, chunk_size: int = 50000, domain_super_areas=None, config_filename = None,
+    file_path: str,
+    chunk_size: int = 50000,
+    domain_super_areas=None,
+    config_filename=None,
 ):
     """
     Loads schools from an hdf5 file located at ``file_path``.
@@ -133,7 +136,9 @@ def load_schools_from_hdf5(
     """
 
     School_Class = School
-    School_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+    School_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
 
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         schools = f["schools"]

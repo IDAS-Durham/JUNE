@@ -9,6 +9,7 @@ default_config_filename = paths.configs_path / "defaults/interaction/interaction
 
 logger = logging.getLogger("subgroup maker")
 
+
 def Get_Defaults(spec):
     if spec in [
         "pub",
@@ -16,33 +17,23 @@ def Get_Defaults(spec):
         "cinema",
         "city_transport",
         "inter_city_transport",
-        "gym"
-        ]:
-        return [0,100], "Age"
+        "gym",
+    ]:
+        return [0, 100], "Age"
 
-    elif spec in [
-        "care_home"
-        ]:
+    elif spec in ["care_home"]:
         return ["workers", "residents", "visitors"], "Discrete"
 
-    elif spec in [
-        "university"
-        ]:
+    elif spec in ["university"]:
         return ["1", "2", "3", "4", "5"], "Discrete"
-    elif spec in [
-        "school"
-        ]:
+    elif spec in ["school"]:
         return ["teachers", "students"], "Discrete"
-    elif spec in [
-        "household" 
-        ]:
-        return ["kids","young_adults","adults","old_adults"], "Discrete"
-    elif spec in [
-        "company"
-        ]:
+    elif spec in ["household"]:
+        return ["kids", "young_adults", "adults", "old_adults"], "Discrete"
+    elif spec in ["company"]:
         return ["workers"], "Discrete"
 
-    #Cox defaults
+    # Cox defaults
     elif spec in [
         "communal",
         "distribution_center",
@@ -51,37 +42,25 @@ def Get_Defaults(spec):
         "isolation_unit",
         "n_f_distribution_center",
         "pump_latrine",
-        "religious"
-        ]:
-        return [0,18,60], "Age"
-    elif spec in [
-        "play_group"
-        ]:
-        return [3, 7, 12, 18], "Age"
-    elif spec in [
-        "learning_center"
-        ]:
-        return ["students","teachers"], "Discrete"
-    elif spec in [
-        "hospital"
-        ]:
-        return ["workers", "patients", "icu_patients"], "Discrete"
-    elif spec in [
-        "shelter"
-        ]:
-        return ["inter", "intra"], "Discrete"
-    elif spec in [
-        "informal_work"
+        "religious",
     ]:
-        return [0,100], "Age"
+        return [0, 18, 60], "Age"
+    elif spec in ["play_group"]:
+        return [3, 7, 12, 18], "Age"
+    elif spec in ["learning_center"]:
+        return ["students", "teachers"], "Discrete"
+    elif spec in ["hospital"]:
+        return ["workers", "patients", "icu_patients"], "Discrete"
+    elif spec in ["shelter"]:
+        return ["inter", "intra"], "Discrete"
+    elif spec in ["informal_work"]:
+        return [0, 100], "Age"
 
     else:
         return ["defualt"], "Discrete"
 
-    
 
-
-class Subgroup_Params():
+class Subgroup_Params:
     """
     Class to read and collect Interaction matrix information. Allows for reading of subgroups from generic bins
 
@@ -96,6 +75,7 @@ class Subgroup_Params():
     -------
         Subgroup_Params class
     """
+
     AgeYoungAdult = 18
     AgeAdult = 18
     AgeOldAdult = 65
@@ -124,13 +104,10 @@ class Subgroup_Params():
         "learning_center",
         "hospital",
         "shelter",
-        "informal_work"
-        ]
+        "informal_work",
+    ]
 
-    def __init__(
-        self, 
-        params = None,
-    ) -> None:
+    def __init__(self, params=None) -> None:
 
         if params is None:
             self.params = params
@@ -138,10 +115,8 @@ class Subgroup_Params():
         else:
             self.params = params
             self.specs = params.keys()
-            
 
-
-    def subgroup_bins(self,spec):
+    def subgroup_bins(self, spec):
         return self.params[spec]["bins"]
 
     def subgroup_type(self, spec):
@@ -149,32 +124,48 @@ class Subgroup_Params():
 
     def subgroup_labels(self, spec):
         if spec not in self.params.keys():
-            
+
             if spec not in self.PossibleLocs:
                 print(f"{spec} not defined in interaction yaml or defualt options")
                 return list(["default"])
             else:
                 Bins, Type = Get_Defaults(spec)
-                logger.info(f"{spec} interaction bins not specified. Using default values {Bins}")
-                self.params[spec] = {"bins": Bins, "type" : Type}
+                logger.info(
+                    f"{spec} interaction bins not specified. Using default values {Bins}"
+                )
+                self.params[spec] = {"bins": Bins, "type": Type}
 
-        if "bins" not in self.params[spec].keys() or "type" not in self.params[spec].keys():
+        if (
+            "bins" not in self.params[spec].keys()
+            or "type" not in self.params[spec].keys()
+        ):
             Bins, Type = Get_Defaults(spec)
-            logger.info(f"{spec} interaction bins not specified. Using default values {Bins}")
+            logger.info(
+                f"{spec} interaction bins not specified. Using default values {Bins}"
+            )
             self.params[spec]["bins"] = Bins
             self.params[spec]["type"] = Type
-        elif spec in ["learning_center", "hospital", "shelter", "university", "school", "care_home", "household", "company"]:
+        elif spec in [
+            "learning_center",
+            "hospital",
+            "shelter",
+            "university",
+            "school",
+            "care_home",
+            "household",
+            "company",
+        ]:
             Bins, Type = Get_Defaults(spec)
             if self.params[spec]["bins"] != Bins:
                 logger.info(f"{spec} interaction bins need default values for methods.")
                 self.params[spec]["bins"] = Bins
                 self.params[spec]["type"] = Type
 
-        if self.subgroup_type(spec) == "Age": #Make dummy names for N age bins
-            Nbins = len(self.params[spec]["bins"])-1
-            return list(itertools.islice(self.excel_cols(),Nbins))
+        if self.subgroup_type(spec) == "Age":  # Make dummy names for N age bins
+            Nbins = len(self.params[spec]["bins"]) - 1
+            return list(itertools.islice(self.excel_cols(), Nbins))
         elif self.subgroup_type(spec) == "Discrete":
-            return list(self.params[spec]["bins"]) #Already have our names! 
+            return list(self.params[spec]["bins"])  # Already have our names!
 
     # def kids_indexes(self, spec):
     #     if self.subgroup_type(spec) == "Age": #Make dummy names for N age bins
@@ -190,7 +181,6 @@ class Subgroup_Params():
     #     else:
     #         return np.array([]) #Empty list of bin indexes
 
-        
     def excel_cols(self):
         """
         Generate generic string labels in form ["A", "B", "C", ... , "Z", "AA", "AB", .... ]
@@ -205,14 +195,14 @@ class Subgroup_Params():
         """
         n = 1
         while True:
-            yield from (''.join(group) for group in itertools.product(string.ascii_uppercase, repeat=n))
+            yield from (
+                "".join(group)
+                for group in itertools.product(string.ascii_uppercase, repeat=n)
+            )
             n += 1
 
     @classmethod
-    def from_file(
-        cls,
-        config_filename = default_config_filename,
-    ) -> "Subgroup_Params":
+    def from_file(cls, config_filename=default_config_filename) -> "Subgroup_Params":
         """
         Read from interaction yaml and extract information on bins and bin types. Returning instance of Subgroup_Params
 
@@ -229,6 +219,4 @@ class Subgroup_Params():
             config_filename = default_config_filename
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return Subgroup_Params(
-            params = config["contact_matrices"]
-        )
+        return Subgroup_Params(params=config["contact_matrices"])

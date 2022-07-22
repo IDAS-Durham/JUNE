@@ -19,6 +19,7 @@ from june.world import World
 
 nan_integer = -999
 
+
 def save_social_venues_to_hdf5(social_venues_list: List[SocialVenues], file_path: str):
     with h5py.File(file_path, "a") as f:
         f.create_group("social_venues")
@@ -44,22 +45,37 @@ def save_social_venues_to_hdf5(social_venues_list: List[SocialVenues], file_path
             social_venues_dset.create_dataset("area", data=areas)
 
 
-def load_social_venues_from_hdf5(file_path: str, domain_areas=None, config_filename = None,):
+def load_social_venues_from_hdf5(
+    file_path: str, domain_areas=None, config_filename=None
+):
     social_venues_dict = {}
 
     Pub_Class = Pub
-    Pub_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+    Pub_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
 
     Cinema_Class = Cinema
-    Cinema_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+    Cinema_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
 
     Grocery_Class = Grocery
-    Grocery_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+    Grocery_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
 
     Gym_Class = Gym
-    Gym_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+    Gym_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
 
-    spec_to_group_dict = {"pubs": Pub_Class, "cinemas": Cinema_Class, "groceries": Grocery_Class, "gyms": Gym_Class}
+    spec_to_group_dict = {
+        "pubs": Pub_Class,
+        "cinemas": Cinema_Class,
+        "groceries": Grocery_Class,
+        "gyms": Gym_Class,
+    }
     spec_to_supergroup_dict = {
         "pubs": Pubs,
         "cinemas": Cinemas,

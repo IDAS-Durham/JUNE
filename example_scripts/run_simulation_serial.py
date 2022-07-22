@@ -12,7 +12,7 @@ import yaml
 
 from collections import defaultdict
 
-from june import World 
+from june import World
 from june.geography import Geography
 from june.demography import Demography
 from june.interaction import Interaction
@@ -21,10 +21,29 @@ from june.epidemiology.infection import Infection, InfectionSelector, InfectionS
 from june.epidemiology.infection.health_index import Data2Rates
 from june.epidemiology.infection.health_index.health_index import HealthIndexGenerator
 from june.epidemiology.infection.transmission import TransmissionConstant
-from june.groups import Hospitals, Schools, Companies, Households, CareHomes, Cemeteries, Universities
-from june.groups.leisure import generate_leisure_for_config, Cinemas, Pubs, Groceries, Gyms
+from june.groups import (
+    Hospitals,
+    Schools,
+    Companies,
+    Households,
+    CareHomes,
+    Cemeteries,
+    Universities,
+)
+from june.groups.leisure import (
+    generate_leisure_for_config,
+    Cinemas,
+    Pubs,
+    Groceries,
+    Gyms,
+)
 from june.groups.travel import Travel
-from june.groups.travel.transport import CityTransport, CityTransports, InterCityTransport, InterCityTransports
+from june.groups.travel.transport import (
+    CityTransport,
+    CityTransports,
+    InterCityTransport,
+    InterCityTransports,
+)
 from june.simulator import Simulator
 from june.epidemiology.infection_seed import InfectionSeed, InfectionSeeds
 from june.policy import Policy, Policies
@@ -40,10 +59,12 @@ from june.tracker.tracker_plots import PlotClass
 
 from june.activity import ActivityManager
 
+
 def set_random_seed(seed=999):
     """
     Sets global seeds for testing in numpy, random, and numbaized numpy.
     """
+
     @nb.njit(cache=True)
     def set_seed_numba(seed):
         random.seed(seed)
@@ -53,6 +74,7 @@ def set_random_seed(seed=999):
     set_seed_numba(seed)
     random.seed(seed)
     return
+
 
 set_random_seed(0)
 
@@ -99,21 +121,25 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "-ro",
-    "--region_only",
-    help="Run only one region",
-    required=False,
-    default="False",
+    "-ro", "--region_only", help="Run only one region", required=False, default="False"
 )
 
 parser.add_argument(
     "-hb", "--household_beta", help="Household beta", required=False, default=0.25
 )
 parser.add_argument(
-    "-nnv", "--no_vaccines", help="Implement no vaccine policies", required=False, default="False"
+    "-nnv",
+    "--no_vaccines",
+    help="Implement no vaccine policies",
+    required=False,
+    default="False",
 )
 parser.add_argument(
-    "-v", "--vaccines", help="Implement vaccine policies", required=False, default="False"
+    "-v",
+    "--vaccines",
+    help="Implement vaccine policies",
+    required=False,
+    default="False",
 )
 parser.add_argument(
     "-nv", "--no_visits", help="No shelter visits", required=False, default="False"
@@ -154,11 +180,7 @@ parser.add_argument(
     default="False",
 )
 parser.add_argument(
-    "-t",
-    "--isolation_testing",
-    help="Mean testing time",
-    required=False,
-    default=3,
+    "-t", "--isolation_testing", help="Mean testing time", required=False, default=3
 )
 parser.add_argument(
     "-i", "--isolation_time", help="Ouput file name", required=False, default=7
@@ -201,10 +223,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--n_seeding_days",
-    help="number of seeding days",
-    required=False,
-    default=10,
+    "--n_seeding_days", help="number of seeding days", required=False, default=10
 )
 parser.add_argument(
     "--n_seeding_case_per_day",
@@ -217,13 +236,13 @@ args = parser.parse_args()
 args.save_path = Path(args.save_path)
 
 counter = 1
-OG_save_path = args.save_path 
+OG_save_path = args.save_path
 while args.save_path.is_dir() == True:
-    args.save_path = Path( str(OG_save_path) + "_%s" % counter)
+    args.save_path = Path(str(OG_save_path) + "_%s" % counter)
     counter += 1
 args.save_path.mkdir(parents=True, exist_ok=False)
 
-     
+
 if args.tracker == "True":
     args.tracker = True
 else:
@@ -238,12 +257,12 @@ if args.child_susceptibility == "True":
     args.child_susceptibility = True
 else:
     args.child_susceptibility = False
-    
+
 if args.no_vaccines == "True":
     args.no_vaccines = True
 else:
     args.no_vaccines = False
-    
+
 if args.vaccines == "True":
     args.vaccines = True
 else:
@@ -264,8 +283,6 @@ if args.mask_wearing == "True":
 else:
     args.mask_wearing = False
 
-
-    
 
 if args.infectiousness_path == "nature":
     transmission_config_path = paths.configs_path / "defaults/transmission/nature.yaml"
@@ -319,7 +336,6 @@ time.sleep(10)
 CONFIG_PATH = args.config
 
 
-
 world = generate_world_from_hdf5(args.world_path, interaction_config=args.parameters)
 
 leisure = generate_leisure_for_config(world, CONFIG_PATH)
@@ -334,37 +350,40 @@ selector = InfectionSelector.from_file()
 selectors = InfectionSelectors([selector])
 
 infection_seed = InfectionSeed.from_uniform_cases(
-    world=world, infection_selector=selector, cases_per_capita=0.01, date="2020-03-02 9:00", seed_past_infections=False,
+    world=world,
+    infection_selector=selector,
+    cases_per_capita=0.01,
+    date="2020-03-02 9:00",
+    seed_past_infections=False,
 )
 infection_seeds = InfectionSeeds([infection_seed])
 
-epidemiology = Epidemiology(infection_selectors=selectors, infection_seeds=infection_seeds)
-
-interaction = Interaction.from_file(
-    config_filename=args.parameters
+epidemiology = Epidemiology(
+    infection_selectors=selectors, infection_seeds=infection_seeds
 )
+
+interaction = Interaction.from_file(config_filename=args.parameters)
 # ============================================================================#
 
 # =================================== policies ===============================#
 
 
 policies = Policies.from_file(
-        paths.configs_path / "defaults/policy/policy.yaml",
-        base_policy_modules=("june.policy", "camps.policy"),
-    )
-   
-print("Policy path set to: {}".format(paths.configs_path / "defaults/policy/policy.yaml"))
+    paths.configs_path / "defaults/policy/policy.yaml",
+    base_policy_modules=("june.policy", "camps.policy"),
+)
 
-record = Record(    
-    record_path = args.save_path,    
-    record_static_data=True,
-) 
+print(
+    "Policy path set to: {}".format(paths.configs_path / "defaults/policy/policy.yaml")
+)
+
+record = Record(record_path=args.save_path, record_static_data=True)
 
 # ==================================================================================#
 
 # =================================== tracker ===============================#
 if args.tracker:
-    group_types=[
+    group_types = [
         world.households,
         world.care_homes,
         world.schools,
@@ -376,9 +395,9 @@ if args.tracker:
         world.cinemas,
         world.gyms,
         world.city_transports,
-        world.inter_city_transports
+        world.inter_city_transports,
     ]
-    
+
     tracker = Tracker(
         world=world,
         record_path=args.save_path,
@@ -386,11 +405,11 @@ if args.tracker:
         load_interactions_path=args.parameters,
         contact_sexes=["unisex", "male", "female"],
         Tracker_Contact_Type=["1D"],
-        MaxVenueTrackingSize=10000
+        MaxVenueTrackingSize=10000,
     )
 else:
-    tracker=None
-	
+    tracker = None
+
 # ==================================================================================#
 
 # =================================== simulator ===============================#
@@ -399,13 +418,13 @@ else:
 simulator = Simulator.from_file(
     world=world,
     epidemiology=epidemiology,
-    interaction=interaction, 
-    config_filename = CONFIG_PATH,
-    leisure = leisure,
-    travel = travel,
+    interaction=interaction,
+    config_filename=CONFIG_PATH,
+    leisure=leisure,
+    travel=travel,
     record=record,
-    policies = policies,
-    tracker=tracker
+    policies=policies,
+    tracker=tracker,
 )
 
 simulator.run()
@@ -428,47 +447,45 @@ locations_df.to_csv(args.save_path / "locations.csv")
 
 if args.tracker:
     print("Tracker stuff now")
-    simulator.tracker.contract_matrices("AC", np.array([0,18,100]))
-    simulator.tracker.contract_matrices("Paper",[0,5,10,13,15,18,20,22,25,30,35,40,45,50,55,60,65,70,75,100])                                  
-    simulator.tracker.post_process_simulation(save=True)
-    
-    #Make Plots
-    Plots = PlotClass(
-        record_path=args.save_path / "Tracker",
-        Tracker_Contact_Type = "1D"
-
+    simulator.tracker.contract_matrices("AC", np.array([0, 18, 100]))
+    simulator.tracker.contract_matrices(
+        "Paper",
+        [0, 5, 10, 13, 15, 18, 20, 22, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 100],
     )
+    simulator.tracker.post_process_simulation(save=True)
+
+    # Make Plots
+    Plots = PlotClass(record_path=args.save_path / "Tracker", Tracker_Contact_Type="1D")
     Plots.make_plots(
-        plot_BBC = True,
-        plot_thumbprints = True,
+        plot_BBC=True,
+        plot_thumbprints=True,
         SameCMAP="Log",
-    
         plot_INPUTOUTPUT=True,
-        plot_AvContactsLocation=True, 
-        plot_dTLocationPopulation=True, 
-        plot_InteractionMatrices=True, 
+        plot_AvContactsLocation=True,
+        plot_dTLocationPopulation=True,
+        plot_InteractionMatrices=True,
         plot_ContactMatrices=True,
         plot_CompareSexMatrices=True,
-        plot_AgeBinning=True, 
-        plot_Distances=True 
+        plot_AgeBinning=True,
+        plot_Distances=True,
     )
-    
+
     ##Make Plots
-    #Plots = PlotClass(
+    # Plots = PlotClass(
     #    record_path=args.save_path / "Tracker",
     #    Tracker_Contact_Type = "All"
-    #)
-    #Plots.make_plots(
+    # )
+    # Plots.make_plots(
     #    plot_BBC = True,
     #    plot_thumbprints = True,
     #    SameCMAP="Log",
-    
+
     #    plot_INPUTOUTPUT=False,
-    #    plot_AvContactsLocation=False, 
-    #    plot_dTLocationPopulation=False, 
-    #    plot_InteractionMatrices=True, 
+    #    plot_AvContactsLocation=False,
+    #    plot_dTLocationPopulation=False,
+    #    plot_InteractionMatrices=True,
     #    plot_ContactMatrices=True,
     #    plot_CompareSexMatrices=True,
-    #    plot_AgeBinning=False, 
-    #    plot_Distances=False 
-    #)
+    #    plot_AgeBinning=False,
+    #    plot_Distances=False
+    # )

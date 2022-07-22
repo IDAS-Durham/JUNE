@@ -32,11 +32,7 @@ def _populate_areas(areas: Areas, demography, ethnicity=True, comorbidity=True):
     logger.info("Populating areas")
     people = Population()
     for area in areas:
-        area.populate(
-            demography,
-            ethnicity=ethnicity,
-            comorbidity=comorbidity,
-        )
+        area.populate(demography, ethnicity=ethnicity, comorbidity=comorbidity)
         people.extend(area.people)
     n_people = len(people)
     logger.info(f"Areas populated. This world's population is: {n_people}")
@@ -104,11 +100,9 @@ class World:
 
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
-            
-            self.households = (
-                household_distributor.distribute_people_and_households_to_areas(
-                    self.areas
-                )
+
+            self.households = household_distributor.distribute_people_and_households_to_areas(
+                self.areas
             )
 
         if self.schools is not None:
@@ -186,8 +180,6 @@ def generate_world_from_geography(
         geography_group = getattr(geography, possible_group)
         if geography_group is not None:
             setattr(world, possible_group, geography_group)
-    world.distribute_people(
-        include_households=include_households,
-    )
+    world.distribute_people(include_households=include_households)
     world.cemeteries = Cemeteries()
     return world

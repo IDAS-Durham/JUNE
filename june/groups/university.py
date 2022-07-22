@@ -33,7 +33,7 @@ class University(Group):
 
     @property
     def n_students(self):
-        return sum([self.subgroups[i].size for i in range(1,len(self.subgroups))])
+        return sum([self.subgroups[i].size for i in range(1, len(self.subgroups))])
 
     @property
     def super_area(self):
@@ -50,7 +50,7 @@ class University(Group):
             if person.work_super_area is not None:
                 person.work_super_area.remove_worker(person)
         elif subgroup == "professors":
-            #No professors in the modeling of the code!
+            # No professors in the modeling of the code!
             self.subgroups[0].append(person)
             person.subgroups.primary_activity = self.subgroups[0]
 
@@ -60,7 +60,8 @@ class University(Group):
 
 
 class Universities(Supergroup):
-    venue_class=University
+    venue_class = University
+
     def __init__(self, universities: List[venue_class]):
         super().__init__(members=universities)
 

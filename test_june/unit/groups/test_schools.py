@@ -39,9 +39,7 @@ class TestSchool:
 
 class TestSchools:
     def test__creating_schools_from_file(self, geo_schools):
-        Schools.from_file(
-            areas=geo_schools.areas,
-        )
+        Schools.from_file(areas=geo_schools.areas)
 
     def test_creating_schools_for_areas(self, geo_schools):
         Schools.for_areas(geo_schools.areas)

@@ -109,8 +109,8 @@ class TestTrajectoryMaker:
 class TestSymptoms:
     def test__construct__trajectory__from__maxseverity(self, symptoms_trajectories):
         symptoms_trajectories.max_severity = 0.9
-        symptoms_trajectories.trajectory = (
-            symptoms_trajectories._make_symptom_trajectory(health_index)
+        symptoms_trajectories.trajectory = symptoms_trajectories._make_symptom_trajectory(
+            health_index
         )
         symptoms_trajectories.time_of_symptoms_onset = (
             symptoms_trajectories._compute_time_from_infection_to_symptoms()
@@ -118,18 +118,9 @@ class TestSymptoms:
         assert symptoms_trajectories.trajectory == [
             (0.0, SymptomTag.exposed),
             (pytest.approx(3.4, rel=0.5), SymptomTag.mild),
-            (
-                pytest.approx(6.8, rel=0.5),
-                SymptomTag.hospitalised,
-            ),
-            (
-                pytest.approx(6.8, rel=0.5),
-                SymptomTag.intensive_care,
-            ),
-            (
-                pytest.approx(20, rel=0.5),
-                SymptomTag.dead_icu,
-            ),
+            (pytest.approx(6.8, rel=0.5), SymptomTag.hospitalised),
+            (pytest.approx(6.8, rel=0.5), SymptomTag.intensive_care),
+            (pytest.approx(20, rel=0.5), SymptomTag.dead_icu),
         ]
         assert (
             symptoms_trajectories.time_of_symptoms_onset
@@ -137,8 +128,8 @@ class TestSymptoms:
         )
         assert symptoms_trajectories.time_of_symptoms_onset > 0
         symptoms_trajectories.max_severity = 0.45
-        symptoms_trajectories.trajectory = (
-            symptoms_trajectories._make_symptom_trajectory(health_index)
+        symptoms_trajectories.trajectory = symptoms_trajectories._make_symptom_trajectory(
+            health_index
         )
         symptoms_trajectories.time_of_symptoms_onset = (
             symptoms_trajectories._compute_time_from_infection_to_symptoms()
@@ -146,23 +137,11 @@ class TestSymptoms:
         assert symptoms_trajectories.trajectory == [
             (0.0, SymptomTag.exposed),
             (pytest.approx(10, rel=0.5), SymptomTag.mild),
-            (
-                pytest.approx(13, rel=0.5),
-                SymptomTag.hospitalised,
-            ),
-            (
-                pytest.approx(15, rel=0.5),
-                SymptomTag.intensive_care,
-            ),
-            (
-                pytest.approx(20, rel=0.5),
-                SymptomTag.hospitalised,
-            ),
+            (pytest.approx(13, rel=0.5), SymptomTag.hospitalised),
+            (pytest.approx(15, rel=0.5), SymptomTag.intensive_care),
+            (pytest.approx(20, rel=0.5), SymptomTag.hospitalised),
             (pytest.approx(34, rel=0.5), SymptomTag.mild),
-            (
-                pytest.approx(40, rel=0.5),
-                SymptomTag.recovered,
-            ),
+            (pytest.approx(40, rel=0.5), SymptomTag.recovered),
         ]
         assert (
             symptoms_trajectories.time_of_symptoms_onset
@@ -170,8 +149,8 @@ class TestSymptoms:
         )
         assert symptoms_trajectories.time_of_symptoms_onset > 0
         symptoms_trajectories.max_severity = 0.05
-        symptoms_trajectories.trajectory = (
-            symptoms_trajectories._make_symptom_trajectory(health_index)
+        symptoms_trajectories.trajectory = symptoms_trajectories._make_symptom_trajectory(
+            health_index
         )
         symptoms_trajectories.time_of_symptoms_onset = (
             symptoms_trajectories._compute_time_from_infection_to_symptoms()
@@ -197,10 +176,7 @@ class TestSymptoms:
         assert infection.symptoms.trajectory == [
             (0.0, SymptomTag.exposed),
             (pytest.approx(5, 2.5), SymptomTag.mild),
-            (
-                pytest.approx(5, rel=5),
-                SymptomTag.hospitalised,
-            ),
+            (pytest.approx(5, rel=5), SymptomTag.hospitalised),
             (pytest.approx(13, rel=5), SymptomTag.mild),
             (pytest.approx(30, rel=5), SymptomTag.recovered),
         ]

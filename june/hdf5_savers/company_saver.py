@@ -85,7 +85,9 @@ def save_companies_to_hdf5(
                 companies_dset["n_workers_max"][idx1:idx2] = n_workers_max
 
 
-def load_companies_from_hdf5(file_path: str, chunk_size=50000, domain_super_areas=None, config_filename = None,):
+def load_companies_from_hdf5(
+    file_path: str, chunk_size=50000, domain_super_areas=None, config_filename=None
+):
     """
     Loads companies from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
@@ -94,7 +96,9 @@ def load_companies_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
     """
 
     Company_Class = Company
-    Company_Class.subgroup_params = Subgroup_Params.from_file(config_filename=config_filename)
+    Company_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
 
     logger.info("loading companies...")
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:

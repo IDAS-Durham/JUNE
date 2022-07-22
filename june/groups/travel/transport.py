@@ -33,6 +33,7 @@ class Transports(Supergroup):
     """
     A collection of transport units.
     """
+
     def __init__(self, transports: List[Transport]):
         super().__init__(transports)
 
@@ -44,11 +45,12 @@ class CityTransport(Transport):
 
 
 class CityTransports(Transports):
-    
+
     """
     Inner city transports
     """
-    venue_class=CityTransport
+
+    venue_class = CityTransport
 
 
 class InterCityTransport(Transport):
@@ -61,4 +63,5 @@ class InterCityTransports(Transports):
     """
     Inter city transports
     """
-    venue_class=InterCityTransport
+
+    venue_class = InterCityTransport

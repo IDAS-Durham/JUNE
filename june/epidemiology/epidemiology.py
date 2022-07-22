@@ -236,15 +236,11 @@ class Epidemiology:
                 continue
             if vaccinate:
                 self.vaccination_campaigns.apply(
-                    person=person,
-                    date=date,
-                    record=record,
+                    person=person, date=date, record=record
                 )
                 if person.vaccine_trajectory is not None:
                     person.vaccine_trajectory.update_vaccine_effect(
-                        person=person,
-                        date=date,
-                        record=record,
+                        person=person, date=date, record=record
                     )
 
     def infect_people(

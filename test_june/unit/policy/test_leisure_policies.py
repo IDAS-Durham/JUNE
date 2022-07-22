@@ -5,10 +5,7 @@ import numpy as np
 from june import paths
 from june.demography import Person
 from june.groups import Household
-from june.groups.leisure import (
-    generate_leisure_for_config,
-    generate_leisure_for_world,
-)
+from june.groups.leisure import generate_leisure_for_config, generate_leisure_for_world
 from june.policy import (
     Policies,
     CloseLeisureVenue,
@@ -26,9 +23,7 @@ class TestCloseLeisure:
     def test__close_leisure_venues(self, setup_policy_world):
         world, pupil, student, worker, sim = setup_policy_world
         close_venues = CloseLeisureVenue(
-            start_time="2020-3-1",
-            end_time="2020-3-30",
-            venues_to_close=["pub"],
+            start_time="2020-3-1", end_time="2020-3-30", venues_to_close=["pub"]
         )
         policies = Policies([close_venues])
         leisure = generate_leisure_for_config(world=world, config_filename=test_config)
@@ -136,10 +131,7 @@ class TestReduceLeisureProbabilities:
             start_time="2020-03-02",
             end_time="2020-03-05",
             activity_reductions={
-                "pub": {
-                    "male": {"0-50": 0.5, "50-100": 0.0},
-                    "female": {"0-100": 0.5},
-                },
+                "pub": {"male": {"0-50": 0.5, "50-100": 0.0}, "female": {"0-100": 0.5}}
             },
         )
         policies = Policies([reduce_leisure_probabilities])
@@ -243,10 +235,7 @@ class TestReduceLeisureProbabilities:
             start_time="2020-03-02",
             end_time="2020-03-05",
             activity_reductions={
-                "pub": {
-                    "male": {"0-50": 0.5, "50-100": 0.0},
-                    "female": {"0-100": 0.5},
-                },
+                "pub": {"male": {"0-50": 0.5, "50-100": 0.0}, "female": {"0-100": 0.5}}
             },
         )
         policies = Policies([reduce_leisure_probabilities])

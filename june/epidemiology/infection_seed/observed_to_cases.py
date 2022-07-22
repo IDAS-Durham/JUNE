@@ -202,9 +202,7 @@ class Observed2Cases:
         )
 
     def aggregate_age_sex_dfs_by_region(
-        self,
-        age_per_area_df: pd.DataFrame,
-        female_fraction_per_area_df: pd.DataFrame,
+        self, age_per_area_df: pd.DataFrame, female_fraction_per_area_df: pd.DataFrame
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Combines the age per area dataframe and female fraction per area to
@@ -241,9 +239,7 @@ class Observed2Cases:
         males_per_age_region_df = self.aggregate_areas_by_region(males_per_age_area_df)
         return females_per_age_region_df, males_per_age_region_df
 
-    def get_symptoms_rates_per_age_sex(
-        self,
-    ) -> dict:
+    def get_symptoms_rates_per_age_sex(self,) -> dict:
         """
         Computes the rates of ending up with certain SymptomTag for all
         ages and sex.
@@ -356,9 +352,7 @@ class Observed2Cases:
         )
         return n_cases_per_region_df
 
-    def get_super_area_population_weights(
-        self,
-    ) -> pd.DataFrame:
+    def get_super_area_population_weights(self,) -> pd.DataFrame:
         """
         Compute the weight in population that a super area has over its whole region, used
         to convert regional cases to cases by super area by population density
@@ -424,9 +418,7 @@ class Observed2Cases:
         return pd.concat(regional_series, axis=1).fillna(0.0)
 
     def convert_regional_cases_to_super_area(
-        self,
-        n_cases_per_region_df: pd.DataFrame,
-        starting_date: str,
+        self, n_cases_per_region_df: pd.DataFrame, starting_date: str
     ) -> pd.DataFrame:
         """
         Converts regional cases to cases by super area by weighting each super area
@@ -444,8 +436,7 @@ class Observed2Cases:
         data frame with the number of cases by super area, indexed by date
         """
         n_cases_per_region_df = self.limit_cases_per_region(
-            n_cases_per_region_df=n_cases_per_region_df,
-            starting_date=starting_date,
+            n_cases_per_region_df=n_cases_per_region_df, starting_date=starting_date
         )
         n_cases_per_super_area_df = pd.DataFrame(
             0,
@@ -587,9 +578,7 @@ class Observed2Cases:
             avg_rate_for_symptoms
         )
 
-    def get_regional_latent_cases(
-        self,
-    ) -> pd.DataFrame:
+    def get_regional_latent_cases(self,) -> pd.DataFrame:
         """
         Find regional latent cases from the observed one.
 

@@ -89,7 +89,7 @@ class HouseholdDistributor:
         max_age_to_be_parent=64,
         max_household_size=8,
         allowed_household_compositions: dict = None,
-        ignore_orphans: bool = False
+        ignore_orphans: bool = False,
     ):
         """
         Tool to populate areas with households and fill them with the correct
@@ -152,13 +152,13 @@ class HouseholdDistributor:
             values=(
                 list(first_kid_parent_age_differences.keys()),
                 list(first_kid_parent_age_differences.values()),
-            ),
+            )
         )
         self._second_kid_parent_age_diff_rv = rv_discrete(
             values=(
                 list(second_kid_parent_age_differences.keys()),
                 list(second_kid_parent_age_differences.values()),
-            ),
+            )
         )
         self._couples_age_rv = rv_discrete(
             values=(
@@ -211,10 +211,7 @@ class HouseholdDistributor:
 
     @classmethod
     def from_df(
-        cls,
-        husband_wife_df: pd.DataFrame,
-        parent_child_df: pd.DataFrame,
-        **kwargs,
+        cls, husband_wife_df: pd.DataFrame, parent_child_df: pd.DataFrame, **kwargs
     ) -> "HouseholdDistributor":
         """
         Initializes a household distributor from dataframes. If they are not specified they are assumed to be in the default
@@ -717,11 +714,7 @@ class HouseholdDistributor:
         return all_households
 
     def _create_household(
-        self,
-        area: Area,
-        composition_type,
-        type=None,
-        max_household_size: int = np.inf,
+        self, area: Area, composition_type, type=None, max_household_size: int = np.inf
     ) -> Household:
         """Creates household in the area.
 
@@ -902,18 +895,12 @@ class HouseholdDistributor:
         target_age = max(min(self.old_max_age, target_age), 18)
         if sex == 0:
             partner = self._get_closest_person_of_age(
-                men_by_age,
-                women_by_age,
-                target_age,
-                min_age=self.adult_min_age,
+                men_by_age, women_by_age, target_age, min_age=self.adult_min_age
             )
             return partner
         else:
             partner = self._get_closest_person_of_age(
-                women_by_age,
-                men_by_age,
-                target_age,
-                min_age=self.adult_min_age,
+                women_by_age, men_by_age, target_age, min_age=self.adult_min_age
             )
             return partner
 
@@ -1642,9 +1629,7 @@ class HouseholdDistributor:
                     # old with old,
                     # otherwise random
                     household = self._find_household_for_nonkid(
-                        [
-                            households_with_extra_oldpeople,
-                        ]
+                        [households_with_extra_oldpeople]
                     )
                     if household is None:
                         household = self._find_household_for_nonkid(
@@ -1666,9 +1651,7 @@ class HouseholdDistributor:
             if age in people_left_dict:
                 for person in people_left_dict[age]:
                     household = self._find_household_for_nonkid(
-                        [
-                            households_with_extra_youngadults,
-                        ]
+                        [households_with_extra_youngadults]
                     )
                     if household is None:
                         household = self._find_household_for_nonkid(
@@ -1689,9 +1672,7 @@ class HouseholdDistributor:
             if age in people_left_dict:
                 for person in people_left_dict[age]:
                     household = self._find_household_for_nonkid(
-                        [
-                            households_with_extra_adults,
-                        ]
+                        [households_with_extra_adults]
                     )
                     if household is None:
                         household = self._find_household_for_nonkid(
@@ -1713,9 +1694,7 @@ class HouseholdDistributor:
             if age in people_left_dict:
                 for person in people_left_dict[age]:
                     household = self._find_household_for_kid(
-                        [
-                            households_with_extra_kids,
-                        ]
+                        [households_with_extra_kids]
                     )
                     if household is None:
                         household = self._find_household_for_nonkid(

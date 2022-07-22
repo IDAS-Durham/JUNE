@@ -31,6 +31,7 @@ class SchoolClass(Subgroup):
         super().__init__(group, subgroup_type)
         self.quarantine_starting_date = -np.inf
 
+
 class School(Group):
 
     __slots__ = (
@@ -189,7 +190,8 @@ class School(Group):
 
 
 class Schools(Supergroup):
-    venue_class=School
+    venue_class = School
+
     def __init__(
         self,
         schools: List["venue_class"],
@@ -293,10 +295,7 @@ class Schools(Supergroup):
         -------
             An infrastructure of schools
         """
-        employee_per_clients = employee_per_clients or {
-            "primary": 30,
-            "secondary": 30,
-        }
+        employee_per_clients = employee_per_clients or {"primary": 30, "secondary": 30}
         # build schools
         schools = []
         for school_name, row in school_df.iterrows():
@@ -330,10 +329,7 @@ class Schools(Supergroup):
         )
 
     @staticmethod
-    def init_trees(
-        school_df: pd.DataFrame,
-        age_range: Tuple[int, int],
-    ) -> "Schools":
+    def init_trees(school_df: pd.DataFrame, age_range: Tuple[int, int]) -> "Schools":
         """
         Create trees to easily find the closest school that
         accepts a pupil given their age
@@ -345,11 +341,7 @@ class Schools(Supergroup):
         """
         school_trees = {}
         school_agegroup_to_global_indices = {
-            k: []
-            for k in range(
-                int(age_range[0]),
-                int(age_range[1]) + 1,
-            )
+            k: [] for k in range(int(age_range[0]), int(age_range[1]) + 1)
         }
         # have a tree per age
         for age in range(int(age_range[0]), int(age_range[1]) + 1):
@@ -409,9 +401,7 @@ class Schools(Supergroup):
         coordinates_rad = np.deg2rad(coordinates).reshape(1, -1)
         k = min(k, school_tree.data.shape[0])
         distances, neighbours = school_tree.query(
-            coordinates_rad,
-            k=k,
-            sort_results=True,
+            coordinates_rad, k=k, sort_results=True
         )
         return neighbours[0]
 
@@ -422,7 +412,6 @@ class Schools(Supergroup):
     @property
     def n_pupils(self):
         return sum([school.n_pupils for school in self.members])
-
 
 
 @nb.jit(nopython=True)

@@ -54,14 +54,8 @@ def save_immunities_to_hdf5(hdf5_file_path: str, immunities: List[Immunity]):
         else:
             susc_infection_ids = np.array(susc_infection_ids, dtype=np.int64)
             susc_susceptibilities = np.array(susc_susceptibilities, dtype=np.float64)
-        g.create_dataset(
-            "susc_infection_ids",
-            data=susc_infection_ids,
-        )
-        g.create_dataset(
-            "susc_susceptibilities",
-            data=susc_susceptibilities,
-        )
+        g.create_dataset("susc_infection_ids", data=susc_infection_ids)
+        g.create_dataset("susc_susceptibilities", data=susc_susceptibilities)
 
 
 def load_immunities_from_hdf5(hdf5_file_path: str, chunk_size=50000):

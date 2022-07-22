@@ -8,11 +8,7 @@ from shutil import copyfile
 
 
 def read_df(
-    DATA_DIR: str,
-    filename: str,
-    column_names: list,
-    usecols: list,
-    index: str,
+    DATA_DIR: str, filename: str, column_names: list, usecols: list, index: str
 ) -> pd.DataFrame:
     """Read dataframe and format
 
@@ -29,10 +25,7 @@ def read_df(
     """
 
     df = pd.read_csv(
-        os.path.join(DATA_DIR, filename),
-        names=column_names,
-        usecols=usecols,
-        header=0,
+        os.path.join(DATA_DIR, filename), names=column_names, usecols=usecols, header=0
     )
     df.set_index(index, inplace=True)
     return df
@@ -49,12 +42,7 @@ def read_population_df(OUTPUT_AREA_DIR) -> pd.DataFrame:
     """
     # TODO: column names need to be more general for other datasets.
     population = "usual_resident_population.csv"
-    population_column_names = [
-        "output_area",
-        "n_residents",
-        "males",
-        "females",
-    ]
+    population_column_names = ["output_area", "n_residents", "males", "females"]
     population_usecols = [
         "geography code",
         "Variable: All usual residents; measures: Value",
@@ -62,8 +50,7 @@ def read_population_df(OUTPUT_AREA_DIR) -> pd.DataFrame:
         "Variable: Females; measures: Value",
     ]
     population_df = pd.read_csv(
-        os.path.join(OUTPUT_AREA_DIR, population),
-        usecols=population_usecols,
+        os.path.join(OUTPUT_AREA_DIR, population), usecols=population_usecols
     )
     names_dict = dict(zip(population_usecols, population_column_names))
     population_df.rename(columns=names_dict, inplace=True)
@@ -113,9 +100,7 @@ def read_ages_df(OUTPUT_AREA_DIR: str, freq: bool = True) -> pd.DataFrame:
         "90-XXX",
     ]
 
-    ages_usecols = [
-        2,
-    ] + list(range(5, 21))
+    ages_usecols = [2] + list(range(5, 21))
 
     ages_df = read_df(OUTPUT_AREA_DIR, ages, ages_names, ages_usecols, "output_area")
     return ages_df
@@ -248,18 +233,11 @@ def read_household_df(OUTPUT_AREA_DIR: str) -> pd.DataFrame:
     """
 
     households = "household_composition.csv"
-    households_names = [
-        "output_area",
-        "n_households",
-    ]
+    households_names = ["output_area", "n_households"]
     households_usecols = [2, 4]
 
     households_df = read_df(
-        OUTPUT_AREA_DIR,
-        households,
-        households_names,
-        households_usecols,
-        "output_area",
+        OUTPUT_AREA_DIR, households, households_names, households_usecols, "output_area"
     )
 
     return households_df

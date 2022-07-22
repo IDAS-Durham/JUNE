@@ -41,8 +41,7 @@ class Travel:
     ):
         logger.info("Initialising commute...")
         self._generate_cities(
-            world=world,
-            city_super_areas_filename=self.city_super_areas_filename,
+            world=world, city_super_areas_filename=self.city_super_areas_filename
         )
         self._assign_mode_of_transport_to_people(world=world)
         commuters_dict = self._get_city_commuters(
@@ -55,8 +54,7 @@ class Travel:
             city_stations_filename=self.city_stations_filename,
         )
         self._distribute_commuters_to_stations(
-            world=world,
-            commuters_dict=commuters_dict,
+            world=world, commuters_dict=commuters_dict
         )
         self._create_transports_in_cities(world)
 
@@ -96,8 +94,8 @@ class Travel:
                 logger.info(
                     f"Mode of transport allocated in {i} of {len(world.areas)} areas."
                 )
-            mode_of_transport_generator_area = (
-                mode_of_transport_generator.regional_gen_from_area(area.name)
+            mode_of_transport_generator_area = mode_of_transport_generator.regional_gen_from_area(
+                area.name
             )
             for person in area.people:
                 if person.age < 18 or person.age >= 65:
@@ -219,11 +217,9 @@ class Travel:
             for external_commuter_id in commuters["external"]:
                 external_commuter = world.people.get_from_id(external_commuter_id)
                 work_city = external_commuter.work_city.name
-                station = (
-                    external_commuter.super_area.closest_inter_city_station_for_city[
-                        work_city
-                    ]
-                )
+                station = external_commuter.super_area.closest_inter_city_station_for_city[
+                    work_city
+                ]
                 station.commuter_ids.add(external_commuter_id)
 
     def _create_transports_in_cities(
@@ -234,12 +230,11 @@ class Travel:
         InterCityStations respectively.
         """
         logger.info("Creating transport units for the population")
-        if not hasattr(world, 'city_transports'):
+        if not hasattr(world, "city_transports"):
             world.city_transports = CityTransports([])
-        if not hasattr(world, 'inter_city_transports'):
+        if not hasattr(world, "inter_city_transports"):
             world.inter_city_transports = InterCityTransports([])
-        
-            
+
         for city in world.cities:
             if city.has_stations:
                 seats_per_passenger = self.commute_config["seats_per_passenger"].get(
@@ -264,7 +259,9 @@ class Travel:
                 )
                 for station in city.city_stations:
                     for _ in range(transports_per_station):
-                        city_transport = world.city_transports.venue_class(station=station)
+                        city_transport = world.city_transports.venue_class(
+                            station=station
+                        )
                         station.city_transports.append(city_transport)
                         world.city_transports.add(city_transport)
                         number_city_transports -= 1
@@ -285,7 +282,9 @@ class Travel:
                     )
                     number_inter_city_transports_total += number_inter_city_transports
                     for _ in range(number_inter_city_transports):
-                        inter_city_transport = world.inter_city_transports.venue_class(station=station)
+                        inter_city_transport = world.inter_city_transports.venue_class(
+                            station=station
+                        )
                         station.inter_city_transports.append(inter_city_transport)
                         world.inter_city_transports.add(inter_city_transport)
                 logger.info(

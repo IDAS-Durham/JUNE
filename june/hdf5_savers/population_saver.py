@@ -186,9 +186,7 @@ def save_population_to_hdf5(
                 )
                 people_dset.create_dataset("ethnicity", data=ethns, maxshape=(None,))
                 people_dset.create_dataset(
-                    "group_ids",
-                    data=group_ids,
-                    maxshape=(None, group_ids.shape[1]),
+                    "group_ids", data=group_ids, maxshape=(None, group_ids.shape[1])
                 )
                 people_dset.create_dataset(
                     "group_specs",
@@ -330,10 +328,7 @@ def load_population_from_hdf5(
                 else:
                     ethn = ethns[k].decode()
                 person = Person.from_attributes(
-                    id=ids[k],
-                    age=ages[k],
-                    sex=sexes[k].decode(),
-                    ethnicity=ethn,
+                    id=ids[k], age=ages[k], sex=sexes[k].decode(), ethnicity=ethn
                 )
                 people.append(person)
                 mode_of_transport_description = mode_of_transport_description_list[k]
@@ -473,8 +468,7 @@ def restore_population_properties_from_hdf5(
                             domain_id=domain_of_subgroup, id=group_id, spec=group_spec
                         )
                         subgroup_external = ExternalSubgroup(
-                            group=group,
-                            subgroup_type=subgroup_type,
+                            group=group, subgroup_type=subgroup_type
                         )
                         setattr(
                             subgroups_instances, activities_fields[i], subgroup_external

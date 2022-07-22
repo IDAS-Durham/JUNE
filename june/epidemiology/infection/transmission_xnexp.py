@@ -29,7 +29,7 @@ def xnexp(x: float, n: float, alpha: float) -> float:
     -------
         evaluation fo xnexp function
     """
-    return x**n * np.exp(-x / alpha)
+    return x ** n * np.exp(-x / alpha)
 
 
 @nb.jit(nopython=True)
@@ -259,10 +259,7 @@ class TransmissionXNExp(Transmission):
         )
 
     def _modify_infectiousness_for_symptoms(
-        self,
-        max_symptoms: str,
-        asymptomatic_infectious_factor,
-        mild_infectious_factor,
+        self, max_symptoms: str, asymptomatic_infectious_factor, mild_infectious_factor
     ):
         """
         Lowers the infectiousness of asymptomatic and mild cases, by modifying

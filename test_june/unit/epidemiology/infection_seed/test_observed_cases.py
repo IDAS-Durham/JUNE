@@ -108,18 +108,12 @@ def test__expected_cases(oc):
 
 def test__latent_cases_per_region(oc):
     n_observed_df = pd.DataFrame(
-        {
-            "date": ["2020-04-20", "2020-04-21"],
-            "magnificient": [100, 200],
-        }
+        {"date": ["2020-04-20", "2020-04-21"], "magnificient": [100, 200]}
     )
     n_observed_df.set_index("date", inplace=True)
     n_observed_df.index = pd.to_datetime(n_observed_df.index)
     n_expected_true_df = pd.DataFrame(
-        {
-            "date": ["2020-04-10", "2020-04-11"],
-            "magnificient": [100 / 0.4, 200 / 0.4],
-        }
+        {"date": ["2020-04-10", "2020-04-11"], "magnificient": [100 / 0.4, 200 / 0.4]}
     )
     n_expected_true_df.set_index("date", inplace=True)
     n_expected_true_df.index = pd.to_datetime(n_expected_true_df.index)
@@ -196,10 +190,7 @@ def test__get_weighted_time_to_symptoms(oc):
 
 def test__cases_from_observation_per_super_area(oc_multiple_super_areas):
     n_observed_df = pd.DataFrame(
-        {
-            "date": ["2020-04-20", "2020-04-21"],
-            "magnificient": [100, 200],
-        }
+        {"date": ["2020-04-20", "2020-04-21"], "magnificient": [100, 200]}
     )
     n_observed_df.set_index("date", inplace=True)
     n_observed_df.index = pd.to_datetime(n_observed_df.index)
@@ -225,11 +216,8 @@ def test__cases_from_observation_per_super_area(oc_multiple_super_areas):
     assert super_area_weights.loc["super_1"]["weights"] == pytest.approx(0.33, rel=0.05)
     assert super_area_weights.loc["super_2"]["weights"] == pytest.approx(0.33, rel=0.05)
     assert super_area_weights.loc["super_3"]["weights"] == pytest.approx(0.33, rel=0.05)
-    n_expected_per_super_area_df = (
-        oc_multiple_super_areas.convert_regional_cases_to_super_area(
-            n_expected_per_region_df,
-            starting_date="2020-04-10",
-        )
+    n_expected_per_super_area_df = oc_multiple_super_areas.convert_regional_cases_to_super_area(
+        n_expected_per_region_df, starting_date="2020-04-10"
     )
 
     pd.testing.assert_series_equal(

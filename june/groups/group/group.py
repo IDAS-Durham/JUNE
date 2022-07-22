@@ -42,6 +42,7 @@ class Group(AbstractGroup):
     a list of group specifiers - we could promote it to a dicitonary with
     default intensities (maybe mean+width with a pre-described range?).
     """
+
     external = False
     subgroup_params = Subgroup_Params.from_file()
 
@@ -52,10 +53,10 @@ class Group(AbstractGroup):
     #     else:
     #         self.subgroup_params.params = {
     #             self.get_spec(): {
-    #                 'contacts': [[0]], 
-    #                 'proportion_physical': [[0]], 
-    #                 'characteristic_time': 0, 
-    #                 'type': 'Age', 
+    #                 'contacts': [[0]],
+    #                 'proportion_physical': [[0]],
+    #                 'characteristic_time': 0,
+    #                 'type': 'Age',
     #                 'bins': [0,100]
     #             }
     #         }
@@ -83,7 +84,9 @@ class Group(AbstractGroup):
         """
         self.id = self._next_id()
         self.spec = self.get_spec()
-        self.SubgroupType = IntEnum("SubgroupType", self.subgroup_params.subgroup_labels(self.spec), start=0)
+        self.SubgroupType = IntEnum(
+            "SubgroupType", self.subgroup_params.subgroup_labels(self.spec), start=0
+        )
         # noinspection PyTypeChecker
         self.subgroups = [Subgroup(self, i) for i in range(len(self.SubgroupType))]
 
@@ -129,10 +132,7 @@ class Group(AbstractGroup):
         return self.subgroups[item]
 
     def add(
-        self,
-        person: Person,
-        activity: str,
-        subgroup_type: None,  # , dynamic=False
+        self, person: Person, activity: str, subgroup_type: None  # , dynamic=False
     ):
         """
         Add a person to a given subgroup. For example, in a school
@@ -148,7 +148,7 @@ class Group(AbstractGroup):
         # if not dynamic:
         if subgroup_type is None:
             subgroup_type = self.get_leisure_subgroup(person)
-        
+
         self[subgroup_type].append(person)
         if activity is not None:
             setattr(person.subgroups, activity, self[subgroup_type])
@@ -240,7 +240,7 @@ class Group(AbstractGroup):
     def get_leisure_subgroup(self, person, subgroup_type=None, to_send_abroad=None):
         if self.subgroup_type == "Age":
             min_age = self.subgroup_bins[0]
-            max_age = self.subgroup_bins[-1]-1
+            max_age = self.subgroup_bins[-1] - 1
 
             if person.age >= min_age and person.age <= max_age:
                 subgroup_idx = (
@@ -258,7 +258,7 @@ class Group(AbstractGroup):
     def get_index_subgroup(self, person, subgroup_type=None, to_send_abroad=None):
         if self.subgroup_type == "Age":
             min_age = self.subgroup_bins[0]
-            max_age = self.subgroup_bins[-1]-1
+            max_age = self.subgroup_bins[-1] - 1
 
             if person.age >= min_age and person.age <= max_age:
                 subgroup_idx = (
@@ -291,7 +291,7 @@ class Group(AbstractGroup):
             person
             for subgroup in self.subgroups
             for person in subgroup.people
-            if person.age < self.subgroup_params.AgeYoungAdult 
+            if person.age < self.subgroup_params.AgeYoungAdult
         ]
 
     # @property
@@ -311,14 +311,14 @@ class Group(AbstractGroup):
             for person in subgroup.people
             if person.age >= self.subgroup_params.AgeAdult
         ]
-    
+
     # @property
     # def old_adults(self):
     #     return [
     #         person
     #         for subgroup in self.subgroups
     #         for person in subgroup.people
-    #         if person.age >= self.subgroup_params.AgeOldAdult 
+    #         if person.age >= self.subgroup_params.AgeOldAdult
     #     ]
 
     @classmethod

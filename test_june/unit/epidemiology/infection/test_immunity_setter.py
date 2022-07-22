@@ -94,10 +94,7 @@ class TestSusceptibilitySetter:
 
 @pytest.fixture(name="multiplier_dict")
 def make_multiplier():
-    return {
-        Covid19.infection_id(): 1.0,
-        B117.infection_id(): 1.5,
-    }
+    return {Covid19.infection_id(): 1.0, B117.infection_id(): 1.5}
 
 
 class TestMultiplierSetter:
@@ -115,9 +112,7 @@ class TestMultiplierSetter:
             assert person.immunity.get_effective_multiplier(c19_id) == 1.0
             assert person.immunity.get_effective_multiplier(b117_id) == 1.5
 
-    def test__mean_multiplier_reference(
-        self,
-    ):
+    def test__mean_multiplier_reference(self,):
         prevalence_reference_population = {
             "feo": {
                 "f": {"0-10": 0.2, "10-100": 0.4},
@@ -137,10 +132,7 @@ class TestMultiplierSetter:
             multiplier_by_comorbidity=comorbidity_multipliers,
             comorbidity_prevalence_reference_population=prevalence_reference_population,
         )
-        dummy = Person.from_attributes(
-            sex="f",
-            age=40,
-        )
+        dummy = Person.from_attributes(sex="f", age=40)
         mean_multiplier_uk = (
             prevalence_reference_population["feo"]["f"]["10-100"]
             * comorbidity_multipliers["feo"]
@@ -156,9 +148,7 @@ class TestMultiplierSetter:
             == mean_multiplier_uk
         )
 
-    def test__interaction_changes_multiplier(
-        self,
-    ):
+    def test__interaction_changes_multiplier(self,):
         c19_id = Covid19.infection_id()
         b117_id = B117.infection_id()
         comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}
@@ -169,18 +159,9 @@ class TestMultiplierSetter:
             assert person.immunity.get_effective_multiplier(c19_id) == 1.0
             assert person.immunity.get_effective_multiplier(b117_id) == 1.0
         comorbidity_prevalence_reference_population = {
-            "guapo": {
-                "f": {"0-100": 0.0},
-                "m": {"0-100": 0.0},
-            },
-            "feo": {
-                "f": {"0-100": 0.0},
-                "m": {"0-100": 0.0},
-            },
-            "no_condition": {
-                "m": {"0-100": 1.0},
-                "f": {"0-100": 1.0},
-            },
+            "guapo": {"f": {"0-100": 0.0}, "m": {"0-100": 0.0}},
+            "feo": {"f": {"0-100": 0.0}, "m": {"0-100": 0.0}},
+            "no_condition": {"m": {"0-100": 1.0}, "f": {"0-100": 1.0}},
         }
 
         multiplier_setter = ImmunitySetter(
@@ -208,7 +189,7 @@ class TestVaccinationSetter:
                     Covid19.infection_id(): {
                         "sterilisation_efficacy": {"0-100": 0.5},
                         "symptomatic_efficacy": {"0-100": 0.5},
-                    },
+                    }
                 },
             },
             "sputnik": {
@@ -217,7 +198,7 @@ class TestVaccinationSetter:
                     B117.infection_id(): {
                         "sterilisation_efficacy": {"0-100": 0.8},
                         "symptomatic_efficacy": {"0-100": 0.8},
-                    },
+                    }
                 },
             },
         }
@@ -327,7 +308,7 @@ class TestVaccinationSetter:
                     B117.infection_id(): {
                         "sterilisation_efficacy": {"0-100": 0.8},
                         "symptomatic_efficacy": {"0-100": 0.8},
-                    },
+                    }
                 },
             }
         }

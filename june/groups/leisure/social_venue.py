@@ -89,8 +89,10 @@ class SocialVenues(Supergroup):
                 super_area = None
             sv.coordinates = coord
             if super_areas:
-                area, dist = Areas(super_area.areas).get_closest_area(coordinates=coord,return_distance=True)
-                
+                area, dist = Areas(super_area.areas).get_closest_area(
+                    coordinates=coord, return_distance=True
+                )
+
                 if dist > max_distance_to_area:
                     continue
 
@@ -100,9 +102,7 @@ class SocialVenues(Supergroup):
 
     @classmethod
     def for_super_areas(
-        cls,
-        super_areas: List[SuperArea],
-        coordinates_filename: str = None,
+        cls, super_areas: List[SuperArea], coordinates_filename: str = None
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
@@ -110,22 +110,14 @@ class SocialVenues(Supergroup):
         return cls.from_coordinates(sv_coordinates, super_areas=super_areas)
 
     @classmethod
-    def for_areas(
-        cls,
-        areas: Areas,
-        coordinates_filename: str = None,
-    ):
+    def for_areas(cls, areas: Areas, coordinates_filename: str = None):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
         super_areas = SuperAreas([area.super_area for area in areas])
         return cls.for_super_areas(super_areas, coordinates_filename)
 
     @classmethod
-    def for_geography(
-        cls,
-        geography: Geography,
-        coordinates_filename: str = None,
-    ):
+    def for_geography(cls, geography: Geography, coordinates_filename: str = None):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
         return cls.for_super_areas(geography.super_areas, coordinates_filename)

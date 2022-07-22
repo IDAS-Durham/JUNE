@@ -144,13 +144,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         return group
 
     def get_poisson_parameter(
-        self,
-        sex,
-        age,
-        day_type,
-        working_hours,
-        region=None,
-        policy_reduction=None,
+        self, sex, age, day_type, working_hours, region=None, policy_reduction=None
     ):
         """
         This differs from the super() implementation in that we do not allow

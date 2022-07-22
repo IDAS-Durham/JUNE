@@ -122,11 +122,7 @@ class TestSaveHospitals:
             test_results / "test.hdf5", chunk_size=600
         )
         for hospital, hospital2 in zip(hospitals, hospitals_recovered):
-            for attribute_name in [
-                "id",
-                "n_beds",
-                "n_icu_beds",
-            ]:
+            for attribute_name in ["id", "n_beds", "n_icu_beds"]:
                 attribute = getattr(hospital, attribute_name)
                 attribute2 = getattr(hospital2, attribute_name)
                 if attribute is None:
@@ -291,11 +287,7 @@ class TestSaveUniversities:
         save_universities_to_hdf5(universities, test_results / "test.hdf5")
         universities_recovered = load_universities_from_hdf5(test_results / "test.hdf5")
         for uni, uni2 in zip(universities, universities_recovered):
-            for attribute_name in [
-                "id",
-                "n_students_max",
-                "n_years",
-            ]:
+            for attribute_name in ["id", "n_students_max", "n_years"]:
                 attribute = getattr(uni, attribute_name)
                 attribute2 = getattr(uni2, attribute_name)
                 if attribute is None:

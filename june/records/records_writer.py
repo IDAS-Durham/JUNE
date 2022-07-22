@@ -168,7 +168,7 @@ class Record:
             current_hospitalised,
             current_intensive_care,
         ) = self.summarise_hospitalisations(world=world)
-        
+
         daily_deaths, daily_deaths_in_hospital = self.summarise_deaths(world=world)
         all_hospital_regions = [hospital.region_name for hospital in world.hospitals]
         all_world_regions = [region.name for region in world.regions]
@@ -190,11 +190,7 @@ class Record:
                 ]
                 if sum(data) > 0:
                     summary_writer.writerow(
-                        [
-                            timestamp.strftime("%Y-%m-%d"),
-                            region,
-                        ]
-                        + data
+                        [timestamp.strftime("%Y-%m-%d"), region] + data
                     )
 
     def combine_outputs(self, remove_left_overs=True):
@@ -213,10 +209,7 @@ class Record:
                 sort_keys=False,
             )
 
-    def parameters_interaction(
-        self,
-        interaction: "Interaction" = None,
-    ):
+    def parameters_interaction(self, interaction: "Interaction" = None):
         if interaction is not None:
             interaction_dict = {}
             interaction_dict["betas"] = interaction.betas
@@ -226,10 +219,7 @@ class Record:
                 interaction_dict["contact_matrices"][key] = values.tolist()
             self.append_dict_to_configs(config_dict={"interaction": interaction_dict})
 
-    def parameters_seed(
-        self,
-        infection_seeds: "InfectionSeeds" = None,
-    ):
+    def parameters_seed(self, infection_seeds: "InfectionSeeds" = None):
         if infection_seeds is not None:
             infection_seeds_dict = {}
             for infection_seed in infection_seeds:
@@ -244,10 +234,7 @@ class Record:
                 config_dict={"infection_seeds": infection_seeds_dict}
             )
 
-    def parameters_infection(
-        self,
-        infection_selectors: "InfectionSelectors" = None,
-    ):
+    def parameters_infection(self, infection_selectors: "InfectionSelectors" = None):
         if infection_selectors is not None:
             save_dict = {}
             for selector in infection_selectors._infection_selectors:
@@ -256,10 +243,7 @@ class Record:
                 save_dict[class_name]["transmission_type"] = selector.transmission_type
             self.append_dict_to_configs(config_dict={"infections": save_dict})
 
-    def parameters_policies(
-        self,
-        activity_manager: "ActivityManager" = None,
-    ):
+    def parameters_policies(self, activity_manager: "ActivityManager" = None):
         if activity_manager is not None:
             policy_dicts = []
             for policy in activity_manager.policies.policies:
@@ -381,9 +365,7 @@ def combine_hdf5s(
                     if i == 0:
                         description = getattr(record.root, dataset.name).description
                         merged_record.create_table(
-                            merged_record.root,
-                            dataset.name,
-                            description=description,
+                            merged_record.root, dataset.name, description=description
                         )
                     if len(arr_data) > 0:
                         table = getattr(merged_record.root, dataset.name)

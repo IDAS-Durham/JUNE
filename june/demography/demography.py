@@ -243,12 +243,7 @@ class Demography:
         self.age_sex_generators = age_sex_generators
         self.comorbidity_data = comorbidity_data
 
-    def populate(
-        self,
-        area_name: str,
-        ethnicity=True,
-        comorbidity=True,
-    ) -> Population:
+    def populate(self, area_name: str, ethnicity=True, comorbidity=True) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
         are all based on census data for that area.
@@ -408,7 +403,7 @@ def _load_age_and_sex_generators(
     # TODO fix this to use proper complete indexing.
 
     ret = {}
-    for ((_, age_structure), (index, female_ratios), (_, ethnicity_df),) in zip(
+    for ((_, age_structure), (index, female_ratios), (_, ethnicity_df)) in zip(
         age_structure_df.iterrows(),
         female_ratios_df.iterrows(),
         ethnicity_structure_df.groupby(level=0),

@@ -75,9 +75,7 @@ class Policies:
 
     @classmethod
     def from_file(
-        cls,
-        config_file=default_config_filename,
-        base_policy_modules=("june.policy",),
+        cls, config_file=default_config_filename, base_policy_modules=("june.policy",)
     ):
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)

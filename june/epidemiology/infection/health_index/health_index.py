@@ -31,12 +31,7 @@ def _parse_interval(interval):
 
 
 class HealthIndexGenerator:
-    def __init__(
-        self,
-        rates_df: pd.DataFrame,
-        care_home_min_age: int = 50,
-        max_age=99,
-    ):
+    def __init__(self, rates_df: pd.DataFrame, care_home_min_age: int = 50, max_age=99):
         """
         A Generator to determine the final outcome of an infection.
 
@@ -58,17 +53,10 @@ class HealthIndexGenerator:
         }["severe"]
 
     @classmethod
-    def from_file(
-        cls,
-        rates_file: str = default_rates_file,
-        care_home_min_age=50,
-    ):
+    def from_file(cls, rates_file: str = default_rates_file, care_home_min_age=50):
         ifrs = pd.read_csv(rates_file, index_col=0)
         ifrs = ifrs.rename(_parse_interval)
-        return cls(
-            rates_df=ifrs,
-            care_home_min_age=care_home_min_age,
-        )
+        return cls(rates_df=ifrs, care_home_min_age=care_home_min_age)
 
     def __call__(self, person: "Person", infection_id: int):
         """
@@ -131,8 +119,7 @@ class HealthIndexGenerator:
         ]
         icu_dead_rate = self.rates_df.loc[age_bin, f"{population}_icu_ifr_{_sex}"]
         severe_rate = max(
-            0,
-            1 - (hospital_rate + home_dead_rate + asymptomatic_rate + mild_rate),
+            0, 1 - (hospital_rate + home_dead_rate + asymptomatic_rate + mild_rate)
         )
         # fill each age in bin
         for age in range(age_bin.left, age_bin.right + 1):
@@ -173,9 +160,6 @@ class HealthIndexGenerator:
                 # values are constant at each bin
                 for age_bin in self.age_bins:
                     self._set_probability_per_age_bin(
-                        p=probabilities,
-                        age_bin=age_bin,
-                        sex=sex,
-                        population=population,
+                        p=probabilities, age_bin=age_bin, sex=sex, population=population
                     )
         return probabilities
