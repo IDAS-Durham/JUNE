@@ -49,7 +49,12 @@ def setup_sim(dummy_world, selectors):
         person.subgroups.medical_facility = None
         person.dead = False
     leisure_instance = leisure.generate_leisure_for_world(
-        world=world, list_of_leisure_groups=["pubs", "cinemas", "groceries"]
+        world=world,
+        list_of_leisure_groups=["pubs", "cinemas", "groceries"],
+        daytypes={
+            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"],
+        },
     )
     leisure_instance.distribute_social_venues_to_areas(
         world.areas, super_areas=world.super_areas
@@ -68,7 +73,9 @@ def setup_sim(dummy_world, selectors):
         policies=policies,
     )
     sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-        delta_time=3, working_hours=False, day_type="weekday"
+        delta_time=3,
+        working_hours=False,
+        date=datetime.strptime("2020-03-01", "%Y-%m-%d"),
     )
     sim.clear_world()
     return sim

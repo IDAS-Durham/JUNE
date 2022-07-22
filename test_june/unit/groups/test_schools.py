@@ -5,6 +5,7 @@ from june.demography import Person
 from june.groups import School, Schools
 from recordclass import dataobject
 
+
 class Activities(dataobject):
     residence: None
     primary_activity: None
@@ -17,8 +18,6 @@ class Activities(dataobject):
         return [getattr(self, activity) for activity in self.__fields__]
 
 
-
-
 @pytest.fixture(name="geo_schools", scope="module")
 def area_name():
     geography = Geography.from_file(filter_key={"super_area": ["E02004935"]})
@@ -28,12 +27,7 @@ def area_name():
 class TestSchool:
     @pytest.fixture(name="school")
     def create_school(self):
-        return School(
-            coordinates=(1.0, 1.0),
-            n_pupils_max=467,
-            age_min=6,
-            age_max=8,
-        )
+        return School(coordinates=(1.0, 1.0), n_pupils_max=467, age_min=6, age_max=8)
 
     def test__school_grouptype(self, school):
         assert school.SubgroupType.teachers == 0
@@ -45,7 +39,9 @@ class TestSchool:
             assert len(subgroup.people) == 0
 
     def test__filling_school(self, school):
-        person = Person(sex="f", age=7, subgroups = Activities(None, None, None, None, None, None))
+        person = Person(
+            sex="f", age=7, subgroups=Activities(None, None, None, None, None, None)
+        )
 
         school.add(person)
         assert bool(school.subgroups[2].people) is True
@@ -54,7 +50,6 @@ class TestSchool:
 class TestSchools:
     def test__creating_schools_from_file(self, geo_schools):
         Schools.from_file(areas=geo_schools.areas)
-
 
     def test_creating_schools_for_areas(self, geo_schools):
         Schools.for_areas(geo_schools.areas)

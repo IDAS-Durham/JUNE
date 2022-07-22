@@ -30,7 +30,7 @@ def make_leisure():
             "weekday": {"male": {"18-50": 0.5}, "female": {"10-40": 0.3}},
             "weekend": {"male": {"18-50": 0.7}, "female": {"18-50": 0.4}},
         },
-        daytypes = {
+        daytypes={
             "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
             "weekend": ["Saturday", "Sunday"],
         },
@@ -44,7 +44,7 @@ def make_leisure():
             "weekday": {"male": {"10-40": 0.1}, "female": {"10-40": 0.2}},
             "weekend": {"male": {"18-50": 0.4}, "female": {"18-50": 0.5}},
         },
-        daytypes = {
+        daytypes={
             "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
             "weekend": ["Saturday", "Sunday"],
         },
@@ -64,7 +64,9 @@ def _get_times_pub_cinema(leisure, person, day_type):
         delta_time = 1 / 8
         n_days = 5
     leisure.generate_leisure_probabilities_for_timestep(
-        delta_time, working_hours=False, date=datetime.strptime("2020-03-01", "%Y-%m-%d")
+        delta_time,
+        working_hours=False,
+        date=datetime.strptime("2020-03-01", "%Y-%m-%d"),
     )
     times_goes_pub = []
     times_goes_cinema = []
@@ -157,12 +159,16 @@ def test__generate_leisure_from_world(dummy_world):
     household.add(person)
     person.area = world.areas[0]
     leisure = generate_leisure_for_world(
-        list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world,daytypes = {
+        list_of_leisure_groups=["pubs", "cinemas", "groceries"],
+        world=world,
+        daytypes={
             "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
             "weekend": ["Saturday", "Sunday"],
-        }
+        },
     )
-    leisure.generate_leisure_probabilities_for_timestep(0.1, False, datetime.strptime("2020-03-01", "%Y-%m-%d"))
+    leisure.generate_leisure_probabilities_for_timestep(
+        0.1, False, datetime.strptime("2020-03-01", "%Y-%m-%d")
+    )
     n_pubs = 0
     n_cinemas = 0
     n_groceries = 0

@@ -47,10 +47,10 @@ def make_distributor(social_venues, sv_input):
         times_per_week=times_per_week,
         hours_per_day=hours_per_day,
         maximum_distance=30,
-        daytypes = {
+        daytypes={
             "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
             "weekend": ["Saturday", "Sunday"],
-        }
+        },
     )
 
 

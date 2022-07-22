@@ -19,7 +19,6 @@ class MockGroup(Group):
         super().__init__()
 
 
-
 @pytest.fixture(name="super_group", scope="module")
 def make_supergroup():
     groups_list = [MockGroup() for _ in range(10)]

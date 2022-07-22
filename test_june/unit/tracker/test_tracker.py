@@ -71,11 +71,7 @@ class TestTracker:
         assert sorted(tracker.group_type_names) == ["household", "pub"]
 
         # Check CM that are initialised
-        assert sorted(tracker.CM_T["syoa"].keys()) == [
-            "global",
-            "household",
-            "pub",
-        ]
+        assert sorted(tracker.CM_T["syoa"].keys()) == ["global", "household", "pub"]
         assert sorted(tracker.CM_T["syoa"]["global"].keys()) == [
             "female",
             "male",

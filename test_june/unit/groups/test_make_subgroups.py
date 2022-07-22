@@ -17,7 +17,6 @@ interaction_config = (
 class MockGroup(Group):
     def __init__(self):
         super().__init__()
-    
 
 
 class MockSupergroup(Supergroup):

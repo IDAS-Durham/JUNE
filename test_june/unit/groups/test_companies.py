@@ -16,7 +16,6 @@ default_data_path = (
 )
 
 
-
 @pytest.fixture(name="super_area_companies", scope="module")
 def create_geography():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
