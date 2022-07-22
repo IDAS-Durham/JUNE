@@ -45,7 +45,6 @@ class TestTracker:
             record_path=None,
             group_types=group_types,
             load_interactions_path=interaction_config,
-            track_contacts_count=True,
             contact_sexes=["unisex", "male", "female"],
         )
 
@@ -58,10 +57,10 @@ class TestTracker:
     def test__tracker_init(self, tracker):
         """"""
         # Check loaded in correct values from made up obscene values
-        assert tracker.interaction_matrices["pub"]["contacts"] == [[10]]
-        assert tracker.interaction_matrices["pub"]["proportion_physical"] == [[0.2]]
-        assert tracker.interaction_matrices["pub"]["type"] == "Age"
-        assert tracker.interaction_matrices["pub"]["bins"] == [1, 99]
+        assert tracker.IM["pub"]["contacts"] == [[10]]
+        assert tracker.IM["pub"]["proportion_physical"] == [[0.2]]
+        assert tracker.IM["pub"]["type"] == "Age"
+        assert tracker.IM["pub"]["bins"] == [1, 99]
 
         # Check functionality of calls from make_subgroups
         assert tracker.world.pubs[0].subgroup_bins == [1, 99]
@@ -72,12 +71,12 @@ class TestTracker:
         assert sorted(tracker.group_type_names) == ["household", "pub"]
 
         # Check CM that are initialised
-        assert sorted(tracker.contact_matrices["syoa"].keys()) == [
+        assert sorted(tracker.CM_T["syoa"].keys()) == [
             "global",
             "household",
             "pub",
         ]
-        assert sorted(tracker.contact_matrices["syoa"]["global"].keys()) == [
+        assert sorted(tracker.CM_T["syoa"]["global"].keys()) == [
             "female",
             "male",
             "unisex",

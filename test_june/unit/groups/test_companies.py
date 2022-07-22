@@ -16,6 +16,7 @@ default_data_path = (
 )
 
 
+
 @pytest.fixture(name="super_area_companies", scope="module")
 def create_geography():
     g = Geography.from_file(filter_key={"super_area": ["E02002559"]})
@@ -45,7 +46,7 @@ class TestCompany:
     def test__person_is_employed(self, person, company):
         company.add(person)
         assert (
-            person.primary_activity == company.subgroups[Company.SubgroupType.workers]
+            person.primary_activity == company.subgroups[company.SubgroupType.workers]
         )
 
 

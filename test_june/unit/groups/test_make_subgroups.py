@@ -17,6 +17,7 @@ interaction_config = (
 class MockGroup(Group):
     def __init__(self):
         super().__init__()
+    
 
 
 class MockSupergroup(Supergroup):
@@ -28,7 +29,8 @@ class MockSupergroup(Supergroup):
 
 @pytest.fixture(name="super_group_default", scope="module")
 def make_supergroup_default():
-    groups_list = [MockGroup() for _ in range(10)]
+    MockSupergroup.Get_Interaction(interaction_config)
+    groups_list = [MockSupergroup.venue_class() for _ in range(10)]
     super_group_default = MockSupergroup(groups_list)
     return super_group_default
 
@@ -43,8 +45,8 @@ def make_supergroup():
 
 def test__make_subgroups_defualt(super_group_default):
     assert super_group_default[0].subgroup_type == "Age"
-    assert super_group_default[0].subgroup_bins == [0, 100]
-    assert super_group_default[0].subgroup_labels == ["A"]
+    assert super_group_default[0].subgroup_bins == [0, 18, 60, 100]
+    assert super_group_default[0].subgroup_labels == ["A", "B", "C"]
 
 
 def test__make_subgroups(super_group):

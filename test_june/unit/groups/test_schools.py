@@ -3,6 +3,20 @@ import pytest
 from june.geography import Geography
 from june.demography import Person
 from june.groups import School, Schools
+from recordclass import dataobject
+
+class Activities(dataobject):
+    residence: None
+    primary_activity: None
+    medical_facility: None
+    commute: None
+    rail_travel: None
+    leisure: None
+
+    def iter(self):
+        return [getattr(self, activity) for activity in self.__fields__]
+
+
 
 
 @pytest.fixture(name="geo_schools", scope="module")
@@ -19,7 +33,6 @@ class TestSchool:
             n_pupils_max=467,
             age_min=6,
             age_max=8,
-            sector="primary_secondary",
         )
 
     def test__school_grouptype(self, school):
@@ -32,7 +45,8 @@ class TestSchool:
             assert len(subgroup.people) == 0
 
     def test__filling_school(self, school):
-        person = Person(sex="f", age=7)
+        person = Person(sex="f", age=7, subgroups = Activities(None, None, None, None, None, None))
+
         school.add(person)
         assert bool(school.subgroups[2].people) is True
 
@@ -40,6 +54,7 @@ class TestSchool:
 class TestSchools:
     def test__creating_schools_from_file(self, geo_schools):
         Schools.from_file(areas=geo_schools.areas)
+
 
     def test_creating_schools_for_areas(self, geo_schools):
         Schools.for_areas(geo_schools.areas)

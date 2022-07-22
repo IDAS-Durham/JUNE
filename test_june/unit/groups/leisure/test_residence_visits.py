@@ -19,6 +19,10 @@ def make_rvd():
             "weekday": {"male": {"0-100": 3}, "female": {"0-100": 3}},
             "weekend": {"male": {"0-100": 3}, "female": {"0-100": 3}},
         },
+        daytypes = {
+            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"],
+        }
     )
     return residence_visits_distributor
 

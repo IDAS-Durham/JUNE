@@ -61,7 +61,7 @@ class TestDomainDecomposition:
         assert len(all_people) == len(all_domains_people)
         assert set(all_people) == set(all_domains_people)
 
-    def test__all_groups_decomposition(self, domains_world, domains):
+    def test__all_groups_decomposition(self, domains_world, domains): 
         for supergroup_name in available_groups:
             world_supergroup = getattr(domains_world, supergroup_name)
             for domain in domains:

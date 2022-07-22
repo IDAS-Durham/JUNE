@@ -17,4 +17,3 @@ contact_matrices:
     characteristic_time: 8 # in hours
     type: "Age"
     bins: [0,18,60,100]
-

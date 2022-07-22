@@ -12,15 +12,12 @@ class MockSupergroup(Supergroup):
 
 class MockGroup(Group):
     class SubgroupType(IntEnum):
-        type1 = 0
-        type2 = 0
+        A = 0
+        B = 1
 
     def __init__(self):
         super().__init__()
-        person = Person.from_attributes()
-        self.add(Person.from_attributes(), "primary_activity", self.SubgroupType.type1)
-        person = Person.from_attributes()
-        self.add(person, "primary_activity", self.SubgroupType.type2)
+
 
 
 @pytest.fixture(name="super_group", scope="module")

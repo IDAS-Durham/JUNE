@@ -6,8 +6,8 @@ from june.groups.household import Household
 class TestGroup:
     def test_group_types(self):
         group = Household()
-        group.add(Person.from_attributes(), Household.SubgroupType.adults)
-        assert group[Household.SubgroupType.adults].size == 1
+        group.add(Person.from_attributes(), group.SubgroupType.adults)
+        assert group[group.SubgroupType.adults].size == 1
 
     def test_ids(self):
         household_1 = Household()
