@@ -32,6 +32,7 @@ class SocialVenueDistributor:
         neighbours_to_consider=5,
         maximum_distance=5,
         leisure_subgroup_type=0,
+        nearest_venues_to_visit=0,
     ):
         """
         A sex/age profile for the social venue attendees can be specified as
@@ -63,6 +64,9 @@ class SocialVenueDistributor:
         leisure_subgroup_type
             Subgroup of the venue that the person will be appended to
             (for instance, the visitors subgroup of the care home)
+        nearest_venues_to_visit:
+            restrict people only travelling to nearest venue(s). 0 means no restriction.
+            if >0, "neighbours_to_consider" will be ignored.
         """
         if hours_per_day is None:
             hours_per_day = {
@@ -82,13 +86,24 @@ class SocialVenueDistributor:
         self.leisure_subgroup_type = leisure_subgroup_type
         self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
         self.spec = "_".join(self.spec).lower()
+        self.nearest_venues_to_visit = nearest_venues_to_visit
 
     @classmethod
-    def from_config(cls, social_venues: SocialVenues, config_filename: str = None):
+    def from_config(cls, social_venues: SocialVenues, config_filename: str = None, config_override: Dict[str, int] = None):
+        '''
+        Parameters
+        ----------
+        config_override
+            a dict of parameters overrides their values in "config_filename"
+        '''
         if config_filename is None:
             config_filename = cls.default_config_filename
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
+        if config_override is not None:
+            for key, value in config_override.items():
+                if value is not None:
+                    config[key] = value
         return cls(social_venues, **config)
 
     def _compute_poisson_parameter_from_times_per_week(
@@ -189,8 +204,8 @@ class SocialVenueDistributor:
         """
         Given an area, searches for the social venues inside
         ``self.maximum_distance``. It then returns ``self.neighbours_to_consider``
-        of them randomly. If there are no social venues inside the maximum distance,
-        it returns the closest one.
+        of them randomly, or ``nearest_venues_to_visit`` of them sorting by distance ascending.
+        If there are no social venues inside the maximum distance, it returns the closest one.
         """
         area_location = area.coordinates
         potential_venues = self.social_venues.get_venues_in_radius(
@@ -201,9 +216,13 @@ class SocialVenueDistributor:
             if closest_venue is None:
                 return
             return (closest_venue[0],)
-        indices_len = min(len(potential_venues), self.neighbours_to_consider)
-        random_idx_choice = sample(range(len(potential_venues)), indices_len)
-        return tuple([potential_venues[idx] for idx in random_idx_choice])
+        if self.nearest_venues_to_visit > 0:
+            indices_len = min(len(potential_venues), self.nearest_venues_to_visit)
+            return tuple([potential_venues[idx] for idx in range(indices_len)])
+        else:
+            indices_len = min(len(potential_venues), self.neighbours_to_consider)
+            random_idx_choice = sample(range(len(potential_venues)), indices_len)
+            return tuple([potential_venues[idx] for idx in random_idx_choice])
 
     def get_leisure_group(self, person):
         candidates = person.area.social_venues[self.spec]
