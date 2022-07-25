@@ -358,14 +358,19 @@ class PlotClass:
                 matplotlib.colors.Norm object
 
         """
-        SAMElinvmin = {"small_dim": 0, "large_dim": 0}
-        SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-2}
+        if self.Tracker_Contact_Type == "1D":
+            factor = 1
+        elif self.Tracker_Contact_Type == "All":
+            factor = 3
+            
+        SAMElinvmin = {"small_dim": 0, "large_dim": factor*1e-1}
+        SAMElogvmin = {"small_dim": 1e-1, "large_dim": factor*1e-2}
 
-        SAMElinvmax = {"small_dim": 2.5e1, "large_dim": 4e0}
-        SAMElogvmax = {"small_dim": 2.5e1, "large_dim": 4e0}
+        SAMElinvmax = {"small_dim": 2.5e1, "large_dim": factor*4e0}
+        SAMElogvmax = {"small_dim": 2.5e1, "large_dim": factor*4e0}
 
-        SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": 3e0}
-        SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": 0.5e0}
+        SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": factor*3e0}
+        SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": factor*0.5e0}
 
         if dim < 5:
             kind = "small_dim"
@@ -1573,10 +1578,11 @@ class PlotClass:
             data = df[df["day"] == day][
                 df.columns[~df.columns.isin(["t", "day"])]
             ].values.flatten()
-            data = data[data > 1]
+            data = data[data > 0]
 
             if len(data) == 0:
                 continue
+
             means[day_i] = np.nanmean(data)
             stds[day_i] = np.nanstd(data, ddof=1)
             medians[day_i] = np.nanmedian(data)
@@ -2075,7 +2081,7 @@ class PlotClass:
                             fig.get_size_inches()[1],
                         )
                         plt.savefig(
-                            plot_dir / f"colourbar_Interaction.pdf",
+                            plot_dir / f"colourbar.pdf",
                             dpi=100,
                             bbox_inches="tight",
                         )
@@ -2103,7 +2109,7 @@ class PlotClass:
                             fig.get_size_inches()[1],
                         )
                         plt.savefig(
-                            plot_dir / f"colourbar_Interaction_log.pdf",
+                            plot_dir / f"colourbar_log.pdf",
                             dpi=100,
                             bbox_inches="tight",
                         )
@@ -2172,7 +2178,7 @@ class PlotClass:
                                             fig.get_size_inches()[1],
                                         )
                                         plt.savefig(
-                                            plot_dir_3 / f"colourbar_{rbt}.pdf",
+                                            plot_dir_3 / f"colourbar.pdf",
                                             dpi=100,
                                             bbox_inches="tight",
                                         )
@@ -2204,7 +2210,7 @@ class PlotClass:
                                             fig.get_size_inches()[1],
                                         )
                                         plt.savefig(
-                                            plot_dir_3 / f"colourbar_{rbt}_log.pdf",
+                                            plot_dir_3 / f"colourbar_log.pdf",
                                             dpi=100,
                                             bbox_inches="tight",
                                         )
@@ -2234,7 +2240,7 @@ class PlotClass:
                                 )
                                 if rct == IM_contact_types[0]:
                                     fig.colorbar(
-                                        im1, ax=ax1, extend="both", aspect=aspect
+                                        im1, ax=ax1, extend="both", aspect=aspect,orientation="horizontal",
                                     )
                                     ax1.remove()
                                     fig.set_size_inches(
@@ -2242,7 +2248,7 @@ class PlotClass:
                                         fig.get_size_inches()[1],
                                     )
                                     plt.savefig(
-                                        plot_dir_2 / f"colourbar_CM.pdf",
+                                        plot_dir_2 / f"colourbar.pdf",
                                         dpi=100,
                                         bbox_inches="tight",
                                     )
@@ -2262,7 +2268,7 @@ class PlotClass:
                                 )
                                 if rct == IM_contact_types[0]:
                                     fig.colorbar(
-                                        im1, ax=ax1, extend="both", aspect=aspect
+                                        im1, ax=ax1, extend="both", aspect=aspect,orientation="horizontal",
                                     )
                                     ax1.remove()
                                     fig.set_size_inches(
@@ -2270,7 +2276,7 @@ class PlotClass:
                                         fig.get_size_inches()[1],
                                     )
                                     plt.savefig(
-                                        plot_dir_2 / f"colourbar_CM_log.pdf",
+                                        plot_dir_2 / f"colourbar_log.pdf",
                                         dpi=100,
                                         bbox_inches="tight",
                                     )
