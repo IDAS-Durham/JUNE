@@ -359,18 +359,24 @@ class PlotClass:
 
         """
         if self.Tracker_Contact_Type == "1D":
-            factor = 1
+            SAMElinvmin = {"small_dim": 0, "large_dim": 0}
+            SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-2}
+
+            SAMElinvmax = {"small_dim": 2.5e1, "large_dim": 4e0}
+            SAMElogvmax = {"small_dim": 2.5e1, "large_dim": 4e0}
+
+            SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": 3e0}
+            SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": 0.5e0}
+
         elif self.Tracker_Contact_Type == "All":
-            factor = 3
-            
-        SAMElinvmin = {"small_dim": 0, "large_dim": factor*1e-1}
-        SAMElogvmin = {"small_dim": 1e-1, "large_dim": factor*1e-2}
+            SAMElinvmin = {"small_dim": 0, "large_dim": 0}
+            SAMElogvmin = {"small_dim": 1e-3, "large_dim": 1e-3}
 
-        SAMElinvmax = {"small_dim": 2.5e1, "large_dim": factor*4e0}
-        SAMElogvmax = {"small_dim": 2.5e1, "large_dim": factor*4e0}
+            SAMElinvmax = {"small_dim": 1, "large_dim": 1}
+            SAMElogvmax = {"small_dim": 1, "large_dim": 1}
 
-        SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": factor*3e0}
-        SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": factor*0.5e0}
+            SAMEsymlogvmax = {"small_dim": 1, "large_dim": 1}
+            SAMEsymlinvmax = {"small_dim": 1, "large_dim": 1}
 
         if dim < 5:
             kind = "small_dim"
@@ -2081,9 +2087,7 @@ class PlotClass:
                             fig.get_size_inches()[1],
                         )
                         plt.savefig(
-                            plot_dir / f"colourbar.pdf",
-                            dpi=100,
-                            bbox_inches="tight",
+                            plot_dir / f"colourbar.pdf", dpi=100, bbox_inches="tight"
                         )
                     plt.close()
 
@@ -2240,7 +2244,11 @@ class PlotClass:
                                 )
                                 if rct == IM_contact_types[0]:
                                     fig.colorbar(
-                                        im1, ax=ax1, extend="both", aspect=aspect,orientation="horizontal",
+                                        im1,
+                                        ax=ax1,
+                                        extend="both",
+                                        aspect=aspect,
+                                        orientation="horizontal",
                                     )
                                     ax1.remove()
                                     fig.set_size_inches(
@@ -2268,7 +2276,11 @@ class PlotClass:
                                 )
                                 if rct == IM_contact_types[0]:
                                     fig.colorbar(
-                                        im1, ax=ax1, extend="both", aspect=aspect,orientation="horizontal",
+                                        im1,
+                                        ax=ax1,
+                                        extend="both",
+                                        aspect=aspect,
+                                        orientation="horizontal",
                                     )
                                     ax1.remove()
                                     fig.set_size_inches(

@@ -1167,25 +1167,28 @@ class Tracker:
 
                     if bin_type == "Interaction":
                         if sex == "unisex":
-                            cm = cm_spec
-                            age_profile = self.location_cum_pop["Interaction"][
-                                contact_type
-                            ]
+                            cm = np.array(cm_spec)
+                            age_profile = np.array(
+                                self.location_cum_pop["Interaction"][contact_type]
+                            )
                         else:
                             continue
                     else:
-                        cm = cm_spec[sex]
-                        age_profile = self.location_cum_pop[bin_type][contact_type][sex]
+                        cm = np.array(cm_spec[sex])
+                        age_profile = np.array(
+                            self.location_cum_pop[bin_type][contact_type][sex]
+                        )
 
                     NCM, NCM_err = self.CM_Norm(
-                        cm,
-                        np.array(age_profile),
+                        cm=cm,
+                        pop_tots=age_profile,
                         contact_type=contact_type,
                         Reciprocal=False,
                     )
+
                     NCM_R, NCM_R_err = self.CM_Norm(
-                        cm,
-                        np.array(age_profile),
+                        cm=cm,
+                        pop_tots=age_profile,
                         contact_type=contact_type,
                         Reciprocal=True,
                     )
@@ -1268,23 +1271,23 @@ class Tracker:
             factor = 0
 
         # Create blanks to fill
-        norm_cm = np.zeros_like(cm)
-        norm_cm_err = np.zeros_like(cm)
+        norm_cm = np.zeros_like(cm, dtype=float)
+        norm_cm_err = np.zeros_like(cm, dtype=float)
 
         # Loop over elements
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
                 if Reciprocal:  # Count contacts j to i also
-                    F_i = 1
-                    F_j = 1
+                    F_i = 1.0
+                    F_j = 1.0
                 else:  # Only count contacts i to j
-                    F_i = 2
-                    F_j = 0
+                    F_i = 2.0
+                    F_j = 0.0
 
                 # Population rescaling
                 w = pop_tots[j] / pop_tots[i]
 
-                if pop_tots[i] == 0 or pop_tots[j] == 0:
+                if pop_tots[i] < 1 or pop_tots[j] < 1:
                     continue
 
                 norm_cm[i, j] = (
@@ -1295,6 +1298,7 @@ class Tracker:
                     )
                     * factor
                 )
+
                 norm_cm_err[i, j] = (
                     0.5
                     * np.sqrt(
@@ -1334,7 +1338,7 @@ class Tracker:
         self.CM_T_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex])
+                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dype=float)
                     for sex in self.CM_T[bin_type][loc].keys()
                 }
                 for loc in self.CM_T[bin_type].keys()
@@ -1343,7 +1347,7 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.CM_T_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc])
+            loc: np.zeros_like(self.CM_T["Interaction"][loc], dype=float)
             for loc in self.CM_T["Interaction"].keys()
         }
 
@@ -1351,7 +1355,7 @@ class Tracker:
         self.NCM = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex])
+                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dype=float)
                     for sex in self.CM_T[bin_type][loc].keys()
                 }
                 for loc in self.CM_T[bin_type].keys()
@@ -1360,14 +1364,14 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc])
+            loc: np.zeros_like(self.CM_T["Interaction"][loc], dype=float)
             for loc in self.CM_T["Interaction"].keys()
         }
 
         self.NCM_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex])
+                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dype=float)
                     for sex in self.CM_T[bin_type][loc].keys()
                 }
                 for loc in self.CM_T[bin_type].keys()
@@ -1376,7 +1380,7 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc])
+            loc: np.zeros_like(self.CM_T["Interaction"][loc], dype=float)
             for loc in self.CM_T["Interaction"].keys()
         }
 
@@ -1384,7 +1388,7 @@ class Tracker:
         self.NCM_R = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex])
+                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dype=float)
                     for sex in self.CM_T[bin_type][loc].keys()
                 }
                 for loc in self.CM_T[bin_type].keys()
@@ -1393,14 +1397,14 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_R["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc])
+            loc: np.zeros_like(self.CM_T["Interaction"][loc], dype=float)
             for loc in self.CM_T["Interaction"].keys()
         }
 
         self.NCM_R_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex])
+                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dype=float)
                     for sex in self.CM_T[bin_type][loc].keys()
                 }
                 for loc in self.CM_T[bin_type].keys()
@@ -1409,7 +1413,7 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_R_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc])
+            loc: np.zeros_like(self.CM_T["Interaction"][loc], dype=float)
             for loc in self.CM_T["Interaction"].keys()
         }
         return 1
@@ -1441,7 +1445,7 @@ class Tracker:
         self.CM_AC_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex])
+                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dype=float)
                     for sex in self.CM_AC[bin_type][loc].keys()
                 }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1450,7 +1454,7 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.CM_AC_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc])
+            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dype=float)
             for loc in self.CM_AC["Interaction"].keys()
         }
 
@@ -1458,7 +1462,7 @@ class Tracker:
         self.NCM_AC = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex])
+                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dype=float)
                     for sex in self.CM_AC[bin_type][loc].keys()
                 }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1467,14 +1471,14 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_AC["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc])
+            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dype=float)
             for loc in self.CM_AC["Interaction"].keys()
         }
 
         self.NCM_AC_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex])
+                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dype=float)
                     for sex in self.CM_AC[bin_type][loc].keys()
                 }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1483,7 +1487,7 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_AC_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc])
+            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dype=float)
             for loc in self.CM_AC["Interaction"].keys()
         }
 
@@ -1491,7 +1495,7 @@ class Tracker:
         self.NCM_AC_R = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex])
+                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dype=float)
                     for sex in self.CM_AC[bin_type][loc].keys()
                 }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1500,14 +1504,14 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_AC_R["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc])
+            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dype=float)
             for loc in self.CM_AC["Interaction"].keys()
         }
 
         self.NCM_AC_R_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex])
+                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dype=float)
                     for sex in self.CM_AC[bin_type][loc].keys()
                 }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1516,7 +1520,7 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_AC_R_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc])
+            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dype=float)
             for loc in self.CM_AC["Interaction"].keys()
         }
         return 1
@@ -1875,6 +1879,8 @@ class Tracker:
             return 1
 
         for person in group.people:
+            NPeople = len(group.people)
+
             # Shelter we want family groups
             if group.spec == "shelter":
                 groups_inter = [list(sub.people) for sub in group.families]
@@ -1920,21 +1926,21 @@ class Tracker:
                     if inside:
                         self.CM_AC["Interaction"][group.spec][0, 0] += len(
                             subgroup_people_without
-                        )
+                        ) / (NPeople - 1.0)
                         self.CM_AC["Interaction"][group.spec][1, 1] += len(
                             subgroup_people_without
-                        )
+                        ) / (NPeople - 1.0)
                     else:
                         self.CM_AC["Interaction"][group.spec][
                             person_subgroup_idx, contact_subgroup_idx
-                        ] += len(subgroup_people_without)
+                        ] += len(subgroup_people_without) / (NPeople - 1.0)
                         self.CM_AC["Interaction"][group.spec][
                             contact_subgroup_idx, person_subgroup_idx
-                        ] += len(subgroup_people_without)
+                        ] += len(subgroup_people_without) / (NPeople - 1.0)
                 else:
                     self.CM_AC["Interaction"][group.spec][
                         person_subgroup_idx, contact_subgroup_idx
-                    ] += len(subgroup_people_without)
+                    ] += len(subgroup_people_without) / (NPeople - 1.0)
 
                 contact_ids_inter = []
                 contact_ids_intra = []
@@ -1957,14 +1963,26 @@ class Tracker:
                     self.age_idxs["syoa"][contact_id] for contact_id in contact_ids
                 ]
                 for cidx in contact_age_idxs:
-                    self.CM_AC["syoa"]["global"]["unisex"][age_idx, cidx] += 1
-                    self.CM_AC["syoa"][group.spec]["unisex"][age_idx, cidx] += 1
+                    self.CM_AC["syoa"]["global"]["unisex"][age_idx, cidx] += 1.0 / (
+                        NPeople - 1.0
+                    )
+                    self.CM_AC["syoa"][group.spec]["unisex"][age_idx, cidx] += 1.0 / (
+                        NPeople - 1.0
+                    )
                     if person.sex == "m" and "male" in self.contact_sexes:
-                        self.CM_AC["syoa"]["global"]["male"][age_idx, cidx] += 1
-                        self.CM_AC["syoa"][group.spec]["male"][age_idx, cidx] += 1
+                        self.CM_AC["syoa"]["global"]["male"][age_idx, cidx] += 1.0 / (
+                            NPeople - 1.0
+                        )
+                        self.CM_AC["syoa"][group.spec]["male"][age_idx, cidx] += 1.0 / (
+                            NPeople - 1.0
+                        )
                     if person.sex == "f" and "female" in self.contact_sexes:
-                        self.CM_AC["syoa"]["global"]["female"][age_idx, cidx] += 1
-                        self.CM_AC["syoa"][group.spec]["female"][age_idx, cidx] += 1
+                        self.CM_AC["syoa"]["global"]["female"][age_idx, cidx] += 1.0 / (
+                            NPeople - 1.0
+                        )
+                        self.CM_AC["syoa"][group.spec]["female"][
+                            age_idx, cidx
+                        ] += 1.0 / (NPeople - 1.0)
 
                 # For shelter only. We check over inter and intra groups
                 if group.spec == "shelter":
@@ -1976,15 +1994,15 @@ class Tracker:
                     for cidx in contact_age_idxs:
                         self.CM_AC["syoa"][group.spec + "_inter"]["unisex"][
                             age_idx, cidx
-                        ] += 1
+                        ] += 1.0 / (NPeople - 1.0)
                         if person.sex == "m" and "male" in self.contact_sexes:
                             self.CM_AC["syoa"][group.spec + "_inter"]["male"][
                                 age_idx, cidx
-                            ] += 1
+                            ] += 1.0 / (NPeople - 1.0)
                         if person.sex == "f" and "female" in self.contact_sexes:
                             self.CM_AC["syoa"][group.spec + "_inter"]["female"][
                                 age_idx, cidx
-                            ] += 1
+                            ] += 1.0 / (NPeople - 1.0)
 
                     # Intra
                     contact_age_idxs = [
@@ -1994,15 +2012,15 @@ class Tracker:
                     for cidx in contact_age_idxs:
                         self.CM_AC["syoa"][group.spec + "_intra"]["unisex"][
                             age_idx, cidx
-                        ] += 1
+                        ] += 1.0 / (NPeople - 1.0)
                         if person.sex == "m" and "male" in self.contact_sexes:
                             self.CM_AC["syoa"][group.spec + "_intra"]["male"][
                                 age_idx, cidx
-                            ] += 1
+                            ] += 1.0 / (NPeople - 1.0)
                         if person.sex == "f" and "female" in self.contact_sexes:
                             self.CM_AC["syoa"][group.spec + "_intra"]["female"][
                                 age_idx, cidx
-                            ] += 1
+                            ] += 1.0 / (NPeople - 1.0)
         return 1
 
     def simulate_pop_time_venues(self, group):
@@ -2924,7 +2942,7 @@ class Tracker:
                         matrix[i] = 0
 
                     if dtypeString == "float":
-                        string += "%.2f" % matrix[i]
+                        string += "%.4f" % matrix[i]
                     if dtypeString == "int":
                         string += "%.0f" % matrix[i]
 
@@ -2939,7 +2957,7 @@ class Tracker:
                         matrix[i, j] = 0
 
                     if dtypeString == "float":
-                        string += "%.2f" % matrix[i, j]
+                        string += "%.4f" % matrix[i, j]
                     if dtypeString == "int":
                         string += "%.0f" % matrix[i, j]
 
