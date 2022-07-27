@@ -370,13 +370,13 @@ class PlotClass:
 
         elif self.Tracker_Contact_Type == "All":
             SAMElinvmin = {"small_dim": 0, "large_dim": 0}
-            SAMElogvmin = {"small_dim": 1e-3, "large_dim": 1e-3}
+            SAMElogvmin = {"small_dim": 1e-2, "large_dim": 1e-2}
 
-            SAMElinvmax = {"small_dim": 1, "large_dim": 1}
-            SAMElogvmax = {"small_dim": 1, "large_dim": 1}
+            SAMElinvmax = {"small_dim": 0.5, "large_dim": 1}
+            SAMElogvmax = {"small_dim": 0.5, "large_dim": 1}
 
-            SAMEsymlogvmax = {"small_dim": 1, "large_dim": 1}
-            SAMEsymlinvmax = {"small_dim": 1, "large_dim": 1}
+            SAMEsymlogvmax = {"small_dim": 0.5, "large_dim": 1}
+            SAMEsymlinvmax = {"small_dim": 0.5, "large_dim": 1}
 
         if dim < 5:
             kind = "small_dim"
@@ -887,7 +887,7 @@ class PlotClass:
             cm = np.nan_to_num(cm, nan=0.0)
             bbc_cm = np.nan_to_num(bbc_cm, nan=0.0)
 
-            print(contact_type, self.Canberra_distance(cm, bbc_cm))
+            print(contact_type)
             pop_by_bin = np.array(self.age_profiles[bin_type][contact_type][sex])
             pop_bins = np.array(self.age_bins[bin_type])
             pop_width = np.diff(pop_bins)
@@ -909,7 +909,9 @@ class PlotClass:
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
             I_sq_s = I_sq / var ** 2
             print("BBC", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
-            print({"Camberra": self.Canberra_distance(cm, bbc_cm)})
+            print({"Camberra": self.Canberra_distance(cm, bbc_cm)[0]})
+            print("")
+            print(np.array(self.Canberra_distance(cm, bbc_cm)[1]))
             print("")
 
             f.colorbar(im1, ax=ax1, extend="both")

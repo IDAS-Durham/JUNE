@@ -264,12 +264,15 @@ class Tracker:
             CD:
                 float, CD the Canberra distance
         """
-        x = x.flatten()
-        y = y.flatten()
-
-        n = len(x)
+        n = np.prod(x.shape)   
         Z = np.nansum((x - y) == 0)
-        return np.nansum(abs(x - y) / (abs(x) + abs(y))) / (n - Z)
+        Norm = (n - Z)
+
+        if Norm == 0:
+            Norm = 1
+            
+        DM = abs(x - y) / (abs(x) + abs(y))
+        return np.nansum(DM) / Norm, DM
 
     def Calc_QIndex(self, cm):
         """
@@ -284,7 +287,7 @@ class Tracker:
             Q:
                 float, Q index of assortiveness
         """
-        P = np.zeros_like(cm)
+        P = np.zeros_like(cm, dtype=float)
         P = np.nan_to_num(cm / np.nansum(cm, axis=1), nan=0.0)
         return (np.trace(P) - 1) / (P.shape[0] - 1)
 
@@ -460,7 +463,7 @@ class Tracker:
             CM:
                 np.array The contracted matrix
         """
-        cm = np.zeros((len(bins) - 1, len(bins) - 1))
+        cm = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
         for bin_xi in range(len(bins) - 1):
             for bin_yi in range(len(bins) - 1):
                 Win_Xi = (bins[bin_xi], bins[bin_xi + 1])
@@ -500,7 +503,7 @@ class Tracker:
                     self.age_bins = {Name: bins, **self.age_bins}
                 append = {}
                 for sex in self.contact_sexes:
-                    append[sex] = np.zeros((len(bins) - 1, len(bins) - 1))
+                    append[sex] = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
                 self.CM_T[Name][group] = append
                 for sex in self.contact_sexes:
 
@@ -519,7 +522,7 @@ class Tracker:
                     self.age_bins = {Name: bins, **self.age_bins}
                 append = {}
                 for sex in self.contact_sexes:
-                    append[sex] = np.zeros((len(bins) - 1, len(bins) - 1))
+                    append[sex] = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
                 self.CM_AC[Name][group] = append
                 for sex in self.contact_sexes:
 
@@ -611,10 +614,10 @@ class Tracker:
             self.CM_T = {}
             # For each type of contact matrix binning, eg BBC, polymod, SYOA...
             for bin_type, bins in self.age_bins.items():
-                CM = np.zeros((len(bins) - 1, len(bins) - 1))
+                CM = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
                 append = {}
                 for sex in self.contact_sexes:  # For each sex
-                    append[sex] = np.zeros_like(CM)
+                    append[sex] = np.zeros_like(CM, dtype=float)
 
                 self.CM_T[bin_type] = {
                     "global": append  # Add in a global matrix tracker
@@ -622,7 +625,7 @@ class Tracker:
                 for spec in self.group_type_names:  # Over location
                     append = {}
                     for sex in self.contact_sexes:
-                        append[sex] = np.zeros_like(CM)
+                        append[sex] = np.zeros_like(CM, dtype=float)
                     self.CM_T[bin_type][spec] = append
 
             # Initialize for the input contact matrices.
@@ -632,17 +635,17 @@ class Tracker:
                     continue
 
                 IM = self.IM[spec]["contacts"]
-                append = np.zeros_like(IM)
+                append = np.zeros_like(IM, dtype=float)
                 self.CM_T["Interaction"][spec] = append
 
         if "All" in self.Tracker_Contact_Type:
             self.CM_AC = {}
             # For each type of contact matrix binning, eg BBC, polymod, SYOA...
             for bin_type, bins in self.age_bins.items():
-                CM = np.zeros((len(bins) - 1, len(bins) - 1))
+                CM = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
                 append = {}
                 for sex in self.contact_sexes:  # For each sex
-                    append[sex] = np.zeros_like(CM)
+                    append[sex] = np.zeros_like(CM, dtype=float)
 
                 self.CM_AC[bin_type] = {
                     "global": append  # Add in a global matrix tracker
@@ -650,7 +653,7 @@ class Tracker:
                 for spec in self.group_type_names:  # Over location
                     append = {}
                     for sex in self.contact_sexes:
-                        append[sex] = np.zeros_like(CM)
+                        append[sex] = np.zeros_like(CM, dtype=float)
                     self.CM_AC[bin_type][spec] = append
 
             # Initialize for the input contact matrices.
@@ -660,7 +663,7 @@ class Tracker:
                     continue
 
                 IM = self.IM[spec]["contacts"]
-                append = np.zeros_like(IM)
+                append = np.zeros_like(IM, dtype=float)
                 self.CM_AC["Interaction"][spec] = append
         return 1
 
@@ -781,10 +784,10 @@ class Tracker:
         for bin_type, bins in self.age_bins.items():
             # For each type of contact matrix binning, eg BBC, polymod, SYOA...
             self.location_cum_pop[bin_type] = {}
-            CM = np.zeros(len(bins) - 1)
+            CM = np.zeros(len(bins) - 1, dtype=float)
             append = {}
             for sex in self.contact_sexes:  # For each sex
-                append[sex] = np.zeros_like(CM)
+                append[sex] = np.zeros_like(CM, dtype=float)
 
             self.location_cum_pop[bin_type][
                 "global"
@@ -793,13 +796,13 @@ class Tracker:
             for spec in self.group_type_names:  # Over location
                 append = {}
                 for sex in self.contact_sexes:
-                    append[sex] = np.zeros_like(CM)
+                    append[sex] = np.zeros_like(CM, dtype=float)
                 self.location_cum_pop[bin_type][spec] = append
 
         self.location_cum_pop["Interaction"] = {}
         for spec in self.IM.keys():  # Over location
             self.location_cum_pop["Interaction"][spec] = np.zeros(
-                len(self.IM[spec]["contacts"])
+                len(self.IM[spec]["contacts"]), dtype=float
             )
         return 1
 
@@ -972,12 +975,12 @@ class Tracker:
             -------
                 dict, new matrices for location by sex
             """
-            CM = np.zeros(len(bins_idx) - 1)
+            CM = np.zeros(len(bins_idx) - 1, dtype=float)
             APPEND = {}
             for spec in locs:  # Over location
                 append = {}
                 for sex in self.contact_sexes:
-                    append[sex] = np.zeros_like(CM)
+                    append[sex] = np.zeros_like(CM, dtype=float)
                 APPEND[spec] = append
 
             for spec in locs:  # Over location
@@ -1093,16 +1096,30 @@ class Tracker:
                                 # TODO Feed this in so not to be hard coded
                                 # Special normalisation for shelters. Reweight based on households sharing shelters
                                 shelter_shared = 0.75
-                                NCM[0, 0] *= shelter_shared ** 2
-                                NCM[1, 1] *= shelter_shared ** 2
-                                NCM_err[0, 0] *= shelter_shared ** 2
-                                NCM_err[1, 1] *= shelter_shared ** 2
-                                NCM_R[0, 0] *= shelter_shared ** 2
-                                NCM_R[1, 1] *= shelter_shared ** 2
-                                NCM_R_err[0, 0] *= shelter_shared ** 2
-                                NCM_R_err[1, 1] *= shelter_shared ** 2
-                                cm[0, 0] *= shelter_shared ** 2
-                                cm[1, 1] *= shelter_shared ** 2
+                                FIntraExtra = shelter_shared / (2*(1-shelter_shared))
+                                FIntraIntra = 1 / ( (1-shelter_shared) / (2*(1-shelter_shared)) )
+                                print(FIntraIntra, FIntraExtra)
+                                NCM[0, 0] /= FIntraIntra
+                                NCM[1, 1] /= FIntraIntra
+                                NCM_err[0, 0] /= FIntraIntra
+                                NCM_err[1, 1] /= FIntraIntra
+                                NCM_R[0, 0] /= FIntraIntra
+                                NCM_R[1, 1] /= FIntraIntra
+                                NCM_R_err[0, 0] /= FIntraIntra
+                                NCM_R_err[1, 1] /= FIntraIntra
+                                cm[0, 0] /= FIntraIntra
+                                cm[1, 1] /= FIntraIntra
+
+                                NCM[0, 1] /= FIntraExtra
+                                NCM[1, 0] /= FIntraExtra
+                                NCM_err[0, 1] /= FIntraExtra
+                                NCM_err[1, 0] /= FIntraExtra
+                                NCM_R[0, 1] /= FIntraExtra
+                                NCM_R[1, 0] /= FIntraExtra
+                                NCM_R_err[0, 1] /= FIntraExtra
+                                NCM_R_err[1, 0] /= FIntraExtra
+                                cm[0, 1] /= FIntraExtra
+                                cm[1, 0] /= FIntraExtra
 
                             self.NCM["Interaction"][contact_type] = NCM
                             self.NCM_err["Interaction"][contact_type] = NCM_err
@@ -1199,16 +1216,30 @@ class Tracker:
                                 # TODO Feed this in so not to be hard coded
                                 # Special normalisation for shelters. Reweight based on households sharing shelters
                                 shelter_shared = 0.75
-                                NCM[0, 0] *= shelter_shared ** 2
-                                NCM[1, 1] *= shelter_shared ** 2
-                                NCM_err[0, 0] *= shelter_shared ** 2
-                                NCM_err[1, 1] *= shelter_shared ** 2
-                                NCM_R[0, 0] *= shelter_shared ** 2
-                                NCM_R[1, 1] *= shelter_shared ** 2
-                                NCM_R_err[0, 0] *= shelter_shared ** 2
-                                NCM_R_err[1, 1] *= shelter_shared ** 2
-                                cm[0, 0] *= shelter_shared ** 2
-                                cm[1, 1] *= shelter_shared ** 2
+                                FIntraExtra = shelter_shared / (2*(1-shelter_shared))
+                                FIntraIntra = 1 / ( (1-shelter_shared) / (2*(1-shelter_shared)) )
+                                #print(FIntraIntra, FIntraExtra)
+                                NCM[0, 0] /= FIntraIntra
+                                NCM[1, 1] /= FIntraIntra
+                                NCM_err[0, 0] /= FIntraIntra
+                                NCM_err[1, 1] /= FIntraIntra
+                                NCM_R[0, 0] /= FIntraIntra
+                                NCM_R[1, 1] /= FIntraIntra
+                                NCM_R_err[0, 0] /= FIntraIntra
+                                NCM_R_err[1, 1] /= FIntraIntra
+                                cm[0, 0] /= FIntraIntra
+                                cm[1, 1] /= FIntraIntra
+
+                                NCM[0, 1] /= FIntraExtra
+                                NCM[1, 0] /= FIntraExtra
+                                NCM_err[0, 1] /= FIntraExtra
+                                NCM_err[1, 0] /= FIntraExtra
+                                NCM_R[0, 1] /= FIntraExtra
+                                NCM_R[1, 0] /= FIntraExtra
+                                NCM_R_err[0, 1] /= FIntraExtra
+                                NCM_R_err[1, 0] /= FIntraExtra
+                                cm[0, 1] /= FIntraExtra
+                                cm[1, 0] /= FIntraExtra
 
                             self.NCM_AC["Interaction"][contact_type] = NCM
                             self.NCM_AC_err["Interaction"][contact_type] = NCM_err
@@ -1641,7 +1672,7 @@ class Tracker:
         if "contacts_err" in self.IM[spec].keys():
             cms_err = self.IM[spec]["contacts_err"]
         else:
-            cms_err = np.zeros_like(cms)
+            cms_err = np.zeros_like(cms, dtype=float)
 
         NSubgroups = len(group.subgroups)
         if group.spec == "school":
@@ -1880,6 +1911,7 @@ class Tracker:
 
         for person in group.people:
             NPeople = len(group.people)
+           
 
             # Shelter we want family groups
             if group.spec == "shelter":
@@ -2857,7 +2889,7 @@ class Tracker:
                     else:
                         return PM
                 expand_bins = self.age_bins["syoa"]
-                Pmatrix = np.zeros((len(expand_bins) - 1, len(expand_bins) - 1))
+                Pmatrix = np.zeros((len(expand_bins) - 1, len(expand_bins) - 1), dtype=float)
                 if PM.shape == (1, 1):
                     bins_I = np.array([0, 100])
                 for bin_xi in range(len(bins_I) - 1):
