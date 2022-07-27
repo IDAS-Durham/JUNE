@@ -1338,7 +1338,7 @@ class Tracker:
         self.CM_T_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dype=float)
+                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dtype=float)
                     for sex in self.CM_T[bin_type][loc].keys()
                 }
                 for loc in self.CM_T[bin_type].keys()
@@ -1347,7 +1347,7 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.CM_T_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc], dype=float)
+            loc: np.zeros_like(self.CM_T["Interaction"][loc], dtype=float)
             for loc in self.CM_T["Interaction"].keys()
         }
 
@@ -1355,7 +1355,7 @@ class Tracker:
         self.NCM = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dype=float)
+                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dtype=float)
                     for sex in self.CM_T[bin_type][loc].keys()
                 }
                 for loc in self.CM_T[bin_type].keys()
@@ -1364,14 +1364,14 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc], dype=float)
+            loc: np.zeros_like(self.CM_T["Interaction"][loc], dtype=float)
             for loc in self.CM_T["Interaction"].keys()
         }
 
         self.NCM_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dype=float)
+                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dtype=float)
                     for sex in self.CM_T[bin_type][loc].keys()
                 }
                 for loc in self.CM_T[bin_type].keys()
@@ -1380,7 +1380,7 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc], dype=float)
+            loc: np.zeros_like(self.CM_T["Interaction"][loc], dtype=float)
             for loc in self.CM_T["Interaction"].keys()
         }
 
@@ -1388,7 +1388,7 @@ class Tracker:
         self.NCM_R = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dype=float)
+                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dtype=float)
                     for sex in self.CM_T[bin_type][loc].keys()
                 }
                 for loc in self.CM_T[bin_type].keys()
@@ -1397,14 +1397,14 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_R["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc], dype=float)
+            loc: np.zeros_like(self.CM_T["Interaction"][loc], dtype=float)
             for loc in self.CM_T["Interaction"].keys()
         }
 
         self.NCM_R_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dype=float)
+                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dtype=float)
                     for sex in self.CM_T[bin_type][loc].keys()
                 }
                 for loc in self.CM_T[bin_type].keys()
@@ -1413,7 +1413,7 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_R_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc], dype=float)
+            loc: np.zeros_like(self.CM_T["Interaction"][loc], dtype=float)
             for loc in self.CM_T["Interaction"].keys()
         }
         return 1
@@ -1445,7 +1445,7 @@ class Tracker:
         self.CM_AC_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dype=float)
+                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dtype=float)
                     for sex in self.CM_AC[bin_type][loc].keys()
                 }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1454,7 +1454,7 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.CM_AC_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dype=float)
+            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dtype=float)
             for loc in self.CM_AC["Interaction"].keys()
         }
 
@@ -1462,7 +1462,7 @@ class Tracker:
         self.NCM_AC = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dype=float)
+                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dtype=float)
                     for sex in self.CM_AC[bin_type][loc].keys()
                 }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1471,14 +1471,14 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_AC["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dype=float)
+            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dtype=float)
             for loc in self.CM_AC["Interaction"].keys()
         }
 
         self.NCM_AC_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dype=float)
+                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dtype=float)
                     for sex in self.CM_AC[bin_type][loc].keys()
                 }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1487,7 +1487,7 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_AC_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dype=float)
+            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dtype=float)
             for loc in self.CM_AC["Interaction"].keys()
         }
 
@@ -1495,7 +1495,7 @@ class Tracker:
         self.NCM_AC_R = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dype=float)
+                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dtype=float)
                     for sex in self.CM_AC[bin_type][loc].keys()
                 }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1504,14 +1504,14 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_AC_R["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dype=float)
+            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dtype=float)
             for loc in self.CM_AC["Interaction"].keys()
         }
 
         self.NCM_AC_R_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dype=float)
+                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dtype=float)
                     for sex in self.CM_AC[bin_type][loc].keys()
                 }
                 for loc in self.CM_AC[bin_type].keys()
@@ -1520,7 +1520,7 @@ class Tracker:
             if bin_type != "Interaction"
         }
         self.NCM_AC_R_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dype=float)
+            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dtype=float)
             for loc in self.CM_AC["Interaction"].keys()
         }
         return 1
