@@ -264,13 +264,13 @@ class Tracker:
             CD:
                 float, CD the Canberra distance
         """
-        n = np.prod(x.shape)   
+        n = np.prod(x.shape)
         Z = np.nansum((x - y) == 0)
-        Norm = (n - Z)
+        Norm = n - Z
 
         if Norm == 0:
             Norm = 1
-            
+
         DM = abs(x - y) / (abs(x) + abs(y))
         return np.nansum(DM) / Norm, DM
 
@@ -1096,8 +1096,12 @@ class Tracker:
                                 # TODO Feed this in so not to be hard coded
                                 # Special normalisation for shelters. Reweight based on households sharing shelters
                                 shelter_shared = 0.75
-                                FIntraExtra = shelter_shared / (2*(1-shelter_shared))
-                                FIntraIntra = 1 / ( (1-shelter_shared) / (2*(1-shelter_shared)) )
+                                FIntraExtra = shelter_shared / (
+                                    2 * (1 - shelter_shared)
+                                )
+                                FIntraIntra = 1 / (
+                                    (1 - shelter_shared) / (2 * (1 - shelter_shared))
+                                )
                                 print(FIntraIntra, FIntraExtra)
                                 NCM[0, 0] /= FIntraIntra
                                 NCM[1, 1] /= FIntraIntra
@@ -1216,9 +1220,13 @@ class Tracker:
                                 # TODO Feed this in so not to be hard coded
                                 # Special normalisation for shelters. Reweight based on households sharing shelters
                                 shelter_shared = 0.75
-                                FIntraExtra = shelter_shared / (2*(1-shelter_shared))
-                                FIntraIntra = 1 / ( (1-shelter_shared) / (2*(1-shelter_shared)) )
-                                #print(FIntraIntra, FIntraExtra)
+                                FIntraExtra = shelter_shared / (
+                                    2 * (1 - shelter_shared)
+                                )
+                                FIntraIntra = 1 / (
+                                    (1 - shelter_shared) / (2 * (1 - shelter_shared))
+                                )
+                                # print(FIntraIntra, FIntraExtra)
                                 NCM[0, 0] /= FIntraIntra
                                 NCM[1, 1] /= FIntraIntra
                                 NCM_err[0, 0] /= FIntraIntra
@@ -1911,7 +1919,6 @@ class Tracker:
 
         for person in group.people:
             NPeople = len(group.people)
-           
 
             # Shelter we want family groups
             if group.spec == "shelter":
@@ -2889,7 +2896,9 @@ class Tracker:
                     else:
                         return PM
                 expand_bins = self.age_bins["syoa"]
-                Pmatrix = np.zeros((len(expand_bins) - 1, len(expand_bins) - 1), dtype=float)
+                Pmatrix = np.zeros(
+                    (len(expand_bins) - 1, len(expand_bins) - 1), dtype=float
+                )
                 if PM.shape == (1, 1):
                     bins_I = np.array([0, 100])
                 for bin_xi in range(len(bins_I) - 1):
