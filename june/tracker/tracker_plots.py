@@ -370,7 +370,7 @@ class PlotClass:
 
         elif self.Tracker_Contact_Type == "All":
             SAMElinvmin = {"small_dim": 0, "large_dim": 0}
-            SAMElogvmin = {"small_dim": 1e-2, "large_dim": 1e-2}
+            SAMElogvmin = {"small_dim": 1e-2, "large_dim": 1e-3}
 
             SAMElinvmax = {"small_dim": 0.5, "large_dim": 1}
             SAMElogvmax = {"small_dim": 0.5, "large_dim": 1}
