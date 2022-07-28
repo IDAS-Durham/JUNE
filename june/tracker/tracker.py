@@ -1102,7 +1102,6 @@ class Tracker:
                                 FIntraIntra = 1 / (
                                     (1 - shelter_shared) / (2 * (1 - shelter_shared))
                                 )
-                                print(FIntraIntra, FIntraExtra)
                                 NCM[0, 0] /= FIntraIntra
                                 NCM[1, 1] /= FIntraIntra
                                 NCM_err[0, 0] /= FIntraIntra
@@ -2277,11 +2276,6 @@ class Tracker:
             None
 
         """
-
-        # Only track over Monday
-        if day != "Monday":
-            return 1
-
         self.travel_distance[day] = {}
         for loc in self.location_counters_day_i["loc"].keys():
             self.travel_distance[day][loc] = []
@@ -2345,7 +2339,7 @@ class Tracker:
         DaysElapsed = len(self.location_counters_day["Timestamp"]) - 1
         day = self.timer.day_of_week
 
-        if DaysElapsed > 0 and DaysElapsed <= 7:
+        if DaysElapsed > 0 and DaysElapsed <= 8:
             # Only run after first day completed first day
             self.simulate_traveldistance(day)
 
