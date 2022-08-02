@@ -102,8 +102,10 @@ class WorkerDistributor:
         self.super_areas = super_areas
         lockdown_tags = np.array(["key_worker", "random", "furlough"])
         lockdown_tags_idx = np.arange(0, len(lockdown_tags))
-        lockdown_tags_probabilities_by_sector = self._parse_closure_probabilities_by_sector(
-            company_closure=self.company_closure, lockdown_tags=lockdown_tags
+        lockdown_tags_probabilities_by_sector = (
+            self._parse_closure_probabilities_by_sector(
+                company_closure=self.company_closure, lockdown_tags=lockdown_tags
+            )
         )
         logger.info("Distributing workers to super areas...")
         for i, area in enumerate(iter(self.areas)):

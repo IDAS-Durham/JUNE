@@ -72,9 +72,7 @@ class IndividualPolicies(PolicyCollection):
                                                 subgroup.remove(guardian)
                                                 break
                                     guardian.residence.append(guardian)
-                    return (
-                        activities
-                    )  # if it stays at home we don't need to check the rest
+                    return activities  # if it stays at home we don't need to check the rest
             elif policy.policy_subtype == "skip_activity":
                 if policy.check_skips_activity(person):
                     activities = policy.apply(activities=activities)

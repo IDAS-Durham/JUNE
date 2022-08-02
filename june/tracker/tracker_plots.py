@@ -417,7 +417,7 @@ class PlotClass:
             thresh:
                 threshhold value for CM text change colour
 
-            
+
         Returns
         -------
             ax
@@ -483,7 +483,7 @@ class PlotClass:
             thresh:
                 threshhold value for CM text change colour
             thumb:
-                bool, make thumbnail style plots. e.g. no axis labels 
+                bool, make thumbnail style plots. e.g. no axis labels
             **plt_kwargs:
                 plot keyword arguements
 
@@ -582,7 +582,7 @@ class PlotClass:
                 np.array contact matrix errors
             labels:
                 list of strings for bin labels or none type
-            
+
         Returns
         -------
             Truncated values of;
@@ -648,7 +648,7 @@ class PlotClass:
                 np.array contact matrix errors
             labels:
                 list of strings for bin labels or none type
-            
+
         Returns
         -------
             Truncated values of;
@@ -679,7 +679,7 @@ class PlotClass:
 
     def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="NCM"):
         """
-        Get cm out of dictionary. 
+        Get cm out of dictionary.
 
         Parameters
         ----------
@@ -691,7 +691,7 @@ class PlotClass:
                 Sex contact matrix
             which:
                 str, which matrix type to collect "NCM", "NCM_R", "CM_T"
-            
+
         Returns
         -------
             cm:
@@ -723,7 +723,7 @@ class PlotClass:
 
     def IMPlots_GetIM(self, contact_type):
         """
-        Get IM out of dictionary. 
+        Get IM out of dictionary.
 
         Parameters
         ----------
@@ -764,7 +764,7 @@ class PlotClass:
                 Sex contact matrix
             which:
                 str, which matrix type to collect "NCM", "NCM_R", "CM_T"
-            
+
         Returns
         -------
             (ax1,ax2):
@@ -901,13 +901,13 @@ class PlotClass:
             Q = self.Calc_QIndex(cm)
             NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width)
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-            I_sq_s = I_sq / var ** 2
+            I_sq_s = I_sq / var**2
             print("JUNE", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
 
             Q = self.Calc_QIndex(bbc_cm)
             NPCDM = self.Calc_NPCDM(bbc_cm, pop_density, pop_width)
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-            I_sq_s = I_sq / var ** 2
+            I_sq_s = I_sq / var**2
             print("BBC", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
             print({"Camberra": self.Canberra_distance(cm, bbc_cm)[0]})
             print("")
@@ -933,7 +933,7 @@ class PlotClass:
         ----------
             contact_type:
                 Location of contacts
-            
+
         Returns
         -------
             ax1:
@@ -1052,11 +1052,11 @@ class PlotClass:
 
         Parameters
         ----------
-            log: 
+            log:
 
             contact_type:
                 Location of contacts
-            
+
         Returns
         -------
             ax1:
@@ -1138,7 +1138,7 @@ class PlotClass:
                 Sex contact matrix
             which:
                 str, which matrix type to collect "NCM", "NCM_R", "CM_T"
-            
+
         Returns
         -------
             (ax1,ax2):
@@ -1212,7 +1212,7 @@ class PlotClass:
                 Sex contact matrix
             which:
                 str, which matrix type to collect "NCM", "NCM_R", "CM_T"
-            
+
         Returns
         -------
             (ax1,ax2):
@@ -1292,7 +1292,7 @@ class PlotClass:
                 Location of contacts
             which:
                 str, which matrix type to collect "NCM", "NCM_R", "CM_T"
-            
+
         Returns
         -------
             (ax1,ax2):
@@ -1348,7 +1348,7 @@ class PlotClass:
                 Name of bin type syoa, AC etc
             contact_types:
                 List of the contact_type locations (or none to grab all of them)
-            
+
         Returns
         -------
             ax:

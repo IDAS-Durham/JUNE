@@ -171,11 +171,13 @@ class Leisure:
                     region=region,
                 )
         else:
-            self.probabilities_by_region_sex_age = self._generate_leisure_probabilities_for_age_and_sex(
-                delta_time=delta_time,
-                working_hours=working_hours,
-                date=date,
-                region=None,
+            self.probabilities_by_region_sex_age = (
+                self._generate_leisure_probabilities_for_age_and_sex(
+                    delta_time=delta_time,
+                    working_hours=working_hours,
+                    date=date,
+                    region=None,
+                )
             )
 
     def get_subgroup_for_person_and_housemates(

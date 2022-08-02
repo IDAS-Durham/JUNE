@@ -34,7 +34,9 @@ class MergerClass:
     """
 
     class Timer:
-        def __init__(self,):
+        def __init__(
+            self,
+        ):
             self.total_days = 1
 
     def __init__(self, record_path=Path("")):
