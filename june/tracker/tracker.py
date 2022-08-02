@@ -6,8 +6,6 @@ import yaml
 import pandas as pd
 import warnings
 
-warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
-
 from pathlib import Path
 from june import paths
 
@@ -15,6 +13,8 @@ from june.world import World
 import geopy.distance
 
 from june.groups.group import make_subgroups
+
+warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
 AgeAdult = make_subgroups.Subgroup_Params.AgeYoungAdult
 ACArray = np.array([0, AgeAdult, 100])
@@ -2454,7 +2454,7 @@ class Tracker:
                 jsonfile=jsonfile,
             )
 
-            if MPI == False:
+            if not MPI:
                 jsonfile = {}
                 for binType in list(self.NCM.keys()):
                     jsonfile[binType] = self.tracker_CMJSON(
@@ -2533,7 +2533,7 @@ class Tracker:
                 jsonfile=jsonfile,
             )
 
-            if MPI == False:
+            if not MPI:
                 jsonfile = {}
                 for binType in list(self.NCM_AC.keys()):
                     jsonfile[binType] = self.tracker_CMJSON(
