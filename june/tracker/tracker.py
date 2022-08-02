@@ -2297,7 +2297,7 @@ class Tracker:
                         "unisex"
                     ]:
                         person = self.world.people.get_from_id(ID)
-                        if person.residence == None:
+                        if person.residence is None:
                             continue
                         household_coords = person.residence.group.area.coordinates
                         self.travel_distance[day][loc].append(
