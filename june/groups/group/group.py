@@ -11,14 +11,14 @@ from .interactive import InteractiveGroup
 from . import AbstractGroup
 from . import Subgroup
 
+from june.groups.group.make_subgroups import Subgroup_Params
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from june.geography.geography import Region
 
 logger = logging.getLogger(__name__)
-
-from june.groups.group.make_subgroups import Subgroup_Params
 
 
 class Group(AbstractGroup):
