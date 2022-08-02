@@ -236,16 +236,13 @@ def save_geography_to_hdf5(geography: Geography, file_path: str):
         geography_dset.create_dataset("region_name", data=region_names)
         if social_venues_specs and social_venues_ids:
             geography_dset.create_dataset(
-                "social_venues_specs",
-                data=social_venues_specs_list,
+                "social_venues_specs", data=social_venues_specs_list
             )
             geography_dset.create_dataset(
-                "social_venues_ids",
-                data=social_venues_ids_list,
+                "social_venues_ids", data=social_venues_ids_list
             )
             geography_dset.create_dataset(
-                "social_venues_super_areas",
-                data=social_venues_super_areas,
+                "social_venues_super_areas", data=social_venues_super_areas
             )
 
 
@@ -343,10 +340,7 @@ def load_geography_from_hdf5(file_path: str, chunk_size=50000, domain_super_area
                         )
                     if region_id not in domain_regions:
                         continue
-                region = Region(
-                    name=region_names[k].decode(),
-                    super_areas=None,
-                )
+                region = Region(name=region_names[k].decode(), super_areas=None)
                 region.id = region_ids[k]
                 region_list.append(region)
 
@@ -428,16 +422,11 @@ def restore_geography_properties_from_hdf5(
                                 group_super_area
                             ]
                             group = ExternalGroup(
-                                id=group_id,
-                                domain_id=domain_of_group,
-                                spec=spec,
+                                id=group_id, domain_id=domain_of_group, spec=spec
                             )
                         else:
                             group = supergroup.get_from_id(group_id)
-                        area.social_venues[spec] = (
-                            *area.social_venues[spec],
-                            group,
-                        )
+                        area.social_venues[spec] = (*area.social_venues[spec], group)
         n_super_areas = geography.attrs["n_super_areas"]
         n_chunks = int(np.ceil(n_super_areas / chunk_size))
         # areas

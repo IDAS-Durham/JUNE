@@ -69,30 +69,18 @@ def make_campaign(
 
 class TestWhenWho:
     def test__is_active(self, vaccine):
-        campaign = make_campaign(
-            vaccine=vaccine,
-            group_by="age",
-            group_type="50-100",
-        )
+        campaign = make_campaign(vaccine=vaccine, group_by="age", group_type="50-100")
         assert campaign.is_active(datetime.datetime(2022, 1, 2)) is True
         assert campaign.is_active(datetime.datetime(2022, 1, 12)) is False
 
     def test__is_target_group(self, vaccine):
         young_person = Person(age=5, sex="f")
         old_person = Person(age=51, sex="m")
-        campaign = make_campaign(
-            vaccine=vaccine,
-            group_by="age",
-            group_type="50-100",
-        )
+        campaign = make_campaign(vaccine=vaccine, group_by="age", group_type="50-100")
         assert campaign.is_target_group(person=young_person) is False
         assert campaign.is_target_group(person=old_person) is True
 
-        campaign = make_campaign(
-            vaccine=vaccine,
-            group_by="sex",
-            group_type="m",
-        )
+        campaign = make_campaign(vaccine=vaccine, group_by="sex", group_type="m")
         assert campaign.is_target_group(person=young_person) is False
         assert campaign.is_target_group(person=old_person) is True
 
@@ -141,11 +129,7 @@ class TestWhenWho:
 
 class TestCampaign:
     def test__daily_prob(self, vaccine):
-        campaign = make_campaign(
-            vaccine=vaccine,
-            group_by="age",
-            group_type="0-100",
-        )
+        campaign = make_campaign(vaccine=vaccine, group_by="age", group_type="0-100")
         campaign.group_coverage = 0.3
         total_days = 10
         assert campaign.daily_vaccination_probability(days_passed=5) == 0.3 * (
@@ -158,15 +142,8 @@ class TestCampaign:
         person.immunity.effective_multiplier_dict = {delta_id: 0.9, omicron_id: 0.9}
 
         date = datetime.datetime(2022, 1, 1)
-        campaign = make_campaign(
-            vaccine=vaccine,
-            group_by="age",
-            group_type="0-100",
-        )
-        campaign.vaccinate(
-            person,
-            date=date,
-        )
+        campaign = make_campaign(vaccine=vaccine, group_by="age", group_type="0-100")
+        campaign.vaccinate(person, date=date)
         assert isinstance(person.vaccine_trajectory, VaccineTrajectory)
         assert person.vaccine_trajectory.doses[0].date_administered == date
         assert person.id in campaign.vaccinated_ids
@@ -280,25 +257,15 @@ def make_campaigns():
 
 
 class TestVaccinationInitialization:
-    def test__to_finished(
-        self,
-        vax_campaigns,
-    ):
+    def test__to_finished(self, vax_campaigns):
         assert (
             vax_campaigns.vaccination_campaigns[0].days_from_administered_to_finished
             == 38
         )
 
-    def test__vaccination_from_the_past(
-        self,
-        population,
-        vax_campaigns,
-    ):
+    def test__vaccination_from_the_past(self, population, vax_campaigns):
         date = datetime.datetime(2021, 4, 30)
-        vax_campaigns.apply_past_campaigns(
-            people=population,
-            date=date,
-        )
+        vax_campaigns.apply_past_campaigns(people=population, date=date)
         n_vaccinated = 0
         for person in population:
             if (person.age < 20) or (person.age >= 40):
@@ -313,29 +280,21 @@ class TestVaccinationInitialization:
                         person.immunity.susceptibility_dict[omicron_id], 0.2
                     )
                     assert np.isclose(
-                        person.immunity.effective_multiplier_dict[delta_id],
-                        0.3,
+                        person.immunity.effective_multiplier_dict[delta_id], 0.3
                     )
                     assert np.isclose(
-                        person.immunity.effective_multiplier_dict[omicron_id],
-                        0.9,
+                        person.immunity.effective_multiplier_dict[omicron_id], 0.9
                     )
         assert np.isclose(n_vaccinated, 60 * 20, atol=0, rtol=0.1)
 
-    def test__record_saving(
-        self,
-        fast_population,
-        vax_campaigns,
-    ):
+    def test__record_saving(self, fast_population, vax_campaigns):
         record = Record(record_path="results")
         dates = vax_campaigns.collect_all_dates_in_past(
-            current_date=datetime.datetime(2021, 5, 1),
+            current_date=datetime.datetime(2021, 5, 1)
         )
         assert len(set(dates)) == len(dates)
         vax_campaigns.apply_past_campaigns(
-            people=fast_population,
-            date=datetime.datetime(2021, 5, 1),
-            record=record,
+            people=fast_population, date=datetime.datetime(2021, 5, 1), record=record
         )
         n_vaccinated = 0
         for person in fast_population:

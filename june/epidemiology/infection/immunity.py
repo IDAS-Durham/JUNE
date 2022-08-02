@@ -32,8 +32,9 @@ class Immunity:
         return self.effective_multiplier_dict.get(infection_id, 1.0)
 
     def serialize(self):
-        return list(self.susceptibility_dict.keys()), list(
-            self.susceptibility_dict.values()
+        return (
+            list(self.susceptibility_dict.keys()),
+            list(self.susceptibility_dict.values()),
         )
 
     def is_immune(self, infection_id):

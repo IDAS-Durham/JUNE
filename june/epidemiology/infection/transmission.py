@@ -161,9 +161,7 @@ class TransmissionGamma(Transmission):
 
     @classmethod
     def from_file(
-        cls,
-        max_symptoms: str = None,
-        config_path: str = default_gamma_config_path,
+        cls, max_symptoms: str = None, config_path: str = default_gamma_config_path
     ) -> "TransmissionGamma":
         """
         Generate transmission class reading parameters from config file

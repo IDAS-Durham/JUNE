@@ -25,12 +25,7 @@ class InteractionPolicies(PolicyCollection):
 class SocialDistancing(InteractionPolicy):
     policy_subtype = "beta_factor"
 
-    def __init__(
-        self,
-        start_time: str,
-        end_time: str,
-        beta_factors: dict = None,
-    ):
+    def __init__(self, start_time: str, end_time: str, beta_factors: dict = None):
         super().__init__(start_time, end_time)
         self.beta_factors = beta_factors
 

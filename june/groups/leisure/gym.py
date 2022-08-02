@@ -12,7 +12,7 @@ class Gym(SocialVenue):
 
 
 class Gyms(SocialVenues):
-    social_venue_class = Gym
+    venue_class = Gym
     default_coordinates_filename = default_gym_coordinates_filename
 
 

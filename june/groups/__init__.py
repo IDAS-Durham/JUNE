@@ -1,11 +1,5 @@
 from .group.group import Group
-from .group import (
-    AbstractGroup,
-    Subgroup,
-    Supergroup,
-    ExternalSubgroup,
-    ExternalGroup,
-)
+from .group import AbstractGroup, Subgroup, Supergroup, ExternalSubgroup, ExternalGroup
 from .boundary import Boundary
 from .care_home import CareHome, CareHomes
 from .cemetery import Cemetery, Cemeteries

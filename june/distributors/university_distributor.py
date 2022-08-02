@@ -11,10 +11,7 @@ logger = logging.getLogger("university_distributor")
 
 
 class UniversityDistributor:
-    def __init__(
-        self,
-        universities: List[University],
-    ):
+    def __init__(self, universities: List[University]):
         """
         For each university it searches in the nearby areas for students living
         in student households. Once it has enough to fill the university, it stops
@@ -38,10 +35,11 @@ class UniversityDistributor:
             for household in area.households:
                 if household.type == "student":
                     for student in household.residents:
-                        if student.primary_activity is None:
-                            students_dict[university.ukprn]["student"].append(
-                                student.id
-                            )
+                        if self.min_student_age <= student.age <= self.max_student_age:
+                            if student.primary_activity is None:
+                                students_dict[university.ukprn]["student"].append(
+                                    student.id
+                                )
                 elif household.type == "communal":
                     for person in household.residents:
                         if self.min_student_age <= person.age <= self.max_student_age:
@@ -92,9 +90,7 @@ class UniversityDistributor:
             )
             close_areas = np.array(close_areas)[distances < distance]
             self.find_students_in_areas(
-                students_dict=students_dict,
-                areas=close_areas,
-                university=university,
+                students_dict=students_dict, areas=close_areas, university=university
             )
         return students_dict
 

@@ -6,11 +6,7 @@ from june import paths
 from june.geography import Cities
 from june.groups import Cemeteries
 from june.groups.leisure import generate_leisure_for_config
-from june.policy import (
-    Policies,
-    SocialDistancing,
-    MaskWearing,
-)
+from june.policy import Policies, SocialDistancing, MaskWearing
 
 
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"

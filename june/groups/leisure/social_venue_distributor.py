@@ -27,11 +27,13 @@ class SocialVenueDistributor:
         self,
         social_venues: SocialVenues,
         times_per_week: Dict[Dict, float],
+        daytypes: Dict[str, str],
         hours_per_day: Dict[Dict, float] = None,
         drags_household_probability=0.0,
         neighbours_to_consider=5,
         maximum_distance=5,
         leisure_subgroup_type=0,
+        open={"weekday": "0-24", "weekend": "0-24"},
     ):
         """
         A sex/age profile for the social venue attendees can be specified as
@@ -64,6 +66,8 @@ class SocialVenueDistributor:
             Subgroup of the venue that the person will be appended to
             (for instance, the visitors subgroup of the care home)
         """
+        self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
+        self.spec = "_".join(self.spec).lower()
         if hours_per_day is None:
             hours_per_day = {
                 "weekday": {
@@ -73,6 +77,9 @@ class SocialVenueDistributor:
                 "weekend": {"male": {"0-100": 12}, "female": {"0-100": 12}},
             }
         self.social_venues = social_venues
+        self.open = open
+        self.daytypes = daytypes
+
         self.poisson_parameters = self._parse_poisson_parameters(
             times_per_week=times_per_week, hours_per_day=hours_per_day
         )
@@ -80,31 +87,29 @@ class SocialVenueDistributor:
         self.maximum_distance = maximum_distance
         self.drags_household_probability = drags_household_probability
         self.leisure_subgroup_type = leisure_subgroup_type
-        self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
-        self.spec = "_".join(self.spec).lower()
 
     @classmethod
-    def from_config(cls, social_venues: SocialVenues, config_filename: str = None):
+    def from_config(
+        cls, social_venues: SocialVenues, daytypes: dict, config_filename: str = None
+    ):
         if config_filename is None:
             config_filename = cls.default_config_filename
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(social_venues, **config)
+        return cls(social_venues, daytypes=daytypes, **config)
 
     def _compute_poisson_parameter_from_times_per_week(
         self, times_per_week, hours_per_day, day_type
     ):
         if times_per_week == 0:
             return 0
-        if day_type == "weekend":
-            days = 2
-        else:
-            days = 5
-        return times_per_week / days * 24 / hours_per_day
+        ndays = len(self.daytypes[day_type])
+        return (times_per_week / ndays) * (24 / hours_per_day)
 
     def _parse_poisson_parameters(self, times_per_week, hours_per_day):
         ret = {}
         _sex_t = {"male": "m", "female": "f"}
+
         for day_type in ["weekday", "weekend"]:
             ret[day_type] = {}
             for sex in ["male", "female"]:
@@ -114,6 +119,7 @@ class SocialVenueDistributor:
                 parsed_hours_per_day = parse_age_probabilities(
                     hours_per_day[day_type][sex]
                 )
+
                 ret[day_type][_sex_t[sex]] = [
                     self._compute_poisson_parameter_from_times_per_week(
                         times_per_week=parsed_times_per_week[i],
@@ -125,13 +131,7 @@ class SocialVenueDistributor:
         return ret
 
     def get_poisson_parameter(
-        self,
-        sex,
-        age,
-        day_type,
-        working_hours,
-        region=None,
-        policy_reduction=None,
+        self, sex, age, day_type, working_hours, region=None, policy_reduction=None
     ):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
@@ -153,6 +153,7 @@ class SocialVenueDistributor:
             if self.spec in region.closed_venues:
                 return 0
             regional_compliance = region.regional_compliance
+
         original_poisson_parameter = self.poisson_parameters[day_type][sex][age]
         if policy_reduction is None:
             return original_poisson_parameter

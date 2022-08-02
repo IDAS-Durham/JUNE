@@ -111,10 +111,8 @@ class ImmunitySetter:
         )
         self.multiplier_by_comorbidity = multiplier_by_comorbidity
         if comorbidity_prevalence_reference_population is not None:
-            self.comorbidity_prevalence_reference_population = (
-                parse_prevalence_comorbidities_in_reference_population(
-                    comorbidity_prevalence_reference_population
-                )
+            self.comorbidity_prevalence_reference_population = parse_prevalence_comorbidities_in_reference_population(
+                comorbidity_prevalence_reference_population
             )
         else:
             self.comorbidity_prevalence_reference_population = None
@@ -144,10 +142,8 @@ class ImmunitySetter:
             male_prevalence = read_comorbidity_csv(
                 male_comorbidity_reference_prevalence_path
             )
-            comorbidity_prevalence_reference_population = (
-                convert_comorbidities_prevalence_to_dict(
-                    female_prevalence, male_prevalence
-                )
+            comorbidity_prevalence_reference_population = convert_comorbidities_prevalence_to_dict(
+                female_prevalence, male_prevalence
             )
         else:
             comorbidity_multipliers = None
@@ -199,9 +195,7 @@ class ImmunitySetter:
             )
         return weighted_multiplier
 
-    def get_weighted_multipliers_by_age_sex(
-        self,
-    ):
+    def get_weighted_multipliers_by_age_sex(self,):
         reference_multipliers = {"m": [], "f": []}
         for sex in ("m", "f"):
             for age in range(100):

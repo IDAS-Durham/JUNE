@@ -1,3 +1,4 @@
+from datetime import datetime
 import numpy as np
 from pytest import fixture
 from june.groups import Household
@@ -29,6 +30,10 @@ def make_leisure():
             "weekday": {"male": {"18-50": 0.5}, "female": {"10-40": 0.3}},
             "weekend": {"male": {"18-50": 0.7}, "female": {"18-50": 0.4}},
         },
+        daytypes={
+            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"],
+        },
     )
     pubs[0].coordinates = [1, 2]
     cinemas = Cinemas([Cinema()], make_tree=False)
@@ -38,6 +43,10 @@ def make_leisure():
         times_per_week={
             "weekday": {"male": {"10-40": 0.1}, "female": {"10-40": 0.2}},
             "weekend": {"male": {"18-50": 0.4}, "female": {"18-50": 0.5}},
+        },
+        daytypes={
+            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"],
         },
         drags_household_probability=1.0,
     )
@@ -55,7 +64,9 @@ def _get_times_pub_cinema(leisure, person, day_type):
         delta_time = 1 / 8
         n_days = 5
     leisure.generate_leisure_probabilities_for_timestep(
-        delta_time, working_hours=False, day_type=day_type
+        delta_time,
+        working_hours=False,
+        date=datetime.strptime("2020-03-01", "%Y-%m-%d"),
     )
     times_goes_pub = []
     times_goes_cinema = []
@@ -99,14 +110,14 @@ def test__probability_of_leisure(leisure):
     times_pub_a_week, times_cinema_a_week = _get_times_pub_cinema(
         person=male, leisure=leisure, day_type="weekday"
     )
-    assert np.isclose(times_pub_a_week, 0.5, rtol=0.1)
-    assert np.isclose(times_cinema_a_week, 0.1, rtol=0.1)
+    assert np.isclose(times_pub_a_week, 0.43, rtol=0.1)
+    assert np.isclose(times_cinema_a_week, 0.23, rtol=0.1)
     # weekday female
     times_pub_a_week, times_cinema_a_week = _get_times_pub_cinema(
         person=female, leisure=leisure, day_type="weekday"
     )
-    assert np.isclose(times_pub_a_week, 0.3, rtol=0.1)
-    assert np.isclose(times_cinema_a_week, 0.2, rtol=0.1)
+    assert np.isclose(times_pub_a_week, 0.23, rtol=0.1)
+    assert np.isclose(times_cinema_a_week, 0.3, rtol=0.1)
     # weekend male
     times_pub_a_week, times_cinema_a_week = _get_times_pub_cinema(
         person=male, leisure=leisure, day_type="weekend"
@@ -148,9 +159,16 @@ def test__generate_leisure_from_world(dummy_world):
     household.add(person)
     person.area = world.areas[0]
     leisure = generate_leisure_for_world(
-        list_of_leisure_groups=["pubs", "cinemas", "groceries"], world=world
+        list_of_leisure_groups=["pubs", "cinemas", "groceries"],
+        world=world,
+        daytypes={
+            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"],
+        },
     )
-    leisure.generate_leisure_probabilities_for_timestep(0.1, False, day_type="weekday")
+    leisure.generate_leisure_probabilities_for_timestep(
+        0.1, False, datetime.strptime("2020-03-01", "%Y-%m-%d")
+    )
     n_pubs = 0
     n_cinemas = 0
     n_groceries = 0
@@ -163,6 +181,6 @@ def test__generate_leisure_from_world(dummy_world):
                 n_cinemas += 1
             elif subgroup.group.spec == "grocery":
                 n_groceries += 1
-    assert 0 < n_pubs
-    assert 0 < n_cinemas
-    assert 0 < n_groceries
+    assert 0 <= n_pubs
+    assert 0 <= n_cinemas
+    assert 0 <= n_groceries

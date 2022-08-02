@@ -9,13 +9,7 @@ import pytest
 @pytest.fixture(name="world")
 def create_world():
     geography = Geography.from_file(
-        {
-            "super_area": [
-                "E02004314",
-                "E02004315",
-                "E02004313",
-            ]
-        }
+        {"super_area": ["E02004314", "E02004315", "E02004313"]}
     )
     world = generate_world_from_geography(geography, include_households=True)
     return world
@@ -28,4 +22,4 @@ def test__students_go_to_uni(world):
     university_distributor.distribute_students_to_universities(
         areas=world.areas, people=world.people
     )
-    assert durham.n_students > 10000
+    assert durham.n_students > 6000

@@ -46,9 +46,9 @@ class School(Group):
         "years",
     )
 
-    class SubgroupType(IntEnum):
-        teachers = 0
-        students = 1
+    # class SubgroupType(IntEnum):
+    #     teachers = 0
+    #     students = 1
 
     def __init__(
         self,
@@ -94,7 +94,9 @@ class School(Group):
         # for i, _ in enumerate(range(age_min, age_max + 2)):
         if n_classrooms is None:
             n_classrooms = age_max - age_min
+
         self.subgroups = [SchoolClass(self, i) for i in range(n_classrooms + 2)]
+
         self.n_classrooms = n_classrooms
         self.coordinates = coordinates
         self.area = area
@@ -111,13 +113,13 @@ class School(Group):
     def get_interactive_group(self, people_from_abroad=None):
         return InteractiveSchool(self, people_from_abroad=people_from_abroad)
 
-    def add(self, person, subgroup_type=SubgroupType.students):
-        if subgroup_type == self.SubgroupType.students:
+    def add(self, person):
+        if person.age <= self.age_max:
             subgroup = self.subgroups[1 + person.age - self.age_min]
             subgroup.append(person)
             person.subgroups.primary_activity = subgroup
         else:  # teacher
-            subgroup = self.subgroups[self.SubgroupType.teachers]
+            subgroup = self.subgroups[0]
             subgroup.append(person)
             person.subgroups.primary_activity = subgroup
 
@@ -188,9 +190,11 @@ class School(Group):
 
 
 class Schools(Supergroup):
+    venue_class = School
+
     def __init__(
         self,
-        schools: List["School"],
+        schools: List["venue_class"],
         school_trees: Optional[Dict[int, BallTree]] = None,
         agegroup_to_global_indices: dict = None,
     ):
@@ -291,10 +295,7 @@ class Schools(Supergroup):
         -------
             An infrastructure of schools
         """
-        employee_per_clients = employee_per_clients or {
-            "primary": 30,
-            "secondary": 30,
-        }
+        employee_per_clients = employee_per_clients or {"primary": 30, "secondary": 30}
         # build schools
         schools = []
         for school_name, row in school_df.iterrows():
@@ -306,7 +307,7 @@ class Schools(Supergroup):
                 row[["latitude", "longitude"]].values, dtype=np.float64
             )
             area = areas.get_closest_area(coordinates)
-            school = School(
+            school = cls.venue_class(
                 coordinates=coordinates,
                 n_pupils_max=n_pupils_max,
                 age_min=int(row["age_min"]),
@@ -328,10 +329,7 @@ class Schools(Supergroup):
         )
 
     @staticmethod
-    def init_trees(
-        school_df: pd.DataFrame,
-        age_range: Tuple[int, int],
-    ) -> "Schools":
+    def init_trees(school_df: pd.DataFrame, age_range: Tuple[int, int]) -> "Schools":
         """
         Create trees to easily find the closest school that
         accepts a pupil given their age
@@ -343,11 +341,7 @@ class Schools(Supergroup):
         """
         school_trees = {}
         school_agegroup_to_global_indices = {
-            k: []
-            for k in range(
-                int(age_range[0]),
-                int(age_range[1]) + 1,
-            )
+            k: [] for k in range(int(age_range[0]), int(age_range[1]) + 1)
         }
         # have a tree per age
         for age in range(int(age_range[0]), int(age_range[1]) + 1):
@@ -407,11 +401,17 @@ class Schools(Supergroup):
         coordinates_rad = np.deg2rad(coordinates).reshape(1, -1)
         k = min(k, school_tree.data.shape[0])
         distances, neighbours = school_tree.query(
-            coordinates_rad,
-            k=k,
-            sort_results=True,
+            coordinates_rad, k=k, sort_results=True
         )
         return neighbours[0]
+
+    @property
+    def n_teachers(self):
+        return sum([school.n_teachers for school in self.members])
+
+    @property
+    def n_pupils(self):
+        return sum([school.n_pupils for school in self.members])
 
 
 @nb.jit(nopython=True)

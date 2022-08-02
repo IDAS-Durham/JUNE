@@ -1,8 +1,5 @@
 from june.epidemiology.infection import SymptomTag
-from june.policy import (
-    Policies,
-    Hospitalisation,
-)
+from june.policy import Policies, Hospitalisation
 
 
 def test__hospitalise_the_sick(setup_policy_world, selector):

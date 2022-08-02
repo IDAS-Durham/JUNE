@@ -15,6 +15,7 @@ from june.groups.leisure import (
 )
 from june.utils import random_choice_numba
 from june import paths
+from june.utils.parse_probabilities import parse_opens
 
 
 default_config_filename = paths.configs_path / "config_example.yaml"
@@ -22,7 +23,7 @@ default_config_filename = paths.configs_path / "config_example.yaml"
 logger = logging.getLogger("leisure")
 
 
-def generate_leisure_for_world(list_of_leisure_groups, world):
+def generate_leisure_for_world(list_of_leisure_groups, world, daytypes):
     """
     Generates an instance of the leisure class for the specified geography and leisure groups.
 
@@ -36,12 +37,16 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
         if not hasattr(world, "pubs") or world.pubs is None or len(world.pubs) == 0:
             logger.warning("No pubs in this world/domain")
         else:
-            leisure_distributors["pub"] = PubDistributor.from_config(world.pubs)
+            leisure_distributors["pub"] = PubDistributor.from_config(
+                world.pubs, daytypes=daytypes
+            )
     if "gyms" in list_of_leisure_groups:
         if not hasattr(world, "gyms") or world.gyms is None or len(world.gyms) == 0:
             logger.warning("No gyms in this world/domain")
         else:
-            leisure_distributors["gym"] = GymDistributor.from_config(world.gyms)
+            leisure_distributors["gym"] = GymDistributor.from_config(
+                world.gyms, daytypes=daytypes
+            )
     if "cinemas" in list_of_leisure_groups:
         if (
             not hasattr(world, "cinemas")
@@ -51,7 +56,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
             logger.warning("No cinemas in this world/domain")
         else:
             leisure_distributors["cinema"] = CinemaDistributor.from_config(
-                world.cinemas
+                world.cinemas, daytypes=daytypes
             )
     if "groceries" in list_of_leisure_groups:
         if (
@@ -62,7 +67,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
             logger.warning("No groceries in this world/domain")
         else:
             leisure_distributors["grocery"] = GroceryDistributor.from_config(
-                world.groceries
+                world.groceries, daytypes=daytypes
             )
     if (
         "household_visits" in list_of_leisure_groups
@@ -74,7 +79,7 @@ def generate_leisure_for_world(list_of_leisure_groups, world):
             )
         leisure_distributors[
             "residence_visits"
-        ] = ResidenceVisitsDistributor.from_config()
+        ] = ResidenceVisitsDistributor.from_config(daytypes=daytypes)
     leisure = Leisure(leisure_distributors=leisure_distributors, regions=world.regions)
     return leisure
 
@@ -93,7 +98,17 @@ def generate_leisure_for_config(world, config_filename=default_config_filename):
         list_of_leisure_groups = config["activity_to_super_groups"]["leisure"]
     except Exception:
         list_of_leisure_groups = config["activity_to_groups"]["leisure"]
-    leisure_instance = generate_leisure_for_world(list_of_leisure_groups, world)
+
+    if "weekday" in config.keys() and "weekend" in config.keys():
+        daytypes = {"weekday": config["weekday"], "weekend": config["weekend"]}
+    else:
+        daytypes = {
+            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"],
+        }
+    leisure_instance = generate_leisure_for_world(
+        list_of_leisure_groups, world, daytypes
+    )
     return leisure_instance
 
 
@@ -142,10 +157,7 @@ class Leisure:
         logger.info(f"Distributed in {len(areas)} of {len(areas)} areas.")
 
     def generate_leisure_probabilities_for_timestep(
-        self,
-        delta_time: float,
-        working_hours: bool,
-        day_type: str,
+        self, delta_time: float, working_hours: bool, date: str
     ):
         self.probabilities_by_region_sex_age = {}
         if self.regions:
@@ -155,17 +167,15 @@ class Leisure:
                 ] = self._generate_leisure_probabilities_for_age_and_sex(
                     delta_time=delta_time,
                     working_hours=working_hours,
-                    day_type=day_type,
+                    date=date,
                     region=region,
                 )
         else:
-            self.probabilities_by_region_sex_age = (
-                self._generate_leisure_probabilities_for_age_and_sex(
-                    delta_time=delta_time,
-                    working_hours=working_hours,
-                    day_type=day_type,
-                    region=None,
-                )
+            self.probabilities_by_region_sex_age = self._generate_leisure_probabilities_for_age_and_sex(
+                delta_time=delta_time,
+                working_hours=working_hours,
+                date=date,
+                region=None,
             )
 
     def get_subgroup_for_person_and_housemates(
@@ -189,7 +199,19 @@ class Leisure:
         person
             an instance of person
         """
+
+        ###########################################
+        age_before = person.age
+        age = person.age
+        # AorC_value = self.AorC(person.age)
+        # if age < 18 and AorC_value == "Adult":
+        #     age = 18
+
+        # Does this change actual persons name above?
+        person.age = age
+
         if person.residence.group.spec == "care_home":
+            person.age = age_before
             return
         prob_age_sex = self._get_activity_probabilities_for_person(person=person)
         if random() < prob_age_sex["does_activity"]:
@@ -206,10 +228,12 @@ class Leisure:
             activity_distributor.send_household_with_person_if_necessary(
                 person=person, to_send_abroad=to_send_abroad
             )
+            person.age = age_before
             return subgroup
+        person.age = age_before
 
     def _generate_leisure_probabilities_for_age_and_sex(
-        self, delta_time: float, working_hours: bool, day_type: str, region: Region
+        self, delta_time: float, working_hours: bool, date: str, region: Region
     ):
         ret = {}
         for sex in ["m", "f"]:
@@ -218,13 +242,14 @@ class Leisure:
                     age=age,
                     sex=sex,
                     delta_time=delta_time,
-                    day_type=day_type,
+                    date=date,
                     working_hours=working_hours,
                     region=region,
                 )
                 for age in range(0, 100)
             ]
             ret[sex] = probs
+
         return ret
 
     def _get_leisure_probability_for_age_and_sex(
@@ -232,7 +257,7 @@ class Leisure:
         age: int,
         sex: str,
         delta_time: float,
-        day_type: str,
+        date: str,
         working_hours: bool,
         region: Region,
     ):
@@ -258,12 +283,13 @@ class Leisure:
             drags_household_probabilities.append(
                 distributor.drags_household_probability
             )
+
             activity_poisson_parameter = self._get_activity_poisson_parameter(
                 activity=activity,
                 distributor=distributor,
                 age=age,
                 sex=sex,
-                day_type=day_type,
+                date=date,
                 working_hours=working_hours,
                 region=region,
             )
@@ -295,7 +321,7 @@ class Leisure:
         distributor: SocialVenueDistributor,
         age: int,
         sex: str,
-        day_type: str,
+        date: str,
         working_hours: bool,
         region: Region,
     ):
@@ -303,10 +329,33 @@ class Leisure:
         Computes an activity poisson parameter taking into account active policies,
         regional compliances and lockdown tiers.
         """
+        day = [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        ][date.weekday()]
+        if day in distributor.daytypes["weekday"]:
+            day_type = "weekday"
+        elif day in distributor.daytypes["weekend"]:
+            day_type = "weekend"
+
+        # TODO check closures etc!
+        open_times = parse_opens(distributor.open)[day_type]
+        open = 1
+        if open_times[1] - open_times[0] == 0:
+            open = 0
+        if date.hour < open_times[0] or date.hour >= open_times[1]:
+            open = 0
+
         if activity in self.policy_reductions:
             policy_reduction = self.policy_reductions[activity][day_type][sex][age]
         else:
             policy_reduction = 1
+
         activity_poisson_parameter = distributor.get_poisson_parameter(
             sex=sex,
             age=age,
@@ -315,7 +364,7 @@ class Leisure:
             policy_reduction=policy_reduction,
             region=region,
         )
-        return activity_poisson_parameter
+        return activity_poisson_parameter * open
 
     def _drags_household_to_activity(self, person, activity):
         """
@@ -340,7 +389,35 @@ class Leisure:
                 ][person.sex][person.age]["drags_household"][activity]
         return random() < prob
 
+    # TESTING TODO
+    ######################################################################
+    def P_IsAdult(self, age):
+        tanh_halfpeak_age = 15  # 17.1
+        tanh_width = 0.7  # 1
+
+        minageadult = 13
+        maxagechild = 17
+        if age < minageadult:
+            return 0
+        elif age > maxagechild:
+            return 1
+        else:
+            return (np.tanh(tanh_width * (age - tanh_halfpeak_age)) + 1) / 2
+
+    def P_IsChild(self, age):
+        return 1 - self.P_IsAdult(age)
+
+    def AorC(self, age):
+        r = np.random.rand(1)[0]
+        if r < self.P_IsAdult(age):
+            return "Adult"
+        else:
+            return "Child"
+
+    ######################################################################
+
     def _get_activity_probabilities_for_person(self, person: Person):
+
         try:
             return self.probabilities_by_region_sex_age[person.region.name][person.sex][
                 person.age

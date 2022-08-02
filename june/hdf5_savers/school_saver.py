@@ -3,6 +3,7 @@ import numpy as np
 
 from june.groups import Schools, School
 from june.world import World
+from june.groups.group.make_subgroups import Subgroup_Params
 from .utils import read_dataset
 
 nan_integer = -999
@@ -122,7 +123,10 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
 
 
 def load_schools_from_hdf5(
-    file_path: str, chunk_size: int = 50000, domain_super_areas=None
+    file_path: str,
+    chunk_size: int = 50000,
+    domain_super_areas=None,
+    config_filename=None,
 ):
     """
     Loads schools from an hdf5 file located at ``file_path``.
@@ -130,6 +134,12 @@ def load_schools_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+
+    School_Class = School
+    School_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
+
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         schools = f["schools"]
         schools_list = []
@@ -161,7 +171,7 @@ def load_schools_from_hdf5(
                     sector = None
                 else:
                     sector = sector.decode()
-                school = School(
+                school = School_Class(
                     coordinates=coordinates[k],
                     n_pupils_max=n_pupils_max[k],
                     age_min=age_min[k],

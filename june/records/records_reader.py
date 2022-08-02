@@ -58,9 +58,7 @@ class RecordReader:
         df = self.decode_bytes_columns(df)
         return df
 
-    def get_geography_df(
-        self,
-    ):
+    def get_geography_df(self,):
         areas_df = self.table_to_df("areas")
         super_areas_df = self.table_to_df("super_areas")
         regions_df = self.table_to_df("regions")
@@ -73,10 +71,7 @@ class RecordReader:
             suffixes=("_area", "_super_area"),
         )
         geography_df = geography_df.merge(
-            regions_df,
-            how="inner",
-            left_on="region_id",
-            right_index=True,
+            regions_df, how="inner", left_on="region_id", right_index=True
         )
         return geography_df.rename(
             columns={geography_df.index.name: "area_id", "name": "name_region"}

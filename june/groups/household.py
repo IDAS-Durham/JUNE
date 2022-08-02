@@ -33,11 +33,11 @@ class Household(Group):
         "receiving_care",
     )
 
-    class SubgroupType(IntEnum):
-        kids = 0
-        young_adults = 1
-        adults = 2
-        old_adults = 3
+    # class SubgroupType(IntEnum):
+    #     kids = 0
+    #     young_adults = 1
+    #     adults = 2
+    #     old_adults = 3
 
     def __init__(self, type=None, area=None, max_size=np.inf, composition_type=None):
         """
@@ -52,14 +52,16 @@ class Household(Group):
         self.residents = ()
         self.residences_to_visit = defaultdict(tuple)
         self.household_to_care = None
-        self.being_visited = False  # this is True when people from other households have been added to the group
+        self.being_visited = (
+            False
+        )  # this is True when people from other households have been added to the group
         self.receiving_care = False
         self.composition_type = composition_type
 
     def _get_leisure_subgroup_for_person(self, person):
         if person.age < 18:
             subgroup = self.SubgroupType.kids
-        elif person.age <= 35:
+        elif person.age <= 25:
             subgroup = self.SubgroupType.young_adults
         elif person.age < 65:
             subgroup = self.SubgroupType.adults
@@ -67,7 +69,10 @@ class Household(Group):
             subgroup = self.SubgroupType.old_adults
         return subgroup
 
-    def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
+    def add(self, person, subgroup_type=None, activity="residence"):
+        if subgroup_type is None:
+            subgroup_type = self.get_leisure_subgroup_type(person)
+
         if activity == "leisure":
             subgroup_type = self.get_leisure_subgroup_type(person)
             person.subgroups.leisure = self[subgroup_type]
@@ -80,7 +85,6 @@ class Household(Group):
         else:
             raise NotImplementedError(f"Activity {activity} not supported in household")
 
-    @classmethod
     def get_leisure_subgroup_type(cls, person):
         """
         A person wants to come and visit this household. We need to assign the person
@@ -89,7 +93,7 @@ class Household(Group):
         """
         if person.age < 18:
             return cls.SubgroupType.kids
-        elif person.age <= 35:
+        elif person.age <= 25:
             return cls.SubgroupType.young_adults
         elif person.age < 65:
             return cls.SubgroupType.adults
@@ -123,21 +127,21 @@ class Household(Group):
                     mate.residence  # person will be added later in the simulator.
                 )
 
-    @property
-    def kids(self):
-        return self.subgroups[self.SubgroupType.kids]
+    # @property
+    # def kids(self):
+    #     return self.subgroups[self.SubgroupType.kids]
 
-    @property
-    def young_adults(self):
-        return self.subgroups[self.SubgroupType.young_adults]
+    # @property
+    # def young_adults(self):
+    #     return self.subgroups[self.SubgroupType.young_adults]
 
-    @property
-    def adults(self):
-        return self.subgroups[self.SubgroupType.adults]
+    # @property
+    # def adults(self):
+    #     return self.subgroups[self.SubgroupType.adults]
 
-    @property
-    def old_adults(self):
-        return self.subgroups[self.SubgroupType.old_adults]
+    # @property
+    # def old_adults(self):
+    #     return self.subgroups[self.SubgroupType.old_adults]
 
     @property
     def coordinates(self):
@@ -185,7 +189,9 @@ class Households(Supergroup):
     Contains all households for the given area, and information about them.
     """
 
-    def __init__(self, households: List[Household]):
+    venue_class = Household
+
+    def __init__(self, households: List[venue_class]):
         super().__init__(members=households)
 
 

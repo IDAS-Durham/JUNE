@@ -14,9 +14,7 @@ delta_id = Delta.infection_id()
 omicron_id = Omicron.infection_id()
 
 
-@pytest.fixture(
-    name="dates_values",
-)
+@pytest.fixture(name="dates_values")
 def make_dates_and_values():
     return {
         datetime.datetime(2022, 1, 1): 0.1,
@@ -75,8 +73,7 @@ def make_campaigns(vaccine):
 @pytest.fixture(name="vaccine_epidemiology")
 def make_epidemiology(selectors, vaccination_campaigns):
     return Epidemiology(
-        infection_selectors=selectors,
-        vaccination_campaigns=vaccination_campaigns,
+        infection_selectors=selectors, vaccination_campaigns=vaccination_campaigns
     )
 
 
@@ -102,11 +99,7 @@ class TestEpi:
         for days in range(n_days):
             date = start_date + datetime.timedelta(days)
             vaccine_epidemiology.update_health_status(
-                world=world,
-                time=0.0,
-                duration=4,
-                date=date,
-                vaccinate=True,
+                world=world, time=0.0, duration=4, date=date, vaccinate=True
             )
             if date in dates_values:
                 assert person.immunity.susceptibility_dict[delta_id] == pytest.approx(

@@ -31,6 +31,7 @@ def _get_medical_facilities(world, activity_manager):
     for group_name in activity_manager.all_super_groups:
         if "visits" in group_name:
             continue
+
         grouptype = getattr(world, group_name)
         if grouptype is not None:
             if isinstance(grouptype, MedicalFacilities):
@@ -235,15 +236,11 @@ class Epidemiology:
                 continue
             if vaccinate:
                 self.vaccination_campaigns.apply(
-                    person=person,
-                    date=date,
-                    record=record,
+                    person=person, date=date, record=record
                 )
                 if person.vaccine_trajectory is not None:
                     person.vaccine_trajectory.update_vaccine_effect(
-                        person=person,
-                        date=date,
-                        record=record,
+                        person=person, date=date, record=record
                     )
 
     def infect_people(
