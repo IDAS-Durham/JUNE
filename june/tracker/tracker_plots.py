@@ -42,7 +42,7 @@ try:
     plt.style.use(["science", "no-latex", "bright"])
     if mpi_rank == 0:
         print("Using 'science' matplotlib style")
-except:
+except Exception:
     plt.style.use("default")
     if mpi_rank == 0:
         print("Using default matplotlib style")
