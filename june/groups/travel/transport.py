@@ -9,8 +9,8 @@ class Transport(Group):
     A class representing a transport unit.
     """
 
-    class SubgroupType(IntEnum):
-        passengers = 0
+    # class SubgroupType(IntEnum):
+    #     passengers = 0
 
     def __init__(self, station):
         super().__init__()
@@ -45,9 +45,12 @@ class CityTransport(Transport):
 
 
 class CityTransports(Transports):
+
     """
     Inner city transports
     """
+
+    venue_class = CityTransport
 
 
 class InterCityTransport(Transport):
@@ -60,3 +63,5 @@ class InterCityTransports(Transports):
     """
     Inter city transports
     """
+
+    venue_class = InterCityTransport

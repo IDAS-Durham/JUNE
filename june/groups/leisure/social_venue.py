@@ -23,8 +23,8 @@ class SocialVenueError(BaseException):
 class SocialVenue(Group):
     max_size = np.inf
 
-    class SubgroupType(IntEnum):
-        leisure = 0
+    # class SubgroupType(IntEnum):
+    #     leisure = 0
 
     def __init__(self, area=None):
         super().__init__()
@@ -38,14 +38,21 @@ class SocialVenue(Group):
     def super_area(self):
         return self.area.super_area
 
-    def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
-        return self[self.SubgroupType.leisure]
+    @property
+    def get_coordinates(self):
+        if self.area is None:
+            return
+        else:
+            return self.area.coordinates
+
+    # def get_leisure_subgroup(self, person, subgroup_type, to_send_abroad):
+    #     return self[self.SubgroupType.leisure]
 
 
 class SocialVenues(Supergroup):
-    social_venue_class = SocialVenue
+    venue_class = SocialVenue
 
-    def __init__(self, social_venues: List[SocialVenue], make_tree=True):
+    def __init__(self, social_venues: List[venue_class], make_tree=True):
         super().__init__(members=social_venues)
         logger.info(f"Domain {mpi_rank} has {len(self)} {self.spec}(s)")
         self.ball_tree = None
@@ -60,7 +67,7 @@ class SocialVenues(Supergroup):
         cls,
         coordinates: List[np.array],
         super_areas: Optional[Areas],
-        max_distance_to_area=15,
+        max_distance_to_area=10,
         **kwargs,
     ):
         if len(coordinates) == 0:
@@ -73,24 +80,29 @@ class SocialVenues(Supergroup):
             distances_close = np.where(distances < max_distance_to_area)
             coordinates = coordinates[distances_close]
         social_venues = []
+
         for i, coord in enumerate(coordinates):
-            sv = cls.social_venue_class()
+            sv = cls.venue_class()
             if super_areas:
                 super_area = super_areas[i]
             else:
                 super_area = None
             sv.coordinates = coord
             if super_areas:
-                area = Areas(super_area.areas).get_closest_area(coordinates=coord)
+                area, dist = Areas(super_area.areas).get_closest_area(
+                    coordinates=coord, return_distance=True
+                )
+
+                if dist > max_distance_to_area:
+                    continue
+
                 sv.area = area
             social_venues.append(sv)
         return cls(social_venues, **kwargs)
 
     @classmethod
     def for_super_areas(
-        cls,
-        super_areas: List[SuperArea],
-        coordinates_filename: str = None,
+        cls, super_areas: List[SuperArea], coordinates_filename: str = None
     ):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
@@ -98,22 +110,14 @@ class SocialVenues(Supergroup):
         return cls.from_coordinates(sv_coordinates, super_areas=super_areas)
 
     @classmethod
-    def for_areas(
-        cls,
-        areas: Areas,
-        coordinates_filename: str = None,
-    ):
+    def for_areas(cls, areas: Areas, coordinates_filename: str = None):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
         super_areas = SuperAreas([area.super_area for area in areas])
         return cls.for_super_areas(super_areas, coordinates_filename)
 
     @classmethod
-    def for_geography(
-        cls,
-        geography: Geography,
-        coordinates_filename: str = None,
-    ):
+    def for_geography(cls, geography: Geography, coordinates_filename: str = None):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
         return cls.for_super_areas(geography.super_areas, coordinates_filename)
@@ -145,14 +149,14 @@ class SocialVenues(Supergroup):
         if venues_per_area is not None:
             for area in areas:
                 for _ in range(venues_per_area):
-                    sv = cls.social_venue_class()
+                    sv = cls.venue_class()
                     sv.area = area
                     social_venues.append(sv)
         elif venues_per_capita is not None:
             for area in areas:
                 area_population = len(area.people)
                 for _ in range(int(np.ceil(venues_per_capita * area_population))):
-                    sv = cls.social_venue_class()
+                    sv = cls.venue_class()
                     sv.area = area
                     sv.coordinates = area.coordinates
                     social_venues.append(sv)
@@ -184,14 +188,14 @@ class SocialVenues(Supergroup):
         if venues_per_super_area is not None:
             for area in super_areas:
                 for _ in range(venues_per_super_area):
-                    sv = cls.social_venue_class()
+                    sv = cls.venue_class()
                     sv.area = area
                     social_venues.append(sv)
         elif venues_per_capita is not None:
             for super_area in super_areas:
                 super_area_population = len(super_area.people)
                 for _ in range(int(np.ceil(venues_per_capita * super_area_population))):
-                    sv = cls.social_venue_class()
+                    sv = cls.venue_class()
                     area = Areas(super_area.areas).get_closest_area(
                         coordinates=super_area.coordinates
                     )

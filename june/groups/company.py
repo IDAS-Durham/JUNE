@@ -53,14 +53,10 @@ class Company(Group):
     We made this explicit here, although it is not necessary.
     """
 
-    __slots__ = (
-        "super_area",
-        "sector",
-        "n_workers_max",
-    )
+    __slots__ = ("super_area", "sector", "n_workers_max")
 
-    class SubgroupType(IntEnum):
-        workers = 0
+    # class SubgroupType(IntEnum):
+    #     workers = 0
 
     def __init__(self, super_area=None, n_workers_max=np.inf, sector=None):
         super().__init__()
@@ -71,7 +67,7 @@ class Company(Group):
     def add(self, person):
         super().add(
             person,
-            subgroup_type=self.SubgroupType.workers,
+            subgroup_type=self.get_index_subgroup(person),
             activity="primary_activity",
         )
 
@@ -79,9 +75,9 @@ class Company(Group):
     def n_workers(self):
         return len(self.people)
 
-    @property
-    def workers(self):
-        return self.subgroups[self.SubgroupType.workers]
+    # @property
+    # def workers(self):
+    #     return self.subgroups[self.SubgroupType.workers]
 
     @property
     def coordinates(self):
@@ -96,6 +92,8 @@ class Company(Group):
 
 
 class Companies(Supergroup):
+    venue_class = Company
+
     def __init__(self, companies: List["Companies"]):
         """
         Create companies and provide functionality to allocate workers.
@@ -172,9 +170,7 @@ class Companies(Supergroup):
         if len(company_sectors_per_super_area) == 1:
             super_area = super_areas[0]
             companies = cls.create_companies_in_super_area(
-                super_area,
-                company_sizes_per_super_area,
-                company_sectors_per_super_area,
+                super_area, company_sizes_per_super_area, company_sectors_per_super_area
             )
             super_area.companies = companies
         else:
@@ -185,19 +181,14 @@ class Companies(Supergroup):
                 company_sectors_per_super_area.iterrows(),
             ):
                 super_area.companies = cls.create_companies_in_super_area(
-                    super_area,
-                    company_sizes,
-                    company_sectors,
+                    super_area, company_sizes, company_sectors
                 )
                 companies += super_area.companies
         return cls(companies)
 
     @classmethod
     def create_companies_in_super_area(
-        cls,
-        super_area: SuperArea,
-        company_sizes,
-        company_sectors,
+        cls, super_area: SuperArea, company_sizes, company_sectors
     ) -> list:
         """
         Crates companies in super area using the sizes and sectors distributions.
@@ -226,7 +217,7 @@ class Companies(Supergroup):
 
     @classmethod
     def create_company(cls, super_area, company_size, company_sector):
-        company = Company(super_area, company_size, company_sector)
+        company = cls.venue_class(super_area, company_size, company_sector)
         return company
 
 
@@ -245,7 +236,6 @@ class InteractiveCompany(InteractiveGroup):
 
     def get_processed_beta(self, betas, beta_reductions):
         beta_processed = super().get_processed_beta(
-            betas=betas,
-            beta_reductions=beta_reductions,
+            betas=betas, beta_reductions=beta_reductions
         )
         return beta_processed * self.sector_betas.get(self.sector, 1.0)

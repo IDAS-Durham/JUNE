@@ -8,14 +8,7 @@ from june import paths
 from june.records import Record
 from june.groups import Hospital, Hospitals, Household, Households, CareHome, CareHomes
 from june.demography import Person
-from june.geography.geography import (
-    Areas,
-    SuperAreas,
-    Regions,
-    Area,
-    SuperArea,
-    Region,
-)
+from june.geography.geography import Areas, SuperAreas, Regions, Area, SuperArea, Region
 from june import World
 
 from june.records.records_writer import prepend_checkpoint_hdf5
@@ -50,14 +43,7 @@ def create_dummy_world():
     areas = Areas(super_areas[0].areas + super_areas[1].areas + super_areas[2].areas)
     households = Households([Household(area=super_areas[0].areas[0])])
     hospitals = Hospitals(
-        [
-            Hospital(
-                n_beds=1,
-                n_icu_beds=1,
-                area=areas[5],
-                coordinates=(0.0, 0.0),
-            )
-        ]
+        [Hospital(n_beds=1, n_icu_beds=1, area=areas[5], coordinates=(0.0, 0.0))]
     )
     care_homes = CareHomes([CareHome(area=super_areas[0].areas[0])])
     world = World()

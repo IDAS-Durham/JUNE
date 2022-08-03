@@ -5,6 +5,7 @@ from itertools import chain
 
 from june.world import World
 from june.groups import Household, Households, ExternalGroup
+from june.groups.group.make_subgroups import Subgroup_Params
 from june.mpi_setup import mpi_rank
 from .utils import read_dataset
 
@@ -148,21 +149,18 @@ def save_households_to_hdf5(
                 residences_to_visit_super_areas, dtype=np.int64
             )
         households_dset.create_dataset(
-            "residences_to_visit_ids",
-            data=residences_to_visit_ids,
+            "residences_to_visit_ids", data=residences_to_visit_ids
         )
         households_dset.create_dataset(
-            "residences_to_visit_specs",
-            data=residences_to_visit_specs,
+            "residences_to_visit_specs", data=residences_to_visit_specs
         )
         households_dset.create_dataset(
-            "residences_to_visit_super_areas",
-            data=residences_to_visit_super_areas,
+            "residences_to_visit_super_areas", data=residences_to_visit_super_areas
         )
 
 
 def load_households_from_hdf5(
-    file_path: str, chunk_size=50000, domain_super_areas=None
+    file_path: str, chunk_size=50000, domain_super_areas=None, config_filename=None
 ):
     """
     Loads households from an hdf5 file located at ``file_path``.
@@ -170,6 +168,12 @@ def load_households_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+
+    Household_Class = Household
+    Household_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
+
     logger.info("loading households...")
     households_list = []
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
@@ -195,7 +199,7 @@ def load_households_from_hdf5(
                         )
                     if super_area not in domain_super_areas:
                         continue
-                household = Household(
+                household = Household_Class(
                     area=None,
                     type=types[k].decode(),
                     max_size=max_sizes[k],

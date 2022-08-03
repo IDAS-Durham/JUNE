@@ -125,15 +125,9 @@ class Stations(Supergroup):
             y = distance_to_city_center * np.sin(angle)
             super_area = super_areas.get_closest_super_area(np.array(station_position))
             if type == "city_station":
-                station = CityStation(
-                    city=city.name,
-                    super_area=super_area,
-                )
+                station = CityStation(city=city.name, super_area=super_area)
             elif type == "inter_city_station":
-                station = InterCityStation(
-                    city=city.name,
-                    super_area=super_area,
-                )
+                station = InterCityStation(city=city.name, super_area=super_area)
             else:
                 raise ValueError
             stations.append(station)

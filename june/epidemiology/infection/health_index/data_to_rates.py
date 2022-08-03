@@ -572,10 +572,7 @@ class Data2Rates:
         self, age: Union[int, pd.Interval], sex: str, is_care_home: bool = False
     ) -> int:
         return self._get_ifr(
-            function=self.get_n_icu_deaths,
-            age=age,
-            sex=sex,
-            is_care_home=is_care_home,
+            function=self.get_n_icu_deaths, age=age, sex=sex, is_care_home=is_care_home
         )
 
     def get_hospital_infection_admission_rate(
@@ -623,9 +620,7 @@ class Data2Rates:
 
 
 def get_outputs_df(rates, age_bins):
-    outputs = pd.DataFrame(
-        index=age_bins,
-    )
+    outputs = pd.DataFrame(index=age_bins)
     for pop in ["gp", "ch"]:
         for sex in ["male", "female"]:
             for fname, function in zip(

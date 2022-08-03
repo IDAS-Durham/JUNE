@@ -3,6 +3,7 @@ import numpy as np
 
 from june.world import World
 from june.groups import Hospital, Hospitals, ExternalHospital
+from june.groups.group.make_subgroups import Subgroup_Params
 from .utils import read_dataset
 
 nan_integer = -999
@@ -111,6 +112,7 @@ def load_hospitals_from_hdf5(
     chunk_size=50000,
     domain_super_areas=None,
     super_areas_to_domain_dict: dict = None,
+    config_filename=None,
 ):
     """
     Loads companies from an hdf5 file located at ``file_path``.
@@ -118,6 +120,12 @@ def load_hospitals_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+    Hospital_Class = Hospital
+    Hospital_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
+    ExternalHospital_Class = ExternalHospital
+
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         hospitals = f["hospitals"]
         hospitals_list = []
@@ -150,14 +158,14 @@ def load_hospitals_from_hdf5(
                     domain_super_areas is not None
                     and super_area not in domain_super_areas
                 ):
-                    hospital = ExternalHospital(
+                    hospital = ExternalHospital_Class(
                         id=ids[k],
                         spec="hospital",
                         domain_id=super_areas_to_domain_dict[super_area],
                         region_name=region_name[k].decode(),
                     )
                 else:
-                    hospital = Hospital(
+                    hospital = Hospital_Class(
                         n_beds=n_beds_list[k],
                         n_icu_beds=n_icu_beds_list[k],
                         coordinates=coordinates[k],

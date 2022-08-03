@@ -12,7 +12,7 @@ class Pub(SocialVenue):
 
 
 class Pubs(SocialVenues):
-    social_venue_class = Pub
+    venue_class = Pub
     default_coordinates_filename = default_pub_coordinates_filename
 
 

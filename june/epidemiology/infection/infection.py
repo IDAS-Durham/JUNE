@@ -16,12 +16,7 @@ class Infection:
     time step, according to an infectivity profile.
     """
 
-    __slots__ = (
-        "start_time",
-        "transmission",
-        "symptoms",
-        "time_of_testing",
-    )
+    __slots__ = ("start_time", "transmission", "symptoms", "time_of_testing")
     _infection_id = None
 
     def __init__(

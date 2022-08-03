@@ -84,9 +84,7 @@ class TestSusceptibilityHasAnEffect:
     def test__run_different_susceptibility(self, simulation_setup):
         group, population = simulation_setup
         interaction = Interaction(
-            betas={"company": 1},
-            alpha_physical=1.0,
-            contact_matrices=None,
+            betas={"company": 1}, alpha_physical=1.0, contact_matrices=None
         )
         for person in population:
             if person.age < 13:

@@ -30,11 +30,7 @@ def create_person():
 class TestCompany:
     @pytest.fixture(name="company")
     def create_company(self, super_area_companies):
-        return Company(
-            super_area=super_area_companies,
-            n_workers_max=115,
-            sector="Q",
-        )
+        return Company(super_area=super_area_companies, n_workers_max=115, sector="Q")
 
     def test__company_grouptype(self, company):
         assert company.SubgroupType.workers == 0
@@ -49,15 +45,13 @@ class TestCompany:
     def test__person_is_employed(self, person, company):
         company.add(person)
         assert (
-            person.primary_activity == company.subgroups[Company.SubgroupType.workers]
+            person.primary_activity == company.subgroups[company.SubgroupType.workers]
         )
 
 
 @pytest.fixture(name="companies_example")
 def create_companies(super_area_companies):
-    companies = Companies.for_super_areas(
-        [super_area_companies],
-    )
+    companies = Companies.for_super_areas([super_area_companies])
     return companies
 
 

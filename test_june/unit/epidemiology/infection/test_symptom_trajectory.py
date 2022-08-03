@@ -118,18 +118,9 @@ class TestSymptoms:
         assert symptoms_trajectories.trajectory == [
             (0.0, SymptomTag.exposed),
             (pytest.approx(3.4, rel=0.5), SymptomTag.mild),
-            (
-                pytest.approx(6.8, rel=0.5),
-                SymptomTag.hospitalised,
-            ),
-            (
-                pytest.approx(6.8, rel=0.5),
-                SymptomTag.intensive_care,
-            ),
-            (
-                pytest.approx(20, rel=0.5),
-                SymptomTag.dead_icu,
-            ),
+            (pytest.approx(6.8, rel=0.5), SymptomTag.hospitalised),
+            (pytest.approx(6.8, rel=0.5), SymptomTag.intensive_care),
+            (pytest.approx(20, rel=0.5), SymptomTag.dead_icu),
         ]
         assert (
             symptoms_trajectories.time_of_symptoms_onset
@@ -146,23 +137,11 @@ class TestSymptoms:
         assert symptoms_trajectories.trajectory == [
             (0.0, SymptomTag.exposed),
             (pytest.approx(10, rel=0.5), SymptomTag.mild),
-            (
-                pytest.approx(13, rel=0.5),
-                SymptomTag.hospitalised,
-            ),
-            (
-                pytest.approx(15, rel=0.5),
-                SymptomTag.intensive_care,
-            ),
-            (
-                pytest.approx(20, rel=0.5),
-                SymptomTag.hospitalised,
-            ),
+            (pytest.approx(13, rel=0.5), SymptomTag.hospitalised),
+            (pytest.approx(15, rel=0.5), SymptomTag.intensive_care),
+            (pytest.approx(20, rel=0.5), SymptomTag.hospitalised),
             (pytest.approx(34, rel=0.5), SymptomTag.mild),
-            (
-                pytest.approx(40, rel=0.5),
-                SymptomTag.recovered,
-            ),
+            (pytest.approx(40, rel=0.5), SymptomTag.recovered),
         ]
         assert (
             symptoms_trajectories.time_of_symptoms_onset
@@ -197,10 +176,7 @@ class TestSymptoms:
         assert infection.symptoms.trajectory == [
             (0.0, SymptomTag.exposed),
             (pytest.approx(5, 2.5), SymptomTag.mild),
-            (
-                pytest.approx(5, rel=5),
-                SymptomTag.hospitalised,
-            ),
+            (pytest.approx(5, rel=5), SymptomTag.hospitalised),
             (pytest.approx(13, rel=5), SymptomTag.mild),
             (pytest.approx(30, rel=5), SymptomTag.recovered),
         ]

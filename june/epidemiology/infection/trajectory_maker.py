@@ -200,9 +200,7 @@ class TrajectoryMaker:
 
     @classmethod
     def from_dict(cls, trajectory_dict):
-        return TrajectoryMaker(
-            *map(Stage.from_dict, trajectory_dict["stages"]),
-        )
+        return TrajectoryMaker(*map(Stage.from_dict, trajectory_dict["stages"]))
 
 
 class TrajectoryMakers:

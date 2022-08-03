@@ -400,11 +400,7 @@ class CloseSchools(SkipActivity):
 
 
 class CloseUniversities(SkipActivity):
-    def __init__(
-        self,
-        start_time: str,
-        end_time: str,
-    ):
+    def __init__(self, start_time: str, end_time: str):
         super().__init__(
             start_time, end_time, activities_to_remove=("primary_activity")
         )

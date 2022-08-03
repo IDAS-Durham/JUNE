@@ -95,8 +95,7 @@ class Boundary(Group):
             columns=["f", "m"],
         )
         self.sex_freq_per_compsec = sex_freq_per_compsec.div(
-            sex_freq_per_compsec.sum(axis=1),
-            axis=0,
+            sex_freq_per_compsec.sum(axis=1), axis=0
         )
 
         # age-frequencies of people at work, based on the whole simulated region
@@ -120,8 +119,7 @@ class Boundary(Group):
         self.nomis_bins = nomis_bin_df.div(nomis_bin_df.sum(axis=0), axis=1)
 
         age_df = pd.DataFrame(
-            data=np.vstack((age_unique, age_counts)).T,
-            columns=["age", "freq"],
+            data=np.vstack((age_unique, age_counts)).T, columns=["age", "freq"]
         )
         age_df = age_df[(age_df["age"] >= 20) & (age_df["age"] <= 65)]
         self.ages = age_df.div(age_df.sum(axis=0), axis=1)
@@ -132,10 +130,7 @@ class Boundary(Group):
         for different attributes of the whole simulated region.
         """
         sex_rv = rv_discrete(
-            values=(
-                np.arange(0, 2),
-                self.sex_freq_per_compsec.loc[compsec].values,
-            )
+            values=(np.arange(0, 2), self.sex_freq_per_compsec.loc[compsec].values)
         )
         sex_rnd_arr = sex_rv.rvs(size=n_residents)
 
