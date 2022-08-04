@@ -14,9 +14,7 @@ float_vlen_type = h5py.vlen_dtype(np.dtype("float64"))
 
 
 def save_infection_classes_to_hdf5(
-    hdf5_file_path: str,
-    infections: List[Infection],
-    chunk_size: int = 50000,
+    hdf5_file_path: str, infections: List[Infection], chunk_size: int = 50000
 ):
     n_infections = len(infections)
     n_chunks = int(np.ceil(n_infections / chunk_size))
@@ -39,9 +37,7 @@ def save_infection_classes_to_hdf5(
 
 
 def save_infections_to_hdf5(
-    hdf5_file_path: str,
-    infections: List[Infection],
-    chunk_size: int = 50000,
+    hdf5_file_path: str, infections: List[Infection], chunk_size: int = 50000
 ):
     """
     Saves infections data to hdf5.

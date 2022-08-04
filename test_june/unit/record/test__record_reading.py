@@ -58,18 +58,13 @@ def make_selector(
     desired_symptoms,
 ):
     health_index_generator = MockHealthIndexGenerator(desired_symptoms)
-    selector = InfectionSelector(
-        health_index_generator=health_index_generator,
-    )
+    selector = InfectionSelector(health_index_generator=health_index_generator)
     return selector
 
 
 def infect_hospitalised_person(person):
     max_symptom_tag = random.choice(
-        [
-            SymptomTag.hospitalised,
-            SymptomTag.intensive_care,
-        ]
+        [SymptomTag.hospitalised, SymptomTag.intensive_care]
     )
     selector = make_selector(desired_symptoms=max_symptom_tag)
     selector.infect_person_at_time(person, 0.0)
@@ -124,10 +119,7 @@ def make_dummy_world(geog):
         area=geog.areas.members[0],
         coordinates=super_area.coordinates,
     )
-    uni = University(
-        coordinates=super_area.coordinates,
-        n_students_max=2500,
-    )
+    uni = University(coordinates=super_area.coordinates, n_students_max=2500)
 
     worker1 = Person.from_attributes(age=44, sex="f", ethnicity="A1")
     worker1.area = super_area.areas[0]

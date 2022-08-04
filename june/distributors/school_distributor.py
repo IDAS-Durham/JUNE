@@ -16,11 +16,7 @@ logger = logging.getLogger("school_distributor")
 
 EARTH_RADIUS = 6371  # km
 
-default_decoder = {
-    2314: "secondary",
-    2315: "primary",
-    2316: "special_needs",
-}
+default_decoder = {2314: "secondary", 2315: "primary", 2316: "special_needs"}
 
 
 class SchoolDistributor:
@@ -127,9 +123,7 @@ class SchoolDistributor:
             for agegroup in self.schools.school_trees:
                 closest_schools = []
                 closest_schools_idx = self.schools.get_closest_schools(
-                    agegroup,
-                    area.coordinates,
-                    self.neighbour_schools,
+                    agegroup, area.coordinates, self.neighbour_schools
                 )
                 for idx in closest_schools_idx:
                     real_idx = self.schools.school_agegroup_to_global_indices[agegroup][
@@ -195,7 +189,7 @@ class SchoolDistributor:
                 # remove from working population
                 if person.work_super_area is not None:
                     person.work_super_area.remove_worker(person)
-                school.add(person, school.SubgroupType.students)
+                school.add(person)
 
     def distribute_non_mandatory_kids_to_school(
         self, area: Area, is_school_full: dict, closest_schools_by_age: dict
@@ -235,7 +229,7 @@ class SchoolDistributor:
                     if find_school:
                         if person.work_super_area is not None:
                             person.work_super_area.remove_worker(person)
-                        school.add(person, school.SubgroupType.students)
+                        school.add(person)
 
     def distribute_teachers_to_schools_in_super_areas(
         self, super_areas: List[SuperArea]
@@ -335,7 +329,7 @@ class SchoolDistributor:
                     if not primary_teachers:
                         all_filled = True
                         break
-                    primary_school.add(teacher, school.SubgroupType.teachers)
+                    primary_school.add(teacher)
                     teacher.lockdown_status = "key_worker"
             if all_filled:
                 break
@@ -351,7 +345,7 @@ class SchoolDistributor:
                     if not secondary_teachers:
                         all_filled = True
                         break
-                    secondary_school.add(teacher, school.SubgroupType.teachers)
+                    secondary_school.add(teacher)
                     teacher.lockdown_status = "key_worker"
             if all_filled:
                 break
@@ -366,7 +360,7 @@ class SchoolDistributor:
             if not remaining_teachers:
                 break
             teacher = remaining_teachers.pop()
-            school.add(teacher, school.SubgroupType.teachers)
+            school.add(teacher)
             teacher.lockdown_status = "key_worker"
 
         while remaining_teachers:
@@ -380,7 +374,7 @@ class SchoolDistributor:
                     if not remaining_teachers:
                         all_filled = True
                         break
-                    school.add(teacher, school.SubgroupType.teachers)
+                    school.add(teacher)
                     teacher.lockdown_status = "key_worker"
             if all_filled:
                 break

@@ -174,8 +174,7 @@ class HealthIndexGenerator:
         ]
         icu_dead_rate = self.rates_df.loc[age_bin, f"{population}_icu_ifr_{_sex}"]
         severe_rate = max(
-            0,
-            1 - (hospital_rate + home_dead_rate + asymptomatic_rate + mild_rate),
+            0, 1 - (hospital_rate + home_dead_rate + asymptomatic_rate + mild_rate)
         )
         # fill each age in bin
         for age in range(age_bin.left, age_bin.right + 1):
@@ -216,9 +215,6 @@ class HealthIndexGenerator:
                 # values are constant at each bin
                 for age_bin in self.age_bins:
                     self._set_probability_per_age_bin(
-                        p=probabilities,
-                        age_bin=age_bin,
-                        sex=sex,
-                        population=population,
+                        p=probabilities, age_bin=age_bin, sex=sex, population=population
                     )
         return probabilities

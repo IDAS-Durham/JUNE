@@ -31,10 +31,7 @@ class Interaction:
     """
 
     def __init__(
-        self,
-        alpha_physical: float,
-        betas: Dict[str, float],
-        contact_matrices: dict,
+        self, alpha_physical: float, betas: Dict[str, float], contact_matrices: dict
     ):
         self.alpha_physical = alpha_physical
         self.betas = betas or {}
@@ -47,10 +44,7 @@ class Interaction:
         self.beta_reductions = {}
 
     @classmethod
-    def from_file(
-        cls,
-        config_filename: str = default_config_filename,
-    ) -> "Interaction":
+    def from_file(cls, config_filename: str = default_config_filename) -> "Interaction":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         contact_matrices = config["contact_matrices"]
@@ -214,10 +208,7 @@ class Interaction:
         return infected_ids, infection_ids, interactive_group.size
 
     def _time_step_for_subgroup(
-        self,
-        infector_tensor,
-        susceptible_subgroup_id,
-        subgroup_susceptibles,
+        self, infector_tensor, susceptible_subgroup_id, subgroup_susceptibles
     ):
         """
         Time step for one susceptible subgroup. We first compute the combined

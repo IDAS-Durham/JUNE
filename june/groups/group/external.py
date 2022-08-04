@@ -1,3 +1,7 @@
+from typing import List, Tuple
+from june.demography.person import Person
+
+
 class ExternalGroup:
     external = True
     __slots__ = "spec", "id", "domain_id"

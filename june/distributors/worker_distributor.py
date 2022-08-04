@@ -89,12 +89,7 @@ class WorkerDistributor:
         self._boundary_workers_counter = count()
         self.n_boundary_workers = 0
 
-    def distribute(
-        self,
-        areas: Areas,
-        super_areas: SuperAreas,
-        population: Population,
-    ):
+    def distribute(self, areas: Areas, super_areas: SuperAreas, population: Population):
         """
         Assign any person within the eligible working age range a location
         (SuperArea) of their work, and the sector (e.g. "P"=education) of
@@ -409,8 +404,7 @@ class WorkerDistributor:
 
 
 def load_workflow_df(
-    workflow_file: str = default_workflow_file,
-    area_names: Optional[List[str]] = None,
+    workflow_file: str = default_workflow_file, area_names: Optional[List[str]] = None
 ) -> pd.DataFrame:
     wf_df = pd.read_csv(
         workflow_file,
@@ -452,8 +446,7 @@ def load_sex_per_sector(
 
     uni_columns = [col for col in sector_by_sex_df.columns.values if "all " in col]
     sector_by_sex_df = sector_by_sex_df.drop(
-        uni_columns + ["m all", "m R S T U", "f all", "f R S T U"],
-        axis=1,
+        uni_columns + ["m all", "m R S T U", "f all", "f R S T U"], axis=1
     )
 
     if area_names:

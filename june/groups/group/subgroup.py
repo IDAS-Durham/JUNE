@@ -5,11 +5,7 @@ from typing import List
 
 class Subgroup(AbstractGroup):
     external = False
-    __slots__ = (
-        "group",
-        "subgroup_type",
-        "people",
-    )
+    __slots__ = ("group", "subgroup_type", "people")
 
     def __init__(self, group, subgroup_type: int):
         """

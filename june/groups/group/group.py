@@ -11,6 +11,8 @@ from .interactive import InteractiveGroup
 from . import AbstractGroup
 from . import Subgroup
 
+from june.groups.group.make_subgroups import Subgroup_Params
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -42,13 +44,24 @@ class Group(AbstractGroup):
     """
 
     external = False
+    subgroup_params = Subgroup_Params.from_file()
 
-    class SubgroupType(IntEnum):
-        """
-        Defines the indices of subgroups within the subgroups array
-        """
-
-        default = 0
+    # @property
+    # def SubgroupType(self):
+    #     if self.get_spec() in self.subgroup_params.specs:
+    #         return IntEnum("SubgroupType", self.subgroup_labels, start=0)
+    #     else:
+    #         self.subgroup_params.params = {
+    #             self.get_spec(): {
+    #                 'contacts': [[0]],
+    #                 'proportion_physical': [[0]],
+    #                 'characteristic_time': 0,
+    #                 'type': 'Age',
+    #                 'bins': [0,100]
+    #             }
+    #         }
+    #         self.subgroup_params.specs = self.subgroup_params.params.keys()
+    #         return IntEnum("SubgroupType", ["default"], start=0)
 
     __slots__ = ("id", "subgroups", "spec")
 
@@ -71,6 +84,9 @@ class Group(AbstractGroup):
         """
         self.id = self._next_id()
         self.spec = self.get_spec()
+        self.SubgroupType = IntEnum(
+            "SubgroupType", self.subgroup_params.subgroup_labels(self.spec), start=0
+        )
         # noinspection PyTypeChecker
         self.subgroups = [Subgroup(self, i) for i in range(len(self.SubgroupType))]
 
@@ -109,17 +125,14 @@ class Group(AbstractGroup):
             if person in grouping:
                 grouping.remove(person)
 
-    def __getitem__(self, item: SubgroupType) -> "Subgroup":
+    def __getitem__(self, item) -> "Subgroup":
         """
         A subgroup with a given index
         """
         return self.subgroups[item]
 
     def add(
-        self,
-        person: Person,
-        activity: str,
-        subgroup_type: SubgroupType,  # , dynamic=False
+        self, person: Person, activity: str, subgroup_type: None  # , dynamic=False
     ):
         """
         Add a person to a given subgroup. For example, in a school
@@ -133,6 +146,9 @@ class Group(AbstractGroup):
 
         """
         # if not dynamic:
+        if subgroup_type is None:
+            subgroup_type = self.get_leisure_subgroup(person)
+
         self[subgroup_type].append(person)
         if activity is not None:
             setattr(person.subgroups, activity, self[subgroup_type])
@@ -220,3 +236,103 @@ class Group(AbstractGroup):
 
     def get_interactive_group(self, people_from_abroad=None):
         return InteractiveGroup(self, people_from_abroad=people_from_abroad)
+
+    def get_leisure_subgroup(self, person, subgroup_type=None, to_send_abroad=None):
+        if self.subgroup_type == "Age":
+            min_age = self.subgroup_bins[0]
+            max_age = self.subgroup_bins[-1] - 1
+
+            if person.age >= min_age and person.age <= max_age:
+                subgroup_idx = (
+                    np.searchsorted(self.subgroup_bins, person.age, side="right") - 1
+                )
+                return self.subgroups[subgroup_idx]
+            else:
+                return
+        elif self.subgroup_type == "Discrete":
+            if len(self.subgroups) == 1:
+                return self.subgroups[0]
+            else:
+                return
+
+    def get_index_subgroup(self, person, subgroup_type=None, to_send_abroad=None):
+        if self.subgroup_type == "Age":
+            min_age = self.subgroup_bins[0]
+            max_age = self.subgroup_bins[-1] - 1
+
+            if person.age >= min_age and person.age <= max_age:
+                subgroup_idx = (
+                    np.searchsorted(self.subgroup_bins, person.age, side="right") - 1
+                )
+                return subgroup_idx
+            else:
+                return
+        elif self.subgroup_type == "Discrete":
+            if len(self.subgroups) == 1:
+                return 0
+            else:
+                return
+
+    @property
+    def subgroup_type(self):
+        return self.subgroup_params.subgroup_type(self.get_spec())
+
+    @property
+    def subgroup_labels(self):
+        return self.subgroup_params.subgroup_labels(self.get_spec())
+
+    @property
+    def subgroup_bins(self):
+        return self.subgroup_params.subgroup_bins(self.get_spec())
+
+    @property
+    def kids(self):
+        return [
+            person
+            for subgroup in self.subgroups
+            for person in subgroup.people
+            if person.age < self.subgroup_params.AgeYoungAdult
+        ]
+
+    # @property
+    # def young_adults(self):
+    #     return [
+    #         person
+    #         for subgroup in self.subgroups
+    #         for person in subgroup.people
+    #         if person.age >= self.subgroup_params.AgeYoungAdult and person.age < self.subgroup_params.AgeAdult
+    #     ]
+
+    @property
+    def adults(self):
+        return [
+            person
+            for subgroup in self.subgroups
+            for person in subgroup.people
+            if person.age >= self.subgroup_params.AgeAdult
+        ]
+
+    # @property
+    # def old_adults(self):
+    #     return [
+    #         person
+    #         for subgroup in self.subgroups
+    #         for person in subgroup.people
+    #         if person.age >= self.subgroup_params.AgeOldAdult
+    #     ]
+
+    @classmethod
+    def get_leisure_subgroup_type(cls, person):
+        """
+        A person wants to come and visit this household. We need to assign the person
+        to the relevant age subgroup, and make sure the residents welcome him and
+        don't go do any other leisure activities.
+        """
+        if person.age < 18:
+            return cls.SubgroupType.kids
+        elif person.age <= 35:
+            return cls.SubgroupType.young_adults
+        elif person.age < 65:
+            return cls.SubgroupType.adults
+        else:
+            return cls.SubgroupType.old_adults

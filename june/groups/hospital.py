@@ -9,6 +9,7 @@ from sklearn.neighbors import BallTree
 
 from june.groups import Group, Supergroup, ExternalGroup, ExternalSubgroup
 from june.exc import HospitalError
+from june.groups.group.make_subgroups import Subgroup_Params
 
 logger = logging.getLogger("hospitals")
 
@@ -114,10 +115,10 @@ class Hospital(Group, AbstractHospital, MedicalFacility):
     2 - ICU patients
     """
 
-    class SubgroupType(IntEnum):
-        workers = 0
-        patients = 1
-        icu_patients = 2
+    # class SubgroupType(IntEnum):
+    #     workers = 0
+    #     patients = 1
+    #     icu_patients = 2
 
     __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "area", "trust_code"
 
@@ -177,15 +178,13 @@ class Hospital(Group, AbstractHospital, MedicalFacility):
         """
         return self[self.SubgroupType.icu_patients].size >= self.n_icu_beds
 
-    def add(self, person, subgroup_type=SubgroupType.workers):
+    def add(self, person, subgroup_type):
         if subgroup_type in [
             self.SubgroupType.patients,
             self.SubgroupType.icu_patients,
         ]:
             super().add(
-                person,
-                activity="medical_facility",
-                subgroup_type=subgroup_type,
+                person, activity="medical_facility", subgroup_type=subgroup_type
             )
         else:
             super().add(
@@ -204,11 +203,10 @@ class Hospital(Group, AbstractHospital, MedicalFacility):
 
 
 class Hospitals(Supergroup, MedicalFacilities):
+    venue_class = Hospital
+
     def __init__(
-        self,
-        hospitals: List["Hospital"],
-        neighbour_hospitals: int = 5,
-        ball_tree=True,
+        self, hospitals: List["Hospital"], neighbour_hospitals: int = 5, ball_tree=True
     ):
         """
         Create a group of hospitals, and provide functionality to locate patients
@@ -279,17 +277,11 @@ class Hospitals(Supergroup, MedicalFacilities):
             if area.name in hospital_df.index:
                 hospitals_in_area = hospital_df.loc[area.name]
                 if isinstance(hospitals_in_area, pd.Series):
-                    hospital = cls.create_hospital_from_df_row(
-                        area,
-                        hospitals_in_area,
-                    )
+                    hospital = cls.create_hospital_from_df_row(area, hospitals_in_area)
                     hospitals.append(hospital)
                 else:
                     for _, row in hospitals_in_area.iterrows():
-                        hospital = cls.create_hospital_from_df_row(
-                            area,
-                            row,
-                        )
+                        hospital = cls.create_hospital_from_df_row(area, row)
                         hospitals.append(hospital)
                 if len(hospitals) == total_hospitals:
                     break
@@ -298,16 +290,12 @@ class Hospitals(Supergroup, MedicalFacilities):
         )
 
     @classmethod
-    def create_hospital_from_df_row(
-        cls,
-        area,
-        row,
-    ):
+    def create_hospital_from_df_row(cls, area, row):
         coordinates = row[["latitude", "longitude"]].values.astype(np.float64)
         n_beds = row["beds"]
         n_icu_beds = row["icu_beds"]
         trust_code = row["code"]
-        hospital = Hospital(
+        hospital = cls.venue_class(
             area=area,
             coordinates=coordinates,
             n_beds=n_beds,
@@ -316,10 +304,7 @@ class Hospitals(Supergroup, MedicalFacilities):
         )
         return hospital
 
-    def init_hospitals(
-        self,
-        hospital_df: pd.DataFrame,
-    ) -> List["Hospital"]:
+    def init_hospitals(self, hospital_df: pd.DataFrame) -> List["Hospital"]:
         """
         Create Hospital objects with the right characteristics,
         as given by dataframe.
@@ -359,8 +344,7 @@ class Hospitals(Supergroup, MedicalFacilities):
         Tree to query nearby schools
         """
         self.hospital_trees = BallTree(
-            np.deg2rad(hospital_coordinates),
-            metric="haversine",
+            np.deg2rad(hospital_coordinates), metric="haversine"
         )
 
     def get_closest_hospitals_idx(
@@ -383,9 +367,7 @@ class Hospitals(Supergroup, MedicalFacilities):
         """
         k = min(k, len(list(self.hospital_trees.data)))
         distances, neighbours = self.hospital_trees.query(
-            np.deg2rad(coordinates.reshape(1, -1)),
-            k=k,
-            sort_results=True,
+            np.deg2rad(coordinates.reshape(1, -1)), k=k, sort_results=True
         )
         return neighbours[0]
 
@@ -409,24 +391,28 @@ class Hospitals(Supergroup, MedicalFacilities):
         """
         k = min(k, len(list(self.hospital_trees.data)))
         distances, neighbours = self.hospital_trees.query(
-            np.deg2rad(coordinates.reshape(1, -1)),
-            k=k,
-            sort_results=True,
+            np.deg2rad(coordinates.reshape(1, -1)), k=k, sort_results=True
         )
         return [self.members[index] for index in neighbours[0]]
 
 
-class ExternalHospital(ExternalGroup, AbstractHospital):
+class ExternalHospital(ExternalGroup, AbstractHospital, MedicalFacility):
     external = True
     __slots__ = "spec", "id", "domain_id", "region_name", "ward_ids", "icu_ids"
+
+    class SubgroupType(IntEnum):
+        workers = 0
+        patients = 1
+        icu_patients = 2
 
     def __init__(self, id, spec, domain_id, region_name):
         ExternalGroup.__init__(self, id=id, spec=spec, domain_id=domain_id)
         AbstractHospital.__init__(self)
         self.region_name = region_name
+
         self.ward = ExternalSubgroup(
-            group=self, subgroup_type=Hospital.SubgroupType.patients
+            group=self, subgroup_type=self.SubgroupType.patients
         )
         self.icu = ExternalSubgroup(
-            group=self, subgroup_type=Hospital.SubgroupType.icu_patients
+            group=self, subgroup_type=self.SubgroupType.icu_patients
         )

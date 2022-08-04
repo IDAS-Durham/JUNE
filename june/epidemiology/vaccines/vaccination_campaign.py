@@ -146,10 +146,7 @@ class VaccinationCampaign:
         else:
             return f"{group_by}", group_type
 
-    def is_target_group(
-        self,
-        person: "Person",
-    ) -> bool:
+    def is_target_group(self, person: "Person") -> bool:
         """is_target_group.
 
         Parameters
@@ -301,9 +298,7 @@ class VaccinationCampaigns:
                     **{k: v for k, v in params_dict.items() if k != "vaccine_type"}
                 )
             )
-        return cls(
-            vaccination_campaigns=vaccination_campaigns,
-        )
+        return cls(vaccination_campaigns=vaccination_campaigns)
 
     def __iter__(
         self,
@@ -343,9 +338,7 @@ class VaccinationCampaigns:
         active_campaigns = self.get_active(date=date)
         daily_probability, campaigns_to_chose_from = [], []
         for vc in active_campaigns:
-            if vc.should_be_vaccinated(
-                person=person,
-            ):
+            if vc.should_be_vaccinated(person=person):
                 days_passed = (date - vc.start_time).days
                 daily_probability.append(
                     vc.daily_vaccination_probability(days_passed=days_passed)
@@ -362,8 +355,7 @@ class VaccinationCampaigns:
                 campaign.vaccinate(person=person, date=date, record=record)
 
     def collect_all_dates_in_past(
-        self,
-        current_date: datetime.datetime,
+        self, current_date: datetime.datetime
     ) -> Set[datetime.datetime]:
         dates = set()
         for cv in self.vaccination_campaigns:
@@ -383,17 +375,11 @@ class VaccinationCampaigns:
     def apply_past_campaigns(
         self, people, date: datetime.datetime, record: Optional["Record"] = None
     ):
-        dates_to_vaccinate = self.collect_all_dates_in_past(
-            current_date=date,
-        )
+        dates_to_vaccinate = self.collect_all_dates_in_past(current_date=date)
         for date_to_vax in dates_to_vaccinate:
             logger.info(f"Vaccinating at date {date_to_vax.date()}")
             for person in people:
-                self.apply(
-                    person=person,
-                    date=date_to_vax,
-                    record=record,
-                )
+                self.apply(person=person, date=date_to_vax, record=record)
                 if person.vaccine_trajectory is not None:
                     person.vaccine_trajectory.update_vaccine_effect(
                         person=person, date=date_to_vax, record=record

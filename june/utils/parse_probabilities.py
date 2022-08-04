@@ -36,6 +36,23 @@ def parse_age_probabilities(age_dict: dict, fill_value=0):
     return probabilities_per_age
 
 
+def parse_opens(dict: dict, fill_value=0):
+    """
+    Parses the opening time dictionary into an array
+    """
+    daytype = list(dict.keys())
+    bins = {}
+    for day_i in daytype:
+        bins[day_i] = []
+        hour_range_split = dict[day_i].split("-")
+        if len(hour_range_split) == 1:
+            raise NotImplementedError("Please give open times as intervals")
+        else:
+            bins[day_i].append(int(hour_range_split[0]))
+            bins[day_i].append(int(hour_range_split[1]))
+    return bins
+
+
 def read_comorbidity_csv(filename: str):
     comorbidity_df = pd.read_csv(filename, index_col=0)
     column_names = [f"0-{comorbidity_df.columns[0]}"]

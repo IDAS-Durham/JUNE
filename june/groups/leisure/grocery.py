@@ -13,7 +13,7 @@ class Grocery(SocialVenue):
 
 
 class Groceries(SocialVenues):
-    social_venue_class = Grocery
+    venue_class = Grocery
     default_coordinates_filename = default_groceries_coordinates_filename
 
 

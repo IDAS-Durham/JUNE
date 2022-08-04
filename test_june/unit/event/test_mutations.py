@@ -40,16 +40,14 @@ class MockWorld:
 @pytest.fixture(name="c19_selector")
 def covid19_selector(health_index_generator):
     return InfectionSelector(
-        health_index_generator=health_index_generator,
-        infection_class=Covid19,
+        health_index_generator=health_index_generator, infection_class=Covid19
     )
 
 
 @pytest.fixture(name="c20_selector")
 def covid20_selector(health_index_generator):
     return InfectionSelector(
-        infection_class=B117,
-        health_index_generator=health_index_generator,
+        infection_class=B117, health_index_generator=health_index_generator
     )
 
 

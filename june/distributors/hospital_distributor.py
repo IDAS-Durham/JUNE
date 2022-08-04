@@ -61,11 +61,7 @@ class HospitalDistributor:
         self.healthcare_sector_label = healthcare_sector_label
 
     @classmethod
-    def from_file(
-        cls,
-        hospitals,
-        config_filename=default_config_filename,
-    ):
+    def from_file(cls, hospitals, config_filename=default_config_filename):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return HospitalDistributor(

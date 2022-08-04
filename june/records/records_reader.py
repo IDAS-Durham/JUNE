@@ -73,10 +73,7 @@ class RecordReader:
             suffixes=("_area", "_super_area"),
         )
         geography_df = geography_df.merge(
-            regions_df,
-            how="inner",
-            left_on="region_id",
-            right_index=True,
+            regions_df, how="inner", left_on="region_id", right_index=True
         )
         return geography_df.rename(
             columns={geography_df.index.name: "area_id", "name": "name_region"}

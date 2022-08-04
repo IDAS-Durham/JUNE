@@ -65,18 +65,10 @@ class Hospitalisation(MedicalCarePolicy):
     enough. When the person recovers, releases the person from the hospital.
     """
 
-    def __init__(
-        self,
-        start_time="1900-01-01",
-        end_time="2500-01-01",
-    ):
+    def __init__(self, start_time="1900-01-01", end_time="2500-01-01"):
         super().__init__(start_time, end_time)
 
-    def apply(
-        self,
-        person: Person,
-        record: Optional[Record] = None,
-    ):
+    def apply(self, person: Person, record: Optional[Record] = None):
         symptoms_tag = person.infection.tag
         if symptoms_tag in hospitalised_tags:
             if (
@@ -87,9 +79,7 @@ class Hospitalisation(MedicalCarePolicy):
             else:
                 patient_hospital = person.super_area.closest_hospitals[0]
             # note, we dont model hospital capacity here.
-            status = patient_hospital.allocate_patient(
-                person,
-            )
+            status = patient_hospital.allocate_patient(person)
             if record is not None:
                 if status in ["ward_admitted"]:
                     record.accumulate(

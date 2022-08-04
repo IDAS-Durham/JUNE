@@ -23,10 +23,7 @@ class StaticRecord:
             timestamp=False,
         )
         self.table = file.create_table(
-            file.root,
-            self.table_name,
-            table_description,
-            expectedrows=expectedrows,
+            file.root, self.table_name, table_description, expectedrows=expectedrows
         )
 
     def _record(self, hdf5_file, int_data, float_data, str_data):
@@ -75,20 +72,9 @@ class PeopleRecord(StaticRecord):
     def __init__(self):
         super().__init__(
             table_name="population",
-            int_names=[
-                "id",
-                "age",
-                "primary_activity_id",
-                "residence_id",
-                "area_id",
-            ],
+            int_names=["id", "age", "primary_activity_id", "residence_id", "area_id"],
             float_names=[],
-            str_names=[
-                "sex",
-                "ethnicity",
-                "primary_activity_type",
-                "residence_type",
-            ],
+            str_names=["sex", "ethnicity", "primary_activity_type", "residence_type"],
             expectedrows=1_000_000,
         )
 
@@ -132,13 +118,7 @@ class PeopleRecord(StaticRecord):
             ethnicity.append(
                 person.ethnicity if person.ethnicity is not None else "None"
             )
-        int_data = [
-            ids,
-            age,
-            primary_activity_id,
-            residence_id,
-            area_id,
-        ]
+        int_data = [ids, age, primary_activity_id, residence_id, area_id]
         float_data = []
         str_data = []
         str_data = [sex, ethnicity, primary_activity_type, residence_type]
@@ -191,10 +171,7 @@ class AreaRecord(StaticRecord):
     def __init__(self):
         super().__init__(
             table_name="areas",
-            int_names=[
-                "id",
-                "super_area_id",
-            ],
+            int_names=["id", "super_area_id"],
             float_names=["latitude", "longitude", "socioeconomic_index"],
             str_names=["name"],
             expectedrows=10_000,
@@ -227,10 +204,7 @@ class SuperAreaRecord(StaticRecord):
     def __init__(self):
         super().__init__(
             table_name="super_areas",
-            int_names=[
-                "id",
-                "region_id",
-            ],
+            int_names=["id", "region_id"],
             float_names=["latitude", "longitude"],
             str_names=["name"],
             expectedrows=5_000,
@@ -261,9 +235,7 @@ class RegionRecord(StaticRecord):
     def __init__(self):
         super().__init__(
             table_name="regions",
-            int_names=[
-                "id",
-            ],
+            int_names=["id"],
             float_names=[],
             str_names=["name"],
             expectedrows=50,

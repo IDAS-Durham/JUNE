@@ -1,11 +1,5 @@
 from june.geography import Geography
-from june.groups import (
-    Hospitals,
-    Schools,
-    Companies,
-    CareHomes,
-    Universities,
-)
+from june.groups import Hospitals, Schools, Companies, CareHomes, Universities
 from june.groups.leisure import (
     Pubs,
     Cinemas,
@@ -28,18 +22,9 @@ if "E00004734" not in london_areas:
 # add some people commuting from Cambridge
 london_areas = np.concatenate((london_areas, ["E02003719", "E02003720", "E02003721"]))
 #
-## add Bath as well to have a city with no stations
+# add Bath as well to have a city with no stations
 london_areas = np.concatenate(
-    (
-        london_areas,
-        [
-            "E02002988",
-            "E02002989",
-            "E02002990",
-            "E02002991",
-            "E02002992",
-        ],
-    )
+    (london_areas, ["E02002988", "E02002989", "E02002990", "E02002991", "E02002992"])
 )
 
 t1 = time.time()
@@ -57,10 +42,10 @@ geography.companies = Companies.for_geography(geography)
 geography.schools = Schools.for_geography(geography)
 geography.universities = Universities.for_geography(geography)
 geography.care_homes = CareHomes.for_geography(geography)
-## generate world
+# generate world
 world = generate_world_from_geography(geography, include_households=True)
-#
-## some leisure activities
+
+# some leisure activities
 world.pubs = Pubs.for_geography(geography)
 world.cinemas = Cinemas.for_geography(geography)
 world.groceries = Groceries.for_geography(geography)

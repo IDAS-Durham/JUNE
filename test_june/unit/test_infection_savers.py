@@ -180,9 +180,7 @@ class TestInfectionSavers:
             assert (
                 infection.__class__.__name__ == infection_recovered.__class__.__name__
             )
-            for attribute_name in [
-                "start_time",
-            ]:
+            for attribute_name in ["start_time"]:
                 assert getattr(infection, attribute_name) == getattr(
                     infection_recovered, attribute_name
                 )
