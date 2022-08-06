@@ -17,6 +17,10 @@ def random_choice_numba(arr, prob):
     """
     return arr[np.searchsorted(np.cumsum(prob), random(), side="right")]
 
+default_daytypes = {
+            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"],
+}
 
 class SocialVenueDistributor:
     """
@@ -27,7 +31,7 @@ class SocialVenueDistributor:
         self,
         social_venues: SocialVenues,
         times_per_week: Dict[Dict, float],
-        daytypes: Dict[str, str],
+        daytypes: Dict[str, str] = default_daytypes,
         hours_per_day: Dict[Dict, float] = None,
         drags_household_probability=0.0,
         neighbours_to_consider=5,
@@ -97,7 +101,7 @@ class SocialVenueDistributor:
 
     @classmethod
     def from_config(
-        cls, social_venues: SocialVenues, daytypes: dict, config_filename: str = None, config_override: Dict[str, int] = None
+        cls, social_venues: SocialVenues, daytypes: dict = default_daytypes, config_filename: str = None, config_override: Dict[str, int] = None
     ):
         '''
         Parameters

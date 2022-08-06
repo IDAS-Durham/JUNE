@@ -8,6 +8,10 @@ from june.utils import random_choice_numba
 
 default_config_filename = configs_path / "defaults/groups/leisure/visits.yaml"
 
+default_daytypes = {
+            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "weekend": ["Saturday", "Sunday"],
+}
 
 class ResidenceVisitsDistributor(SocialVenueDistributor):
     """
@@ -21,8 +25,8 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         self,
         residence_type_probabilities,
         times_per_week,
-        daytypes,
         hours_per_day,
+        daytypes=default_daytypes,
         drags_household_probability=0,
     ):
         # it is necessary to make them arrays for performance
