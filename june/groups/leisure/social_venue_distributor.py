@@ -17,10 +17,12 @@ def random_choice_numba(arr, prob):
     """
     return arr[np.searchsorted(np.cumsum(prob), random(), side="right")]
 
+
 default_daytypes = {
-            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-            "weekend": ["Saturday", "Sunday"],
+    "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "weekend": ["Saturday", "Sunday"],
 }
+
 
 class SocialVenueDistributor:
     """
@@ -101,14 +103,18 @@ class SocialVenueDistributor:
 
     @classmethod
     def from_config(
-        cls, social_venues: SocialVenues, daytypes: dict = default_daytypes, config_filename: str = None, config_override: Dict[str, int] = None
+        cls,
+        social_venues: SocialVenues,
+        daytypes: dict = default_daytypes,
+        config_filename: str = None,
+        config_override: Dict[str, int] = None,
     ):
-        '''
+        """
         Parameters
         ----------
         config_override
             a dict of parameters overrides their values in "config_filename"
-        '''
+        """
         if config_filename is None:
             config_filename = cls.default_config_filename
         with open(config_filename) as f:

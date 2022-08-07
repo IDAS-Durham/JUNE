@@ -39,7 +39,9 @@ class ExactNumInfectionSeed(InfectionSeed):
             account_secondary_infections=False,
         )
         # use age bin in exact number mode. No need to expanding individual ages.
-        self.daily_cases_per_capita_per_age_per_region = daily_cases_per_capita_per_age_per_region * seed_strength
+        self.daily_cases_per_capita_per_age_per_region = (
+            daily_cases_per_capita_per_age_per_region * seed_strength
+        )
 
     def infect_super_area(
         self, super_area, cases_per_capita_per_age, time, record=None
@@ -49,18 +51,25 @@ class ExactNumInfectionSeed(InfectionSeed):
 
         age_ranges = []
         for age in cases_per_capita_per_age.index:
-            agemin, agemax = age.split('-')
+            agemin, agemax = age.split("-")
             age_ranges.append([int(agemin), int(agemax)])
 
-        N_seeded = np.zeros(len(age_ranges), dtype='int')
+        N_seeded = np.zeros(len(age_ranges), dtype="int")
         random.seed()
         for person in random.sample(list(people), len(people)):
             in_seed_age_range = False
             for j in range(len(age_ranges)):
-                if person.age>=age_ranges[j][0] and person.age<age_ranges[j][1] and N_seeded[j]<cases_per_capita_per_age[j]:
+                if (
+                    person.age >= age_ranges[j][0]
+                    and person.age < age_ranges[j][1]
+                    and N_seeded[j] < cases_per_capita_per_age[j]
+                ):
                     in_seed_age_range = True
                     break
-            if in_seed_age_range and person.immunity.get_susceptibility(infection_id) > 0:
+            if (
+                in_seed_age_range
+                and person.immunity.get_susceptibility(infection_id) > 0
+            ):
                 self.infect_person(person=person, time=time, record=record)
                 self.current_seeded_cases[person.region.name] += 1
                 if time < 0:
@@ -69,7 +78,7 @@ class ExactNumInfectionSeed(InfectionSeed):
                     )
 
                 N_seeded[j] += 1
-                if np.all(N_seeded==np.array(cases_per_capita_per_age)):
+                if np.all(N_seeded == np.array(cases_per_capita_per_age)):
                     break
 
     def infect_super_areas(
@@ -97,12 +106,12 @@ class ExactNumInfectionSeed(InfectionSeed):
                 record=record,
             )
         else:
-            col_name_split = cases_per_capita_per_age_per_region.columns[0].split('-')
-            if len(col_name_split)==2:
+            col_name_split = cases_per_capita_per_age_per_region.columns[0].split("-")
+            if len(col_name_split) == 2:
                 # region
                 iter_type = self.world.regions
             else:
-                if len(col_name_split[-1])==1:
+                if len(col_name_split[-1]) == 1:
                     # superarea
                     iter_type = self.world.super_areas
                 else:
@@ -135,9 +144,12 @@ class ExactNumInfectionSeed(InfectionSeed):
                     record=record,
                 )
                 num_locations_to_seed -= 1
-            
-            # check if all columns are seeded    
-            assert num_locations_to_seed<1, "something wrong in location (column) name !!!"
+
+            # check if all columns are seeded
+            assert (
+                num_locations_to_seed < 1
+            ), "something wrong in location (column) name !!!"
+
 
 class ExactNumClusteredInfectionSeed(ExactNumInfectionSeed):
     def __init__(
@@ -163,12 +175,12 @@ class ExactNumClusteredInfectionSeed(ExactNumInfectionSeed):
             return 0
         age_ranges = []
         for age in age_distribution.index:
-            agemin, agemax = age.split('-')
+            agemin, agemax = age.split("-")
             age_ranges.append([int(agemin), int(agemax)])
         ret = 0
         for resident in household.residents:
-            for ii,age_bin in enumerate(age_ranges):
-                if resident.age>=age_bin[0] and resident.age<age_bin[1]:
+            for ii, age_bin in enumerate(age_ranges):
+                if resident.age >= age_bin[0] and resident.age < age_bin[1]:
                     ret += age_distribution[ii]
                     break
         return ret / np.sqrt(len(household.residents))
@@ -177,27 +189,27 @@ class ExactNumClusteredInfectionSeed(ExactNumInfectionSeed):
         self, super_area, cases_per_capita_per_age, time, record=None
     ):
         infection_id = self.infection_selector.infection_class.infection_id()
-        
+
         total_to_infect = cases_per_capita_per_age.sum()
         households = []
         area_type = type(super_area).__name__
-        if area_type =='CampWorld':
+        if area_type == "CampWorld":
             for r in super_area.regions:
                 for sa in r.super_areas:
                     for area in sa.areas:
                         households += area.households
-        elif area_type =='Region':
+        elif area_type == "Region":
             for sa in super_area.super_areas:
                 for area in sa.areas:
                     households += area.households
-        elif area_type =='SuperArea':
+        elif area_type == "SuperArea":
             for area in super_area.areas:
                 households += area.households
-        elif area_type =='CampArea':
+        elif area_type == "CampArea":
             households += super_area.households
         else:
             raise Exception("invalid seeding location type: " + area_type)
-        
+
         age_distribution = cases_per_capita_per_age / cases_per_capita_per_age.sum()
         scores = [self.get_household_score(h, age_distribution) for h in households]
 
