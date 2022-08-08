@@ -208,7 +208,7 @@ class ExactNumClusteredInfectionSeed(ExactNumInfectionSeed):
         elif area_type == "CampArea":
             households += super_area.households
         else:
-            raise Exception("invalid seeding location type: " + area_type)
+            raise TypeError("invalid seeding location type: " + area_type)
 
         age_distribution = cases_per_capita_per_age / cases_per_capita_per_age.sum()
         scores = [self.get_household_score(h, age_distribution) for h in households]
