@@ -6,8 +6,6 @@ import yaml
 import pandas as pd
 import warnings
 
-warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
-
 from pathlib import Path
 from june import paths
 
@@ -15,6 +13,8 @@ from june.world import World
 import geopy.distance
 
 from june.groups.group import make_subgroups
+
+warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
 AgeAdult = make_subgroups.Subgroup_Params.AgeYoungAdult
 ACArray = np.array([0, AgeAdult, 100])
@@ -50,7 +50,7 @@ class Tracker:
     contact_sexes:
         list of sexes for which to create contact matix. "male", "female" and or "unisex" (for both together)
     group_types:
-        list of world.locations for tracker to loop over 
+        list of world.locations for tracker to loop over
     record_path:
         path for results directory
     load_interactions_path:
@@ -130,9 +130,9 @@ class Tracker:
 
         self.travel_distance = {}
 
-    #####################################################################################################################################################################
-    ################################### Useful functions ##################################
-    #####################################################################################################################################################################
+    #####################################################
+    # Useful functions ##################################
+    #####################################################
 
     @staticmethod
     def _random_round(x):
@@ -143,7 +143,7 @@ class Tracker:
         ----------
             x:
                 A float
-            
+
         Returns
         -------
             int
@@ -166,8 +166,8 @@ class Tracker:
             list_B:
                 second list of objects
             permute: defualt = True
-                bool, shuffle the returned list 
-            
+                bool, shuffle the returned list
+
         Returns
         -------
             list of shared elements
@@ -190,7 +190,7 @@ class Tracker:
             list_B:
                 second list of objects
 
-            
+
         Returns
         -------
             list of all unique elements
@@ -201,13 +201,13 @@ class Tracker:
 
     def pluralise_r(self, loc):
         """
-        Some naming conventions of the venues are plurals or not. 
+        Some naming conventions of the venues are plurals or not.
         Here is a function for consistent conversion to de-pluralise
 
         Parameters
         ----------
             loc:
-                string            
+                string
         Returns
         -------
             string, singular
@@ -224,13 +224,13 @@ class Tracker:
 
     def pluralise(self, loc):
         """
-        Some naming conventions of the venues are plurals or not. 
+        Some naming conventions of the venues are plurals or not.
         Here is a function for consistent conversion to pluralise
 
         Parameters
         ----------
             loc:
-                string            
+                string
         Returns
         -------
             string, pluralised
@@ -245,9 +245,9 @@ class Tracker:
             loc = loc + "s"
         return loc
 
-    #####################################################################################################################################################################
-    ################################### CM Metric functions ##################################
-    #####################################################################################################################################################################
+    ########################################################
+    # CM Metric functions ##################################
+    ########################################################
 
     def Canberra_distance(self, x, y):
         """
@@ -329,7 +329,7 @@ class Tracker:
         Returns
         -------
             I_sq:
-                float, The expectation value for assortativeness I^2 
+                float, The expectation value for assortativeness I^2
         """
         pop_width = np.diff(pop_bins)
         ages = (pop_bins[1:] + pop_bins[:-1]) / 2
@@ -381,7 +381,7 @@ class Tracker:
                 dict, dictionary of all matrices of type. eg self.CM_T_err
             sex:
                 string, sex matrix to use
-            
+
         Returns
         -------
             jsonfile:
@@ -410,12 +410,12 @@ class Tracker:
         Q = self.Calc_QIndex(cm)
         NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width)
         I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-        I_sq_s = I_sq / var ** 2
+        I_sq_s = I_sq / var**2
         return {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"}
 
-    #####################################################################################################################################################################
-    ################################### Useful CM functions ##################################
-    #####################################################################################################################################################################
+    ########################################################
+    # Useful CM functions ##################################
+    ########################################################
 
     def Probabilistic_Contacts(self, mean, mean_err, Probabilistic=True):
         """
@@ -429,7 +429,7 @@ class Tracker:
                 float, the 1 sigma error on the mean
             Probabilistic:
                 bool, True to allow the err to value the possion mean. False otherwise
-            
+
         Returns
         -------
             C_i:
@@ -456,8 +456,8 @@ class Tracker:
             bins:
                 np.array, bin edges used for rebinning
             method:
-                np.method, The method of contraction. np.sum, np.mean etc 
-            
+                np.method, The method of contraction. np.sum, np.mean etc
+
         Returns
         -------
             CM:
@@ -481,12 +481,12 @@ class Tracker:
 
         Parameters
         ----------
-            Name: 
+            Name:
                 string, Name of matrix rebinning
 
             bins:
                 array, bin edges used for rebinning
-            
+
         Returns
         -------
             None
@@ -541,8 +541,8 @@ class Tracker:
         Parameters
         ----------
             location:
-                string, location 
-            
+                string, location
+
         Returns
         -------
             None
@@ -559,9 +559,9 @@ class Tracker:
             proportion_pysical = 0.12
         return characteristic_time, proportion_pysical
 
-    #####################################################################################################################################################################
-    ################################### Initalize ##################################
-    #####################################################################################################################################################################
+    ##############################################
+    # Initalize ##################################
+    ##############################################
 
     def initialise_group_names(self):
         """
@@ -604,7 +604,7 @@ class Tracker:
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             None
@@ -676,7 +676,7 @@ class Tracker:
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             None
@@ -704,7 +704,7 @@ class Tracker:
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             None
@@ -774,7 +774,7 @@ class Tracker:
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             None
@@ -815,7 +815,7 @@ class Tracker:
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             None
@@ -835,7 +835,7 @@ class Tracker:
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             None
@@ -861,7 +861,7 @@ class Tracker:
         ----------
             interaction_path:
                 string, location of the yaml file for interactions
-            
+
         Returns
         -------
             None
@@ -880,20 +880,20 @@ class Tracker:
                 self.IM[loc]["bins"] = Bins
         return 1
 
-    #####################################################################################################################################################################
-    ################################### Post Process ##################################
-    #####################################################################################################################################################################
+    #################################################
+    # Post Process ##################################
+    #################################################
 
     def convert_dict_to_df(self):
         """
         Transform contact_counts into pandas dataframe for easy sorting
         Sets;
-            self.contacts_df 
+            self.contacts_df
 
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             None
@@ -918,7 +918,7 @@ class Tracker:
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             None
@@ -962,7 +962,7 @@ class Tracker:
 
         def Contract(bins_idx, locs):
             """
-            Take full syoa year by year binning of full unnormalised contact matrix and reduce to matrix with age bins bins_idx. 
+            Take full syoa year by year binning of full unnormalised contact matrix and reduce to matrix with age bins bins_idx.
 
             Parameters
             ----------
@@ -970,7 +970,7 @@ class Tracker:
                     array, bin edges indices from syoa binning
                 locs:
                     string, location considered
-                
+
             Returns
             -------
                 dict, new matrices for location by sex
@@ -1009,7 +1009,7 @@ class Tracker:
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             None
@@ -1037,7 +1037,7 @@ class Tracker:
     def normalise_1D_CM(self):
         """
         For 1D tracking
-        Normalise the contact matrices based on likelyhood to interact with each demographic. 
+        Normalise the contact matrices based on likelyhood to interact with each demographic.
         Sets and rescales;
             self.CM_T
             self.CM_T_err
@@ -1052,7 +1052,7 @@ class Tracker:
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             None
@@ -1156,7 +1156,7 @@ class Tracker:
     def normalise_All_CM(self):
         """
         For All contacts All tracking
-        Normalise the contact matrices based on likelyhood to interact with each demographic. 
+        Normalise the contact matrices based on likelyhood to interact with each demographic.
         Sets and rescales;
             self.CM_AC
             self.CM_AC_err
@@ -1171,7 +1171,7 @@ class Tracker:
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             None
@@ -1577,7 +1577,7 @@ class Tracker:
         ----------
             save:
                 bool, Save out contact matrices
-            
+
         Returns
         -------
             None
@@ -1615,9 +1615,9 @@ class Tracker:
             self.tracker_tofile(self.record_path / "Tracker" / folder_name)
         return 1
 
-    #####################################################################################################################################################################
-    ################################### Run tracker ##################################
-    #####################################################################################################################################################################
+    #################################################
+    # Run tracker ##################################
+    #################################################
 
     def get_active_subgroup(self, person):
         """
@@ -1629,7 +1629,7 @@ class Tracker:
         ----------
             Person:
                 The JUNE person
-            
+
         Returns
         -------
             active_subgroups:
@@ -1664,14 +1664,14 @@ class Tracker:
                 index of subgroup for the interaction matrix
             group:
                 group. Location and group of people at that location
-            
+
         Returns
         -------
             contacts_per_subgroup:
-                Mean number contacts in the time period 
-            
+                Mean number contacts in the time period
+
             contacts_per_subgroup_error:
-                Error on mean number contacts in the time period 
+                Error on mean number contacts in the time period
         """
 
         spec = group.spec
@@ -1704,7 +1704,7 @@ class Tracker:
 
     def simulate_1d_contacts(self, group):
         """
-        Construct contact matrices. 
+        Construct contact matrices.
         For group at a location we loop over all people and sample from the selection of availible contacts to build more grainual contact matrices.
         Sets;
             self.CM_T
@@ -1714,7 +1714,7 @@ class Tracker:
         ----------
             group:
                 The group of interest to build contacts
-            
+
         Returns
         -------
             None
@@ -1754,9 +1754,10 @@ class Tracker:
                     person_subgroup_idx = 1
 
             # Get contacts person expects
-            contacts_per_subgroup, contacts_per_subgroup_error = self.get_contacts_per_subgroup(
-                person_subgroup_idx, group
-            )
+            (
+                contacts_per_subgroup,
+                contacts_per_subgroup_error,
+            ) = self.get_contacts_per_subgroup(person_subgroup_idx, group)
 
             total_contacts = 0
 
@@ -1906,7 +1907,7 @@ class Tracker:
         ----------
             group:
                 The group of interest to build contacts
-            
+
         Returns
         -------
             None
@@ -2072,7 +2073,7 @@ class Tracker:
         ----------
             group:
                 The group of interest to build contacts
-            
+
         Returns
         -------
             None
@@ -2169,7 +2170,7 @@ class Tracker:
                 timestamp of the time step
             counter:
                 venue number in locations list
-            
+
         Returns
         -------
             None
@@ -2270,7 +2271,7 @@ class Tracker:
         ----------
             day:
                 str, day of the week for timestep
-            
+
         Returns
         -------
             None
@@ -2296,7 +2297,7 @@ class Tracker:
                         "unisex"
                     ]:
                         person = self.world.people.get_from_id(ID)
-                        if person.residence == None:
+                        if person.residence is None:
                             continue
                         household_coords = person.residence.group.area.coordinates
                         self.travel_distance[day][loc].append(
@@ -2305,9 +2306,9 @@ class Tracker:
                     counter += 1
         return 1
 
-    #####################################################################################################################################################################
-    ################################### Tracker running ##################################
-    #####################################################################################################################################################################
+    ####################################################
+    # Tracker running ##################################
+    ####################################################
 
     def trackertimestep(self, all_super_groups, timer):
         """
@@ -2319,7 +2320,7 @@ class Tracker:
                 List of all groups to track contacts over
             timer:
                 timer object from simulator class
-            
+
         Returns
         -------
             None
@@ -2389,9 +2390,9 @@ class Tracker:
                         counter += 1
         return 1
 
-    #####################################################################################################################################################################
-    ################################### Saving tracker results ##################################
-    #####################################################################################################################################################################
+    ###########################################################
+    # Saving tracker results ##################################
+    ###########################################################
 
     def tracker_tofile(self, tracker_path):
         """
@@ -2403,7 +2404,7 @@ class Tracker:
         ----------
             tracker_path:
                 str, path to save tracker results
-            
+
         Returns
         -------
             None
@@ -2436,7 +2437,7 @@ class Tracker:
                 jsonfile=self.tracker_IMJSON(),
             )
 
-        ################################### Saving 1D Contacts tracker results ##################################
+        # Saving 1D Contacts tracker results ##################################
         if "1D" in self.Tracker_Contact_Type:
             Tracker_Type = "1D"
 
@@ -2453,7 +2454,7 @@ class Tracker:
                 jsonfile=jsonfile,
             )
 
-            if MPI == False:
+            if not MPI:
                 jsonfile = {}
                 for binType in list(self.NCM.keys()):
                     jsonfile[binType] = self.tracker_CMJSON(
@@ -2515,7 +2516,7 @@ class Tracker:
                     jsonfile=jsonfile,
                 )
 
-        ################################### Saving All Contacts tracker results ##################################
+        # Saving All Contacts tracker results ##################################
         if "All" in self.Tracker_Contact_Type:
             Tracker_Type = "All"
 
@@ -2532,7 +2533,7 @@ class Tracker:
                 jsonfile=jsonfile,
             )
 
-            if MPI == False:
+            if not MPI:
                 jsonfile = {}
                 for binType in list(self.NCM_AC.keys()):
                     jsonfile[binType] = self.tracker_CMJSON(
@@ -2594,7 +2595,7 @@ class Tracker:
                     jsonfile=jsonfile,
                 )
 
-        ################################### Saving Venue tracker results ##################################
+        # Saving Venue tracker results ##################################
         VD_dir = self.record_path / "Tracker" / folder_name / "Venue_Demographics"
         VD_dir.mkdir(exist_ok=True, parents=True)
         for bin_types in self.age_profiles.keys():
@@ -2726,7 +2727,7 @@ class Tracker:
     def Save_CM_JSON(self, dir, folder, filename, jsonfile):
         """
         Save yaml file for any given json dict.
-        Note saves dummy yaml in junk folder then resaves removing quotation marks 
+        Note saves dummy yaml in junk folder then resaves removing quotation marks
 
         Parameters
         ----------
@@ -2737,8 +2738,8 @@ class Tracker:
             filename:
                 string, the filename
             jsonfile:
-                dict, save to be saved out 
-            
+                dict, save to be saved out
+
         Returns
         -------
             None
@@ -2769,7 +2770,7 @@ class Tracker:
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             jsonfile:
@@ -2807,7 +2808,7 @@ class Tracker:
         Parameters
         ----------
             None
-            
+
         Returns
         -------
             jsonfile:
@@ -2841,7 +2842,7 @@ class Tracker:
                 dict, dictionary of all matrices of type. eg self.CM_T
             CM_err:
                 dict, dictionary of all matrices of type. eg self.CM_T_err
-            
+
         Returns
         -------
             jsonfile:
@@ -2960,7 +2961,7 @@ class Tracker:
                 np.array matrix
             dtypeString:
                 str, 'int' or 'float'
-            
+
         Returns
         -------
             string:
@@ -3004,9 +3005,9 @@ class Tracker:
         string += "]"
         return string
 
-    #####################################################################################################################################################################
-    ################################### Print out tracker results ##################################
-    #####################################################################################################################################################################
+    ##############################################################
+    # Print out tracker results ##################################
+    ##############################################################
 
     def PolicyText(
         self, Type, contacts, contacts_err, proportional_physical, characteristic_time
@@ -3050,8 +3051,8 @@ class Tracker:
                 Sex contact matrix
             binType:
                 Name of bin type syoa, AC etc
-           
-            
+
+
         Returns
         -------
             None

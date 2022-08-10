@@ -13,19 +13,18 @@ import matplotlib.colors as colors
 from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
 import datetime
+import logging
 
 from june.tracker.tracker import Tracker
 
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
-import logging
+from june.paths import data_path, configs_path
 
 logger = logging.getLogger("tracker plotter")
 mpi_logger = logging.getLogger("mpi")
 
 if mpi_rank > 0:
     logger.propagate = False
-
-from june.paths import data_path, configs_path
 
 default_BBC_Pandemic_loc = data_path / "BBC_Pandemic"
 
@@ -43,7 +42,7 @@ try:
     plt.style.use(["science", "no-latex", "bright"])
     if mpi_rank == 0:
         print("Using 'science' matplotlib style")
-except:
+except Exception:
     plt.style.use("default")
     if mpi_rank == 0:
         print("Using default matplotlib style")
@@ -53,9 +52,9 @@ cmap_A = "RdYlBu_r"
 cmap_B = "seismic"
 
 
-#####################################################################################################################################################################
-################################### Plotting functions ##################################
-#####################################################################################################################################################################
+#######################################################
+# Plotting functions ##################################
+#######################################################
 
 
 class PlotClass:
@@ -313,9 +312,9 @@ class PlotClass:
 
         logger.info(f"Rank {mpi_rank} -- Data loaded")
 
-    #####################################################################################################################################################################
-    ################################### Useful functions ##################################
-    #####################################################################################################################################################################
+    #####################################################
+    # Useful functions ##################################
+    #####################################################
 
     def Calculate_CM_Metrics(self, bin_type, contact_type, CM, CM_err, sex="unisex"):
         return Tracker.Calculate_CM_Metrics(
@@ -337,9 +336,9 @@ class PlotClass:
     def Canberra_distance(self, x, y):
         return Tracker.Canberra_distance(self, x, y)
 
-    #####################################################################################################################################################################
-    ################################### General Plotting ##################################
-    #####################################################################################################################################################################
+    #####################################################
+    # General Plotting ##################################
+    #####################################################
 
     def Get_SAMECMAP_Norm(self, dim, override=None):
         """
@@ -417,7 +416,7 @@ class PlotClass:
             thresh:
                 threshhold value for CM text change colour
 
-            
+
         Returns
         -------
             ax
@@ -483,7 +482,7 @@ class PlotClass:
             thresh:
                 threshhold value for CM text change colour
             thumb:
-                bool, make thumbnail style plots. e.g. no axis labels 
+                bool, make thumbnail style plots. e.g. no axis labels
             **plt_kwargs:
                 plot keyword arguements
 
@@ -516,7 +515,7 @@ class PlotClass:
         # Loop over data dimensions and create text annotations.
         if cm.shape[0] * cm.shape[1] < 26:
             self.AnnotateCM(cm, cm_err, ax, thresh=thresh)
-        if thumb == False:
+        if not thumb:
             ax.set_xlabel("age group")
             ax.set_ylabel("contact age group")
         else:
@@ -582,7 +581,7 @@ class PlotClass:
                 np.array contact matrix errors
             labels:
                 list of strings for bin labels or none type
-            
+
         Returns
         -------
             Truncated values of;
@@ -648,7 +647,7 @@ class PlotClass:
                 np.array contact matrix errors
             labels:
                 list of strings for bin labels or none type
-            
+
         Returns
         -------
             Truncated values of;
@@ -673,13 +672,13 @@ class PlotClass:
             labels = labels[:index]
         return cm, cm_err, labels
 
-    #####################################################################################################################################################################
-    ################################### Grab CM  ##################################
-    #####################################################################################################################################################################
+    #############################################
+    # Grab CM  ##################################
+    #############################################
 
     def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="NCM"):
         """
-        Get cm out of dictionary. 
+        Get cm out of dictionary.
 
         Parameters
         ----------
@@ -691,7 +690,7 @@ class PlotClass:
                 Sex contact matrix
             which:
                 str, which matrix type to collect "NCM", "NCM_R", "CM_T"
-            
+
         Returns
         -------
             cm:
@@ -723,7 +722,7 @@ class PlotClass:
 
     def IMPlots_GetIM(self, contact_type):
         """
-        Get IM out of dictionary. 
+        Get IM out of dictionary.
 
         Parameters
         ----------
@@ -744,9 +743,9 @@ class PlotClass:
             im_err = np.array(self.IM[contact_type]["contacts_err"], dtype=float)
         return im, im_err
 
-    #####################################################################################################################################################################
-    ################################### Plotting ##################################
-    #####################################################################################################################################################################
+    #############################################
+    # Plotting ##################################
+    #############################################
 
     def plot_contact_matrix_INOUT(
         self, bin_type, contact_type, sex="unisex", which="NCM_R", plot_BBC_Sheet=False
@@ -764,7 +763,7 @@ class PlotClass:
                 Sex contact matrix
             which:
                 str, which matrix type to collect "NCM", "NCM_R", "CM_T"
-            
+
         Returns
         -------
             (ax1,ax2):
@@ -813,14 +812,14 @@ class PlotClass:
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
-        if self.SameCMAP == False:
+        if not self.SameCMAP:
             norm1 = colors.Normalize(vmin=0, vmax=IM_Max)
             norm2 = colors.Normalize(vmin=0, vmax=cm_Max)
         else:
             norm1 = self.Get_SAMECMAP_Norm(IM.shape[0])
             norm2 = self.Get_SAMECMAP_Norm(cm.shape[0])
 
-        if plot_BBC_Sheet == False:
+        if not plot_BBC_Sheet:
             plt.rcParams["figure.figsize"] = (15, 5)
             f, (ax1, ax2) = plt.subplots(1, 2)
             f.patch.set_facecolor("white")
@@ -860,7 +859,7 @@ class PlotClass:
 
             cm_Max = max(bbc_Max, cm_Max)
 
-            if self.SameCMAP == False:
+            if not self.SameCMAP:
                 norm2 = colors.Normalize(vmin=0, vmax=cm_Max)
 
             plt.rcParams["figure.figsize"] = (15, 5)
@@ -901,13 +900,13 @@ class PlotClass:
             Q = self.Calc_QIndex(cm)
             NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width)
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-            I_sq_s = I_sq / var ** 2
+            I_sq_s = I_sq / var**2
             print("JUNE", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
 
             Q = self.Calc_QIndex(bbc_cm)
             NPCDM = self.Calc_NPCDM(bbc_cm, pop_density, pop_width)
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-            I_sq_s = I_sq / var ** 2
+            I_sq_s = I_sq / var**2
             print("BBC", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
             print({"Camberra": self.Canberra_distance(cm, bbc_cm)[0]})
             print("")
@@ -933,7 +932,7 @@ class PlotClass:
         ----------
             contact_type:
                 Location of contacts
-            
+
         Returns
         -------
             ax1:
@@ -993,7 +992,7 @@ class PlotClass:
         f, (ax1, ax2, ax3) = plt.subplots(1, 3)
         f.patch.set_facecolor("white")
 
-        if self.SameCMAP == False:
+        if not self.SameCMAP:
             norm1 = colors.Normalize(vmin=vMin, vmax=vMax)
             norm2 = colors.Normalize(vmin=vMin, vmax=vMax)
         else:
@@ -1052,11 +1051,11 @@ class PlotClass:
 
         Parameters
         ----------
-            log: 
+            log:
 
             contact_type:
                 Location of contacts
-            
+
         Returns
         -------
             ax1:
@@ -1090,14 +1089,14 @@ class PlotClass:
         f, ax1 = plt.subplots(1, 1)
         f.patch.set_facecolor("white")
 
-        if self.SameCMAP == False:
+        if not self.SameCMAP:
             normlin = colors.Normalize(vmin=0, vmax=IM_Max)
             normlog = colors.LogNorm(vmin=IM_Max, vmax=IM_Max)
         else:
             normlin = self.Get_SAMECMAP_Norm(IM.shape[0])
             normlog = self.Get_SAMECMAP_Norm(IM.shape[0])
 
-        if log == False:
+        if not log:
             im1 = self.PlotCM(
                 IM + 1e-16,
                 IM_err,
@@ -1138,7 +1137,7 @@ class PlotClass:
                 Sex contact matrix
             which:
                 str, which matrix type to collect "NCM", "NCM_R", "CM_T"
-            
+
         Returns
         -------
             (ax1,ax2):
@@ -1167,7 +1166,7 @@ class PlotClass:
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
-        if self.SameCMAP == False or which == "CM_T":
+        if not self.SameCMAP or which == "CM_T":
             normlin = colors.Normalize(vmin=0, vmax=cm_Max)
             normlog = colors.LogNorm(vmin=cm_Min, vmax=cm_Max)
         else:
@@ -1212,7 +1211,7 @@ class PlotClass:
                 Sex contact matrix
             which:
                 str, which matrix type to collect "NCM", "NCM_R", "CM_T"
-            
+
         Returns
         -------
             (ax1,ax2):
@@ -1246,14 +1245,14 @@ class PlotClass:
         f, ax1 = plt.subplots(1, 1)
         f.patch.set_facecolor("white")
 
-        if self.SameCMAP == False or which == "CM_T":
+        if not self.SameCMAP or which == "CM_T":
             normlin = colors.Normalize(vmin=0, vmax=cm_Max)
             normlog = colors.LogNorm(vmin=cm_Min, vmax=cm_Max)
         else:
             normlin = self.Get_SAMECMAP_Norm(cm.shape[0], override="Lin")
             normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="Log")
 
-        if log == False:
+        if not log:
             im1 = self.PlotCM(
                 cm + 1e-16,
                 cm_err,
@@ -1292,7 +1291,7 @@ class PlotClass:
                 Location of contacts
             which:
                 str, which matrix type to collect "NCM", "NCM_R", "CM_T"
-            
+
         Returns
         -------
             (ax1,ax2):
@@ -1313,7 +1312,7 @@ class PlotClass:
         cm_Min = -1e-1
         cm_Max = 1e-1
 
-        if self.SameCMAP == False:
+        if not self.SameCMAP:
             normlin = colors.Normalize(vmin=cm_Max, vmax=cm_Max)
             normlog = colors.SymLogNorm(linthresh=1, vmin=cm_Min, vmax=cm_Max)
         else:
@@ -1348,7 +1347,7 @@ class PlotClass:
                 Name of bin type syoa, AC etc
             contact_types:
                 List of the contact_type locations (or none to grab all of them)
-            
+
         Returns
         -------
             ax:
@@ -1836,7 +1835,7 @@ class PlotClass:
             vmax_P = ws_P[np.isfinite(ws_P)].max() * 2
 
         vmax = np.nanmax([vmax_G, vmax_P])
-        if np.isnan(vmax) or vmax == None:
+        if np.isnan(vmax) or vmax is None:
             vmax = 1e-1
 
         vmin = 10 ** (-1 * np.log10(vmax))
@@ -1921,9 +1920,9 @@ class PlotClass:
         ax.set_xlim([0, maxkm])
         return ax
 
-    #####################################################################################################################################################################
-    ################################### Master plotter ##################################
-    #####################################################################################################################################################################
+    ###################################################
+    # Master plotter ##################################
+    ###################################################
 
     def make_plots(
         self,
@@ -2003,7 +2002,7 @@ class PlotClass:
 
                 plot_BBC_Sheet = False
                 if (
-                    plot_BBC == True
+                    plot_BBC
                     and rct in ["household", "school", "company"]
                     and rbt == "Paper"
                 ):

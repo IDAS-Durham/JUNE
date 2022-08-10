@@ -237,7 +237,7 @@ args.save_path = Path(args.save_path)
 if mpi_rank == 0:
     counter = 1
     OG_save_path = args.save_path
-    while args.save_path.is_dir() == True:
+    while args.save_path.is_dir() is True:
         args.save_path = Path(str(OG_save_path) + "_%s" % counter)
         counter += 1
     args.save_path.mkdir(parents=True, exist_ok=False)

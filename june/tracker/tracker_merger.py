@@ -15,9 +15,9 @@ mpi_logger = logging.getLogger("mpi")
 if mpi_rank > 0:
     logger.propagate = False
 
-################################################################################################################################################################
-################################### Plotting functions ##################################
-#####################################################################################################################################################################
+#######################################################
+# Plotting functions ##################################
+#######################################################
 
 
 class MergerClass:
@@ -34,7 +34,9 @@ class MergerClass:
     """
 
     class Timer:
-        def __init__(self,):
+        def __init__(
+            self,
+        ):
             self.total_days = 1
 
     def __init__(self, record_path=Path("")):
@@ -47,7 +49,7 @@ class MergerClass:
         else:
             self.MPI = False
 
-        if self.MPI == False:
+        if not self.MPI:
             pass
         else:
             self.raw_data_path = self.record_path / "Tracker" / "raw_data_output"
@@ -133,9 +135,9 @@ class MergerClass:
             f"Rank {mpi_rank} -- Initial params loaded -- have following group types { self.group_type_names['all'] }"
         )
 
-    #####################################################################################################################################################################
-    ################################### Import the useful functions from other Tracker modules ##################################
-    #####################################################################################################################################################################
+    ###########################################################################################
+    # Import the useful functions from other Tracker modules ##################################
+    ###########################################################################################
 
     def CM_Norm(self, cm, pop_tots, contact_type="global", Reciprocal=True):
         return Tracker.CM_Norm(self, cm, pop_tots, contact_type, Reciprocal)
@@ -208,9 +210,9 @@ class MergerClass:
     def Canberra_distance(self, x, y):
         return Tracker.Canberra_distance(self, x, y)
 
-    #####################################################################################################################################################################
-    ################################### Individual Merge ##################################
-    #####################################################################################################################################################################
+    #####################################################
+    # Individual Merge ##################################
+    #####################################################
 
     def Travel_Distance(self):
         travel_distance = {}
@@ -753,7 +755,7 @@ class MergerClass:
     def SaveOutCM(self):
         folder_name = self.merged_data_path
         mpi_rankname = ""
-        ################################### Saving 1D Contacts tracker results ##################################
+        # Saving 1D Contacts tracker results ##################################
         if "1D" in self.Tracker_Contact_Type:
             Tracker_Type = "1D"
 
@@ -831,7 +833,7 @@ class MergerClass:
                 jsonfile=jsonfile,
             )
 
-        ################################### Saving All Contacts tracker results ##################################
+        # Saving All Contacts tracker results ##################################
         if "All" in self.Tracker_Contact_Type:
             Tracker_Type = "All"
 
@@ -910,13 +912,13 @@ class MergerClass:
             )
         return 1
 
-    #####################################################################################################################################################################
-    ################################### Master Merge ##################################
-    #####################################################################################################################################################################
+    #################################################
+    # Master Merge ##################################
+    #################################################
 
     def Merge(self):
         logger.info(f"Rank {mpi_rank} -- Begin Merging from {self.NRanks} ranks")
-        if self.MPI == True:
+        if self.MPI:
             self.Travel_Distance()
             logger.info(f"Rank {mpi_rank} -- Distance sheet done")
 

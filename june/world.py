@@ -101,8 +101,10 @@ class World:
         if include_households:
             household_distributor = HouseholdDistributor.from_file()
 
-            self.households = household_distributor.distribute_people_and_households_to_areas(
-                self.areas
+            self.households = (
+                household_distributor.distribute_people_and_households_to_areas(
+                    self.areas
+                )
             )
 
         if self.schools is not None:

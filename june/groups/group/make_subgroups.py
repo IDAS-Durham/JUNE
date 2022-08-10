@@ -66,11 +66,11 @@ class Subgroup_Params:
 
     Parameters
     ----------
-        bins_groups: 
+        bins_groups:
             list of bin edges or categories
         bins_type:
             str, "Age" for bin ages, or "Discrete" for categorical bins
-            
+
     Returns
     -------
         Subgroup_Params class
@@ -188,7 +188,7 @@ class Subgroup_Params:
         Parameters
         ----------
             None
-                
+
         Returns
         -------
             List of unique strings
@@ -210,10 +210,10 @@ class Subgroup_Params:
         ----------
             config_filename:
                 yaml location
-                    
+
         Returns
         -------
-            Subgroup_Params class instance 
+            Subgroup_Params class instance
         """
         if config_filename is None:
             config_filename = default_config_filename

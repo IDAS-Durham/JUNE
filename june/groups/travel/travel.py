@@ -94,8 +94,8 @@ class Travel:
                 logger.info(
                     f"Mode of transport allocated in {i} of {len(world.areas)} areas."
                 )
-            mode_of_transport_generator_area = mode_of_transport_generator.regional_gen_from_area(
-                area.name
+            mode_of_transport_generator_area = (
+                mode_of_transport_generator.regional_gen_from_area(area.name)
             )
             for person in area.people:
                 if person.age < 18 or person.age >= 65:
@@ -217,9 +217,11 @@ class Travel:
             for external_commuter_id in commuters["external"]:
                 external_commuter = world.people.get_from_id(external_commuter_id)
                 work_city = external_commuter.work_city.name
-                station = external_commuter.super_area.closest_inter_city_station_for_city[
-                    work_city
-                ]
+                station = (
+                    external_commuter.super_area.closest_inter_city_station_for_city[
+                        work_city
+                    ]
+                )
                 station.commuter_ids.add(external_commuter_id)
 
     def _create_transports_in_cities(

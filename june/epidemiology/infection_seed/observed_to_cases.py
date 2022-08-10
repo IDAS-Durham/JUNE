@@ -239,7 +239,9 @@ class Observed2Cases:
         males_per_age_region_df = self.aggregate_areas_by_region(males_per_age_area_df)
         return females_per_age_region_df, males_per_age_region_df
 
-    def get_symptoms_rates_per_age_sex(self,) -> dict:
+    def get_symptoms_rates_per_age_sex(
+        self,
+    ) -> dict:
         """
         Computes the rates of ending up with certain SymptomTag for all
         ages and sex.
@@ -352,7 +354,9 @@ class Observed2Cases:
         )
         return n_cases_per_region_df
 
-    def get_super_area_population_weights(self,) -> pd.DataFrame:
+    def get_super_area_population_weights(
+        self,
+    ) -> pd.DataFrame:
         """
         Compute the weight in population that a super area has over its whole region, used
         to convert regional cases to cases by super area by population density
@@ -578,7 +582,9 @@ class Observed2Cases:
             avg_rate_for_symptoms
         )
 
-    def get_regional_latent_cases(self,) -> pd.DataFrame:
+    def get_regional_latent_cases(
+        self,
+    ) -> pd.DataFrame:
         """
         Find regional latent cases from the observed one.
 

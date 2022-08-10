@@ -30,7 +30,7 @@ class Timer:
             hour_i = int(initial_day.split(" ")[1].split(":")[0])
         self.initial_date = day_i + datetime.timedelta(hours=hour_i)
 
-        if day_types == None:
+        if day_types is None:
             self.day_types = {
                 "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
                 "weekend": ["Saturday", "Sunday"],
