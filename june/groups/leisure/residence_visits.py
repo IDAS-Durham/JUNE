@@ -9,9 +9,10 @@ from june.utils import random_choice_numba
 default_config_filename = configs_path / "defaults/groups/leisure/visits.yaml"
 
 default_daytypes = {
-            "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-            "weekend": ["Saturday", "Sunday"],
+    "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "weekend": ["Saturday", "Sunday"],
 }
+
 
 class ResidenceVisitsDistributor(SocialVenueDistributor):
     """
