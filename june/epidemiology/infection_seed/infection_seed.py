@@ -280,7 +280,7 @@ class InfectionSeed:
         date_str = date.date().strftime("%Y-%m-%d")
         not_yet_seeded_date = (
             date_str not in self.dates_seeded
-            and date.date()
+            and date_str
             in self.daily_cases_per_capita_per_age_per_region.index.get_level_values(
                 "date"
             )
@@ -290,7 +290,7 @@ class InfectionSeed:
                 f"Seeding {self.infection_selector.infection_class.__name__} infections at date {date.date()}"
             )
             cases_per_capita_per_age_per_region = (
-                self.daily_cases_per_capita_per_age_per_region.loc[date.date()]
+                self.daily_cases_per_capita_per_age_per_region.loc[date]
             )
             self.infect_super_areas(
                 cases_per_capita_per_age_per_region=cases_per_capita_per_age_per_region,
