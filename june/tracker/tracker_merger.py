@@ -649,7 +649,7 @@ class MergerClass:
                         for bin_type in self.CM_AC_rank.keys()
                         if bin_type != "Interaction"
                     }
-                    self.CM_T["Interaction"] = {
+                    self.CM_AC["Interaction"] = {
                         loc: np.array(self.CM_AC_rank["Interaction"][loc]["contacts"])
                         * self.timer.total_days
                         for loc in self.CM_AC_rank["Interaction"].keys()
@@ -658,8 +658,8 @@ class MergerClass:
                     for rbt in self.binTypes:
                         if rbt == "Interaction" or rbt in self.age_bins.keys():
                             continue
-                        loc = list(self.CM_T_rank[rbt].keys())[0]
-                        self.age_bins[rbt] = self.CM_T_rank[rbt][loc]["bins"]
+                        loc = list(self.CM_AC_rank[rbt].keys())[0]
+                        self.age_bins[rbt] = self.CM_AC_rank[rbt][loc]["bins"]
 
                 else:
                     for bin_type in self.binTypes:
