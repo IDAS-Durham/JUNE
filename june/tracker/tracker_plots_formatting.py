@@ -4,7 +4,6 @@
 import numpy as np
 from cycler import cycler
 import matplotlib as mpl
-mpl.use('Tkagg')
 import matplotlib.font_manager
 import matplotlib.pyplot as plt
 
