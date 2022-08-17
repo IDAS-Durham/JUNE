@@ -831,6 +831,21 @@ class MergerClass:
                 folder=folder_name,
                 filename=f"tracker_{Tracker_Type}_Metrics_NCM_R_{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
+            ) 
+
+            jsonfile = {}
+            for loc in list(self.NCM["Interaction"].keys()):
+                A = np.array(self.NCM["Interaction"][loc], dtype=float)
+                B = np.array(self.IM[loc]["contacts"], dtype=float)
+                Dc = self.Canberra_distance(A,B)[0]
+                jsonfile[loc] = {
+                    "Dc": f"{Dc}"
+                }
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+                folder=folder_name,
+                filename=f"tracker_{Tracker_Type}_CamberraDist_{mpi_rankname}.yaml",
+                jsonfile=jsonfile,
             )
 
         # Saving All Contacts tracker results ##################################
@@ -864,7 +879,7 @@ class MergerClass:
             )
 
             jsonfile = {}
-            for binType in list(self.NCM_AC_R.keys()):
+            for binType in list(self.NCM_AC.keys()):
                 jsonfile[binType] = self.tracker_CMJSON(
                     binType=binType, CM=self.NCM_AC_R, CM_err=self.NCM_AC_R_err
                 )
@@ -878,9 +893,9 @@ class MergerClass:
 
             # Save out metric calculations
             jsonfile = {}
-            for binType in list(self.NCM.keys()):
+            for binType in list(self.NCM_AC.keys()):
                 jsonfile[binType] = {}
-                for loc in list(self.NCM[binType].keys()):
+                for loc in list(self.NCM_AC[binType].keys()):
                     jsonfile[binType][loc] = self.Calculate_CM_Metrics(
                         bin_type=binType,
                         contact_type=loc,
@@ -895,9 +910,9 @@ class MergerClass:
             )
 
             jsonfile = {}
-            for binType in list(self.NCM.keys()):
+            for binType in list(self.NCM_AC.keys()):
                 jsonfile[binType] = {}
-                for loc in list(self.NCM[binType].keys()):
+                for loc in list(self.NCM_AC[binType].keys()):
                     jsonfile[binType][loc] = self.Calculate_CM_Metrics(
                         bin_type=binType,
                         contact_type=loc,
@@ -910,6 +925,23 @@ class MergerClass:
                 filename=f"tracker_{Tracker_Type}_Metrics_NCM_R_{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
             )
+
+
+            jsonfile = {}
+            for loc in list(self.NCM_AC["Interaction"].keys()):
+                A = np.array(self.NCM_AC["Interaction"][loc], dtype=float)
+                B = np.array(self.IM[loc]["contacts"], dtype=float)
+                Dc = self.Canberra_distance(A,B)[0]
+                jsonfile[loc] = {
+                    "Dc": f"{Dc}"
+                }
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+                folder=folder_name,
+                filename=f"tracker_{Tracker_Type}_CamberraDist_{mpi_rankname}.yaml",
+                jsonfile=jsonfile,
+            )
+
         return 1
 
     #################################################

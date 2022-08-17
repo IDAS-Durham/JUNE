@@ -1,4 +1,5 @@
-from configparser import Interpolation
+from .tracker_plots_formatting import fig_initialize, set_size, dpi
+fig_initialize(setsize=True)
 import numpy as np
 import yaml
 import pandas as pd
@@ -8,6 +9,7 @@ from june import paths
 
 from june.world import World
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from matplotlib.dates import DateFormatter
@@ -37,16 +39,6 @@ DaysOfWeek_Names = [
     "Friday",
     "Saturday",
 ]
-
-try:
-    plt.style.use(["science", "no-latex", "bright"])
-    if mpi_rank == 0:
-        print("Using 'science' matplotlib style")
-except Exception:
-    plt.style.use("default")
-    if mpi_rank == 0:
-        print("Using default matplotlib style")
-    pass
 
 cmap_A = "RdYlBu_r"
 cmap_B = "seismic"
@@ -401,7 +393,7 @@ class PlotClass:
             return colors.Normalize(vmin=SAMElinvmin[kind], vmax=SAMElinvmax[kind])
         return None
 
-    def AnnotateCM(self, cm, cm_err, ax, thresh=1e10):
+    def AnnotateCM(self, cm, cm_err, ax, thresh=1e10, annotate=True):
         """
         Function to annotate the CM with text. Including error catching for Nonetype errors.
 
@@ -421,11 +413,14 @@ class PlotClass:
         -------
             ax
         """
-        size = 15
-        if cm.shape[0] == 3:
-            size = 12
+        size = mpl.rcParams["font.size"]
+        if cm.shape[0] <= 3:
+            size -= 3
         if cm.shape[0] > 3:
-            size = 10
+            size -= 4
+
+        if annotate == "Small":
+            size -= 3
 
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
@@ -465,7 +460,7 @@ class PlotClass:
                     )
         return ax
 
-    def PlotCM(self, cm, cm_err, labels, ax, thresh=1e10, thumb=False, **plt_kwargs):
+    def PlotCM(self, cm, cm_err, labels, ax, thresh=1e10, thumb=False, annotate=True, **plt_kwargs):
         """
         Function to imshow plot the CM.
 
@@ -508,13 +503,13 @@ class PlotClass:
         if labels is not None:
             if len(labels) < 25:
                 ax.set_xticks(np.arange(len(cm)))
-                ax.set_xticklabels(labels, rotation=45, size=12)
+                ax.set_xticklabels(labels, rotation=45)
                 ax.set_yticks(np.arange(len(cm)))
-                ax.set_yticklabels(labels, size=12)
+                ax.set_yticklabels(labels)
 
         # Loop over data dimensions and create text annotations.
-        if cm.shape[0] * cm.shape[1] < 26:
-            self.AnnotateCM(cm, cm_err, ax, thresh=thresh)
+        if cm.shape[0] * cm.shape[1] < 26 and annotate != False:
+            self.AnnotateCM(cm, cm_err, ax, thresh=thresh, annotate=annotate)
         if not thumb:
             ax.set_xlabel("age group")
             ax.set_ylabel("contact age group")
@@ -820,8 +815,9 @@ class PlotClass:
             norm2 = self.Get_SAMECMAP_Norm(cm.shape[0])
 
         if not plot_BBC_Sheet:
-            plt.rcParams["figure.figsize"] = (15, 5)
+            #plt.rcParams["figure.figsize"] = (15, 5)
             f, (ax1, ax2) = plt.subplots(1, 2)
+            f.set_size_inches(set_size(subplots=(1,2), fraction=1))
             f.patch.set_facecolor("white")
 
             im1 = self.PlotCM(
@@ -840,10 +836,10 @@ class PlotClass:
             f.colorbar(im1, ax=ax1, extend="both")
             f.colorbar(im2, ax=ax2, extend="both")
 
-            ax1.set_title(f"Interaction Matrix (IM)")
-            ax2.set_title(f"Output Contact Matrix ({which})")
+            ax1.set_title(f"IM")
+            ax2.set_title(f"{which}")
             # f.suptitle(f"{bin_type} binned contacts in {contact_type}")
-            plt.tight_layout()
+            #plt.tight_layout()
             return (ax1, ax2)
         else:
             df = pd.read_excel(
@@ -862,8 +858,9 @@ class PlotClass:
             if not self.SameCMAP:
                 norm2 = colors.Normalize(vmin=0, vmax=cm_Max)
 
-            plt.rcParams["figure.figsize"] = (15, 5)
-            f, (ax1, ax2, ax3) = plt.subplots(1, 3)
+            #plt.rcParams["figure.figsize"] = (15, 5)
+            f, (ax1, ax2, ax3) = plt.subplots(1, 2)
+            f.set_size_inches(set_size(subplots=(1,3), fraction=1))
             f.patch.set_facecolor("white")
 
             im1 = self.PlotCM(
@@ -874,12 +871,14 @@ class PlotClass:
                 origin="lower",
                 cmap=cmap_A,
                 norm=norm1,
+                annotate="Small",
+                thumb=True
             )
             im2 = self.PlotCM(
-                cm + 1e-16, cm_err, labels, ax2, origin="lower", cmap=cmap_A, norm=norm2
+                cm + 1e-16, cm_err, labels, ax2, origin="lower", cmap=cmap_A, norm=norm2,annotate="Small",thumb=True
             )
             im3 = self.PlotCM(
-                bbc_cm, None, bbc_labels, ax3, origin="lower", cmap=cmap_A, norm=norm2
+                bbc_cm, None, bbc_labels, ax3, origin="lower", cmap=cmap_A, norm=norm2,annotate="Small",thumb=True
             )
 
             # TODO Remove This is for convience only.
@@ -910,16 +909,14 @@ class PlotClass:
             print("BBC", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
             print({"Camberra": self.Canberra_distance(cm, bbc_cm)[0]})
             print("")
-            print(np.array(self.Canberra_distance(cm, bbc_cm)[1]))
-            print("")
 
             f.colorbar(im1, ax=ax1, extend="both")
             f.colorbar(im2, ax=ax2, extend="both")
             f.colorbar(im3, ax=ax3, extend="both")
 
-            ax1.set_title(f"Interaction Matrix (IM)")
-            ax2.set_title(f"Output Contact Matrix ({which})")
-            ax3.set_title(f"BBC Pandemic Matrix ({plot_BBC_Sheet})")
+            ax1.set_title(f"IM")
+            ax2.set_title(f"{which}")
+            ax3.set_title(f"BBC ({plot_BBC_Sheet})")
             # f.suptitle(f"{bin_type} binned contacts in {contact_type}")
             plt.tight_layout()
             return (ax1, ax2, ax3)
@@ -988,8 +985,9 @@ class PlotClass:
         vMax = max(cm_Max, IM_Max)
         vMin = 1e-2
 
-        plt.rcParams["figure.figsize"] = (15, 5)
+        #plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2, ax3) = plt.subplots(1, 3)
+        f.set_size_inches(set_size(subplots=(1,2), fraction=1))
         f.patch.set_facecolor("white")
 
         if not self.SameCMAP:
@@ -1001,10 +999,10 @@ class PlotClass:
             norm2 = self.Get_SAMECMAP_Norm(cm.shape[0])
 
         im1 = self.PlotCM(
-            IM + 1e-16, IM_err, labels_IM, ax1, origin="lower", cmap=cmap_A, norm=norm1
+            IM + 1e-16, IM_err, labels_IM, ax1, origin="lower", cmap=cmap_A, norm=norm1,annotate="Small",thumb=True
         )
         im2 = self.PlotCM(
-            cm + 1e-16, cm_err, labels_CM, ax2, origin="lower", cmap=cmap_A, norm=norm2
+            cm + 1e-16, cm_err, labels_CM, ax2, origin="lower", cmap=cmap_A, norm=norm2,annotate="Small",thumb=True
         )
 
         ratio = cm / IM
@@ -1033,12 +1031,14 @@ class PlotClass:
             origin="lower",
             cmap=cmap_B,
             norm=norm,
+            annotate="Small",
+            thumb=True
         )
         f.colorbar(im1, ax=ax1, extend="both")
         f.colorbar(im2, ax=ax2, extend="both")
         f.colorbar(im3, ax=ax3, extend="both")
-        ax1.set_title("Interaction Matrix (IM)")
-        ax2.set_title("Normalised Contact Matrix (NCM)")
+        ax1.set_title("IM")
+        ax2.set_title("NCM")
         ax3.set_title("NCM / IM")
 
         # f.suptitle(f"Survey interaction binned contacts in {contact_type}")
@@ -1085,8 +1085,8 @@ class PlotClass:
 
         labels_CM = labels_IM
 
-        plt.rcParams["figure.figsize"] = (5, 5)
         f, ax1 = plt.subplots(1, 1)
+        f.set_size_inches(set_size(subplots=(1,1), fraction=.75))
         f.patch.set_facecolor("white")
 
         if not self.SameCMAP:
@@ -1120,7 +1120,7 @@ class PlotClass:
             )
 
         # f.suptitle(f"Survey interaction binned contacts in {contact_type}")
-        plt.tight_layout()
+        #plt.tight_layout()
         return f, ax1, im1
 
     def plot_contact_matrix(self, bin_type, contact_type, sex="unisex", which="NCM"):
@@ -1173,8 +1173,9 @@ class PlotClass:
             normlin = self.Get_SAMECMAP_Norm(cm.shape[0], override="Lin")
             normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="Log")
 
-        plt.rcParams["figure.figsize"] = (15, 5)
+        #plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
+        f.set_size_inches(set_size(subplots=(1,2), fraction=1))
         f.patch.set_facecolor("white")
 
         im1 = self.PlotCM(
@@ -1187,10 +1188,10 @@ class PlotClass:
         f.colorbar(im1, ax=ax1, extend="both")
         f.colorbar(im2, ax=ax2, extend="both")
 
-        ax1.set_title("Linear Scale")
-        ax2.set_title("Log Scale")
+        #ax1.set_title("Linear Scale")
+        #ax2.set_title("Log Scale")
         # f.suptitle(f"{bin_type} binned contacts in {contact_type} for {sex}")
-        plt.tight_layout()
+        #plt.tight_layout()
         return (ax1, ax2)
 
     def plot_contact_matrix_thumb(
@@ -1241,8 +1242,9 @@ class PlotClass:
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
-        plt.rcParams["figure.figsize"] = (5, 5)
         f, ax1 = plt.subplots(1, 1)
+        #TODO
+        f.set_size_inches(set_size(subplots=(1,1), fraction=.75))
         f.patch.set_facecolor("white")
 
         if not self.SameCMAP or which == "CM_T":
@@ -1276,7 +1278,7 @@ class PlotClass:
             )
 
         # cax1 = f.add_axes([ax1.get_position().x1+0.01,ax1.get_position().y0,0.02,ax1.get_position().height])
-        plt.tight_layout()
+        #plt.tight_layout()
         return f, ax1, im1
 
     def plot_comparesexes_contact_matrix(self, bin_type, contact_type, which="NCM"):
@@ -1297,8 +1299,9 @@ class PlotClass:
             (ax1,ax2):
                 matplotlib axes objects (Linear and Log)
         """
-        plt.rcParams["figure.figsize"] = (15, 5)
+        #plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
+        f.set_size_inches(set_size(subplots=(1,2), fraction=1))
         f.patch.set_facecolor("white")
 
         labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
@@ -1331,10 +1334,10 @@ class PlotClass:
         f.colorbar(im1, ax=ax1, extend="both", label="$M - F$")
         f.colorbar(im2, ax=ax2, extend="both", label="$M - F$")
 
-        ax1.set_title("Linear Scale")
-        ax2.set_title("Log Scale")
+        #ax1.set_title("Linear Scale")
+        #ax2.set_title("Log Scale")
         # f.suptitle(f"Male - female {bin_type} binned contacts in {contact_type}")
-        plt.tight_layout()
+        #plt.tight_layout()
         return (ax1, ax2)
 
     def plot_stacked_contacts(self, bin_type, contact_types=None):
@@ -1354,8 +1357,9 @@ class PlotClass:
                 matplotlib axes object
 
         """
-        plt.rcParams["figure.figsize"] = (10, 5)
+        #plt.rcParams["figure.figsize"] = (10, 5)
         f, ax = plt.subplots()
+        f.set_size_inches(set_size(subplots=(1,2), fraction=1))
         f.patch.set_facecolor("white")
 
         average_contacts = self.average_contacts[bin_type]
@@ -1370,7 +1374,7 @@ class PlotClass:
             contact_types = self.contact_types
 
         for ii, contact_type in enumerate(contact_types):
-            if contact_type in ["shelter_intra", "shelter_inter"]:
+            if contact_type in ["shelter_intra", "shelter_inter", "informal_work"]:
                 continue
             if contact_type not in average_contacts.columns:
                 print(f"No contact_type {contact_type}")
@@ -1411,145 +1415,146 @@ class PlotClass:
         ax.set_xlabel("Age")
         ax.set_ylabel("average contacts per day")
         f.subplots_adjust(top=0.70)
-        plt.tight_layout()
+        #plt.tight_layout()
         return ax
 
-    def plot_population_at_locs(self, locations, max_days=7):
-        """
-        Plot total population of each location for each timestep.
+    # def plot_population_at_locs(self, locations, max_days=7):
+    #     """
+    #     Plot total population of each location for each timestep.
 
-        Parameters
-        ----------
-            locations:
-                list of locations to plot for
-            max_days:
-                The maximum number of days to plot over
+    #     Parameters
+    #     ----------
+    #         locations:
+    #             list of locations to plot for
+    #         max_days:
+    #             The maximum number of days to plot over
 
-        Returns
-        -------
-            ax:
-                matplotlib axes object
+    #     Returns
+    #     -------
+    #         ax:
+    #             matplotlib axes object
 
-        """
-        df = pd.DataFrame()
-        df = self.location_counters_day["loc"][locations]["unisex"]
-        NVenues = df.shape[1]
-        df["t"] = np.array(self.location_counters_day["Timestamp"])
-        df["day"] = [day.day_name() for day in df["t"]]
-        Weekday_Names = self.day_types["weekday"]
+    #     """
+    #     df = pd.DataFrame()
+    #     df = self.location_counters_day["loc"][locations]["unisex"]
+    #     NVenues = df.shape[1]
+    #     df["t"] = np.array(self.location_counters_day["Timestamp"])
+    #     df["day"] = [day.day_name() for day in df["t"]]
+    #     Weekday_Names = self.day_types["weekday"]
 
-        df = df[df["day"] == Weekday_Names[0]]
-        Cols = df.columns[~df.columns.isin(["t", "day"])]
-        df = df[Cols].iloc[0]
+    #     df = df[df["day"] == Weekday_Names[0]]
+    #     Cols = df.columns[~df.columns.isin(["t", "day"])]
+    #     df = df[Cols].iloc[0]
 
-        df_weekeday_att = np.array(df.values)
+    #     df_weekeday_att = np.array(df.values)
 
-        NVenues_Per = sum(df_weekeday_att > 0) / NVenues
-        NVenues = sum(df_weekeday_att > 0)
+    #     NVenues_Per = sum(df_weekeday_att > 0) / NVenues
+    #     NVenues = sum(df_weekeday_att > 0)
 
-        Interval = datetime.timedelta(days=max_days)
+    #     Interval = datetime.timedelta(days=max_days)
 
-        xs = self.location_counters["Timestamp"]
-        max_index = None
-        if xs.iloc[-1] - xs.iloc[0] > Interval:
-            max_index = np.sum(xs < xs.iloc[0] + Interval)
-        xs = xs[:max_index]
+    #     xs = self.location_counters["Timestamp"]
+    #     max_index = None
+    #     if xs.iloc[-1] - xs.iloc[0] > Interval:
+    #         max_index = np.sum(xs < xs.iloc[0] + Interval)
+    #     xs = xs[:max_index]
 
-        widths = [
-            datetime.timedelta(hours=w)
-            for w in self.location_counters["delta_t"][:max_index]
-        ]
+    #     widths = [
+    #         datetime.timedelta(hours=w)
+    #         for w in self.location_counters["delta_t"][:max_index]
+    #     ]
 
-        plt.rcParams["figure.figsize"] = (10, 5)
-        f, (ax1, ax2) = plt.subplots(1, 2)
-        f.patch.set_facecolor("white")
+    #     #plt.rcParams["figure.figsize"] = (10, 5)
+    #     f, (ax1, ax2) = plt.subplots(1, 2)
+    #     f.set_size_inches(set_size(subplots=(1,2), fraction=1))
+    #     f.patch.set_facecolor("white")
 
-        plural_locations = Tracker.pluralise(self, locations)
-        Nlocals = self.NVenues[plural_locations]
+    #     plural_locations = Tracker.pluralise(self, locations)
+    #     Nlocals = self.NVenues[plural_locations]
 
-        ymax = -1
-        i_counts = 0
+    #     ymax = -1
+    #     i_counts = 0
 
-        # ax1.set_title("%s locations (frac:%.2f)" % (NVenues, NVenues_Per))
-        for i in self.location_counters["loc"][locations]["unisex"][Cols].keys():
-            if Nlocals > 100:
-                Nlocals = 100
+    #     # ax1.set_title("%s locations (frac:%.2f)" % (NVenues, NVenues_Per))
+    #     for i in self.location_counters["loc"][locations]["unisex"][Cols].keys():
+    #         if Nlocals > 100:
+    #             Nlocals = 100
 
-            if (
-                np.sum(
-                    self.location_counters["loc"][locations]["unisex"][Cols][i].values
-                )
-                == 0
-            ):
-                continue
+    #         if (
+    #             np.sum(
+    #                 self.location_counters["loc"][locations]["unisex"][Cols][i].values
+    #             )
+    #             == 0
+    #         ):
+    #             continue
 
-            ys = self.location_counters["loc"][locations]["unisex"][Cols][i].iloc[
-                :max_index
-            ]
-            if np.nanmax(ys) > ymax:
-                ymax = np.nanmax(ys)
+    #         ys = self.location_counters["loc"][locations]["unisex"][Cols][i].iloc[
+    #             :max_index
+    #         ]
+    #         if np.nanmax(ys) > ymax:
+    #             ymax = np.nanmax(ys)
 
-            ax1.bar(xs, ys, width=widths, align="edge", color="b", alpha=1 / Nlocals)
+    #         ax1.bar(xs, ys, width=widths, align="edge", color="b", alpha=1 / Nlocals)
 
-            if i_counts == 0:
-                Total = np.array(ys)
-            else:
-                Total += np.array(ys)
+    #         if i_counts == 0:
+    #             Total = np.array(ys)
+    #         else:
+    #             Total += np.array(ys)
 
-            i_counts += 1
-            if i_counts >= Nlocals:
-                break
+    #         i_counts += 1
+    #         if i_counts >= Nlocals:
+    #             break
 
-        # Define the date format
-        ax1.xaxis.set_major_locator(mdates.HourLocator(byhour=[0]))
-        ax1.xaxis.set_minor_locator(mdates.HourLocator(byhour=None, interval=1))
-        ax1.xaxis.set_major_formatter(DateFormatter("%d/%m"))
-        ax1.set_ylabel("Number of people at venue")
-        ax1.set_xlabel("time")
-        ax1.set_yscale("log")
-        ax1.set_ylim([1, ymax])
+    #     # Define the date format
+    #     ax1.xaxis.set_major_locator(mdates.HourLocator(byhour=[0]))
+    #     ax1.xaxis.set_minor_locator(mdates.HourLocator(byhour=None, interval=1))
+    #     ax1.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+    #     ax1.set_ylabel("Number of people at venue")
+    #     ax1.set_xlabel("time")
+    #     ax1.set_yscale("log")
+    #     ax1.set_ylim([1, ymax])
 
-        df = pd.DataFrame()
-        df = self.location_counters_day["loc"][locations]["unisex"]
-        df["t"] = np.array(self.location_counters_day["Timestamp"])
-        Cols = df.columns[~df.columns.isin(["t", "day"])]
+    #     df = pd.DataFrame()
+    #     df = self.location_counters_day["loc"][locations]["unisex"]
+    #     df["t"] = np.array(self.location_counters_day["Timestamp"])
+    #     Cols = df.columns[~df.columns.isin(["t", "day"])]
 
-        if df[Cols].shape[1] == 0:
-            Max_attendance = 20
-        else:
-            Max_attendance = max(df[Cols].max())
+    #     if df[Cols].shape[1] == 0:
+    #         Max_attendance = 20
+    #     else:
+    #         Max_attendance = max(df[Cols].max())
 
-        Steps = 1
-        if Max_attendance < 20:
-            Steps = 1
-        elif Max_attendance < 100:
-            Steps = 5
-        elif Max_attendance < 1000:
-            Steps = 10
-        else:
-            Steps = 50
-        bins = np.concatenate(
-            [np.zeros(1) - 0.5, np.arange(0.5, Max_attendance + Steps, Steps)]
-        )
+    #     Steps = 1
+    #     if Max_attendance < 20:
+    #         Steps = 1
+    #     elif Max_attendance < 100:
+    #         Steps = 5
+    #     elif Max_attendance < 1000:
+    #         Steps = 10
+    #     else:
+    #         Steps = 50
+    #     bins = np.concatenate(
+    #         [np.zeros(1) - 0.5, np.arange(0.5, Max_attendance + Steps, Steps)]
+    #     )
 
-        for day_i in range(df.shape[0]):
-            hist, bin_edges = np.histogram(
-                df[Cols].iloc[day_i].values, bins=bins, density=False
-            )
-            ax2.bar(
-                x=(bin_edges[1:] + bin_edges[:-1]) / 2,
-                height=(100 * hist) / len(self.location_counters["loc"][locations]),
-                width=(bin_edges[:-1] - bin_edges[1:]),
-                alpha=1 / df.shape[0],
-                color="b",
-            )
+    #     for day_i in range(df.shape[0]):
+    #         hist, bin_edges = np.histogram(
+    #             df[Cols].iloc[day_i].values, bins=bins, density=False
+    #         )
+    #         ax2.bar(
+    #             x=(bin_edges[1:] + bin_edges[:-1]) / 2,
+    #             height=(100 * hist) / len(self.location_counters["loc"][locations]),
+    #             width=(bin_edges[:-1] - bin_edges[1:]),
+    #             alpha=1 / df.shape[0],
+    #             color="b",
+    #         )
 
-        ax2.set_ylim([0, None])
-        ax2.set_ylabel(r"% of venue type")
-        ax2.set_xlabel(r"People per day")
+    #     ax2.set_ylim([0, None])
+    #     ax2.set_ylabel(r"% of venue type")
+    #     ax2.set_xlabel(r"People per day")
 
-        plt.tight_layout()
-        return (ax1, ax2)
+    #     #plt.tight_layout()
+    #     return (ax1, ax2)
 
     def plot_population_at_locs_variations(self, locations):
         """
@@ -1594,8 +1599,9 @@ class PlotClass:
             stds[day_i] = np.nanstd(data, ddof=1)
             medians[day_i] = np.nanmedian(data)
 
-        plt.rcParams["figure.figsize"] = (15, 5)
+        #plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
+        f.set_size_inches(set_size(subplots=(1,2), fraction=1))
         f.patch.set_facecolor("white")
         ax1.bar(
             np.arange(len(DaysOfWeek_Names)), means, alpha=0.4, color="b", label="mean"
@@ -1607,17 +1613,22 @@ class PlotClass:
             color="g",
             label="median",
         )
-        ax1.errorbar(
-            np.arange(len(DaysOfWeek_Names)),
-            means,
-            [stds, stds],
-            color="black",
-            label="std errorbar",
-        )
-        ax1.set_xticklabels([""] + DaysOfWeek_Names)
-        ax1.set_ylabel("Unique Attendees per day")
-        ax1.set_xlabel("Day of week")
-        ax1.set_ylim([0, None])
+        # ax1.errorbar(
+        #     np.arange(len(DaysOfWeek_Names)),
+        #     means,
+        #     [stds, stds],
+        #     color="black",
+        #     label="std errorbar",
+        # )
+        labels = []
+        for i in range(len(DaysOfWeek_Names)):
+            labels += [DaysOfWeek_Names[i][:2]]
+
+        ax1.set_xticks(np.arange(len(DaysOfWeek_Names)))
+        ax1.set_xticklabels(labels)
+        #ax1.set_ylabel("Unique Attendees per day")
+        #ax1.set_xlabel("Day of week")
+        ax1.set_ylim([0, np.nanmax(means)*1.4])
         ax1.legend()
 
         # Get variations between days and time of day
@@ -1749,15 +1760,15 @@ class PlotClass:
             )
         ax2.axhline(0, color="grey", linestyle="--")
 
-        ax2.set_ylabel("Mean Unique Attendees per timeslot")
-        ax2.set_xlabel("Time of day [hour]")
+        #ax2.set_ylabel("Mean Unique Attendees per timeslot")
+        #ax2.set_xlabel("Time of day [hour]")
         # Define the date format
-        ax2.xaxis.set_major_locator(mdates.HourLocator(byhour=None, interval=1))
+        ax2.xaxis.set_major_locator(mdates.HourLocator(byhour=None, interval=4))
         ax2.xaxis.set_major_formatter(DateFormatter("%H"))
         ax2.set_xlim(xlim)
         ax2.set_ylim(ylim)
         ax2.legend()
-        plt.tight_layout()
+        #plt.tight_layout()
         return (ax1, ax2)
 
     def plot_AgeProfileRatios(
@@ -1822,9 +1833,9 @@ class PlotClass:
                 ws_G[i, j] = Height_G[i] / Height_G[j]
                 ws_P[i, j] = Height_P[i] / Height_P[j]
 
-        plt.rcParams["figure.figsize"] = (15, 5)
+        #plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
-
+        f.set_size_inches(set_size(subplots=(1,1), fraction=1))
         f.patch.set_facecolor("white")
 
         vmax_G = np.nan
@@ -1839,15 +1850,15 @@ class PlotClass:
             vmax = 1e-1
 
         vmin = 10 ** (-1 * np.log10(vmax))
-        ax1_ins = ax1.inset_axes([0.8, 1.0, 0.2, 0.2])
+        #ax1_ins = ax1.inset_axes([0.8, 1.0, 0.2, 0.2])
 
         norm = colors.LogNorm(vmin=vmin, vmax=vmax)
         im_P = self.PlotCM(
             ws_P, None, Labels, ax1, origin="lower", cmap=cmap_B, norm=norm
         )
-        im_G = self.PlotCM(
-            ws_G, None, Labels, ax1_ins, origin="lower", cmap=cmap_B, norm=norm
-        )
+        #im_G = self.PlotCM(
+        #    ws_G, None, Labels, ax1_ins, origin="lower", cmap=cmap_B, norm=norm
+        #)
 
         f.colorbar(im_P, ax=ax1, label=r"$\dfrac{Age_{y}}{Age_{x}}$", extend="both")
         plt.bar(
@@ -1866,7 +1877,7 @@ class PlotClass:
             tick_label=Labels,
             alpha=0.5,
             color="red",
-            label=contact_type + " tracker",
+            label="tracker",
         )
         ax2.set_xlabel("Age")
         ax2.set_ylabel("Normed Population size")
@@ -1875,6 +1886,7 @@ class PlotClass:
         plt.xticks(rotation=90)
         # f.suptitle(f"Age profile of {contact_type}")
         plt.legend()
+        plt.tight_layout()
         return (ax1, ax2)
 
     def plot_DistanceTraveled(self, location, day):
@@ -1904,8 +1916,9 @@ class PlotClass:
         indexlast = len(CumSum) - np.sum(CumSum == CumSum[-1])
         maxkm = dat.iloc[indexlast, 0] + 3.5 * (dat.iloc[1, 0] - dat.iloc[0, 0])
 
-        plt.rcParams["figure.figsize"] = (10, 5)
+        #plt.rcParams["figure.figsize"] = (10, 5)
         f, ax = plt.subplots(1, 1)
+        f.set_size_inches(set_size(subplots=(1,2), fraction=1))
         f.patch.set_facecolor("white")
         ax.bar(
             x=dat["bins"],
@@ -2020,7 +2033,7 @@ class PlotClass:
                     which="NCM_R",
                     plot_BBC_Sheet=plot_BBC_Sheet,
                 )
-                plt.savefig(plot_dir_1 / f"{rct}.pdf", dpi=150, bbox_inches="tight")
+                plt.savefig(plot_dir_1 / f"{rct}.pdf", dpi=dpi, bbox_inches="tight")
                 plt.close()
         logger.info(f"Rank {mpi_rank} -- Input vs output done")
 
@@ -2037,7 +2050,7 @@ class PlotClass:
                 )
                 stacked_contacts_plot.plot()
                 plt.savefig(
-                    plot_dir / f"{rbt}_contacts.pdf", dpi=150, bbox_inches="tight"
+                    plot_dir / f"{rbt}_contacts.pdf", dpi=dpi, bbox_inches="tight"
                 )
                 plt.close()
         logger.info(f"Rank {mpi_rank} -- Av contacts done")
@@ -2049,14 +2062,14 @@ class PlotClass:
                 self.plot_population_at_locs_variations(locations)
                 plt.savefig(
                     plot_dir / f"{locations}_Variations.pdf",
-                    dpi=150,
+                    dpi=dpi,
                     bbox_inches="tight",
                 )
                 plt.close()
 
-                self.plot_population_at_locs(locations)
-                plt.savefig(plot_dir / f"{locations}.pdf", dpi=150, bbox_inches="tight")
-                plt.close()
+                # self.plot_population_at_locs(locations)
+                # plt.savefig(plot_dir / f"{locations}.pdf", dpi=dpi, bbox_inches="tight")
+                # plt.close()
         logger.info(f"Rank {mpi_rank} -- Pop at locations done")
 
         if plot_InteractionMatrices:
@@ -2064,7 +2077,7 @@ class PlotClass:
             plot_dir.mkdir(exist_ok=True, parents=True)
             for rct in self.IM.keys():
                 self.plot_interaction_matrix(contact_type=rct)
-                plt.savefig(plot_dir / f"{rct}.pdf", dpi=150, bbox_inches="tight")
+                plt.savefig(plot_dir / f"{rct}.pdf", dpi=dpi, bbox_inches="tight")
                 plt.close()
 
                 if plot_thumbprints:
@@ -2151,7 +2164,7 @@ class PlotClass:
                                 )
                                 plt.savefig(
                                     plot_dir_3 / f"{rct}.pdf",
-                                    dpi=150,
+                                    dpi=dpi,
                                     bbox_inches="tight",
                                 )
                                 plt.close()
@@ -2326,7 +2339,7 @@ class PlotClass:
                                 bin_type=rbt, contact_type=rct, which=CMType
                             )
                             plt.savefig(
-                                plot_dir_3 / f"{rct}.pdf", dpi=150, bbox_inches="tight"
+                                plot_dir_3 / f"{rct}.pdf", dpi=dpi, bbox_inches="tight"
                             )
                             plt.close()
         logger.info(f"Rank {mpi_rank} -- CM between sexes done")
@@ -2342,7 +2355,7 @@ class PlotClass:
                         contact_type=rct, bin_type=rbt, sex="unisex"
                     )
                     plt.savefig(
-                        plot_dir / f"{rbt}_{rct}.pdf", dpi=150, bbox_inches="tight"
+                        plot_dir / f"{rbt}_{rct}.pdf", dpi=dpi, bbox_inches="tight"
                     )
                     plt.close()
         logger.info(f"Rank {mpi_rank} -- Age bin matrix done")
@@ -2354,7 +2367,7 @@ class PlotClass:
                 for day in self.travel_distance.keys():
                     self.plot_DistanceTraveled(locations, day)
                     plt.savefig(
-                        plot_dir / f"{locations}.pdf", dpi=150, bbox_inches="tight"
+                        plot_dir / f"{locations}.pdf", dpi=dpi, bbox_inches="tight"
                     )
                     plt.close()
                     break
