@@ -486,6 +486,9 @@ class PlotClass:
             im:
                 referance to plot object
         """
+        
+        
+
         if cm is None:
             pass
         else:
@@ -536,6 +539,13 @@ class PlotClass:
                 ax.set_xticklabels(labels, rotation=90, size=size)
                 ax.set_yticks(np.arange(len(cm)))
                 ax.set_yticklabels(labels, size=size)
+        else:
+            Nticks = 5
+            ticks = np.arange(0, len(cm), int((len(cm)+1)/(Nticks-1)))
+            ax.set_xticks(ticks)
+            ax.set_xticklabels(ticks)
+            ax.set_yticks(ticks)
+            ax.set_yticklabels(ticks)
             
 
         # Loop over data dimensions and create text annotations.
@@ -593,7 +603,7 @@ class PlotClass:
         else:
             return None
 
-    def CMPlots_UsefulCM(self, bin_type, cm, cm_err=None, labels=None):
+    def CMPlots_UsefulCM(self, bin_type, cm, cm_err=None, labels=None, MaxAgeBin = 100):
         """
         Truncate the CM for the plots to drop age bins of the data with no people.
 
@@ -618,10 +628,8 @@ class PlotClass:
             labels:
                 list of strings for bin labels or none type
         """
-        MaxAgeBin = 60
         if bin_type == "Paper":
             MaxAgeBin = np.inf
-
         index = self.MaxAgeBinIndex(self.age_bins[bin_type], MaxAgeBin=MaxAgeBin)
         cm = cm[:index, :index]
         if cm_err is not None:
@@ -774,7 +782,7 @@ class PlotClass:
     #############################################
 
     def plot_contact_matrix_INOUT(
-        self, bin_type, contact_type, sex="unisex", which="NCM_R", plot_BBC_Sheet=False
+        self, bin_type, contact_type, sex="unisex", which="NCM_R", plot_BBC_Sheet=False, MaxAgeBin = 100
     ):
         """
         Function to plot input contact matrix vs output for bin_type, contact_type and sex.
@@ -820,7 +828,7 @@ class PlotClass:
 
         labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
         cm, cm_err = self.CMPlots_GetCM(bin_type, contact_type, sex=sex, which=which)
-        cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels)
+        cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels, MaxAgeBin)
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
             cm_Min = np.nanmin(cm[np.nonzero(cm)])
@@ -902,7 +910,7 @@ class PlotClass:
                 origin="lower",
                 cmap=cmap_A,
                 norm=norm1,
-                annotate="Small",
+                annotate=True,
                 thumb=True
             )
             im2 = self.PlotCM(
@@ -1030,7 +1038,7 @@ class PlotClass:
             norm2 = self.Get_SAMECMAP_Norm(cm.shape[0])
 
         im1 = self.PlotCM(
-            IM + 1e-16, IM_err, labels_IM, ax1, origin="lower", cmap=cmap_A, norm=norm1,annotate="Small",thumb=True
+            IM + 1e-16, IM_err, labels_IM, ax1, origin="lower", cmap=cmap_A, norm=norm1,annotate=True,thumb=True
         )
         im2 = self.PlotCM(
             cm + 1e-16, cm_err, labels_CM, ax2, origin="lower", cmap=cmap_A, norm=norm2,annotate="Small",thumb=True
@@ -1154,7 +1162,7 @@ class PlotClass:
         #plt.tight_layout()
         return f, ax1, im1
 
-    def plot_contact_matrix(self, bin_type, contact_type, sex="unisex", which="NCM"):
+    def plot_contact_matrix(self, bin_type, contact_type, sex="unisex", which="NCM", MaxAgeBin = 100):
         """
         Function to plot contact matrix for bin_type, contact_type and sex.
 
@@ -1179,7 +1187,7 @@ class PlotClass:
             labels = self.IMPlots_GetLabels(contact_type)
         else:
             labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
-            cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels)
+            cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels, MaxAgeBin)
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
             cm_Min = np.nanmin(cm[np.nonzero(cm)])
@@ -1226,7 +1234,7 @@ class PlotClass:
         return (ax1, ax2)
 
     def plot_contact_matrix_thumb(
-        self, log, bin_type, contact_type, sex="unisex", which="NCM"
+        self, log, bin_type, contact_type, sex="unisex", which="NCM", MaxAgeBin = 100
     ):
         """
         Function to plot contact matrix for bin_type, contact_type and sex.
@@ -1255,7 +1263,7 @@ class PlotClass:
             labels = self.IMPlots_GetLabels(contact_type)
         else:
             labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
-            cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels)
+            cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels, MaxAgeBin)
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
             cm_Min = np.nanmin(cm[np.nonzero(cm)])
@@ -1312,7 +1320,7 @@ class PlotClass:
         #plt.tight_layout()
         return f, ax1, im1
 
-    def plot_comparesexes_contact_matrix(self, bin_type, contact_type, which="NCM"):
+    def plot_comparesexes_contact_matrix(self, bin_type, contact_type, which="NCM", MaxAgeBin = 100):
         """
         Function to plot difference in contact matrices between men and women for bin_type, contact_type.
 
@@ -1341,7 +1349,7 @@ class PlotClass:
         cm_F, _ = self.CMPlots_GetCM(bin_type, contact_type, "female", which)
         cm = cm_M - cm_F
 
-        cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, None, labels)
+        cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, None, labels, MaxAgeBin)
 
         cm_Min = -1e-1
         cm_Max = 1e-1
@@ -1981,6 +1989,9 @@ class PlotClass:
         plot_CompareSexMatrices=True,
         plot_AgeBinning=True,
         plot_Distances=True,
+
+        MaxAgeBin = 100,
+        
     ):
         """
         Make plots.
@@ -2063,6 +2074,7 @@ class PlotClass:
                     sex="unisex",
                     which="NCM_R",
                     plot_BBC_Sheet=plot_BBC_Sheet,
+                    MaxAgeBin=MaxAgeBin,
                 )
                 plt.savefig(plot_dir_1 / f"{rct}.pdf", dpi=dpi, bbox_inches="tight")
                 plt.close()
@@ -2192,6 +2204,7 @@ class PlotClass:
                                     contact_type=rct,
                                     sex=sex,
                                     which=CMType,
+                                    MaxAgeBin=MaxAgeBin,
                                 )
                                 plt.savefig(
                                     plot_dir_3 / f"{rct}.pdf",
@@ -2207,6 +2220,7 @@ class PlotClass:
                                         contact_type=rct,
                                         sex=sex,
                                         which=CMType,
+                                        MaxAgeBin=MaxAgeBin,
                                     )
                                     plt.savefig(
                                         plot_dir_3 / f"{rct}_thumbnail.pdf",
@@ -2239,6 +2253,7 @@ class PlotClass:
                                         contact_type=rct,
                                         sex=sex,
                                         which=CMType,
+                                        MaxAgeBin=MaxAgeBin,
                                     )
                                     plt.savefig(
                                         plot_dir_3 / f"{rct}_thumbnail_log.pdf",
@@ -2267,7 +2282,7 @@ class PlotClass:
                     else:
                         for rct in IM_contact_types:
                             self.plot_contact_matrix(
-                                bin_type=rbt, contact_type=rct, sex=sex, which=CMType
+                                bin_type=rbt, contact_type=rct, sex=sex, which=CMType, MaxAgeBin=MaxAgeBin,
                             )
                             plt.savefig(
                                 plot_dir_2 / f"{rct}.pdf", dpi=150, bbox_inches="tight"
@@ -2281,6 +2296,7 @@ class PlotClass:
                                     contact_type=rct,
                                     sex=sex,
                                     which=CMType,
+                                    MaxAgeBin=MaxAgeBin,
                                 )
                                 plt.savefig(
                                     plot_dir_2 / f"{rct}_thumbnail.pdf",
@@ -2313,6 +2329,7 @@ class PlotClass:
                                     contact_type=rct,
                                     sex=sex,
                                     which=CMType,
+                                    MaxAgeBin=MaxAgeBin,
                                 )
                                 plt.savefig(
                                     plot_dir_2 / f"{rct}_thumbnail_log.pdf",
