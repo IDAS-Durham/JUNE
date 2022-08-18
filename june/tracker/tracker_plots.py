@@ -500,12 +500,43 @@ class PlotClass:
         Interpolation = "None"
         im = ax.imshow(cm, **plt_kwargs, interpolation=Interpolation)
         ax.xaxis.tick_bottom()
+
+        if annotate == "Small" and len(labels) > 4:
+            size =  mpl.rcParams["xtick.labelsize"] - 4
+        elif annotate == "Small":
+            size = mpl.rcParams["xtick.labelsize"] - 2
+        else:
+            size = mpl.rcParams["xtick.labelsize"]
+
         if labels is not None:
-            if len(labels) < 25:
+            if "kids" in labels and "young_adults" in labels:
+                labels = ["K", "Y", "A", "O"]
+            if "teachers" in labels and "students" in labels:
+                labels = ["T", "S"]
+        
+        if labels is not None:
+            if len(labels) == 1:
+                ax.set_xticks(np.arange(len(cm)))
+                ax.set_xticklabels(labels, rotation=0, size=size)
+                ax.set_yticks(np.arange(len(cm)))
+                ax.set_yticklabels(labels, rotation=0, size=size)
+            elif len(labels) < 10:
                 ax.set_xticks(np.arange(len(cm)))
                 ax.set_xticklabels(labels, rotation=45)
                 ax.set_yticks(np.arange(len(cm)))
                 ax.set_yticklabels(labels)
+
+            elif len(labels) >= 10 and len(labels) <= 25:
+                ax.set_xticks(np.arange(len(cm)))
+                ax.set_xticklabels(labels, rotation=90, size=size)
+                ax.set_yticks(np.arange(len(cm)))
+                ax.set_yticklabels(labels, size=size)
+            elif len(labels) < 25:
+                ax.set_xticks(np.arange(len(cm)))
+                ax.set_xticklabels(labels, rotation=90, size=size)
+                ax.set_yticks(np.arange(len(cm)))
+                ax.set_yticklabels(labels, size=size)
+            
 
         # Loop over data dimensions and create text annotations.
         if cm.shape[0] * cm.shape[1] < 26 and annotate != False:
@@ -859,8 +890,8 @@ class PlotClass:
                 norm2 = colors.Normalize(vmin=0, vmax=cm_Max)
 
             #plt.rcParams["figure.figsize"] = (15, 5)
-            f, (ax1, ax2, ax3) = plt.subplots(1, 2)
-            f.set_size_inches(set_size(subplots=(1,3), fraction=1))
+            f, (ax1, ax2, ax3) = plt.subplots(1, 3)
+            f.set_size_inches(set_size(subplots=(1,2), fraction=1))
             f.patch.set_facecolor("white")
 
             im1 = self.PlotCM(
@@ -1086,7 +1117,7 @@ class PlotClass:
         labels_CM = labels_IM
 
         f, ax1 = plt.subplots(1, 1)
-        f.set_size_inches(set_size(subplots=(1,1), fraction=.75))
+        f.set_size_inches(set_size(subplots=(1,1), fraction=.5))
         f.patch.set_facecolor("white")
 
         if not self.SameCMAP:
@@ -1244,7 +1275,7 @@ class PlotClass:
 
         f, ax1 = plt.subplots(1, 1)
         #TODO
-        f.set_size_inches(set_size(subplots=(1,1), fraction=.75))
+        f.set_size_inches(set_size(subplots=(1,1), fraction=.5))
         f.patch.set_facecolor("white")
 
         if not self.SameCMAP or which == "CM_T":
