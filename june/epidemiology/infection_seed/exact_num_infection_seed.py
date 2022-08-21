@@ -12,10 +12,8 @@ from june.epidemiology.infection import InfectionSelector
 from .infection_seed import InfectionSeed
 from june.epidemiology.infection import InfectionSelector
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from june.world import World
+from june.world import World
+from june.geography import Region, Area, SuperArea
 
 seed_logger = logging.getLogger("seed")
 
@@ -42,6 +40,29 @@ class ExactNumInfectionSeed(InfectionSeed):
         self.daily_cases_per_capita_per_age_per_region = (
             daily_cases_per_capita_per_age_per_region * seed_strength
         )
+
+        self.iter_list = []
+        if "all" not in daily_cases_per_capita_per_age_per_region.columns:
+            # generate list of existing regions, superareas, areas
+            regions = [region.name for region in self.world.regions]
+            super_areas = [super_area.name for super_area in self.world.super_areas]
+            areas = [area.name for area in self.world.areas]
+
+            # check if seeding locations are existing in curent world
+            for loc_name in self.daily_cases_per_capita_per_age_per_region.columns:
+                if loc_name in regions:
+                    if self.world.regions not in self.iter_list:
+                        self.iter_list.append(self.world.regions)
+                elif loc_name in super_areas:
+                    if self.world.super_areas not in self.iter_list:
+                        self.iter_list.append(self.world.super_areas)
+                elif loc_name in areas:
+                    if self.world.areas not in self.iter_list:
+                        self.iter_list.append(self.world.areas)
+                else:
+                    raise TypeError(
+                        "invalid seeding location (column) name: " + loc_name
+                    )
 
     def infect_super_area(
         self, super_area, cases_per_capita_per_age, time, record=None
@@ -90,11 +111,12 @@ class ExactNumInfectionSeed(InfectionSeed):
     ):
         """
         Infect world/region/super_area/area with number of cases given by data frame
+        Not only super area, but still keep the old function name for now.
 
         Parameters
         ----------
         n_cases_per_super_area:
-            data frame containig the number of cases per super area
+            data frame containig the number of cases per world/region/super_area/area
         time:
             Time where infections start (could be negative if they started before the simulation)
         """
@@ -106,44 +128,37 @@ class ExactNumInfectionSeed(InfectionSeed):
                 record=record,
             )
         else:
-            col_name_split = cases_per_capita_per_age_per_region.columns[0].split("-")
-            if len(col_name_split) == 2:
-                # region
-                iter_type = self.world.regions
-            else:
-                if len(col_name_split[-1]) == 1:
-                    # superarea
-                    iter_type = self.world.super_areas
-                else:
-                    # area
-                    iter_type = self.world.areas
-
             num_locations_to_seed = len(cases_per_capita_per_age_per_region.columns)
-            for this_area in iter_type:
-                try:
-                    cases_per_capita_per_age = cases_per_capita_per_age_per_region[
-                        this_area.name
-                    ]
-                except:
-                    continue
+            for geo_type in self.iter_list:
+                for this_loc in geo_type:
+                    try:
+                        cases_per_capita_per_age = cases_per_capita_per_age_per_region[
+                            this_loc.name
+                        ]
+                    except KeyError:
+                        continue
 
-                if self._need_to_seed_accounting_secondary_infections(date=date):
-                    cases_per_capita_per_age = (
-                        self._adjust_seed_accounting_secondary_infections(
-                            cases_per_capita_per_age=cases_per_capita_per_age,
-                            region=this_area,
-                            date=date,
-                            time=time,
+                    """ 
+                    ### 
+                    # TO DO: rewite self._adjust_seed_accounting_secondary_infections to work for superarea/area
+                    ###
+                    if self._need_to_seed_accounting_secondary_infections(date=date):
+                        cases_per_capita_per_age = (
+                            self._adjust_seed_accounting_secondary_infections(
+                                cases_per_capita_per_age=cases_per_capita_per_age,
+                                region=this_loc,
+                                date=date,
+                                time=time,
+                            )
                         )
+                    """
+                    self.infect_super_area(
+                        super_area=this_loc,
+                        cases_per_capita_per_age=cases_per_capita_per_age,
+                        time=time,
+                        record=record,
                     )
-
-                self.infect_super_area(
-                    super_area=this_area,
-                    cases_per_capita_per_age=cases_per_capita_per_age,
-                    time=time,
-                    record=record,
-                )
-                num_locations_to_seed -= 1
+                    num_locations_to_seed -= 1
 
             # check if all columns are seeded
             assert (
@@ -188,32 +203,33 @@ class ExactNumClusteredInfectionSeed(ExactNumInfectionSeed):
     def infect_super_area(
         self, super_area, cases_per_capita_per_age, time, record=None
     ):
-        infection_id = self.infection_selector.infection_class.infection_id()
-
-        total_to_infect = cases_per_capita_per_age.sum()
         households = []
-        area_type = type(super_area).__name__
-        if area_type == "CampWorld":
+        if isinstance(super_area, World):
             for r in super_area.regions:
                 for sa in r.super_areas:
                     for area in sa.areas:
                         households += area.households
-        elif area_type == "Region":
+        elif isinstance(super_area, Region):
             for sa in super_area.super_areas:
                 for area in sa.areas:
                     households += area.households
-        elif area_type == "SuperArea":
+        elif isinstance(super_area, SuperArea):
             for area in super_area.areas:
                 households += area.households
-        elif area_type == "CampArea":
+        elif isinstance(super_area, Area):
             households += super_area.households
         else:
-            raise TypeError("invalid seeding location type: " + area_type)
+            raise TypeError(
+                "invalid seeding location type: " + type(super_area).__name__
+            )
 
         age_distribution = cases_per_capita_per_age / cases_per_capita_per_age.sum()
         scores = [self.get_household_score(h, age_distribution) for h in households]
-
         cum_scores = np.cumsum(scores)
+
+        infection_id = self.infection_selector.infection_class.infection_id()
+        total_to_infect = cases_per_capita_per_age.sum()
+
         seeded_households = set()
         while total_to_infect > 0:
             num = random.random() * cum_scores[-1]
