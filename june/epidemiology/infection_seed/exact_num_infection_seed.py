@@ -41,7 +41,7 @@ class ExactNumInfectionSeed(InfectionSeed):
             daily_cases_per_capita_per_age_per_region * seed_strength
         )
 
-        self.iter_list = []
+        self.iter_type_set = set()
         if "all" not in daily_cases_per_capita_per_age_per_region.columns:
             # generate list of existing regions, superareas, areas
             regions = [region.name for region in self.world.regions]
@@ -51,14 +51,11 @@ class ExactNumInfectionSeed(InfectionSeed):
             # check if seeding locations are existing in curent world
             for loc_name in self.daily_cases_per_capita_per_age_per_region.columns:
                 if loc_name in regions:
-                    if self.world.regions not in self.iter_list:
-                        self.iter_list.append(self.world.regions)
+                    self.iter_type_set.add(self.world.regions)
                 elif loc_name in super_areas:
-                    if self.world.super_areas not in self.iter_list:
-                        self.iter_list.append(self.world.super_areas)
+                    self.iter_type_set.add(self.world.super_areas)
                 elif loc_name in areas:
-                    if self.world.areas not in self.iter_list:
-                        self.iter_list.append(self.world.areas)
+                    self.iter_type_set.add(self.world.areas)
                 else:
                     raise TypeError(
                         "invalid seeding location (column) name: " + loc_name
@@ -129,7 +126,7 @@ class ExactNumInfectionSeed(InfectionSeed):
             )
         else:
             num_locations_to_seed = len(cases_per_capita_per_age_per_region.columns)
-            for geo_type in self.iter_list:
+            for geo_type in self.iter_type_set:
                 for this_loc in geo_type:
                     try:
                         cases_per_capita_per_age = cases_per_capita_per_age_per_region[
