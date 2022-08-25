@@ -1,3 +1,4 @@
+from shutil import which
 from .tracker_plots_formatting import fig_initialize, set_size, dpi
 fig_initialize(setsize=True)
 import numpy as np
@@ -414,13 +415,13 @@ class PlotClass:
             ax
         """
         size = mpl.rcParams["font.size"]
-        if cm.shape[0] <= 3:
+        if cm.shape[0] <= 2:
             size -= 3
-        if cm.shape[0] > 3:
+        if cm.shape[0] >= 3:
             size -= 4
 
         if annotate == "Small":
-            size -= 3
+            size -= 2
 
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
@@ -437,12 +438,13 @@ class PlotClass:
                     if cm_err[i, j] + cm[i, j] == 0:
                         fmt = ".0f"
 
-                    text = r"$ %s \pm %s$" % (
-                        format(cm[i, j], fmt),
-                        format(cm_err[i, j], fmt),
-                    )
+                    if fmt == ".0f":
+                        text = r"$0 \pm 0$"
+                    else:
+                        text = r"$%s \pm $" % (format(cm[i, j], fmt)) + "\n\t" + "$%s$" % (format(cm_err[i, j], fmt))
+                    
                 else:
-                    text = r"$ %s $" % (format(cm[i, j], fmt))
+                    text = r"$%s$" % (format(cm[i, j], fmt))
 
                 if thresh == 1e8:
                     ax.text(
@@ -504,7 +506,7 @@ class PlotClass:
         im = ax.imshow(cm, **plt_kwargs, interpolation=Interpolation)
         ax.xaxis.tick_bottom()
 
-        if annotate == "Small" and len(labels) > 4:
+        if annotate == "Small" and len(labels) >= 3:
             size =  mpl.rcParams["xtick.labelsize"] - 4
         elif annotate == "Small":
             size = mpl.rcParams["xtick.labelsize"] - 2
@@ -516,6 +518,8 @@ class PlotClass:
                 labels = ["K", "Y", "A", "O"]
             if "teachers" in labels and "students" in labels:
                 labels = ["T", "S"]
+            if "workers" in labels and len(labels) == 1:
+                labels = ["W"]
         
         if labels is not None:
             if len(labels) == 1:
@@ -2068,11 +2072,15 @@ class PlotClass:
                     if rct == "company":
                         plot_BBC_Sheet = "all_work"
 
+                which = "NCM_R"
+                if self.Tracker_Contact_Type == "All":
+                    which = "NCM"
+
                 self.plot_contact_matrix_INOUT(
                     bin_type=rbt,
                     contact_type=rct,
                     sex="unisex",
-                    which="NCM_R",
+                    which=which,
                     plot_BBC_Sheet=plot_BBC_Sheet,
                     MaxAgeBin=MaxAgeBin,
                 )
