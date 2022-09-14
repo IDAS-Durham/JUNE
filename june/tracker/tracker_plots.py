@@ -1,5 +1,5 @@
-from shutil import which
 from .tracker_plots_formatting import fig_initialize, set_size, dpi
+
 fig_initialize(setsize=True)
 import numpy as np
 import yaml
@@ -99,7 +99,6 @@ class PlotClass:
     ):
         self.record_path = record_path
         self.Tracker_Contact_Type = Tracker_Contact_Type
-
 
         # Only plot fully merged data (Only applies to MPI runs, auto saved to merge if single core)
         folder_name = "merged_data_output"
@@ -442,8 +441,12 @@ class PlotClass:
                     if fmt == ".0f":
                         text = r"$0 \pm 0$"
                     else:
-                        text = r"$%s \pm $" % (format(cm[i, j], fmt)) + "\n\t" + "$%s$" % (format(cm_err[i, j], fmt))
-                    
+                        text = (
+                            r"$%s \pm $" % (format(cm[i, j], fmt))
+                            + "\n\t"
+                            + "$%s$" % (format(cm_err[i, j], fmt))
+                        )
+
                 else:
                     text = r"$%s$" % (format(cm[i, j], fmt))
 
@@ -463,7 +466,17 @@ class PlotClass:
                     )
         return ax
 
-    def PlotCM(self, cm, cm_err, labels, ax, thresh=1e10, thumb=False, annotate=True, **plt_kwargs):
+    def PlotCM(
+        self,
+        cm,
+        cm_err,
+        labels,
+        ax,
+        thresh=1e10,
+        thumb=False,
+        annotate=True,
+        **plt_kwargs,
+    ):
         """
         Function to imshow plot the CM.
 
@@ -489,8 +502,6 @@ class PlotClass:
             im:
                 referance to plot object
         """
-        
-        
 
         if cm is None:
             pass
@@ -526,14 +537,12 @@ class PlotClass:
         ax.xaxis.tick_bottom()
 
         if annotate == "Small" and len(labels) >= 3:
-            size =  mpl.rcParams["xtick.labelsize"] - 4
+            size = mpl.rcParams["xtick.labelsize"] - 4
         elif annotate == "Small":
             size = mpl.rcParams["xtick.labelsize"] - 2
         else:
             size = mpl.rcParams["xtick.labelsize"]
 
-
-        
         if labels is not None:
             if len(labels) == 1:
                 ax.set_xticks(np.arange(len(cm)))
@@ -558,15 +567,14 @@ class PlotClass:
                 ax.set_yticklabels(labels, size=size)
         else:
             Nticks = 5
-            ticks = np.arange(0, len(cm), int((len(cm)+1)/(Nticks-1)))
+            ticks = np.arange(0, len(cm), int((len(cm) + 1) / (Nticks - 1)))
             ax.set_xticks(ticks)
             ax.set_xticklabels(ticks)
             ax.set_yticks(ticks)
             ax.set_yticklabels(ticks)
-            
 
         # Loop over data dimensions and create text annotations.
-        if cm.shape[0] * cm.shape[1] < 26 and annotate != False:
+        if cm.shape[0] * cm.shape[1] < 26 and annotate:
             self.AnnotateCM(cm, cm_err, ax, thresh=thresh, annotate=annotate)
         if not thumb:
             ax.set_xlabel("age group")
@@ -620,7 +628,7 @@ class PlotClass:
         else:
             return None
 
-    def CMPlots_UsefulCM(self, bin_type, cm, cm_err=None, labels=None, MaxAgeBin = 100):
+    def CMPlots_UsefulCM(self, bin_type, cm, cm_err=None, labels=None, MaxAgeBin=100):
         """
         Truncate the CM for the plots to drop age bins of the data with no people.
 
@@ -799,7 +807,13 @@ class PlotClass:
     #############################################
 
     def plot_contact_matrix_INOUT(
-        self, bin_type, contact_type, sex="unisex", which="NCM_R", plot_BBC_Sheet=False, MaxAgeBin = 100
+        self,
+        bin_type,
+        contact_type,
+        sex="unisex",
+        which="NCM_R",
+        plot_BBC_Sheet=False,
+        MaxAgeBin=100,
     ):
         """
         Function to plot input contact matrix vs output for bin_type, contact_type and sex.
@@ -845,7 +859,9 @@ class PlotClass:
 
         labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
         cm, cm_err = self.CMPlots_GetCM(bin_type, contact_type, sex=sex, which=which)
-        cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels, MaxAgeBin)
+        cm, cm_err, labels = self.CMPlots_UsefulCM(
+            bin_type, cm, cm_err, labels, MaxAgeBin
+        )
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
             cm_Min = np.nanmin(cm[np.nonzero(cm)])
@@ -871,9 +887,9 @@ class PlotClass:
             norm2 = self.Get_SAMECMAP_Norm(cm.shape[0])
 
         if not plot_BBC_Sheet:
-            #plt.rcParams["figure.figsize"] = (15, 5)
+            # plt.rcParams["figure.figsize"] = (15, 5)
             f, (ax1, ax2) = plt.subplots(1, 2)
-            f.set_size_inches(set_size(subplots=(1,2), fraction=1))
+            f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
             f.patch.set_facecolor("white")
 
             im1 = self.PlotCM(
@@ -892,10 +908,10 @@ class PlotClass:
             f.colorbar(im1, ax=ax1, extend="both")
             f.colorbar(im2, ax=ax2, extend="both")
 
-            #ax1.set_title(f"IM")
-            #ax2.set_title(f"{which}")
+            # ax1.set_title(f"IM")
+            # ax2.set_title(f"{which}")
             # f.suptitle(f"{bin_type} binned contacts in {contact_type}")
-            #plt.tight_layout()
+            # plt.tight_layout()
             return (ax1, ax2)
         else:
             df = pd.read_excel(
@@ -914,9 +930,9 @@ class PlotClass:
             if not self.SameCMAP:
                 norm2 = colors.Normalize(vmin=0, vmax=cm_Max)
 
-            #plt.rcParams["figure.figsize"] = (15, 5)
+            # plt.rcParams["figure.figsize"] = (15, 5)
             f, (ax1, ax2, ax3) = plt.subplots(1, 3)
-            f.set_size_inches(set_size(subplots=(1,2), fraction=1))
+            f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
             f.patch.set_facecolor("white")
 
             im1 = self.PlotCM(
@@ -928,18 +944,38 @@ class PlotClass:
                 cmap=cmap_A,
                 norm=norm1,
                 annotate=True,
-                thumb=True
+                thumb=True,
             )
 
-            
-            cm = (cm.T*(np.array(self.age_profiles["Paper"][contact_type][sex])/np.array(self.age_profiles["Paper"]["global"][sex]))).T
+            cm = (
+                cm.T
+                * (
+                    np.array(self.age_profiles["Paper"][contact_type][sex])
+                    / np.array(self.age_profiles["Paper"]["global"][sex])
+                )
+            ).T
             im2 = self.PlotCM(
-                cm + 1e-16, cm_err, labels, ax2, origin="lower", cmap=cmap_A, norm=norm2,annotate="Small",thumb=True
+                cm + 1e-16,
+                cm_err,
+                labels,
+                ax2,
+                origin="lower",
+                cmap=cmap_A,
+                norm=norm2,
+                annotate="Small",
+                thumb=True,
             )
-
 
             im3 = self.PlotCM(
-                bbc_cm, None, bbc_labels, ax3, origin="lower", cmap=cmap_A, norm=norm2,annotate="Small",thumb=True
+                bbc_cm,
+                None,
+                bbc_labels,
+                ax3,
+                origin="lower",
+                cmap=cmap_A,
+                norm=norm2,
+                annotate="Small",
+                thumb=True,
             )
 
             cm = np.nan_to_num(cm, nan=0.0)
@@ -974,9 +1010,9 @@ class PlotClass:
             f.colorbar(im2, ax=ax2, extend="both")
             f.colorbar(im3, ax=ax3, extend="both")
 
-            #ax1.set_title(f"IM")
-            #ax2.set_title(f"{which}")
-            #ax3.set_title(f"BBC ({plot_BBC_Sheet})")
+            # ax1.set_title(f"IM")
+            # ax2.set_title(f"{which}")
+            # ax3.set_title(f"BBC ({plot_BBC_Sheet})")
             # f.suptitle(f"{bin_type} binned contacts in {contact_type}")
             plt.tight_layout()
             return (ax1, ax2, ax3)
@@ -1045,9 +1081,9 @@ class PlotClass:
         vMax = max(cm_Max, IM_Max)
         vMin = 1e-2
 
-        #plt.rcParams["figure.figsize"] = (15, 5)
+        # plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2, ax3) = plt.subplots(1, 3)
-        f.set_size_inches(set_size(subplots=(1,2), fraction=1))
+        f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
         f.patch.set_facecolor("white")
 
         if not self.SameCMAP:
@@ -1059,10 +1095,26 @@ class PlotClass:
             norm2 = self.Get_SAMECMAP_Norm(cm.shape[0])
 
         im1 = self.PlotCM(
-            IM + 1e-16, IM_err, labels_IM, ax1, origin="lower", cmap=cmap_A, norm=norm1,annotate=True,thumb=True
+            IM + 1e-16,
+            IM_err,
+            labels_IM,
+            ax1,
+            origin="lower",
+            cmap=cmap_A,
+            norm=norm1,
+            annotate=True,
+            thumb=True,
         )
         im2 = self.PlotCM(
-            cm + 1e-16, cm_err, labels_CM, ax2, origin="lower", cmap=cmap_A, norm=norm2,annotate="Small",thumb=True
+            cm + 1e-16,
+            cm_err,
+            labels_CM,
+            ax2,
+            origin="lower",
+            cmap=cmap_A,
+            norm=norm2,
+            annotate="Small",
+            thumb=True,
         )
 
         ratio = cm / IM
@@ -1092,7 +1144,7 @@ class PlotClass:
             cmap=cmap_B,
             norm=norm,
             annotate="Small",
-            thumb=True
+            thumb=True,
         )
         f.colorbar(im1, ax=ax1, extend="both")
         f.colorbar(im2, ax=ax2, extend="both")
@@ -1146,7 +1198,7 @@ class PlotClass:
         labels_CM = labels_IM
 
         f, ax1 = plt.subplots(1, 1)
-        f.set_size_inches(set_size(subplots=(1,1), fraction=.5))
+        f.set_size_inches(set_size(subplots=(1, 1), fraction=0.5))
         f.patch.set_facecolor("white")
 
         if not self.SameCMAP:
@@ -1180,10 +1232,12 @@ class PlotClass:
             )
 
         # f.suptitle(f"Survey interaction binned contacts in {contact_type}")
-        #plt.tight_layout()
+        # plt.tight_layout()
         return f, ax1, im1
 
-    def plot_contact_matrix(self, bin_type, contact_type, sex="unisex", which="NCM", MaxAgeBin = 100):
+    def plot_contact_matrix(
+        self, bin_type, contact_type, sex="unisex", which="NCM", MaxAgeBin=100
+    ):
         """
         Function to plot contact matrix for bin_type, contact_type and sex.
 
@@ -1208,7 +1262,9 @@ class PlotClass:
             labels = self.IMPlots_GetLabels(contact_type)
         else:
             labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
-            cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels, MaxAgeBin)
+            cm, cm_err, labels = self.CMPlots_UsefulCM(
+                bin_type, cm, cm_err, labels, MaxAgeBin
+            )
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
             cm_Min = np.nanmin(cm[np.nonzero(cm)])
@@ -1233,9 +1289,9 @@ class PlotClass:
             normlin = self.Get_SAMECMAP_Norm(cm.shape[0], override="Lin")
             normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="Log")
 
-        #plt.rcParams["figure.figsize"] = (15, 5)
+        # plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
-        f.set_size_inches(set_size(subplots=(1,2), fraction=1))
+        f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
         f.patch.set_facecolor("white")
 
         im1 = self.PlotCM(
@@ -1248,14 +1304,14 @@ class PlotClass:
         f.colorbar(im1, ax=ax1, extend="both")
         f.colorbar(im2, ax=ax2, extend="both")
 
-        #ax1.set_title("Linear Scale")
-        #ax2.set_title("Log Scale")
+        # ax1.set_title("Linear Scale")
+        # ax2.set_title("Log Scale")
         # f.suptitle(f"{bin_type} binned contacts in {contact_type} for {sex}")
-        #plt.tight_layout()
+        # plt.tight_layout()
         return (ax1, ax2)
 
     def plot_contact_matrix_thumb(
-        self, log, bin_type, contact_type, sex="unisex", which="NCM", MaxAgeBin = 100
+        self, log, bin_type, contact_type, sex="unisex", which="NCM", MaxAgeBin=100
     ):
         """
         Function to plot contact matrix for bin_type, contact_type and sex.
@@ -1284,7 +1340,9 @@ class PlotClass:
             labels = self.IMPlots_GetLabels(contact_type)
         else:
             labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
-            cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels, MaxAgeBin)
+            cm, cm_err, labels = self.CMPlots_UsefulCM(
+                bin_type, cm, cm_err, labels, MaxAgeBin
+            )
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
             cm_Min = np.nanmin(cm[np.nonzero(cm)])
@@ -1303,7 +1361,7 @@ class PlotClass:
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
         f, ax1 = plt.subplots(1, 1)
-        f.set_size_inches(set_size(subplots=(1,1), fraction=.5))
+        f.set_size_inches(set_size(subplots=(1, 1), fraction=0.5))
         f.patch.set_facecolor("white")
 
         if not self.SameCMAP or which == "CM_T":
@@ -1337,10 +1395,12 @@ class PlotClass:
             )
 
         # cax1 = f.add_axes([ax1.get_position().x1+0.01,ax1.get_position().y0,0.02,ax1.get_position().height])
-        #plt.tight_layout()
+        # plt.tight_layout()
         return f, ax1, im1
 
-    def plot_comparesexes_contact_matrix(self, bin_type, contact_type, which="NCM", MaxAgeBin = 100):
+    def plot_comparesexes_contact_matrix(
+        self, bin_type, contact_type, which="NCM", MaxAgeBin=100
+    ):
         """
         Function to plot difference in contact matrices between men and women for bin_type, contact_type.
 
@@ -1358,9 +1418,9 @@ class PlotClass:
             (ax1,ax2):
                 matplotlib axes objects (Linear and Log)
         """
-        #plt.rcParams["figure.figsize"] = (15, 5)
+        # plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
-        f.set_size_inches(set_size(subplots=(1,2), fraction=1))
+        f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
         f.patch.set_facecolor("white")
 
         labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
@@ -1369,7 +1429,9 @@ class PlotClass:
         cm_F, _ = self.CMPlots_GetCM(bin_type, contact_type, "female", which)
         cm = cm_M - cm_F
 
-        cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, None, labels, MaxAgeBin)
+        cm, cm_err, labels = self.CMPlots_UsefulCM(
+            bin_type, cm, None, labels, MaxAgeBin
+        )
 
         cm_Min = -1e-1
         cm_Max = 1e-1
@@ -1393,10 +1455,10 @@ class PlotClass:
         f.colorbar(im1, ax=ax1, extend="both", label="$M - F$")
         f.colorbar(im2, ax=ax2, extend="both", label="$M - F$")
 
-        #ax1.set_title("Linear Scale")
-        #ax2.set_title("Log Scale")
+        # ax1.set_title("Linear Scale")
+        # ax2.set_title("Log Scale")
         # f.suptitle(f"Male - female {bin_type} binned contacts in {contact_type}")
-        #plt.tight_layout()
+        # plt.tight_layout()
         return (ax1, ax2)
 
     def plot_stacked_contacts(self, bin_type, contact_types=None):
@@ -1416,9 +1478,9 @@ class PlotClass:
                 matplotlib axes object
 
         """
-        #plt.rcParams["figure.figsize"] = (10, 5)
+        # plt.rcParams["figure.figsize"] = (10, 5)
         f, ax = plt.subplots()
-        f.set_size_inches(set_size(subplots=(1,2), fraction=1))
+        f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
         f.patch.set_facecolor("white")
 
         average_contacts = self.average_contacts[bin_type]
@@ -1474,7 +1536,7 @@ class PlotClass:
         ax.set_xlabel("Age")
         ax.set_ylabel("average contacts per day")
         f.subplots_adjust(top=0.70)
-        #plt.tight_layout()
+        # plt.tight_layout()
         return ax
 
     # def plot_population_at_locs(self, locations, max_days=7):
@@ -1658,9 +1720,9 @@ class PlotClass:
             stds[day_i] = np.nanstd(data, ddof=1)
             medians[day_i] = np.nanmedian(data)
 
-        #plt.rcParams["figure.figsize"] = (15, 5)
+        # plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
-        f.set_size_inches(set_size(subplots=(1,2), fraction=1))
+        f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
         f.patch.set_facecolor("white")
         ax1.bar(
             np.arange(len(DaysOfWeek_Names)), means, alpha=0.4, color="b", label="mean"
@@ -1685,9 +1747,9 @@ class PlotClass:
 
         ax1.set_xticks(np.arange(len(DaysOfWeek_Names)))
         ax1.set_xticklabels(labels)
-        #ax1.set_ylabel("Unique Attendees per day")
-        #ax1.set_xlabel("Day of week")
-        ax1.set_ylim([0, np.nanmax(means)*1.4])
+        # ax1.set_ylabel("Unique Attendees per day")
+        # ax1.set_xlabel("Day of week")
+        ax1.set_ylim([0, np.nanmax(means) * 1.4])
         ax1.legend()
 
         # Get variations between days and time of day
@@ -1819,15 +1881,15 @@ class PlotClass:
             )
         ax2.axhline(0, color="grey", linestyle="--")
 
-        #ax2.set_ylabel("Mean Unique Attendees per timeslot")
-        #ax2.set_xlabel("Time of day [hour]")
+        # ax2.set_ylabel("Mean Unique Attendees per timeslot")
+        # ax2.set_xlabel("Time of day [hour]")
         # Define the date format
         ax2.xaxis.set_major_locator(mdates.HourLocator(byhour=None, interval=4))
         ax2.xaxis.set_major_formatter(DateFormatter("%H"))
         ax2.set_xlim(xlim)
         ax2.set_ylim([0, ylim[1]])
         ax2.legend()
-        #plt.tight_layout()
+        # plt.tight_layout()
         return (ax1, ax2)
 
     def plot_AgeProfileRatios(
@@ -1892,9 +1954,9 @@ class PlotClass:
                 ws_G[i, j] = Height_G[i] / Height_G[j]
                 ws_P[i, j] = Height_P[i] / Height_P[j]
 
-        #plt.rcParams["figure.figsize"] = (15, 5)
+        # plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
-        f.set_size_inches(set_size(subplots=(1,1), fraction=1))
+        f.set_size_inches(set_size(subplots=(1, 1), fraction=1))
         f.patch.set_facecolor("white")
 
         vmax_G = np.nan
@@ -1909,15 +1971,15 @@ class PlotClass:
             vmax = 1e-1
 
         vmin = 10 ** (-1 * np.log10(vmax))
-        #ax1_ins = ax1.inset_axes([0.8, 1.0, 0.2, 0.2])
+        # ax1_ins = ax1.inset_axes([0.8, 1.0, 0.2, 0.2])
 
         norm = colors.LogNorm(vmin=vmin, vmax=vmax)
         im_P = self.PlotCM(
             ws_P, None, Labels, ax1, origin="lower", cmap=cmap_B, norm=norm
         )
-        #im_G = self.PlotCM(
+        # im_G = self.PlotCM(
         #    ws_G, None, Labels, ax1_ins, origin="lower", cmap=cmap_B, norm=norm
-        #)
+        # )
 
         f.colorbar(im_P, ax=ax1, label=r"$\dfrac{Age_{y}}{Age_{x}}$", extend="both")
         plt.bar(
@@ -1975,9 +2037,9 @@ class PlotClass:
         indexlast = len(CumSum) - np.sum(CumSum == CumSum[-1])
         maxkm = dat.iloc[indexlast, 0] + 3.5 * (dat.iloc[1, 0] - dat.iloc[0, 0])
 
-        #plt.rcParams["figure.figsize"] = (10, 5)
+        # plt.rcParams["figure.figsize"] = (10, 5)
         f, ax = plt.subplots(1, 1)
-        f.set_size_inches(set_size(subplots=(1,2), fraction=1))
+        f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
         f.patch.set_facecolor("white")
         ax.bar(
             x=dat["bins"],
@@ -2009,9 +2071,7 @@ class PlotClass:
         plot_CompareSexMatrices=True,
         plot_AgeBinning=True,
         plot_Distances=True,
-
-        MaxAgeBin = 100,
-        
+        MaxAgeBin=100,
     ):
         """
         Make plots.
@@ -2161,9 +2221,9 @@ class PlotClass:
                             extend="both",
                             orientation="horizontal",
                             aspect=aspect,
-                            format='%g'
+                            format="%g",
                         )
-                        #cbar.ticklabel_format(style='plain')
+                        # cbar.ticklabel_format(style='plain')
                         ax1.remove()
                         fig.set_size_inches(
                             fig.get_size_inches()[0] * CbarMultiplier,
@@ -2189,7 +2249,7 @@ class PlotClass:
                             extend="both",
                             orientation="horizontal",
                             aspect=aspect,
-                            format='%g'
+                            format="%g",
                         )
                         ax1.remove()
                         fig.set_size_inches(
@@ -2261,7 +2321,7 @@ class PlotClass:
                                             extend="both",
                                             orientation="horizontal",
                                             aspect=aspect,
-                                            format='%g'
+                                            format="%g",
                                         )
                                         ax1.remove()
                                         fig.set_size_inches(
@@ -2295,7 +2355,7 @@ class PlotClass:
                                             extend="both",
                                             orientation="horizontal",
                                             aspect=aspect,
-                                            format='%g'
+                                            format="%g",
                                         )
                                         ax1.remove()
                                         fig.set_size_inches(
@@ -2311,7 +2371,11 @@ class PlotClass:
                     else:
                         for rct in IM_contact_types:
                             self.plot_contact_matrix(
-                                bin_type=rbt, contact_type=rct, sex=sex, which=CMType, MaxAgeBin=MaxAgeBin,
+                                bin_type=rbt,
+                                contact_type=rct,
+                                sex=sex,
+                                which=CMType,
+                                MaxAgeBin=MaxAgeBin,
                             )
                             plt.savefig(
                                 plot_dir_2 / f"{rct}.pdf", dpi=150, bbox_inches="tight"
@@ -2339,7 +2403,7 @@ class PlotClass:
                                         extend="both",
                                         aspect=aspect,
                                         orientation="horizontal",
-                                        format='%g'
+                                        format="%g",
                                     )
                                     ax1.remove()
                                     fig.set_size_inches(
@@ -2373,7 +2437,7 @@ class PlotClass:
                                         extend="both",
                                         aspect=aspect,
                                         orientation="horizontal",
-                                        format='%g'
+                                        format="%g",
                                     )
                                     ax1.remove()
                                     fig.set_size_inches(

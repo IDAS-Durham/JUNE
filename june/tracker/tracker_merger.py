@@ -831,16 +831,14 @@ class MergerClass:
                 folder=folder_name,
                 filename=f"tracker_{Tracker_Type}_Metrics_NCM_R_{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
-            ) 
+            )
 
             jsonfile = {}
             for loc in list(self.NCM["Interaction"].keys()):
                 A = np.array(self.NCM["Interaction"][loc], dtype=float)
                 B = np.array(self.IM[loc]["contacts"], dtype=float)
-                Dc = self.Canberra_distance(A,B)[0]
-                jsonfile[loc] = {
-                    "Dc": f"{Dc}"
-                }
+                Dc = self.Canberra_distance(A, B)[0]
+                jsonfile[loc] = {"Dc": f"{Dc}"}
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                 folder=folder_name,
@@ -926,15 +924,12 @@ class MergerClass:
                 jsonfile=jsonfile,
             )
 
-
             jsonfile = {}
             for loc in list(self.NCM_AC["Interaction"].keys()):
                 A = np.array(self.NCM_AC["Interaction"][loc], dtype=float)
                 B = np.array(self.IM[loc]["contacts"], dtype=float)
-                Dc = self.Canberra_distance(A,B)[0]
-                jsonfile[loc] = {
-                    "Dc": f"{Dc}"
-                }
+                Dc = self.Canberra_distance(A, B)[0]
+                jsonfile[loc] = {"Dc": f"{Dc}"}
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                 folder=folder_name,

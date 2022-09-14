@@ -907,7 +907,6 @@ class Tracker:
             col_name = f"{bins_type}_idx"
             self.contacts_df[col_name] = pd.Series(age_idxes)
 
-        
         return 1
 
     def calc_age_profiles(self):
@@ -2521,10 +2520,8 @@ class Tracker:
                 for loc in list(self.NCM["Interaction"].keys()):
                     A = np.array(self.NCM["Interaction"][loc], dtype=float)
                     B = np.array(self.IM[loc]["contacts"], dtype=float)
-                    Dc = self.Canberra_distance(A,B)[0]
-                    jsonfile[loc] = {
-                        "Dc": f"{Dc}"
-                    }
+                    Dc = self.Canberra_distance(A, B)[0]
+                    jsonfile[loc] = {"Dc": f"{Dc}"}
                 self.Save_CM_JSON(
                     dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                     folder=folder_name,
@@ -2611,15 +2608,12 @@ class Tracker:
                     jsonfile=jsonfile,
                 )
 
-
                 jsonfile = {}
                 for loc in list(self.NCM_AC["Interaction"].keys()):
                     A = np.array(self.NCM_AC["Interaction"][loc], dtype=float)
                     B = np.array(self.IM[loc]["contacts"], dtype=float)
-                    Dc = self.Canberra_distance(A,B)[0]
-                    jsonfile[loc] = {
-                        "Dc": f"{Dc}"
-                    }
+                    Dc = self.Canberra_distance(A, B)[0]
+                    jsonfile[loc] = {"Dc": f"{Dc}"}
                 self.Save_CM_JSON(
                     dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                     folder=folder_name,
