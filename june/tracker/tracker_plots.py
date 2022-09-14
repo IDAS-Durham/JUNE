@@ -100,6 +100,7 @@ class PlotClass:
         self.record_path = record_path
         self.Tracker_Contact_Type = Tracker_Contact_Type
 
+
         # Only plot fully merged data (Only applies to MPI runs, auto saved to merge if single core)
         folder_name = "merged_data_output"
 
@@ -501,6 +502,24 @@ class PlotClass:
         else:
             cm_err = cm_err.T
 
+        if labels is not None:
+            if "kids" in labels and "young_adults" in labels:
+                labels = ["K", "Y", "A", "O"]
+            elif len(labels) == 2 and "students" in labels:
+                if labels[0] == "students" and labels[1] == "teachers":
+                    labels = ["  S  ", "  T  "]
+                elif labels[1] == "students" and labels[0] == "teachers":
+                    labels = ["  S  ", "  T  "]
+                    cm = cm.T
+                    if cm_err is None:
+                        pass
+                    else:
+                        cm_err = cm_err.T
+            elif "workers" in labels and len(labels) == 1:
+                labels = ["W"]
+            elif "inter" in labels:
+                labels = [r" H$_1$ ", r" H$_2$ "]
+
         # im = ax.matshow(cm, **plt_kwargs)
         Interpolation = "None"
         im = ax.imshow(cm, **plt_kwargs, interpolation=Interpolation)
@@ -513,13 +532,7 @@ class PlotClass:
         else:
             size = mpl.rcParams["xtick.labelsize"]
 
-        if labels is not None:
-            if "kids" in labels and "young_adults" in labels:
-                labels = ["K", "Y", "A", "O"]
-            if "teachers" in labels and "students" in labels:
-                labels = ["T", "S"]
-            if "workers" in labels and len(labels) == 1:
-                labels = ["W"]
+
         
         if labels is not None:
             if len(labels) == 1:
@@ -879,8 +892,8 @@ class PlotClass:
             f.colorbar(im1, ax=ax1, extend="both")
             f.colorbar(im2, ax=ax2, extend="both")
 
-            ax1.set_title(f"IM")
-            ax2.set_title(f"{which}")
+            #ax1.set_title(f"IM")
+            #ax2.set_title(f"{which}")
             # f.suptitle(f"{bin_type} binned contacts in {contact_type}")
             #plt.tight_layout()
             return (ax1, ax2)
@@ -917,14 +930,18 @@ class PlotClass:
                 annotate=True,
                 thumb=True
             )
+
+            
+            cm = (cm.T*(np.array(self.age_profiles["Paper"][contact_type][sex])/np.array(self.age_profiles["Paper"]["global"][sex]))).T
             im2 = self.PlotCM(
                 cm + 1e-16, cm_err, labels, ax2, origin="lower", cmap=cmap_A, norm=norm2,annotate="Small",thumb=True
             )
+
+
             im3 = self.PlotCM(
                 bbc_cm, None, bbc_labels, ax3, origin="lower", cmap=cmap_A, norm=norm2,annotate="Small",thumb=True
             )
 
-            # TODO Remove This is for convience only.
             cm = np.nan_to_num(cm, nan=0.0)
             bbc_cm = np.nan_to_num(bbc_cm, nan=0.0)
 
@@ -957,9 +974,9 @@ class PlotClass:
             f.colorbar(im2, ax=ax2, extend="both")
             f.colorbar(im3, ax=ax3, extend="both")
 
-            ax1.set_title(f"IM")
-            ax2.set_title(f"{which}")
-            ax3.set_title(f"BBC ({plot_BBC_Sheet})")
+            #ax1.set_title(f"IM")
+            #ax2.set_title(f"{which}")
+            #ax3.set_title(f"BBC ({plot_BBC_Sheet})")
             # f.suptitle(f"{bin_type} binned contacts in {contact_type}")
             plt.tight_layout()
             return (ax1, ax2, ax3)
@@ -1286,7 +1303,6 @@ class PlotClass:
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
         f, ax1 = plt.subplots(1, 1)
-        #TODO
         f.set_size_inches(set_size(subplots=(1,1), fraction=.5))
         f.patch.set_facecolor("white")
 
@@ -1809,7 +1825,7 @@ class PlotClass:
         ax2.xaxis.set_major_locator(mdates.HourLocator(byhour=None, interval=4))
         ax2.xaxis.set_major_formatter(DateFormatter("%H"))
         ax2.set_xlim(xlim)
-        ax2.set_ylim(ylim)
+        ax2.set_ylim([0, ylim[1]])
         ax2.legend()
         #plt.tight_layout()
         return (ax1, ax2)
@@ -2139,13 +2155,15 @@ class PlotClass:
                         plot_dir / f"{rct}_thumbnail.pdf", dpi=100, bbox_inches="tight"
                     )
                     if rct == list(self.IM.keys())[0] and SameCMAP:
-                        fig.colorbar(
+                        cbar = fig.colorbar(
                             im1,
                             ax=ax1,
                             extend="both",
                             orientation="horizontal",
                             aspect=aspect,
+                            format='%g'
                         )
+                        #cbar.ticklabel_format(style='plain')
                         ax1.remove()
                         fig.set_size_inches(
                             fig.get_size_inches()[0] * CbarMultiplier,
@@ -2171,6 +2189,7 @@ class PlotClass:
                             extend="both",
                             orientation="horizontal",
                             aspect=aspect,
+                            format='%g'
                         )
                         ax1.remove()
                         fig.set_size_inches(
@@ -2242,6 +2261,7 @@ class PlotClass:
                                             extend="both",
                                             orientation="horizontal",
                                             aspect=aspect,
+                                            format='%g'
                                         )
                                         ax1.remove()
                                         fig.set_size_inches(
@@ -2275,6 +2295,7 @@ class PlotClass:
                                             extend="both",
                                             orientation="horizontal",
                                             aspect=aspect,
+                                            format='%g'
                                         )
                                         ax1.remove()
                                         fig.set_size_inches(
@@ -2318,6 +2339,7 @@ class PlotClass:
                                         extend="both",
                                         aspect=aspect,
                                         orientation="horizontal",
+                                        format='%g'
                                     )
                                     ax1.remove()
                                     fig.set_size_inches(
@@ -2351,6 +2373,7 @@ class PlotClass:
                                         extend="both",
                                         aspect=aspect,
                                         orientation="horizontal",
+                                        format='%g'
                                     )
                                     ax1.remove()
                                     fig.set_size_inches(

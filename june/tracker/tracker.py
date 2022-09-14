@@ -907,6 +907,7 @@ class Tracker:
             col_name = f"{bins_type}_idx"
             self.contacts_df[col_name] = pd.Series(age_idxes)
 
+        
         return 1
 
     def calc_age_profiles(self):
