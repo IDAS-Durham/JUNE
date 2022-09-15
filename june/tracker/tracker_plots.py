@@ -60,14 +60,17 @@ class PlotClass:
         path for results directory
 
     Tracker_Contact_Type:
-        list, list of tracker contact types to be loaded ["1D", "All"]
+        NONE, Not used
 
     Following parameters can be preloaded data from another plot class. If None data automatically loaded.
         Params,
         IM,
-        CM_T,
+        CM,
         NCM,
         NCM_R,
+        NCM_P,
+        CMV,
+        NCMV,
         average_contacts,
         location_counters,
         location_counters_day,
@@ -84,12 +87,15 @@ class PlotClass:
     def __init__(
         self,
         record_path=Path(""),
-        Tracker_Contact_Type="1D",
+        Tracker_Contact_Type=None,
         Params=None,
         IM=None,
-        CM_T=None,
+        CM=None,
         NCM=None,
         NCM_R=None,
+        NCM_P=None,
+        CMV=None,
+        NCM_V=None,
         average_contacts=None,
         location_counters=None,
         location_counters_day=None,
@@ -97,8 +103,14 @@ class PlotClass:
         age_profiles=None,
         travel_distance=None,
     ):
+
+        if Tracker_Contact_Type == None:
+            pass
+        else:
+            print("Tracker_Contact_Type argument no longer required")
+
         self.record_path = record_path
-        self.Tracker_Contact_Type = Tracker_Contact_Type
+        
 
         # Only plot fully merged data (Only applies to MPI runs, auto saved to merge if single core)
         folder_name = "merged_data_output"
@@ -121,23 +133,23 @@ class PlotClass:
         else:
             self.IM = IM
 
-        if CM_T is None:
+        if CM is None:
             with open(
                 self.record_path
                 / folder_name
                 / "CM_yamls"
-                / f"tracker_{self.Tracker_Contact_Type}_Total_CM.yaml"
+                / f"tracker_CM.yaml"
             ) as f:
-                self.CM_T = yaml.load(f, Loader=yaml.FullLoader)
+                self.CM = yaml.load(f, Loader=yaml.FullLoader)
         else:
-            self.CM_T = CM_T
+            self.CM = CM
 
         if NCM is None:
             with open(
                 self.record_path
                 / folder_name
                 / "CM_yamls"
-                / f"tracker_{self.Tracker_Contact_Type}_NCM.yaml"
+                / f"tracker_NCM.yaml"
             ) as f:
                 self.NCM = yaml.load(f, Loader=yaml.FullLoader)
         else:
@@ -148,11 +160,44 @@ class PlotClass:
                 self.record_path
                 / folder_name
                 / "CM_yamls"
-                / f"tracker_{self.Tracker_Contact_Type}_NCM_R.yaml"
+                / f"tracker_NCM_R.yaml"
             ) as f:
                 self.NCM_R = yaml.load(f, Loader=yaml.FullLoader)
         else:
             self.NCM_R = NCM_R
+
+        if NCM_P is None:
+            with open(
+                self.record_path
+                / folder_name
+                / "CM_yamls"
+                / f"tracker_NCM_V.yaml"
+            ) as f:
+                self.NCM_P = yaml.load(f, Loader=yaml.FullLoader)
+        else:
+            self.NCM_P = NCM_P
+
+        if CMV is None:
+            with open(
+                self.record_path
+                / folder_name
+                / "CM_yamls"
+                / f"tracker_CMV.yaml"
+            ) as f:
+                self.CMV = yaml.load(f, Loader=yaml.FullLoader)
+        else:
+            self.CMV = CMV
+
+        if NCM_V is None:
+            with open(
+                self.record_path
+                / folder_name
+                / "CM_yamls"
+                / f"tracker_NCM_V.yaml"
+            ) as f:
+                self.NCM_V = yaml.load(f, Loader=yaml.FullLoader)
+        else:
+            self.NCM_V = NCM_V
 
         # Get Parameters of simulation
         self.total_days = self.Params["total_days"]
@@ -162,14 +207,14 @@ class PlotClass:
         }
         self.NVenues = self.Params["NVenues"]
         # Get all the bin types
-        self.relevant_bin_types = list(self.CM_T.keys())
+        self.relevant_bin_types = list(self.CM.keys())
         # Get all location names
-        self.group_type_names = list(self.CM_T["syoa"].keys())
+        self.group_type_names = list(self.CM["syoa"].keys())
         # Get all CM options
-        self.CM_Keys = list(self.CM_T["syoa"][self.group_type_names[0]].keys())
+        self.CM_Keys = list(self.CM["syoa"][self.group_type_names[0]].keys())
         # Get all contact sexes
         self.contact_sexes = list(
-            self.CM_T["syoa"][self.group_type_names[0]]["sex"].keys()
+            self.CM["syoa"][self.group_type_names[0]]["sex"].keys()
         )
 
         self.age_bins = {}
@@ -177,7 +222,7 @@ class PlotClass:
             if rbt == "Interaction":
                 continue
             self.age_bins[rbt] = np.array(
-                self.CM_T[rbt][self.group_type_names[0]]["bins"]
+                self.CM[rbt][self.group_type_names[0]]["bins"]
             )
 
         if average_contacts is None:
@@ -333,7 +378,7 @@ class PlotClass:
     # General Plotting ##################################
     #####################################################
 
-    def Get_SAMECMAP_Norm(self, dim, override=None):
+    def Get_SAMECMAP_Norm(self, dim, which="NCM", override=None):
         """
         If same colour map required this produces standarised colourmaps for different size matrices.
 
@@ -341,6 +386,8 @@ class PlotClass:
         ----------
             dim:
                 int, the dimension (length) of square matrix
+            which:
+                string, the contact matrix type
             override:
                 string, Log, Lin, SymLog or SymLin. Override if SAMECMAP was False. (Applies to certain plots)
 
@@ -350,7 +397,7 @@ class PlotClass:
                 matplotlib.colors.Norm object
 
         """
-        if self.Tracker_Contact_Type == "1D":
+        if which in ["CM", "NCM", "NCM_R", "NCM_P"]:
             SAMElinvmin = {"small_dim": 0, "large_dim": 0}
             SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-2}
 
@@ -360,7 +407,7 @@ class PlotClass:
             SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": 3e0}
             SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": 0.5e0}
 
-        elif self.Tracker_Contact_Type == "All":
+        elif which in ["CMV", "NCM_V"]:
             SAMElinvmin = {"small_dim": 0, "large_dim": 0}
             SAMElogvmin = {"small_dim": 1e-2, "large_dim": 1e-3}
 
@@ -748,7 +795,7 @@ class PlotClass:
             sex:
                 Sex contact matrix
             which:
-                str, which matrix type to collect "NCM", "NCM_R", "CM_T"
+                str, which matrix type to collect "CM", "NCM", "NCM_R", "NCM_P", "CMV", "NCM_V"
 
         Returns
         -------
@@ -758,25 +805,47 @@ class PlotClass:
                 np.array contact matrix errors
         """
         if bin_type != "Interaction":
-            if which == "CM_T":
-                cm = self.CM_T[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.CM_T[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            if which == "CM":
+                cm = self.CM[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.CM[bin_type][contact_type]["sex"][sex]["contacts_err"]
             elif which == "NCM":
                 cm = self.NCM[bin_type][contact_type]["sex"][sex]["contacts"]
                 cm_err = self.NCM[bin_type][contact_type]["sex"][sex]["contacts_err"]
             elif which == "NCM_R":
                 cm = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts"]
                 cm_err = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM_P":
+                cm = self.NCM_P[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM_P[bin_type][contact_type]["sex"][sex]["contacts_err"]
+
+            elif which == "CMV":
+                cm = self.CMV[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.CMV[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM_V":
+                cm = self.NCM_V[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM_V[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            
         else:
-            if which == "CM_T":
-                cm = self.CM_T[bin_type][contact_type]["contacts"]
-                cm_err = self.CM_T[bin_type][contact_type]["contacts_err"]
+            if which == "CM":
+                cm = self.CM[bin_type][contact_type]["contacts"]
+                cm_err = self.CM[bin_type][contact_type]["contacts_err"]
             elif which == "NCM":
                 cm = self.NCM[bin_type][contact_type]["contacts"]
                 cm_err = self.NCM[bin_type][contact_type]["contacts_err"]
             elif which == "NCM_R":
                 cm = self.NCM_R[bin_type][contact_type]["contacts"]
                 cm_err = self.NCM_R[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM_P":
+                cm = self.NCM_P[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM_P[bin_type][contact_type]["contacts_err"]
+
+            elif which == "CMV":
+                cm = self.CMV[bin_type][contact_type]["contacts"]
+                cm_err = self.CMV[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM_V":
+                cm = self.NCM_V[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM_V[bin_type][contact_type]["contacts_err"]
+
         return np.array(cm), np.array(cm_err)
 
     def IMPlots_GetIM(self, contact_type):
@@ -883,8 +952,8 @@ class PlotClass:
             norm1 = colors.Normalize(vmin=0, vmax=IM_Max)
             norm2 = colors.Normalize(vmin=0, vmax=cm_Max)
         else:
-            norm1 = self.Get_SAMECMAP_Norm(IM.shape[0])
-            norm2 = self.Get_SAMECMAP_Norm(cm.shape[0])
+            norm1 = self.Get_SAMECMAP_Norm(IM.shape[0], which=which)
+            norm2 = self.Get_SAMECMAP_Norm(cm.shape[0], which=which)
 
         if not plot_BBC_Sheet:
             # plt.rcParams["figure.figsize"] = (15, 5)
@@ -946,14 +1015,6 @@ class PlotClass:
                 annotate=True,
                 thumb=True,
             )
-
-            cm = (
-                cm.T
-                * (
-                    np.array(self.age_profiles["Paper"][contact_type][sex])
-                    / np.array(self.age_profiles["Paper"]["global"][sex])
-                )
-            ).T
             im2 = self.PlotCM(
                 cm + 1e-16,
                 cm_err,
@@ -1031,6 +1092,7 @@ class PlotClass:
             ax1:
                 matplotlib axes object
         """
+        which = "NCM"
         IM, IM_err = self.IMPlots_GetIM(contact_type)
         labels_IM = self.IMPlots_GetLabels(contact_type)
         IM, IM_err, labels_IM = self.IMPlots_UsefulCM(
@@ -1054,8 +1116,8 @@ class PlotClass:
         IM = np.nan_to_num(IM, posinf=IM_Max, neginf=0, nan=0)
 
         labels_CM = labels_IM
-        if contact_type in self.CM_T["Interaction"].keys():
-            cm, cm_err = self.CMPlots_GetCM("Interaction", contact_type, which="NCM")
+        if contact_type in self.CM["Interaction"].keys():
+            cm, cm_err = self.CMPlots_GetCM("Interaction", contact_type, which=which)
             cm, cm_err, _ = self.IMPlots_UsefulCM(
                 contact_type, cm, cm_err=cm_err, labels=labels_CM
             )
@@ -1091,8 +1153,8 @@ class PlotClass:
             norm2 = colors.Normalize(vmin=vMin, vmax=vMax)
         else:
 
-            norm1 = self.Get_SAMECMAP_Norm(IM.shape[0])
-            norm2 = self.Get_SAMECMAP_Norm(cm.shape[0])
+            norm1 = self.Get_SAMECMAP_Norm(IM.shape[0], which=which)
+            norm2 = self.Get_SAMECMAP_Norm(cm.shape[0], which=which)
 
         im1 = self.PlotCM(
             IM + 1e-16,
@@ -1173,6 +1235,7 @@ class PlotClass:
             ax1:
                 matplotlib axes object
         """
+        which = "NCM"
         IM, IM_err = self.IMPlots_GetIM(contact_type)
         labels_IM = self.IMPlots_GetLabels(contact_type)
         IM, IM_err, labels_IM = self.IMPlots_UsefulCM(
@@ -1205,8 +1268,8 @@ class PlotClass:
             normlin = colors.Normalize(vmin=0, vmax=IM_Max)
             normlog = colors.LogNorm(vmin=IM_Max, vmax=IM_Max)
         else:
-            normlin = self.Get_SAMECMAP_Norm(IM.shape[0])
-            normlog = self.Get_SAMECMAP_Norm(IM.shape[0])
+            normlin = self.Get_SAMECMAP_Norm(IM.shape[0], which=which)
+            normlog = self.Get_SAMECMAP_Norm(IM.shape[0], which=which)
 
         if not log:
             im1 = self.PlotCM(
@@ -1286,8 +1349,8 @@ class PlotClass:
             normlin = colors.Normalize(vmin=0, vmax=cm_Max)
             normlog = colors.LogNorm(vmin=cm_Min, vmax=cm_Max)
         else:
-            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], override="Lin")
-            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="Log")
+            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], which=which, override="Lin")
+            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], which=which, override="Log")
 
         # plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
@@ -1368,8 +1431,8 @@ class PlotClass:
             normlin = colors.Normalize(vmin=0, vmax=cm_Max)
             normlog = colors.LogNorm(vmin=cm_Min, vmax=cm_Max)
         else:
-            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], override="Lin")
-            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="Log")
+            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], which=which, override="Lin")
+            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], which=which, override="Log")
 
         if not log:
             im1 = self.PlotCM(
@@ -1440,8 +1503,8 @@ class PlotClass:
             normlin = colors.Normalize(vmin=cm_Max, vmax=cm_Max)
             normlog = colors.SymLogNorm(linthresh=1, vmin=cm_Min, vmax=cm_Max)
         else:
-            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], override="SymLin")
-            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="SymLog")
+            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], which=which, override="SymLin")
+            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], which=which, override="SymLog")
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
@@ -2113,18 +2176,18 @@ class PlotClass:
 
         self.SameCMAP = SameCMAP
 
-        relevant_bin_types = list(self.CM_T.keys())
+        relevant_bin_types = list(self.CM.keys())
         relevant_bin_types_short = ["syoa", "AC"]
-        relevant_contact_types = list(self.CM_T["syoa"].keys())
-        IM_contact_types = list(self.CM_T["Interaction"].keys())
-        CMTypes = ["NCM", "NCM_R", "CM_T"]
-        # CMTypes = ["CM_T"]
+        relevant_contact_types = list(self.CM["syoa"].keys())
+        IM_contact_types = list(self.CM["Interaction"].keys())
+        CMTypes = ["NCM", "NCM_R", "NCM_P", "NCM_V"]
+        # CMTypes = ["CM", "CMV"]
 
         if plot_INPUTOUTPUT:
             plot_dir_1 = (
                 self.record_path
                 / "Graphs"
-                / f"Contact_Matrices_INOUT_{self.Tracker_Contact_Type}"
+                / f"Contact_Matrices_INOUT"
             )
             plot_dir_1.mkdir(exist_ok=True, parents=True)
             if "Paper" in relevant_bin_types:
@@ -2135,7 +2198,9 @@ class PlotClass:
                 if rct not in relevant_contact_types:
                     continue
 
+                which="NCM_R"
                 plot_BBC_Sheet = False
+
                 if (
                     plot_BBC
                     and rct in ["household", "school", "company"]
@@ -2147,10 +2212,7 @@ class PlotClass:
                         plot_BBC_Sheet = "all_school"
                     if rct == "company":
                         plot_BBC_Sheet = "all_work"
-
-                which = "NCM_R"
-                if self.Tracker_Contact_Type == "All":
-                    which = "NCM"
+                    which = "NCM_P"
 
                 self.plot_contact_matrix_INOUT(
                     bin_type=rbt,
@@ -2168,7 +2230,7 @@ class PlotClass:
             plot_dir = (
                 self.record_path
                 / "Graphs"
-                / f"Average_Contacts_{self.Tracker_Contact_Type}"
+                / f"Average_Contacts"
             )
             plot_dir.mkdir(exist_ok=True, parents=True)
             for rbt in relevant_bin_types_short:
@@ -2200,7 +2262,7 @@ class PlotClass:
         logger.info(f"Rank {mpi_rank} -- Pop at locations done")
 
         if plot_InteractionMatrices:
-            plot_dir = self.record_path / "Graphs" / f"IM_{self.Tracker_Contact_Type}"
+            plot_dir = self.record_path / "Graphs" / f"IM"
             plot_dir.mkdir(exist_ok=True, parents=True)
             for rct in self.IM.keys():
                 self.plot_interaction_matrix(contact_type=rct)
@@ -2270,7 +2332,6 @@ class PlotClass:
                     self.record_path
                     / "Graphs"
                     / "Contact_Matrices"
-                    / self.Tracker_Contact_Type
                     / CMType
                 )
                 plot_dir_1.mkdir(exist_ok=True, parents=True)
@@ -2458,7 +2519,6 @@ class PlotClass:
                     self.record_path
                     / "Graphs"
                     / "Contact_Matrices"
-                    / self.Tracker_Contact_Type
                     / CMType
                 )
                 plot_dir_1.mkdir(exist_ok=True, parents=True)

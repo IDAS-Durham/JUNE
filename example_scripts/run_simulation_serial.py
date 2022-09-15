@@ -404,7 +404,6 @@ if args.tracker:
         group_types=group_types,
         load_interactions_path=args.parameters,
         contact_sexes=["unisex", "male", "female"],
-        Tracker_Contact_Type=["1D"],
         MaxVenueTrackingSize=10000,
     )
 else:
@@ -455,7 +454,7 @@ if args.tracker:
     simulator.tracker.post_process_simulation(save=True)
 
     # Make Plots
-    Plots = PlotClass(record_path=args.save_path / "Tracker", Tracker_Contact_Type="1D")
+    Plots = PlotClass(record_path=args.save_path / "Tracker")
     Plots.make_plots(
         plot_BBC=True,
         plot_thumbprints=True,
@@ -470,22 +469,3 @@ if args.tracker:
         plot_Distances=True,
     )
 
-    # #Make Plots
-    # Plots = PlotClass(
-    #    record_path=args.save_path / "Tracker",
-    #    Tracker_Contact_Type = "All"
-    # )
-    # Plots.make_plots(
-    #    plot_BBC = True,
-    #    plot_thumbprints = True,
-    #    SameCMAP="Log",
-
-    #    plot_INPUTOUTPUT=False,
-    #    plot_AvContactsLocation=False,
-    #    plot_dTLocationPopulation=False,
-    #    plot_InteractionMatrices=True,
-    #    plot_ContactMatrices=True,
-    #    plot_CompareSexMatrices=True,
-    #    plot_AgeBinning=False,
-    #    plot_Distances=False
-    # )

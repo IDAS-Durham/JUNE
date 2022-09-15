@@ -70,8 +70,6 @@ class MergerClass:
             self.group_type_names["all"] = list(Params["NVenues"].keys())
             self.binTypes = list(Params["binTypes"])
             self.contact_sexes = list(Params["sexes"])
-            self.Tracker_Contact_Type = list(Params["trackerTypes"])
-
             self.timer.total_days = int(Params["total_days"])
 
             Params["MPI_rank"] = "Combined"
@@ -519,211 +517,209 @@ class MergerClass:
 
     def LoadContactMatrices(self):
         self.age_bins = {}
-        if "1D" in self.Tracker_Contact_Type:
 
-            for rank in range(0, self.NRanks):
-                with open(
-                    self.raw_data_path
-                    / "CM_yamls"
-                    / f"tracker_1D_Total_CM_r{rank}_.yaml"
-                ) as f:
-                    self.CM_T_rank = yaml.load(f, Loader=yaml.FullLoader)
+        for rank in range(0, self.NRanks):
+            with open(
+                self.raw_data_path
+                / "CM_yamls"
+                / f"tracker_CM_r{rank}_.yaml"
+            ) as f:
+                self.CM_rank = yaml.load(f, Loader=yaml.FullLoader)
 
-                if rank == 0:
-                    # Create copies of the contact_matrices to be filled in.
-                    # Error Matrix
-                    self.CM_T = {
-                        bin_type: {
-                            loc: {
-                                sex: np.array(
-                                    self.CM_T_rank[bin_type][loc]["sex"][sex][
-                                        "contacts"
-                                    ]
-                                )
-                                * self.timer.total_days
-                                for sex in self.CM_T_rank[bin_type][loc]["sex"].keys()
-                            }
-                            for loc in self.CM_T_rank[bin_type].keys()
+            if rank == 0:
+                # Create copies of the contact_matrices to be filled in.
+                # Error Matrix
+                self.CM = {
+                    bin_type: {
+                        loc: {
+                            sex: np.array(
+                                self.CM_rank[bin_type][loc]["sex"][sex][
+                                    "contacts"
+                                ]
+                            )
+                            * self.timer.total_days
+                            for sex in self.CM_rank[bin_type][loc]["sex"].keys()
                         }
-                        for bin_type in self.CM_T_rank.keys()
-                        if bin_type != "Interaction"
+                        for loc in self.CM_rank[bin_type].keys()
                     }
-                    self.CM_T["Interaction"] = {
-                        loc: np.array(self.CM_T_rank["Interaction"][loc]["contacts"])
-                        * self.timer.total_days
-                        for loc in self.CM_T_rank["Interaction"].keys()
-                    }
+                    for bin_type in self.CM_rank.keys()
+                    if bin_type != "Interaction"
+                }
+                self.CM["Interaction"] = {
+                    loc: np.array(self.CM_rank["Interaction"][loc]["contacts"])
+                    * self.timer.total_days
+                    for loc in self.CM_rank["Interaction"].keys()
+                }
 
-                    for rbt in self.binTypes:
-                        if rbt == "Interaction" or rbt in self.age_bins.keys():
+                for rbt in self.binTypes:
+                    if rbt == "Interaction" or rbt in self.age_bins.keys():
+                        continue
+                    loc = list(self.CM_rank[rbt].keys())[0]
+                    self.age_bins[rbt] = self.CM_rank[rbt][loc]["bins"]
+
+            else:
+                for bin_type in self.binTypes:
+                    for loc_plural in self.group_type_names["all"]:
+                        loc = self.pluralise_r(loc_plural)
+                        NEW = False
+                        if loc_plural not in self.group_type_names[rank]:
                             continue
-                        loc = list(self.CM_T_rank[rbt].keys())[0]
-                        self.age_bins[rbt] = self.CM_T_rank[rbt][loc]["bins"]
+                        if loc_plural in ["care_home_visits", "household_visits"]:
+                            continue
 
-                else:
-                    for bin_type in self.binTypes:
-                        for loc_plural in self.group_type_names["all"]:
-                            loc = self.pluralise_r(loc_plural)
-                            NEW = False
-                            if loc_plural not in self.group_type_names[rank]:
-                                continue
-                            if loc_plural in ["care_home_visits", "household_visits"]:
-                                continue
+                        if loc not in self.CM[bin_type].keys():
+                            NEW = True
 
-                            if loc not in self.CM_T[bin_type].keys():
-                                NEW = True
+                        if bin_type != "Interaction":
+                            if NEW:
+                                self.CM[bin_type][loc] = {}
 
-                            if bin_type != "Interaction":
+                            for sex in self.contact_sexes:
                                 if NEW:
-                                    self.CM_T[bin_type][loc] = {}
-
-                                for sex in self.contact_sexes:
-                                    if NEW:
-                                        self.CM_T[bin_type][loc][sex] = (
-                                            np.array(
-                                                self.CM_T_rank[bin_type][loc]["sex"][
-                                                    sex
-                                                ]["contacts"]
-                                            )
-                                            * self.timer.total_days
-                                        )
-                                    else:
-                                        self.CM_T[bin_type][loc][sex] += (
-                                            np.array(
-                                                self.CM_T_rank[bin_type][loc]["sex"][
-                                                    sex
-                                                ]["contacts"]
-                                            )
-                                            * self.timer.total_days
-                                        )
-
-                            else:
-                                if loc in [
-                                    "global",
-                                    "care_home_visits",
-                                    "household_visits",
-                                ]:
-                                    continue
-                                if NEW:
-                                    self.CM_T[bin_type][loc] = (
+                                    self.CM[bin_type][loc][sex] = (
                                         np.array(
-                                            self.CM_T_rank[bin_type][loc]["contacts"]
+                                            self.CM_rank[bin_type][loc]["sex"][
+                                                sex
+                                            ]["contacts"]
                                         )
                                         * self.timer.total_days
                                     )
                                 else:
-                                    self.CM_T[bin_type][loc] += (
+                                    self.CM[bin_type][loc][sex] += (
                                         np.array(
-                                            self.CM_T_rank[bin_type][loc]["contacts"]
+                                            self.CM_rank[bin_type][loc]["sex"][
+                                                sex
+                                            ]["contacts"]
                                         )
                                         * self.timer.total_days
                                     )
-            print(rank, "1D Done")
 
-        if "All" in self.Tracker_Contact_Type:
-            for rank in range(0, self.NRanks):
-                with open(
-                    self.raw_data_path
-                    / "CM_yamls"
-                    / f"tracker_All_Total_CM_r{rank}_.yaml"
-                ) as f:
-                    self.CM_AC_rank = yaml.load(f, Loader=yaml.FullLoader)
-                    # [bin_type][contact_type]["sex"][sex]["contacts"]
-
-                if rank == 0:
-                    # Create copies of the contact_matrices to be filled in.
-                    # Error Matrix
-                    self.CM_AC = {
-                        bin_type: {
-                            loc: {
-                                sex: np.array(
-                                    self.CM_AC_rank[bin_type][loc]["sex"][sex][
-                                        "contacts"
-                                    ]
-                                )
-                                * self.timer.total_days
-                                for sex in self.CM_AC_rank[bin_type][loc]["sex"].keys()
-                            }
-                            for loc in self.CM_AC_rank[bin_type].keys()
-                        }
-                        for bin_type in self.CM_AC_rank.keys()
-                        if bin_type != "Interaction"
-                    }
-                    self.CM_AC["Interaction"] = {
-                        loc: np.array(self.CM_AC_rank["Interaction"][loc]["contacts"])
-                        * self.timer.total_days
-                        for loc in self.CM_AC_rank["Interaction"].keys()
-                    }
-
-                    for rbt in self.binTypes:
-                        if rbt == "Interaction" or rbt in self.age_bins.keys():
-                            continue
-                        loc = list(self.CM_AC_rank[rbt].keys())[0]
-                        self.age_bins[rbt] = self.CM_AC_rank[rbt][loc]["bins"]
-
-                else:
-                    for bin_type in self.binTypes:
-                        for loc_plural in self.group_type_names["all"]:
-                            loc = self.pluralise_r(loc_plural)
-                            NEW = False
-                            if loc_plural not in self.group_type_names[rank]:
-                                continue
-                            if loc_plural in [
+                        else:
+                            if loc in [
                                 "global",
                                 "care_home_visits",
                                 "household_visits",
                             ]:
                                 continue
-
-                            if loc not in self.CM_AC[bin_type].keys():
-                                NEW = True
-
-                            if bin_type != "Interaction":
-                                if NEW:
-                                    self.CM_AC[bin_type][loc] = {}
-
-                                for sex in self.contact_sexes:
-                                    if NEW:
-                                        self.CM_AC[bin_type][loc][sex] = (
-                                            np.array(
-                                                self.CM_AC_rank[bin_type][loc]["sex"][
-                                                    sex
-                                                ]["contacts"]
-                                            )
-                                            * self.timer.total_days
-                                        )
-                                    else:
-                                        self.CM_AC[bin_type][loc][sex] += (
-                                            np.array(
-                                                self.CM_AC_rank[bin_type][loc]["sex"][
-                                                    sex
-                                                ]["contacts"]
-                                            )
-                                            * self.timer.total_days
-                                        )
-
+                            if NEW:
+                                self.CM[bin_type][loc] = (
+                                    np.array(
+                                        self.CM_rank[bin_type][loc]["contacts"]
+                                    )
+                                    * self.timer.total_days
+                                )
                             else:
-                                if loc in [
-                                    "global",
-                                    "care_home_visits",
-                                    "household_visits",
-                                ]:
-                                    continue
+                                self.CM[bin_type][loc] += (
+                                    np.array(
+                                        self.CM_rank[bin_type][loc]["contacts"]
+                                    )
+                                    * self.timer.total_days
+                                )
+        print(rank, "CM Done")
+
+        for rank in range(0, self.NRanks):
+            with open(
+                self.raw_data_path
+                / "CM_yamls"
+                / f"tracker_CMV_r{rank}_.yaml"
+            ) as f:
+                self.CMV_rank = yaml.load(f, Loader=yaml.FullLoader)
+                # [bin_type][contact_type]["sex"][sex]["contacts"]
+
+            if rank == 0:
+                # Create copies of the contact_matrices to be filled in.
+                # Error Matrix
+                self.CMV = {
+                    bin_type: {
+                        loc: {
+                            sex: np.array(
+                                self.CMV_rank[bin_type][loc]["sex"][sex][
+                                    "contacts"
+                                ]
+                            )
+                            * self.timer.total_days
+                            for sex in self.CMV_rank[bin_type][loc]["sex"].keys()
+                        }
+                        for loc in self.CMV_rank[bin_type].keys()
+                    }
+                    for bin_type in self.CMV_rank.keys()
+                    if bin_type != "Interaction"
+                }
+                self.CMV["Interaction"] = {
+                    loc: np.array(self.CMV_rank["Interaction"][loc]["contacts"])
+                    * self.timer.total_days
+                    for loc in self.CMV_rank["Interaction"].keys()
+                }
+
+                for rbt in self.binTypes:
+                    if rbt == "Interaction" or rbt in self.age_bins.keys():
+                        continue
+                    loc = list(self.CMV_rank[rbt].keys())[0]
+                    self.age_bins[rbt] = self.CMV_rank[rbt][loc]["bins"]
+
+            else:
+                for bin_type in self.binTypes:
+                    for loc_plural in self.group_type_names["all"]:
+                        loc = self.pluralise_r(loc_plural)
+                        NEW = False
+                        if loc_plural not in self.group_type_names[rank]:
+                            continue
+                        if loc_plural in [
+                            "global",
+                            "care_home_visits",
+                            "household_visits",
+                        ]:
+                            continue
+
+                        if loc not in self.CMV[bin_type].keys():
+                            NEW = True
+
+                        if bin_type != "Interaction":
+                            if NEW:
+                                self.CMV[bin_type][loc] = {}
+
+                            for sex in self.contact_sexes:
                                 if NEW:
-                                    self.CM_AC[bin_type][loc] = (
+                                    self.CMV[bin_type][loc][sex] = (
                                         np.array(
-                                            self.CM_AC_rank[bin_type][loc]["contacts"]
+                                            self.CMV_rank[bin_type][loc]["sex"][
+                                                sex
+                                            ]["contacts"]
                                         )
                                         * self.timer.total_days
                                     )
                                 else:
-                                    self.CM_AC[bin_type][loc] += (
+                                    self.CMV[bin_type][loc][sex] += (
                                         np.array(
-                                            self.CM_AC_rank[bin_type][loc]["contacts"]
+                                            self.CMV_rank[bin_type][loc]["sex"][
+                                                sex
+                                            ]["contacts"]
                                         )
                                         * self.timer.total_days
                                     )
-            print(rank, "1D Done")
+
+                        else:
+                            if loc in [
+                                "global",
+                                "care_home_visits",
+                                "household_visits",
+                            ]:
+                                continue
+                            if NEW:
+                                self.CMV[bin_type][loc] = (
+                                    np.array(
+                                        self.CMV_rank[bin_type][loc]["contacts"]
+                                    )
+                                    * self.timer.total_days
+                                )
+                            else:
+                                self.CMV[bin_type][loc] += (
+                                    np.array(
+                                        self.CMV_rank[bin_type][loc]["contacts"]
+                                    )
+                                    * self.timer.total_days
+                                )
+        print(rank, "CMV Done")
         return 1
 
     def LoadCumtimes(self):
@@ -756,186 +752,204 @@ class MergerClass:
         folder_name = self.merged_data_path
         mpi_rankname = ""
         # Saving 1D Contacts tracker results ##################################
-        if "1D" in self.Tracker_Contact_Type:
-            Tracker_Type = "1D"
+        jsonfile = {}
+        for binType in list(self.CM.keys()):
+            jsonfile[binType] = self.tracker_CMJSON(
+                binType=binType, CM=self.CM, CM_err=self.CM_err
+            )
+        # Save out the CM
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
+            folder=folder_name,
+            filename=f"tracker_CM{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
 
-            jsonfile = {}
-            for binType in list(self.CM_T.keys()):
-                jsonfile[binType] = self.tracker_CMJSON(
-                    binType=binType, CM=self.CM_T, CM_err=self.CM_T_err
+        jsonfile = {}
+        for binType in list(self.CMV.keys()):
+            jsonfile[binType] = self.tracker_CMJSON(
+                binType=binType, CM=self.CMV, CM_err=self.CMV_err
+            )
+        # Save out the CMV
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
+            folder=folder_name,
+            filename=f"tracker_CMV{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
+
+        jsonfile = {}
+        for binType in list(self.NCM.keys()):
+            jsonfile[binType] = self.tracker_CMJSON(
+                binType=binType, CM=self.NCM, CM_err=self.NCM_err
+            )
+        # Save out the Normalised NCM
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
+            folder=folder_name,
+            filename=f"tracker_NCM{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
+
+        jsonfile = {}
+        for binType in list(self.NCM_R.keys()):
+            jsonfile[binType] = self.tracker_CMJSON(
+                binType=binType, CM=self.NCM_R, CM_err=self.NCM_R_err
+            )
+        # Save out the NCMR
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
+            folder=folder_name,
+            filename=f"tracker_NCM_R{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
+
+        jsonfile = {}
+        for binType in list(self.NCM_P.keys()):
+            jsonfile[binType] = self.tracker_CMJSON(
+                binType=binType, CM=self.NCM_P, CM_err=self.NCM_P_err
+            )
+        # Save out the NCMP
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
+            folder=folder_name,
+            filename=f"tracker_NCM_P{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
+
+        jsonfile = {}
+        for binType in list(self.NCM_V.keys()):
+            jsonfile[binType] = self.tracker_CMJSON(
+                binType=binType, CM=self.NCM_V, CM_err=self.NCM_V_err
+            )
+        # Save out the NCMV
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
+            folder=folder_name,
+            filename=f"tracker_NCM_V{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
+
+        # Save out metric calculations
+        jsonfile = {}
+        for binType in list(self.NCM.keys()):
+            jsonfile[binType] = {}
+            for loc in list(self.NCM[binType].keys()):
+                jsonfile[binType][loc] = self.Calculate_CM_Metrics(
+                    bin_type=binType,
+                    contact_type=loc,
+                    CM=self.NCM,
+                    CM_err=self.NCM_err,
                 )
-            # Save out the CM totals
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_Total_CM{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
-            )
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+            folder=folder_name,
+            filename=f"tracker_Metrics_NCM_{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
 
-            jsonfile = {}
-            for binType in list(self.NCM.keys()):
-                jsonfile[binType] = self.tracker_CMJSON(
-                    binType=binType, CM=self.NCM, CM_err=self.NCM_err
+        jsonfile = {}
+        for binType in list(self.NCM.keys()):
+            jsonfile[binType] = {}
+            for loc in list(self.NCM[binType].keys()):
+                jsonfile[binType][loc] = self.Calculate_CM_Metrics(
+                    bin_type=binType,
+                    contact_type=loc,
+                    CM=self.NCM_R,
+                    CM_err=self.NCM_R_err,
                 )
-            # Save out the Normalised CM
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
-            )
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+            folder=folder_name,
+            filename=f"tracker_Metrics_NCM_R_{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
 
-            jsonfile = {}
-            for binType in list(self.NCM_R.keys()):
-                jsonfile[binType] = self.tracker_CMJSON(
-                    binType=binType, CM=self.NCM_R, CM_err=self.NCM_R_err
+        jsonfile = {}
+        for binType in list(self.NCM_P.keys()):
+            jsonfile[binType] = {}
+            for loc in list(self.NCM_P[binType].keys()):
+                jsonfile[binType][loc] = self.Calculate_CM_Metrics(
+                    bin_type=binType,
+                    contact_type=loc,
+                    CM=self.NCM_P,
+                    CM_err=self.NCM_P_err,
                 )
-            # Save out the Normalised CM with Reciprocal contacts
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
-            )
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+            folder=folder_name,
+            filename=f"tracker_Metrics_NCM_P_{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
 
-            # Save out metric calculations
-            jsonfile = {}
-            for binType in list(self.NCM.keys()):
-                jsonfile[binType] = {}
-                for loc in list(self.NCM[binType].keys()):
-                    jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                        bin_type=binType,
-                        contact_type=loc,
-                        CM=self.NCM,
-                        CM_err=self.NCM_err,
-                    )
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_Metrics_NCM_{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
-            )
-
-            jsonfile = {}
-            for binType in list(self.NCM.keys()):
-                jsonfile[binType] = {}
-                for loc in list(self.NCM[binType].keys()):
-                    jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                        bin_type=binType,
-                        contact_type=loc,
-                        CM=self.NCM_R,
-                        CM_err=self.NCM_R_err,
-                    )
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_Metrics_NCM_R_{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
-            )
-
-            jsonfile = {}
-            for loc in list(self.NCM["Interaction"].keys()):
-                A = np.array(self.NCM["Interaction"][loc], dtype=float)
-                B = np.array(self.IM[loc]["contacts"], dtype=float)
-                Dc = self.Canberra_distance(A, B)[0]
-                jsonfile[loc] = {"Dc": f"{Dc}"}
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_CamberraDist_{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
-            )
-
-        # Saving All Contacts tracker results ##################################
-        if "All" in self.Tracker_Contact_Type:
-            Tracker_Type = "All"
-
-            jsonfile = {}
-            for binType in list(self.CM_AC.keys()):
-                jsonfile[binType] = self.tracker_CMJSON(
-                    binType=binType, CM=self.CM_AC, CM_err=self.CM_AC_err
+        jsonfile = {}
+        for binType in list(self.NCM_V.keys()):
+            jsonfile[binType] = {}
+            for loc in list(self.NCM_V[binType].keys()):
+                jsonfile[binType][loc] = self.Calculate_CM_Metrics(
+                    bin_type=binType,
+                    contact_type=loc,
+                    CM=self.NCM_V,
+                    CM_err=self.NCM_V_err,
                 )
-            # Save out the CM totals
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_Total_CM{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
-            )
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+            folder=folder_name,
+            filename=f"tracker_Metrics_NCM_V_{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
 
-            jsonfile = {}
-            for binType in list(self.NCM_AC.keys()):
-                jsonfile[binType] = self.tracker_CMJSON(
-                    binType=binType, CM=self.NCM_AC, CM_err=self.NCM_AC_err
-                )
-            # Save out the Normalised CM
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
-            )
+        jsonfile = {}
+        for loc in list(self.NCM["Interaction"].keys()):
+            A = np.array(self.NCM["Interaction"][loc], dtype=float)
+            B = np.array(self.IM[loc]["contacts"], dtype=float)
+            Dc = self.Canberra_distance(A, B)[0]
+            jsonfile[loc] = {"Dc": f"{Dc}"}
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+            folder=folder_name,
+            filename=f"tracker_CamberraDist_NCM_{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
 
-            jsonfile = {}
-            for binType in list(self.NCM_AC.keys()):
-                jsonfile[binType] = self.tracker_CMJSON(
-                    binType=binType, CM=self.NCM_AC_R, CM_err=self.NCM_AC_R_err
-                )
-            # Save out the Normalised CM with Reciprocal contacts
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
-            )
+        jsonfile = {}
+        for loc in list(self.NCM_R["Interaction"].keys()):
+            A = np.array(self.NCM_R["Interaction"][loc], dtype=float)
+            B = np.array(self.IM[loc]["contacts"], dtype=float)
+            Dc = self.Canberra_distance(A, B)[0]
+            jsonfile[loc] = {"Dc": f"{Dc}"}
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+            folder=folder_name,
+            filename=f"tracker_CamberraDist_NCM_R_{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
 
-            # Save out metric calculations
-            jsonfile = {}
-            for binType in list(self.NCM_AC.keys()):
-                jsonfile[binType] = {}
-                for loc in list(self.NCM_AC[binType].keys()):
-                    jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                        bin_type=binType,
-                        contact_type=loc,
-                        CM=self.NCM_AC,
-                        CM_err=self.NCM_AC_err,
-                    )
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_Metrics_NCM_{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
-            )
+        jsonfile = {}
+        for loc in list(self.NCM_P["Interaction"].keys()):
+            A = np.array(self.NCM_P["Interaction"][loc], dtype=float)
+            B = np.array(self.IM[loc]["contacts"], dtype=float)
+            Dc = self.Canberra_distance(A, B)[0]
+            jsonfile[loc] = {"Dc": f"{Dc}"}
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+            folder=folder_name,
+            filename=f"tracker_CamberraDist_NCM_P_{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
 
-            jsonfile = {}
-            for binType in list(self.NCM_AC.keys()):
-                jsonfile[binType] = {}
-                for loc in list(self.NCM_AC[binType].keys()):
-                    jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                        bin_type=binType,
-                        contact_type=loc,
-                        CM=self.NCM_AC_R,
-                        CM_err=self.NCM_AC_R_err,
-                    )
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_Metrics_NCM_R_{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
-            )
-
-            jsonfile = {}
-            for loc in list(self.NCM_AC["Interaction"].keys()):
-                A = np.array(self.NCM_AC["Interaction"][loc], dtype=float)
-                B = np.array(self.IM[loc]["contacts"], dtype=float)
-                Dc = self.Canberra_distance(A, B)[0]
-                jsonfile[loc] = {"Dc": f"{Dc}"}
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_CamberraDist_{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
-            )
+        jsonfile = {}
+        for loc in list(self.NCM_V["Interaction"].keys()):
+            A = np.array(self.NCM_V["Interaction"][loc], dtype=float)
+            B = np.array(self.IM[loc]["contacts"], dtype=float)
+            Dc = self.Canberra_distance(A, B)[0]
+            jsonfile[loc] = {"Dc": f"{Dc}"}
+        self.Save_CM_JSON(
+            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+            folder=folder_name,
+            filename=f"tracker_CamberraDist_NCM_V_{mpi_rankname}.yaml",
+            jsonfile=jsonfile,
+        )
 
         return 1
 
@@ -963,15 +977,13 @@ class MergerClass:
             self.LoadIMatrices()
             self.LoadContactMatrices()
             logger.info(f"Rank {mpi_rank} -- Load IM and CMs done")
-            if "1D" in self.Tracker_Contact_Type:
-                print("1D Norms")
-                self.initalize_CM_Normalisations()
-                self.normalise_1D_CM()
 
-            if "All" in self.Tracker_Contact_Type:
-                print("All Norms")
-                self.initalize_CM_All_Normalisations()
-                self.normalise_All_CM()
+            self.initalize_CM_Normalisations()
+            self.normalise_1D_CM()
+
+            self.initalize_CM_All_Normalisations()
+            self.normalise_All_CM()
+
             logger.info(f"Rank {mpi_rank} -- Normalised CMs done")
             self.PrintOutResults()
 

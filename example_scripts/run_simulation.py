@@ -538,7 +538,6 @@ def generate_simulator():
             group_types=group_types,
             load_interactions_path=args.parameters,
             contact_sexes=["unisex", "male", "female"],
-            Tracker_Contact_Type=["1D"],
             MaxVenueTrackingSize=100000,
         )
     else:
@@ -601,7 +600,7 @@ if args.tracker:
         Merger.Merge()
 
         Plots = PlotClass(
-            record_path=args.save_path / "Tracker", Tracker_Contact_Type="1D"
+            record_path=args.save_path / "Tracker"
         )
         Plots.make_plots(
             plot_BBC=True,
@@ -617,21 +616,4 @@ if args.tracker:
             plot_Distances=True,
         )
 
-        # Plots = PlotClass(
-        #    record_path=args.save_path / "Tracker",
-        #    Tracker_Contact_Type = "All"
-        # )
-        # Plots.make_plots(
-        #    plot_BBC = True,
-        #    plot_thumbprints = True,
-        #    SameCMAP="Log",
 
-        #    plot_INPUTOUTPUT=False,
-        #    plot_AvContactsLocation=False,
-        #    plot_dTLocationPopulation=False,
-        #    plot_InteractionMatrices=True,
-        #    plot_ContactMatrices=True,
-        #    plot_CompareSexMatrices=True,
-        #    plot_AgeBinning=False,
-        #    plot_Distances=False
-        # )
