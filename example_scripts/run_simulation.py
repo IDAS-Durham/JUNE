@@ -599,9 +599,7 @@ if args.tracker:
         Merger = MergerClass(record_path=args.save_path)
         Merger.Merge()
 
-        Plots = PlotClass(
-            record_path=args.save_path / "Tracker"
-        )
+        Plots = PlotClass(record_path=args.save_path / "Tracker")
         Plots.make_plots(
             plot_BBC=True,
             plot_thumbprints=True,
@@ -615,5 +613,3 @@ if args.tracker:
             plot_AgeBinning=True,
             plot_Distances=True,
         )
-
-

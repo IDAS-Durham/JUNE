@@ -1,5 +1,4 @@
 from .tracker_plots_formatting import fig_initialize, set_size, dpi
-
 fig_initialize(setsize=True)
 import numpy as np
 import yaml
@@ -104,13 +103,12 @@ class PlotClass:
         travel_distance=None,
     ):
 
-        if Tracker_Contact_Type == None:
+        if Tracker_Contact_Type is None:
             pass
         else:
             print("Tracker_Contact_Type argument no longer required")
 
         self.record_path = record_path
-        
 
         # Only plot fully merged data (Only applies to MPI runs, auto saved to merge if single core)
         folder_name = "merged_data_output"
@@ -135,10 +133,7 @@ class PlotClass:
 
         if CM is None:
             with open(
-                self.record_path
-                / folder_name
-                / "CM_yamls"
-                / f"tracker_CM.yaml"
+                self.record_path / folder_name / "CM_yamls" / f"tracker_CM.yaml"
             ) as f:
                 self.CM = yaml.load(f, Loader=yaml.FullLoader)
         else:
@@ -146,10 +141,7 @@ class PlotClass:
 
         if NCM is None:
             with open(
-                self.record_path
-                / folder_name
-                / "CM_yamls"
-                / f"tracker_NCM.yaml"
+                self.record_path / folder_name / "CM_yamls" / f"tracker_NCM.yaml"
             ) as f:
                 self.NCM = yaml.load(f, Loader=yaml.FullLoader)
         else:
@@ -157,10 +149,7 @@ class PlotClass:
 
         if NCM_R is None:
             with open(
-                self.record_path
-                / folder_name
-                / "CM_yamls"
-                / f"tracker_NCM_R.yaml"
+                self.record_path / folder_name / "CM_yamls" / f"tracker_NCM_R.yaml"
             ) as f:
                 self.NCM_R = yaml.load(f, Loader=yaml.FullLoader)
         else:
@@ -168,10 +157,7 @@ class PlotClass:
 
         if NCM_P is None:
             with open(
-                self.record_path
-                / folder_name
-                / "CM_yamls"
-                / f"tracker_NCM_V.yaml"
+                self.record_path / folder_name / "CM_yamls" / f"tracker_NCM_V.yaml"
             ) as f:
                 self.NCM_P = yaml.load(f, Loader=yaml.FullLoader)
         else:
@@ -179,10 +165,7 @@ class PlotClass:
 
         if CMV is None:
             with open(
-                self.record_path
-                / folder_name
-                / "CM_yamls"
-                / f"tracker_CMV.yaml"
+                self.record_path / folder_name / "CM_yamls" / f"tracker_CMV.yaml"
             ) as f:
                 self.CMV = yaml.load(f, Loader=yaml.FullLoader)
         else:
@@ -190,10 +173,7 @@ class PlotClass:
 
         if NCM_V is None:
             with open(
-                self.record_path
-                / folder_name
-                / "CM_yamls"
-                / f"tracker_NCM_V.yaml"
+                self.record_path / folder_name / "CM_yamls" / f"tracker_NCM_V.yaml"
             ) as f:
                 self.NCM_V = yaml.load(f, Loader=yaml.FullLoader)
         else:
@@ -824,7 +804,7 @@ class PlotClass:
             elif which == "NCM_V":
                 cm = self.NCM_V[bin_type][contact_type]["sex"][sex]["contacts"]
                 cm_err = self.NCM_V[bin_type][contact_type]["sex"][sex]["contacts_err"]
-            
+
         else:
             if which == "CM":
                 cm = self.CM[bin_type][contact_type]["contacts"]
@@ -1056,13 +1036,13 @@ class PlotClass:
             Q = self.Calc_QIndex(cm)
             NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width)
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-            I_sq_s = I_sq / var**2
+            I_sq_s = I_sq / var ** 2
             print("JUNE", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
 
             Q = self.Calc_QIndex(bbc_cm)
             NPCDM = self.Calc_NPCDM(bbc_cm, pop_density, pop_width)
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-            I_sq_s = I_sq / var**2
+            I_sq_s = I_sq / var ** 2
             print("BBC", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
             print({"Camberra": self.Canberra_distance(cm, bbc_cm)[0]})
             print("")
@@ -1503,8 +1483,12 @@ class PlotClass:
             normlin = colors.Normalize(vmin=cm_Max, vmax=cm_Max)
             normlog = colors.SymLogNorm(linthresh=1, vmin=cm_Min, vmax=cm_Max)
         else:
-            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], which=which, override="SymLin")
-            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], which=which, override="SymLog")
+            normlin = self.Get_SAMECMAP_Norm(
+                cm.shape[0], which=which, override="SymLin"
+            )
+            normlog = self.Get_SAMECMAP_Norm(
+                cm.shape[0], which=which, override="SymLog"
+            )
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
@@ -2184,11 +2168,7 @@ class PlotClass:
         # CMTypes = ["CM", "CMV"]
 
         if plot_INPUTOUTPUT:
-            plot_dir_1 = (
-                self.record_path
-                / "Graphs"
-                / f"Contact_Matrices_INOUT"
-            )
+            plot_dir_1 = self.record_path / "Graphs" / f"Contact_Matrices_INOUT"
             plot_dir_1.mkdir(exist_ok=True, parents=True)
             if "Paper" in relevant_bin_types:
                 rbt = "Paper"
@@ -2198,7 +2178,7 @@ class PlotClass:
                 if rct not in relevant_contact_types:
                     continue
 
-                which="NCM_R"
+                which = "NCM_R"
                 plot_BBC_Sheet = False
 
                 if (
@@ -2227,11 +2207,7 @@ class PlotClass:
         logger.info(f"Rank {mpi_rank} -- Input vs output done")
 
         if plot_AvContactsLocation:
-            plot_dir = (
-                self.record_path
-                / "Graphs"
-                / f"Average_Contacts"
-            )
+            plot_dir = self.record_path / "Graphs" / f"Average_Contacts"
             plot_dir.mkdir(exist_ok=True, parents=True)
             for rbt in relevant_bin_types_short:
                 stacked_contacts_plot = self.plot_stacked_contacts(
@@ -2328,12 +2304,7 @@ class PlotClass:
 
         if plot_ContactMatrices:
             for CMType in CMTypes:
-                plot_dir_1 = (
-                    self.record_path
-                    / "Graphs"
-                    / "Contact_Matrices"
-                    / CMType
-                )
+                plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices" / CMType
                 plot_dir_1.mkdir(exist_ok=True, parents=True)
 
                 for rbt in relevant_bin_types:
@@ -2515,12 +2486,7 @@ class PlotClass:
 
         if plot_CompareSexMatrices:
             for CMType in CMTypes:
-                plot_dir_1 = (
-                    self.record_path
-                    / "Graphs"
-                    / "Contact_Matrices"
-                    / CMType
-                )
+                plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices" / CMType
                 plot_dir_1.mkdir(exist_ok=True, parents=True)
 
                 for rbt in relevant_bin_types:

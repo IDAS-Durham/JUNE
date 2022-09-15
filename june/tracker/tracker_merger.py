@@ -34,9 +34,7 @@ class MergerClass:
     """
 
     class Timer:
-        def __init__(
-            self,
-        ):
+        def __init__(self,):
             self.total_days = 1
 
     def __init__(self, record_path=Path("")):
@@ -520,9 +518,7 @@ class MergerClass:
 
         for rank in range(0, self.NRanks):
             with open(
-                self.raw_data_path
-                / "CM_yamls"
-                / f"tracker_CM_r{rank}_.yaml"
+                self.raw_data_path / "CM_yamls" / f"tracker_CM_r{rank}_.yaml"
             ) as f:
                 self.CM_rank = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -533,9 +529,7 @@ class MergerClass:
                     bin_type: {
                         loc: {
                             sex: np.array(
-                                self.CM_rank[bin_type][loc]["sex"][sex][
-                                    "contacts"
-                                ]
+                                self.CM_rank[bin_type][loc]["sex"][sex]["contacts"]
                             )
                             * self.timer.total_days
                             for sex in self.CM_rank[bin_type][loc]["sex"].keys()
@@ -578,18 +572,18 @@ class MergerClass:
                                 if NEW:
                                     self.CM[bin_type][loc][sex] = (
                                         np.array(
-                                            self.CM_rank[bin_type][loc]["sex"][
-                                                sex
-                                            ]["contacts"]
+                                            self.CM_rank[bin_type][loc]["sex"][sex][
+                                                "contacts"
+                                            ]
                                         )
                                         * self.timer.total_days
                                     )
                                 else:
                                     self.CM[bin_type][loc][sex] += (
                                         np.array(
-                                            self.CM_rank[bin_type][loc]["sex"][
-                                                sex
-                                            ]["contacts"]
+                                            self.CM_rank[bin_type][loc]["sex"][sex][
+                                                "contacts"
+                                            ]
                                         )
                                         * self.timer.total_days
                                     )
@@ -603,25 +597,19 @@ class MergerClass:
                                 continue
                             if NEW:
                                 self.CM[bin_type][loc] = (
-                                    np.array(
-                                        self.CM_rank[bin_type][loc]["contacts"]
-                                    )
+                                    np.array(self.CM_rank[bin_type][loc]["contacts"])
                                     * self.timer.total_days
                                 )
                             else:
                                 self.CM[bin_type][loc] += (
-                                    np.array(
-                                        self.CM_rank[bin_type][loc]["contacts"]
-                                    )
+                                    np.array(self.CM_rank[bin_type][loc]["contacts"])
                                     * self.timer.total_days
                                 )
         print(rank, "CM Done")
 
         for rank in range(0, self.NRanks):
             with open(
-                self.raw_data_path
-                / "CM_yamls"
-                / f"tracker_CMV_r{rank}_.yaml"
+                self.raw_data_path / "CM_yamls" / f"tracker_CMV_r{rank}_.yaml"
             ) as f:
                 self.CMV_rank = yaml.load(f, Loader=yaml.FullLoader)
                 # [bin_type][contact_type]["sex"][sex]["contacts"]
@@ -633,9 +621,7 @@ class MergerClass:
                     bin_type: {
                         loc: {
                             sex: np.array(
-                                self.CMV_rank[bin_type][loc]["sex"][sex][
-                                    "contacts"
-                                ]
+                                self.CMV_rank[bin_type][loc]["sex"][sex]["contacts"]
                             )
                             * self.timer.total_days
                             for sex in self.CMV_rank[bin_type][loc]["sex"].keys()
@@ -682,18 +668,18 @@ class MergerClass:
                                 if NEW:
                                     self.CMV[bin_type][loc][sex] = (
                                         np.array(
-                                            self.CMV_rank[bin_type][loc]["sex"][
-                                                sex
-                                            ]["contacts"]
+                                            self.CMV_rank[bin_type][loc]["sex"][sex][
+                                                "contacts"
+                                            ]
                                         )
                                         * self.timer.total_days
                                     )
                                 else:
                                     self.CMV[bin_type][loc][sex] += (
                                         np.array(
-                                            self.CMV_rank[bin_type][loc]["sex"][
-                                                sex
-                                            ]["contacts"]
+                                            self.CMV_rank[bin_type][loc]["sex"][sex][
+                                                "contacts"
+                                            ]
                                         )
                                         * self.timer.total_days
                                     )
@@ -707,16 +693,12 @@ class MergerClass:
                                 continue
                             if NEW:
                                 self.CMV[bin_type][loc] = (
-                                    np.array(
-                                        self.CMV_rank[bin_type][loc]["contacts"]
-                                    )
+                                    np.array(self.CMV_rank[bin_type][loc]["contacts"])
                                     * self.timer.total_days
                                 )
                             else:
                                 self.CMV[bin_type][loc] += (
-                                    np.array(
-                                        self.CMV_rank[bin_type][loc]["contacts"]
-                                    )
+                                    np.array(self.CMV_rank[bin_type][loc]["contacts"])
                                     * self.timer.total_days
                                 )
         print(rank, "CMV Done")
@@ -836,10 +818,7 @@ class MergerClass:
             jsonfile[binType] = {}
             for loc in list(self.NCM[binType].keys()):
                 jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                    bin_type=binType,
-                    contact_type=loc,
-                    CM=self.NCM,
-                    CM_err=self.NCM_err,
+                    bin_type=binType, contact_type=loc, CM=self.NCM, CM_err=self.NCM_err
                 )
         self.Save_CM_JSON(
             dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",

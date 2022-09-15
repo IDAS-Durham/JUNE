@@ -109,8 +109,8 @@ class TestTrajectoryMaker:
 class TestSymptoms:
     def test__construct__trajectory__from__maxseverity(self, symptoms_trajectories):
         symptoms_trajectories.max_severity = 0.9
-        symptoms_trajectories.trajectory = (
-            symptoms_trajectories._make_symptom_trajectory(health_index)
+        symptoms_trajectories.trajectory = symptoms_trajectories._make_symptom_trajectory(
+            health_index
         )
         symptoms_trajectories.time_of_symptoms_onset = (
             symptoms_trajectories._compute_time_from_infection_to_symptoms()
@@ -128,8 +128,8 @@ class TestSymptoms:
         )
         assert symptoms_trajectories.time_of_symptoms_onset > 0
         symptoms_trajectories.max_severity = 0.45
-        symptoms_trajectories.trajectory = (
-            symptoms_trajectories._make_symptom_trajectory(health_index)
+        symptoms_trajectories.trajectory = symptoms_trajectories._make_symptom_trajectory(
+            health_index
         )
         symptoms_trajectories.time_of_symptoms_onset = (
             symptoms_trajectories._compute_time_from_infection_to_symptoms()
@@ -149,8 +149,8 @@ class TestSymptoms:
         )
         assert symptoms_trajectories.time_of_symptoms_onset > 0
         symptoms_trajectories.max_severity = 0.05
-        symptoms_trajectories.trajectory = (
-            symptoms_trajectories._make_symptom_trajectory(health_index)
+        symptoms_trajectories.trajectory = symptoms_trajectories._make_symptom_trajectory(
+            health_index
         )
         symptoms_trajectories.time_of_symptoms_onset = (
             symptoms_trajectories._compute_time_from_infection_to_symptoms()

@@ -58,9 +58,7 @@ class RecordReader:
         df = self.decode_bytes_columns(df)
         return df
 
-    def get_geography_df(
-        self,
-    ):
+    def get_geography_df(self,):
         areas_df = self.table_to_df("areas")
         super_areas_df = self.table_to_df("super_areas")
         regions_df = self.table_to_df("regions")

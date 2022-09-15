@@ -45,9 +45,7 @@ class TestTransmissionGamma:
             scipy_gamma.pdf(x), rel=0.001
         )
 
-    def test__gamma_pdf_vectorized(
-        self,
-    ):
+    def test__gamma_pdf_vectorized(self,):
         x = np.linspace(0.0, 10.0, 100)
         a = 1.0
         loc = 1.0

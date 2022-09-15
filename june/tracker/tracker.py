@@ -78,7 +78,7 @@ class Tracker:
         MaxVenueTrackingSize=np.inf,
     ):
 
-        if Tracker_Contact_Type == None:
+        if Tracker_Contact_Type is None:
             pass
         else:
             print("Tracker_Contact_Type argument no longer required")
@@ -268,13 +268,9 @@ class Tracker:
         -------
             cm:
         """
-        
-        FIntraExtra = shelter_shared / (
-            2 * (1 - shelter_shared)
-        )
-        FIntraIntra = 1 / (
-            (1 - shelter_shared) / (2 * (1 - shelter_shared))
-        )
+
+        FIntraExtra = shelter_shared / (2 * (1 - shelter_shared))
+        FIntraIntra = 1 / ((1 - shelter_shared) / (2 * (1 - shelter_shared)))
         cm[0, 0] /= FIntraIntra
         cm[1, 1] /= FIntraIntra
         cm[0, 1] /= FIntraExtra
@@ -446,7 +442,7 @@ class Tracker:
         Q = self.Calc_QIndex(cm)
         NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width)
         I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-        I_sq_s = I_sq / var**2
+        I_sq_s = I_sq / var ** 2
         return {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"}
 
     ########################################################
@@ -547,7 +543,6 @@ class Tracker:
                     cm[group][sex], bins, np.sum
                 )
 
-
         cm = self.CMV["syoa"]
         self.CMV[Name] = {}
 
@@ -646,7 +641,7 @@ class Tracker:
             None
 
         """
-        #1D tracker
+        # 1D tracker
         self.CM = {}
         # For each type of contact matrix binning, eg BBC, polymod, SYOA...
         for bin_type, bins in self.age_bins.items():
@@ -655,9 +650,7 @@ class Tracker:
             for sex in self.contact_sexes:  # For each sex
                 append[sex] = np.zeros_like(CM, dtype=float)
 
-            self.CM[bin_type] = {
-                "global": append  # Add in a global matrix tracker
-            }
+            self.CM[bin_type] = {"global": append}  # Add in a global matrix tracker
             for spec in self.group_type_names:  # Over location
                 append = {}
                 for sex in self.contact_sexes:
@@ -674,7 +667,7 @@ class Tracker:
             append = np.zeros_like(IM, dtype=float)
             self.CM["Interaction"][spec] = append
 
-        #All tracker
+        # All tracker
         self.CMV = {}
         # For each type of contact matrix binning, eg BBC, polymod, SYOA...
         for bin_type, bins in self.age_bins.items():
@@ -683,9 +676,7 @@ class Tracker:
             for sex in self.contact_sexes:  # For each sex
                 append[sex] = np.zeros_like(CM, dtype=float)
 
-            self.CMV[bin_type] = {
-                "global": append  # Add in a global matrix tracker
-            }
+            self.CMV[bin_type] = {"global": append}  # Add in a global matrix tracker
             for spec in self.group_type_names:  # Over location
                 append = {}
                 for sex in self.contact_sexes:
@@ -1118,7 +1109,9 @@ class Tracker:
                         cm_err = np.sqrt(cm)
 
                         age_profile = self.location_cum_pop[bin_type][contact_type][sex]
-                        ratio = age_profile / self.location_cum_pop[bin_type]["global"][sex]
+                        ratio = (
+                            age_profile / self.location_cum_pop[bin_type]["global"][sex]
+                        )
 
                     NCM, NCM_err = self.CM_Norm(
                         cm=cm,
@@ -1136,8 +1129,8 @@ class Tracker:
                         Which="NCM_R",
                     )
 
-                    #TO DO defo this one?
-                    NCM_P = NCM.copy() * ratio 
+                    # TO DO defo this one?
+                    NCM_P = NCM.copy() * ratio
                     NCM_P_err = NCM_err.copy() * ratio
 
                     if bin_type == "Interaction":
@@ -1174,7 +1167,9 @@ class Tracker:
                         self.CM[bin_type][contact_type][sex] = (
                             cm / self.timer.total_days
                         )
-                        self.CM_err[bin_type][contact_type][sex] = cm_err / self.timer.total_days
+                        self.CM_err[bin_type][contact_type][sex] = (
+                            cm_err / self.timer.total_days
+                        )
         return 1
 
     def normalise_All_CM(self):
@@ -1243,7 +1238,7 @@ class Tracker:
                             self.CMV_err["Interaction"][contact_type] = (
                                 cm_err / self.timer.total_days
                             )
-                            
+
                         else:
                             continue
                     else:
@@ -1254,8 +1249,10 @@ class Tracker:
                         self.CMV[bin_type][contact_type][sex] = (
                             cm / self.timer.total_days
                         )
-                        self.CMV_err[bin_type][contact_type][sex] = cm_err / self.timer.total_days
-                        
+                        self.CMV_err[bin_type][contact_type][sex] = (
+                            cm_err / self.timer.total_days
+                        )
+
         return 1
 
     def CM_Norm(self, cm, cm_err, pop_tots, contact_type="global", Which="NCM"):
@@ -1303,39 +1300,33 @@ class Tracker:
                 if pop_tots[i] < 1 or pop_tots[j] < 1:
                     continue
 
-                if Which in ["NCM", "NCM_V"]: # Only count contacts i to j
-                    norm_cm[i, j] = (
-                        (cm[i, j] / pop_tots[i])
-                        * factor
-                    )
+                if Which in ["NCM", "NCM_V"]:  # Only count contacts i to j
+                    norm_cm[i, j] = (cm[i, j] / pop_tots[i]) * factor
 
-                    norm_cm_err[i, j] = (
-                        (cm_err[i, j] / pop_tots[i])
-                        * factor
-                    )
-                elif Which == "NCM_R": # Only count contacts i to j
+                    norm_cm_err[i, j] = (cm_err[i, j] / pop_tots[i]) * factor
+                elif Which == "NCM_R":  # Only count contacts i to j
                     norm_cm[i, j] = (
                         0.5
-                        * (
-                            cm[i, j] / pop_tots[i]
-                            + (cm[j, i] / pop_tots[j]) * w
-                        )
+                        * (cm[i, j] / pop_tots[i] + (cm[j, i] / pop_tots[j]) * w)
                         * factor
                     )
                     norm_cm_err[i, j] = (
                         0.5
                         * np.sqrt(
-                            (cm_err[i, j] / pop_tots[i])**2
-                            + ((cm_err[j, i] / pop_tots[j]) * w)**2
+                            (cm_err[i, j] / pop_tots[i]) ** 2
+                            + ((cm_err[j, i] / pop_tots[j]) * w) ** 2
                         )
                         * factor
                     )
 
-        if Which == "NCM_V": # Only count contacts i to j
+        if Which == "NCM_V":  # Only count contacts i to j
             sum_i = np.nansum(norm_cm, axis=1)
             norm_cm /= sum_i
-            sum_err = np.sqrt(np.nansum(norm_cm_err**2, axis=1))
-            norm_cm_err = norm_cm * np.sqrt( (sum_err/np.nansum(norm_cm_err, axis=1))**2 + (np.nansum(norm_cm_err, axis=1)/sum_i)**2) 
+            sum_err = np.sqrt(np.nansum(norm_cm_err ** 2, axis=1))
+            norm_cm_err = norm_cm * np.sqrt(
+                (sum_err / np.nansum(norm_cm_err, axis=1)) ** 2
+                + (np.nansum(norm_cm_err, axis=1) / sum_i) ** 2
+            )
 
         return norm_cm, norm_cm_err
 
@@ -1584,7 +1575,6 @@ class Tracker:
 
         self.initalize_CM_Normalisations()
         self.normalise_1D_CM()
-
 
         self.initalize_CM_All_Normalisations()
         self.normalise_All_CM()
@@ -2010,9 +2000,9 @@ class Tracker:
                         self.CMV["syoa"]["global"]["female"][age_idx, cidx] += 1.0 / (
                             NPeople - 1.0
                         )
-                        self.CMV["syoa"][group.spec]["female"][
-                            age_idx, cidx
-                        ] += 1.0 / (NPeople - 1.0)
+                        self.CMV["syoa"][group.spec]["female"][age_idx, cidx] += 1.0 / (
+                            NPeople - 1.0
+                        )
 
                 # For shelter only. We check over inter and intra groups
                 if group.spec == "shelter":
@@ -2081,41 +2071,51 @@ class Tracker:
             groups_inter = [list(sub.people) for sub in group.families]
         elif group.spec == "school":
             groups_inter = [list(group.teachers.people), list(group.students)]
-        else:  #Want subgroups as defined in groups
+        else:  # Want subgroups as defined in groups
             groups_inter = [list(sub.people) for sub in group.subgroups]
 
-        #By Interaction groups
+        # By Interaction groups
         subgroupNPeople = np.array([len(g) for g in groups_inter])
         if group.spec == "shelter":
             if len(groups_inter) == 1:
-                NContacts_Interaction = np.eye(self.CMV["Interaction"][group.spec].shape[0])*subgroupNPeople*(subgroupNPeople-1)
+                NContacts_Interaction = (
+                    np.eye(self.CMV["Interaction"][group.spec].shape[0])
+                    * subgroupNPeople
+                    * (subgroupNPeople - 1)
+                )
             if len(groups_inter) > 1:
-                NContacts_Interaction = np.outer(subgroupNPeople,subgroupNPeople)
-                NContacts_Interaction = 0.5*(NContacts_Interaction+NContacts_Interaction.T)
-                np.fill_diagonal(NContacts_Interaction, subgroupNPeople*(subgroupNPeople-1) )
+                NContacts_Interaction = np.outer(subgroupNPeople, subgroupNPeople)
+                NContacts_Interaction = 0.5 * (
+                    NContacts_Interaction + NContacts_Interaction.T
+                )
+                np.fill_diagonal(
+                    NContacts_Interaction, subgroupNPeople * (subgroupNPeople - 1)
+                )
             self.CMV["Interaction"][group.spec] += NContacts_Interaction / NPeople
         else:
-            NContacts_Interaction = np.outer(subgroupNPeople,subgroupNPeople)
-            np.fill_diagonal(NContacts_Interaction, subgroupNPeople*(subgroupNPeople-1) )
+            NContacts_Interaction = np.outer(subgroupNPeople, subgroupNPeople)
+            np.fill_diagonal(
+                NContacts_Interaction, subgroupNPeople * (subgroupNPeople - 1)
+            )
             self.CMV["Interaction"][group.spec] += NContacts_Interaction / NPeople
- 
-        #By Age
+
+        # By Age
         NAges_unisex = np.array([p.age for p in group.people])
         NAges_male = np.array([p.age for p in group.people if p.sex == "m"])
         NAges_female = np.array([p.age for p in group.people if p.sex == "f"])
-        bins = np.arange(0,101,1)
+        bins = np.arange(0, 101, 1)
         Counts_unisex, bins = np.histogram(NAges_unisex, bins=bins)
         Counts_male, _ = np.histogram(NAges_male, bins=bins)
         Counts_female, _ = np.histogram(NAges_female, bins=bins)
 
-        NContacts_unisex = np.outer(Counts_unisex,Counts_unisex)
-        np.fill_diagonal(NContacts_unisex, Counts_unisex*(Counts_unisex-1) )
+        NContacts_unisex = np.outer(Counts_unisex, Counts_unisex)
+        np.fill_diagonal(NContacts_unisex, Counts_unisex * (Counts_unisex - 1))
 
-        NContacts_female = np.outer(Counts_female,Counts_unisex)
-        np.fill_diagonal(NContacts_female, Counts_female*(Counts_unisex-1) )
+        NContacts_female = np.outer(Counts_female, Counts_unisex)
+        np.fill_diagonal(NContacts_female, Counts_female * (Counts_unisex - 1))
 
-        NContacts_male = np.outer(Counts_male,Counts_unisex)
-        np.fill_diagonal(NContacts_male, Counts_male*(Counts_unisex-1) )
+        NContacts_male = np.outer(Counts_male, Counts_unisex)
+        np.fill_diagonal(NContacts_male, Counts_male * (Counts_unisex - 1))
 
         self.CMV["syoa"]["global"]["unisex"] += NContacts_unisex / NPeople
         self.CMV["syoa"][group.spec]["unisex"] += NContacts_unisex / NPeople
@@ -2126,15 +2126,23 @@ class Tracker:
         self.CMV["syoa"]["global"]["male"] += NContacts_male / NPeople
         self.CMV["syoa"][group.spec]["male"] += NContacts_male / NPeople
 
-        #This is identical to shelters...
+        # This is identical to shelters...
         if group.spec == "shelter":
             # Inter
-            self.CMV["syoa"][group.spec + "_inter"]["unisex"] += NContacts_unisex / NPeople
-            self.CMV["syoa"][group.spec + "_inter"]["female"] += NContacts_female / NPeople
+            self.CMV["syoa"][group.spec + "_inter"]["unisex"] += (
+                NContacts_unisex / NPeople
+            )
+            self.CMV["syoa"][group.spec + "_inter"]["female"] += (
+                NContacts_female / NPeople
+            )
             self.CMV["syoa"][group.spec + "_inter"]["male"] += NContacts_male / NPeople
             # Intra
-            self.CMV["syoa"][group.spec + "_intra"]["unisex"] += NContacts_unisex / NPeople
-            self.CMV["syoa"][group.spec + "_intra"]["female"] += NContacts_female / NPeople
+            self.CMV["syoa"][group.spec + "_intra"]["unisex"] += (
+                NContacts_unisex / NPeople
+            )
+            self.CMV["syoa"][group.spec + "_intra"]["female"] += (
+                NContacts_female / NPeople
+            )
             self.CMV["syoa"][group.spec + "_intra"]["male"] += NContacts_male / NPeople
         return 1
 
@@ -3182,20 +3190,14 @@ class Tracker:
             contact_err = self.NCM_err[binType][local]
 
             if local in self.IM.keys():
-                proportional_physical = np.array(
-                    self.IM[local]["proportion_physical"]
-                )
+                proportional_physical = np.array(self.IM[local]["proportion_physical"])
                 characteristic_time = self.IM[local]["characteristic_time"]
             else:
                 proportional_physical = np.array(0)
                 characteristic_time = 0
 
             self.PolicyText(
-                local,
-                contact,
-                contact_err,
-                proportional_physical,
-                characteristic_time,
+                local, contact, contact_err, proportional_physical, characteristic_time
             )
             print("")
             interact = np.array(self.IM[local]["contacts"])
@@ -3204,7 +3206,6 @@ class Tracker:
                 % self.MatrixString(contact / interact)
             )
             print("")
-
 
         print("Results from NCMV")
         print("")
@@ -3217,20 +3218,14 @@ class Tracker:
             contact_err = self.NCM_V_err[binType][local]
 
             if local in self.IM.keys():
-                proportional_physical = np.array(
-                    self.IM[local]["proportion_physical"]
-                )
+                proportional_physical = np.array(self.IM[local]["proportion_physical"])
                 characteristic_time = self.IM[local]["characteristic_time"]
             else:
                 proportional_physical = np.array(0)
                 characteristic_time = 0
 
             self.PolicyText(
-                local,
-                contact,
-                contact_err,
-                proportional_physical,
-                characteristic_time,
+                local, contact, contact_err, proportional_physical, characteristic_time
             )
             print("")
             interact = np.array(self.IM[local]["contacts"])

@@ -4,12 +4,16 @@ import matplotlib as mpl
 import matplotlib.font_manager
 import matplotlib.pyplot as plt
 
+from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+
 try:
     plt.style.use(["science", "no-latex", "bright"])
-    print("Using 'science' matplotlib style")
+    if mpi_rank == 0:
+        print("Using 'science' matplotlib style")
 except Exception:
     plt.style.use("default")
-    print("Using default matplotlib style")
+    if mpi_rank == 0:
+        print("Using default matplotlib style")
 
 dpi = 150
 
@@ -52,7 +56,6 @@ def fig_initialize(setsize=False):
     plt.rc("axes")
     return 1
 
-
 def set_size(width="paper", fraction=1, subplots=(1, 1)):
     """Set figure dimensions to avoid scaling in LaTeX.
 
@@ -82,7 +85,7 @@ def set_size(width="paper", fraction=1, subplots=(1, 1)):
     inches_per_pt = 1 / 72.27
 
     # Golden ratio to set aesthetic figure height
-    golden_ratio = (5**0.5 - 1) / 2
+    golden_ratio = (5 ** 0.5 - 1) / 2
 
     # Figure width in inches
     fig_width_in = fig_width_pt * inches_per_pt

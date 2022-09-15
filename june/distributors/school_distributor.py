@@ -379,9 +379,7 @@ class SchoolDistributor:
             if all_filled:
                 break
 
-    def limit_classroom_sizes(
-        self,
-    ):
+    def limit_classroom_sizes(self,):
         """
         Limit subgroup sizes that represent class rooms to a maximum number of students.
         If maximum number is exceeded create new subgroups to distribute students homogeneously
