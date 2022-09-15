@@ -63,7 +63,9 @@ class MockHealthIndexGenerator:
         return hi
 
 
-def make_selector(desired_symptoms,):
+def make_selector(
+    desired_symptoms,
+):
     health_index_generator = MockHealthIndexGenerator(desired_symptoms)
     selector = InfectionSelector(health_index_generator=health_index_generator)
     return selector

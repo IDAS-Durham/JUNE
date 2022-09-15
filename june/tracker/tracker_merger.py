@@ -34,7 +34,9 @@ class MergerClass:
     """
 
     class Timer:
-        def __init__(self,):
+        def __init__(
+            self,
+        ):
             self.total_days = 1
 
     def __init__(self, record_path=Path("")):
@@ -823,7 +825,7 @@ class MergerClass:
         self.Save_CM_JSON(
             dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
             folder=folder_name,
-            filename=f"tracker_Metrics_NCM_{mpi_rankname}.yaml",
+            filename=f"tracker_Metrics_NCM{mpi_rankname}.yaml",
             jsonfile=jsonfile,
         )
 
@@ -840,7 +842,7 @@ class MergerClass:
         self.Save_CM_JSON(
             dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
             folder=folder_name,
-            filename=f"tracker_Metrics_NCM_R_{mpi_rankname}.yaml",
+            filename=f"tracker_Metrics_NCM_R{mpi_rankname}.yaml",
             jsonfile=jsonfile,
         )
 
@@ -857,7 +859,7 @@ class MergerClass:
         self.Save_CM_JSON(
             dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
             folder=folder_name,
-            filename=f"tracker_Metrics_NCM_P_{mpi_rankname}.yaml",
+            filename=f"tracker_Metrics_NCM_P{mpi_rankname}.yaml",
             jsonfile=jsonfile,
         )
 
@@ -874,7 +876,7 @@ class MergerClass:
         self.Save_CM_JSON(
             dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
             folder=folder_name,
-            filename=f"tracker_Metrics_NCM_V_{mpi_rankname}.yaml",
+            filename=f"tracker_Metrics_NCM_V{mpi_rankname}.yaml",
             jsonfile=jsonfile,
         )
 
@@ -887,7 +889,7 @@ class MergerClass:
         self.Save_CM_JSON(
             dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
             folder=folder_name,
-            filename=f"tracker_CamberraDist_NCM_{mpi_rankname}.yaml",
+            filename=f"tracker_CamberraDist_NCM{mpi_rankname}.yaml",
             jsonfile=jsonfile,
         )
 
@@ -900,7 +902,7 @@ class MergerClass:
         self.Save_CM_JSON(
             dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
             folder=folder_name,
-            filename=f"tracker_CamberraDist_NCM_R_{mpi_rankname}.yaml",
+            filename=f"tracker_CamberraDist_NCM_R{mpi_rankname}.yaml",
             jsonfile=jsonfile,
         )
 
@@ -913,7 +915,7 @@ class MergerClass:
         self.Save_CM_JSON(
             dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
             folder=folder_name,
-            filename=f"tracker_CamberraDist_NCM_P_{mpi_rankname}.yaml",
+            filename=f"tracker_CamberraDist_NCM_P{mpi_rankname}.yaml",
             jsonfile=jsonfile,
         )
 
@@ -926,7 +928,7 @@ class MergerClass:
         self.Save_CM_JSON(
             dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
             folder=folder_name,
-            filename=f"tracker_CamberraDist_NCM_V_{mpi_rankname}.yaml",
+            filename=f"tracker_CamberraDist_NCM_V{mpi_rankname}.yaml",
             jsonfile=jsonfile,
         )
 

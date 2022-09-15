@@ -1,4 +1,5 @@
 from .tracker_plots_formatting import fig_initialize, set_size, dpi
+
 fig_initialize(setsize=True)
 import numpy as np
 import yaml
@@ -1036,13 +1037,13 @@ class PlotClass:
             Q = self.Calc_QIndex(cm)
             NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width)
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-            I_sq_s = I_sq / var ** 2
+            I_sq_s = I_sq / var**2
             print("JUNE", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
 
             Q = self.Calc_QIndex(bbc_cm)
             NPCDM = self.Calc_NPCDM(bbc_cm, pop_density, pop_width)
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-            I_sq_s = I_sq / var ** 2
+            I_sq_s = I_sq / var**2
             print("BBC", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
             print({"Camberra": self.Canberra_distance(cm, bbc_cm)[0]})
             print("")
@@ -2165,7 +2166,6 @@ class PlotClass:
         relevant_contact_types = list(self.CM["syoa"].keys())
         IM_contact_types = list(self.CM["Interaction"].keys())
         CMTypes = ["NCM", "NCM_R", "NCM_P", "NCM_V"]
-        # CMTypes = ["CM", "CMV"]
 
         if plot_INPUTOUTPUT:
             plot_dir_1 = self.record_path / "Graphs" / f"Contact_Matrices_INOUT"

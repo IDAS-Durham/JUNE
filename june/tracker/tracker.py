@@ -256,12 +256,12 @@ class Tracker:
         """
         Special normalisation for shelters. Reweight based on households sharing shelters
         TODO Feed this in so not to be hard coded
-    
+
         Parameters
         ----------
-            cm: 
+            cm:
                 np.array: The contact matrix between households in a shelter
-            shelter_shared: 
+            shelter_shared:
                 np.float: The proportion of shelters with multiple households
 
         Returns
@@ -442,7 +442,7 @@ class Tracker:
         Q = self.Calc_QIndex(cm)
         NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width)
         I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-        I_sq_s = I_sq / var ** 2
+        I_sq_s = I_sq / var**2
         return {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"}
 
     ########################################################
@@ -1320,13 +1320,16 @@ class Tracker:
                     )
 
         if Which == "NCM_V":  # Only count contacts i to j
-            sum_i = np.nansum(norm_cm, axis=1)
+            old_frac_err = norm_cm_err / norm_cm
+
+            sum_i = np.tile(np.nansum(norm_cm, axis=1), (norm_cm.shape[0], 1)).T
+            sum_i_err = np.tile(
+                np.sqrt(np.nansum(norm_cm**2, axis=1)), (norm_cm.shape[0], 1)
+            ).T
+            sum_frac_err = sum_i_err / sum_i
+
             norm_cm /= sum_i
-            sum_err = np.sqrt(np.nansum(norm_cm_err ** 2, axis=1))
-            norm_cm_err = norm_cm * np.sqrt(
-                (sum_err / np.nansum(norm_cm_err, axis=1)) ** 2
-                + (np.nansum(norm_cm_err, axis=1) / sum_i) ** 2
-            )
+            norm_cm_err = norm_cm * np.sqrt(old_frac_err**2 + sum_frac_err**2)
 
         return norm_cm, norm_cm_err
 
@@ -2613,7 +2616,7 @@ class Tracker:
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                 folder=folder_name,
-                filename=f"tracker_Metrics_NCM_{mpi_rankname}.yaml",
+                filename=f"tracker_Metrics_NCM{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
             )
 
@@ -2630,7 +2633,7 @@ class Tracker:
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                 folder=folder_name,
-                filename=f"tracker_Metrics_NCM_R_{mpi_rankname}.yaml",
+                filename=f"tracker_Metrics_NCM_R{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
             )
 
@@ -2647,7 +2650,7 @@ class Tracker:
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                 folder=folder_name,
-                filename=f"tracker_Metrics_NCM_P_{mpi_rankname}.yaml",
+                filename=f"tracker_Metrics_NCM_P{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
             )
 
@@ -2664,7 +2667,7 @@ class Tracker:
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                 folder=folder_name,
-                filename=f"tracker_Metrics_NCM_V_{mpi_rankname}.yaml",
+                filename=f"tracker_Metrics_NCM_V{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
             )
 
@@ -2677,7 +2680,7 @@ class Tracker:
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                 folder=folder_name,
-                filename=f"tracker_CamberraDist_NCM_{mpi_rankname}.yaml",
+                filename=f"tracker_CamberraDist_NCM{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
             )
 
@@ -2690,7 +2693,7 @@ class Tracker:
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                 folder=folder_name,
-                filename=f"tracker_CamberraDist_NCM_R_{mpi_rankname}.yaml",
+                filename=f"tracker_CamberraDist_NCM_R{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
             )
 
@@ -2703,7 +2706,7 @@ class Tracker:
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                 folder=folder_name,
-                filename=f"tracker_CamberraDist_NCM_P_{mpi_rankname}.yaml",
+                filename=f"tracker_CamberraDist_NCM_P{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
             )
 
@@ -2716,7 +2719,7 @@ class Tracker:
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                 folder=folder_name,
-                filename=f"tracker_CamberraDist_NCM_V_{mpi_rankname}.yaml",
+                filename=f"tracker_CamberraDist_NCM_V{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
             )
 
