@@ -355,6 +355,79 @@ class PlotClass:
     def Canberra_distance(self, x, y):
         return Tracker.Canberra_distance(self, x, y)
 
+    #############################################
+    # Grab CM  ##################################
+    #############################################
+
+    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="NCM"):
+        """
+        Get cm out of dictionary.
+
+        Parameters
+        ----------
+            binType:
+                Name of bin type syoa, AC etc
+            contact_type:
+                Location of contacts
+            sex:
+                Sex contact matrix
+            which:
+                str, which matrix type to collect "CM", "NCM", "NCM_R", "NCM_P", "CMV", "NCM_V"
+
+        Returns
+        -------
+            cm:
+                np.array contact matrix
+            cm_err:
+                np.array contact matrix errors
+        """
+        if bin_type != "Interaction":
+            if which == "CM":
+                cm = self.CM[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.CM[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM":
+                cm = self.NCM[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM_R":
+                cm = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM_P":
+                cm = self.NCM_P[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM_P[bin_type][contact_type]["sex"][sex]["contacts_err"]
+
+            elif which == "CMV":
+                cm = self.CMV[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.CMV[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM_V":
+                cm = self.NCM_V[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM_V[bin_type][contact_type]["sex"][sex]["contacts_err"]
+
+        else:
+            if which == "CM":
+                cm = self.CM[bin_type][contact_type]["contacts"]
+                cm_err = self.CM[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM":
+                cm = self.NCM[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM_R":
+                cm = self.NCM_R[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM_R[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM_P":
+                cm = self.NCM_P[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM_P[bin_type][contact_type]["contacts_err"]
+
+            elif which == "CMV":
+                cm = self.CMV[bin_type][contact_type]["contacts"]
+                cm_err = self.CMV[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM_V":
+                cm = self.NCM_V[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM_V[bin_type][contact_type]["contacts_err"]
+
+        return np.array(cm), np.array(cm_err)
+
+    def IMPlots_GetIM(self, contact_type):
+        return Tracker.IMPlots_GetIM(self, contact_type)
+
     #####################################################
     # General Plotting ##################################
     #####################################################
@@ -758,99 +831,6 @@ class PlotClass:
         if labels is not None:
             labels = labels[:index]
         return cm, cm_err, labels
-
-    #############################################
-    # Grab CM  ##################################
-    #############################################
-
-    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="NCM"):
-        """
-        Get cm out of dictionary.
-
-        Parameters
-        ----------
-            binType:
-                Name of bin type syoa, AC etc
-            contact_type:
-                Location of contacts
-            sex:
-                Sex contact matrix
-            which:
-                str, which matrix type to collect "CM", "NCM", "NCM_R", "NCM_P", "CMV", "NCM_V"
-
-        Returns
-        -------
-            cm:
-                np.array contact matrix
-            cm_err:
-                np.array contact matrix errors
-        """
-        if bin_type != "Interaction":
-            if which == "CM":
-                cm = self.CM[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.CM[bin_type][contact_type]["sex"][sex]["contacts_err"]
-            elif which == "NCM":
-                cm = self.NCM[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.NCM[bin_type][contact_type]["sex"][sex]["contacts_err"]
-            elif which == "NCM_R":
-                cm = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts_err"]
-            elif which == "NCM_P":
-                cm = self.NCM_P[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.NCM_P[bin_type][contact_type]["sex"][sex]["contacts_err"]
-
-            elif which == "CMV":
-                cm = self.CMV[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.CMV[bin_type][contact_type]["sex"][sex]["contacts_err"]
-            elif which == "NCM_V":
-                cm = self.NCM_V[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.NCM_V[bin_type][contact_type]["sex"][sex]["contacts_err"]
-
-        else:
-            if which == "CM":
-                cm = self.CM[bin_type][contact_type]["contacts"]
-                cm_err = self.CM[bin_type][contact_type]["contacts_err"]
-            elif which == "NCM":
-                cm = self.NCM[bin_type][contact_type]["contacts"]
-                cm_err = self.NCM[bin_type][contact_type]["contacts_err"]
-            elif which == "NCM_R":
-                cm = self.NCM_R[bin_type][contact_type]["contacts"]
-                cm_err = self.NCM_R[bin_type][contact_type]["contacts_err"]
-            elif which == "NCM_P":
-                cm = self.NCM_P[bin_type][contact_type]["contacts"]
-                cm_err = self.NCM_P[bin_type][contact_type]["contacts_err"]
-
-            elif which == "CMV":
-                cm = self.CMV[bin_type][contact_type]["contacts"]
-                cm_err = self.CMV[bin_type][contact_type]["contacts_err"]
-            elif which == "NCM_V":
-                cm = self.NCM_V[bin_type][contact_type]["contacts"]
-                cm_err = self.NCM_V[bin_type][contact_type]["contacts_err"]
-
-        return np.array(cm), np.array(cm_err)
-
-    def IMPlots_GetIM(self, contact_type):
-        """
-        Get IM out of dictionary.
-
-        Parameters
-        ----------
-            contact_type:
-                Location of contacts
-
-        Returns
-        -------
-            cm:
-                np.array interactiojn matrix
-            cm_err:
-                np.array interaction matrix errors (could be none)
-        """
-        im = np.array(self.IM[contact_type]["contacts"], dtype=float)
-        if "contacts_err" not in self.IM[contact_type].keys():
-            im_err = None
-        else:
-            im_err = np.array(self.IM[contact_type]["contacts_err"], dtype=float)
-        return im, im_err
 
     #############################################
     # Plotting ##################################

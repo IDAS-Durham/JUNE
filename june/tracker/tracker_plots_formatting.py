@@ -20,7 +20,7 @@ dpi = 150
 # Some figure initialization
 def fig_initialize(setsize=False):
     # Set up tex rendering
-    plt.rc("text", usetex=False)
+    plt.rc("text", usetex=True)
     plt.rc(
         "text.latex",
         preamble=[
@@ -32,7 +32,7 @@ def fig_initialize(setsize=False):
     )
     # mpl.rcParams["font.family"] = "serif"
     # mpl.rcParams["font.serif"] = "STIX"
-    mpl.rcParams["mathtext.fontset"] = "stix"
+    # mpl.rcParams["mathtext.fontset"] = "stix"
     plt.rcParams["axes.facecolor"] = "white"
     plt.rcParams["figure.facecolor"] = "white"
     plt.rcParams["savefig.facecolor"] = "white"

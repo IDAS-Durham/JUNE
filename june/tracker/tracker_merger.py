@@ -5,6 +5,7 @@ from pathlib import Path
 import glob
 
 from june.tracker.tracker import Tracker
+from june.tracker.tracker_plots import PlotClass
 
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 import logging
@@ -39,7 +40,7 @@ class MergerClass:
         ):
             self.total_days = 1
 
-    def __init__(self, record_path=Path("")):
+    def __init__(self, record_path=Path(""), NRanksTest=None):
 
         self.record_path = record_path
         self.timer = self.Timer()
@@ -56,7 +57,10 @@ class MergerClass:
             self.merged_data_path = self.record_path / "Tracker" / "merged_data_output"
             self.merged_data_path.mkdir(exist_ok=True, parents=True)
 
-            self.NRanks = len(glob.glob(str(self.raw_data_path / "*.yaml")))
+            if NRanksTest is None:
+                self.NRanks = len(glob.glob(str(self.raw_data_path / "*.yaml")))
+            else:
+                self.NRanks = NRanksTest
 
             with open(self.raw_data_path / "tracker_Simulation_Params_r0_.yaml") as f:
                 Params = yaml.load(f, Loader=yaml.FullLoader)
@@ -67,7 +71,7 @@ class MergerClass:
                 "household_visits",
                 "global",
             ]
-            self.group_type_names["all"] = list(Params["NVenues"].keys())
+            self.group_type_names["all"] = list(Params["NVenues"].keys()) + ["global"]
             self.binTypes = list(Params["binTypes"])
             self.contact_sexes = list(Params["sexes"])
             self.timer.total_days = int(Params["total_days"])
@@ -81,7 +85,6 @@ class MergerClass:
             )
             Params["binTypes"] = self.MatrixString(matrix=np.array(Params["binTypes"]))
             Params["sexes"] = self.MatrixString(matrix=np.array(Params["sexes"]))
-
 
             for rank in range(1, self.NRanks):
                 with open(
@@ -135,8 +138,8 @@ class MergerClass:
     # Import the useful functions from other Tracker modules ##################################
     ###########################################################################################
 
-    def CM_Norm(self, cm, pop_tots, contact_type="global", Reciprocal=True):
-        return Tracker.CM_Norm(self, cm, pop_tots, contact_type, Reciprocal)
+    def CM_Norm(self, cm, cm_err, pop_tots, contact_type="global", Which="NCM"):
+        return Tracker.CM_Norm(self, cm, cm_err, pop_tots, contact_type, Which)
 
     def Get_characteristic_time(self, location):
         return Tracker.Get_characteristic_time(self, location)
@@ -205,6 +208,74 @@ class MergerClass:
 
     def Canberra_distance(self, x, y):
         return Tracker.Canberra_distance(self, x, y)
+
+    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="NCM"):
+        """
+        Get cm out of dictionary.
+
+        Parameters
+        ----------
+            binType:
+                Name of bin type syoa, AC etc
+            contact_type:
+                Location of contacts
+            sex:
+                Sex contact matrix
+            which:
+                str, which matrix type to collect "CM", "NCM", "NCM_R", "NCM_P", "CMV", "NCM_V"
+
+        Returns
+        -------
+            cm:
+                np.array contact matrix
+            cm_err:
+                np.array contact matrix errors
+        """
+        if bin_type != "Interaction":
+            if which == "CM":
+                cm = self.CM[bin_type][contact_type][sex]
+                cm_err = self.CM_err[bin_type][contact_type][sex]
+            elif which == "NCM":
+                cm = self.NCM[bin_type][contact_type][sex]
+                cm_err = self.NCM_err[bin_type][contact_type][sex]
+            elif which == "NCM_R":
+                cm = self.NCM_R[bin_type][contact_type][sex]
+                cm_err = self.NCM_R_err[bin_type][contact_type][sex]
+            elif which == "NCM_P":
+                cm = self.NCM_P[bin_type][contact_type][sex]
+                cm_err = self.NCM_P_err[bin_type][contact_type][sex]
+
+            elif which == "CMV":
+                cm = self.CMV[bin_type][contact_type][sex]
+                cm_err = self.CMV_err[bin_type][contact_type][sex]
+            elif which == "NCM_V":
+                cm = self.NCM_V[bin_type][contact_type][sex]
+                cm_err = self.NCM_V_err[bin_type][contact_type][sex]
+
+        else:
+            if which == "CM":
+                cm = self.CM[bin_type][contact_type]
+                cm_err = self.CM_err[bin_type][contact_type]
+            elif which == "NCM":
+                cm = self.NCM[bin_type][contact_type]
+                cm_err = self.NCM_err[bin_type][contact_type]
+            elif which == "NCM_R":
+                cm = self.NCM_R[bin_type][contact_type]
+                cm_err = self.NCM_R_err[bin_type][contact_type]
+            elif which == "NCM_P":
+                cm = self.NCM_P[bin_type][contact_type]
+                cm_err = self.NCM_P_err[bin_type][contact_type]
+
+            elif which == "CMV":
+                cm = self.CMV[bin_type][contact_type]
+                cm_err = self.CMV_err[bin_type][contact_type]
+            elif which == "NCM_V":
+                cm = self.NCM_V[bin_type][contact_type]
+                cm_err = self.NCM_V_err[bin_type][contact_type]
+        return np.array(cm), np.array(cm_err)
+
+    def IMPlots_GetIM(self, contact_type):
+        return Tracker.IMPlots_GetIM(self, contact_type)
 
     #####################################################
     # Individual Merge ##################################
@@ -605,7 +676,7 @@ class MergerClass:
                                     np.array(self.CM_rank[bin_type][loc]["contacts"])
                                     * self.timer.total_days
                                 )
-        print(rank, "CM Done")
+        logger.info(f"Rank {mpi_rank} -- Load CMs Done")
 
         for rank in range(0, self.NRanks):
             with open(
@@ -701,7 +772,8 @@ class MergerClass:
                                     np.array(self.CMV_rank[bin_type][loc]["contacts"])
                                     * self.timer.total_days
                                 )
-        print(rank, "CMV Done")
+
+        logger.info(f"Rank {mpi_rank} -- Load CMVs Done")
         return 1
 
     def LoadCumtimes(self):
@@ -937,7 +1009,7 @@ class MergerClass:
     #################################################
 
     def Merge(self):
-        logger.info(f"Rank {mpi_rank} -- Begin Merging from {self.NRanks} ranks")
+        logger.info(f"Rank {mpi_rank} -- Begin Merging from {self.NRanks+1} ranks")
         if self.MPI:
             self.Travel_Distance()
             logger.info(f"Rank {mpi_rank} -- Distance sheet done")
@@ -964,7 +1036,6 @@ class MergerClass:
             self.normalise_All_CM()
 
             logger.info(f"Rank {mpi_rank} -- Normalised CMs done")
-            self.PrintOutResults()
 
             self.SaveOutCM()
             logger.info(f"Rank {mpi_rank} -- Saved CM done")
@@ -972,3 +1043,4 @@ class MergerClass:
         else:
             logger.info(f"Rank {mpi_rank} -- Skip run was on 1 core")
         logger.info(f"Rank {mpi_rank} -- Merging done")
+        self.PrintOutResults()

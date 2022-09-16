@@ -277,6 +277,98 @@ class Tracker:
         cm[1, 0] /= FIntraExtra
         return cm
 
+    #############################################
+    # Grab CM  ##################################
+    #############################################
+
+    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="NCM"):
+        """
+        Get cm out of dictionary.
+
+        Parameters
+        ----------
+            binType:
+                Name of bin type syoa, AC etc
+            contact_type:
+                Location of contacts
+            sex:
+                Sex contact matrix
+            which:
+                str, which matrix type to collect "CM", "NCM", "NCM_R", "NCM_P", "CMV", "NCM_V"
+
+        Returns
+        -------
+            cm:
+                np.array contact matrix
+            cm_err:
+                np.array contact matrix errors
+        """
+        if bin_type != "Interaction":
+            if which == "CM":
+                cm = self.CM[bin_type][contact_type]["sex"][sex]
+                cm_err = self.CM_err[bin_type][contact_type]["sex"][sex]
+            elif which == "NCM":
+                cm = self.NCM[bin_type][contact_type]["sex"][sex]
+                cm_err = self.NCM_err[bin_type][contact_type]["sex"][sex]
+            elif which == "NCM_R":
+                cm = self.NCM_R[bin_type][contact_type]["sex"][sex]
+                cm_err = self.NCM_R_err[bin_type][contact_type]["sex"][sex]
+            elif which == "NCM_P":
+                cm = self.NCM_P[bin_type][contact_type]["sex"][sex]
+                cm_err = self.NCM_P_err[bin_type][contact_type]["sex"][sex]
+
+            elif which == "CMV":
+                cm = self.CMV[bin_type][contact_type]["sex"][sex]
+                cm_err = self.CMV_err[bin_type][contact_type]["sex"][sex]
+            elif which == "NCM_V":
+                cm = self.NCM_V[bin_type][contact_type]["sex"][sex]
+                cm_err = self.NCM_V_err[bin_type][contact_type]["sex"][sex]
+
+        else:
+            if which == "CM":
+                cm = self.CM[bin_type][contact_type]
+                cm_err = self.CM_err[bin_type][contact_type]
+            elif which == "NCM":
+                cm = self.NCM[bin_type][contact_type]
+                cm_err = self.NCM_err[bin_type][contact_type]
+            elif which == "NCM_R":
+                cm = self.NCM_R[bin_type][contact_type]
+                cm_err = self.NCM_R_err[bin_type][contact_type]
+            elif which == "NCM_P":
+                cm = self.NCM_P[bin_type][contact_type]
+                cm_err = self.NCM_P_err[bin_type][contact_type]
+
+            elif which == "CMV":
+                cm = self.CMV[bin_type][contact_type]
+                cm_err = self.CMV_err[bin_type][contact_type]
+            elif which == "NCM_V":
+                cm = self.NCM_V[bin_type][contact_type]
+                cm_err = self.NCM_V_err[bin_type][contact_type]
+        return np.array(cm), np.array(cm_err)
+
+    def IMPlots_GetIM(self, contact_type):
+        """
+        Get IM out of dictionary.
+
+        Parameters
+        ----------
+            contact_type:
+                Location of contacts
+
+        Returns
+        -------
+            cm:
+                np.array interactiojn matrix
+            cm_err:
+                np.array interaction matrix errors (could be none)
+        """
+        im = np.array(self.IM[contact_type]["contacts"], dtype=float)
+        if "contacts_err" not in self.IM[contact_type].keys():
+            im_err = None
+        else:
+            im_err = np.array(self.IM[contact_type]["contacts_err"], dtype=float)
+        return im, im_err
+
     ########################################################
     # CM Metric functions ##################################
     ########################################################
@@ -1095,9 +1187,9 @@ class Tracker:
                     if bin_type == "Interaction":
                         if sex == "unisex":
                             cm = cm_spec
-                            age_profile = self.location_cum_pop["Interaction"][
-                                contact_type
-                            ]
+                            age_profile = np.array(
+                                self.location_cum_pop["Interaction"][contact_type]
+                            )
                             if contact_type == "shelter":
                                 cm = self.cm_shelter_renorm(cm)
                             cm_err = np.sqrt(cm)
@@ -1108,8 +1200,10 @@ class Tracker:
                         cm = cm_spec[sex]
                         cm_err = np.sqrt(cm)
 
-                        age_profile = self.location_cum_pop[bin_type][contact_type][sex]
-                        ratio = (
+                        age_profile = np.array(
+                            self.location_cum_pop[bin_type][contact_type][sex]
+                        )
+                        ratio = np.array(
                             age_profile / self.location_cum_pop[bin_type]["global"][sex]
                         )
 
@@ -1128,10 +1222,20 @@ class Tracker:
                         contact_type=contact_type,
                         Which="NCM_R",
                     )
-
                     # TO DO defo this one?
                     NCM_P = NCM.copy() * ratio
                     NCM_P_err = NCM_err.copy() * ratio
+                    # NCM_P = NCM_R.copy() * ratio
+                    # NCM_P_err = NCM_R_err.copy() * ratio
+
+                    NCM = np.nan_to_num(NCM, nan=0)
+                    NCM_err = np.nan_to_num(NCM_err, nan=0)
+
+                    NCM_R = np.nan_to_num(NCM_R, nan=0)
+                    NCM_R_err = np.nan_to_num(NCM_R_err, nan=0)
+
+                    NCM_P = np.nan_to_num(NCM_P, nan=0)
+                    NCM_P_err = np.nan_to_num(NCM_P_err, nan=0)
 
                     if bin_type == "Interaction":
                         if sex == "unisex":
@@ -3182,59 +3286,54 @@ class Tracker:
         -------
             None
         """
-
-        print("Results from 1D NCM")
-        print("")
         if len(WhichLocals) == 0:
             WhichLocals = self.CM[binType].keys()
 
-        for local in WhichLocals:
-            contact = self.NCM[binType][local]
-            contact_err = self.NCM_err[binType][local]
+        def printoutfunction(which):
+            for local in WhichLocals:
+                contact, contact_err = self.CMPlots_GetCM(
+                    binType, local, sex=sex, which=which
+                )
+                if local in self.IM.keys():
 
-            if local in self.IM.keys():
-                proportional_physical = np.array(self.IM[local]["proportion_physical"])
-                characteristic_time = self.IM[local]["characteristic_time"]
-            else:
-                proportional_physical = np.array(0)
-                characteristic_time = 0
+                    (
+                        characteristic_time,
+                        proportion_pysical,
+                    ) = self.Get_characteristic_time(local)
+                    proportional_physical = np.array(proportion_pysical)
+                    characteristic_time = characteristic_time * 24
+                else:
+                    proportional_physical = np.array(0)
+                    characteristic_time = 0
 
-            self.PolicyText(
-                local, contact, contact_err, proportional_physical, characteristic_time
-            )
-            print("")
-            interact = np.array(self.IM[local]["contacts"])
-            print(
-                "    Ratio of contacts and feed in values: %s"
-                % self.MatrixString(contact / interact)
-            )
-            print("")
+                self.PolicyText(
+                    local,
+                    contact,
+                    contact_err,
+                    proportional_physical,
+                    characteristic_time,
+                )
+                print("")
+                im, im_err = self.IMPlots_GetIM(local)
+                print(
+                    "    Ratio of contacts and feed in values: %s"
+                    % self.MatrixString(contact / np.array(im))
+                )
+                print("")
 
-        print("Results from NCMV")
+        print("Results from NCM")
+        printoutfunction(which="NCM")
         print("")
 
-        if len(WhichLocals) == 0:
-            WhichLocals = self.CMV[binType].keys()
+        print("Results from NCM_R")
+        printoutfunction(which="NCM_R")
+        print("")
 
-        for local in WhichLocals:
-            contact = self.NCM_V[binType][local]
-            contact_err = self.NCM_V_err[binType][local]
+        print("Results from NCM_P")
+        printoutfunction(which="NCM_P")
+        print("")
 
-            if local in self.IM.keys():
-                proportional_physical = np.array(self.IM[local]["proportion_physical"])
-                characteristic_time = self.IM[local]["characteristic_time"]
-            else:
-                proportional_physical = np.array(0)
-                characteristic_time = 0
-
-            self.PolicyText(
-                local, contact, contact_err, proportional_physical, characteristic_time
-            )
-            print("")
-            interact = np.array(self.IM[local]["contacts"])
-            print(
-                "    Ratio of contacts and feed in values: %s"
-                % self.MatrixString(contact / interact)
-            )
-            print("")
+        print("Results from NCM_V")
+        printoutfunction(which="NCM_V")
+        print("")
         return 1
