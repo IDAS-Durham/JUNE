@@ -20,7 +20,7 @@ dpi = 150
 # Some figure initialization
 def fig_initialize(setsize=False):
     # Set up tex rendering
-    plt.rc("text", usetex=True)
+    plt.rc("text", usetex=False)
     plt.rc(
         "text.latex",
         preamble=[

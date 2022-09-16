@@ -81,9 +81,7 @@ class MergerClass:
             )
             Params["binTypes"] = self.MatrixString(matrix=np.array(Params["binTypes"]))
             Params["sexes"] = self.MatrixString(matrix=np.array(Params["sexes"]))
-            Params["trackerTypes"] = self.MatrixString(
-                matrix=np.array(Params["trackerTypes"])
-            )
+
 
             for rank in range(1, self.NRanks):
                 with open(
