@@ -1223,8 +1223,8 @@ class Tracker:
                         Which="NCM_R",
                     )
                     # TO DO defo this one?
-                    NCM_P = NCM.copy() * ratio
-                    NCM_P_err = NCM_err.copy() * ratio
+                    NCM_P = (NCM.copy().T * ratio).T
+                    NCM_P_err = (NCM_err.copy().T * ratio).T
                     # NCM_P = NCM_R.copy() * ratio
                     # NCM_P_err = NCM_R_err.copy() * ratio
 
