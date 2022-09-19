@@ -138,7 +138,7 @@ class MergerClass:
     # Import the useful functions from other Tracker modules ##################################
     ###########################################################################################
 
-    def CM_Norm(self, cm, cm_err, pop_tots, contact_type="global", Which="NCM"):
+    def CM_Norm(self, cm, cm_err, pop_tots, contact_type="global", Which="UNCM"):
         return Tracker.CM_Norm(self, cm, cm_err, pop_tots, contact_type, Which)
 
     def Get_characteristic_time(self, location):
@@ -183,15 +183,15 @@ class MergerClass:
     def Save_CM_JSON(self, dir, folder, filename, jsonfile):
         return Tracker.Save_CM_JSON(self, dir, folder, filename, jsonfile)
 
-    def tracker_CMJSON(self, binType, CM, CM_err):
-        return Tracker.tracker_CMJSON(self, binType, CM, CM_err)
+    def tracker_CMJSON(self, binType, CM, CM_err, NormType):
+        return Tracker.tracker_CMJSON(self, binType, CM, CM_err, NormType)
 
     def contract_matrix(self, CM, bins, method=np.sum):
         return Tracker.contract_matrix(self, CM, bins, method)
 
-    def Calculate_CM_Metrics(self, bin_type, contact_type, CM, CM_err, sex="unisex"):
+    def Calculate_CM_Metrics(self, bin_type, contact_type, CM, CM_err, ratio, sex="unisex"):
         return Tracker.Calculate_CM_Metrics(
-            self, bin_type, contact_type, CM, CM_err, sex
+            self, bin_type, contact_type, CM, CM_err, ratio, sex
         )
 
     def Population_Metrics(self, pop_by_bin, pop_bins):
@@ -209,7 +209,10 @@ class MergerClass:
     def Canberra_distance(self, x, y):
         return Tracker.Canberra_distance(self, x, y)
 
-    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="NCM"):
+    def AttendenceRatio(self, bin_type, contact_type, sex):
+        return Tracker.AttendenceRatio(self, bin_type, contact_type, sex)
+
+    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="UNCM"):
         """
         Get cm out of dictionary.
 
@@ -222,7 +225,7 @@ class MergerClass:
             sex:
                 Sex contact matrix
             which:
-                str, which matrix type to collect "CM", "NCM", "NCM_R", "NCM_P", "CMV", "NCM_V"
+                str, which matrix type to collect "CM", "UNCM", "UNCM_R", "CMV", "UNCM_V"
 
         Returns
         -------
@@ -235,43 +238,38 @@ class MergerClass:
             if which == "CM":
                 cm = self.CM[bin_type][contact_type][sex]
                 cm_err = self.CM_err[bin_type][contact_type][sex]
-            elif which == "NCM":
-                cm = self.NCM[bin_type][contact_type][sex]
-                cm_err = self.NCM_err[bin_type][contact_type][sex]
-            elif which == "NCM_R":
-                cm = self.NCM_R[bin_type][contact_type][sex]
-                cm_err = self.NCM_R_err[bin_type][contact_type][sex]
-            elif which == "NCM_P":
-                cm = self.NCM_P[bin_type][contact_type][sex]
-                cm_err = self.NCM_P_err[bin_type][contact_type][sex]
+            elif which == "UNCM":
+                cm = self.UNCM[bin_type][contact_type][sex]
+                cm_err = self.UNCM_err[bin_type][contact_type][sex]
+            elif which == "UNCM_R":
+                cm = self.UNCM_R[bin_type][contact_type][sex]
+                cm_err = self.UNCM_R_err[bin_type][contact_type][sex]
+
 
             elif which == "CMV":
                 cm = self.CMV[bin_type][contact_type][sex]
                 cm_err = self.CMV_err[bin_type][contact_type][sex]
-            elif which == "NCM_V":
-                cm = self.NCM_V[bin_type][contact_type][sex]
-                cm_err = self.NCM_V_err[bin_type][contact_type][sex]
+            elif which == "UNCM_V":
+                cm = self.UNCM_V[bin_type][contact_type][sex]
+                cm_err = self.UNCM_V_err[bin_type][contact_type][sex]
 
         else:
             if which == "CM":
                 cm = self.CM[bin_type][contact_type]
                 cm_err = self.CM_err[bin_type][contact_type]
-            elif which == "NCM":
-                cm = self.NCM[bin_type][contact_type]
-                cm_err = self.NCM_err[bin_type][contact_type]
-            elif which == "NCM_R":
-                cm = self.NCM_R[bin_type][contact_type]
-                cm_err = self.NCM_R_err[bin_type][contact_type]
-            elif which == "NCM_P":
-                cm = self.NCM_P[bin_type][contact_type]
-                cm_err = self.NCM_P_err[bin_type][contact_type]
+            elif which == "UNCM":
+                cm = self.UNCM[bin_type][contact_type]
+                cm_err = self.UNCM_err[bin_type][contact_type]
+            elif which == "UNCM_R":
+                cm = self.UNCM_R[bin_type][contact_type]
+                cm_err = self.UNCM_R_err[bin_type][contact_type]
 
             elif which == "CMV":
                 cm = self.CMV[bin_type][contact_type]
                 cm_err = self.CMV_err[bin_type][contact_type]
-            elif which == "NCM_V":
-                cm = self.NCM_V[bin_type][contact_type]
-                cm_err = self.NCM_V_err[bin_type][contact_type]
+            elif which == "UNCM_V":
+                cm = self.UNCM_V[bin_type][contact_type]
+                cm_err = self.UNCM_V_err[bin_type][contact_type]
         return np.array(cm), np.array(cm_err)
 
     def IMPlots_GetIM(self, contact_type):
@@ -805,203 +803,106 @@ class MergerClass:
     def SaveOutCM(self):
         folder_name = self.merged_data_path
         mpi_rankname = ""
-        # Saving 1D Contacts tracker results ##################################
-        jsonfile = {}
-        for binType in list(self.CM.keys()):
-            jsonfile[binType] = self.tracker_CMJSON(
-                binType=binType, CM=self.CM, CM_err=self.CM_err
-            )
-        # Save out the CM
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-            folder=folder_name,
-            filename=f"tracker_CM{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
+        
+        def SaveMatrix(CM, CM_err, Mtype, NormType="U"):
+            jsonfile = {}
+            for binType in list(CM.keys()):
 
-        jsonfile = {}
-        for binType in list(self.CMV.keys()):
-            jsonfile[binType] = self.tracker_CMJSON(
-                binType=binType, CM=self.CMV, CM_err=self.CMV_err
-            )
-        # Save out the CMV
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-            folder=folder_name,
-            filename=f"tracker_CMV{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
+                if NormType == "U":
+                    pass
+                elif NormType == "P":
+                    Mtype = "P"+Mtype[1:]
 
-        jsonfile = {}
-        for binType in list(self.NCM.keys()):
-            jsonfile[binType] = self.tracker_CMJSON(
-                binType=binType, CM=self.NCM, CM_err=self.NCM_err
-            )
-        # Save out the Normalised NCM
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-            folder=folder_name,
-            filename=f"tracker_NCM{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
-
-        jsonfile = {}
-        for binType in list(self.NCM_R.keys()):
-            jsonfile[binType] = self.tracker_CMJSON(
-                binType=binType, CM=self.NCM_R, CM_err=self.NCM_R_err
-            )
-        # Save out the NCMR
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-            folder=folder_name,
-            filename=f"tracker_NCM_R{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
-
-        jsonfile = {}
-        for binType in list(self.NCM_P.keys()):
-            jsonfile[binType] = self.tracker_CMJSON(
-                binType=binType, CM=self.NCM_P, CM_err=self.NCM_P_err
-            )
-        # Save out the NCMP
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-            folder=folder_name,
-            filename=f"tracker_NCM_P{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
-
-        jsonfile = {}
-        for binType in list(self.NCM_V.keys()):
-            jsonfile[binType] = self.tracker_CMJSON(
-                binType=binType, CM=self.NCM_V, CM_err=self.NCM_V_err
-            )
-        # Save out the NCMV
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-            folder=folder_name,
-            filename=f"tracker_NCM_V{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
-
-        # Save out metric calculations
-        jsonfile = {}
-        for binType in list(self.NCM.keys()):
-            jsonfile[binType] = {}
-            for loc in list(self.NCM[binType].keys()):
-                jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                    bin_type=binType, contact_type=loc, CM=self.NCM, CM_err=self.NCM_err
+                jsonfile[binType] = self.tracker_CMJSON(
+                    binType=binType, CM=CM, CM_err=CM_err, NormType=NormType,
                 )
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-            folder=folder_name,
-            filename=f"tracker_Metrics_NCM{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
+            # Save out the Normalised UNCM
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
+                folder=folder_name,
+                filename=f"tracker_{Mtype}{mpi_rankname}.yaml",
+                jsonfile=jsonfile,
+            )
 
-        jsonfile = {}
-        for binType in list(self.NCM.keys()):
-            jsonfile[binType] = {}
-            for loc in list(self.NCM[binType].keys()):
-                jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                    bin_type=binType,
-                    contact_type=loc,
-                    CM=self.NCM_R,
-                    CM_err=self.NCM_R_err,
-                )
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-            folder=folder_name,
-            filename=f"tracker_Metrics_NCM_R{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
+        def SaveMatrixMetrics(CM, CM_err, Mtype, NormType="U"):
+            # Save out metric calculations
+            jsonfile = {}
+            for binType in list(CM.keys()):
+                jsonfile[binType] = {}
+                for loc in list(CM[binType].keys()):
 
-        jsonfile = {}
-        for binType in list(self.NCM_P.keys()):
-            jsonfile[binType] = {}
-            for loc in list(self.NCM_P[binType].keys()):
-                jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                    bin_type=binType,
-                    contact_type=loc,
-                    CM=self.NCM_P,
-                    CM_err=self.NCM_P_err,
-                )
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-            folder=folder_name,
-            filename=f"tracker_Metrics_NCM_P{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
+                    if NormType == "U":
+                        ratio = 1
+                    elif NormType == "P":
+                        ratio = self.AttendenceRatio(binType, loc, "unisex")
+                        Mtype = "P"+Mtype[1:]
 
-        jsonfile = {}
-        for binType in list(self.NCM_V.keys()):
-            jsonfile[binType] = {}
-            for loc in list(self.NCM_V[binType].keys()):
-                jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                    bin_type=binType,
-                    contact_type=loc,
-                    CM=self.NCM_V,
-                    CM_err=self.NCM_V_err,
-                )
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-            folder=folder_name,
-            filename=f"tracker_Metrics_NCM_V{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
+                    jsonfile[binType][loc] = self.Calculate_CM_Metrics(
+                        bin_type=binType,
+                        contact_type=loc,
+                        CM=CM,
+                        CM_err=CM_err,
+                        ratio = ratio,
+                        sex = "unisex"
+                    )
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+                folder=folder_name,
+                filename=f"tracker_Metrics_{Mtype}{mpi_rankname}.yaml",
+                jsonfile=jsonfile,
+            )
 
-        jsonfile = {}
-        for loc in list(self.NCM["Interaction"].keys()):
-            A = np.array(self.NCM["Interaction"][loc], dtype=float)
-            B = np.array(self.IM[loc]["contacts"], dtype=float)
-            Dc = self.Canberra_distance(A, B)[0]
-            jsonfile[loc] = {"Dc": f"{Dc}"}
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-            folder=folder_name,
-            filename=f"tracker_CamberraDist_NCM{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
+        def SaveMatrixCamberra(CM, CM_err, Mtype, NormType="U"):
+            jsonfile = {}
+            for loc in list(CM["Interaction"].keys()):
 
-        jsonfile = {}
-        for loc in list(self.NCM_R["Interaction"].keys()):
-            A = np.array(self.NCM_R["Interaction"][loc], dtype=float)
-            B = np.array(self.IM[loc]["contacts"], dtype=float)
-            Dc = self.Canberra_distance(A, B)[0]
-            jsonfile[loc] = {"Dc": f"{Dc}"}
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-            folder=folder_name,
-            filename=f"tracker_CamberraDist_NCM_R{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
+                if NormType == "U":
+                    ratio = 1
+                elif NormType == "P":
+                    ratio = self.AttendenceRatio("Interaction", loc, "unisex")
+                    Mtype = "P"+Mtype[1:]
 
-        jsonfile = {}
-        for loc in list(self.NCM_P["Interaction"].keys()):
-            A = np.array(self.NCM_P["Interaction"][loc], dtype=float)
-            B = np.array(self.IM[loc]["contacts"], dtype=float)
-            Dc = self.Canberra_distance(A, B)[0]
-            jsonfile[loc] = {"Dc": f"{Dc}"}
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-            folder=folder_name,
-            filename=f"tracker_CamberraDist_NCM_P{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
+                cm = CM["Interaction"][loc]
+                cm = self.UNtoPNConversion(cm, ratio)
+      
+                A = np.array(cm, dtype=float)
+                B = np.array(self.IM[loc]["contacts"], dtype=float)
+                Dc = self.Canberra_distance(A, B)[0]
+                jsonfile[loc] = {"Dc": f"{Dc}"}
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+                folder=folder_name,
+                filename=f"tracker_CamberraDist_{Mtype}{mpi_rankname}.yaml",
+                jsonfile=jsonfile,
+            )
 
-        jsonfile = {}
-        for loc in list(self.NCM_V["Interaction"].keys()):
-            A = np.array(self.NCM_V["Interaction"][loc], dtype=float)
-            B = np.array(self.IM[loc]["contacts"], dtype=float)
-            Dc = self.Canberra_distance(A, B)[0]
-            jsonfile[loc] = {"Dc": f"{Dc}"}
-        self.Save_CM_JSON(
-            dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-            folder=folder_name,
-            filename=f"tracker_CamberraDist_NCM_V{mpi_rankname}.yaml",
-            jsonfile=jsonfile,
-        )
+        # Saving Contacts tracker results ##################################
+        SaveMatrix(CM=self.CM, CM_err=self.CM, Mtype = "CM")
+        SaveMatrix(CM=self.CMV, CM_err=self.CMV_err, Mtype = "CMV")
 
+        SaveMatrix(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM")
+        SaveMatrix(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R")
+        SaveMatrix(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V")
+
+        SaveMatrix(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM",NormType="P")
+        SaveMatrix(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R",NormType="P")
+        SaveMatrix(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V",NormType="P")
+
+        SaveMatrixMetrics(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM")
+        SaveMatrixMetrics(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R")
+        SaveMatrixMetrics(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V")
+
+        SaveMatrixMetrics(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM",NormType="P")
+        SaveMatrixMetrics(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R",NormType="P")
+        SaveMatrixMetrics(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V",NormType="P")
+
+        SaveMatrixCamberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM")
+        SaveMatrixCamberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R")
+        SaveMatrixCamberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V")
+
+        SaveMatrixCamberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM",NormType="P")
+        SaveMatrixCamberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R",NormType="P")
+        SaveMatrixCamberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V",NormType="P")
         return 1
 
     #################################################
