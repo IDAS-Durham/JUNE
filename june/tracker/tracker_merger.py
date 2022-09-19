@@ -212,6 +212,9 @@ class MergerClass:
     def AttendenceRatio(self, bin_type, contact_type, sex):
         return Tracker.AttendenceRatio(self, bin_type, contact_type, sex)
 
+    def UNtoPNConversion(self, cm, ratio):
+        return Tracker.UNtoPNConversion(self, cm, ratio)
+
     def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="UNCM"):
         """
         Get cm out of dictionary.
