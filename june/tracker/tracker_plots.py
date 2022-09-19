@@ -62,21 +62,24 @@ class PlotClass:
     Tracker_Contact_Type:
         NONE, Not used
 
+    Normalisation_Type:
+        string, "U" for venue normalised or "P" for population normalised
+
     Following parameters can be preloaded data from another plot class. If None data automatically loaded.
         Params,
         IM,
         CM,
-        UNCM,
-        UNCM_R,
-        PNCM,
+        NCM,
+        NCM_R,
         CMV,
-        UNCMV,
+        NCMV,
         average_contacts,
         location_counters,
         location_counters_day,
         location_cum_pop,
         age_profiles,
-        travel_distance
+        travel_distance,
+        
 
     Returns
     -------
@@ -91,23 +94,25 @@ class PlotClass:
         Params=None,
         IM=None,
         CM=None,
-        UNCM=None,
-        UNCM_R=None,
-        PNCM=None,
+        NCM=None,
+        NCM_R=None,
         CMV=None,
-        UNCM_V=None,
+        NCM_V=None,
         average_contacts=None,
         location_counters=None,
         location_counters_day=None,
         location_cum_pop=None,
         age_profiles=None,
         travel_distance=None,
+        Normalisation_Type="U",
     ):
 
         if Tracker_Contact_Type is None:
             pass
         else:
             print("Tracker_Contact_Type argument no longer required")
+
+        self.Normalisation_Type = Normalisation_Type
 
         self.record_path = record_path
 
@@ -140,29 +145,27 @@ class PlotClass:
         else:
             self.CM = CM
 
-        if UNCM is None:
+        if NCM is None:
             with open(
-                self.record_path / folder_name / "CM_yamls" / f"tracker_UNCM.yaml"
+                self.record_path
+                / folder_name
+                / "CM_yamls"
+                / f"tracker_{self.Normalisation_Type}NCM.yaml"
             ) as f:
-                self.UNCM = yaml.load(f, Loader=yaml.FullLoader)
+                self.NCM = yaml.load(f, Loader=yaml.FullLoader)
         else:
-            self.UNCM = UNCM
+            self.NCM = NCM
 
-        if UNCM_R is None:
+        if NCM_R is None:
             with open(
-                self.record_path / folder_name / "CM_yamls" / f"tracker_UNCM_R.yaml"
+                self.record_path
+                / folder_name
+                / "CM_yamls"
+                / f"tracker_{self.Normalisation_Type}NCM_R.yaml"
             ) as f:
-                self.UNCM_R = yaml.load(f, Loader=yaml.FullLoader)
+                self.NCM_R = yaml.load(f, Loader=yaml.FullLoader)
         else:
-            self.UNCM_R = UNCM_R
-
-        if PNCM is None:
-            with open(
-                self.record_path / folder_name / "CM_yamls" / f"tracker_UNCM_V.yaml"
-            ) as f:
-                self.PNCM = yaml.load(f, Loader=yaml.FullLoader)
-        else:
-            self.PNCM = PNCM
+            self.NCM_R = NCM_R
 
         if CMV is None:
             with open(
@@ -172,13 +175,16 @@ class PlotClass:
         else:
             self.CMV = CMV
 
-        if UNCM_V is None:
+        if NCM_V is None:
             with open(
-                self.record_path / folder_name / "CM_yamls" / f"tracker_UNCM_V.yaml"
+                self.record_path
+                / folder_name
+                / "CM_yamls"
+                / f"tracker_{self.Normalisation_Type}NCM_V.yaml"
             ) as f:
-                self.UNCM_V = yaml.load(f, Loader=yaml.FullLoader)
+                self.NCM_V = yaml.load(f, Loader=yaml.FullLoader)
         else:
-            self.UNCM_V = UNCM_V
+            self.NCM_V = NCM_V
 
         # Get Parameters of simulation
         self.total_days = self.Params["total_days"]
@@ -359,7 +365,7 @@ class PlotClass:
     # Grab CM  ##################################
     #############################################
 
-    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="UNCM"):
+    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="NCM"):
         """
         Get cm out of dictionary.
 
@@ -372,7 +378,7 @@ class PlotClass:
             sex:
                 Sex contact matrix
             which:
-                str, which matrix type to collect "CM", "UNCM", "UNCM_R", "PNCM", "CMV", "UNCM_V"
+                str, which matrix type to collect "CM", "NCM", "NCM_R", "CMV", "NCM_V"
 
         Returns
         -------
@@ -385,43 +391,37 @@ class PlotClass:
             if which == "CM":
                 cm = self.CM[bin_type][contact_type]["sex"][sex]["contacts"]
                 cm_err = self.CM[bin_type][contact_type]["sex"][sex]["contacts_err"]
-            elif which == "UNCM":
-                cm = self.UNCM[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.UNCM[bin_type][contact_type]["sex"][sex]["contacts_err"]
-            elif which == "UNCM_R":
-                cm = self.UNCM_R[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.UNCM_R[bin_type][contact_type]["sex"][sex]["contacts_err"]
-            elif which == "PNCM":
-                cm = self.PNCM[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.PNCM[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM":
+                cm = self.NCM[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM_R":
+                cm = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts_err"]
 
             elif which == "CMV":
                 cm = self.CMV[bin_type][contact_type]["sex"][sex]["contacts"]
                 cm_err = self.CMV[bin_type][contact_type]["sex"][sex]["contacts_err"]
-            elif which == "UNCM_V":
-                cm = self.UNCM_V[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.UNCM_V[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM_V":
+                cm = self.NCM_V[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM_V[bin_type][contact_type]["sex"][sex]["contacts_err"]
 
         else:
             if which == "CM":
                 cm = self.CM[bin_type][contact_type]["contacts"]
                 cm_err = self.CM[bin_type][contact_type]["contacts_err"]
-            elif which == "UNCM":
-                cm = self.UNCM[bin_type][contact_type]["contacts"]
-                cm_err = self.UNCM[bin_type][contact_type]["contacts_err"]
-            elif which == "UNCM_R":
-                cm = self.UNCM_R[bin_type][contact_type]["contacts"]
-                cm_err = self.UNCM_R[bin_type][contact_type]["contacts_err"]
-            elif which == "PNCM":
-                cm = self.PNCM[bin_type][contact_type]["contacts"]
-                cm_err = self.PNCM[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM":
+                cm = self.NCM[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM_R":
+                cm = self.NCM_R[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM_R[bin_type][contact_type]["contacts_err"]
 
             elif which == "CMV":
                 cm = self.CMV[bin_type][contact_type]["contacts"]
                 cm_err = self.CMV[bin_type][contact_type]["contacts_err"]
-            elif which == "UNCM_V":
-                cm = self.UNCM_V[bin_type][contact_type]["contacts"]
-                cm_err = self.UNCM_V[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM_V":
+                cm = self.NCM_V[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM_V[bin_type][contact_type]["contacts_err"]
 
         return np.array(cm), np.array(cm_err)
 
@@ -432,7 +432,7 @@ class PlotClass:
     # General Plotting ##################################
     #####################################################
 
-    def Get_SAMECMAP_Norm(self, dim, which="UNCM", override=None):
+    def Get_SAMECMAP_Norm(self, dim, which="NCM", override=None):
         """
         If same colour map required this produces standarised colourmaps for different size matrices.
 
@@ -451,7 +451,7 @@ class PlotClass:
                 matplotlib.colors.Norm object
 
         """
-        if which in ["CM", "UNCM", "UNCM_R", "PNCM"]:
+        if which in ["CM", "NCM", "NCM_R"]:
             SAMElinvmin = {"small_dim": 0, "large_dim": 0}
             SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-2}
 
@@ -461,7 +461,7 @@ class PlotClass:
             SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": 3e0}
             SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": 0.5e0}
 
-        elif which in ["CMV", "UNCM_V"]:
+        elif which in ["CMV", "NCM_V"]:
             SAMElinvmin = {"small_dim": 0, "large_dim": 0}
             SAMElogvmin = {"small_dim": 1e-2, "large_dim": 1e-3}
 
@@ -841,7 +841,7 @@ class PlotClass:
         bin_type,
         contact_type,
         sex="unisex",
-        which="UNCM_R",
+        which="NCM_R",
         plot_BBC_Sheet=False,
         MaxAgeBin=100,
     ):
@@ -857,7 +857,7 @@ class PlotClass:
             sex:
                 Sex contact matrix
             which:
-                str, which matrix type to collect "UNCM", "UNCM_R", "CM_T"
+                str, which matrix type to collect "NCM", "NCM_R", "CM_T"
 
         Returns
         -------
@@ -1017,13 +1017,13 @@ class PlotClass:
             Q = self.Calc_QIndex(cm)
             NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width)
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-            I_sq_s = I_sq / var**2
+            I_sq_s = I_sq / var ** 2
             print("JUNE", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
 
             Q = self.Calc_QIndex(bbc_cm)
             NPCDM = self.Calc_NPCDM(bbc_cm, pop_density, pop_width)
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-            I_sq_s = I_sq / var**2
+            I_sq_s = I_sq / var ** 2
             print("BBC", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
             print({"Camberra": self.Canberra_distance(cm, bbc_cm)[0]})
             print("")
@@ -1053,7 +1053,7 @@ class PlotClass:
             ax1:
                 matplotlib axes object
         """
-        which = "UNCM"
+        which = "NCM"
         IM, IM_err = self.IMPlots_GetIM(contact_type)
         labels_IM = self.IMPlots_GetLabels(contact_type)
         IM, IM_err, labels_IM = self.IMPlots_UsefulCM(
@@ -1173,8 +1173,8 @@ class PlotClass:
         f.colorbar(im2, ax=ax2, extend="both")
         f.colorbar(im3, ax=ax3, extend="both")
         ax1.set_title("IM")
-        ax2.set_title("UNCM")
-        ax3.set_title("UNCM / IM")
+        ax2.set_title("NCM")
+        ax3.set_title("NCM / IM")
 
         # f.suptitle(f"Survey interaction binned contacts in {contact_type}")
         plt.tight_layout()
@@ -1196,7 +1196,7 @@ class PlotClass:
             ax1:
                 matplotlib axes object
         """
-        which = "UNCM"
+        which = "NCM"
         IM, IM_err = self.IMPlots_GetIM(contact_type)
         labels_IM = self.IMPlots_GetLabels(contact_type)
         IM, IM_err, labels_IM = self.IMPlots_UsefulCM(
@@ -1260,7 +1260,7 @@ class PlotClass:
         return f, ax1, im1
 
     def plot_contact_matrix(
-        self, bin_type, contact_type, sex="unisex", which="UNCM", MaxAgeBin=100
+        self, bin_type, contact_type, sex="unisex", which="NCM", MaxAgeBin=100
     ):
         """
         Function to plot contact matrix for bin_type, contact_type and sex.
@@ -1274,7 +1274,7 @@ class PlotClass:
             sex:
                 Sex contact matrix
             which:
-                str, which matrix type to collect "UNCM", "UNCM_R", "CM_T"
+                str, which matrix type to collect "NCM", "NCM_R", "CM_T"
 
         Returns
         -------
@@ -1335,7 +1335,7 @@ class PlotClass:
         return (ax1, ax2)
 
     def plot_contact_matrix_thumb(
-        self, log, bin_type, contact_type, sex="unisex", which="UNCM", MaxAgeBin=100
+        self, log, bin_type, contact_type, sex="unisex", which="NCM", MaxAgeBin=100
     ):
         """
         Function to plot contact matrix for bin_type, contact_type and sex.
@@ -1351,7 +1351,7 @@ class PlotClass:
             sex:
                 Sex contact matrix
             which:
-                str, which matrix type to collect "UNCM", "UNCM_R", "CM_T"
+                str, which matrix type to collect "NCM", "NCM_R", "CM_T"
 
         Returns
         -------
@@ -1423,7 +1423,7 @@ class PlotClass:
         return f, ax1, im1
 
     def plot_comparesexes_contact_matrix(
-        self, bin_type, contact_type, which="UNCM", MaxAgeBin=100
+        self, bin_type, contact_type, which="NCM", MaxAgeBin=100
     ):
         """
         Function to plot difference in contact matrices between men and women for bin_type, contact_type.
@@ -1435,7 +1435,7 @@ class PlotClass:
             contact_type:
                 Location of contacts
             which:
-                str, which matrix type to collect "UNCM", "UNCM_R", "CM_T"
+                str, which matrix type to collect "NCM", "NCM_R", "CM_T"
 
         Returns
         -------
@@ -2145,10 +2145,18 @@ class PlotClass:
         relevant_bin_types_short = ["syoa", "AC"]
         relevant_contact_types = list(self.CM["syoa"].keys())
         IM_contact_types = list(self.CM["Interaction"].keys())
-        CMTypes = ["UNCM", "UNCM_R", "PNCM", "UNCM_V"]
+
+        if self.Normalisation_Type == "U":
+            NormFolder = "VenueNorm"
+        elif self.Normalisation_Type == "P":
+            NormFolder = "PopNorm"
+
+        CMTypes = ["NCM", "NCM_R", "NCM_V"]
 
         if plot_INPUTOUTPUT:
-            plot_dir_1 = self.record_path / "Graphs" / f"Contact_Matrices_INOUT"
+            plot_dir_1 = (
+                self.record_path / "Graphs" / "Contact_Matrices_INOUT" / NormFolder
+            )
             plot_dir_1.mkdir(exist_ok=True, parents=True)
             if "Paper" in relevant_bin_types:
                 rbt = "Paper"
@@ -2158,7 +2166,7 @@ class PlotClass:
                 if rct not in relevant_contact_types:
                     continue
 
-                which = "UNCM_R"
+                which = "NCM_R"
                 plot_BBC_Sheet = False
 
                 if (
@@ -2172,7 +2180,7 @@ class PlotClass:
                         plot_BBC_Sheet = "all_school"
                     if rct == "company":
                         plot_BBC_Sheet = "all_work"
-                    which = "PNCM"
+                    which = "NCM_R"
 
                 self.plot_contact_matrix_INOUT(
                     bin_type=rbt,
@@ -2218,7 +2226,7 @@ class PlotClass:
         logger.info(f"Rank {mpi_rank} -- Pop at locations done")
 
         if plot_InteractionMatrices:
-            plot_dir = self.record_path / "Graphs" / f"IM"
+            plot_dir = self.record_path / "Graphs" / "IM" / NormFolder
             plot_dir.mkdir(exist_ok=True, parents=True)
             for rct in self.IM.keys():
                 self.plot_interaction_matrix(contact_type=rct)
@@ -2284,7 +2292,13 @@ class PlotClass:
 
         if plot_ContactMatrices:
             for CMType in CMTypes:
-                plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices" / CMType
+                plot_dir_1 = (
+                    self.record_path
+                    / "Graphs"
+                    / "Contact_Matrices"
+                    / NormFolder
+                    / CMType
+                )
                 plot_dir_1.mkdir(exist_ok=True, parents=True)
 
                 for rbt in relevant_bin_types:
@@ -2466,7 +2480,13 @@ class PlotClass:
 
         if plot_CompareSexMatrices:
             for CMType in CMTypes:
-                plot_dir_1 = self.record_path / "Graphs" / "Contact_Matrices" / CMType
+                plot_dir_1 = (
+                    self.record_path
+                    / "Graphs"
+                    / "Contact_Matrices"
+                    / NormFolder
+                    / CMType
+                )
                 plot_dir_1.mkdir(exist_ok=True, parents=True)
 
                 for rbt in relevant_bin_types:

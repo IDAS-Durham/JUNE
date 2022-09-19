@@ -483,7 +483,9 @@ class Tracker:
         variance = np.sqrt(np.nansum(pop_by_bin * (ages - mean) ** 2) / (Npeople - 1))
         return mean, variance
 
-    def Calculate_CM_Metrics(self, bin_type, contact_type, CM, CM_err, ratio, sex="unisex"):
+    def Calculate_CM_Metrics(
+        self, bin_type, contact_type, CM, CM_err, ratio, sex="unisex"
+    ):
         """
         Calculate key metrics for CM, {Q, I^2, I^2_s} and return as formated string dict for saving
 
@@ -497,6 +499,8 @@ class Tracker:
                 dict, dictionary of all matrices of type. eg self.CM
             CM_err:
                 dict, dictionary of all matrices of type. eg self.CM_err
+            ratio:
+                float, attendence fraction of population
             sex:
                 string, sex matrix to use
 
@@ -531,7 +535,7 @@ class Tracker:
         Q = self.Calc_QIndex(cm)
         NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width)
         I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-        I_sq_s = I_sq / var**2
+        I_sq_s = I_sq / var ** 2
         return {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"}
 
     ########################################################
@@ -1199,7 +1203,7 @@ class Tracker:
                         age_profile = np.array(
                             self.location_cum_pop[bin_type][contact_type][sex]
                         )
-                    
+
                     UNCM, UNCM_err = self.CM_Norm(
                         cm=cm,
                         cm_err=cm_err,
@@ -1221,7 +1225,6 @@ class Tracker:
 
                     UNCM_R = np.nan_to_num(UNCM_R, nan=0)
                     UNCM_R_err = np.nan_to_num(UNCM_R_err, nan=0)
-
 
                     if bin_type == "Interaction":
                         if sex == "unisex":
@@ -1340,16 +1343,54 @@ class Tracker:
         return 1
 
     def AttendenceRatio(self, bin_type, contact_type, sex):
-            if bin_type != "Interaction":
-                global_pop = self.location_cum_pop[bin_type]["global"][sex]
-                local_pop = self.location_cum_pop[bin_type][contact_type][sex]
-            else:
-                return 1
-            return np.array( local_pop / global_pop )
+        """
+        Get the attendence fraction of subgroup i with respect to the total population in subgroup i
+
+        Parameters
+        ----------
+        bin_type:
+            string, contact matrix binning type
+
+        contact_type:
+            List of the contact_type locations (or none to grab all of them)
+
+        sex:
+            string, the sex of the matrix "male", "female", "unisex"
+
+        Returns
+        -------
+            ratio:
+                float, attendence fraction
+        
+        """
+        if bin_type != "Interaction":
+            global_pop = self.location_cum_pop[bin_type]["global"][sex]
+            local_pop = self.location_cum_pop[bin_type][contact_type][sex]
+        else:
+            return 1
+        return np.array(local_pop / global_pop)
 
     def UNtoPNConversion(self, cm, ratio):
-        return (cm.T.copy()*ratio).T
-                        
+        """
+        Function to rescale the contact matrices from venue to population normalised
+
+        Parameters
+        ----------
+            cm:
+                np.array, The contact matrix
+
+            ratio:
+                    float, attendence fraction
+
+        Returns
+        -------
+            
+            cm:
+                np.array, The contact matrix
+        
+        """
+        return (cm.T.copy() * ratio).T
+
     def CM_Norm(self, cm, cm_err, pop_tots, contact_type="global", Which="UNCM"):
         """
         Normalise the contact matrices using population at location data and time of simulation run time.
@@ -1364,8 +1405,8 @@ class Tracker:
                 np.array total counts of visits of each age bin for entire simulation time. (1 person can go to same location more than once)
             contact_type:
                 List of the contact_type locations (or none to grab all of them)
-            Reciprocal:
-                bool, add in reciprocal contacts with reweighting for demographic sizes
+            which:
+                string, contact matrix type "CM", "NCM", "NCM_R", "CMV", "NCM_V"
         Returns
         -------
             cm:
@@ -2024,20 +2065,12 @@ class Tracker:
         # This is identical to shelters...
         if group.spec == "shelter":
             # Inter
-            self.CMV["syoa"][group.spec + "_inter"]["unisex"] += (
-                NContacts_unisex
-            )
-            self.CMV["syoa"][group.spec + "_inter"]["female"] += (
-                NContacts_female
-            )
+            self.CMV["syoa"][group.spec + "_inter"]["unisex"] += NContacts_unisex
+            self.CMV["syoa"][group.spec + "_inter"]["female"] += NContacts_female
             self.CMV["syoa"][group.spec + "_inter"]["male"] += NContacts_male
             # Intra
-            self.CMV["syoa"][group.spec + "_intra"]["unisex"] += (
-                NContacts_unisex
-            )
-            self.CMV["syoa"][group.spec + "_intra"]["female"] += (
-                NContacts_female
-            )
+            self.CMV["syoa"][group.spec + "_intra"]["unisex"] += NContacts_unisex
+            self.CMV["syoa"][group.spec + "_intra"]["female"] += NContacts_female
             self.CMV["syoa"][group.spec + "_intra"]["male"] += NContacts_male
         return 1
 
@@ -2387,9 +2420,9 @@ class Tracker:
             None
 
         """
-        #ratio = self.AttendenceRatio(binType, loc, "unisex")
-        #cm = self.UNtoPNConversion(cm, ratio)
-        #cm_err = self.UNtoPNConversion(cm_err, ratio)
+        # ratio = self.AttendenceRatio(binType, loc, "unisex")
+        # cm = self.UNtoPNConversion(cm, ratio)
+        # cm_err = self.UNtoPNConversion(cm_err, ratio)
 
         def SaveMatrix(CM, CM_err, Mtype, NormType="U"):
             jsonfile = {}
@@ -2398,10 +2431,10 @@ class Tracker:
                 if NormType == "U":
                     pass
                 elif NormType == "P":
-                    Mtype = "P"+Mtype[1:]
+                    Mtype = "P" + Mtype[1:]
 
                 jsonfile[binType] = self.tracker_CMJSON(
-                    binType=binType, CM=CM, CM_err=CM_err, NormType=NormType,
+                    binType=binType, CM=CM, CM_err=CM_err, NormType=NormType
                 )
             # Save out the Normalised UNCM
             self.Save_CM_JSON(
@@ -2422,15 +2455,15 @@ class Tracker:
                         ratio = 1
                     elif NormType == "P":
                         ratio = self.AttendenceRatio(binType, loc, "unisex")
-                        Mtype = "P"+Mtype[1:]
+                        Mtype = "P" + Mtype[1:]
 
                     jsonfile[binType][loc] = self.Calculate_CM_Metrics(
                         bin_type=binType,
                         contact_type=loc,
                         CM=CM,
                         CM_err=CM_err,
-                        ratio = ratio,
-                        sex = "unisex"
+                        ratio=ratio,
+                        sex="unisex",
                     )
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
@@ -2447,11 +2480,11 @@ class Tracker:
                     ratio = 1
                 elif NormType == "P":
                     ratio = self.AttendenceRatio("Interaction", loc, "unisex")
-                    Mtype = "P"+Mtype[1:]
+                    Mtype = "P" + Mtype[1:]
 
                 cm = CM["Interaction"][loc]
                 cm = self.UNtoPNConversion(cm, ratio)
-      
+
                 A = np.array(cm, dtype=float)
                 B = np.array(self.IM[loc]["contacts"], dtype=float)
                 Dc = self.Canberra_distance(A, B)[0]
@@ -2490,35 +2523,49 @@ class Tracker:
             )
 
         # Saving Contacts tracker results ##################################
-        SaveMatrix(CM=self.CM, CM_err=self.CM, Mtype = "CM")
-        SaveMatrix(CM=self.CMV, CM_err=self.CMV_err, Mtype = "CMV")
+        SaveMatrix(CM=self.CM, CM_err=self.CM, Mtype="CM")
+        SaveMatrix(CM=self.CMV, CM_err=self.CMV_err, Mtype="CMV")
 
         if not MPI:
-            SaveMatrix(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM")
-            SaveMatrix(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R")
-            SaveMatrix(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V")
+            SaveMatrix(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
+            SaveMatrix(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
+            SaveMatrix(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
 
-            SaveMatrix(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM",NormType="P")
-            SaveMatrix(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R",NormType="P")
-            SaveMatrix(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V",NormType="P")
+            SaveMatrix(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM", NormType="P")
+            SaveMatrix(
+                CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R", NormType="P"
+            )
+            SaveMatrix(
+                CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P"
+            )
 
-            SaveMatrixMetrics(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM")
-            SaveMatrixMetrics(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R")
-            SaveMatrixMetrics(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V")
+            SaveMatrixMetrics(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
+            SaveMatrixMetrics(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
+            SaveMatrixMetrics(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
 
-            SaveMatrixMetrics(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM",NormType="P")
-            SaveMatrixMetrics(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R",NormType="P")
-            SaveMatrixMetrics(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V",NormType="P")
+            SaveMatrixMetrics(
+                CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM", NormType="P"
+            )
+            SaveMatrixMetrics(
+                CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R", NormType="P"
+            )
+            SaveMatrixMetrics(
+                CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P"
+            )
 
+            SaveMatrixCamberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
+            SaveMatrixCamberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
+            SaveMatrixCamberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
 
-            SaveMatrixCamberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM")
-            SaveMatrixCamberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R")
-            SaveMatrixCamberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V")
-
-            SaveMatrixCamberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM",NormType="P")
-            SaveMatrixCamberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R",NormType="P")
-            SaveMatrixCamberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V",NormType="P")
-
+            SaveMatrixCamberra(
+                CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM", NormType="P"
+            )
+            SaveMatrixCamberra(
+                CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R", NormType="P"
+            )
+            SaveMatrixCamberra(
+                CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P"
+            )
 
         # Saving Venue tracker results ##################################
         VD_dir = self.record_path / "Tracker" / folder_name / "Venue_Demographics"
@@ -2804,12 +2851,8 @@ class Tracker:
                 cm = self.UNtoPNConversion(cm, ratio)
                 cm_err = self.UNtoPNConversion(cm_err, ratio)
 
-                jsonfile[local]["contacts"] = self.MatrixString(
-                    np.array(cm)
-                )
-                jsonfile[local]["contacts_err"] = self.MatrixString(
-                    np.array(cm_err)
-                )
+                jsonfile[local]["contacts"] = self.MatrixString(np.array(cm))
+                jsonfile[local]["contacts_err"] = self.MatrixString(np.array(cm_err))
         else:
 
             def expand_proportional(self, PM, bins_I, bins_I_Type, bins_target):

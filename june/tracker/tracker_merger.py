@@ -35,9 +35,7 @@ class MergerClass:
     """
 
     class Timer:
-        def __init__(
-            self,
-        ):
+        def __init__(self,):
             self.total_days = 1
 
     def __init__(self, record_path=Path(""), NRanksTest=None):
@@ -189,7 +187,9 @@ class MergerClass:
     def contract_matrix(self, CM, bins, method=np.sum):
         return Tracker.contract_matrix(self, CM, bins, method)
 
-    def Calculate_CM_Metrics(self, bin_type, contact_type, CM, CM_err, ratio, sex="unisex"):
+    def Calculate_CM_Metrics(
+        self, bin_type, contact_type, CM, CM_err, ratio, sex="unisex"
+    ):
         return Tracker.Calculate_CM_Metrics(
             self, bin_type, contact_type, CM, CM_err, ratio, sex
         )
@@ -244,7 +244,6 @@ class MergerClass:
             elif which == "UNCM_R":
                 cm = self.UNCM_R[bin_type][contact_type][sex]
                 cm_err = self.UNCM_R_err[bin_type][contact_type][sex]
-
 
             elif which == "CMV":
                 cm = self.CMV[bin_type][contact_type][sex]
@@ -803,7 +802,7 @@ class MergerClass:
     def SaveOutCM(self):
         folder_name = self.merged_data_path
         mpi_rankname = ""
-        
+
         def SaveMatrix(CM, CM_err, Mtype, NormType="U"):
             jsonfile = {}
             for binType in list(CM.keys()):
@@ -811,10 +810,10 @@ class MergerClass:
                 if NormType == "U":
                     pass
                 elif NormType == "P":
-                    Mtype = "P"+Mtype[1:]
+                    Mtype = "P" + Mtype[1:]
 
                 jsonfile[binType] = self.tracker_CMJSON(
-                    binType=binType, CM=CM, CM_err=CM_err, NormType=NormType,
+                    binType=binType, CM=CM, CM_err=CM_err, NormType=NormType
                 )
             # Save out the Normalised UNCM
             self.Save_CM_JSON(
@@ -835,15 +834,15 @@ class MergerClass:
                         ratio = 1
                     elif NormType == "P":
                         ratio = self.AttendenceRatio(binType, loc, "unisex")
-                        Mtype = "P"+Mtype[1:]
+                        Mtype = "P" + Mtype[1:]
 
                     jsonfile[binType][loc] = self.Calculate_CM_Metrics(
                         bin_type=binType,
                         contact_type=loc,
                         CM=CM,
                         CM_err=CM_err,
-                        ratio = ratio,
-                        sex = "unisex"
+                        ratio=ratio,
+                        sex="unisex",
                     )
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
@@ -860,11 +859,11 @@ class MergerClass:
                     ratio = 1
                 elif NormType == "P":
                     ratio = self.AttendenceRatio("Interaction", loc, "unisex")
-                    Mtype = "P"+Mtype[1:]
+                    Mtype = "P" + Mtype[1:]
 
                 cm = CM["Interaction"][loc]
                 cm = self.UNtoPNConversion(cm, ratio)
-      
+
                 A = np.array(cm, dtype=float)
                 B = np.array(self.IM[loc]["contacts"], dtype=float)
                 Dc = self.Canberra_distance(A, B)[0]
@@ -877,32 +876,44 @@ class MergerClass:
             )
 
         # Saving Contacts tracker results ##################################
-        SaveMatrix(CM=self.CM, CM_err=self.CM, Mtype = "CM")
-        SaveMatrix(CM=self.CMV, CM_err=self.CMV_err, Mtype = "CMV")
+        SaveMatrix(CM=self.CM, CM_err=self.CM, Mtype="CM")
+        SaveMatrix(CM=self.CMV, CM_err=self.CMV_err, Mtype="CMV")
 
-        SaveMatrix(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM")
-        SaveMatrix(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R")
-        SaveMatrix(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V")
+        SaveMatrix(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
+        SaveMatrix(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
+        SaveMatrix(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
 
-        SaveMatrix(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM",NormType="P")
-        SaveMatrix(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R",NormType="P")
-        SaveMatrix(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V",NormType="P")
+        SaveMatrix(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM", NormType="P")
+        SaveMatrix(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R", NormType="P")
+        SaveMatrix(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P")
 
-        SaveMatrixMetrics(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM")
-        SaveMatrixMetrics(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R")
-        SaveMatrixMetrics(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V")
+        SaveMatrixMetrics(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
+        SaveMatrixMetrics(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
+        SaveMatrixMetrics(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
 
-        SaveMatrixMetrics(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM",NormType="P")
-        SaveMatrixMetrics(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R",NormType="P")
-        SaveMatrixMetrics(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V",NormType="P")
+        SaveMatrixMetrics(
+            CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM", NormType="P"
+        )
+        SaveMatrixMetrics(
+            CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R", NormType="P"
+        )
+        SaveMatrixMetrics(
+            CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P"
+        )
 
-        SaveMatrixCamberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM")
-        SaveMatrixCamberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R")
-        SaveMatrixCamberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V")
+        SaveMatrixCamberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
+        SaveMatrixCamberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
+        SaveMatrixCamberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
 
-        SaveMatrixCamberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype = "UNCM",NormType="P")
-        SaveMatrixCamberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype = "UNCM_R",NormType="P")
-        SaveMatrixCamberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype = "UNCM_V",NormType="P")
+        SaveMatrixCamberra(
+            CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM", NormType="P"
+        )
+        SaveMatrixCamberra(
+            CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R", NormType="P"
+        )
+        SaveMatrixCamberra(
+            CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P"
+        )
         return 1
 
     #################################################

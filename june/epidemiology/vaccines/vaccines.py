@@ -181,15 +181,11 @@ class VaccineTrajectory:
         self.stage = 0
 
     @property
-    def current_dose(
-        self,
-    ):
+    def current_dose(self,):
         """current_dose."""
         return self.doses[self.stage].number
 
-    def _get_immunity_prior_to_trajectory(
-        self,
-    ):
+    def _get_immunity_prior_to_trajectory(self,):
         """_get_immunity_prior_to_trajectory."""
         prior_efficacy = self.doses[0].prior_efficacy
         suscepbitility = {
@@ -592,14 +588,10 @@ class Vaccines:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return cls.from_config_dict(config=config)
 
-    def __iter__(
-        self,
-    ):
+    def __iter__(self,):
         """__iter__."""
         return iter(self.vaccines)
 
-    def get_max_effective_date(
-        self,
-    ):
+    def get_max_effective_date(self,):
         """get_max_effective_date."""
         return max([sum(vaccine.days_to_effective) for vaccine in self.vaccines])

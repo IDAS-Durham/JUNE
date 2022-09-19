@@ -29,7 +29,7 @@ def xnexp(x: float, n: float, alpha: float) -> float:
     -------
         evaluation fo xnexp function
     """
-    return x**n * np.exp(-x / alpha)
+    return x ** n * np.exp(-x / alpha)
 
 
 @nb.jit(nopython=True)

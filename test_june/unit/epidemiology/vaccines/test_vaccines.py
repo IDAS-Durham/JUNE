@@ -182,9 +182,7 @@ class TestVaccineTrajectory:
             0.55
         )
 
-    def test__update_vaccine_effect_high_initial_immunity(
-        self,
-    ):
+    def test__update_vaccine_effect_high_initial_immunity(self,):
         trajectory = get_trajectory_initial_efficacy(0.9)
         person = Person.from_attributes(age=5, sex="f")
         person.immunity.susceptibility_dict = {delta_id: 0.1, omicron_id: 0.1}

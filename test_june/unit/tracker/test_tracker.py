@@ -101,7 +101,7 @@ class TestTracker:
 
         assert np.array_equal(
             tracker.contract_matrix(CM, [0, 18, 100], method=np.sum),
-            np.array([[18**2, (100 - 18) * 18], [(100 - 18) * 18, (100 - 18) ** 2]]),
+            np.array([[18 ** 2, (100 - 18) * 18], [(100 - 18) * 18, (100 - 18) ** 2]]),
         )
         assert np.array_equal(
             tracker.contract_matrix(CM, [0, 18, 100], method=np.mean),
@@ -109,10 +109,10 @@ class TestTracker:
         )
 
         assert np.array_equal(
-            tracker.contract_matrix(CM, [0, 100], method=np.sum), np.array([[100**2]])
+            tracker.contract_matrix(CM, [0, 100], method=np.sum), np.array([[100 ** 2]])
         )
         assert np.array_equal(
-            tracker.contract_matrix(CM, [10, 90], method=np.sum), np.array([[80**2]])
+            tracker.contract_matrix(CM, [10, 90], method=np.sum), np.array([[80 ** 2]])
         )
 
     def test__Probabilistic_Contacts(self, tracker):

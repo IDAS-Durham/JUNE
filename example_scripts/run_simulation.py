@@ -598,18 +598,3 @@ if args.tracker:
         print("Combine Tracker results")
         Merger = MergerClass(record_path=args.save_path)
         Merger.Merge()
-
-        Plots = PlotClass(record_path=args.save_path / "Tracker")
-        Plots.make_plots(
-            plot_BBC=True,
-            plot_thumbprints=True,
-            SameCMAP="Log",
-            plot_INPUTOUTPUT=True,
-            plot_AvContactsLocation=True,
-            plot_dTLocationPopulation=True,
-            plot_InteractionMatrices=True,
-            plot_ContactMatrices=True,
-            plot_CompareSexMatrices=True,
-            plot_AgeBinning=True,
-            plot_Distances=True,
-        )
