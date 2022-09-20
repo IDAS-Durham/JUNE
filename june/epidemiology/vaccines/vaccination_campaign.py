@@ -300,7 +300,9 @@ class VaccinationCampaigns:
             )
         return cls(vaccination_campaigns=vaccination_campaigns)
 
-    def __iter__(self,):
+    def __iter__(
+        self,
+    ):
         """__iter__."""
         return iter(self.vaccination_campaigns)
 

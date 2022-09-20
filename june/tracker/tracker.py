@@ -535,7 +535,7 @@ class Tracker:
         Q = self.Calc_QIndex(cm)
         NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width)
         I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-        I_sq_s = I_sq / var ** 2
+        I_sq_s = I_sq / var**2
         return {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"}
 
     ########################################################
@@ -1361,7 +1361,7 @@ class Tracker:
         -------
             ratio:
                 float, attendence fraction
-        
+
         """
         if bin_type != "Interaction":
             global_pop = self.location_cum_pop[bin_type]["global"][sex]
@@ -1384,10 +1384,10 @@ class Tracker:
 
         Returns
         -------
-            
+
             cm:
                 np.array, The contact matrix
-        
+
         """
         return (cm.T.copy() * ratio).T
 

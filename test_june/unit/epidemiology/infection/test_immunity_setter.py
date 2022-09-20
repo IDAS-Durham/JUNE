@@ -112,7 +112,9 @@ class TestMultiplierSetter:
             assert person.immunity.get_effective_multiplier(c19_id) == 1.0
             assert person.immunity.get_effective_multiplier(b117_id) == 1.5
 
-    def test__mean_multiplier_reference(self,):
+    def test__mean_multiplier_reference(
+        self,
+    ):
         prevalence_reference_population = {
             "feo": {
                 "f": {"0-10": 0.2, "10-100": 0.4},
@@ -148,7 +150,9 @@ class TestMultiplierSetter:
             == mean_multiplier_uk
         )
 
-    def test__interaction_changes_multiplier(self,):
+    def test__interaction_changes_multiplier(
+        self,
+    ):
         c19_id = Covid19.infection_id()
         b117_id = B117.infection_id()
         comorbidity_multipliers = {"guapo": 0.8, "feo": 1.2, "no_condition": 1.0}

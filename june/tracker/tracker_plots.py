@@ -79,7 +79,7 @@ class PlotClass:
         location_cum_pop,
         age_profiles,
         travel_distance,
-        
+
 
     Returns
     -------
@@ -427,6 +427,9 @@ class PlotClass:
 
     def IMPlots_GetIM(self, contact_type):
         return Tracker.IMPlots_GetIM(self, contact_type)
+
+    def Get_characteristic_time(self, location):
+        return Tracker.Get_characteristic_time(self, location)
 
     #####################################################
     # General Plotting ##################################
@@ -955,6 +958,12 @@ class PlotClass:
             bbc_Max = np.nanmax(bbc_cm)
             bbc_Min = np.nanmin(bbc_cm)
 
+            # Put into same contact units
+
+            CT = self.Get_characteristic_time(contact_type)[0]
+            print(contact_type, CT, 1 / CT)
+            cm /= CT
+
             cm_Max = max(bbc_Max, cm_Max)
 
             if not self.SameCMAP:
@@ -977,7 +986,7 @@ class PlotClass:
                 thumb=True,
             )
             im2 = self.PlotCM(
-                cm + 1e-16,
+                (cm + 1e-16),
                 cm_err,
                 labels,
                 ax2,
@@ -1017,13 +1026,13 @@ class PlotClass:
             Q = self.Calc_QIndex(cm)
             NPCDM = self.Calc_NPCDM(cm, pop_density, pop_width)
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-            I_sq_s = I_sq / var ** 2
+            I_sq_s = I_sq / var**2
             print("JUNE", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
 
             Q = self.Calc_QIndex(bbc_cm)
             NPCDM = self.Calc_NPCDM(bbc_cm, pop_density, pop_width)
             I_sq = self.Expectation_Assortativeness(NPCDM, pop_bins)
-            I_sq_s = I_sq / var ** 2
+            I_sq_s = I_sq / var**2
             print("BBC", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
             print({"Camberra": self.Canberra_distance(cm, bbc_cm)[0]})
             print("")
