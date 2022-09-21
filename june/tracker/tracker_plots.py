@@ -466,13 +466,13 @@ class PlotClass:
 
         elif which in ["CMV", "NCM_V"]:
             SAMElinvmin = {"small_dim": 0, "large_dim": 0}
-            SAMElogvmin = {"small_dim": 1e-2, "large_dim": 1e-3}
+            SAMElogvmin = {"small_dim": 1, "large_dim": 1}
 
-            SAMElinvmax = {"small_dim": 0.5, "large_dim": 1}
-            SAMElogvmax = {"small_dim": 0.5, "large_dim": 1}
+            SAMElinvmax = {"small_dim": 1e2, "large_dim": 1e1}
+            SAMElogvmax = {"small_dim": 1e2, "large_dim": 1e1}
 
-            SAMEsymlogvmax = {"small_dim": 0.5, "large_dim": 1}
-            SAMEsymlinvmax = {"small_dim": 0.5, "large_dim": 1}
+            SAMEsymlogvmax = {"small_dim": 1e2, "large_dim": 1e1}
+            SAMEsymlinvmax = {"small_dim": 1e2, "large_dim": 1e1}
 
         if dim < 5:
             kind = "small_dim"
@@ -961,7 +961,6 @@ class PlotClass:
             # Put into same contact units
 
             CT = self.Get_characteristic_time(contact_type)[0]
-            print(contact_type, CT, 1 / CT)
             cm /= CT
 
             cm_Max = max(bbc_Max, cm_Max)
@@ -2405,6 +2404,7 @@ class PlotClass:
                                     plt.close()
                     else:
                         for rct in IM_contact_types:
+                            sex = "unisex"
                             self.plot_contact_matrix(
                                 bin_type=rbt,
                                 contact_type=rct,
