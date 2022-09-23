@@ -466,7 +466,7 @@ class PlotClass:
 
         elif which in ["CMV", "NCM_V"]:
             SAMElinvmin = {"small_dim": 0, "large_dim": 0}
-            SAMElogvmin = {"small_dim": 1, "large_dim": 1}
+            SAMElogvmin = {"small_dim": 1, "large_dim": 1e-1}
 
             SAMElinvmax = {"small_dim": 1e2, "large_dim": 1e1}
             SAMElogvmax = {"small_dim": 1e2, "large_dim": 1e1}
@@ -625,6 +625,7 @@ class PlotClass:
                     labels = ["  S  ", "  T  "]
                 elif labels[1] == "students" and labels[0] == "teachers":
                     labels = ["  S  ", "  T  "]
+                    #labels = ["Stude", "Teach"]
                     cm = cm.T
                     if cm_err is None:
                         pass
