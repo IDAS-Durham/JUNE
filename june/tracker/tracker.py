@@ -2964,7 +2964,7 @@ class Tracker:
                         matrix[i] = 0
 
                     if dtypeString == "float":
-                        string += "%.4f" % matrix[i]
+                        string += "{:.2e}".format(matrix[i]) #"%.4f" % matrix[i]
                     if dtypeString == "int":
                         string += "%.0f" % matrix[i]
 
@@ -2979,7 +2979,7 @@ class Tracker:
                         matrix[i, j] = 0
 
                     if dtypeString == "float":
-                        string += "%.4f" % matrix[i, j]
+                        string += "{:.2e}".format(matrix[i, j]) #"%.4f" % matrix[i, j]
                     if dtypeString == "int":
                         string += "%.0f" % matrix[i, j]
 
