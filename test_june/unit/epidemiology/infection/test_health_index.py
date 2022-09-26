@@ -24,6 +24,18 @@ class TestHealthIndex:
                     assert all(probs >= 0)
                     assert sum(probs) == pytest.approx(1, rel=1.0e-2)
 
+    def test__physiological_age(self):
+        health_index = HealthIndexGenerator.from_file(
+            m_exp_baseline=80,
+            f_exp_baseline=90,
+            m_exp=60,
+            f_exp=80,
+            cutoff_age=30,
+        )
+        assert health_index.use_physiological_age
+        assert health_index.physiological_age(39, "m") == 45
+        assert health_index.physiological_age(60, "f") == 66
+
 
 class TestMultipliers:
     @pytest.mark.parametrize("multiplier", [1.5, 0.5])

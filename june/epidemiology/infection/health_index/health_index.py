@@ -31,7 +31,17 @@ def _parse_interval(interval):
 
 
 class HealthIndexGenerator:
-    def __init__(self, rates_df: pd.DataFrame, care_home_min_age: int = 50, max_age=99):
+    def __init__(
+        self,
+        rates_df: pd.DataFrame,
+        care_home_min_age: int = 50,
+        max_age=99,
+        m_exp_baseline=79.4,
+        f_exp_baseline=83.1,
+        m_exp=79.4,
+        f_exp=83.1,
+        cutoff_age=16,
+    ):
         """
         A Generator to determine the final outcome of an infection.
 
@@ -52,11 +62,59 @@ class HealthIndexGenerator:
             value: key for key, value in index_to_maximum_symptoms_tag.items()
         }["severe"]
 
+        self.m_exp_baseline = m_exp_baseline
+        self.f_exp_baseline = f_exp_baseline
+        self.m_exp = m_exp
+        self.f_exp = f_exp
+        self.cutoff_age = cutoff_age
+        if self.m_exp_baseline == self.m_exp and self.f_exp_baseline == self.f_exp:
+            self.use_physiological_age = False
+        else:
+            self.use_physiological_age = True
+
     @classmethod
-    def from_file(cls, rates_file: str = default_rates_file, care_home_min_age=50):
+    def from_file(
+        cls,
+        rates_file: str = default_rates_file,
+        care_home_min_age=50,
+        m_exp_baseline=79.4,
+        f_exp_baseline=83.1,
+        m_exp=79.4,
+        f_exp=83.1,
+        cutoff_age=16,
+    ):
         ifrs = pd.read_csv(rates_file, index_col=0)
         ifrs = ifrs.rename(_parse_interval)
-        return cls(rates_df=ifrs, care_home_min_age=care_home_min_age)
+        return cls(
+            rates_df=ifrs,
+            care_home_min_age=care_home_min_age,
+            m_exp_baseline=m_exp_baseline,
+            f_exp_baseline=f_exp_baseline,
+            m_exp=m_exp,
+            f_exp=f_exp,
+            cutoff_age=cutoff_age,
+        )
+
+    def physiological_age(self, person_age, sex):
+        if sex == "f":
+            exp_baseline_age = self.f_exp_baseline
+            exp_age = self.f_exp
+        elif sex == "m":
+            exp_baseline_age = self.m_exp_baseline
+            exp_age = self.m_exp
+
+        if person_age > self.cutoff_age:
+            if exp_age == self.cutoff_age:
+                return 99
+            m = (exp_baseline_age - self.cutoff_age) / (exp_age - self.cutoff_age)
+            c = self.cutoff_age * (1 - m)
+            scaled_age = person_age * m + c
+        else:
+            scaled_age = person_age
+
+        if scaled_age > 99.0:
+            scaled_age = 99.0
+        return int(round(scaled_age))
 
     def __call__(self, person: "Person", infection_id: int):
         """
@@ -74,7 +132,11 @@ class HealthIndexGenerator:
             population = "ch"
         else:
             population = "gp"
-        probabilities = self.probabilities[population][person.sex][person.age]
+        if self.use_physiological_age:
+            physiological_age = self.physiological_age(int(person.age), person.sex)
+        else:
+            physiological_age = int(person.age)
+        probabilities = self.probabilities[population][person.sex][physiological_age]
         if infection_id is not None:
             effective_multiplier = person.immunity.get_effective_multiplier(
                 infection_id
