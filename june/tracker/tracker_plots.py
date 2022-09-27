@@ -469,17 +469,17 @@ class PlotClass:
                 SAMElinvmin = {"small_dim": 0, "large_dim": 0}
                 SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-5}
 
-                SAMElinvmax = {"small_dim": 2.5e1, "large_dim": 4e0}
-                SAMElogvmax = {"small_dim": 2.5e1, "large_dim": 4e0}
+                SAMElinvmax = {"small_dim": 2.5e1, "large_dim": 1e0}
+                SAMElogvmax = {"small_dim": 2.5e1, "large_dim": 1e0}
 
-                SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": 3e0}
-                SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": 0.5e0}
+                SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": 1e0}
+                SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": 1e0}
 
 
         elif which in ["CMV", "NCM_V"]:
             if self.Normalisation_Type == "U":
                 SAMElinvmin = {"small_dim": 0, "large_dim": 0}
-                SAMElogvmin = {"small_dim": 1, "large_dim": 1e-1}
+                SAMElogvmin = {"small_dim": 1, "large_dim": 1e-2}
 
                 SAMElinvmax = {"small_dim": 1e2, "large_dim": 1e1}
                 SAMElogvmax = {"small_dim": 1e2, "large_dim": 1e1}
