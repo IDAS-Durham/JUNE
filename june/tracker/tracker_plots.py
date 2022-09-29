@@ -1,6 +1,5 @@
 from .tracker_plots_formatting import fig_initialize, set_size, dpi
 
-fig_initialize(setsize=True)
 import numpy as np
 import yaml
 import pandas as pd
@@ -22,6 +21,8 @@ from june.tracker.tracker import Tracker
 
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 from june.paths import data_path, configs_path
+
+fig_initialize(setsize=True)
 
 logger = logging.getLogger("tracker plotter")
 mpi_logger = logging.getLogger("mpi")
