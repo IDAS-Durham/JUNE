@@ -475,7 +475,6 @@ class PlotClass:
                 SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": 1e0}
                 SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": 1e0}
 
-
         elif which in ["CMV", "NCM_V"]:
             if self.Normalisation_Type == "U":
                 SAMElinvmin = {"small_dim": 0, "large_dim": 0}
@@ -647,7 +646,7 @@ class PlotClass:
                     labels = ["  S  ", "  T  "]
                 elif labels[1] == "students" and labels[0] == "teachers":
                     labels = ["  S  ", "  T  "]
-                    #labels = ["Stude", "Teach"]
+                    # labels = ["Stude", "Teach"]
                     cm = cm.T
                     if cm_err is None:
                         pass
