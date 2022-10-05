@@ -63,8 +63,8 @@ class PlotClass:
     Tracker_Contact_Type:
         NONE, Not used
 
-    Normalisation_Type:
-        string, "U" for venue normalised or "P" for population normalised
+    Normalization_Type:
+        string, "U" for venue normalized or "P" for population normalized
 
     Following parameters can be preloaded data from another plot class. If None data automatically loaded.
         Params,
@@ -105,7 +105,7 @@ class PlotClass:
         location_cum_pop=None,
         age_profiles=None,
         travel_distance=None,
-        Normalisation_Type="U",
+        Normalization_Type="U",
     ):
 
         if Tracker_Contact_Type is None:
@@ -113,7 +113,7 @@ class PlotClass:
         else:
             print("Tracker_Contact_Type argument no longer required")
 
-        self.Normalisation_Type = Normalisation_Type
+        self.Normalization_Type = Normalization_Type
 
         self.record_path = record_path
 
@@ -151,7 +151,7 @@ class PlotClass:
                 self.record_path
                 / folder_name
                 / "CM_yamls"
-                / f"tracker_{self.Normalisation_Type}NCM.yaml"
+                / f"tracker_{self.Normalization_Type}NCM.yaml"
             ) as f:
                 self.NCM = yaml.load(f, Loader=yaml.FullLoader)
         else:
@@ -162,7 +162,7 @@ class PlotClass:
                 self.record_path
                 / folder_name
                 / "CM_yamls"
-                / f"tracker_{self.Normalisation_Type}NCM_R.yaml"
+                / f"tracker_{self.Normalization_Type}NCM_R.yaml"
             ) as f:
                 self.NCM_R = yaml.load(f, Loader=yaml.FullLoader)
         else:
@@ -181,7 +181,7 @@ class PlotClass:
                 self.record_path
                 / folder_name
                 / "CM_yamls"
-                / f"tracker_{self.Normalisation_Type}NCM_V.yaml"
+                / f"tracker_{self.Normalization_Type}NCM_V.yaml"
             ) as f:
                 self.NCM_V = yaml.load(f, Loader=yaml.FullLoader)
         else:
@@ -240,7 +240,7 @@ class PlotClass:
 
                 for sex in self.contact_sexes:
                     filename = f"Venues_{sex}_Counts_BydT.xlsx"
-                    sheet_name = Tracker.pluralise(self, loc)
+                    sheet_name = Tracker.pluralize(self, loc)
                     df = pd.read_excel(
                         self.record_path / folder_name / "Venue_UniquePops" / filename,
                         sheet_name=sheet_name,
@@ -263,7 +263,7 @@ class PlotClass:
 
                 for sex in self.contact_sexes:
                     filename = f"Venues_{sex}_Counts_ByDate.xlsx"
-                    sheet_name = Tracker.pluralise(self, loc)
+                    sheet_name = Tracker.pluralize(self, loc)
                     df = pd.read_excel(
                         self.record_path / folder_name / "Venue_UniquePops" / filename,
                         sheet_name=sheet_name,
@@ -330,7 +330,7 @@ class PlotClass:
             for loc in self.group_type_names:
                 if loc in ["global", "shelter_inter", "shelter_intra"]:
                     continue
-                sheet_name = Tracker.pluralise(self, loc)
+                sheet_name = Tracker.pluralize(self, loc)
                 df = pd.read_excel(filename, sheet_name=sheet_name, index_col=0)
                 self.travel_distance[loc] = df
         else:
@@ -438,7 +438,7 @@ class PlotClass:
 
     def Get_SAMECMAP_Norm(self, dim, which="NCM", override=None):
         """
-        If same colour map required this produces standarised colourmaps for different size matrices.
+        If same colour map required this produces standardized colourmaps for different size matrices.
 
         Parameters
         ----------
@@ -456,7 +456,7 @@ class PlotClass:
 
         """
         if which in ["CM", "NCM", "NCM_R"]:
-            if self.Normalisation_Type == "U":
+            if self.Normalization_Type == "U":
                 SAMElinvmin = {"small_dim": 0, "large_dim": 0}
                 SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-2}
 
@@ -466,9 +466,9 @@ class PlotClass:
                 SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": 3e0}
                 SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": 0.5e0}
 
-            elif self.Normalisation_Type == "P":
+            elif self.Normalization_Type == "P":
                 SAMElinvmin = {"small_dim": 0, "large_dim": 0}
-                SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-5}
+                SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-4}
 
                 SAMElinvmax = {"small_dim": 2.5e1, "large_dim": 1e0}
                 SAMElogvmax = {"small_dim": 2.5e1, "large_dim": 1e0}
@@ -477,7 +477,7 @@ class PlotClass:
                 SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": 1e0}
 
         elif which in ["CMV", "NCM_V"]:
-            if self.Normalisation_Type == "U":
+            if self.Normalization_Type == "U":
                 SAMElinvmin = {"small_dim": 0, "large_dim": 0}
                 SAMElogvmin = {"small_dim": 1, "large_dim": 1e-2}
 
@@ -486,9 +486,9 @@ class PlotClass:
 
                 SAMEsymlogvmax = {"small_dim": 1e2, "large_dim": 1e1}
                 SAMEsymlinvmax = {"small_dim": 1e2, "large_dim": 1e1}
-            elif self.Normalisation_Type == "P":
+            elif self.Normalization_Type == "P":
                 SAMElinvmin = {"small_dim": 0, "large_dim": 0}
-                SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-5}
+                SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-4}
 
                 SAMElinvmax = {"small_dim": 1e2, "large_dim": 1e1}
                 SAMElogvmax = {"small_dim": 1e2, "large_dim": 1e1}
@@ -533,7 +533,7 @@ class PlotClass:
             ax:
                 matplotlib axes
             thresh:
-                threshhold value for CM text change colour
+                threshold value for CM text change colour
 
 
         Returns
@@ -617,16 +617,16 @@ class PlotClass:
             ax:
                 matplotlib axes
             thresh:
-                threshhold value for CM text change colour
+                threshold value for CM text change colour
             thumb:
                 bool, make thumbnail style plots. e.g. no axis labels
             **plt_kwargs:
-                plot keyword arguements
+                plot keyword arguments
 
         Returns
         -------
             im:
-                referance to plot object
+                reference to plot object
         """
 
         if cm is None:
@@ -988,8 +988,12 @@ class PlotClass:
 
             cm_Max = max(bbc_Max, cm_Max)
 
-            if not self.SameCMAP:
-                norm2 = colors.Normalize(vmin=0, vmax=cm_Max)
+            if contact_type in "household":
+                norm2 = colors.LogNorm(vmin=1e-2, vmax=2)
+            elif contact_type in "school":
+                norm2 = colors.LogNorm(vmin=1e-3, vmax=1e1)
+            elif contact_type in "company":
+                norm2 = colors.LogNorm(vmin=1e-2, vmax=1)
 
             # plt.rcParams["figure.figsize"] = (15, 5)
             f, (ax1, ax2, ax3) = plt.subplots(1, 3)
@@ -1059,9 +1063,9 @@ class PlotClass:
             print({"Camberra": self.Canberra_distance(cm, bbc_cm)[0]})
             print("")
 
-            f.colorbar(im1, ax=ax1, extend="both")
-            f.colorbar(im2, ax=ax2, extend="both")
-            f.colorbar(im3, ax=ax3, extend="both")
+            f.colorbar(im1, ax=ax1, extend="both", format="%g")
+            f.colorbar(im2, ax=ax2, extend="both", format="%g")
+            f.colorbar(im3, ax=ax3, extend="both", format="%g")
 
             # ax1.set_title(f"IM")
             # ax2.set_title(f"{which}")
@@ -1598,144 +1602,6 @@ class PlotClass:
         # plt.tight_layout()
         return ax
 
-    # def plot_population_at_locs(self, locations, max_days=7):
-    #     """
-    #     Plot total population of each location for each timestep.
-
-    #     Parameters
-    #     ----------
-    #         locations:
-    #             list of locations to plot for
-    #         max_days:
-    #             The maximum number of days to plot over
-
-    #     Returns
-    #     -------
-    #         ax:
-    #             matplotlib axes object
-
-    #     """
-    #     df = pd.DataFrame()
-    #     df = self.location_counters_day["loc"][locations]["unisex"]
-    #     NVenues = df.shape[1]
-    #     df["t"] = np.array(self.location_counters_day["Timestamp"])
-    #     df["day"] = [day.day_name() for day in df["t"]]
-    #     Weekday_Names = self.day_types["weekday"]
-
-    #     df = df[df["day"] == Weekday_Names[0]]
-    #     Cols = df.columns[~df.columns.isin(["t", "day"])]
-    #     df = df[Cols].iloc[0]
-
-    #     df_weekeday_att = np.array(df.values)
-
-    #     NVenues_Per = sum(df_weekeday_att > 0) / NVenues
-    #     NVenues = sum(df_weekeday_att > 0)
-
-    #     Interval = datetime.timedelta(days=max_days)
-
-    #     xs = self.location_counters["Timestamp"]
-    #     max_index = None
-    #     if xs.iloc[-1] - xs.iloc[0] > Interval:
-    #         max_index = np.sum(xs < xs.iloc[0] + Interval)
-    #     xs = xs[:max_index]
-
-    #     widths = [
-    #         datetime.timedelta(hours=w)
-    #         for w in self.location_counters["delta_t"][:max_index]
-    #     ]
-
-    #     #plt.rcParams["figure.figsize"] = (10, 5)
-    #     f, (ax1, ax2) = plt.subplots(1, 2)
-    #     f.set_size_inches(set_size(subplots=(1,2), fraction=1))
-    #     f.patch.set_facecolor("white")
-
-    #     plural_locations = Tracker.pluralise(self, locations)
-    #     Nlocals = self.NVenues[plural_locations]
-
-    #     ymax = -1
-    #     i_counts = 0
-
-    #     # ax1.set_title("%s locations (frac:%.2f)" % (NVenues, NVenues_Per))
-    #     for i in self.location_counters["loc"][locations]["unisex"][Cols].keys():
-    #         if Nlocals > 100:
-    #             Nlocals = 100
-
-    #         if (
-    #             np.sum(
-    #                 self.location_counters["loc"][locations]["unisex"][Cols][i].values
-    #             )
-    #             == 0
-    #         ):
-    #             continue
-
-    #         ys = self.location_counters["loc"][locations]["unisex"][Cols][i].iloc[
-    #             :max_index
-    #         ]
-    #         if np.nanmax(ys) > ymax:
-    #             ymax = np.nanmax(ys)
-
-    #         ax1.bar(xs, ys, width=widths, align="edge", color="b", alpha=1 / Nlocals)
-
-    #         if i_counts == 0:
-    #             Total = np.array(ys)
-    #         else:
-    #             Total += np.array(ys)
-
-    #         i_counts += 1
-    #         if i_counts >= Nlocals:
-    #             break
-
-    #     # Define the date format
-    #     ax1.xaxis.set_major_locator(mdates.HourLocator(byhour=[0]))
-    #     ax1.xaxis.set_minor_locator(mdates.HourLocator(byhour=None, interval=1))
-    #     ax1.xaxis.set_major_formatter(DateFormatter("%d/%m"))
-    #     ax1.set_ylabel("Number of people at venue")
-    #     ax1.set_xlabel("time")
-    #     ax1.set_yscale("log")
-    #     ax1.set_ylim([1, ymax])
-
-    #     df = pd.DataFrame()
-    #     df = self.location_counters_day["loc"][locations]["unisex"]
-    #     df["t"] = np.array(self.location_counters_day["Timestamp"])
-    #     Cols = df.columns[~df.columns.isin(["t", "day"])]
-
-    #     if df[Cols].shape[1] == 0:
-    #         Max_attendance = 20
-    #     else:
-    #         Max_attendance = max(df[Cols].max())
-
-    #     Steps = 1
-    #     if Max_attendance < 20:
-    #         Steps = 1
-    #     elif Max_attendance < 100:
-    #         Steps = 5
-    #     elif Max_attendance < 1000:
-    #         Steps = 10
-    #     else:
-    #         Steps = 50
-    #     bins = np.concatenate(
-    #         [np.zeros(1) - 0.5, np.arange(0.5, Max_attendance + Steps, Steps)]
-    #     )
-
-    #     for day_i in range(df.shape[0]):
-    #         hist, bin_edges = np.histogram(
-    #             df[Cols].iloc[day_i].values, bins=bins, density=False
-    #         )
-    #         ax2.bar(
-    #             x=(bin_edges[1:] + bin_edges[:-1]) / 2,
-    #             height=(100 * hist) / len(self.location_counters["loc"][locations]),
-    #             width=(bin_edges[:-1] - bin_edges[1:]),
-    #             alpha=1 / df.shape[0],
-    #             color="b",
-    #         )
-
-    #     ax2.set_ylim([0, None])
-    #     ax2.set_ylabel(r"% of venue type")
-    #     ax2.set_xlabel(r"People per day")
-
-    #     #plt.tight_layout()
-    #     return (ax1, ax2)
-
     def plot_population_at_locs_variations(self, locations):
         """
         Plot variations of median values of attendence across all venues of each type
@@ -2086,7 +1952,7 @@ class PlotClass:
                 matplotlib axes object
 
         """
-        plural_locations = Tracker.pluralise(self, location)
+        plural_locations = Tracker.pluralize(self, location)
         Nlocals = self.NVenues[plural_locations]
         dat = self.travel_distance[location]
         Total = dat.iloc[:, 1].sum()
@@ -2177,9 +2043,9 @@ class PlotClass:
         relevant_contact_types = list(self.CM["syoa"].keys())
         IM_contact_types = list(self.CM["Interaction"].keys())
 
-        if self.Normalisation_Type == "U":
+        if self.Normalization_Type == "U":
             NormFolder = "VenueNorm"
-        elif self.Normalisation_Type == "P":
+        elif self.Normalization_Type == "P":
             NormFolder = "PopNorm"
 
         CMTypes = ["NCM", "NCM_R", "NCM_V"]

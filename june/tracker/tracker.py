@@ -46,9 +46,9 @@ class Tracker:
     world:
         instance of World class
     age_bins:
-        dictionary mapping of bin stucture and array of bin edges
+        dictionary mapping of bin structure and array of bin edges
     contact_sexes:
-        list of sexes for which to create contact matix. "male", "female" and or "unisex" (for both together)
+        list of sexes for which to create contact matrix. "male", "female" and or "unisex" (for both together)
     group_types:
         list of world.locations for tracker to loop over
     record_path:
@@ -101,7 +101,7 @@ class Tracker:
             if locs in ["global", "shelter_inter", "shelter_intra"]:
                 continue
 
-            locations.append(self.pluralise(locs))
+            locations.append(self.pluralize(locs))
 
         self.venues_which = {}
         for spec in locations:
@@ -116,20 +116,20 @@ class Tracker:
                     0, len(getattr(self.world, spec).members), 1
                 )
 
-        self.intitalise_location_counters()
+        self.initialise_location_counters()
 
         self.load_interactions(
             self.load_interactions_path
-        )  # Load in premade contact matrices
+        )  # Load in pre-made contact matrices
         self.initialise_contact_matrices()
 
         # store all ages/ index to age bins in python dict for quick lookup.
         self.hash_ages()
 
-        # Initalize time, pop and contact counters
-        self.intitalise_location_cum_time()
-        self.intitalise_location_cum_pop()
-        self.intitalise_contact_counters()
+        # Initialize time, pop and contact counters
+        self.initialise_location_cum_time()
+        self.initialise_location_cum_pop()
+        self.initialise_contact_counters()
 
         self.travel_distance = {}
 
@@ -168,7 +168,7 @@ class Tracker:
                 list of objects
             list_B:
                 second list of objects
-            permute: defualt = True
+            permute: default = True
                 bool, shuffle the returned list
 
         Returns
@@ -202,10 +202,10 @@ class Tracker:
         Union = sorted(list(set(list_A + list_B)))
         return Union
 
-    def pluralise_r(self, loc):
+    def pluralize_r(self, loc):
         """
         Some naming conventions of the venues are plurals or not.
-        Here is a function for consistent conversion to de-pluralise
+        Here is a function for consistent conversion to de-pluralize
 
         Parameters
         ----------
@@ -225,10 +225,10 @@ class Tracker:
             loc = loc[:-1]
         return loc
 
-    def pluralise(self, loc):
+    def pluralize(self, loc):
         """
         Some naming conventions of the venues are plurals or not.
-        Here is a function for consistent conversion to pluralise
+        Here is a function for consistent conversion to pluralize
 
         Parameters
         ----------
@@ -236,7 +236,7 @@ class Tracker:
                 string
         Returns
         -------
-            string, pluralised
+            string, pluralized
 
         """
         # Global is exception
@@ -249,12 +249,12 @@ class Tracker:
         return loc
 
     ########################################################
-    # CM Normalisation functions ###########################
+    # CM Normalization functions ###########################
     ########################################################
 
     def cm_shelter_renorm(self, cm, shelter_shared=0.75):
         """
-        Special normalisation for shelters. Reweight based on households sharing shelters
+        Special Normalization for shelters. Re-weight based on households sharing shelters
         TODO Feed this in so not to be hard coded
 
         Parameters
@@ -352,7 +352,7 @@ class Tracker:
         Returns
         -------
             cm:
-                np.array interactiojn matrix
+                np.array interaction matrix
             cm_err:
                 np.array interaction matrix errors (could be none)
         """
@@ -394,16 +394,16 @@ class Tracker:
 
     def Calc_QIndex(self, cm):
         """
-        calculate the normalised population contact density matrix, NPCDM
+        calculate the normalized population contact density matrix, NPCDM
 
         Parameters
         ----------
             cm:
-                np.array, the contact matrix. Should be normalised per capita eg. UNCM or UNCM_R types.
+                np.array, the contact matrix. Should be normalized per capita eg. UNCM or UNCM_R types.
         Returns
         -------
             Q:
-                float, Q index of assortiveness
+                float, Q index of assortativeness
         """
         P = np.zeros_like(cm, dtype=float)
         P = np.nan_to_num(cm / np.nansum(cm, axis=1), nan=0.0)
@@ -411,21 +411,21 @@ class Tracker:
 
     def Calc_NPCDM(self, cm, pop_by_bin, pop_width):
         """
-        calculate the normalised population contact density matrix, NPCDM
+        calculate the normalized population contact density matrix, NPCDM
 
         Parameters
         ----------
             cm:
-                np.array, the contact matrix. Should be normalised per capita eg. UNCM or UNCM_R types.
+                np.array, the contact matrix. Should be normalized per capita eg. UNCM or UNCM_R types.
             pop_by_bin:
-                np.array, unnormalised population counts per age bin
+                np.array, un-normalized population counts per age bin
             pop_width:
                 np.array, age bin widths
 
         Returns
         -------
             NPCDM:
-                np.array, The normalised population contact density matrix
+                np.array, The normalized population contact density matrix
         """
         NPCDM = np.zeros_like(cm)
         NPCDM = cm * np.multiply.outer(pop_by_bin, pop_by_bin)
@@ -435,12 +435,12 @@ class Tracker:
 
     def Expectation_Assortativeness(self, NPCDM, pop_bins):
         """
-        Expectation of assortativeness E(age_i - age_j)^2 over the normalised population contact density matrix, NPCDM
+        Expectation of assortativeness E(age_i - age_j)^2 over the normalized population contact density matrix, NPCDM
 
         Parameters
         ----------
             NPCDM:
-                np.array, The normalised population contact density matrix
+                np.array, The normalized population contact density matrix
             pop_bins:
                 np.array, The age binning bin edges for the population bin type
 
@@ -466,7 +466,7 @@ class Tracker:
         Parameters
         ----------
             pop_by_bin:
-                np.array, unnormalised population counts per age bin
+                np.array, un-normalized population counts per age bin
             pop_bins:
                 np.array, The age binning bin edges for the population bin type
 
@@ -487,7 +487,7 @@ class Tracker:
         self, bin_type, contact_type, CM, CM_err, ratio, sex="unisex"
     ):
         """
-        Calculate key metrics for CM, {Q, I^2, I^2_s} and return as formated string dict for saving
+        Calculate key metrics for CM, {Q, I^2, I^2_s} and return as formatted string dict for saving
 
         Parameters
         ----------
@@ -500,7 +500,7 @@ class Tracker:
             CM_err:
                 dict, dictionary of all matrices of type. eg self.CM_err
             ratio:
-                float, attendence fraction of population
+                float, attendance fraction of population
             sex:
                 string, sex matrix to use
 
@@ -544,7 +544,7 @@ class Tracker:
 
     def Probabilistic_Contacts(self, mean, mean_err, Probabilistic=True):
         """
-        Possion variable. How many contacts statisticaly.
+        Poisson variable. How many contacts statistically.
 
         Parameters
         ----------
@@ -553,7 +553,7 @@ class Tracker:
             mean_err:
                 float, the 1 sigma error on the mean
             Probabilistic:
-                bool, True to allow the err to value the possion mean. False otherwise
+                bool, True to allow the err to value the poisson mean. False otherwise
 
         Returns
         -------
@@ -572,14 +572,14 @@ class Tracker:
 
     def contract_matrix(self, CM, bins, method=np.sum):
         """
-        Rebin the matrix from "syoa" bin type to general given by bins with method.
+        Re-bin the matrix from "syoa" bin type to general given by bins with method.
 
         Parameters
         ----------
             CM:
-                np.array The contact matrix (unnormalised)
+                np.array The contact matrix (un-normalized)
             bins:
-                np.array, bin edges used for rebinning
+                np.array, bin edges used for re-binning
             method:
                 np.method, The method of contraction. np.sum, np.mean etc
 
@@ -601,16 +601,16 @@ class Tracker:
 
     def contract_matrices(self, Name, bins=np.arange(0, 100 + 5, 5)):
         """
-        Rebin the integer year binning to custom bins specified by list useing produced contact matrix
-        Appends new rebinning to self.CM or self.CMV for "1D" and "All" contact tracing types.
+        Re-bin the integer year binning to custom bins specified by list using produced contact matrix
+        Appends new re-binning to self.CM or self.CMV for "1D" and "All" contact tracing types.
 
         Parameters
         ----------
             Name:
-                string, Name of matrix rebinning
+                string, Name of matrix re-binning
 
             bins:
-                array, bin edges used for rebinning
+                array, bin edges used for re-binning
 
         Returns
         -------
@@ -660,7 +660,7 @@ class Tracker:
 
     def Get_characteristic_time(self, location):
         """
-        Get the characteristic time and proportion_pysical time for location. (In hours)
+        Get the characteristic time and proportion_physical time for location. (In hours)
 
         Parameters
         ----------
@@ -674,23 +674,23 @@ class Tracker:
         """
         if location not in ["global", "shelter_intra", "shelter_inter"]:
             characteristic_time = self.IM[location]["characteristic_time"] / 24
-            proportion_pysical = self.IM[location]["proportion_physical"]
+            proportion_physical = self.IM[location]["proportion_physical"]
         elif location in ["shelter_intra", "shelter_inter"]:
             characteristic_time = self.IM["shelter"]["characteristic_time"] / 24
-            proportion_pysical = self.IM["shelter"]["proportion_physical"]
+            proportion_physical = self.IM["shelter"]["proportion_physical"]
         else:
             characteristic_time = 1
-            proportion_pysical = 0.12
-        return characteristic_time, proportion_pysical
+            proportion_physical = 0.12
+        return characteristic_time, proportion_physical
 
     ##############################################
-    # Initalize ##################################
+    # Initialize ##################################
     ##############################################
 
     def initialise_group_names(self):
         """
         Get list of names of the location sites and set as class variable
-        Intitalise;
+        initialise;
             self.group_type_names
 
         Parameters
@@ -719,7 +719,7 @@ class Tracker:
     def initialise_contact_matrices(self):
         """
         Create set of empty contact matrices and set as class variable
-        Intitalise;
+        initialise;
             self.CM
             self.CMV
 
@@ -787,10 +787,10 @@ class Tracker:
             self.CMV["Interaction"][spec] = append
         return 1
 
-    def intitalise_contact_counters(self):
+    def initialise_contact_counters(self):
         """
         Create set of empty interactions for each person in each location and set as class variable
-        Intitalise;
+        initialise;
             self.contact_counts
 
         Parameters
@@ -813,10 +813,10 @@ class Tracker:
 
         return 1
 
-    def intitalise_location_counters(self):
+    def initialise_location_counters(self):
         """
-        Create set of empty person counts for each location and set as class variable for all timesteps, days and current day.
-        Intitalise;
+        Create set of empty person counts for each location and set as class variable for all time steps, days and current day.
+        initialise;
             self.location_counters
             self.location_counters_day
             self.location_counters_day_i
@@ -835,7 +835,7 @@ class Tracker:
             if locs in ["global", "shelter_inter", "shelter_intra"]:
                 continue
 
-            locations.append(self.pluralise(locs))
+            locations.append(self.pluralize(locs))
         self.location_counters = {
             "Timestamp": [],
             "delta_t": [],
@@ -885,10 +885,10 @@ class Tracker:
         }
         return 1
 
-    def intitalise_location_cum_pop(self):
+    def initialise_location_cum_pop(self):
         """
-        Intitialise the cumalitive population at venues to be tracked
-        Intitalise;
+        Intitialize the cumalitive population at venues to be tracked
+        initialise;
             self.location_cum_pop
 
         Parameters
@@ -926,10 +926,10 @@ class Tracker:
             )
         return 1
 
-    def intitalise_location_cum_time(self):
+    def initialise_location_cum_time(self):
         """
-        Intitialise the cumalitive population time at venues to be tracked
-        Intitalise;
+        Initialize the cumulative population time at venues to be tracked
+        initialise;
             self.location_cum_time
 
         Parameters
@@ -1006,7 +1006,7 @@ class Tracker:
 
     def convert_dict_to_df(self):
         """
-        Transform contact_counts into pandas dataframe for easy sorting
+        Transform contact_counts into pandas data frame for easy sorting
         Sets;
             self.contacts_df
 
@@ -1082,7 +1082,7 @@ class Tracker:
 
         def Contract(bins_idx, locs):
             """
-            Take full syoa year by year binning of full unnormalised contact matrix and reduce to matrix with age bins bins_idx.
+            Take full syoa year by year binning of full un-normalized contact matrix and reduce to matrix with age bins bins_idx.
 
             Parameters
             ----------
@@ -1154,10 +1154,10 @@ class Tracker:
             self.average_contacts[bin_type] = AgesCount
         return 1
 
-    def normalise_1D_CM(self):
+    def normalize_1D_CM(self):
         """
         For 1D tracking
-        Normalise the contact matrices based on likelyhood to interact with each demographic.
+        normalize the contact matrices based on likelihood to interact with each demographic.
         Sets and rescales;
             self.CM
             self.CM_err
@@ -1177,7 +1177,7 @@ class Tracker:
         -------
             None
         """
-        # Preform normalisation
+        # Preform Normalization
         bin_Keys = self.CM.keys()
         for bin_type in bin_Keys:
 
@@ -1234,7 +1234,7 @@ class Tracker:
                             self.UNCM_R["Interaction"][contact_type] = UNCM_R
                             self.UNCM_R_err["Interaction"][contact_type] = UNCM_R_err
 
-                            # Basically just counts of interations so assume a poisson error
+                            # Basically just counts of interactions so assume a poisson error
                             self.CM["Interaction"][contact_type] = (
                                 cm / self.timer.total_days
                             )
@@ -1250,7 +1250,7 @@ class Tracker:
                         self.UNCM_R[bin_type][contact_type][sex] = UNCM_R
                         self.UNCM_R_err[bin_type][contact_type][sex] = UNCM_R_err
 
-                        # Basically just counts of interations so assume a poisson error
+                        # Basically just counts of interactions so assume a poisson error
                         self.CM[bin_type][contact_type][sex] = (
                             cm / self.timer.total_days
                         )
@@ -1259,10 +1259,10 @@ class Tracker:
                         )
         return 1
 
-    def normalise_All_CM(self):
+    def normalize_All_CM(self):
         """
         For All contacts All tracking
-        Normalise the contact matrices based on likelyhood to interact with each demographic.
+        normalize the contact matrices based on likelihood to interact with each demographic.
         Sets and rescales;
             self.CMV
             self.CMV_err
@@ -1278,7 +1278,7 @@ class Tracker:
         -------
             None
         """
-        # Preform normalisation
+        # Preform Normalization
         bin_Keys = self.CMV.keys()
 
         for bin_type in bin_Keys:
@@ -1318,7 +1318,7 @@ class Tracker:
                             self.UNCM_V["Interaction"][contact_type] = UNCMV
                             self.UNCM_V_err["Interaction"][contact_type] = UNCMV_err
 
-                            # Basically just counts of interations so assume a poisson error
+                            # Basically just counts of interactions so assume a poisson error
                             self.CMV["Interaction"][contact_type] = (
                                 cm / self.timer.total_days
                             )
@@ -1332,7 +1332,7 @@ class Tracker:
                         self.UNCM_V[bin_type][contact_type][sex] = UNCMV
                         self.UNCM_V_err[bin_type][contact_type][sex] = UNCMV_err
 
-                        # Basically just counts of interations so assume a poisson error
+                        # Basically just counts of interactions so assume a poisson error
                         self.CMV[bin_type][contact_type][sex] = (
                             cm / self.timer.total_days
                         )
@@ -1342,9 +1342,9 @@ class Tracker:
 
         return 1
 
-    def AttendenceRatio(self, bin_type, contact_type, sex):
+    def AttendanceRatio(self, bin_type, contact_type, sex):
         """
-        Get the attendence fraction of subgroup i with respect to the total population in subgroup i
+        Get the attendance fraction of subgroup i with respect to the total population in subgroup i
 
         Parameters
         ----------
@@ -1360,7 +1360,7 @@ class Tracker:
         Returns
         -------
             ratio:
-                float, attendence fraction
+                float, attendance fraction
 
         """
         if bin_type != "Interaction":
@@ -1372,7 +1372,7 @@ class Tracker:
 
     def UNtoPNConversion(self, cm, ratio):
         """
-        Function to rescale the contact matrices from venue to population normalised
+        Function to rescale the contact matrices from venue to population normalized
 
         Parameters
         ----------
@@ -1380,7 +1380,7 @@ class Tracker:
                 np.array, The contact matrix
 
             ratio:
-                    float, attendence fraction
+                    float, Attendance fraction
 
         Returns
         -------
@@ -1393,7 +1393,7 @@ class Tracker:
 
     def CM_Norm(self, cm, cm_err, pop_tots, contact_type="global", Which="UNCM"):
         """
-        Normalise the contact matrices using population at location data and time of simulation run time.
+        normalize the contact matrices using population at location data and time of simulation run time.
 
         Parameters
         ----------
@@ -1415,9 +1415,9 @@ class Tracker:
                 np.array contact matrix errors
 
         """
-        # Normalise based on characteristic time.
+        # normalize based on characteristic time.
 
-        # Normalisation over charecteristic time and population
+        # Normalization over characteristic time and population
         factor = (
             self.Get_characteristic_time(location=contact_type)[0] * np.sum(pop_tots)
         ) / self.location_cum_time[contact_type]
@@ -1469,11 +1469,11 @@ class Tracker:
 
         return norm_cm, norm_cm_err
 
-    def initalize_CM_Normalisations(self):
+    def initialize_CM_Normalizations(self):
         """
-        Create the CM Normalisation arrays from the CM_T template
+        Create the CM Normalization arrays from the CM_T template
 
-        Initalises
+        Initialise
         ----------
             self.CM_err
 
@@ -1511,7 +1511,7 @@ class Tracker:
             for loc in self.CM["Interaction"].keys()
         }
 
-        # Normalised Matrices
+        # normalized Matrices
         self.UNCM = {
             bin_type: {
                 loc: {
@@ -1544,7 +1544,7 @@ class Tracker:
             for loc in self.CM["Interaction"].keys()
         }
 
-        # Normalised Matrices with reciprocal contacts
+        # normalized Matrices with reciprocal contacts
         self.UNCM_R = {
             bin_type: {
                 loc: {
@@ -1578,11 +1578,11 @@ class Tracker:
         }
         return 1
 
-    def initalize_CM_All_Normalisations(self):
+    def initialize_CM_All_Normalizations(self):
         """
-        Create the CM Normalisation arrays from the CM_AC template
+        Create the CM Normalization arrays from the CM_AC template
 
-        Initalises
+        Initialise
         ----------
             self.CMV_err
 
@@ -1615,7 +1615,7 @@ class Tracker:
             for loc in self.CMV["Interaction"].keys()
         }
 
-        # Normalised Matrices
+        # normalized Matrices
         self.UNCM_V = {
             bin_type: {
                 loc: {
@@ -1652,10 +1652,10 @@ class Tracker:
     def post_process_simulation(self, save=True):
         """
         Perform some post simulation checks and calculations.
-            Create contact dataframes
+            Create contact data frames
             Get age profiles over the age bins and locations
             Get average contacts by location
-            Normalise contact matrices by population demographics
+            normalize contact matrices by population demographics
 
             Print out results to Yaml in Results_Path directory
 
@@ -1676,11 +1676,11 @@ class Tracker:
         self.calc_age_profiles()
         self.calc_average_contacts()
 
-        self.initalize_CM_Normalisations()
-        self.normalise_1D_CM()
+        self.initialize_CM_Normalizations()
+        self.normalize_1D_CM()
 
-        self.initalize_CM_All_Normalisations()
-        self.normalise_All_CM()
+        self.initialize_CM_All_Normalizations()
+        self.normalize_All_CM()
 
         if mpi_rank == 0:
             self.PrintOutResults()
@@ -1789,7 +1789,7 @@ class Tracker:
     def simulate_1d_contacts(self, group):
         """
         Construct contact matrices.
-        For group at a location we loop over all people and sample from the selection of availible contacts to build more grainual contact matrices.
+        For group at a location we loop over all people and sample from the selection of available contacts to build more granular contact matrices.
         Sets;
             self.CM
             self.contact_counts
@@ -1849,7 +1849,6 @@ class Tracker:
             for subgroup_contacts, subgroup_contacts_error, contact_subgroup_idx in zip(
                 contacts_per_subgroup, contacts_per_subgroup_error, contact_subgroups
             ):
-                # Degugging print out...
                 # potential contacts is one less if you're in that subgroup - can't contact yourself!
                 subgroup_people = groups_inter[contact_subgroup_idx]
                 subgroup_people_without = subgroup_people.copy()
@@ -1983,7 +1982,7 @@ class Tracker:
     def simulate_All_contacts(self, group):
         """
         Construct contact matrices for all contacts all
-        For group at a location we loop over all people and sample from the selection of availible contacts to build more grainual contact matrices.
+        For group at a location we loop over all people and sample from the selection of available contacts to build more granular contact matrices.
         Sets;
             self.CMV
 
@@ -2076,7 +2075,7 @@ class Tracker:
 
     def simulate_pop_time_venues(self, group):
         """
-        Get the population and cumalative time at all venues over all timesteps.
+        Get the population and cumulative time at all venues over all time steps.
         Sets;
             self.location_cum_pop
             self.location_cum_time
@@ -2282,7 +2281,7 @@ class Tracker:
         Parameters
         ----------
             day:
-                str, day of the week for timestep
+                str, day of the week for time step
 
         Returns
         -------
@@ -2382,15 +2381,6 @@ class Tracker:
                             counter += 1
                             continue  # Skip external venues to the domain.
 
-                        # if group.spec in ["household"]:
-                        #     if group.being_visited:
-                        #         #We want to track household visits separately
-                        #         # and person.residence.group != group
-                        #         # or 9 <= self.timer.date.hour < 18
-                        #         counter += 1
-                        #         continue
-                        #     #Carehomes already deal with visitors
-
                         self.simulate_pop_time_venues(group)
                         self.simulate_attendance(
                             group, super_group_name, self.timer, counter
@@ -2420,7 +2410,7 @@ class Tracker:
             None
 
         """
-        # ratio = self.AttendenceRatio(binType, loc, "unisex")
+        # ratio = self.AttendanceRatio(binType, loc, "unisex")
         # cm = self.UNtoPNConversion(cm, ratio)
         # cm_err = self.UNtoPNConversion(cm_err, ratio)
 
@@ -2436,7 +2426,7 @@ class Tracker:
                 jsonfile[binType] = self.tracker_CMJSON(
                     binType=binType, CM=CM, CM_err=CM_err, NormType=NormType
                 )
-            # Save out the Normalised UNCM
+            # Save out the normalized UNCM
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
                 folder=folder_name,
@@ -2454,7 +2444,7 @@ class Tracker:
                     if NormType == "U":
                         ratio = 1
                     elif NormType == "P":
-                        ratio = self.AttendenceRatio(binType, loc, "unisex")
+                        ratio = self.AttendanceRatio(binType, loc, "unisex")
                         Mtype = "P" + Mtype[1:]
 
                     jsonfile[binType][loc] = self.Calculate_CM_Metrics(
@@ -2472,14 +2462,14 @@ class Tracker:
                 jsonfile=jsonfile,
             )
 
-        def SaveMatrixCamberra(CM, CM_err, Mtype, NormType="U"):
+        def SaveMatrixCanberra(CM, CM_err, Mtype, NormType="U"):
             jsonfile = {}
             for loc in list(CM["Interaction"].keys()):
 
                 if NormType == "U":
                     ratio = 1
                 elif NormType == "P":
-                    ratio = self.AttendenceRatio("Interaction", loc, "unisex")
+                    ratio = self.AttendanceRatio("Interaction", loc, "unisex")
                     Mtype = "P" + Mtype[1:]
 
                 cm = CM["Interaction"][loc]
@@ -2492,7 +2482,7 @@ class Tracker:
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                 folder=folder_name,
-                filename=f"tracker_CamberraDist_{Mtype}{mpi_rankname}.yaml",
+                filename=f"tracker_CanberraDist_{Mtype}{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
             )
 
@@ -2553,17 +2543,17 @@ class Tracker:
                 CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P"
             )
 
-            SaveMatrixCamberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
-            SaveMatrixCamberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
-            SaveMatrixCamberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
+            SaveMatrixCanberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
+            SaveMatrixCanberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
+            SaveMatrixCanberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
 
-            SaveMatrixCamberra(
+            SaveMatrixCanberra(
                 CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM", NormType="P"
             )
-            SaveMatrixCamberra(
+            SaveMatrixCanberra(
                 CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R", NormType="P"
             )
-            SaveMatrixCamberra(
+            SaveMatrixCanberra(
                 CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P"
             )
 
@@ -2825,7 +2815,7 @@ class Tracker:
                 if NormType == "U":
                     ratio = 1
                 elif NormType == "P":
-                    ratio = self.AttendenceRatio(binType, local, "unisex")
+                    ratio = self.AttendanceRatio(binType, local, "unisex")
 
                 jsonfile[local] = {}
 
@@ -2889,7 +2879,7 @@ class Tracker:
                 if NormType == "U":
                     ratio = 1
                 elif NormType == "P":
-                    ratio = self.AttendenceRatio(binType, local, "unisex")
+                    ratio = self.AttendanceRatio(binType, local, "unisex")
 
                 jsonfile[local] = {}
 
@@ -3055,9 +3045,9 @@ class Tracker:
 
                     (
                         characteristic_time,
-                        proportion_pysical,
+                        proportion_physical,
                     ) = self.Get_characteristic_time(local)
-                    proportional_physical = np.array(proportion_pysical)
+                    proportional_physical = np.array(proportion_physical)
                     characteristic_time = characteristic_time * 24
                 else:
                     proportional_physical = np.array(0)

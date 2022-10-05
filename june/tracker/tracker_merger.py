@@ -159,23 +159,23 @@ class MergerClass:
     def MatrixString(self, matrix, dtypeString="float"):
         return Tracker.MatrixString(self, matrix, dtypeString)
 
-    def pluralise_r(self, loc):
-        return Tracker.pluralise_r(self, loc)
+    def pluralize_r(self, loc):
+        return Tracker.pluralize_r(self, loc)
 
-    def pluralise(self, loc):
-        return Tracker.pluralise(self, loc)
+    def pluralize(self, loc):
+        return Tracker.pluralize(self, loc)
 
-    def initalize_CM_Normalisations(self):
-        return Tracker.initalize_CM_Normalisations(self)
+    def initialize_CM_Normalizations(self):
+        return Tracker.initialize_CM_Normalizations(self)
 
-    def initalize_CM_All_Normalisations(self):
-        return Tracker.initalize_CM_All_Normalisations(self)
+    def initialize_CM_All_Normalizations(self):
+        return Tracker.initialize_CM_All_Normalizations(self)
 
-    def normalise_1D_CM(self):
-        return Tracker.normalise_1D_CM(self)
+    def normalize_1D_CM(self):
+        return Tracker.normalize_1D_CM(self)
 
-    def normalise_All_CM(self):
-        return Tracker.normalise_All_CM(self)
+    def normalize_All_CM(self):
+        return Tracker.normalize_All_CM(self)
 
     def PrintOutResults(self):
         return Tracker.PrintOutResults(self)
@@ -211,8 +211,8 @@ class MergerClass:
     def Canberra_distance(self, x, y):
         return Tracker.Canberra_distance(self, x, y)
 
-    def AttendenceRatio(self, bin_type, contact_type, sex):
-        return Tracker.AttendenceRatio(self, bin_type, contact_type, sex)
+    def AttendanceRatio(self, bin_type, contact_type, sex):
+        return Tracker.AttendanceRatio(self, bin_type, contact_type, sex)
 
     def UNtoPNConversion(self, cm, ratio):
         return Tracker.UNtoPNConversion(self, cm, ratio)
@@ -326,7 +326,7 @@ class MergerClass:
                     if loc in ["care_home_visits", "household_visits"]:
                         continue
 
-                    loc = self.pluralise_r(loc)
+                    loc = self.pluralize_r(loc)
 
                     if loc == "global" and rbt == "Interaction":
                         continue
@@ -356,7 +356,7 @@ class MergerClass:
             for plural_loc in self.group_type_names["all"]:
                 if plural_loc in ["global", "care_home_visits", "household_visits"]:
                     continue
-                loc = self.pluralise_r(plural_loc)
+                loc = self.pluralize_r(plural_loc)
                 NVenues_so_far = 0
                 for rank in range(0, self.NRanks):
 
@@ -417,7 +417,7 @@ class MergerClass:
             for plural_loc in self.group_type_names["all"]:
                 if plural_loc in ["global", "care_home_visits", "household_visits"]:
                     continue
-                loc = self.pluralise_r(plural_loc)
+                loc = self.pluralize_r(plural_loc)
 
                 NVenues_so_far = 0
                 for rank in range(0, self.NRanks):
@@ -494,7 +494,7 @@ class MergerClass:
 
                         continue
 
-                    loc = self.pluralise_r(loc)
+                    loc = self.pluralize_r(loc)
                     if loc not in self.rank_age_profiles[rbt].keys():
                         self.rank_age_profiles[rbt][loc] = {}
 
@@ -547,7 +547,7 @@ class MergerClass:
                     dat = {df.columns[0]: df.iloc[0]}
                     nbins = len(self.rank_age_profiles[rbt]["global"]["all"])
                     for col in self.group_type_names["all"]:
-                        col = self.pluralise_r(col)
+                        col = self.pluralize_r(col)
                         if "visit" in col:
                             col += "s"
                         dat[col] = np.zeros(nbins)
@@ -555,9 +555,9 @@ class MergerClass:
                     AvContacts[rbt] = pd.DataFrame(dat)
 
                 for col in df.columns:
-                    if self.pluralise(col) not in self.group_type_names[rank]:
+                    if self.pluralize(col) not in self.group_type_names[rank]:
                         continue
-                    col_age = self.pluralise_r(col)
+                    col_age = self.pluralize_r(col)
                     if col_age == "care_home_visit":
                         col_age = "care_home"
                     if col_age == "household_visit":
@@ -627,7 +627,7 @@ class MergerClass:
             else:
                 for bin_type in self.binTypes:
                     for loc_plural in self.group_type_names["all"]:
-                        loc = self.pluralise_r(loc_plural)
+                        loc = self.pluralize_r(loc_plural)
                         NEW = False
                         if loc_plural not in self.group_type_names[rank]:
                             continue
@@ -719,7 +719,7 @@ class MergerClass:
             else:
                 for bin_type in self.binTypes:
                     for loc_plural in self.group_type_names["all"]:
-                        loc = self.pluralise_r(loc_plural)
+                        loc = self.pluralize_r(loc_plural)
                         NEW = False
                         if loc_plural not in self.group_type_names[rank]:
                             continue
@@ -788,7 +788,7 @@ class MergerClass:
             for plural_col in self.group_type_names["all"]:
                 if plural_col in ["care_home_visits", "household_visits"]:
                     continue
-                col = self.pluralise_r(plural_col)
+                col = self.pluralize_r(plural_col)
                 if col not in df.columns:
                     continue
 
@@ -820,7 +820,7 @@ class MergerClass:
                 jsonfile[binType] = self.tracker_CMJSON(
                     binType=binType, CM=CM, CM_err=CM_err, NormType=NormType
                 )
-            # Save out the Normalised UNCM
+            # Save out the normalized UNCM
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
                 folder=folder_name,
@@ -838,7 +838,7 @@ class MergerClass:
                     if NormType == "U":
                         ratio = 1
                     elif NormType == "P":
-                        ratio = self.AttendenceRatio(binType, loc, "unisex")
+                        ratio = self.AttendanceRatio(binType, loc, "unisex")
                         Mtype = "P" + Mtype[1:]
 
                     jsonfile[binType][loc] = self.Calculate_CM_Metrics(
@@ -856,14 +856,14 @@ class MergerClass:
                 jsonfile=jsonfile,
             )
 
-        def SaveMatrixCamberra(CM, CM_err, Mtype, NormType="U"):
+        def SaveMatrixCanberra(CM, CM_err, Mtype, NormType="U"):
             jsonfile = {}
             for loc in list(CM["Interaction"].keys()):
 
                 if NormType == "U":
                     ratio = 1
                 elif NormType == "P":
-                    ratio = self.AttendenceRatio("Interaction", loc, "unisex")
+                    ratio = self.AttendanceRatio("Interaction", loc, "unisex")
                     Mtype = "P" + Mtype[1:]
 
                 cm = CM["Interaction"][loc]
@@ -876,7 +876,7 @@ class MergerClass:
             self.Save_CM_JSON(
                 dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
                 folder=folder_name,
-                filename=f"tracker_CamberraDist_{Mtype}{mpi_rankname}.yaml",
+                filename=f"tracker_CanberraDist_{Mtype}{mpi_rankname}.yaml",
                 jsonfile=jsonfile,
             )
 
@@ -906,17 +906,17 @@ class MergerClass:
             CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P"
         )
 
-        SaveMatrixCamberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
-        SaveMatrixCamberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
-        SaveMatrixCamberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
+        SaveMatrixCanberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
+        SaveMatrixCanberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
+        SaveMatrixCanberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
 
-        SaveMatrixCamberra(
+        SaveMatrixCanberra(
             CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM", NormType="P"
         )
-        SaveMatrixCamberra(
+        SaveMatrixCanberra(
             CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R", NormType="P"
         )
-        SaveMatrixCamberra(
+        SaveMatrixCanberra(
             CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P"
         )
         return 1
@@ -946,13 +946,13 @@ class MergerClass:
             self.LoadContactMatrices()
             logger.info(f"Rank {mpi_rank} -- Load IM and CMs done")
 
-            self.initalize_CM_Normalisations()
-            self.normalise_1D_CM()
+            self.initialize_CM_Normalizations()
+            self.normalize_1D_CM()
 
-            self.initalize_CM_All_Normalisations()
-            self.normalise_All_CM()
+            self.initialize_CM_All_Normalizations()
+            self.normalize_All_CM()
 
-            logger.info(f"Rank {mpi_rank} -- Normalised CMs done")
+            logger.info(f"Rank {mpi_rank} -- normalized CMs done")
 
             self.SaveOutCM()
             logger.info(f"Rank {mpi_rank} -- Saved CM done")

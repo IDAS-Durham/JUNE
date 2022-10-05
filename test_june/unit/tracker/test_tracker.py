@@ -47,11 +47,6 @@ class TestTracker:
             load_interactions_path=interaction_config,
             contact_sexes=["unisex", "male", "female"],
         )
-
-        # tracker.simulation_days = 1/24
-        # tracker.delta_t = 3600
-        # tracker.trackertimestep(["households", "pubs"], 0)
-        # tracker = postprocess_functions(tracker)
         return tracker
 
     def test__tracker_init(self, tracker):
@@ -70,9 +65,9 @@ class TestTracker:
         # Check the feed in groups we care about tracking
         assert sorted(tracker.group_type_names) == ["household", "pub"]
 
-        # Check CM that are initialised
-        assert sorted(tracker.CM_T["syoa"].keys()) == ["global", "household", "pub"]
-        assert sorted(tracker.CM_T["syoa"]["global"].keys()) == [
+        # Check CM that are initialized
+        assert sorted(tracker.CM["syoa"].keys()) == ["global", "household", "pub"]
+        assert sorted(tracker.CM["syoa"]["global"].keys()) == [
             "female",
             "male",
             "unisex",
@@ -151,5 +146,5 @@ def postprocess_functions(tracker: Tracker):
     tracker.convert_dict_to_df()
     tracker.calc_age_profiles()
     tracker.calc_average_contacts()
-    tracker.normalise_contact_matrices()
+    tracker.normalize_contact_matrices()
     return tracker
