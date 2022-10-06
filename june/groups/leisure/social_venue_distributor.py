@@ -18,6 +18,12 @@ def random_choice_numba(arr, prob):
     return arr[np.searchsorted(np.cumsum(prob), random(), side="right")]
 
 
+default_daytypes = {
+    "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "weekend": ["Saturday", "Sunday"],
+}
+
+
 class SocialVenueDistributor:
     """
     Tool to associate social venues to people.
@@ -27,12 +33,13 @@ class SocialVenueDistributor:
         self,
         social_venues: SocialVenues,
         times_per_week: Dict[Dict, float],
-        daytypes: Dict[str, str],
+        daytypes: Dict[str, str] = default_daytypes,
         hours_per_day: Dict[Dict, float] = None,
         drags_household_probability=0.0,
         neighbours_to_consider=5,
         maximum_distance=5,
         leisure_subgroup_type=0,
+        nearest_venues_to_visit=0,
         open={"weekday": "0-24", "weekend": "0-24"},
     ):
         """
@@ -65,6 +72,9 @@ class SocialVenueDistributor:
         leisure_subgroup_type
             Subgroup of the venue that the person will be appended to
             (for instance, the visitors subgroup of the care home)
+        nearest_venues_to_visit:
+            restrict people only travelling to nearest venue(s). 0 means no restriction.
+            if >0, "neighbours_to_consider" will be ignored.
         """
         self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
         self.spec = "_".join(self.spec).lower()
@@ -87,15 +97,32 @@ class SocialVenueDistributor:
         self.maximum_distance = maximum_distance
         self.drags_household_probability = drags_household_probability
         self.leisure_subgroup_type = leisure_subgroup_type
+        self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
+        self.spec = "_".join(self.spec).lower()
+        self.nearest_venues_to_visit = nearest_venues_to_visit
 
     @classmethod
     def from_config(
-        cls, social_venues: SocialVenues, daytypes: dict, config_filename: str = None
+        cls,
+        social_venues: SocialVenues,
+        daytypes: dict = default_daytypes,
+        config_filename: str = None,
+        config_override: Dict[str, int] = None,
     ):
+        """
+        Parameters
+        ----------
+        config_override
+            a dict of parameters overrides their values in "config_filename"
+        """
         if config_filename is None:
             config_filename = cls.default_config_filename
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
+        if config_override is not None:
+            for key, value in config_override.items():
+                if value is not None:
+                    config[key] = value
         return cls(social_venues, daytypes=daytypes, **config)
 
     def _compute_poisson_parameter_from_times_per_week(
@@ -190,8 +217,8 @@ class SocialVenueDistributor:
         """
         Given an area, searches for the social venues inside
         ``self.maximum_distance``. It then returns ``self.neighbours_to_consider``
-        of them randomly. If there are no social venues inside the maximum distance,
-        it returns the closest one.
+        of them randomly, or ``nearest_venues_to_visit`` of them sorting by distance ascending.
+        If there are no social venues inside the maximum distance, it returns the closest one.
         """
         area_location = area.coordinates
         potential_venues = self.social_venues.get_venues_in_radius(
@@ -202,9 +229,13 @@ class SocialVenueDistributor:
             if closest_venue is None:
                 return
             return (closest_venue[0],)
-        indices_len = min(len(potential_venues), self.neighbours_to_consider)
-        random_idx_choice = sample(range(len(potential_venues)), indices_len)
-        return tuple([potential_venues[idx] for idx in random_idx_choice])
+        if self.nearest_venues_to_visit > 0:
+            indices_len = min(len(potential_venues), self.nearest_venues_to_visit)
+            return tuple([potential_venues[idx] for idx in range(indices_len)])
+        else:
+            indices_len = min(len(potential_venues), self.neighbours_to_consider)
+            random_idx_choice = sample(range(len(potential_venues)), indices_len)
+            return tuple([potential_venues[idx] for idx in random_idx_choice])
 
     def get_leisure_group(self, person):
         candidates = person.area.social_venues[self.spec]
