@@ -46,9 +46,9 @@ class Tracker:
     world:
         instance of World class
     age_bins:
-        dictionary mapping of bin stucture and array of bin edges
+        dictionary mapping of bin structure and array of bin edges
     contact_sexes:
-        list of sexes for which to create contact matix. "male", "female" and or "unisex" (for both together)
+        list of sexes for which to create contact matrix. "male", "female" and or "unisex" (for both together)
     group_types:
         list of world.locations for tracker to loop over
     record_path:
@@ -56,7 +56,7 @@ class Tracker:
     load_interactions_path:
         path for interactions yaml directory
     Tracker_Contact_Type:
-        List of type of contact tracking to be implemented ["1D", "All"].
+        NONE, Not used
     MaxVenueTrackingSize:
         int, Maximum number for venue type to track. Default is all venues in world.VENUE are tracked
 
@@ -74,9 +74,14 @@ class Tracker:
         group_types=None,
         record_path=Path(""),
         load_interactions_path=default_interaction_path,
-        Tracker_Contact_Type=["1D"],
+        Tracker_Contact_Type=None,
         MaxVenueTrackingSize=np.inf,
     ):
+
+        if Tracker_Contact_Type is None:
+            pass
+        else:
+            print("Tracker_Contact_Type argument no longer required")
         self.world = world
         self.age_bins = age_bins
         self.contact_sexes = contact_sexes
@@ -84,8 +89,6 @@ class Tracker:
         self.timer = None
         self.record_path = record_path
         self.load_interactions_path = load_interactions_path
-
-        self.Tracker_Contact_Type = Tracker_Contact_Type
 
         self.MaxVenueTrackingSize = MaxVenueTrackingSize
 
@@ -98,7 +101,7 @@ class Tracker:
             if locs in ["global", "shelter_inter", "shelter_intra"]:
                 continue
 
-            locations.append(self.pluralise(locs))
+            locations.append(self.pluralize(locs))
 
         self.venues_which = {}
         for spec in locations:
@@ -113,20 +116,20 @@ class Tracker:
                     0, len(getattr(self.world, spec).members), 1
                 )
 
-        self.intitalise_location_counters()
+        self.initialise_location_counters()
 
         self.load_interactions(
             self.load_interactions_path
-        )  # Load in premade contact matrices
+        )  # Load in pre-made contact matrices
         self.initialise_contact_matrices()
 
         # store all ages/ index to age bins in python dict for quick lookup.
         self.hash_ages()
 
-        # Initalize time, pop and contact counters
-        self.intitalise_location_cum_time()
-        self.intitalise_location_cum_pop()
-        self.intitalise_contact_counters()
+        # Initialize time, pop and contact counters
+        self.initialise_location_cum_time()
+        self.initialise_location_cum_pop()
+        self.initialise_contact_counters()
 
         self.travel_distance = {}
 
@@ -165,7 +168,7 @@ class Tracker:
                 list of objects
             list_B:
                 second list of objects
-            permute: defualt = True
+            permute: default = True
                 bool, shuffle the returned list
 
         Returns
@@ -199,10 +202,10 @@ class Tracker:
         Union = sorted(list(set(list_A + list_B)))
         return Union
 
-    def pluralise_r(self, loc):
+    def pluralize_r(self, loc):
         """
         Some naming conventions of the venues are plurals or not.
-        Here is a function for consistent conversion to de-pluralise
+        Here is a function for consistent conversion to de-pluralize
 
         Parameters
         ----------
@@ -222,10 +225,10 @@ class Tracker:
             loc = loc[:-1]
         return loc
 
-    def pluralise(self, loc):
+    def pluralize(self, loc):
         """
         Some naming conventions of the venues are plurals or not.
-        Here is a function for consistent conversion to pluralise
+        Here is a function for consistent conversion to pluralize
 
         Parameters
         ----------
@@ -233,7 +236,7 @@ class Tracker:
                 string
         Returns
         -------
-            string, pluralised
+            string, pluralized
 
         """
         # Global is exception
@@ -244,6 +247,121 @@ class Tracker:
         else:
             loc = loc + "s"
         return loc
+
+    ########################################################
+    # CM Normalization functions ###########################
+    ########################################################
+
+    def cm_shelter_renorm(self, cm, shelter_shared=0.75):
+        """
+        Special Normalization for shelters. Re-weight based on households sharing shelters
+        TODO Feed this in so not to be hard coded
+
+        Parameters
+        ----------
+            cm:
+                np.array: The contact matrix between households in a shelter
+            shelter_shared:
+                np.float: The proportion of shelters with multiple households
+
+        Returns
+        -------
+            cm:
+        """
+
+        FIntraExtra = shelter_shared / (2 * (1 - shelter_shared))
+        FIntraIntra = 1 / ((1 - shelter_shared) / (2 * (1 - shelter_shared)))
+        cm[0, 0] /= FIntraIntra
+        cm[1, 1] /= FIntraIntra
+        cm[0, 1] /= FIntraExtra
+        cm[1, 0] /= FIntraExtra
+        return cm
+
+    #############################################
+    # Grab CM  ##################################
+    #############################################
+
+    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="UNCM"):
+        """
+        Get cm out of dictionary.
+
+        Parameters
+        ----------
+            binType:
+                Name of bin type syoa, AC etc
+            contact_type:
+                Location of contacts
+            sex:
+                Sex contact matrix
+            which:
+                str, which matrix type to collect "CM", "UNCM", "UNCM_R", "CMV", "UNCM_V"
+
+        Returns
+        -------
+            cm:
+                np.array contact matrix
+            cm_err:
+                np.array contact matrix errors
+        """
+        if bin_type != "Interaction":
+            if which == "CM":
+                cm = self.CM[bin_type][contact_type]["sex"][sex]
+                cm_err = self.CM_err[bin_type][contact_type]["sex"][sex]
+            elif which == "UNCM":
+                cm = self.UNCM[bin_type][contact_type]["sex"][sex]
+                cm_err = self.UNCM_err[bin_type][contact_type]["sex"][sex]
+            elif which == "UNCM_R":
+                cm = self.UNCM_R[bin_type][contact_type]["sex"][sex]
+                cm_err = self.UNCM_R_err[bin_type][contact_type]["sex"][sex]
+
+            elif which == "CMV":
+                cm = self.CMV[bin_type][contact_type]["sex"][sex]
+                cm_err = self.CMV_err[bin_type][contact_type]["sex"][sex]
+            elif which == "UNCM_V":
+                cm = self.UNCM_V[bin_type][contact_type]["sex"][sex]
+                cm_err = self.UNCM_V_err[bin_type][contact_type]["sex"][sex]
+
+        else:
+            if which == "CM":
+                cm = self.CM[bin_type][contact_type]
+                cm_err = self.CM_err[bin_type][contact_type]
+            elif which == "UNCM":
+                cm = self.UNCM[bin_type][contact_type]
+                cm_err = self.UNCM_err[bin_type][contact_type]
+            elif which == "UNCM_R":
+                cm = self.UNCM_R[bin_type][contact_type]
+                cm_err = self.UNCM_R_err[bin_type][contact_type]
+
+            elif which == "CMV":
+                cm = self.CMV[bin_type][contact_type]
+                cm_err = self.CMV_err[bin_type][contact_type]
+            elif which == "UNCM_V":
+                cm = self.UNCM_V[bin_type][contact_type]
+                cm_err = self.UNCM_V_err[bin_type][contact_type]
+        return np.array(cm), np.array(cm_err)
+
+    def IMPlots_GetIM(self, contact_type):
+        """
+        Get IM out of dictionary.
+
+        Parameters
+        ----------
+            contact_type:
+                Location of contacts
+
+        Returns
+        -------
+            cm:
+                np.array interaction matrix
+            cm_err:
+                np.array interaction matrix errors (could be none)
+        """
+        im = np.array(self.IM[contact_type]["contacts"], dtype=float)
+        if "contacts_err" not in self.IM[contact_type].keys():
+            im_err = None
+        else:
+            im_err = np.array(self.IM[contact_type]["contacts_err"], dtype=float)
+        return im, im_err
 
     ########################################################
     # CM Metric functions ##################################
@@ -276,16 +394,16 @@ class Tracker:
 
     def Calc_QIndex(self, cm):
         """
-        calculate the normalised population contact density matrix, NPCDM
+        calculate the normalized population contact density matrix, NPCDM
 
         Parameters
         ----------
             cm:
-                np.array, the contact matrix. Should be normalised per capita eg. NCM or NCM_R types.
+                np.array, the contact matrix. Should be normalized per capita eg. UNCM or UNCM_R types.
         Returns
         -------
             Q:
-                float, Q index of assortiveness
+                float, Q index of assortativeness
         """
         P = np.zeros_like(cm, dtype=float)
         P = np.nan_to_num(cm / np.nansum(cm, axis=1), nan=0.0)
@@ -293,21 +411,21 @@ class Tracker:
 
     def Calc_NPCDM(self, cm, pop_by_bin, pop_width):
         """
-        calculate the normalised population contact density matrix, NPCDM
+        calculate the normalized population contact density matrix, NPCDM
 
         Parameters
         ----------
             cm:
-                np.array, the contact matrix. Should be normalised per capita eg. NCM or NCM_R types.
+                np.array, the contact matrix. Should be normalized per capita eg. UNCM or UNCM_R types.
             pop_by_bin:
-                np.array, unnormalised population counts per age bin
+                np.array, un-normalized population counts per age bin
             pop_width:
                 np.array, age bin widths
 
         Returns
         -------
             NPCDM:
-                np.array, The normalised population contact density matrix
+                np.array, The normalized population contact density matrix
         """
         NPCDM = np.zeros_like(cm)
         NPCDM = cm * np.multiply.outer(pop_by_bin, pop_by_bin)
@@ -317,12 +435,12 @@ class Tracker:
 
     def Expectation_Assortativeness(self, NPCDM, pop_bins):
         """
-        Expectation of assortativeness E(age_i - age_j)^2 over the normalised population contact density matrix, NPCDM
+        Expectation of assortativeness E(age_i - age_j)^2 over the normalized population contact density matrix, NPCDM
 
         Parameters
         ----------
             NPCDM:
-                np.array, The normalised population contact density matrix
+                np.array, The normalized population contact density matrix
             pop_bins:
                 np.array, The age binning bin edges for the population bin type
 
@@ -348,7 +466,7 @@ class Tracker:
         Parameters
         ----------
             pop_by_bin:
-                np.array, unnormalised population counts per age bin
+                np.array, un-normalized population counts per age bin
             pop_bins:
                 np.array, The age binning bin edges for the population bin type
 
@@ -365,9 +483,11 @@ class Tracker:
         variance = np.sqrt(np.nansum(pop_by_bin * (ages - mean) ** 2) / (Npeople - 1))
         return mean, variance
 
-    def Calculate_CM_Metrics(self, bin_type, contact_type, CM, CM_err, sex="unisex"):
+    def Calculate_CM_Metrics(
+        self, bin_type, contact_type, CM, CM_err, ratio, sex="unisex"
+    ):
         """
-        Calculate key metrics for CM, {Q, I^2, I^2_s} and return as formated string dict for saving
+        Calculate key metrics for CM, {Q, I^2, I^2_s} and return as formatted string dict for saving
 
         Parameters
         ----------
@@ -376,9 +496,11 @@ class Tracker:
             contact_type:
                 string, location to be considered
             CM:
-                dict, dictionary of all matrices of type. eg self.CM_T
+                dict, dictionary of all matrices of type. eg self.CM
             CM_err:
-                dict, dictionary of all matrices of type. eg self.CM_T_err
+                dict, dictionary of all matrices of type. eg self.CM_err
+            ratio:
+                float, attendance fraction of population
             sex:
                 string, sex matrix to use
 
@@ -393,6 +515,9 @@ class Tracker:
 
         cm = CM[bin_type][contact_type][sex]
         cm_err = CM_err[bin_type][contact_type][sex]
+
+        cm = self.UNtoPNConversion(cm, ratio)
+        cm_err = self.UNtoPNConversion(cm_err, ratio)
 
         cm = np.nan_to_num(cm, nan=0.0)
         cm_err = np.nan_to_num(cm_err, nan=0.0)
@@ -419,7 +544,7 @@ class Tracker:
 
     def Probabilistic_Contacts(self, mean, mean_err, Probabilistic=True):
         """
-        Possion variable. How many contacts statisticaly.
+        Poisson variable. How many contacts statistically.
 
         Parameters
         ----------
@@ -428,7 +553,7 @@ class Tracker:
             mean_err:
                 float, the 1 sigma error on the mean
             Probabilistic:
-                bool, True to allow the err to value the possion mean. False otherwise
+                bool, True to allow the err to value the poisson mean. False otherwise
 
         Returns
         -------
@@ -447,14 +572,14 @@ class Tracker:
 
     def contract_matrix(self, CM, bins, method=np.sum):
         """
-        Rebin the matrix from "syoa" bin type to general given by bins with method.
+        Re-bin the matrix from "syoa" bin type to general given by bins with method.
 
         Parameters
         ----------
             CM:
-                np.array The contact matrix (unnormalised)
+                np.array The contact matrix (un-normalized)
             bins:
-                np.array, bin edges used for rebinning
+                np.array, bin edges used for re-binning
             method:
                 np.method, The method of contraction. np.sum, np.mean etc
 
@@ -476,59 +601,58 @@ class Tracker:
 
     def contract_matrices(self, Name, bins=np.arange(0, 100 + 5, 5)):
         """
-        Rebin the integer year binning to custom bins specified by list useing produced contact matrix
-        Appends new rebinning to self.CM_T or self.CM_AC for "1D" and "All" contact tracing types.
+        Re-bin the integer year binning to custom bins specified by list using produced contact matrix
+        Appends new re-binning to self.CM or self.CMV for "1D" and "All" contact tracing types.
 
         Parameters
         ----------
             Name:
-                string, Name of matrix rebinning
+                string, Name of matrix re-binning
 
             bins:
-                array, bin edges used for rebinning
+                array, bin edges used for re-binning
 
         Returns
         -------
             None
 
         """
-        if "1D" in self.Tracker_Contact_Type:
-            cm = self.CM_T["syoa"]
-            self.CM_T[Name] = {}
 
-            for group in cm.keys():
-                # Recreate new hash ages for the new bins and add bins to bin list.
-                Test = [list(item) for item in self.age_bins.values()]
-                if list(bins) not in Test:
-                    self.age_bins = {Name: bins, **self.age_bins}
-                append = {}
-                for sex in self.contact_sexes:
-                    append[sex] = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
-                self.CM_T[Name][group] = append
-                for sex in self.contact_sexes:
+        cm = self.CM["syoa"]
+        self.CM[Name] = {}
 
-                    self.CM_T[Name][group][sex] = self.contract_matrix(
-                        cm[group][sex], bins, np.sum
-                    )
+        for group in cm.keys():
+            # Recreate new hash ages for the new bins and add bins to bin list.
+            Test = [list(item) for item in self.age_bins.values()]
+            if list(bins) not in Test:
+                self.age_bins = {Name: bins, **self.age_bins}
+            append = {}
+            for sex in self.contact_sexes:
+                append[sex] = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
+            self.CM[Name][group] = append
+            for sex in self.contact_sexes:
 
-        if "All" in self.Tracker_Contact_Type:
-            cm = self.CM_AC["syoa"]
-            self.CM_AC[Name] = {}
+                self.CM[Name][group][sex] = self.contract_matrix(
+                    cm[group][sex], bins, np.sum
+                )
 
-            for group in cm.keys():
-                # Recreate new hash ages for the new bins and add bins to bin list.
-                Test = [list(item) for item in self.age_bins.values()]
-                if list(bins) not in Test:
-                    self.age_bins = {Name: bins, **self.age_bins}
-                append = {}
-                for sex in self.contact_sexes:
-                    append[sex] = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
-                self.CM_AC[Name][group] = append
-                for sex in self.contact_sexes:
+        cm = self.CMV["syoa"]
+        self.CMV[Name] = {}
 
-                    self.CM_AC[Name][group][sex] = self.contract_matrix(
-                        cm[group][sex], bins, np.sum
-                    )
+        for group in cm.keys():
+            # Recreate new hash ages for the new bins and add bins to bin list.
+            Test = [list(item) for item in self.age_bins.values()]
+            if list(bins) not in Test:
+                self.age_bins = {Name: bins, **self.age_bins}
+            append = {}
+            for sex in self.contact_sexes:
+                append[sex] = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
+            self.CMV[Name][group] = append
+            for sex in self.contact_sexes:
+
+                self.CMV[Name][group][sex] = self.contract_matrix(
+                    cm[group][sex], bins, np.sum
+                )
 
         # Rehash the ages
         self.hash_ages()
@@ -536,7 +660,7 @@ class Tracker:
 
     def Get_characteristic_time(self, location):
         """
-        Get the characteristic time and proportion_pysical time for location. (In hours)
+        Get the characteristic time and proportion_physical time for location. (In hours)
 
         Parameters
         ----------
@@ -550,23 +674,23 @@ class Tracker:
         """
         if location not in ["global", "shelter_intra", "shelter_inter"]:
             characteristic_time = self.IM[location]["characteristic_time"] / 24
-            proportion_pysical = self.IM[location]["proportion_physical"]
+            proportion_physical = self.IM[location]["proportion_physical"]
         elif location in ["shelter_intra", "shelter_inter"]:
             characteristic_time = self.IM["shelter"]["characteristic_time"] / 24
-            proportion_pysical = self.IM["shelter"]["proportion_physical"]
+            proportion_physical = self.IM["shelter"]["proportion_physical"]
         else:
             characteristic_time = 1
-            proportion_pysical = 0.12
-        return characteristic_time, proportion_pysical
+            proportion_physical = 0.12
+        return characteristic_time, proportion_physical
 
     ##############################################
-    # Initalize ##################################
+    # Initialize ##################################
     ##############################################
 
     def initialise_group_names(self):
         """
         Get list of names of the location sites and set as class variable
-        Intitalise;
+        initialise;
             self.group_type_names
 
         Parameters
@@ -595,9 +719,9 @@ class Tracker:
     def initialise_contact_matrices(self):
         """
         Create set of empty contact matrices and set as class variable
-        Intitalise;
-            self.CM_T
-            self.CM_AC
+        initialise;
+            self.CM
+            self.CMV
 
             depending on contact tracking type
 
@@ -610,67 +734,63 @@ class Tracker:
             None
 
         """
-        if "1D" in self.Tracker_Contact_Type:
-            self.CM_T = {}
-            # For each type of contact matrix binning, eg BBC, polymod, SYOA...
-            for bin_type, bins in self.age_bins.items():
-                CM = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
+        # 1D tracker
+        self.CM = {}
+        # For each type of contact matrix binning, eg BBC, polymod, SYOA...
+        for bin_type, bins in self.age_bins.items():
+            CM = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
+            append = {}
+            for sex in self.contact_sexes:  # For each sex
+                append[sex] = np.zeros_like(CM, dtype=float)
+
+            self.CM[bin_type] = {"global": append}  # Add in a global matrix tracker
+            for spec in self.group_type_names:  # Over location
                 append = {}
-                for sex in self.contact_sexes:  # For each sex
+                for sex in self.contact_sexes:
                     append[sex] = np.zeros_like(CM, dtype=float)
+                self.CM[bin_type][spec] = append
 
-                self.CM_T[bin_type] = {
-                    "global": append  # Add in a global matrix tracker
-                }
-                for spec in self.group_type_names:  # Over location
-                    append = {}
-                    for sex in self.contact_sexes:
-                        append[sex] = np.zeros_like(CM, dtype=float)
-                    self.CM_T[bin_type][spec] = append
+        # Initialize for the input contact matrices.
+        self.CM["Interaction"] = {}
+        for spec in self.IM.keys():  # Over location
+            if spec not in self.CM["syoa"].keys():
+                continue
 
-            # Initialize for the input contact matrices.
-            self.CM_T["Interaction"] = {}
-            for spec in self.IM.keys():  # Over location
-                if spec not in self.CM_T["syoa"].keys():
-                    continue
+            IM = self.IM[spec]["contacts"]
+            append = np.zeros_like(IM, dtype=float)
+            self.CM["Interaction"][spec] = append
 
-                IM = self.IM[spec]["contacts"]
-                append = np.zeros_like(IM, dtype=float)
-                self.CM_T["Interaction"][spec] = append
+        # All tracker
+        self.CMV = {}
+        # For each type of contact matrix binning, eg BBC, polymod, SYOA...
+        for bin_type, bins in self.age_bins.items():
+            CM = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
+            append = {}
+            for sex in self.contact_sexes:  # For each sex
+                append[sex] = np.zeros_like(CM, dtype=float)
 
-        if "All" in self.Tracker_Contact_Type:
-            self.CM_AC = {}
-            # For each type of contact matrix binning, eg BBC, polymod, SYOA...
-            for bin_type, bins in self.age_bins.items():
-                CM = np.zeros((len(bins) - 1, len(bins) - 1), dtype=float)
+            self.CMV[bin_type] = {"global": append}  # Add in a global matrix tracker
+            for spec in self.group_type_names:  # Over location
                 append = {}
-                for sex in self.contact_sexes:  # For each sex
+                for sex in self.contact_sexes:
                     append[sex] = np.zeros_like(CM, dtype=float)
+                self.CMV[bin_type][spec] = append
 
-                self.CM_AC[bin_type] = {
-                    "global": append  # Add in a global matrix tracker
-                }
-                for spec in self.group_type_names:  # Over location
-                    append = {}
-                    for sex in self.contact_sexes:
-                        append[sex] = np.zeros_like(CM, dtype=float)
-                    self.CM_AC[bin_type][spec] = append
+        # Initialize for the input contact matrices.
+        self.CMV["Interaction"] = {}
+        for spec in self.IM.keys():  # Over location
+            if spec not in self.CMV["syoa"].keys():
+                continue
 
-            # Initialize for the input contact matrices.
-            self.CM_AC["Interaction"] = {}
-            for spec in self.IM.keys():  # Over location
-                if spec not in self.CM_AC["syoa"].keys():
-                    continue
-
-                IM = self.IM[spec]["contacts"]
-                append = np.zeros_like(IM, dtype=float)
-                self.CM_AC["Interaction"][spec] = append
+            IM = self.IM[spec]["contacts"]
+            append = np.zeros_like(IM, dtype=float)
+            self.CMV["Interaction"][spec] = append
         return 1
 
-    def intitalise_contact_counters(self):
+    def initialise_contact_counters(self):
         """
         Create set of empty interactions for each person in each location and set as class variable
-        Intitalise;
+        initialise;
             self.contact_counts
 
         Parameters
@@ -693,10 +813,10 @@ class Tracker:
 
         return 1
 
-    def intitalise_location_counters(self):
+    def initialise_location_counters(self):
         """
-        Create set of empty person counts for each location and set as class variable for all timesteps, days and current day.
-        Intitalise;
+        Create set of empty person counts for each location and set as class variable for all time steps, days and current day.
+        initialise;
             self.location_counters
             self.location_counters_day
             self.location_counters_day_i
@@ -715,7 +835,7 @@ class Tracker:
             if locs in ["global", "shelter_inter", "shelter_intra"]:
                 continue
 
-            locations.append(self.pluralise(locs))
+            locations.append(self.pluralize(locs))
         self.location_counters = {
             "Timestamp": [],
             "delta_t": [],
@@ -765,10 +885,10 @@ class Tracker:
         }
         return 1
 
-    def intitalise_location_cum_pop(self):
+    def initialise_location_cum_pop(self):
         """
-        Intitialise the cumalitive population at venues to be tracked
-        Intitalise;
+        Intitialize the cumalitive population at venues to be tracked
+        initialise;
             self.location_cum_pop
 
         Parameters
@@ -806,10 +926,10 @@ class Tracker:
             )
         return 1
 
-    def intitalise_location_cum_time(self):
+    def initialise_location_cum_time(self):
         """
-        Intitialise the cumalitive population time at venues to be tracked
-        Intitalise;
+        Initialize the cumulative population time at venues to be tracked
+        initialise;
             self.location_cum_time
 
         Parameters
@@ -886,7 +1006,7 @@ class Tracker:
 
     def convert_dict_to_df(self):
         """
-        Transform contact_counts into pandas dataframe for easy sorting
+        Transform contact_counts into pandas data frame for easy sorting
         Sets;
             self.contacts_df
 
@@ -962,7 +1082,7 @@ class Tracker:
 
         def Contract(bins_idx, locs):
             """
-            Take full syoa year by year binning of full unnormalised contact matrix and reduce to matrix with age bins bins_idx.
+            Take full syoa year by year binning of full un-normalized contact matrix and reduce to matrix with age bins bins_idx.
 
             Parameters
             ----------
@@ -1034,19 +1154,19 @@ class Tracker:
             self.average_contacts[bin_type] = AgesCount
         return 1
 
-    def normalise_1D_CM(self):
+    def normalize_1D_CM(self):
         """
         For 1D tracking
-        Normalise the contact matrices based on likelyhood to interact with each demographic.
+        normalize the contact matrices based on likelihood to interact with each demographic.
         Sets and rescales;
-            self.CM_T
-            self.CM_T_err
+            self.CM
+            self.CM_err
 
-            self.NCM
-            self.NCM_err
+            self.UNCM
+            self.UNCM_err
 
-            self.NCM_R
-            self.NCM_R_err
+            self.UNCM_R
+            self.UNCM_R_err
 
 
         Parameters
@@ -1057,116 +1177,98 @@ class Tracker:
         -------
             None
         """
-        # Preform normalisation
-        bin_Keys = self.CM_T.keys()
+        # Preform Normalization
+        bin_Keys = self.CM.keys()
         for bin_type in bin_Keys:
 
-            matrices = self.CM_T[bin_type]
+            matrices = self.CM[bin_type]
             for contact_type, cm_spec in matrices.items():
                 for sex in self.contact_sexes:
 
                     if bin_type == "Interaction":
                         if sex == "unisex":
                             cm = cm_spec
-                            age_profile = self.location_cum_pop["Interaction"][
-                                contact_type
-                            ]
+                            age_profile = np.array(
+                                self.location_cum_pop["Interaction"][contact_type]
+                            )
+                            if contact_type == "shelter":
+                                cm = self.cm_shelter_renorm(cm)
+                            cm_err = np.sqrt(cm)
                         else:
                             continue
                     else:
                         cm = cm_spec[sex]
-                        age_profile = self.location_cum_pop[bin_type][contact_type][sex]
+                        cm_err = np.sqrt(cm)
 
-                    NCM, NCM_err = self.CM_Norm(
-                        cm,
-                        np.array(age_profile),
+                        age_profile = np.array(
+                            self.location_cum_pop[bin_type][contact_type][sex]
+                        )
+
+                    UNCM, UNCM_err = self.CM_Norm(
+                        cm=cm,
+                        cm_err=cm_err,
+                        pop_tots=age_profile,
                         contact_type=contact_type,
-                        Reciprocal=False,
+                        Which="UNCM",
                     )
-                    NCM_R, NCM_R_err = self.CM_Norm(
-                        cm,
-                        np.array(age_profile),
+
+                    UNCM_R, UNCM_R_err = self.CM_Norm(
+                        cm=cm,
+                        cm_err=cm_err,
+                        pop_tots=age_profile,
                         contact_type=contact_type,
-                        Reciprocal=True,
+                        Which="UNCM_R",
                     )
+
+                    UNCM = np.nan_to_num(UNCM, nan=0)
+                    UNCM_err = np.nan_to_num(UNCM_err, nan=0)
+
+                    UNCM_R = np.nan_to_num(UNCM_R, nan=0)
+                    UNCM_R_err = np.nan_to_num(UNCM_R_err, nan=0)
 
                     if bin_type == "Interaction":
                         if sex == "unisex":
-                            if contact_type == "shelter":
-                                # TODO Feed this in so not to be hard coded
-                                # Special normalisation for shelters. Reweight based on households sharing shelters
-                                shelter_shared = 0.75
-                                FIntraExtra = shelter_shared / (
-                                    2 * (1 - shelter_shared)
-                                )
-                                FIntraIntra = 1 / (
-                                    (1 - shelter_shared) / (2 * (1 - shelter_shared))
-                                )
-                                NCM[0, 0] /= FIntraIntra
-                                NCM[1, 1] /= FIntraIntra
-                                NCM_err[0, 0] /= FIntraIntra
-                                NCM_err[1, 1] /= FIntraIntra
-                                NCM_R[0, 0] /= FIntraIntra
-                                NCM_R[1, 1] /= FIntraIntra
-                                NCM_R_err[0, 0] /= FIntraIntra
-                                NCM_R_err[1, 1] /= FIntraIntra
-                                cm[0, 0] /= FIntraIntra
-                                cm[1, 1] /= FIntraIntra
+                            self.UNCM["Interaction"][contact_type] = UNCM
+                            self.UNCM_err["Interaction"][contact_type] = UNCM_err
 
-                                NCM[0, 1] /= FIntraExtra
-                                NCM[1, 0] /= FIntraExtra
-                                NCM_err[0, 1] /= FIntraExtra
-                                NCM_err[1, 0] /= FIntraExtra
-                                NCM_R[0, 1] /= FIntraExtra
-                                NCM_R[1, 0] /= FIntraExtra
-                                NCM_R_err[0, 1] /= FIntraExtra
-                                NCM_R_err[1, 0] /= FIntraExtra
-                                cm[0, 1] /= FIntraExtra
-                                cm[1, 0] /= FIntraExtra
+                            self.UNCM_R["Interaction"][contact_type] = UNCM_R
+                            self.UNCM_R_err["Interaction"][contact_type] = UNCM_R_err
 
-                            self.NCM["Interaction"][contact_type] = NCM
-                            self.NCM_err["Interaction"][contact_type] = NCM_err
-
-                            self.NCM_R["Interaction"][contact_type] = NCM_R
-                            self.NCM_R_err["Interaction"][contact_type] = NCM_R_err
-
-                            # Basically just counts of interations so assume a poisson error
-                            self.CM_T_err["Interaction"][contact_type] = (
-                                np.sqrt(cm) / self.timer.total_days
-                            )
-                            self.CM_T["Interaction"][contact_type] = (
+                            # Basically just counts of interactions so assume a poisson error
+                            self.CM["Interaction"][contact_type] = (
                                 cm / self.timer.total_days
+                            )
+                            self.CM_err["Interaction"][contact_type] = (
+                                cm_err / self.timer.total_days
                             )
                         else:
                             continue
                     else:
-                        self.NCM[bin_type][contact_type][sex] = NCM
-                        self.NCM_err[bin_type][contact_type][sex] = NCM_err
+                        self.UNCM[bin_type][contact_type][sex] = UNCM
+                        self.UNCM_err[bin_type][contact_type][sex] = UNCM_err
 
-                        self.NCM_R[bin_type][contact_type][sex] = NCM_R
-                        self.NCM_R_err[bin_type][contact_type][sex] = NCM_R_err
+                        self.UNCM_R[bin_type][contact_type][sex] = UNCM_R
+                        self.UNCM_R_err[bin_type][contact_type][sex] = UNCM_R_err
 
-                        # Basically just counts of interations so assume a poisson error
-                        self.CM_T_err[bin_type][contact_type][sex] = np.sqrt(cm)
-                        self.CM_T[bin_type][contact_type][sex] = (
+                        # Basically just counts of interactions so assume a poisson error
+                        self.CM[bin_type][contact_type][sex] = (
                             cm / self.timer.total_days
+                        )
+                        self.CM_err[bin_type][contact_type][sex] = (
+                            cm_err / self.timer.total_days
                         )
         return 1
 
-    def normalise_All_CM(self):
+    def normalize_All_CM(self):
         """
         For All contacts All tracking
-        Normalise the contact matrices based on likelyhood to interact with each demographic.
+        normalize the contact matrices based on likelihood to interact with each demographic.
         Sets and rescales;
-            self.CM_AC
-            self.CM_AC_err
+            self.CMV
+            self.CMV_err
 
-            self.NCM_AC
-            self.NCM_AC_err
-
-            self.NCM_AC_R
-            self.NCM_AC_R_err
-
+            self.UNCM_V
+            self.UNCM_V_err
 
         Parameters
         ----------
@@ -1176,12 +1278,12 @@ class Tracker:
         -------
             None
         """
-        # Preform normalisation
-        bin_Keys = self.CM_AC.keys()
+        # Preform Normalization
+        bin_Keys = self.CMV.keys()
 
         for bin_type in bin_Keys:
 
-            matrices = self.CM_AC[bin_type]
+            matrices = self.CMV[bin_type]
             for contact_type, cm_spec in matrices.items():
                 for sex in self.contact_sexes:
 
@@ -1191,106 +1293,120 @@ class Tracker:
                             age_profile = np.array(
                                 self.location_cum_pop["Interaction"][contact_type]
                             )
+                            if contact_type == "shelter":
+                                cm = self.cm_shelter_renorm(cm)
+                            cm_err = np.sqrt(cm)
                         else:
                             continue
                     else:
                         cm = np.array(cm_spec[sex])
+                        cm_err = np.sqrt(cm)
                         age_profile = np.array(
                             self.location_cum_pop[bin_type][contact_type][sex]
                         )
 
-                    NCM, NCM_err = self.CM_Norm(
+                    UNCMV, UNCMV_err = self.CM_Norm(
                         cm=cm,
+                        cm_err=cm_err,
                         pop_tots=age_profile,
                         contact_type=contact_type,
-                        Reciprocal=False,
-                    )
-
-                    NCM_R, NCM_R_err = self.CM_Norm(
-                        cm=cm,
-                        pop_tots=age_profile,
-                        contact_type=contact_type,
-                        Reciprocal=True,
+                        Which="UNCM_V",
                     )
 
                     if bin_type == "Interaction":
                         if sex == "unisex":
-                            if contact_type == "shelter":
-                                # TODO Feed this in so not to be hard coded
-                                # Special normalisation for shelters. Reweight based on households sharing shelters
-                                shelter_shared = 0.75
-                                FIntraExtra = shelter_shared / (
-                                    2 * (1 - shelter_shared)
-                                )
-                                FIntraIntra = 1 / (
-                                    (1 - shelter_shared) / (2 * (1 - shelter_shared))
-                                )
-                                # print(FIntraIntra, FIntraExtra)
-                                NCM[0, 0] /= FIntraIntra
-                                NCM[1, 1] /= FIntraIntra
-                                NCM_err[0, 0] /= FIntraIntra
-                                NCM_err[1, 1] /= FIntraIntra
-                                NCM_R[0, 0] /= FIntraIntra
-                                NCM_R[1, 1] /= FIntraIntra
-                                NCM_R_err[0, 0] /= FIntraIntra
-                                NCM_R_err[1, 1] /= FIntraIntra
-                                cm[0, 0] /= FIntraIntra
-                                cm[1, 1] /= FIntraIntra
+                            self.UNCM_V["Interaction"][contact_type] = UNCMV
+                            self.UNCM_V_err["Interaction"][contact_type] = UNCMV_err
 
-                                NCM[0, 1] /= FIntraExtra
-                                NCM[1, 0] /= FIntraExtra
-                                NCM_err[0, 1] /= FIntraExtra
-                                NCM_err[1, 0] /= FIntraExtra
-                                NCM_R[0, 1] /= FIntraExtra
-                                NCM_R[1, 0] /= FIntraExtra
-                                NCM_R_err[0, 1] /= FIntraExtra
-                                NCM_R_err[1, 0] /= FIntraExtra
-                                cm[0, 1] /= FIntraExtra
-                                cm[1, 0] /= FIntraExtra
-
-                            self.NCM_AC["Interaction"][contact_type] = NCM
-                            self.NCM_AC_err["Interaction"][contact_type] = NCM_err
-
-                            self.NCM_AC_R["Interaction"][contact_type] = NCM_R
-                            self.NCM_AC_R_err["Interaction"][contact_type] = NCM_R_err
-
-                            # Basically just counts of interations so assume a poisson error
-                            self.CM_AC_err["Interaction"][contact_type] = (
-                                np.sqrt(cm) / self.timer.total_days
-                            )
-                            self.CM_AC["Interaction"][contact_type] = (
+                            # Basically just counts of interactions so assume a poisson error
+                            self.CMV["Interaction"][contact_type] = (
                                 cm / self.timer.total_days
                             )
+                            self.CMV_err["Interaction"][contact_type] = (
+                                cm_err / self.timer.total_days
+                            )
+
                         else:
                             continue
                     else:
-                        self.NCM_AC[bin_type][contact_type][sex] = NCM
-                        self.NCM_AC_err[bin_type][contact_type][sex] = NCM_err
+                        self.UNCM_V[bin_type][contact_type][sex] = UNCMV
+                        self.UNCM_V_err[bin_type][contact_type][sex] = UNCMV_err
 
-                        self.NCM_AC_R[bin_type][contact_type][sex] = NCM_R
-                        self.NCM_AC_R_err[bin_type][contact_type][sex] = NCM_R_err
-
-                        # Basically just counts of interations so assume a poisson error
-                        self.CM_AC_err[bin_type][contact_type][sex] = np.sqrt(cm)
-                        self.CM_AC[bin_type][contact_type][sex] = (
+                        # Basically just counts of interactions so assume a poisson error
+                        self.CMV[bin_type][contact_type][sex] = (
                             cm / self.timer.total_days
                         )
+                        self.CMV_err[bin_type][contact_type][sex] = (
+                            cm_err / self.timer.total_days
+                        )
+
         return 1
 
-    def CM_Norm(self, cm, pop_tots, contact_type="global", Reciprocal=True):
+    def AttendanceRatio(self, bin_type, contact_type, sex):
         """
-        Normalise the contact matrices using population at location data and time of simulation run time.
+        Get the attendance fraction of subgroup i with respect to the total population in subgroup i
+
+        Parameters
+        ----------
+        bin_type:
+            string, contact matrix binning type
+
+        contact_type:
+            List of the contact_type locations (or none to grab all of them)
+
+        sex:
+            string, the sex of the matrix "male", "female", "unisex"
+
+        Returns
+        -------
+            ratio:
+                float, attendance fraction
+
+        """
+        if bin_type != "Interaction":
+            global_pop = self.location_cum_pop[bin_type]["global"][sex]
+            local_pop = self.location_cum_pop[bin_type][contact_type][sex]
+        else:
+            return 1
+        return np.array(local_pop / global_pop)
+
+    def UNtoPNConversion(self, cm, ratio):
+        """
+        Function to rescale the contact matrices from venue to population normalized
+
+        Parameters
+        ----------
+            cm:
+                np.array, The contact matrix
+
+            ratio:
+                    float, Attendance fraction
+
+        Returns
+        -------
+
+            cm:
+                np.array, The contact matrix
+
+        """
+        return (cm.T.copy() * ratio).T
+
+    def CM_Norm(self, cm, cm_err, pop_tots, contact_type="global", Which="UNCM"):
+        """
+        normalize the contact matrices using population at location data and time of simulation run time.
 
         Parameters
         ----------
             cm:
                 np.array contact matrix
+            cm_err:
+                np.array contact matrix errors
             pop_tots:
                 np.array total counts of visits of each age bin for entire simulation time. (1 person can go to same location more than once)
             contact_type:
                 List of the contact_type locations (or none to grab all of them)
-            Reciprocal:
-                bool, add in reciprocal contacts with reweighting for demographic sizes
+            which:
+                string, contact matrix type "CM", "NCM", "NCM_R", "CMV", "NCM_V"
         Returns
         -------
             cm:
@@ -1299,9 +1415,9 @@ class Tracker:
                 np.array contact matrix errors
 
         """
-        # Normalise based on characteristic time.
+        # normalize based on characteristic time.
 
-        # Normalisation over charecteristic time and population
+        # Normalization over characteristic time and population
         factor = (
             self.Get_characteristic_time(location=contact_type)[0] * np.sum(pop_tots)
         ) / self.location_cum_time[contact_type]
@@ -1315,51 +1431,57 @@ class Tracker:
         # Loop over elements
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
-                if Reciprocal:  # Count contacts j to i also
-                    F_i = 1.0
-                    F_j = 1.0
-                else:  # Only count contacts i to j
-                    F_i = 2.0
-                    F_j = 0.0
-
                 # Population rescaling
                 w = pop_tots[j] / pop_tots[i]
-
                 if pop_tots[i] < 1 or pop_tots[j] < 1:
                     continue
 
-                norm_cm[i, j] = (
-                    0.5
-                    * (
-                        F_i * cm[i, j] / pop_tots[i]
-                        + (F_j * cm[j, i] / pop_tots[j]) * w
-                    )
-                    * factor
-                )
+                if Which in ["UNCM", "UNCM_V"]:  # Only count contacts i to j
+                    norm_cm[i, j] = (cm[i, j] / pop_tots[i]) * factor
 
-                norm_cm_err[i, j] = (
-                    0.5
-                    * np.sqrt(
-                        (F_i * np.sqrt(cm[i, j] * pop_tots[i]) / pop_tots[i]) ** 2
-                        + (F_j * np.sqrt(cm[j, i] * pop_tots[j]) / pop_tots[j] * w) ** 2
+                    norm_cm_err[i, j] = (cm_err[i, j] / pop_tots[i]) * factor
+                elif Which == "UNCM_R":  # Only count contacts i to j
+                    norm_cm[i, j] = (
+                        0.5
+                        * (cm[i, j] / pop_tots[i] + (cm[j, i] / pop_tots[j]) * w)
+                        * factor
                     )
-                    * factor
-                )
+                    norm_cm_err[i, j] = (
+                        0.5
+                        * np.sqrt(
+                            (cm_err[i, j] / pop_tots[i]) ** 2
+                            + ((cm_err[j, i] / pop_tots[j]) * w) ** 2
+                        )
+                        * factor
+                    )
+
+        # if Which == "UNCM_V":  # Only count contacts i to j
+        #     old_frac_err = norm_cm_err / norm_cm
+
+        #     sum_i = np.tile(np.nansum(norm_cm, axis=1), (norm_cm.shape[0], 1)).T
+        #     sum_i_err = np.tile(
+        #         np.sqrt(np.nansum(norm_cm**2, axis=1)), (norm_cm.shape[0], 1)
+        #     ).T
+        #     sum_frac_err = sum_i_err / sum_i
+
+        #     norm_cm /= sum_i
+        #     norm_cm_err = norm_cm * np.sqrt(old_frac_err**2 + sum_frac_err**2)
+
         return norm_cm, norm_cm_err
 
-    def initalize_CM_Normalisations(self):
+    def initialize_CM_Normalizations(self):
         """
-        Create the CM Normalisation arrays from the CM_T template
+        Create the CM Normalization arrays from the CM_T template
 
-        Initalises
+        Initialise
         ----------
-            self.CM_T_err
+            self.CM_err
 
-            self.NCM
-            self.NCM_err
+            self.UNCM
+            self.UNCM_err
 
-            self.NCM_R
-            self.NCM_R_err
+            self.UNCM_R
+            self.UNCM_R_err
 
         Parameters
         ----------
@@ -1373,102 +1495,99 @@ class Tracker:
 
         # Create copies of the contact_matrices to be filled in.
         # Error Matrix
-        self.CM_T_err = {
+        self.CM_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dtype=float)
-                    for sex in self.CM_T[bin_type][loc].keys()
+                    sex: np.zeros_like(self.CM[bin_type][loc][sex], dtype=float)
+                    for sex in self.CM[bin_type][loc].keys()
                 }
-                for loc in self.CM_T[bin_type].keys()
+                for loc in self.CM[bin_type].keys()
             }
-            for bin_type in self.CM_T.keys()
+            for bin_type in self.CM.keys()
             if bin_type != "Interaction"
         }
-        self.CM_T_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc], dtype=float)
-            for loc in self.CM_T["Interaction"].keys()
+        self.CM_err["Interaction"] = {
+            loc: np.zeros_like(self.CM["Interaction"][loc], dtype=float)
+            for loc in self.CM["Interaction"].keys()
         }
 
-        # Normalised Matrices
-        self.NCM = {
+        # normalized Matrices
+        self.UNCM = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dtype=float)
-                    for sex in self.CM_T[bin_type][loc].keys()
+                    sex: np.zeros_like(self.CM[bin_type][loc][sex], dtype=float)
+                    for sex in self.CM[bin_type][loc].keys()
                 }
-                for loc in self.CM_T[bin_type].keys()
+                for loc in self.CM[bin_type].keys()
             }
-            for bin_type in self.CM_T.keys()
+            for bin_type in self.CM.keys()
             if bin_type != "Interaction"
         }
-        self.NCM["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc], dtype=float)
-            for loc in self.CM_T["Interaction"].keys()
+        self.UNCM["Interaction"] = {
+            loc: np.zeros_like(self.CM["Interaction"][loc], dtype=float)
+            for loc in self.CM["Interaction"].keys()
         }
 
-        self.NCM_err = {
+        self.UNCM_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dtype=float)
-                    for sex in self.CM_T[bin_type][loc].keys()
+                    sex: np.zeros_like(self.CM[bin_type][loc][sex], dtype=float)
+                    for sex in self.CM[bin_type][loc].keys()
                 }
-                for loc in self.CM_T[bin_type].keys()
+                for loc in self.CM[bin_type].keys()
             }
-            for bin_type in self.CM_T.keys()
+            for bin_type in self.CM.keys()
             if bin_type != "Interaction"
         }
-        self.NCM_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc], dtype=float)
-            for loc in self.CM_T["Interaction"].keys()
+        self.UNCM_err["Interaction"] = {
+            loc: np.zeros_like(self.CM["Interaction"][loc], dtype=float)
+            for loc in self.CM["Interaction"].keys()
         }
 
-        # Normalised Matrices with reciprocal contacts
-        self.NCM_R = {
+        # normalized Matrices with reciprocal contacts
+        self.UNCM_R = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dtype=float)
-                    for sex in self.CM_T[bin_type][loc].keys()
+                    sex: np.zeros_like(self.CM[bin_type][loc][sex], dtype=float)
+                    for sex in self.CM[bin_type][loc].keys()
                 }
-                for loc in self.CM_T[bin_type].keys()
+                for loc in self.CM[bin_type].keys()
             }
-            for bin_type in self.CM_T.keys()
+            for bin_type in self.CM.keys()
             if bin_type != "Interaction"
         }
-        self.NCM_R["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc], dtype=float)
-            for loc in self.CM_T["Interaction"].keys()
+        self.UNCM_R["Interaction"] = {
+            loc: np.zeros_like(self.CM["Interaction"][loc], dtype=float)
+            for loc in self.CM["Interaction"].keys()
         }
 
-        self.NCM_R_err = {
+        self.UNCM_R_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_T[bin_type][loc][sex], dtype=float)
-                    for sex in self.CM_T[bin_type][loc].keys()
+                    sex: np.zeros_like(self.CM[bin_type][loc][sex], dtype=float)
+                    for sex in self.CM[bin_type][loc].keys()
                 }
-                for loc in self.CM_T[bin_type].keys()
+                for loc in self.CM[bin_type].keys()
             }
-            for bin_type in self.CM_T.keys()
+            for bin_type in self.CM.keys()
             if bin_type != "Interaction"
         }
-        self.NCM_R_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_T["Interaction"][loc], dtype=float)
-            for loc in self.CM_T["Interaction"].keys()
+        self.UNCM_R_err["Interaction"] = {
+            loc: np.zeros_like(self.CM["Interaction"][loc], dtype=float)
+            for loc in self.CM["Interaction"].keys()
         }
         return 1
 
-    def initalize_CM_All_Normalisations(self):
+    def initialize_CM_All_Normalizations(self):
         """
-        Create the CM Normalisation arrays from the CM_AC template
+        Create the CM Normalization arrays from the CM_AC template
 
-        Initalises
+        Initialise
         ----------
-            self.CM_AC_err
+            self.CMV_err
 
-            self.NCM_AC
-            self.NCM_AC_err
-
-            self.NCM_AC_R
-            self.NCM_AC_R_err
+            self.UNCM_V
+            self.UNCM_V_err
 
         Parameters
         ----------
@@ -1480,96 +1599,63 @@ class Tracker:
 
         """
         # Error Matrix
-        self.CM_AC_err = {
+        self.CMV_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dtype=float)
-                    for sex in self.CM_AC[bin_type][loc].keys()
+                    sex: np.zeros_like(self.CMV[bin_type][loc][sex], dtype=float)
+                    for sex in self.CMV[bin_type][loc].keys()
                 }
-                for loc in self.CM_AC[bin_type].keys()
+                for loc in self.CMV[bin_type].keys()
             }
-            for bin_type in self.CM_AC.keys()
+            for bin_type in self.CMV.keys()
             if bin_type != "Interaction"
         }
-        self.CM_AC_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dtype=float)
-            for loc in self.CM_AC["Interaction"].keys()
+        self.CMV_err["Interaction"] = {
+            loc: np.zeros_like(self.CMV["Interaction"][loc], dtype=float)
+            for loc in self.CMV["Interaction"].keys()
         }
 
-        # Normalised Matrices
-        self.NCM_AC = {
+        # normalized Matrices
+        self.UNCM_V = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dtype=float)
-                    for sex in self.CM_AC[bin_type][loc].keys()
+                    sex: np.zeros_like(self.CMV[bin_type][loc][sex], dtype=float)
+                    for sex in self.CMV[bin_type][loc].keys()
                 }
-                for loc in self.CM_AC[bin_type].keys()
+                for loc in self.CMV[bin_type].keys()
             }
-            for bin_type in self.CM_AC.keys()
+            for bin_type in self.CMV.keys()
             if bin_type != "Interaction"
         }
-        self.NCM_AC["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dtype=float)
-            for loc in self.CM_AC["Interaction"].keys()
+        self.UNCM_V["Interaction"] = {
+            loc: np.zeros_like(self.CMV["Interaction"][loc], dtype=float)
+            for loc in self.CMV["Interaction"].keys()
         }
 
-        self.NCM_AC_err = {
+        self.UNCM_V_err = {
             bin_type: {
                 loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dtype=float)
-                    for sex in self.CM_AC[bin_type][loc].keys()
+                    sex: np.zeros_like(self.CMV[bin_type][loc][sex], dtype=float)
+                    for sex in self.CMV[bin_type][loc].keys()
                 }
-                for loc in self.CM_AC[bin_type].keys()
+                for loc in self.CMV[bin_type].keys()
             }
-            for bin_type in self.CM_AC.keys()
+            for bin_type in self.CMV.keys()
             if bin_type != "Interaction"
         }
-        self.NCM_AC_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dtype=float)
-            for loc in self.CM_AC["Interaction"].keys()
-        }
-
-        # Normalised Matrices with reciprocal contacts
-        self.NCM_AC_R = {
-            bin_type: {
-                loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dtype=float)
-                    for sex in self.CM_AC[bin_type][loc].keys()
-                }
-                for loc in self.CM_AC[bin_type].keys()
-            }
-            for bin_type in self.CM_AC.keys()
-            if bin_type != "Interaction"
-        }
-        self.NCM_AC_R["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dtype=float)
-            for loc in self.CM_AC["Interaction"].keys()
-        }
-
-        self.NCM_AC_R_err = {
-            bin_type: {
-                loc: {
-                    sex: np.zeros_like(self.CM_AC[bin_type][loc][sex], dtype=float)
-                    for sex in self.CM_AC[bin_type][loc].keys()
-                }
-                for loc in self.CM_AC[bin_type].keys()
-            }
-            for bin_type in self.CM_AC.keys()
-            if bin_type != "Interaction"
-        }
-        self.NCM_AC_R_err["Interaction"] = {
-            loc: np.zeros_like(self.CM_AC["Interaction"][loc], dtype=float)
-            for loc in self.CM_AC["Interaction"].keys()
+        self.UNCM_V_err["Interaction"] = {
+            loc: np.zeros_like(self.CMV["Interaction"][loc], dtype=float)
+            for loc in self.CMV["Interaction"].keys()
         }
         return 1
 
     def post_process_simulation(self, save=True):
         """
         Perform some post simulation checks and calculations.
-            Create contact dataframes
+            Create contact data frames
             Get age profiles over the age bins and locations
             Get average contacts by location
-            Normalise contact matrices by population demographics
+            normalize contact matrices by population demographics
 
             Print out results to Yaml in Results_Path directory
 
@@ -1590,13 +1676,11 @@ class Tracker:
         self.calc_age_profiles()
         self.calc_average_contacts()
 
-        if "1D" in self.Tracker_Contact_Type:
-            self.initalize_CM_Normalisations()
-            self.normalise_1D_CM()
+        self.initialize_CM_Normalizations()
+        self.normalize_1D_CM()
 
-        if "All" in self.Tracker_Contact_Type:
-            self.initalize_CM_All_Normalisations()
-            self.normalise_All_CM()
+        self.initialize_CM_All_Normalizations()
+        self.normalize_All_CM()
 
         if mpi_rank == 0:
             self.PrintOutResults()
@@ -1705,9 +1789,9 @@ class Tracker:
     def simulate_1d_contacts(self, group):
         """
         Construct contact matrices.
-        For group at a location we loop over all people and sample from the selection of availible contacts to build more grainual contact matrices.
+        For group at a location we loop over all people and sample from the selection of available contacts to build more granular contact matrices.
         Sets;
-            self.CM_T
+            self.CM
             self.contact_counts
 
         Parameters
@@ -1765,7 +1849,6 @@ class Tracker:
             for subgroup_contacts, subgroup_contacts_error, contact_subgroup_idx in zip(
                 contacts_per_subgroup, contacts_per_subgroup_error, contact_subgroups
             ):
-                # Degugging print out...
                 # potential contacts is one less if you're in that subgroup - can't contact yourself!
                 subgroup_people = groups_inter[contact_subgroup_idx]
                 subgroup_people_without = subgroup_people.copy()
@@ -1802,18 +1885,18 @@ class Tracker:
                 # Interaction Matrix
                 if group.spec == "shelter":
                     if inside:
-                        self.CM_T["Interaction"][group.spec][0, 0] += int_contacts
-                        self.CM_T["Interaction"][group.spec][1, 1] += int_contacts
+                        self.CM["Interaction"][group.spec][0, 0] += int_contacts
+                        self.CM["Interaction"][group.spec][1, 1] += int_contacts
                     else:
-                        self.CM_T["Interaction"][group.spec][
+                        self.CM["Interaction"][group.spec][
                             person_subgroup_idx, contact_subgroup_idx
                         ] += int_contacts
-                        self.CM_T["Interaction"][group.spec][
+                        self.CM["Interaction"][group.spec][
                             contact_subgroup_idx, person_subgroup_idx
                         ] += int_contacts
 
                 else:
-                    self.CM_T["Interaction"][group.spec][
+                    self.CM["Interaction"][group.spec][
                         person_subgroup_idx, contact_subgroup_idx
                     ] += int_contacts
 
@@ -1839,14 +1922,14 @@ class Tracker:
                 ]
 
                 for cidx in contact_age_idxs:
-                    self.CM_T["syoa"]["global"]["unisex"][age_idx, cidx] += 1
-                    self.CM_T["syoa"][group.spec]["unisex"][age_idx, cidx] += 1
+                    self.CM["syoa"]["global"]["unisex"][age_idx, cidx] += 1
+                    self.CM["syoa"][group.spec]["unisex"][age_idx, cidx] += 1
                     if person.sex == "m" and "male" in self.contact_sexes:
-                        self.CM_T["syoa"]["global"]["male"][age_idx, cidx] += 1
-                        self.CM_T["syoa"][group.spec]["male"][age_idx, cidx] += 1
+                        self.CM["syoa"]["global"]["male"][age_idx, cidx] += 1
+                        self.CM["syoa"][group.spec]["male"][age_idx, cidx] += 1
                     if person.sex == "f" and "female" in self.contact_sexes:
-                        self.CM_T["syoa"]["global"]["female"][age_idx, cidx] += 1
-                        self.CM_T["syoa"][group.spec]["female"][age_idx, cidx] += 1
+                        self.CM["syoa"]["global"]["female"][age_idx, cidx] += 1
+                        self.CM["syoa"][group.spec]["female"][age_idx, cidx] += 1
                     total_contacts += 1
 
                 # For shelter only. We check over inter and intra groups
@@ -1858,15 +1941,15 @@ class Tracker:
                     ]
                     for cidx in contact_age_idxs:
 
-                        self.CM_T["syoa"][group.spec + "_inter"]["unisex"][
+                        self.CM["syoa"][group.spec + "_inter"]["unisex"][
                             age_idx, cidx
                         ] += 1
                         if person.sex == "m" and "male" in self.contact_sexes:
-                            self.CM_T["syoa"][group.spec + "_inter"]["male"][
+                            self.CM["syoa"][group.spec + "_inter"]["male"][
                                 age_idx, cidx
                             ] += 1
                         if person.sex == "f" and "female" in self.contact_sexes:
-                            self.CM_T["syoa"][group.spec + "_inter"]["female"][
+                            self.CM["syoa"][group.spec + "_inter"]["female"][
                                 age_idx, cidx
                             ] += 1
 
@@ -1876,15 +1959,15 @@ class Tracker:
                         for contact_id in contact_ids_intra
                     ]
                     for cidx in contact_age_idxs:
-                        self.CM_T["syoa"][group.spec + "_intra"]["unisex"][
+                        self.CM["syoa"][group.spec + "_intra"]["unisex"][
                             age_idx, cidx
                         ] += 1
                         if person.sex == "m" and "male" in self.contact_sexes:
-                            self.CM_T["syoa"][group.spec + "_intra"]["male"][
+                            self.CM["syoa"][group.spec + "_intra"]["male"][
                                 age_idx, cidx
                             ] += 1
                         if person.sex == "f" and "female" in self.contact_sexes:
-                            self.CM_T["syoa"][group.spec + "_intra"]["female"][
+                            self.CM["syoa"][group.spec + "_intra"]["female"][
                                 age_idx, cidx
                             ] += 1
 
@@ -1899,9 +1982,9 @@ class Tracker:
     def simulate_All_contacts(self, group):
         """
         Construct contact matrices for all contacts all
-        For group at a location we loop over all people and sample from the selection of availible contacts to build more grainual contact matrices.
+        For group at a location we loop over all people and sample from the selection of available contacts to build more granular contact matrices.
         Sets;
-            self.CM_AC
+            self.CMV
 
         Parameters
         ----------
@@ -1914,157 +1997,85 @@ class Tracker:
 
         """
         # Loop over people
-        if len(group.people) < 2:
+        NPeople = len(group.people)
+        if NPeople < 2:
             return 1
 
-        for person in group.people:
-            NPeople = len(group.people)
+        # Shelter we want family groups
+        if group.spec == "shelter":
+            groups_inter = [list(sub.people) for sub in group.families]
+        elif group.spec == "school":
+            groups_inter = [list(group.teachers.people), list(group.students)]
+        else:  # Want subgroups as defined in groups
+            groups_inter = [list(sub.people) for sub in group.subgroups]
 
-            # Shelter we want family groups
-            if group.spec == "shelter":
-                groups_inter = [list(sub.people) for sub in group.families]
-            else:  # Want subgroups as defined in groups
-                groups_inter = [list(sub.people) for sub in group.subgroups]
+        # By Interaction groups
+        subgroupNPeople = np.array([len(g) for g in groups_inter])
+        if group.spec == "shelter":
+            if len(groups_inter) == 1:
+                NContacts_Interaction = (
+                    np.eye(self.CMV["Interaction"][group.spec].shape[0])
+                    * subgroupNPeople
+                    * (subgroupNPeople - 1)
+                )
+            if len(groups_inter) > 1:
+                NContacts_Interaction = np.outer(subgroupNPeople, subgroupNPeople)
+                NContacts_Interaction = 0.5 * (
+                    NContacts_Interaction + NContacts_Interaction.T
+                )
+                np.fill_diagonal(
+                    NContacts_Interaction, subgroupNPeople * (subgroupNPeople - 1)
+                )
+            self.CMV["Interaction"][group.spec] += NContacts_Interaction
+        else:
+            NContacts_Interaction = np.outer(subgroupNPeople, subgroupNPeople)
+            np.fill_diagonal(
+                NContacts_Interaction, subgroupNPeople * (subgroupNPeople - 1)
+            )
+            self.CMV["Interaction"][group.spec] += NContacts_Interaction
 
-            # Work out which subgroup they are in...
-            person_subgroup_idx = -1
-            for sub_i in range(len(groups_inter)):
-                if person in groups_inter[sub_i]:
-                    person_subgroup_idx = sub_i
-                    break
-            if person_subgroup_idx == -1:
-                continue
+        # By Age
+        NAges_unisex = np.array([p.age for p in group.people])
+        NAges_male = np.array([p.age for p in group.people if p.sex == "m"])
+        NAges_female = np.array([p.age for p in group.people if p.sex == "f"])
+        bins = np.arange(0, 101, 1)
+        Counts_unisex, bins = np.histogram(NAges_unisex, bins=bins)
+        Counts_male, _ = np.histogram(NAges_male, bins=bins)
+        Counts_female, _ = np.histogram(NAges_female, bins=bins)
 
-            if group.spec == "school":
-                # Allow teachers to mix with ALL students
-                if person_subgroup_idx == 0:
-                    groups_inter = [list(group.teachers.people), list(group.students)]
-                    person_subgroup_idx = 0
-                # Allow students to only mix in their classes.
-                else:
-                    groups_inter = [
-                        list(group.teachers.people),
-                        list(group.subgroups[person_subgroup_idx].people),
-                    ]
-                    person_subgroup_idx = 1
+        NContacts_unisex = np.outer(Counts_unisex, Counts_unisex)
+        np.fill_diagonal(NContacts_unisex, Counts_unisex * (Counts_unisex - 1))
 
-            contact_subgroups = np.arange(0, len(groups_inter), 1)
-            for contact_subgroup_idx in contact_subgroups:
-                subgroup_people = groups_inter[contact_subgroup_idx]
-                subgroup_people_without = subgroup_people.copy()
+        NContacts_female = np.outer(Counts_female, Counts_unisex)
+        np.fill_diagonal(NContacts_female, Counts_female * (Counts_unisex - 1))
 
-                # Person in this subgroup
-                if person in subgroup_people:
-                    inside = True
-                    subgroup_people_without.remove(person)
-                else:
-                    inside = False
-                # Interaction Matrix
+        NContacts_male = np.outer(Counts_male, Counts_unisex)
+        np.fill_diagonal(NContacts_male, Counts_male * (Counts_unisex - 1))
 
-                if group.spec == "shelter":
-                    if inside:
-                        self.CM_AC["Interaction"][group.spec][0, 0] += len(
-                            subgroup_people_without
-                        ) / (NPeople - 1.0)
-                        self.CM_AC["Interaction"][group.spec][1, 1] += len(
-                            subgroup_people_without
-                        ) / (NPeople - 1.0)
-                    else:
-                        self.CM_AC["Interaction"][group.spec][
-                            person_subgroup_idx, contact_subgroup_idx
-                        ] += len(subgroup_people_without) / (NPeople - 1.0)
-                        self.CM_AC["Interaction"][group.spec][
-                            contact_subgroup_idx, person_subgroup_idx
-                        ] += len(subgroup_people_without) / (NPeople - 1.0)
-                else:
-                    self.CM_AC["Interaction"][group.spec][
-                        person_subgroup_idx, contact_subgroup_idx
-                    ] += len(subgroup_people_without) / (NPeople - 1.0)
+        self.CMV["syoa"]["global"]["unisex"] += NContacts_unisex
+        self.CMV["syoa"][group.spec]["unisex"] += NContacts_unisex
 
-                contact_ids_inter = []
-                contact_ids_intra = []
-                contact_ids = []
-                contact_ages = []
+        self.CMV["syoa"]["global"]["female"] += NContacts_female
+        self.CMV["syoa"][group.spec]["female"] += NContacts_female
 
-                # Get the ids
-                for contact in subgroup_people_without:
-                    if group.spec == "shelter":
-                        if inside:
-                            contact_ids_intra.append(contact.id)
-                        else:
-                            contact_ids_inter.append(contact.id)
-                    contact_ids.append(contact.id)
-                    contact_ages.append(contact.age)
+        self.CMV["syoa"]["global"]["male"] += NContacts_male
+        self.CMV["syoa"][group.spec]["male"] += NContacts_male
 
-                age_idx = self.age_idxs["syoa"][person.id]
-
-                contact_age_idxs = [
-                    self.age_idxs["syoa"][contact_id] for contact_id in contact_ids
-                ]
-                for cidx in contact_age_idxs:
-                    self.CM_AC["syoa"]["global"]["unisex"][age_idx, cidx] += 1.0 / (
-                        NPeople - 1.0
-                    )
-                    self.CM_AC["syoa"][group.spec]["unisex"][age_idx, cidx] += 1.0 / (
-                        NPeople - 1.0
-                    )
-                    if person.sex == "m" and "male" in self.contact_sexes:
-                        self.CM_AC["syoa"]["global"]["male"][age_idx, cidx] += 1.0 / (
-                            NPeople - 1.0
-                        )
-                        self.CM_AC["syoa"][group.spec]["male"][age_idx, cidx] += 1.0 / (
-                            NPeople - 1.0
-                        )
-                    if person.sex == "f" and "female" in self.contact_sexes:
-                        self.CM_AC["syoa"]["global"]["female"][age_idx, cidx] += 1.0 / (
-                            NPeople - 1.0
-                        )
-                        self.CM_AC["syoa"][group.spec]["female"][
-                            age_idx, cidx
-                        ] += 1.0 / (NPeople - 1.0)
-
-                # For shelter only. We check over inter and intra groups
-                if group.spec == "shelter":
-                    # Inter
-                    contact_age_idxs = [
-                        self.age_idxs["syoa"][contact_id]
-                        for contact_id in contact_ids_inter
-                    ]
-                    for cidx in contact_age_idxs:
-                        self.CM_AC["syoa"][group.spec + "_inter"]["unisex"][
-                            age_idx, cidx
-                        ] += 1.0 / (NPeople - 1.0)
-                        if person.sex == "m" and "male" in self.contact_sexes:
-                            self.CM_AC["syoa"][group.spec + "_inter"]["male"][
-                                age_idx, cidx
-                            ] += 1.0 / (NPeople - 1.0)
-                        if person.sex == "f" and "female" in self.contact_sexes:
-                            self.CM_AC["syoa"][group.spec + "_inter"]["female"][
-                                age_idx, cidx
-                            ] += 1.0 / (NPeople - 1.0)
-
-                    # Intra
-                    contact_age_idxs = [
-                        self.age_idxs["syoa"][contact_id]
-                        for contact_id in contact_ids_intra
-                    ]
-                    for cidx in contact_age_idxs:
-                        self.CM_AC["syoa"][group.spec + "_intra"]["unisex"][
-                            age_idx, cidx
-                        ] += 1.0 / (NPeople - 1.0)
-                        if person.sex == "m" and "male" in self.contact_sexes:
-                            self.CM_AC["syoa"][group.spec + "_intra"]["male"][
-                                age_idx, cidx
-                            ] += 1.0 / (NPeople - 1.0)
-                        if person.sex == "f" and "female" in self.contact_sexes:
-                            self.CM_AC["syoa"][group.spec + "_intra"]["female"][
-                                age_idx, cidx
-                            ] += 1.0 / (NPeople - 1.0)
+        # This is identical to shelters...
+        if group.spec == "shelter":
+            # Inter
+            self.CMV["syoa"][group.spec + "_inter"]["unisex"] += NContacts_unisex
+            self.CMV["syoa"][group.spec + "_inter"]["female"] += NContacts_female
+            self.CMV["syoa"][group.spec + "_inter"]["male"] += NContacts_male
+            # Intra
+            self.CMV["syoa"][group.spec + "_intra"]["unisex"] += NContacts_unisex
+            self.CMV["syoa"][group.spec + "_intra"]["female"] += NContacts_female
+            self.CMV["syoa"][group.spec + "_intra"]["male"] += NContacts_male
         return 1
 
     def simulate_pop_time_venues(self, group):
         """
-        Get the population and cumalative time at all venues over all timesteps.
+        Get the population and cumulative time at all venues over all time steps.
         Sets;
             self.location_cum_pop
             self.location_cum_time
@@ -2270,7 +2281,7 @@ class Tracker:
         Parameters
         ----------
             day:
-                str, day of the week for timestep
+                str, day of the week for time step
 
         Returns
         -------
@@ -2370,23 +2381,12 @@ class Tracker:
                             counter += 1
                             continue  # Skip external venues to the domain.
 
-                        # if group.spec in ["household"]:
-                        #     if group.being_visited:
-                        #         #We want to track household visits separately
-                        #         # and person.residence.group != group
-                        #         # or 9 <= self.timer.date.hour < 18
-                        #         counter += 1
-                        #         continue
-                        #     #Carehomes already deal with visitors
-
                         self.simulate_pop_time_venues(group)
                         self.simulate_attendance(
                             group, super_group_name, self.timer, counter
                         )
-                        if "1D" in self.Tracker_Contact_Type:
-                            self.simulate_1d_contacts(group)
-                        if "All" in self.Tracker_Contact_Type:
-                            self.simulate_All_contacts(group)
+                        self.simulate_1d_contacts(group)
+                        self.simulate_All_contacts(group)
                         counter += 1
         return 1
 
@@ -2410,6 +2410,81 @@ class Tracker:
             None
 
         """
+        # ratio = self.AttendanceRatio(binType, loc, "unisex")
+        # cm = self.UNtoPNConversion(cm, ratio)
+        # cm_err = self.UNtoPNConversion(cm_err, ratio)
+
+        def SaveMatrix(CM, CM_err, Mtype, NormType="U"):
+            jsonfile = {}
+            for binType in list(CM.keys()):
+
+                if NormType == "U":
+                    pass
+                elif NormType == "P":
+                    Mtype = "P" + Mtype[1:]
+
+                jsonfile[binType] = self.tracker_CMJSON(
+                    binType=binType, CM=CM, CM_err=CM_err, NormType=NormType
+                )
+            # Save out the normalized UNCM
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
+                folder=folder_name,
+                filename=f"tracker_{Mtype}{mpi_rankname}.yaml",
+                jsonfile=jsonfile,
+            )
+
+        def SaveMatrixMetrics(CM, CM_err, Mtype, NormType="U"):
+            # Save out metric calculations
+            jsonfile = {}
+            for binType in list(CM.keys()):
+                jsonfile[binType] = {}
+                for loc in list(CM[binType].keys()):
+
+                    if NormType == "U":
+                        ratio = 1
+                    elif NormType == "P":
+                        ratio = self.AttendanceRatio(binType, loc, "unisex")
+                        Mtype = "P" + Mtype[1:]
+
+                    jsonfile[binType][loc] = self.Calculate_CM_Metrics(
+                        bin_type=binType,
+                        contact_type=loc,
+                        CM=CM,
+                        CM_err=CM_err,
+                        ratio=ratio,
+                        sex="unisex",
+                    )
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+                folder=folder_name,
+                filename=f"tracker_Metrics_{Mtype}{mpi_rankname}.yaml",
+                jsonfile=jsonfile,
+            )
+
+        def SaveMatrixCanberra(CM, CM_err, Mtype, NormType="U"):
+            jsonfile = {}
+            for loc in list(CM["Interaction"].keys()):
+
+                if NormType == "U":
+                    ratio = 1
+                elif NormType == "P":
+                    ratio = self.AttendanceRatio("Interaction", loc, "unisex")
+                    Mtype = "P" + Mtype[1:]
+
+                cm = CM["Interaction"][loc]
+                cm = self.UNtoPNConversion(cm, ratio)
+
+                A = np.array(cm, dtype=float)
+                B = np.array(self.IM[loc]["contacts"], dtype=float)
+                Dc = self.Canberra_distance(A, B)[0]
+                jsonfile[loc] = {"Dc": f"{Dc}"}
+            self.Save_CM_JSON(
+                dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
+                folder=folder_name,
+                filename=f"tracker_CanberraDist_{Mtype}{mpi_rankname}.yaml",
+                jsonfile=jsonfile,
+            )
 
         if mpi_size == 1:
             mpi_rankname = ""
@@ -2437,163 +2512,50 @@ class Tracker:
                 jsonfile=self.tracker_IMJSON(),
             )
 
-        # Saving 1D Contacts tracker results ##################################
-        if "1D" in self.Tracker_Contact_Type:
-            Tracker_Type = "1D"
+        # Saving Contacts tracker results ##################################
+        SaveMatrix(CM=self.CM, CM_err=self.CM, Mtype="CM")
+        SaveMatrix(CM=self.CMV, CM_err=self.CMV_err, Mtype="CMV")
 
-            jsonfile = {}
-            for binType in list(self.CM_T.keys()):
-                jsonfile[binType] = self.tracker_CMJSON(
-                    binType=binType, CM=self.CM_T, CM_err=self.CM_T_err
-                )
-            # Save out the CM totals
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_Total_CM{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
+        if not MPI:
+            SaveMatrix(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
+            SaveMatrix(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
+            SaveMatrix(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
+
+            SaveMatrix(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM", NormType="P")
+            SaveMatrix(
+                CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R", NormType="P"
+            )
+            SaveMatrix(
+                CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P"
             )
 
-            if not MPI:
-                jsonfile = {}
-                for binType in list(self.NCM.keys()):
-                    jsonfile[binType] = self.tracker_CMJSON(
-                        binType=binType, CM=self.NCM, CM_err=self.NCM_err
-                    )
-                # Save out the Normalised CM
-                self.Save_CM_JSON(
-                    dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-                    folder=folder_name,
-                    filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml",
-                    jsonfile=jsonfile,
-                )
+            SaveMatrixMetrics(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
+            SaveMatrixMetrics(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
+            SaveMatrixMetrics(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
 
-                jsonfile = {}
-                for binType in list(self.NCM_R.keys()):
-                    jsonfile[binType] = self.tracker_CMJSON(
-                        binType=binType, CM=self.NCM_R, CM_err=self.NCM_R_err
-                    )
-                # Save out the Normalised CM with Reciprocal contacts
-                self.Save_CM_JSON(
-                    dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-                    folder=folder_name,
-                    filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml",
-                    jsonfile=jsonfile,
-                )
-
-                # Save out metric calculations
-                jsonfile = {}
-                for binType in list(self.NCM.keys()):
-                    jsonfile[binType] = {}
-                    for loc in list(self.NCM[binType].keys()):
-                        jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                            bin_type=binType,
-                            contact_type=loc,
-                            CM=self.NCM,
-                            CM_err=self.NCM_err,
-                        )
-                self.Save_CM_JSON(
-                    dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-                    folder=folder_name,
-                    filename=f"tracker_{Tracker_Type}_Metrics_NCM_{mpi_rankname}.yaml",
-                    jsonfile=jsonfile,
-                )
-
-                jsonfile = {}
-                for binType in list(self.NCM.keys()):
-                    jsonfile[binType] = {}
-                    for loc in list(self.NCM[binType].keys()):
-                        jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                            bin_type=binType,
-                            contact_type=loc,
-                            CM=self.NCM_R,
-                            CM_err=self.NCM_R_err,
-                        )
-                self.Save_CM_JSON(
-                    dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-                    folder=folder_name,
-                    filename=f"tracker_{Tracker_Type}_Metrics_NCM_R_{mpi_rankname}.yaml",
-                    jsonfile=jsonfile,
-                )
-
-        # Saving All Contacts tracker results ##################################
-        if "All" in self.Tracker_Contact_Type:
-            Tracker_Type = "All"
-
-            jsonfile = {}
-            for binType in list(self.CM_AC.keys()):
-                jsonfile[binType] = self.tracker_CMJSON(
-                    binType=binType, CM=self.CM_AC, CM_err=self.CM_AC_err
-                )
-            # Save out the CM totals
-            self.Save_CM_JSON(
-                dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-                folder=folder_name,
-                filename=f"tracker_{Tracker_Type}_Total_CM{mpi_rankname}.yaml",
-                jsonfile=jsonfile,
+            SaveMatrixMetrics(
+                CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM", NormType="P"
+            )
+            SaveMatrixMetrics(
+                CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R", NormType="P"
+            )
+            SaveMatrixMetrics(
+                CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P"
             )
 
-            if not MPI:
-                jsonfile = {}
-                for binType in list(self.NCM_AC.keys()):
-                    jsonfile[binType] = self.tracker_CMJSON(
-                        binType=binType, CM=self.NCM_AC, CM_err=self.NCM_AC_err
-                    )
-                # Save out the Normalised CM
-                self.Save_CM_JSON(
-                    dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-                    folder=folder_name,
-                    filename=f"tracker_{Tracker_Type}_NCM{mpi_rankname}.yaml",
-                    jsonfile=jsonfile,
-                )
+            SaveMatrixCanberra(CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM")
+            SaveMatrixCanberra(CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R")
+            SaveMatrixCanberra(CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V")
 
-                jsonfile = {}
-                for binType in list(self.NCM_AC_R.keys()):
-                    jsonfile[binType] = self.tracker_CMJSON(
-                        binType=binType, CM=self.NCM_AC_R, CM_err=self.NCM_AC_R_err
-                    )
-                # Save out the Normalised CM with Reciprocal contacts
-                self.Save_CM_JSON(
-                    dir=self.record_path / "Tracker" / folder_name / "CM_yamls",
-                    folder=folder_name,
-                    filename=f"tracker_{Tracker_Type}_NCM_R{mpi_rankname}.yaml",
-                    jsonfile=jsonfile,
-                )
-
-                # Save out metric calculations
-                jsonfile = {}
-                for binType in list(self.NCM.keys()):
-                    jsonfile[binType] = {}
-                    for loc in list(self.NCM[binType].keys()):
-                        jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                            bin_type=binType,
-                            contact_type=loc,
-                            CM=self.NCM_AC,
-                            CM_err=self.NCM_AC_err,
-                        )
-                self.Save_CM_JSON(
-                    dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-                    folder=folder_name,
-                    filename=f"tracker_{Tracker_Type}_Metrics_NCM_{mpi_rankname}.yaml",
-                    jsonfile=jsonfile,
-                )
-
-                jsonfile = {}
-                for binType in list(self.NCM.keys()):
-                    jsonfile[binType] = {}
-                    for loc in list(self.NCM[binType].keys()):
-                        jsonfile[binType][loc] = self.Calculate_CM_Metrics(
-                            bin_type=binType,
-                            contact_type=loc,
-                            CM=self.NCM_AC_R,
-                            CM_err=self.NCM_AC_R_err,
-                        )
-                self.Save_CM_JSON(
-                    dir=self.record_path / "Tracker" / folder_name / "CM_Metrics",
-                    folder=folder_name,
-                    filename=f"tracker_{Tracker_Type}_Metrics_NCM_R_{mpi_rankname}.yaml",
-                    jsonfile=jsonfile,
-                )
+            SaveMatrixCanberra(
+                CM=self.UNCM, CM_err=self.UNCM_err, Mtype="UNCM", NormType="P"
+            )
+            SaveMatrixCanberra(
+                CM=self.UNCM_R, CM_err=self.UNCM_R_err, Mtype="UNCM_R", NormType="P"
+            )
+            SaveMatrixCanberra(
+                CM=self.UNCM_V, CM_err=self.UNCM_V_err, Mtype="UNCM_V", NormType="P"
+            )
 
         # Saving Venue tracker results ##################################
         VD_dir = self.record_path / "Tracker" / folder_name / "Venue_Demographics"
@@ -2794,11 +2756,8 @@ class Tracker:
                 self.location_counters_day["loc"][locations]
             )
         jsonfile["NPeople"] = len(self.world.people)
-        jsonfile["binTypes"] = self.MatrixString(np.array(list(self.CM_T.keys())))
+        jsonfile["binTypes"] = self.MatrixString(np.array(list(self.CM.keys())))
         jsonfile["sexes"] = self.MatrixString(np.array(self.contact_sexes))
-        jsonfile["trackerTypes"] = self.MatrixString(
-            np.array(self.Tracker_Contact_Type)
-        )
         return jsonfile
 
     def tracker_IMJSON(self):
@@ -2830,7 +2789,7 @@ class Tracker:
                 jsonfile[local][item] = append
         return jsonfile
 
-    def tracker_CMJSON(self, binType, CM, CM_err):
+    def tracker_CMJSON(self, binType, CM, CM_err, NormType="U"):
         """
         Get final JUNE simulated contact matrix.
 
@@ -2839,9 +2798,9 @@ class Tracker:
             binType:
                 Name of bin type syoa, AC etc
             CM:
-                dict, dictionary of all matrices of type. eg self.CM_T
+                dict, dictionary of all matrices of type. eg self.CM
             CM_err:
-                dict, dictionary of all matrices of type. eg self.CM_T_err
+                dict, dictionary of all matrices of type. eg self.CM_err
 
         Returns
         -------
@@ -2853,6 +2812,11 @@ class Tracker:
         jsonfile = {}
         if binType == "Interaction":
             for local in CM[binType].keys():
+                if NormType == "U":
+                    ratio = 1
+                elif NormType == "P":
+                    ratio = self.AttendanceRatio(binType, local, "unisex")
+
                 jsonfile[local] = {}
 
                 c_time = self.IM[local]["characteristic_time"]
@@ -2872,12 +2836,13 @@ class Tracker:
                         np.array(bins), dtypeString="float"
                     )
 
-                jsonfile[local]["contacts"] = self.MatrixString(
-                    np.array(CM[binType][local])
-                )
-                jsonfile[local]["contacts_err"] = self.MatrixString(
-                    np.array(CM_err[binType][local])
-                )
+                cm = CM[binType][local]
+                cm_err = CM_err[binType][local]
+                cm = self.UNtoPNConversion(cm, ratio)
+                cm_err = self.UNtoPNConversion(cm_err, ratio)
+
+                jsonfile[local]["contacts"] = self.MatrixString(np.array(cm))
+                jsonfile[local]["contacts_err"] = self.MatrixString(np.array(cm_err))
         else:
 
             def expand_proportional(self, PM, bins_I, bins_I_Type, bins_target):
@@ -2910,6 +2875,12 @@ class Tracker:
             locallists.sort()
             for local in locallists:
                 local = str(local)
+
+                if NormType == "U":
+                    ratio = 1
+                elif NormType == "P":
+                    ratio = self.AttendanceRatio(binType, local, "unisex")
+
                 jsonfile[local] = {}
 
                 if "shelter" in local:
@@ -2942,12 +2913,17 @@ class Tracker:
 
                 jsonfile[local]["sex"] = {}
                 for sex in self.contact_sexes:
+                    cm = CM[binType][local][sex]
+                    cm_err = CM_err[binType][local][sex]
+                    cm = self.UNtoPNConversion(cm, ratio)
+                    cm_err = self.UNtoPNConversion(cm_err, ratio)
+
                     jsonfile[local]["sex"][sex] = {}
                     jsonfile[local]["sex"][sex]["contacts"] = self.MatrixString(
-                        np.array(CM[binType][local][sex])
+                        np.array(cm)
                     )
                     jsonfile[local]["sex"][sex]["contacts_err"] = self.MatrixString(
-                        np.array(CM_err[binType][local][sex])
+                        np.array(cm_err)
                     )
         return jsonfile
 
@@ -2978,7 +2954,7 @@ class Tracker:
                         matrix[i] = 0
 
                     if dtypeString == "float":
-                        string += "%.4f" % matrix[i]
+                        string += "{:.2e}".format(matrix[i])  # "%.4f" % matrix[i]
                     if dtypeString == "int":
                         string += "%.0f" % matrix[i]
 
@@ -2993,7 +2969,7 @@ class Tracker:
                         matrix[i, j] = 0
 
                     if dtypeString == "float":
-                        string += "%.4f" % matrix[i, j]
+                        string += "{:.2e}".format(matrix[i, j])  # "%.4f" % matrix[i, j]
                     if dtypeString == "int":
                         string += "%.0f" % matrix[i, j]
 
@@ -3057,21 +3033,22 @@ class Tracker:
         -------
             None
         """
-        if "1D" in self.Tracker_Contact_Type:
-            print("Results from 1D interactions...")
-            print("")
-            if len(WhichLocals) == 0:
-                WhichLocals = self.CM_T[binType].keys()
+        if len(WhichLocals) == 0:
+            WhichLocals = self.CM[binType].keys()
 
+        def printoutfunction(which):
             for local in WhichLocals:
-                contact = self.NCM[binType][local]
-                contact_err = self.NCM_err[binType][local]
-
+                contact, contact_err = self.CMPlots_GetCM(
+                    binType, local, sex=sex, which=which
+                )
                 if local in self.IM.keys():
-                    proportional_physical = np.array(
-                        self.IM[local]["proportion_physical"]
-                    )
-                    characteristic_time = self.IM[local]["characteristic_time"]
+
+                    (
+                        characteristic_time,
+                        proportion_physical,
+                    ) = self.Get_characteristic_time(local)
+                    proportional_physical = np.array(proportion_physical)
+                    characteristic_time = characteristic_time * 24
                 else:
                     proportional_physical = np.array(0)
                     characteristic_time = 0
@@ -3084,45 +3061,22 @@ class Tracker:
                     characteristic_time,
                 )
                 print("")
-                interact = np.array(self.IM[local]["contacts"])
+                im, im_err = self.IMPlots_GetIM(local)
                 print(
                     "    Ratio of contacts and feed in values: %s"
-                    % self.MatrixString(contact / interact)
+                    % self.MatrixString(contact / np.array(im))
                 )
                 print("")
 
-        if "All" in self.Tracker_Contact_Type:
-            print("Results from all contacts all interactions...")
-            print("")
+        print("Results from UNCM")
+        printoutfunction(which="UNCM")
+        print("")
 
-            if len(WhichLocals) == 0:
-                WhichLocals = self.CM_AC[binType].keys()
+        print("Results from UNCM_R")
+        printoutfunction(which="UNCM_R")
+        print("")
 
-            for local in WhichLocals:
-                contact = self.NCM_AC[binType][local]
-                contact_err = self.NCM_AC_err[binType][local]
-
-                if local in self.IM.keys():
-                    proportional_physical = np.array(
-                        self.IM[local]["proportion_physical"]
-                    )
-                    characteristic_time = self.IM[local]["characteristic_time"]
-                else:
-                    proportional_physical = np.array(0)
-                    characteristic_time = 0
-
-                self.PolicyText(
-                    local,
-                    contact,
-                    contact_err,
-                    proportional_physical,
-                    characteristic_time,
-                )
-                print("")
-                interact = np.array(self.IM[local]["contacts"])
-                print(
-                    "    Ratio of contacts and feed in values: %s"
-                    % self.MatrixString(contact / interact)
-                )
-                print("")
+        print("Results from UNCM_V")
+        printoutfunction(which="UNCM_V")
+        print("")
         return 1

@@ -1,4 +1,5 @@
-from configparser import Interpolation
+from .tracker_plots_formatting import fig_initialize, set_size, dpi
+
 import numpy as np
 import yaml
 import pandas as pd
@@ -8,6 +9,7 @@ from june import paths
 
 from june.world import World
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from matplotlib.dates import DateFormatter
@@ -19,6 +21,8 @@ from june.tracker.tracker import Tracker
 
 from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 from june.paths import data_path, configs_path
+
+fig_initialize(setsize=True)
 
 logger = logging.getLogger("tracker plotter")
 mpi_logger = logging.getLogger("mpi")
@@ -37,16 +41,6 @@ DaysOfWeek_Names = [
     "Friday",
     "Saturday",
 ]
-
-try:
-    plt.style.use(["science", "no-latex", "bright"])
-    if mpi_rank == 0:
-        print("Using 'science' matplotlib style")
-except Exception:
-    plt.style.use("default")
-    if mpi_rank == 0:
-        print("Using default matplotlib style")
-    pass
 
 cmap_A = "RdYlBu_r"
 cmap_B = "seismic"
@@ -67,20 +61,26 @@ class PlotClass:
         path for results directory
 
     Tracker_Contact_Type:
-        list, list of tracker contact types to be loaded ["1D", "All"]
+        NONE, Not used
+
+    Normalization_Type:
+        string, "U" for venue normalized or "P" for population normalized
 
     Following parameters can be preloaded data from another plot class. If None data automatically loaded.
         Params,
         IM,
-        CM_T,
+        CM,
         NCM,
         NCM_R,
+        CMV,
+        NCMV,
         average_contacts,
         location_counters,
         location_counters_day,
         location_cum_pop,
         age_profiles,
-        travel_distance
+        travel_distance,
+
 
     Returns
     -------
@@ -91,21 +91,31 @@ class PlotClass:
     def __init__(
         self,
         record_path=Path(""),
-        Tracker_Contact_Type="1D",
+        Tracker_Contact_Type=None,
         Params=None,
         IM=None,
-        CM_T=None,
+        CM=None,
         NCM=None,
         NCM_R=None,
+        CMV=None,
+        NCM_V=None,
         average_contacts=None,
         location_counters=None,
         location_counters_day=None,
         location_cum_pop=None,
         age_profiles=None,
         travel_distance=None,
+        Normalization_Type="U",
     ):
+
+        if Tracker_Contact_Type is None:
+            pass
+        else:
+            print("Tracker_Contact_Type argument no longer required")
+
+        self.Normalization_Type = Normalization_Type
+
         self.record_path = record_path
-        self.Tracker_Contact_Type = Tracker_Contact_Type
 
         # Only plot fully merged data (Only applies to MPI runs, auto saved to merge if single core)
         folder_name = "merged_data_output"
@@ -128,23 +138,20 @@ class PlotClass:
         else:
             self.IM = IM
 
-        if CM_T is None:
+        if CM is None:
             with open(
-                self.record_path
-                / folder_name
-                / "CM_yamls"
-                / f"tracker_{self.Tracker_Contact_Type}_Total_CM.yaml"
+                self.record_path / folder_name / "CM_yamls" / f"tracker_CM.yaml"
             ) as f:
-                self.CM_T = yaml.load(f, Loader=yaml.FullLoader)
+                self.CM = yaml.load(f, Loader=yaml.FullLoader)
         else:
-            self.CM_T = CM_T
+            self.CM = CM
 
         if NCM is None:
             with open(
                 self.record_path
                 / folder_name
                 / "CM_yamls"
-                / f"tracker_{self.Tracker_Contact_Type}_NCM.yaml"
+                / f"tracker_{self.Normalization_Type}NCM.yaml"
             ) as f:
                 self.NCM = yaml.load(f, Loader=yaml.FullLoader)
         else:
@@ -155,11 +162,30 @@ class PlotClass:
                 self.record_path
                 / folder_name
                 / "CM_yamls"
-                / f"tracker_{self.Tracker_Contact_Type}_NCM_R.yaml"
+                / f"tracker_{self.Normalization_Type}NCM_R.yaml"
             ) as f:
                 self.NCM_R = yaml.load(f, Loader=yaml.FullLoader)
         else:
             self.NCM_R = NCM_R
+
+        if CMV is None:
+            with open(
+                self.record_path / folder_name / "CM_yamls" / f"tracker_CMV.yaml"
+            ) as f:
+                self.CMV = yaml.load(f, Loader=yaml.FullLoader)
+        else:
+            self.CMV = CMV
+
+        if NCM_V is None:
+            with open(
+                self.record_path
+                / folder_name
+                / "CM_yamls"
+                / f"tracker_{self.Normalization_Type}NCM_V.yaml"
+            ) as f:
+                self.NCM_V = yaml.load(f, Loader=yaml.FullLoader)
+        else:
+            self.NCM_V = NCM_V
 
         # Get Parameters of simulation
         self.total_days = self.Params["total_days"]
@@ -169,14 +195,14 @@ class PlotClass:
         }
         self.NVenues = self.Params["NVenues"]
         # Get all the bin types
-        self.relevant_bin_types = list(self.CM_T.keys())
+        self.relevant_bin_types = list(self.CM.keys())
         # Get all location names
-        self.group_type_names = list(self.CM_T["syoa"].keys())
+        self.group_type_names = list(self.CM["syoa"].keys())
         # Get all CM options
-        self.CM_Keys = list(self.CM_T["syoa"][self.group_type_names[0]].keys())
+        self.CM_Keys = list(self.CM["syoa"][self.group_type_names[0]].keys())
         # Get all contact sexes
         self.contact_sexes = list(
-            self.CM_T["syoa"][self.group_type_names[0]]["sex"].keys()
+            self.CM["syoa"][self.group_type_names[0]]["sex"].keys()
         )
 
         self.age_bins = {}
@@ -184,7 +210,7 @@ class PlotClass:
             if rbt == "Interaction":
                 continue
             self.age_bins[rbt] = np.array(
-                self.CM_T[rbt][self.group_type_names[0]]["bins"]
+                self.CM[rbt][self.group_type_names[0]]["bins"]
             )
 
         if average_contacts is None:
@@ -214,7 +240,7 @@ class PlotClass:
 
                 for sex in self.contact_sexes:
                     filename = f"Venues_{sex}_Counts_BydT.xlsx"
-                    sheet_name = Tracker.pluralise(self, loc)
+                    sheet_name = Tracker.pluralize(self, loc)
                     df = pd.read_excel(
                         self.record_path / folder_name / "Venue_UniquePops" / filename,
                         sheet_name=sheet_name,
@@ -237,7 +263,7 @@ class PlotClass:
 
                 for sex in self.contact_sexes:
                     filename = f"Venues_{sex}_Counts_ByDate.xlsx"
-                    sheet_name = Tracker.pluralise(self, loc)
+                    sheet_name = Tracker.pluralize(self, loc)
                     df = pd.read_excel(
                         self.record_path / folder_name / "Venue_UniquePops" / filename,
                         sheet_name=sheet_name,
@@ -304,7 +330,7 @@ class PlotClass:
             for loc in self.group_type_names:
                 if loc in ["global", "shelter_inter", "shelter_intra"]:
                     continue
-                sheet_name = Tracker.pluralise(self, loc)
+                sheet_name = Tracker.pluralize(self, loc)
                 df = pd.read_excel(filename, sheet_name=sheet_name, index_col=0)
                 self.travel_distance[loc] = df
         else:
@@ -336,18 +362,90 @@ class PlotClass:
     def Canberra_distance(self, x, y):
         return Tracker.Canberra_distance(self, x, y)
 
+    #############################################
+    # Grab CM  ##################################
+    #############################################
+
+    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="NCM"):
+        """
+        Get cm out of dictionary.
+
+        Parameters
+        ----------
+            binType:
+                Name of bin type syoa, AC etc
+            contact_type:
+                Location of contacts
+            sex:
+                Sex contact matrix
+            which:
+                str, which matrix type to collect "CM", "NCM", "NCM_R", "CMV", "NCM_V"
+
+        Returns
+        -------
+            cm:
+                np.array contact matrix
+            cm_err:
+                np.array contact matrix errors
+        """
+        if bin_type != "Interaction":
+            if which == "CM":
+                cm = self.CM[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.CM[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM":
+                cm = self.NCM[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM_R":
+                cm = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts_err"]
+
+            elif which == "CMV":
+                cm = self.CMV[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.CMV[bin_type][contact_type]["sex"][sex]["contacts_err"]
+            elif which == "NCM_V":
+                cm = self.NCM_V[bin_type][contact_type]["sex"][sex]["contacts"]
+                cm_err = self.NCM_V[bin_type][contact_type]["sex"][sex]["contacts_err"]
+
+        else:
+            if which == "CM":
+                cm = self.CM[bin_type][contact_type]["contacts"]
+                cm_err = self.CM[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM":
+                cm = self.NCM[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM_R":
+                cm = self.NCM_R[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM_R[bin_type][contact_type]["contacts_err"]
+
+            elif which == "CMV":
+                cm = self.CMV[bin_type][contact_type]["contacts"]
+                cm_err = self.CMV[bin_type][contact_type]["contacts_err"]
+            elif which == "NCM_V":
+                cm = self.NCM_V[bin_type][contact_type]["contacts"]
+                cm_err = self.NCM_V[bin_type][contact_type]["contacts_err"]
+
+        return np.array(cm), np.array(cm_err)
+
+    def IMPlots_GetIM(self, contact_type):
+        return Tracker.IMPlots_GetIM(self, contact_type)
+
+    def Get_characteristic_time(self, location):
+        return Tracker.Get_characteristic_time(self, location)
+
     #####################################################
     # General Plotting ##################################
     #####################################################
 
-    def Get_SAMECMAP_Norm(self, dim, override=None):
+    def Get_SAMECMAP_Norm(self, dim, which="NCM", override=None):
         """
-        If same colour map required this produces standarised colourmaps for different size matrices.
+        If same colour map required this produces standardized colourmaps for different size matrices.
 
         Parameters
         ----------
             dim:
                 int, the dimension (length) of square matrix
+            which:
+                string, the contact matrix type
             override:
                 string, Log, Lin, SymLog or SymLin. Override if SAMECMAP was False. (Applies to certain plots)
 
@@ -357,25 +455,46 @@ class PlotClass:
                 matplotlib.colors.Norm object
 
         """
-        if self.Tracker_Contact_Type == "1D":
-            SAMElinvmin = {"small_dim": 0, "large_dim": 0}
-            SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-2}
+        if which in ["CM", "NCM", "NCM_R"]:
+            if self.Normalization_Type == "U":
+                SAMElinvmin = {"small_dim": 0, "large_dim": 0}
+                SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-2}
 
-            SAMElinvmax = {"small_dim": 2.5e1, "large_dim": 4e0}
-            SAMElogvmax = {"small_dim": 2.5e1, "large_dim": 4e0}
+                SAMElinvmax = {"small_dim": 2.5e1, "large_dim": 4e0}
+                SAMElogvmax = {"small_dim": 2.5e1, "large_dim": 4e0}
 
-            SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": 3e0}
-            SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": 0.5e0}
+                SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": 3e0}
+                SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": 0.5e0}
 
-        elif self.Tracker_Contact_Type == "All":
-            SAMElinvmin = {"small_dim": 0, "large_dim": 0}
-            SAMElogvmin = {"small_dim": 1e-2, "large_dim": 1e-3}
+            elif self.Normalization_Type == "P":
+                SAMElinvmin = {"small_dim": 0, "large_dim": 0}
+                SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-4}
 
-            SAMElinvmax = {"small_dim": 0.5, "large_dim": 1}
-            SAMElogvmax = {"small_dim": 0.5, "large_dim": 1}
+                SAMElinvmax = {"small_dim": 2.5e1, "large_dim": 1e0}
+                SAMElogvmax = {"small_dim": 2.5e1, "large_dim": 1e0}
 
-            SAMEsymlogvmax = {"small_dim": 0.5, "large_dim": 1}
-            SAMEsymlinvmax = {"small_dim": 0.5, "large_dim": 1}
+                SAMEsymlogvmax = {"small_dim": 3e0, "large_dim": 1e0}
+                SAMEsymlinvmax = {"small_dim": 1e0, "large_dim": 1e0}
+
+        elif which in ["CMV", "NCM_V"]:
+            if self.Normalization_Type == "U":
+                SAMElinvmin = {"small_dim": 0, "large_dim": 0}
+                SAMElogvmin = {"small_dim": 1, "large_dim": 1e-2}
+
+                SAMElinvmax = {"small_dim": 1e2, "large_dim": 1e1}
+                SAMElogvmax = {"small_dim": 1e2, "large_dim": 1e1}
+
+                SAMEsymlogvmax = {"small_dim": 1e2, "large_dim": 1e1}
+                SAMEsymlinvmax = {"small_dim": 1e2, "large_dim": 1e1}
+            elif self.Normalization_Type == "P":
+                SAMElinvmin = {"small_dim": 0, "large_dim": 0}
+                SAMElogvmin = {"small_dim": 1e-1, "large_dim": 1e-4}
+
+                SAMElinvmax = {"small_dim": 1e2, "large_dim": 1e1}
+                SAMElogvmax = {"small_dim": 1e2, "large_dim": 1e1}
+
+                SAMEsymlogvmax = {"small_dim": 1e2, "large_dim": 1e1}
+                SAMEsymlinvmax = {"small_dim": 1e2, "large_dim": 1e1}
 
         if dim < 5:
             kind = "small_dim"
@@ -401,7 +520,7 @@ class PlotClass:
             return colors.Normalize(vmin=SAMElinvmin[kind], vmax=SAMElinvmax[kind])
         return None
 
-    def AnnotateCM(self, cm, cm_err, ax, thresh=1e10):
+    def AnnotateCM(self, cm, cm_err, ax, thresh=1e10, annotate=True):
         """
         Function to annotate the CM with text. Including error catching for Nonetype errors.
 
@@ -414,18 +533,21 @@ class PlotClass:
             ax:
                 matplotlib axes
             thresh:
-                threshhold value for CM text change colour
+                threshold value for CM text change colour
 
 
         Returns
         -------
             ax
         """
-        size = 15
-        if cm.shape[0] == 3:
-            size = 12
-        if cm.shape[0] > 3:
-            size = 10
+        size = mpl.rcParams["font.size"]
+        if cm.shape[0] <= 2:
+            size -= 3
+        if cm.shape[0] >= 3:
+            size -= 4
+
+        if annotate == "Small":
+            size -= 2
 
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
@@ -442,12 +564,17 @@ class PlotClass:
                     if cm_err[i, j] + cm[i, j] == 0:
                         fmt = ".0f"
 
-                    text = r"$ %s \pm %s$" % (
-                        format(cm[i, j], fmt),
-                        format(cm_err[i, j], fmt),
-                    )
+                    if fmt == ".0f":
+                        text = r"$0 \pm 0$"
+                    else:
+                        text = (
+                            r"$%s \pm $" % (format(cm[i, j], fmt))
+                            + "\n\t"
+                            + "$%s$" % (format(cm_err[i, j], fmt))
+                        )
+
                 else:
-                    text = r"$ %s $" % (format(cm[i, j], fmt))
+                    text = r"$%s$" % (format(cm[i, j], fmt))
 
                 if thresh == 1e8:
                     ax.text(
@@ -465,7 +592,17 @@ class PlotClass:
                     )
         return ax
 
-    def PlotCM(self, cm, cm_err, labels, ax, thresh=1e10, thumb=False, **plt_kwargs):
+    def PlotCM(
+        self,
+        cm,
+        cm_err,
+        labels,
+        ax,
+        thresh=1e10,
+        thumb=False,
+        annotate=True,
+        **plt_kwargs,
+    ):
         """
         Function to imshow plot the CM.
 
@@ -480,17 +617,18 @@ class PlotClass:
             ax:
                 matplotlib axes
             thresh:
-                threshhold value for CM text change colour
+                threshold value for CM text change colour
             thumb:
                 bool, make thumbnail style plots. e.g. no axis labels
             **plt_kwargs:
-                plot keyword arguements
+                plot keyword arguments
 
         Returns
         -------
             im:
-                referance to plot object
+                reference to plot object
         """
+
         if cm is None:
             pass
         else:
@@ -501,20 +639,70 @@ class PlotClass:
         else:
             cm_err = cm_err.T
 
+        if labels is not None:
+            if "kids" in labels and "young_adults" in labels:
+                labels = ["K", "Y", "A", "O"]
+            elif len(labels) == 2 and "students" in labels:
+                if labels[0] == "students" and labels[1] == "teachers":
+                    labels = ["  S  ", "  T  "]
+                elif labels[1] == "students" and labels[0] == "teachers":
+                    labels = ["  S  ", "  T  "]
+                    # labels = ["Stude", "Teach"]
+                    cm = cm.T
+                    if cm_err is None:
+                        pass
+                    else:
+                        cm_err = cm_err.T
+            elif "workers" in labels and len(labels) == 1:
+                labels = ["W"]
+            elif "inter" in labels:
+                labels = [r" H$_1$ ", r" H$_2$ "]
+
         # im = ax.matshow(cm, **plt_kwargs)
         Interpolation = "None"
         im = ax.imshow(cm, **plt_kwargs, interpolation=Interpolation)
         ax.xaxis.tick_bottom()
+
+        if annotate == "Small" and len(labels) >= 3:
+            size = mpl.rcParams["xtick.labelsize"] - 4
+        elif annotate == "Small":
+            size = mpl.rcParams["xtick.labelsize"] - 2
+        else:
+            size = mpl.rcParams["xtick.labelsize"]
+
         if labels is not None:
-            if len(labels) < 25:
+            if len(labels) == 1:
                 ax.set_xticks(np.arange(len(cm)))
-                ax.set_xticklabels(labels, rotation=45, size=12)
+                ax.set_xticklabels(labels, rotation=0, size=size)
                 ax.set_yticks(np.arange(len(cm)))
-                ax.set_yticklabels(labels, size=12)
+                ax.set_yticklabels(labels, rotation=0, size=size)
+            elif len(labels) < 10:
+                ax.set_xticks(np.arange(len(cm)))
+                ax.set_xticklabels(labels, rotation=45)
+                ax.set_yticks(np.arange(len(cm)))
+                ax.set_yticklabels(labels)
+
+            elif len(labels) >= 10 and len(labels) <= 25:
+                ax.set_xticks(np.arange(len(cm)))
+                ax.set_xticklabels(labels, rotation=90, size=size)
+                ax.set_yticks(np.arange(len(cm)))
+                ax.set_yticklabels(labels, size=size)
+            elif len(labels) < 25:
+                ax.set_xticks(np.arange(len(cm)))
+                ax.set_xticklabels(labels, rotation=90, size=size)
+                ax.set_yticks(np.arange(len(cm)))
+                ax.set_yticklabels(labels, size=size)
+        else:
+            Nticks = 5
+            ticks = np.arange(0, len(cm), int((len(cm) + 1) / (Nticks - 1)))
+            ax.set_xticks(ticks)
+            ax.set_xticklabels(ticks)
+            ax.set_yticks(ticks)
+            ax.set_yticklabels(ticks)
 
         # Loop over data dimensions and create text annotations.
-        if cm.shape[0] * cm.shape[1] < 26:
-            self.AnnotateCM(cm, cm_err, ax, thresh=thresh)
+        if cm.shape[0] * cm.shape[1] < 26 and annotate:
+            self.AnnotateCM(cm, cm_err, ax, thresh=thresh, annotate=annotate)
         if not thumb:
             ax.set_xlabel("age group")
             ax.set_ylabel("contact age group")
@@ -567,7 +755,7 @@ class PlotClass:
         else:
             return None
 
-    def CMPlots_UsefulCM(self, bin_type, cm, cm_err=None, labels=None):
+    def CMPlots_UsefulCM(self, bin_type, cm, cm_err=None, labels=None, MaxAgeBin=100):
         """
         Truncate the CM for the plots to drop age bins of the data with no people.
 
@@ -592,10 +780,8 @@ class PlotClass:
             labels:
                 list of strings for bin labels or none type
         """
-        MaxAgeBin = 60
         if bin_type == "Paper":
             MaxAgeBin = np.inf
-
         index = self.MaxAgeBinIndex(self.age_bins[bin_type], MaxAgeBin=MaxAgeBin)
         cm = cm[:index, :index]
         if cm_err is not None:
@@ -673,82 +859,17 @@ class PlotClass:
         return cm, cm_err, labels
 
     #############################################
-    # Grab CM  ##################################
-    #############################################
-
-    def CMPlots_GetCM(self, bin_type, contact_type, sex="unisex", which="NCM"):
-        """
-        Get cm out of dictionary.
-
-        Parameters
-        ----------
-            binType:
-                Name of bin type syoa, AC etc
-            contact_type:
-                Location of contacts
-            sex:
-                Sex contact matrix
-            which:
-                str, which matrix type to collect "NCM", "NCM_R", "CM_T"
-
-        Returns
-        -------
-            cm:
-                np.array contact matrix
-            cm_err:
-                np.array contact matrix errors
-        """
-        if bin_type != "Interaction":
-            if which == "CM_T":
-                cm = self.CM_T[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.CM_T[bin_type][contact_type]["sex"][sex]["contacts_err"]
-            elif which == "NCM":
-                cm = self.NCM[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.NCM[bin_type][contact_type]["sex"][sex]["contacts_err"]
-            elif which == "NCM_R":
-                cm = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts"]
-                cm_err = self.NCM_R[bin_type][contact_type]["sex"][sex]["contacts_err"]
-        else:
-            if which == "CM_T":
-                cm = self.CM_T[bin_type][contact_type]["contacts"]
-                cm_err = self.CM_T[bin_type][contact_type]["contacts_err"]
-            elif which == "NCM":
-                cm = self.NCM[bin_type][contact_type]["contacts"]
-                cm_err = self.NCM[bin_type][contact_type]["contacts_err"]
-            elif which == "NCM_R":
-                cm = self.NCM_R[bin_type][contact_type]["contacts"]
-                cm_err = self.NCM_R[bin_type][contact_type]["contacts_err"]
-        return np.array(cm), np.array(cm_err)
-
-    def IMPlots_GetIM(self, contact_type):
-        """
-        Get IM out of dictionary.
-
-        Parameters
-        ----------
-            contact_type:
-                Location of contacts
-
-        Returns
-        -------
-            cm:
-                np.array interactiojn matrix
-            cm_err:
-                np.array interaction matrix errors (could be none)
-        """
-        im = np.array(self.IM[contact_type]["contacts"], dtype=float)
-        if "contacts_err" not in self.IM[contact_type].keys():
-            im_err = None
-        else:
-            im_err = np.array(self.IM[contact_type]["contacts_err"], dtype=float)
-        return im, im_err
-
-    #############################################
     # Plotting ##################################
     #############################################
 
     def plot_contact_matrix_INOUT(
-        self, bin_type, contact_type, sex="unisex", which="NCM_R", plot_BBC_Sheet=False
+        self,
+        bin_type,
+        contact_type,
+        sex="unisex",
+        which="NCM_R",
+        plot_BBC_Sheet=False,
+        MaxAgeBin=100,
     ):
         """
         Function to plot input contact matrix vs output for bin_type, contact_type and sex.
@@ -794,7 +915,9 @@ class PlotClass:
 
         labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
         cm, cm_err = self.CMPlots_GetCM(bin_type, contact_type, sex=sex, which=which)
-        cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels)
+        cm, cm_err, labels = self.CMPlots_UsefulCM(
+            bin_type, cm, cm_err, labels, MaxAgeBin
+        )
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
             cm_Min = np.nanmin(cm[np.nonzero(cm)])
@@ -816,12 +939,13 @@ class PlotClass:
             norm1 = colors.Normalize(vmin=0, vmax=IM_Max)
             norm2 = colors.Normalize(vmin=0, vmax=cm_Max)
         else:
-            norm1 = self.Get_SAMECMAP_Norm(IM.shape[0])
-            norm2 = self.Get_SAMECMAP_Norm(cm.shape[0])
+            norm1 = self.Get_SAMECMAP_Norm(IM.shape[0], which=which)
+            norm2 = self.Get_SAMECMAP_Norm(cm.shape[0], which=which)
 
         if not plot_BBC_Sheet:
-            plt.rcParams["figure.figsize"] = (15, 5)
+            # plt.rcParams["figure.figsize"] = (15, 5)
             f, (ax1, ax2) = plt.subplots(1, 2)
+            f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
             f.patch.set_facecolor("white")
 
             im1 = self.PlotCM(
@@ -840,10 +964,10 @@ class PlotClass:
             f.colorbar(im1, ax=ax1, extend="both")
             f.colorbar(im2, ax=ax2, extend="both")
 
-            ax1.set_title(f"Interaction Matrix (IM)")
-            ax2.set_title(f"Output Contact Matrix ({which})")
+            # ax1.set_title(f"IM")
+            # ax2.set_title(f"{which}")
             # f.suptitle(f"{bin_type} binned contacts in {contact_type}")
-            plt.tight_layout()
+            # plt.tight_layout()
             return (ax1, ax2)
         else:
             df = pd.read_excel(
@@ -857,13 +981,23 @@ class PlotClass:
             bbc_Max = np.nanmax(bbc_cm)
             bbc_Min = np.nanmin(bbc_cm)
 
+            # Put into same contact units
+
+            CT = self.Get_characteristic_time(contact_type)[0]
+            cm /= CT
+
             cm_Max = max(bbc_Max, cm_Max)
 
-            if not self.SameCMAP:
-                norm2 = colors.Normalize(vmin=0, vmax=cm_Max)
+            if contact_type in "household":
+                norm2 = colors.LogNorm(vmin=1e-2, vmax=2)
+            elif contact_type in "school":
+                norm2 = colors.LogNorm(vmin=1e-3, vmax=1e1)
+            elif contact_type in "company":
+                norm2 = colors.LogNorm(vmin=1e-2, vmax=1)
 
-            plt.rcParams["figure.figsize"] = (15, 5)
+            # plt.rcParams["figure.figsize"] = (15, 5)
             f, (ax1, ax2, ax3) = plt.subplots(1, 3)
+            f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
             f.patch.set_facecolor("white")
 
             im1 = self.PlotCM(
@@ -874,15 +1008,33 @@ class PlotClass:
                 origin="lower",
                 cmap=cmap_A,
                 norm=norm1,
+                annotate=True,
+                thumb=True,
             )
             im2 = self.PlotCM(
-                cm + 1e-16, cm_err, labels, ax2, origin="lower", cmap=cmap_A, norm=norm2
-            )
-            im3 = self.PlotCM(
-                bbc_cm, None, bbc_labels, ax3, origin="lower", cmap=cmap_A, norm=norm2
+                (cm + 1e-16),
+                cm_err,
+                labels,
+                ax2,
+                origin="lower",
+                cmap=cmap_A,
+                norm=norm2,
+                annotate="Small",
+                thumb=True,
             )
 
-            # TODO Remove This is for convience only.
+            im3 = self.PlotCM(
+                bbc_cm,
+                None,
+                bbc_labels,
+                ax3,
+                origin="lower",
+                cmap=cmap_A,
+                norm=norm2,
+                annotate="Small",
+                thumb=True,
+            )
+
             cm = np.nan_to_num(cm, nan=0.0)
             bbc_cm = np.nan_to_num(bbc_cm, nan=0.0)
 
@@ -910,16 +1062,14 @@ class PlotClass:
             print("BBC", {"Q": f"{Q}", "I_sq": f"{I_sq}", "I_sq_s": f"{I_sq_s}"})
             print({"Camberra": self.Canberra_distance(cm, bbc_cm)[0]})
             print("")
-            print(np.array(self.Canberra_distance(cm, bbc_cm)[1]))
-            print("")
 
-            f.colorbar(im1, ax=ax1, extend="both")
-            f.colorbar(im2, ax=ax2, extend="both")
-            f.colorbar(im3, ax=ax3, extend="both")
+            f.colorbar(im1, ax=ax1, extend="both", format="%g")
+            f.colorbar(im2, ax=ax2, extend="both", format="%g")
+            f.colorbar(im3, ax=ax3, extend="both", format="%g")
 
-            ax1.set_title(f"Interaction Matrix (IM)")
-            ax2.set_title(f"Output Contact Matrix ({which})")
-            ax3.set_title(f"BBC Pandemic Matrix ({plot_BBC_Sheet})")
+            # ax1.set_title(f"IM")
+            # ax2.set_title(f"{which}")
+            # ax3.set_title(f"BBC ({plot_BBC_Sheet})")
             # f.suptitle(f"{bin_type} binned contacts in {contact_type}")
             plt.tight_layout()
             return (ax1, ax2, ax3)
@@ -938,6 +1088,7 @@ class PlotClass:
             ax1:
                 matplotlib axes object
         """
+        which = "NCM"
         IM, IM_err = self.IMPlots_GetIM(contact_type)
         labels_IM = self.IMPlots_GetLabels(contact_type)
         IM, IM_err, labels_IM = self.IMPlots_UsefulCM(
@@ -961,8 +1112,8 @@ class PlotClass:
         IM = np.nan_to_num(IM, posinf=IM_Max, neginf=0, nan=0)
 
         labels_CM = labels_IM
-        if contact_type in self.CM_T["Interaction"].keys():
-            cm, cm_err = self.CMPlots_GetCM("Interaction", contact_type, which="NCM")
+        if contact_type in self.CM["Interaction"].keys():
+            cm, cm_err = self.CMPlots_GetCM("Interaction", contact_type, which=which)
             cm, cm_err, _ = self.IMPlots_UsefulCM(
                 contact_type, cm, cm_err=cm_err, labels=labels_CM
             )
@@ -988,8 +1139,9 @@ class PlotClass:
         vMax = max(cm_Max, IM_Max)
         vMin = 1e-2
 
-        plt.rcParams["figure.figsize"] = (15, 5)
+        # plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2, ax3) = plt.subplots(1, 3)
+        f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
         f.patch.set_facecolor("white")
 
         if not self.SameCMAP:
@@ -997,14 +1149,30 @@ class PlotClass:
             norm2 = colors.Normalize(vmin=vMin, vmax=vMax)
         else:
 
-            norm1 = self.Get_SAMECMAP_Norm(IM.shape[0])
-            norm2 = self.Get_SAMECMAP_Norm(cm.shape[0])
+            norm1 = self.Get_SAMECMAP_Norm(IM.shape[0], which=which)
+            norm2 = self.Get_SAMECMAP_Norm(cm.shape[0], which=which)
 
         im1 = self.PlotCM(
-            IM + 1e-16, IM_err, labels_IM, ax1, origin="lower", cmap=cmap_A, norm=norm1
+            IM + 1e-16,
+            IM_err,
+            labels_IM,
+            ax1,
+            origin="lower",
+            cmap=cmap_A,
+            norm=norm1,
+            annotate=True,
+            thumb=True,
         )
         im2 = self.PlotCM(
-            cm + 1e-16, cm_err, labels_CM, ax2, origin="lower", cmap=cmap_A, norm=norm2
+            cm + 1e-16,
+            cm_err,
+            labels_CM,
+            ax2,
+            origin="lower",
+            cmap=cmap_A,
+            norm=norm2,
+            annotate="Small",
+            thumb=True,
         )
 
         ratio = cm / IM
@@ -1033,12 +1201,14 @@ class PlotClass:
             origin="lower",
             cmap=cmap_B,
             norm=norm,
+            annotate="Small",
+            thumb=True,
         )
         f.colorbar(im1, ax=ax1, extend="both")
         f.colorbar(im2, ax=ax2, extend="both")
         f.colorbar(im3, ax=ax3, extend="both")
-        ax1.set_title("Interaction Matrix (IM)")
-        ax2.set_title("Normalised Contact Matrix (NCM)")
+        ax1.set_title("IM")
+        ax2.set_title("NCM")
         ax3.set_title("NCM / IM")
 
         # f.suptitle(f"Survey interaction binned contacts in {contact_type}")
@@ -1061,6 +1231,7 @@ class PlotClass:
             ax1:
                 matplotlib axes object
         """
+        which = "NCM"
         IM, IM_err = self.IMPlots_GetIM(contact_type)
         labels_IM = self.IMPlots_GetLabels(contact_type)
         IM, IM_err, labels_IM = self.IMPlots_UsefulCM(
@@ -1085,16 +1256,16 @@ class PlotClass:
 
         labels_CM = labels_IM
 
-        plt.rcParams["figure.figsize"] = (5, 5)
         f, ax1 = plt.subplots(1, 1)
+        f.set_size_inches(set_size(subplots=(1, 1), fraction=0.5))
         f.patch.set_facecolor("white")
 
         if not self.SameCMAP:
             normlin = colors.Normalize(vmin=0, vmax=IM_Max)
             normlog = colors.LogNorm(vmin=IM_Max, vmax=IM_Max)
         else:
-            normlin = self.Get_SAMECMAP_Norm(IM.shape[0])
-            normlog = self.Get_SAMECMAP_Norm(IM.shape[0])
+            normlin = self.Get_SAMECMAP_Norm(IM.shape[0], which=which)
+            normlog = self.Get_SAMECMAP_Norm(IM.shape[0], which=which)
 
         if not log:
             im1 = self.PlotCM(
@@ -1120,10 +1291,12 @@ class PlotClass:
             )
 
         # f.suptitle(f"Survey interaction binned contacts in {contact_type}")
-        plt.tight_layout()
+        # plt.tight_layout()
         return f, ax1, im1
 
-    def plot_contact_matrix(self, bin_type, contact_type, sex="unisex", which="NCM"):
+    def plot_contact_matrix(
+        self, bin_type, contact_type, sex="unisex", which="NCM", MaxAgeBin=100
+    ):
         """
         Function to plot contact matrix for bin_type, contact_type and sex.
 
@@ -1148,7 +1321,9 @@ class PlotClass:
             labels = self.IMPlots_GetLabels(contact_type)
         else:
             labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
-            cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels)
+            cm, cm_err, labels = self.CMPlots_UsefulCM(
+                bin_type, cm, cm_err, labels, MaxAgeBin
+            )
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
             cm_Min = np.nanmin(cm[np.nonzero(cm)])
@@ -1170,11 +1345,12 @@ class PlotClass:
             normlin = colors.Normalize(vmin=0, vmax=cm_Max)
             normlog = colors.LogNorm(vmin=cm_Min, vmax=cm_Max)
         else:
-            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], override="Lin")
-            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="Log")
+            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], which=which, override="Lin")
+            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], which=which, override="Log")
 
-        plt.rcParams["figure.figsize"] = (15, 5)
+        # plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
+        f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
         f.patch.set_facecolor("white")
 
         im1 = self.PlotCM(
@@ -1187,14 +1363,14 @@ class PlotClass:
         f.colorbar(im1, ax=ax1, extend="both")
         f.colorbar(im2, ax=ax2, extend="both")
 
-        ax1.set_title("Linear Scale")
-        ax2.set_title("Log Scale")
+        # ax1.set_title("Linear Scale")
+        # ax2.set_title("Log Scale")
         # f.suptitle(f"{bin_type} binned contacts in {contact_type} for {sex}")
-        plt.tight_layout()
+        # plt.tight_layout()
         return (ax1, ax2)
 
     def plot_contact_matrix_thumb(
-        self, log, bin_type, contact_type, sex="unisex", which="NCM"
+        self, log, bin_type, contact_type, sex="unisex", which="NCM", MaxAgeBin=100
     ):
         """
         Function to plot contact matrix for bin_type, contact_type and sex.
@@ -1223,7 +1399,9 @@ class PlotClass:
             labels = self.IMPlots_GetLabels(contact_type)
         else:
             labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
-            cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, cm_err, labels)
+            cm, cm_err, labels = self.CMPlots_UsefulCM(
+                bin_type, cm, cm_err, labels, MaxAgeBin
+            )
 
         if len(np.nonzero(cm)[0]) != 0 and len(np.nonzero(cm)[1]) != 0:
             cm_Min = np.nanmin(cm[np.nonzero(cm)])
@@ -1241,16 +1419,16 @@ class PlotClass:
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
-        plt.rcParams["figure.figsize"] = (5, 5)
         f, ax1 = plt.subplots(1, 1)
+        f.set_size_inches(set_size(subplots=(1, 1), fraction=0.5))
         f.patch.set_facecolor("white")
 
         if not self.SameCMAP or which == "CM_T":
             normlin = colors.Normalize(vmin=0, vmax=cm_Max)
             normlog = colors.LogNorm(vmin=cm_Min, vmax=cm_Max)
         else:
-            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], override="Lin")
-            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="Log")
+            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], which=which, override="Lin")
+            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], which=which, override="Log")
 
         if not log:
             im1 = self.PlotCM(
@@ -1276,10 +1454,12 @@ class PlotClass:
             )
 
         # cax1 = f.add_axes([ax1.get_position().x1+0.01,ax1.get_position().y0,0.02,ax1.get_position().height])
-        plt.tight_layout()
+        # plt.tight_layout()
         return f, ax1, im1
 
-    def plot_comparesexes_contact_matrix(self, bin_type, contact_type, which="NCM"):
+    def plot_comparesexes_contact_matrix(
+        self, bin_type, contact_type, which="NCM", MaxAgeBin=100
+    ):
         """
         Function to plot difference in contact matrices between men and women for bin_type, contact_type.
 
@@ -1297,8 +1477,9 @@ class PlotClass:
             (ax1,ax2):
                 matplotlib axes objects (Linear and Log)
         """
-        plt.rcParams["figure.figsize"] = (15, 5)
+        # plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
+        f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
         f.patch.set_facecolor("white")
 
         labels = self.CMPlots_GetLabels(self.age_bins[bin_type])
@@ -1307,7 +1488,9 @@ class PlotClass:
         cm_F, _ = self.CMPlots_GetCM(bin_type, contact_type, "female", which)
         cm = cm_M - cm_F
 
-        cm, cm_err, labels = self.CMPlots_UsefulCM(bin_type, cm, None, labels)
+        cm, cm_err, labels = self.CMPlots_UsefulCM(
+            bin_type, cm, None, labels, MaxAgeBin
+        )
 
         cm_Min = -1e-1
         cm_Max = 1e-1
@@ -1316,8 +1499,12 @@ class PlotClass:
             normlin = colors.Normalize(vmin=cm_Max, vmax=cm_Max)
             normlog = colors.SymLogNorm(linthresh=1, vmin=cm_Min, vmax=cm_Max)
         else:
-            normlin = self.Get_SAMECMAP_Norm(cm.shape[0], override="SymLin")
-            normlog = self.Get_SAMECMAP_Norm(cm.shape[0], override="SymLog")
+            normlin = self.Get_SAMECMAP_Norm(
+                cm.shape[0], which=which, override="SymLin"
+            )
+            normlog = self.Get_SAMECMAP_Norm(
+                cm.shape[0], which=which, override="SymLog"
+            )
 
         cm = np.nan_to_num(cm, posinf=cm_Max, neginf=0, nan=0)
 
@@ -1331,10 +1518,10 @@ class PlotClass:
         f.colorbar(im1, ax=ax1, extend="both", label="$M - F$")
         f.colorbar(im2, ax=ax2, extend="both", label="$M - F$")
 
-        ax1.set_title("Linear Scale")
-        ax2.set_title("Log Scale")
+        # ax1.set_title("Linear Scale")
+        # ax2.set_title("Log Scale")
         # f.suptitle(f"Male - female {bin_type} binned contacts in {contact_type}")
-        plt.tight_layout()
+        # plt.tight_layout()
         return (ax1, ax2)
 
     def plot_stacked_contacts(self, bin_type, contact_types=None):
@@ -1354,8 +1541,9 @@ class PlotClass:
                 matplotlib axes object
 
         """
-        plt.rcParams["figure.figsize"] = (10, 5)
+        # plt.rcParams["figure.figsize"] = (10, 5)
         f, ax = plt.subplots()
+        f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
         f.patch.set_facecolor("white")
 
         average_contacts = self.average_contacts[bin_type]
@@ -1370,7 +1558,7 @@ class PlotClass:
             contact_types = self.contact_types
 
         for ii, contact_type in enumerate(contact_types):
-            if contact_type in ["shelter_intra", "shelter_inter"]:
+            if contact_type in ["shelter_intra", "shelter_inter", "informal_work"]:
                 continue
             if contact_type not in average_contacts.columns:
                 print(f"No contact_type {contact_type}")
@@ -1411,145 +1599,8 @@ class PlotClass:
         ax.set_xlabel("Age")
         ax.set_ylabel("average contacts per day")
         f.subplots_adjust(top=0.70)
-        plt.tight_layout()
+        # plt.tight_layout()
         return ax
-
-    def plot_population_at_locs(self, locations, max_days=7):
-        """
-        Plot total population of each location for each timestep.
-
-        Parameters
-        ----------
-            locations:
-                list of locations to plot for
-            max_days:
-                The maximum number of days to plot over
-
-        Returns
-        -------
-            ax:
-                matplotlib axes object
-
-        """
-        df = pd.DataFrame()
-        df = self.location_counters_day["loc"][locations]["unisex"]
-        NVenues = df.shape[1]
-        df["t"] = np.array(self.location_counters_day["Timestamp"])
-        df["day"] = [day.day_name() for day in df["t"]]
-        Weekday_Names = self.day_types["weekday"]
-
-        df = df[df["day"] == Weekday_Names[0]]
-        Cols = df.columns[~df.columns.isin(["t", "day"])]
-        df = df[Cols].iloc[0]
-
-        df_weekeday_att = np.array(df.values)
-
-        NVenues_Per = sum(df_weekeday_att > 0) / NVenues
-        NVenues = sum(df_weekeday_att > 0)
-
-        Interval = datetime.timedelta(days=max_days)
-
-        xs = self.location_counters["Timestamp"]
-        max_index = None
-        if xs.iloc[-1] - xs.iloc[0] > Interval:
-            max_index = np.sum(xs < xs.iloc[0] + Interval)
-        xs = xs[:max_index]
-
-        widths = [
-            datetime.timedelta(hours=w)
-            for w in self.location_counters["delta_t"][:max_index]
-        ]
-
-        plt.rcParams["figure.figsize"] = (10, 5)
-        f, (ax1, ax2) = plt.subplots(1, 2)
-        f.patch.set_facecolor("white")
-
-        plural_locations = Tracker.pluralise(self, locations)
-        Nlocals = self.NVenues[plural_locations]
-
-        ymax = -1
-        i_counts = 0
-
-        # ax1.set_title("%s locations (frac:%.2f)" % (NVenues, NVenues_Per))
-        for i in self.location_counters["loc"][locations]["unisex"][Cols].keys():
-            if Nlocals > 100:
-                Nlocals = 100
-
-            if (
-                np.sum(
-                    self.location_counters["loc"][locations]["unisex"][Cols][i].values
-                )
-                == 0
-            ):
-                continue
-
-            ys = self.location_counters["loc"][locations]["unisex"][Cols][i].iloc[
-                :max_index
-            ]
-            if np.nanmax(ys) > ymax:
-                ymax = np.nanmax(ys)
-
-            ax1.bar(xs, ys, width=widths, align="edge", color="b", alpha=1 / Nlocals)
-
-            if i_counts == 0:
-                Total = np.array(ys)
-            else:
-                Total += np.array(ys)
-
-            i_counts += 1
-            if i_counts >= Nlocals:
-                break
-
-        # Define the date format
-        ax1.xaxis.set_major_locator(mdates.HourLocator(byhour=[0]))
-        ax1.xaxis.set_minor_locator(mdates.HourLocator(byhour=None, interval=1))
-        ax1.xaxis.set_major_formatter(DateFormatter("%d/%m"))
-        ax1.set_ylabel("Number of people at venue")
-        ax1.set_xlabel("time")
-        ax1.set_yscale("log")
-        ax1.set_ylim([1, ymax])
-
-        df = pd.DataFrame()
-        df = self.location_counters_day["loc"][locations]["unisex"]
-        df["t"] = np.array(self.location_counters_day["Timestamp"])
-        Cols = df.columns[~df.columns.isin(["t", "day"])]
-
-        if df[Cols].shape[1] == 0:
-            Max_attendance = 20
-        else:
-            Max_attendance = max(df[Cols].max())
-
-        Steps = 1
-        if Max_attendance < 20:
-            Steps = 1
-        elif Max_attendance < 100:
-            Steps = 5
-        elif Max_attendance < 1000:
-            Steps = 10
-        else:
-            Steps = 50
-        bins = np.concatenate(
-            [np.zeros(1) - 0.5, np.arange(0.5, Max_attendance + Steps, Steps)]
-        )
-
-        for day_i in range(df.shape[0]):
-            hist, bin_edges = np.histogram(
-                df[Cols].iloc[day_i].values, bins=bins, density=False
-            )
-            ax2.bar(
-                x=(bin_edges[1:] + bin_edges[:-1]) / 2,
-                height=(100 * hist) / len(self.location_counters["loc"][locations]),
-                width=(bin_edges[:-1] - bin_edges[1:]),
-                alpha=1 / df.shape[0],
-                color="b",
-            )
-
-        ax2.set_ylim([0, None])
-        ax2.set_ylabel(r"% of venue type")
-        ax2.set_xlabel(r"People per day")
-
-        plt.tight_layout()
-        return (ax1, ax2)
 
     def plot_population_at_locs_variations(self, locations):
         """
@@ -1594,8 +1645,9 @@ class PlotClass:
             stds[day_i] = np.nanstd(data, ddof=1)
             medians[day_i] = np.nanmedian(data)
 
-        plt.rcParams["figure.figsize"] = (15, 5)
+        # plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
+        f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
         f.patch.set_facecolor("white")
         ax1.bar(
             np.arange(len(DaysOfWeek_Names)), means, alpha=0.4, color="b", label="mean"
@@ -1607,17 +1659,22 @@ class PlotClass:
             color="g",
             label="median",
         )
-        ax1.errorbar(
-            np.arange(len(DaysOfWeek_Names)),
-            means,
-            [stds, stds],
-            color="black",
-            label="std errorbar",
-        )
-        ax1.set_xticklabels([""] + DaysOfWeek_Names)
-        ax1.set_ylabel("Unique Attendees per day")
-        ax1.set_xlabel("Day of week")
-        ax1.set_ylim([0, None])
+        # ax1.errorbar(
+        #     np.arange(len(DaysOfWeek_Names)),
+        #     means,
+        #     [stds, stds],
+        #     color="black",
+        #     label="std errorbar",
+        # )
+        labels = []
+        for i in range(len(DaysOfWeek_Names)):
+            labels += [DaysOfWeek_Names[i][:2]]
+
+        ax1.set_xticks(np.arange(len(DaysOfWeek_Names)))
+        ax1.set_xticklabels(labels)
+        # ax1.set_ylabel("Unique Attendees per day")
+        # ax1.set_xlabel("Day of week")
+        ax1.set_ylim([0, np.nanmax(means) * 1.4])
         ax1.legend()
 
         # Get variations between days and time of day
@@ -1749,15 +1806,15 @@ class PlotClass:
             )
         ax2.axhline(0, color="grey", linestyle="--")
 
-        ax2.set_ylabel("Mean Unique Attendees per timeslot")
-        ax2.set_xlabel("Time of day [hour]")
+        # ax2.set_ylabel("Mean Unique Attendees per timeslot")
+        # ax2.set_xlabel("Time of day [hour]")
         # Define the date format
-        ax2.xaxis.set_major_locator(mdates.HourLocator(byhour=None, interval=1))
+        ax2.xaxis.set_major_locator(mdates.HourLocator(byhour=None, interval=4))
         ax2.xaxis.set_major_formatter(DateFormatter("%H"))
         ax2.set_xlim(xlim)
-        ax2.set_ylim(ylim)
+        ax2.set_ylim([0, ylim[1]])
         ax2.legend()
-        plt.tight_layout()
+        # plt.tight_layout()
         return (ax1, ax2)
 
     def plot_AgeProfileRatios(
@@ -1822,9 +1879,9 @@ class PlotClass:
                 ws_G[i, j] = Height_G[i] / Height_G[j]
                 ws_P[i, j] = Height_P[i] / Height_P[j]
 
-        plt.rcParams["figure.figsize"] = (15, 5)
+        # plt.rcParams["figure.figsize"] = (15, 5)
         f, (ax1, ax2) = plt.subplots(1, 2)
-
+        f.set_size_inches(set_size(subplots=(1, 1), fraction=1))
         f.patch.set_facecolor("white")
 
         vmax_G = np.nan
@@ -1839,15 +1896,15 @@ class PlotClass:
             vmax = 1e-1
 
         vmin = 10 ** (-1 * np.log10(vmax))
-        ax1_ins = ax1.inset_axes([0.8, 1.0, 0.2, 0.2])
+        # ax1_ins = ax1.inset_axes([0.8, 1.0, 0.2, 0.2])
 
         norm = colors.LogNorm(vmin=vmin, vmax=vmax)
         im_P = self.PlotCM(
             ws_P, None, Labels, ax1, origin="lower", cmap=cmap_B, norm=norm
         )
-        im_G = self.PlotCM(
-            ws_G, None, Labels, ax1_ins, origin="lower", cmap=cmap_B, norm=norm
-        )
+        # im_G = self.PlotCM(
+        #    ws_G, None, Labels, ax1_ins, origin="lower", cmap=cmap_B, norm=norm
+        # )
 
         f.colorbar(im_P, ax=ax1, label=r"$\dfrac{Age_{y}}{Age_{x}}$", extend="both")
         plt.bar(
@@ -1866,7 +1923,7 @@ class PlotClass:
             tick_label=Labels,
             alpha=0.5,
             color="red",
-            label=contact_type + " tracker",
+            label="tracker",
         )
         ax2.set_xlabel("Age")
         ax2.set_ylabel("Normed Population size")
@@ -1875,6 +1932,7 @@ class PlotClass:
         plt.xticks(rotation=90)
         # f.suptitle(f"Age profile of {contact_type}")
         plt.legend()
+        plt.tight_layout()
         return (ax1, ax2)
 
     def plot_DistanceTraveled(self, location, day):
@@ -1894,7 +1952,7 @@ class PlotClass:
                 matplotlib axes object
 
         """
-        plural_locations = Tracker.pluralise(self, location)
+        plural_locations = Tracker.pluralize(self, location)
         Nlocals = self.NVenues[plural_locations]
         dat = self.travel_distance[location]
         Total = dat.iloc[:, 1].sum()
@@ -1904,8 +1962,9 @@ class PlotClass:
         indexlast = len(CumSum) - np.sum(CumSum == CumSum[-1])
         maxkm = dat.iloc[indexlast, 0] + 3.5 * (dat.iloc[1, 0] - dat.iloc[0, 0])
 
-        plt.rcParams["figure.figsize"] = (10, 5)
+        # plt.rcParams["figure.figsize"] = (10, 5)
         f, ax = plt.subplots(1, 1)
+        f.set_size_inches(set_size(subplots=(1, 2), fraction=1))
         f.patch.set_facecolor("white")
         ax.bar(
             x=dat["bins"],
@@ -1937,6 +1996,7 @@ class PlotClass:
         plot_CompareSexMatrices=True,
         plot_AgeBinning=True,
         plot_Distances=True,
+        MaxAgeBin=100,
     ):
         """
         Make plots.
@@ -1978,18 +2038,21 @@ class PlotClass:
 
         self.SameCMAP = SameCMAP
 
-        relevant_bin_types = list(self.CM_T.keys())
+        relevant_bin_types = list(self.CM.keys())
         relevant_bin_types_short = ["syoa", "AC"]
-        relevant_contact_types = list(self.CM_T["syoa"].keys())
-        IM_contact_types = list(self.CM_T["Interaction"].keys())
-        CMTypes = ["NCM", "NCM_R", "CM_T"]
-        # CMTypes = ["CM_T"]
+        relevant_contact_types = list(self.CM["syoa"].keys())
+        IM_contact_types = list(self.CM["Interaction"].keys())
+
+        if self.Normalization_Type == "U":
+            NormFolder = "VenueNorm"
+        elif self.Normalization_Type == "P":
+            NormFolder = "PopNorm"
+
+        CMTypes = ["NCM", "NCM_R", "NCM_V"]
 
         if plot_INPUTOUTPUT:
             plot_dir_1 = (
-                self.record_path
-                / "Graphs"
-                / f"Contact_Matrices_INOUT_{self.Tracker_Contact_Type}"
+                self.record_path / "Graphs" / "Contact_Matrices_INOUT" / NormFolder
             )
             plot_dir_1.mkdir(exist_ok=True, parents=True)
             if "Paper" in relevant_bin_types:
@@ -2000,7 +2063,9 @@ class PlotClass:
                 if rct not in relevant_contact_types:
                     continue
 
+                which = "NCM_R"
                 plot_BBC_Sheet = False
+
                 if (
                     plot_BBC
                     and rct in ["household", "school", "company"]
@@ -2012,24 +2077,22 @@ class PlotClass:
                         plot_BBC_Sheet = "all_school"
                     if rct == "company":
                         plot_BBC_Sheet = "all_work"
+                    which = "NCM_R"
 
                 self.plot_contact_matrix_INOUT(
                     bin_type=rbt,
                     contact_type=rct,
                     sex="unisex",
-                    which="NCM_R",
+                    which=which,
                     plot_BBC_Sheet=plot_BBC_Sheet,
+                    MaxAgeBin=MaxAgeBin,
                 )
-                plt.savefig(plot_dir_1 / f"{rct}.pdf", dpi=150, bbox_inches="tight")
+                plt.savefig(plot_dir_1 / f"{rct}.pdf", dpi=dpi, bbox_inches="tight")
                 plt.close()
         logger.info(f"Rank {mpi_rank} -- Input vs output done")
 
         if plot_AvContactsLocation:
-            plot_dir = (
-                self.record_path
-                / "Graphs"
-                / f"Average_Contacts_{self.Tracker_Contact_Type}"
-            )
+            plot_dir = self.record_path / "Graphs" / f"Average_Contacts"
             plot_dir.mkdir(exist_ok=True, parents=True)
             for rbt in relevant_bin_types_short:
                 stacked_contacts_plot = self.plot_stacked_contacts(
@@ -2037,7 +2100,7 @@ class PlotClass:
                 )
                 stacked_contacts_plot.plot()
                 plt.savefig(
-                    plot_dir / f"{rbt}_contacts.pdf", dpi=150, bbox_inches="tight"
+                    plot_dir / f"{rbt}_contacts.pdf", dpi=dpi, bbox_inches="tight"
                 )
                 plt.close()
         logger.info(f"Rank {mpi_rank} -- Av contacts done")
@@ -2049,22 +2112,22 @@ class PlotClass:
                 self.plot_population_at_locs_variations(locations)
                 plt.savefig(
                     plot_dir / f"{locations}_Variations.pdf",
-                    dpi=150,
+                    dpi=dpi,
                     bbox_inches="tight",
                 )
                 plt.close()
 
-                self.plot_population_at_locs(locations)
-                plt.savefig(plot_dir / f"{locations}.pdf", dpi=150, bbox_inches="tight")
-                plt.close()
+                # self.plot_population_at_locs(locations)
+                # plt.savefig(plot_dir / f"{locations}.pdf", dpi=dpi, bbox_inches="tight")
+                # plt.close()
         logger.info(f"Rank {mpi_rank} -- Pop at locations done")
 
         if plot_InteractionMatrices:
-            plot_dir = self.record_path / "Graphs" / f"IM_{self.Tracker_Contact_Type}"
+            plot_dir = self.record_path / "Graphs" / "IM" / NormFolder
             plot_dir.mkdir(exist_ok=True, parents=True)
             for rct in self.IM.keys():
                 self.plot_interaction_matrix(contact_type=rct)
-                plt.savefig(plot_dir / f"{rct}.pdf", dpi=150, bbox_inches="tight")
+                plt.savefig(plot_dir / f"{rct}.pdf", dpi=dpi, bbox_inches="tight")
                 plt.close()
 
                 if plot_thumbprints:
@@ -2075,13 +2138,15 @@ class PlotClass:
                         plot_dir / f"{rct}_thumbnail.pdf", dpi=100, bbox_inches="tight"
                     )
                     if rct == list(self.IM.keys())[0] and SameCMAP:
-                        fig.colorbar(
+                        cbar = fig.colorbar(
                             im1,
                             ax=ax1,
                             extend="both",
                             orientation="horizontal",
                             aspect=aspect,
+                            format="%g",
                         )
+                        # cbar.ticklabel_format(style='plain')
                         ax1.remove()
                         fig.set_size_inches(
                             fig.get_size_inches()[0] * CbarMultiplier,
@@ -2107,6 +2172,7 @@ class PlotClass:
                             extend="both",
                             orientation="horizontal",
                             aspect=aspect,
+                            format="%g",
                         )
                         ax1.remove()
                         fig.set_size_inches(
@@ -2127,7 +2193,7 @@ class PlotClass:
                     self.record_path
                     / "Graphs"
                     / "Contact_Matrices"
-                    / self.Tracker_Contact_Type
+                    / NormFolder
                     / CMType
                 )
                 plot_dir_1.mkdir(exist_ok=True, parents=True)
@@ -2148,10 +2214,11 @@ class PlotClass:
                                     contact_type=rct,
                                     sex=sex,
                                     which=CMType,
+                                    MaxAgeBin=MaxAgeBin,
                                 )
                                 plt.savefig(
                                     plot_dir_3 / f"{rct}.pdf",
-                                    dpi=150,
+                                    dpi=dpi,
                                     bbox_inches="tight",
                                 )
                                 plt.close()
@@ -2163,6 +2230,7 @@ class PlotClass:
                                         contact_type=rct,
                                         sex=sex,
                                         which=CMType,
+                                        MaxAgeBin=MaxAgeBin,
                                     )
                                     plt.savefig(
                                         plot_dir_3 / f"{rct}_thumbnail.pdf",
@@ -2176,6 +2244,7 @@ class PlotClass:
                                             extend="both",
                                             orientation="horizontal",
                                             aspect=aspect,
+                                            format="%g",
                                         )
                                         ax1.remove()
                                         fig.set_size_inches(
@@ -2195,6 +2264,7 @@ class PlotClass:
                                         contact_type=rct,
                                         sex=sex,
                                         which=CMType,
+                                        MaxAgeBin=MaxAgeBin,
                                     )
                                     plt.savefig(
                                         plot_dir_3 / f"{rct}_thumbnail_log.pdf",
@@ -2208,6 +2278,7 @@ class PlotClass:
                                             extend="both",
                                             orientation="horizontal",
                                             aspect=aspect,
+                                            format="%g",
                                         )
                                         ax1.remove()
                                         fig.set_size_inches(
@@ -2222,8 +2293,13 @@ class PlotClass:
                                     plt.close()
                     else:
                         for rct in IM_contact_types:
+                            sex = "unisex"
                             self.plot_contact_matrix(
-                                bin_type=rbt, contact_type=rct, sex=sex, which=CMType
+                                bin_type=rbt,
+                                contact_type=rct,
+                                sex=sex,
+                                which=CMType,
+                                MaxAgeBin=MaxAgeBin,
                             )
                             plt.savefig(
                                 plot_dir_2 / f"{rct}.pdf", dpi=150, bbox_inches="tight"
@@ -2237,6 +2313,7 @@ class PlotClass:
                                     contact_type=rct,
                                     sex=sex,
                                     which=CMType,
+                                    MaxAgeBin=MaxAgeBin,
                                 )
                                 plt.savefig(
                                     plot_dir_2 / f"{rct}_thumbnail.pdf",
@@ -2250,6 +2327,7 @@ class PlotClass:
                                         extend="both",
                                         aspect=aspect,
                                         orientation="horizontal",
+                                        format="%g",
                                     )
                                     ax1.remove()
                                     fig.set_size_inches(
@@ -2269,6 +2347,7 @@ class PlotClass:
                                     contact_type=rct,
                                     sex=sex,
                                     which=CMType,
+                                    MaxAgeBin=MaxAgeBin,
                                 )
                                 plt.savefig(
                                     plot_dir_2 / f"{rct}_thumbnail_log.pdf",
@@ -2282,6 +2361,7 @@ class PlotClass:
                                         extend="both",
                                         aspect=aspect,
                                         orientation="horizontal",
+                                        format="%g",
                                     )
                                     ax1.remove()
                                     fig.set_size_inches(
@@ -2302,7 +2382,7 @@ class PlotClass:
                     self.record_path
                     / "Graphs"
                     / "Contact_Matrices"
-                    / self.Tracker_Contact_Type
+                    / NormFolder
                     / CMType
                 )
                 plot_dir_1.mkdir(exist_ok=True, parents=True)
@@ -2326,7 +2406,7 @@ class PlotClass:
                                 bin_type=rbt, contact_type=rct, which=CMType
                             )
                             plt.savefig(
-                                plot_dir_3 / f"{rct}.pdf", dpi=150, bbox_inches="tight"
+                                plot_dir_3 / f"{rct}.pdf", dpi=dpi, bbox_inches="tight"
                             )
                             plt.close()
         logger.info(f"Rank {mpi_rank} -- CM between sexes done")
@@ -2342,7 +2422,7 @@ class PlotClass:
                         contact_type=rct, bin_type=rbt, sex="unisex"
                     )
                     plt.savefig(
-                        plot_dir / f"{rbt}_{rct}.pdf", dpi=150, bbox_inches="tight"
+                        plot_dir / f"{rbt}_{rct}.pdf", dpi=dpi, bbox_inches="tight"
                     )
                     plt.close()
         logger.info(f"Rank {mpi_rank} -- Age bin matrix done")
@@ -2354,7 +2434,7 @@ class PlotClass:
                 for day in self.travel_distance.keys():
                     self.plot_DistanceTraveled(locations, day)
                     plt.savefig(
-                        plot_dir / f"{locations}.pdf", dpi=150, bbox_inches="tight"
+                        plot_dir / f"{locations}.pdf", dpi=dpi, bbox_inches="tight"
                     )
                     plt.close()
                     break

@@ -1,4 +1,5 @@
 import numpy as np
+import datetime
 import yaml
 import pandas as pd
 from pathlib import Path
@@ -7,6 +8,7 @@ import pytest
 
 from june import paths
 from june.tracker.tracker import Tracker
+from june.time import Timer
 
 
 from june.groups.group import make_subgroups
@@ -48,10 +50,8 @@ class TestTracker:
             contact_sexes=["unisex", "male", "female"],
         )
 
-        # tracker.simulation_days = 1/24
-        # tracker.delta_t = 3600
-        # tracker.trackertimestep(["households", "pubs"], 0)
-        # tracker = postprocess_functions(tracker)
+        tracker.timer = Timer()
+        tracker.timer.delta_time = datetime.timedelta(hours=1)
         return tracker
 
     def test__tracker_init(self, tracker):
@@ -70,9 +70,9 @@ class TestTracker:
         # Check the feed in groups we care about tracking
         assert sorted(tracker.group_type_names) == ["household", "pub"]
 
-        # Check CM that are initialised
-        assert sorted(tracker.CM_T["syoa"].keys()) == ["global", "household", "pub"]
-        assert sorted(tracker.CM_T["syoa"]["global"].keys()) == [
+        # Check CM that are initialized
+        assert sorted(tracker.CM["syoa"].keys()) == ["global", "household", "pub"]
+        assert sorted(tracker.CM["syoa"]["global"].keys()) == [
             "female",
             "male",
             "unisex",
@@ -145,11 +145,42 @@ class TestTracker:
         # Errored increase the variance of the results
         assert Errored_STD >= Errorless_STD
 
+    def test__All(self, tracker):
+        # Tests to make sure groups with 1 person have no contacts.
+        found = False
+        for group in tracker.world.households:
+            if len(group.people) == 1:
+                found = True
+                break
+        if found:
+            tracker.simulate_All_contacts(group)
+            CM_all_test = np.array(tracker.CMV["Interaction"]["household"])
+            assert CM_all_test.sum() == 0.0
+
+            tracker.simulate_1d_contacts(group)
+            CM_1d_test = np.array(tracker.CM["Interaction"]["household"])
+            assert CM_1d_test.sum() == 0.0
+
+        # Tests to make sure groups with at least 2 people have some contacts.
+        found = False
+        for group in tracker.world.households:
+            if len(group.people) > 5:
+                found = True
+                break
+        if found:
+            tracker.simulate_All_contacts(group)
+            CM_all_test = np.array(tracker.CMV["Interaction"]["household"])
+            assert CM_all_test.sum() > 0.0
+
+            tracker.simulate_1d_contacts(group)
+            CM_1d_test = np.array(tracker.CM["Interaction"]["household"])
+            assert CM_1d_test.sum() > 0.0
+
 
 def postprocess_functions(tracker: Tracker):
     tracker.contract_matrices("Interaction", np.array([]))
     tracker.convert_dict_to_df()
     tracker.calc_age_profiles()
     tracker.calc_average_contacts()
-    tracker.normalise_contact_matrices()
+    tracker.normalize_contact_matrices()
     return tracker
