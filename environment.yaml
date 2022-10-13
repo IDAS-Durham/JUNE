@@ -1,4 +1,4 @@
-name: JUNE-private
+name: JUNE
 channels:
   - anaconda
   - conda-forge
@@ -19,8 +19,8 @@ dependencies:
   - brotlipy=0.7.0=py39h1a28f6b_1002
   - bzip2=1.0.8=h620ffc9_4
   - c-ares=1.18.1=h1a28f6b_0
-  - ca-certificates=2022.6.15=h4653dfc_0
-  - certifi=2022.6.15=py39h2804cbe_0
+  - ca-certificates=2022.4.26=hca03da5_0
+  - certifi=2022.6.15=py39hca03da5_0
   - cffi=1.15.0=py39h22df2f2_1
   - charset-normalizer=2.0.4=pyhd3eb1b0_0
   - chart-studio=1.1.0=pyh9f0ad1d_0
@@ -36,8 +36,6 @@ dependencies:
   - executing=0.8.3=pyhd3eb1b0_0
   - fonttools=4.25.0=pyhd3eb1b0_0
   - freetype=2.11.0=h1192e45_0
-  - geographiclib=1.52=pyhd8ed1ab_0
-  - geopy=2.2.0=pyhd8ed1ab_0
   - giflib=5.2.1=h1a28f6b_0
   - h5py=3.6.0=py39h7fe8675_0
   - hdf5=1.12.1=h160e8cb_2
@@ -96,7 +94,7 @@ dependencies:
   - numexpr=2.8.1=py39h144ceef_2
   - numpy=1.21.5=py39h42add53_3
   - numpy-base=1.21.5=py39hadd41eb_3
-  - openssl=1.1.1q=ha287fd2_0
+  - openssl=1.1.1o=h1a28f6b_0
   - packaging=21.3=pyhd3eb1b0_0
   - pandocfilters=1.5.0=pyhd3eb1b0_0
   - parso=0.8.3=pyhd3eb1b0_0
@@ -122,7 +120,6 @@ dependencies:
   - python-cufflinks=0.17.3=py_0
   - python-dateutil=2.8.2=pyhd3eb1b0_0
   - python-fastjsonschema=2.15.1=pyhd3eb1b0_0
-  - python_abi=3.9=2_cp39
   - pytz=2022.1=py39hca03da5_0
   - pyyaml=6.0=py39h1a28f6b_0
   - pyzmq=22.3.0=py39hc377ac9_2
@@ -160,24 +157,17 @@ dependencies:
   - zlib=1.2.12=ha287fd2_1
   - zstd=1.5.2=h8574219_0
   - pip:
-    - black==22.6.0
     - chardet==4.0.0
-    - click==8.1.3
     - et-xmlfile==1.1.0
-    - flake8==5.0.3
+    - geographiclib==1.52
+    - geopy==2.2.0
     - googlemaps==4.4.5
     - idna==2.10
-    - mccabe==0.7.0
     - mpi4py==3.1.3
-    - mypy-extensions==0.4.3
     - networkx==2.8.4
     - openpyxl==3.0.9
     - pandas==1.4.1
-    - pathspec==0.9.0
-    - platformdirs==2.5.2
     - plotly==4.14.3
-    - pycodestyle==2.9.0
-    - pyflakes==2.5.0
     - pytest==7.1.1
     - recordclass==0.17.2
     - requests==2.25.1
