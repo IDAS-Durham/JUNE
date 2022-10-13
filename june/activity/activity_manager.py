@@ -3,8 +3,6 @@ import yaml
 from datetime import datetime
 from itertools import chain
 from typing import List, Optional
-from collections import defaultdict
-import numpy as np
 from time import perf_counter
 from time import time as wall_clock
 
@@ -13,18 +11,8 @@ from june.exc import SimulatorError
 from june.groups import Subgroup
 from june.groups.leisure import Leisure
 from june.groups.travel import Travel
-from june.policy import (
-    IndividualPolicies,
-    LeisurePolicies,
-    MedicalCarePolicies,
-    InteractionPolicies,
-)
-from june.mpi_setup import (
-    mpi_comm,
-    mpi_size,
-    mpi_rank,
-    MovablePeople,
-)
+from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, MovablePeople
+from june.records import Record
 
 logger = logging.getLogger("activity_manager")
 mpi_logger = logging.getLogger("mpi")
@@ -51,12 +39,13 @@ class ActivityManager:
         timer,
         all_activities,
         activity_to_super_groups: dict,
+        record: Optional[Record] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
     ):
         self.policies = policies
         if self.policies is not None:
-            self.policies.init_policies(world=world)
+            self.policies.init_policies(world=world, date=timer.date, record=record)
         self.world = world
         self.timer = timer
         self.leisure = leisure
@@ -64,12 +53,8 @@ class ActivityManager:
         self.all_activities = all_activities
 
         self.activity_to_super_group_dict = {
-            "medical_facility": activity_to_super_groups.get(
-                "medical_facility", []
-            ),
-            "primary_activity": activity_to_super_groups.get(
-                "primary_activity", []
-            ),
+            "medical_facility": activity_to_super_groups.get("medical_facility", []),
+            "primary_activity": activity_to_super_groups.get("primary_activity", []),
             "leisure": activity_to_super_groups.get("leisure", []),
             "residence": activity_to_super_groups.get("residence", []),
             "commute": activity_to_super_groups.get("commute", []),
@@ -83,6 +68,7 @@ class ActivityManager:
         world,
         policies,
         timer,
+        record: Optional[Record] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
     ):
@@ -90,13 +76,14 @@ class ActivityManager:
             config = yaml.load(f, Loader=yaml.FullLoader)
         try:
             activity_to_super_groups = config["activity_to_super_groups"]
-        except:
+        except KeyError:
             logger.warning(
                 "Activity to groups in config is deprecated"
                 "please change it to activity_to_super_groups"
             )
             activity_to_super_groups = config["activity_to_groups"]
         time_config = config["time"]
+
         cls.check_inputs(time_config)
         weekday_activities = [
             activity for activity in time_config["step_activities"]["weekday"].values()
@@ -115,6 +102,7 @@ class ActivityManager:
             activity_to_super_groups=activity_to_super_groups,
             leisure=leisure,
             travel=travel,
+            record=record,
         )
 
     @staticmethod
@@ -194,7 +182,7 @@ class ActivityManager:
     def get_personal_subgroup(self, person: "Person", activity: str):
         return getattr(person, activity)
 
-    def do_timestep(self):
+    def do_timestep(self, record=None):
         # get time data
         tick_interaction_timestep = perf_counter()
         date = self.timer.date
@@ -207,12 +195,15 @@ class ActivityManager:
                 self.policies.leisure_policies.apply(date=date, leisure=self.leisure)
             self.leisure.generate_leisure_probabilities_for_timestep(
                 delta_time=delta_time,
-                day_type=day_type,
+                date=date,
                 working_hours="primary_activity" in activities,
             )
         # move people to subgroups and get going abroad people
         to_send_abroad = self.move_people_to_active_subgroups(
-            activities=activities, date=date, days_from_start=self.timer.now
+            activities=activities,
+            date=date,
+            days_from_start=self.timer.now,
+            record=record,
         )
         tock_interaction_timestep = perf_counter()
         rank_logger.info(
@@ -241,6 +232,7 @@ class ActivityManager:
         activities: List[str],
         date: datetime = datetime(2020, 2, 2),
         days_from_start=0,
+        record=None,
     ):
         """
         Sends every person to one subgroup. If a person has a mild illness,
@@ -254,15 +246,10 @@ class ActivityManager:
         active_individual_policies = self.policies.individual_policies.get_active(
             date=date
         )
-        active_vaccine_policies = self.policies.vaccine_distribution.get_active(
-            date=date
-        )
         to_send_abroad = MovablePeople()
-
+        counter = 0
         for person in self.world.people:
-            self.policies.vaccine_distribution.apply(
-                person=person, date=date, active_policies=active_vaccine_policies
-            )
+            counter += 1
             if person.dead or person.busy:
                 continue
             allowed_activities = self.policies.individual_policies.apply(

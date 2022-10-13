@@ -4,6 +4,7 @@ from random import sample, choices
 
 from .event import Event
 
+
 class IncidenceSetter(Event):
     """
     This Event is used to set a specific incidence per region at some point in the code.

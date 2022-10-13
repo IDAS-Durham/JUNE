@@ -1,8 +1,7 @@
-from typing import Optional, List
+from typing import Optional
 import numpy as np
 from datetime import datetime, timedelta
 import h5py
-from collections import defaultdict
 from glob import glob
 import logging
 
@@ -11,21 +10,11 @@ from june.interaction import Interaction
 from june.groups.leisure import Leisure
 from june.policy import Policies
 from june.event import Events
-from june import paths
 from june.simulator import Simulator
-from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 from june.epidemiology.epidemiology import Epidemiology
-from june.epidemiology.infection import (
-    Transmission,
-    TransmissionGamma,
-    TransmissionXNExp,
-    InfectionSelectors,
-    Infection,
-)
-from june.epidemiology.infection_seed import InfectionSeeds
-from june.hdf5_savers.utils import read_dataset, write_dataset
+from june.hdf5_savers.utils import write_dataset
 from june.demography import Population
-from june.demography.person import Activities, Person
+from june.demography.person import Activities
 from june.hdf5_savers import (
     save_infections_to_hdf5,
     load_infections_from_hdf5,
@@ -34,6 +23,13 @@ from june.hdf5_savers import (
 )
 from june.groups.travel import Travel
 import june.simulator as june_simulator_module
+
+from june.tracker import Tracker
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from june.records.records_writer import Record
 
 default_config_filename = june_simulator_module.default_config_filename
 
@@ -72,11 +68,7 @@ def save_checkpoint_to_hdf5(
         f.create_group("people_data")
         for name, data in zip(
             ["people_id", "infected_id", "dead_id"],
-            [
-                people_ids,
-                infected_people_ids,
-                dead_people_ids,
-            ],
+            [people_ids, infected_people_ids, dead_people_ids],
         ):
             write_dataset(
                 group=f["people_data"],
@@ -84,9 +76,7 @@ def save_checkpoint_to_hdf5(
                 data=np.array(data, dtype=np.int64),
             )
     save_infections_to_hdf5(
-        hdf5_file_path=hdf5_file_path,
-        infections=infection_list,
-        chunk_size=chunk_size,
+        hdf5_file_path=hdf5_file_path, infections=infection_list, chunk_size=chunk_size
     )
     immunities = [person.immunity for person in population]
     save_immunities_to_hdf5(hdf5_file_path=hdf5_file_path, immunities=immunities)
@@ -138,7 +128,7 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
     checkpoint_files = glob(hdf5_file_root + ".[0-9]*.hdf5")
     try:
         cp_date = hdf5_file_root.split("_")[-1]
-    except:
+    except Exception:
         cp_date = hdf5_file_root
     logger.info(f"found {len(checkpoint_files)} {cp_date} checkpoint files")
     ret = load_checkpoint_from_hdf5(checkpoint_files[0])
@@ -165,8 +155,7 @@ def combine_checkpoints_for_ranks(hdf5_file_root: str):
         chunk_size=1000000,
     )
     save_immunities_to_hdf5(
-        hdf5_file_path=unified_checkpoint_path,
-        immunities=ret["immunity_list"],
+        hdf5_file_path=unified_checkpoint_path, immunities=ret["immunity_list"]
     )
 
 
@@ -216,6 +205,8 @@ def restore_simulator_to_checkpoint(
     for person_id, immunity in zip(
         checkpoint_data["people_id"], checkpoint_data["immunity_list"]
     ):
+        if person_id not in people_ids:
+            continue
         person = world.people.get_from_id(person_id)
         person.immunity = immunity
     # restore timer
@@ -223,6 +214,7 @@ def restore_simulator_to_checkpoint(
     # we need to start the next day
     checkpoint_date += timedelta(days=1)
     simulator.timer.reset_to_new_date(checkpoint_date)
+    logger.info(f"Restored checkpoint at date {checkpoint_date.date()}")
     return simulator
 
 
@@ -232,6 +224,7 @@ def generate_simulator_from_checkpoint(
     interaction: Interaction,
     chunk_size: Optional[int] = 50000,
     epidemiology: Optional[Epidemiology] = None,
+    tracker: Optional[Tracker] = None,
     policies: Optional[Policies] = None,
     leisure: Optional[Leisure] = None,
     travel: Optional[Travel] = None,
@@ -244,6 +237,7 @@ def generate_simulator_from_checkpoint(
         world=world,
         interaction=interaction,
         epidemiology=epidemiology,
+        tracker=tracker,
         policies=policies,
         leisure=leisure,
         travel=travel,

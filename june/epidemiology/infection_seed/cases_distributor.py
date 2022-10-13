@@ -23,7 +23,7 @@ def get_super_area_population_weights_by_region(
     data frame indexed by super area, with weights and region
     """
     people_per_super_area_and_region = pd.merge(
-        residents_per_super_area, super_area_to_region, on="super_area",
+        residents_per_super_area, super_area_to_region, on="super_area"
     )
     people_per_region = people_per_super_area_and_region.groupby("region").sum()[
         "n_residents"
@@ -135,7 +135,7 @@ class CasesDistributor:
     ):
         ret = pd.DataFrame(index=cases_per_day.index)
         weights_per_super_area = get_super_area_population_weights(
-            residents_per_super_area=residents_per_super_area,
+            residents_per_super_area=residents_per_super_area
         )
         for date, n_cases in cases_per_day.iterrows():
             weights = weights_per_super_area.values.flatten()

@@ -3,7 +3,6 @@ import h5py
 from collections import defaultdict
 from typing import List
 
-from june import paths
 from june.epidemiology.infection import (
     TransmissionGamma,
     Transmission,
@@ -25,9 +24,7 @@ attributes_to_save_dict = {
 
 
 def save_transmissions_to_hdf5(
-    hdf5_file_path: str,
-    transmissions: List[Transmission],
-    chunk_size: int = 50000,
+    hdf5_file_path: str, transmissions: List[Transmission], chunk_size: int = 50000
 ):
     """
     Saves transmissions data to hdf5. The transmission type is inferred from the first

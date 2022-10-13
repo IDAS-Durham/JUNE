@@ -1,7 +1,6 @@
-import pandas as pd
-import pytest
 from june.groups import Household, Households
 from june.demography import Person
+
 
 def test__households_adding():
     household = Household()
@@ -11,6 +10,7 @@ def test__households_adding():
     households2 = Households([household2, household3])
     households3 = households1 + households2
     assert households3.members == [household, household2, household3]
+
 
 def test__household_mates():
 
@@ -25,6 +25,7 @@ def test__household_mates():
     assert person1 in person1.housemates
     assert person2 in person1.housemates
     assert person3 in person1.housemates
+
 
 def test__being_visited_flag():
     house = Household()

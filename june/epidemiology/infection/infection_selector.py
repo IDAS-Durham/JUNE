@@ -1,18 +1,20 @@
-from enum import IntEnum
-
-import numpy as np
-from itertools import count
 import yaml
 
 from june import paths
 from .health_index.health_index import HealthIndexGenerator
-from .health_index import Data2Rates
 from . import Infection, Covid19
-from .symptoms import Symptoms, SymptomTag
+from .symptoms import Symptoms
 from .trajectory_maker import TrajectoryMakers
 from .transmission import TransmissionConstant, TransmissionGamma
 from .transmission_xnexp import TransmissionXNExp
 from .trajectory_maker import CompletionTime
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from june.demography import Person
+    from .transmission import Transmission
+    from june.epidemiology.infection.symptom_tag import SymptomTag
 
 default_transmission_config_path = (
     paths.configs_path / "defaults/epidemiology/infection/transmission/covid19.yaml"
@@ -89,7 +91,6 @@ class InfectionSelector:
         time:
             time at which infection happens
         """
-        infection_id = self.infection_id
         person.infection = self._make_infection(person, time)
         person.immunity.add_immunity(person.infection.immunity_ids())
 
@@ -194,9 +195,7 @@ class InfectionSelector:
         self.probability = CompletionTime.from_dict(transmission_config["probability"])
 
     def _select_transmission(
-        self,
-        time_to_symptoms_onset: float,
-        max_symptoms_tag: "SymptomsTag",
+        self, time_to_symptoms_onset: float, max_symptoms_tag: "SymptomTag"
     ) -> "Transmission":
         """
         Selects the transmission type specified by the user in the init,
@@ -256,20 +255,22 @@ class InfectionSelector:
         infection_id:
             infection id
         """
-        health_index = self.health_index_generator(person, infection_id=self.infection_id)
+        health_index = self.health_index_generator(
+            person, infection_id=self.infection_id
+        )
         return Symptoms(health_index=health_index)
 
 
 class InfectionSelectors:
     def __init__(self, infection_selectors: list = None):
         self._infection_selectors = infection_selectors
-        self.infection_id_to_selector = self.make_dict() 
+        self.infection_id_to_selector = self.make_dict()
 
     def make_dict(self):
         """
         Makes two dicts:
         infection_type_id -> infection_class (needed for easier MPI comms)
-        infection_class -> infection_selector (needed to map infection to 
+        infection_class -> infection_selector (needed to map infection to
                             the class that creates infections)
         """
         if not self._infection_selectors:
@@ -302,4 +303,3 @@ class InfectionSelectors:
 
     def __getitem__(self, item):
         return self._infection_selectors[item]
-        

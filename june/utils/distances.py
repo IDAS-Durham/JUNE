@@ -1,6 +1,8 @@
 import math
 import numpy as np
+
 earth_radius = 6371  # km
+
 
 def haversine_distance(origin, destination):
     """
@@ -18,6 +20,7 @@ def haversine_distance(origin, destination):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     d = earth_radius * c
     return d
+
 
 def add_distance_to_lat_lon(latitude, longitude, x, y):
     """

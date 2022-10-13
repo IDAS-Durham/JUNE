@@ -1,31 +1,25 @@
 import logging
 import datetime
-import numpy as np
-import pickle
 import yaml
-from itertools import chain
-from typing import Optional, List, Dict, Union
+from typing import Optional, List
 from pathlib import Path
 from time import perf_counter
 from time import time as wall_clock
-from mpi4py import MPI
 
 from june import paths
-from june.activity import ActivityManager, activity_hierarchy
-from june.demography import Person, Activities
+from june.activity import ActivityManager
 from june.exc import SimulatorError
 from june.groups.leisure import Leisure
 from june.groups.travel import Travel
-from june.groups.group.interactive import InteractiveGroup
 from june.epidemiology.epidemiology import Epidemiology
 from june.interaction import Interaction
+from june.tracker import Tracker
 from june.policy import Policies
 from june.event import Events
 from june.time import Timer
 from june.records import Record
 from june.world import World
-from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
-from june.utils.profiler import profile
+from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
 
 default_config_filename = paths.configs_path / "config_example.yaml"
 
@@ -42,7 +36,7 @@ def enable_mpi_debug(results_folder):
     from june.logging import MPIFileHandler
 
     logging_file = Path(results_folder) / "mpi.log"
-    with open(logging_file, "w") as f:
+    with open(logging_file, "w"):
         pass
     mh = MPIFileHandler(logging_file)
     rank_logger.addHandler(mh)
@@ -82,6 +76,7 @@ class Simulator:
         timer: Timer,
         activity_manager: ActivityManager,
         epidemiology: Epidemiology,
+        tracker: Tracker,
         events: Optional[Events] = None,
         record: Optional[Record] = None,
         checkpoint_save_dates: List[datetime.date] = None,
@@ -105,7 +100,11 @@ class Simulator:
             self.epidemiology.set_medical_care(
                 world=world, activity_manager=activity_manager
             )
-            self.epidemiology.set_immunity(self.world.people)
+            self.epidemiology.set_immunity(self.world)
+            self.epidemiology.set_past_vaccinations(
+                people=self.world.people, date=self.timer.date, record=record
+            )
+        self.tracker = tracker
         if self.events is not None:
             self.events.init_events(world=world)
         # self.comment = comment
@@ -127,6 +126,7 @@ class Simulator:
         policies: Optional[Policies] = None,
         events: Optional[Events] = None,
         epidemiology: Optional[Epidemiology] = None,
+        tracker: Optional[Tracker] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
         config_filename: str = default_config_filename,
@@ -161,6 +161,7 @@ class Simulator:
             travel=travel,
             policies=policies,
             timer=timer,
+            record=record,
         )
         return cls(
             world=world,
@@ -169,6 +170,7 @@ class Simulator:
             events=events,
             activity_manager=activity_manager,
             epidemiology=epidemiology,
+            tracker=tracker,
             record=record,
             checkpoint_save_dates=checkpoint_save_dates,
             checkpoint_save_path=checkpoint_save_path,
@@ -181,6 +183,7 @@ class Simulator:
         checkpoint_load_path: str,
         interaction: Interaction,
         epidemiology: Optional[Epidemiology] = None,
+        tracker: Optional[Tracker] = None,
         policies: Optional[Policies] = None,
         leisure: Optional[Leisure] = None,
         travel: Optional[Travel] = None,
@@ -197,6 +200,7 @@ class Simulator:
             interaction=interaction,
             policies=policies,
             epidemiology=epidemiology,
+            tracker=tracker,
             leisure=leisure,
             travel=travel,
             config_filename=config_filename,
@@ -233,19 +237,15 @@ class Simulator:
         status of the population, and distribute scores among the infectors to calculate R0.
         """
         output_logger.info("==================== timestep ====================")
+        tick_s, tickw_s = perf_counter(), wall_clock()
         tick, tickw = perf_counter(), wall_clock()
         if self.activity_manager.policies is not None:
             self.activity_manager.policies.interaction_policies.apply(
-                date=self.timer.date,
-                interaction=self.interaction,
+                date=self.timer.date, interaction=self.interaction
             )
             self.activity_manager.policies.regional_compliance.apply(
                 date=self.timer.date, regions=self.world.regions
             )
-            if self.activity_manager.policies.vaccine_distribution is not None:
-                self.activity_manager.policies.vaccine_distribution.update_vaccinated(
-                    self.world.people, date=self.timer.date
-                )
         activities = self.timer.activities
         # apply events
         if self.events is not None:
@@ -264,7 +264,7 @@ class Simulator:
             n_people_from_abroad,
             n_people_going_abroad,
             to_send_abroad,  # useful for knowing who's MPI-ing, so can send extra info as needed.
-        ) = self.activity_manager.do_timestep()
+        ) = self.activity_manager.do_timestep(record=self.record)
         tick_interaction = perf_counter()
 
         # get the supergroup instances that are active in this time step:
@@ -282,6 +282,7 @@ class Simulator:
         # count people in the cemetery
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
+
         output_logger.info(
             f"Info for rank {mpi_rank}, "
             f"Date = {self.timer.date}, "
@@ -292,6 +293,7 @@ class Simulator:
         # main interaction loop
         infected_ids = []  # ids of the newly infected people
         infection_ids = []  # ids of the viruses they got
+
         for super_group in super_group_instances:
             for group in super_group:
                 if group.external:
@@ -310,13 +312,27 @@ class Simulator:
                         delta_time=self.timer.duration,
                         record=self.record,
                     )
+
                     infected_ids += new_infected_ids
                     infection_ids += new_infection_ids
                     n_people += group_size
+
         tock_interaction = perf_counter()
         rank_logger.info(
             f"Rank {mpi_rank} -- interaction -- {tock_interaction-tick_interaction}"
         )
+
+        tick_tracker = perf_counter()
+        # Loop in here
+        if isinstance(self.tracker, type(None)):
+            pass
+        else:
+            self.tracker.trackertimestep(
+                self.activity_manager.all_super_groups, self.timer
+            )
+        tock_tracker = perf_counter()
+        rank_logger.info(f"Rank {mpi_rank} -- tracker -- {tock_tracker-tick_tracker}")
+
         self.epidemiology.do_timestep(
             world=self.world,
             timer=self.timer,
@@ -325,6 +341,7 @@ class Simulator:
             infection_ids=infection_ids,
             people_from_abroad_dict=people_from_abroad_dict,
         )
+
         tick, tickw = perf_counter(), wall_clock()
         mpi_comm.Barrier()
         tock, tockw = perf_counter(), wall_clock()
@@ -335,6 +352,7 @@ class Simulator:
             len(self.world.people) + n_people_from_abroad - n_people_going_abroad
         )
         if n_people != people_active:
+
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "
                 f"the total people number {people_active}.\n"
@@ -348,10 +366,10 @@ class Simulator:
         self.clear_world()
         tock, tockw = perf_counter(), wall_clock()
         output_logger.info(
-            f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick},"
-            f"{tockw-tickw} - {self.timer.date}\n"
+            f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick_s},"
+            f"{tockw-tickw_s} - {self.timer.date}\n"
         )
-        mpi_logger.info(f"{self.timer.date},{mpi_rank},timestep,{tock-tick}")
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},timestep,{tock-tick_s}")
 
     def run(self):
         """

@@ -1,11 +1,22 @@
-import os
-from pathlib import Path
-import numpy as np
 import pytest
 
 from june.geography import Geography
 from june.demography import Person
 from june.groups import School, Schools
+from recordclass import dataobject
+
+
+class Activities(dataobject):
+    residence: None
+    primary_activity: None
+    medical_facility: None
+    commute: None
+    rail_travel: None
+    leisure: None
+
+    def iter(self):
+        return [getattr(self, activity) for activity in self.__fields__]
+
 
 @pytest.fixture(name="geo_schools", scope="module")
 def area_name():
@@ -16,13 +27,7 @@ def area_name():
 class TestSchool:
     @pytest.fixture(name="school")
     def create_school(self):
-        return School(
-            coordinates=(1.0, 1.0),
-            n_pupils_max=467,
-            age_min=6,
-            age_max=8,
-            sector="primary_secondary",
-        )
+        return School(coordinates=(1.0, 1.0), n_pupils_max=467, age_min=6, age_max=8)
 
     def test__school_grouptype(self, school):
         assert school.SubgroupType.teachers == 0
@@ -34,18 +39,20 @@ class TestSchool:
             assert len(subgroup.people) == 0
 
     def test__filling_school(self, school):
-        person = Person(sex="f", age=7)
-        school.add(person, School.SubgroupType.students)
+        person = Person(
+            sex="f", age=7, subgroups=Activities(None, None, None, None, None, None)
+        )
+
+        school.add(person)
         assert bool(school.subgroups[2].people) is True
+
 
 class TestSchools:
     def test__creating_schools_from_file(self, geo_schools):
-        schools = Schools.from_file(
-            areas = geo_schools.areas,
-        )
+        Schools.from_file(areas=geo_schools.areas)
 
     def test_creating_schools_for_areas(self, geo_schools):
-        schools = Schools.for_areas(geo_schools.areas)
+        Schools.for_areas(geo_schools.areas)
 
     @pytest.fixture(name="schools", scope="module")
     def test__creating_schools_for_geography(self, geo_schools):
@@ -62,5 +69,3 @@ class TestSchools:
             schools.school_agegroup_to_global_indices.get(age)[closest_school[0]]
         ]
         assert closest_school == school
-
-

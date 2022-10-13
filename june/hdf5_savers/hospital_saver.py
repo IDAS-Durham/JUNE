@@ -3,6 +3,7 @@ import numpy as np
 
 from june.world import World
 from june.groups import Hospital, Hospitals, ExternalHospital
+from june.groups.group.make_subgroups import SubgroupParams
 from .utils import read_dataset
 
 nan_integer = -999
@@ -28,7 +29,6 @@ def save_hospitals_to_hdf5(
     """
     n_hospitals = len(hospitals)
     n_chunks = int(np.ceil(n_hospitals / chunk_size))
-    vlen_type = h5py.vlen_dtype(np.dtype("float64"))
     with h5py.File(file_path, "a") as f:
         hospitals_dset = f.create_group("hospitals")
         for chunk in range(n_chunks):
@@ -112,6 +112,7 @@ def load_hospitals_from_hdf5(
     chunk_size=50000,
     domain_super_areas=None,
     super_areas_to_domain_dict: dict = None,
+    config_filename=None,
 ):
     """
     Loads companies from an hdf5 file located at ``file_path``.
@@ -119,6 +120,12 @@ def load_hospitals_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+    Hospital_Class = Hospital
+    Hospital_Class.subgroup_params = SubgroupParams.from_file(
+        config_filename=config_filename
+    )
+    ExternalHospital_Class = ExternalHospital
+
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         hospitals = f["hospitals"]
         hospitals_list = []
@@ -128,13 +135,11 @@ def load_hospitals_from_hdf5(
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_hospitals)
-            length = idx2 - idx1
             ids = read_dataset(hospitals["id"], idx1, idx2)
             n_beds_list = read_dataset(hospitals["n_beds"], idx1, idx2)
             n_icu_beds_list = read_dataset(hospitals["n_icu_beds"], idx1, idx2)
             trust_codes = read_dataset(hospitals["trust_code"], idx1, idx2)
             coordinates = read_dataset(hospitals["coordinates"], idx1, idx2)
-            areas = read_dataset(hospitals["area"], idx1, idx2)
             super_areas = read_dataset(hospitals["super_area"], idx1, idx2)
             region_name = read_dataset(hospitals["region_name"], idx1, idx2)
             for k in range(idx2 - idx1):
@@ -153,14 +158,14 @@ def load_hospitals_from_hdf5(
                     domain_super_areas is not None
                     and super_area not in domain_super_areas
                 ):
-                    hospital = ExternalHospital(
+                    hospital = ExternalHospital_Class(
                         id=ids[k],
                         spec="hospital",
                         domain_id=super_areas_to_domain_dict[super_area],
                         region_name=region_name[k].decode(),
                     )
                 else:
-                    hospital = Hospital(
+                    hospital = Hospital_Class(
                         n_beds=n_beds_list[k],
                         n_icu_beds=n_icu_beds_list[k],
                         coordinates=coordinates[k],
@@ -181,7 +186,6 @@ def restore_hospital_properties_from_hdf5(
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         hospitals = f["hospitals"]
-        hospitals_list = []
         n_hospitals = hospitals.attrs["n_hospitals"]
         n_chunks = int(np.ceil(n_hospitals / chunk_size))
         for chunk in range(n_chunks):

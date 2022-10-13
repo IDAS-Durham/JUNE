@@ -1,34 +1,26 @@
 import datetime
 import numpy as np
-import json
 import pandas as pd
 import yaml
 import pytest
-import dateutil.parser
 
 from tables import open_file
 from june import paths
 from june.records import Record
 from june.groups import Hospital, Hospitals, Household, Households, CareHome, CareHomes
 from june.policy import Policies
+from june.time import Timer
 from june.activity import ActivityManager
 from june.demography import Person, Population
 from june.interaction import Interaction
 from june.epidemiology.epidemiology import Epidemiology
-from june.epidemiology.infection import InfectionSelector, HealthIndexGenerator
 from june.epidemiology.infection_seed import InfectionSeed, InfectionSeeds
-from june.geography.geography import (
-    Areas,
-    SuperAreas,
-    Regions,
-    Area,
-    SuperArea,
-    Region,
-)
+from june.geography.geography import Areas, SuperAreas, Regions, Area, SuperArea, Region
 from june.groups import Supergroup
 from june import World
 
 config_interaction = paths.configs_path / "tests/interaction.yaml"
+
 
 @pytest.fixture(name="dummy_world", scope="module")
 def create_dummy_world():
@@ -87,14 +79,7 @@ def create_dummy_world():
     areas = Areas(super_areas[0].areas + super_areas[1].areas + super_areas[2].areas)
     households = Households([Household(area=super_areas[0].areas[0])])
     hospitals = Hospitals(
-        [
-            Hospital(
-                n_beds=1,
-                n_icu_beds=1,
-                area=areas[5],
-                coordinates=(0.0, 0.0),
-            )
-        ]
+        [Hospital(n_beds=1, n_icu_beds=1, area=areas[5], coordinates=(0.0, 0.0))]
     )
     care_homes = CareHomes([CareHome(area=super_areas[0].areas[0])])
     world = World()
@@ -227,10 +212,7 @@ def test__writing_death():
 
 
 def test__static_people(dummy_world):
-    record = Record(
-        record_path="results",
-        record_static_data=True,
-    )
+    record = Record(record_path="results", record_static_data=True)
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -255,20 +237,18 @@ def test__static_people(dummy_world):
     assert df.loc[2, "ethnicity"] == "C"
     assert df.loc[0, "sex"] == "f"
     assert df.loc[2, "sex"] == "m"
+
 
 def test__static_with_extras_people(dummy_world):
-    record = Record(
-        record_path="results",
-        record_static_data=True,
-    )
-    tonto = [0.1,1.3,5.]
-    listo = [0.9,0.7,0.]
-    vaccine_type = [0,1,2]
-    vaccine_name = ['astra','pfizer','moderna']
-    record.statics['people'].extra_float_data['tonto'] = tonto
-    record.statics['people'].extra_float_data['listo'] = listo  
-    record.statics['people'].extra_int_data['vaccine_type'] = vaccine_type
-    record.statics['people'].extra_str_data['vaccine_name'] = vaccine_name
+    record = Record(record_path="results", record_static_data=True)
+    tonto = [0.1, 1.3, 5.0]
+    listo = [0.9, 0.7, 0.0]
+    vaccine_type = [0, 1, 2]
+    vaccine_name = ["astra", "pfizer", "moderna"]
+    record.statics["people"].extra_float_data["tonto"] = tonto
+    record.statics["people"].extra_float_data["listo"] = listo
+    record.statics["people"].extra_int_data["vaccine_type"] = vaccine_type
+    record.statics["people"].extra_str_data["vaccine_name"] = vaccine_name
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -293,23 +273,22 @@ def test__static_with_extras_people(dummy_world):
     assert df.loc[2, "ethnicity"] == "C"
     assert df.loc[0, "sex"] == "f"
     assert df.loc[2, "sex"] == "m"
-    assert len(df['tonto'].values) == len(tonto)
-    assert all([pytest.approx(a) == b for a, b in zip(df['tonto'].values, tonto)])
-    assert len(df['listo'].values) == len(listo)
-    assert all([pytest.approx(a) == b for a, b in zip(df['listo'].values, listo)])
-    assert len(df['vaccine_type'].values) == len(vaccine_type)
-    assert all([pytest.approx(a) == b for a, b in zip(df['vaccine_type'].values, vaccine_type)])
-    assert len(df['vaccine_name'].values) == len(vaccine_name)
-    assert all([pytest.approx(a) == b for a, b in zip(df['vaccine_name'].values, vaccine_name)])
-
-
+    assert len(df["tonto"].values) == len(tonto)
+    assert all([pytest.approx(a) == b for a, b in zip(df["tonto"].values, tonto)])
+    assert len(df["listo"].values) == len(listo)
+    assert all([pytest.approx(a) == b for a, b in zip(df["listo"].values, listo)])
+    assert len(df["vaccine_type"].values) == len(vaccine_type)
+    assert all(
+        [pytest.approx(a) == b for a, b in zip(df["vaccine_type"].values, vaccine_type)]
+    )
+    assert len(df["vaccine_name"].values) == len(vaccine_name)
+    assert all(
+        [pytest.approx(a) == b for a, b in zip(df["vaccine_name"].values, vaccine_name)]
+    )
 
 
 def test__static_location(dummy_world):
-    record = Record(
-        record_path="results",
-        record_static_data=True,
-    )
+    record = Record(record_path="results", record_static_data=True)
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -339,10 +318,7 @@ def test__static_location(dummy_world):
 
 
 def test__static_geography(dummy_world):
-    record = Record(
-        record_path="results",
-        record_static_data=True,
-    )
+    record = Record(record_path="results", record_static_data=True)
     record.static_data(world=dummy_world)
     with open_file(record.record_path / record.filename, mode="a") as f:
         record.file = f
@@ -471,7 +447,8 @@ def test__parameters(dummy_world, selector, selectors):
         infection_selector=selector,
         seed_strength=0.0,
         cases_per_capita=0,
-        date="2020-03-01"
+        date="2020-03-01",
+        seed_past_infections=False,
     )
     infection_seeds = InfectionSeeds([infection_seed])
     infection_seed.min_date = datetime.datetime(2020, 10, 10)
@@ -481,7 +458,7 @@ def test__parameters(dummy_world, selector, selectors):
     activity_manager = ActivityManager(
         world=dummy_world,
         policies=policies,
-        timer=None,
+        timer=Timer(),
         all_activities=None,
         activity_to_super_groups={"residence": ["household"]},
     )
@@ -497,8 +474,8 @@ def test__parameters(dummy_world, selector, selectors):
     with open(record.record_path / "config.yaml", "r") as file:
         parameters = yaml.load(file, Loader=yaml.FullLoader)
 
-        #policies = policies.replace("array", "np.array")
-        #policies = eval(policies)
+        # policies = policies.replace("array", "np.array")
+        # policies = eval(policies)
     interaction_attributes = ["betas", "alpha_physical"]
     for attribute in interaction_attributes:
         assert parameters["interaction"][attribute] == getattr(interaction, attribute)

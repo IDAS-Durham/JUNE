@@ -1,44 +1,19 @@
 from datetime import datetime, timedelta
-from pathlib import Path
 
 import numpy as np
-import pytest
 
 from june import paths
-from june.demography import Person, Population
-from june.geography import Geography
-from june.groups import Hospital, School, Company, Household, University
-from june.groups import (
-    Hospitals,
-    Schools,
-    Companies,
-    Households,
-    Universities,
-    Cemeteries,
-)
-from june.groups.leisure import (
-    Cinemas,
-    Pubs,
-    Cinema,
-    Pub,
-    generate_leisure_for_config,
-    generate_leisure_for_world,
-)
-from june.epidemiology.infection import SymptomTag
-from june.epidemiology.infection.infection_selector import InfectionSelector
-from june.interaction import Interaction
+from june.demography import Person
+from june.groups import Household
+from june.groups.leisure import generate_leisure_for_config, generate_leisure_for_world
 from june.policy import (
-    Policy,
     Policies,
     CloseLeisureVenue,
     ChangeLeisureProbability,
-    LeisurePolicies,
     TieredLockdown,
     TieredLockdowns,
     ChangeVisitsProbability,
 )
-from june.simulator import Simulator
-from june.world import World
 
 
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
@@ -48,9 +23,7 @@ class TestCloseLeisure:
     def test__close_leisure_venues(self, setup_policy_world):
         world, pupil, student, worker, sim = setup_policy_world
         close_venues = CloseLeisureVenue(
-            start_time="2020-3-1",
-            end_time="2020-3-30",
-            venues_to_close=["pub"],
+            start_time="2020-3-1", end_time="2020-3-30", venues_to_close=["pub"]
         )
         policies = Policies([close_venues])
         leisure = generate_leisure_for_config(world=world, config_filename=test_config)
@@ -63,7 +36,9 @@ class TestCloseLeisure:
         time_before_policy = datetime(2019, 2, 1)
         activities = ["leisure", "residence"]
         leisure.generate_leisure_probabilities_for_timestep(
-            delta_time=10000, working_hours=False, day_type="weekday"
+            delta_time=10000,
+            working_hours=False,
+            date=datetime.strptime("2020-03-02", "%Y-%m-%d"),
         )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_before_policy, 0.0
@@ -74,7 +49,9 @@ class TestCloseLeisure:
         policies.leisure_policies.apply(date=time_during_policy, leisure=leisure)
         assert list(world.regions[0].policy["global_closed_venues"]) == ["pub"]
         leisure.generate_leisure_probabilities_for_timestep(
-            delta_time=10000, working_hours=False, day_type="weekday"
+            delta_time=10000,
+            working_hours=False,
+            date=datetime.strptime("2020-03-02", "%Y-%m-%d"),
         )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy, 0.0
@@ -89,7 +66,9 @@ class TestCloseLeisure:
         policies.leisure_policies.apply(date=time_after_policy, leisure=leisure)
         assert list(world.regions[0].policy["global_closed_venues"]) == []
         leisure.generate_leisure_probabilities_for_timestep(
-            delta_time=10000, working_hours=False, day_type="weekday"
+            delta_time=10000,
+            working_hours=False,
+            date=datetime.strptime("2020-03-02", "%Y-%m-%d"),
         )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy, 0.0
@@ -99,9 +78,9 @@ class TestCloseLeisure:
     def test__close_leisure_venues_tiered_lockdowns(self, setup_policy_world):
         world, pupil, student, worker, sim = setup_policy_world
         tiered_lockdown = TieredLockdown(
-            start_time="2020-03-01",
+            start_time="2020-03-02",
             end_time="2020-03-30",
-            tiers_per_region={"North East": 4.},
+            tiers_per_region={"North East": 4.0},
         )
         tiered_lockdowns = TieredLockdowns([tiered_lockdown])
 
@@ -116,7 +95,9 @@ class TestCloseLeisure:
         time_before_policy = datetime(2019, 2, 1)
         activities = ["leisure", "residence"]
         leisure.generate_leisure_probabilities_for_timestep(
-            delta_time=10000, working_hours=False, day_type="weekday"
+            delta_time=10000,
+            working_hours=False,
+            date=datetime.strptime("2020-03-02", "%Y-%m-%d"),
         )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_before_policy, 0.0
@@ -128,7 +109,9 @@ class TestCloseLeisure:
         assert "pub" in list(world.regions[0].policy["local_closed_venues"])
         assert "cinema" in list(world.regions[0].policy["local_closed_venues"])
         leisure.generate_leisure_probabilities_for_timestep(
-            delta_time=10000, working_hours=False, day_type="weekday"
+            delta_time=10000,
+            working_hours=False,
+            date=datetime.strptime("2020-03-02", "%Y-%m-%d"),
         )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_during_policy, 0.0
@@ -141,7 +124,9 @@ class TestCloseLeisure:
         policies.tiered_lockdown.apply(date=time_after_policy, regions=world.regions)
         assert list(world.regions[0].policy["local_closed_venues"]) == []
         leisure.generate_leisure_probabilities_for_timestep(
-            delta_time=10000, working_hours=False, day_type="weekday"
+            delta_time=10000,
+            working_hours=False,
+            date=datetime.strptime("2020-03-02", "%Y-%m-%d"),
         )
         sim.activity_manager.move_people_to_active_subgroups(
             activities, time_after_policy, 0.0
@@ -158,10 +143,7 @@ class TestReduceLeisureProbabilities:
             start_time="2020-03-02",
             end_time="2020-03-05",
             activity_reductions={
-                "pub": {
-                    "male": {"0-50": 0.5, "50-100": 0.0},
-                    "female": {"0-100": 0.5},
-                },
+                "pub": {"male": {"0-50": 0.5, "50-100": 0.0}, "female": {"0-100": 0.5}}
             },
         )
         policies = Policies([reduce_leisure_probabilities])
@@ -172,7 +154,7 @@ class TestReduceLeisureProbabilities:
             date=sim.timer.date, leisure=sim.activity_manager.leisure
         )
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-            0.1, working_hours=False, day_type="weekday"
+            0.1, working_hours=False, date=datetime.strptime("2020-03-02", "%Y-%m-%d")
         )
         assert str(sim.timer.date.date()) == "2020-03-01"
         household = Household()
@@ -207,7 +189,7 @@ class TestReduceLeisureProbabilities:
             next(sim.timer)
         policies.leisure_policies.apply(date=sim.timer.date, leisure=leisure)
         leisure.generate_leisure_probabilities_for_timestep(
-            0.1, working_hours=False, day_type="weekday"
+            0.1, working_hours=False, date=datetime.strptime("2020-03-02", "%Y-%m-%d")
         )
         assert leisure.policy_reductions["pub"]["weekday"]["m"][60] == 0.0
         assert leisure.policy_reductions["pub"]["weekday"]["f"][19] == 0.5
@@ -233,7 +215,7 @@ class TestReduceLeisureProbabilities:
             date=sim.timer.date, leisure=sim.activity_manager.leisure
         )
         sim.activity_manager.leisure.generate_leisure_probabilities_for_timestep(
-            0.1, working_hours=False, day_type="weekday"
+            0.1, working_hours=False, date=datetime.strptime("2020-03-02", "%Y-%m-%d")
         )
         assert leisure.policy_reductions == {}
         assert leisure.policy_reductions == {}
@@ -258,7 +240,6 @@ class TestReduceLeisureProbabilities:
         world, pupil, student, worker, sim = setup_policy_world
         while str(sim.timer.date.date()) != "2020-03-02":
             next(sim.timer)
-        super_area = world.super_areas[0]
         region = worker.region
         leisure = generate_leisure_for_config(world=world, config_filename=test_config)
         assert leisure.regions[0] == region
@@ -266,10 +247,7 @@ class TestReduceLeisureProbabilities:
             start_time="2020-03-02",
             end_time="2020-03-05",
             activity_reductions={
-                "pub": {
-                    "male": {"0-50": 0.5, "50-100": 0.0},
-                    "female": {"0-100": 0.5},
-                },
+                "pub": {"male": {"0-50": 0.5, "50-100": 0.0}, "female": {"0-100": 0.5}}
             },
         )
         policies = Policies([reduce_leisure_probabilities])
@@ -292,7 +270,7 @@ class TestReduceLeisureProbabilities:
             distributor=leisure.leisure_distributors["pub"],
             sex="m",
             age=25,
-            day_type="weekday",
+            date=datetime.strptime("2020-03-02", "%Y-%m-%d"),
             working_hours=False,
             region=region,
         )
@@ -302,11 +280,13 @@ class TestReduceLeisureProbabilities:
             distributor=leisure.leisure_distributors["pub"],
             sex="m",
             age=25,
-            day_type="weekday",
+            date=datetime.strptime("2020-03-02", "%Y-%m-%d"),
             working_hours=False,
             region=region,
         )
-        assert np.isclose(full_comp_poisson_parameter, 0.5 * original_poisson_parameter)
+        assert np.isclose(
+            full_comp_poisson_parameter, 0.5 * original_poisson_parameter, rtol=0.5
+        )
         assert np.isclose(
             half_comp_poisson_parameter,
             original_poisson_parameter
@@ -316,12 +296,16 @@ class TestReduceLeisureProbabilities:
         # check integration with region object
         region.regional_compliance = 1.0
         leisure.generate_leisure_probabilities_for_timestep(
-            delta_time=0.1, working_hours=False, day_type="weekday"
+            delta_time=0.1,
+            working_hours=False,
+            date=datetime.strptime("2020-03-02", "%Y-%m-%d"),
         )
         full_comp_probs = leisure._get_activity_probabilities_for_person(person=worker)
         region.regional_compliance = 0.5
         leisure.generate_leisure_probabilities_for_timestep(
-            delta_time=0.1, working_hours=False, day_type="weekday"
+            delta_time=0.1,
+            working_hours=False,
+            date=datetime.strptime("2020-03-02", "%Y-%m-%d"),
         )
         half_comp_probs = leisure._get_activity_probabilities_for_person(person=worker)
         # this is  a reduction, so being less compliant means you go more often
@@ -338,9 +322,13 @@ class TestReduceLeisureProbabilities:
 class TestChangeVisitsProbabilities:
     def test__change_split(self, setup_policy_world):
         world, pupil, student, worker, sim = setup_policy_world
-        super_area = world.super_areas[0]
         leisure = generate_leisure_for_world(
-            world=world, list_of_leisure_groups=["care_home_visits", "household_visits"]
+            world=world,
+            list_of_leisure_groups=["care_home_visits", "household_visits"],
+            daytypes={
+                "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "weekend": ["Saturday", "Sunday"],
+            },
         )
         reduce_leisure_probabilities = ChangeVisitsProbability(
             start_time="2020-03-02",

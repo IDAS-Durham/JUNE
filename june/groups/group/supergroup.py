@@ -1,7 +1,8 @@
 import re
 from collections import OrderedDict
 
-from june.exc import GroupException
+from june.groups.group.make_subgroups import SubgroupParams
+import numpy as np
 
 
 class Supergroup:
@@ -67,6 +68,21 @@ class Supergroup:
     def group_spec(self):
         return self.members[0].spec
 
+    @property
+    def group_subgroups_size(self):
+        Nsubgroups = len(self.members[0].subgroups)
+        if self.spec in ["schools"]:
+            Nsubgroups = 2
+        subgroup_sizes = np.zeros(Nsubgroups)
+        for member in self.members:
+            if self.spec not in ["schools"]:
+                for sub_i in range(Nsubgroups):
+                    subgroup_sizes[sub_i] += member.subgroups[sub_i].size
+            elif self.spec in ["schools"]:
+                subgroup_sizes[0] += member.n_teachers
+                subgroup_sizes[1] += member.n_pupils
+        return subgroup_sizes
+
     @classmethod
     def for_geography(cls):
         raise NotImplementedError(
@@ -78,3 +94,7 @@ class Supergroup:
         raise NotImplementedError(
             "From file initialization not available for this supergroup."
         )
+
+    @classmethod
+    def get_interaction(self, config_filename=None):
+        self.venue_class.subgroup_params = SubgroupParams.from_file(config_filename)

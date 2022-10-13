@@ -1,9 +1,8 @@
 import numpy as np
 import h5py
 from typing import List
-from itertools import chain
 
-from june.hdf5_savers.utils import read_dataset, write_dataset
+from june.hdf5_savers.utils import read_dataset
 from june.epidemiology.infection import Immunity
 
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
@@ -55,14 +54,8 @@ def save_immunities_to_hdf5(hdf5_file_path: str, immunities: List[Immunity]):
         else:
             susc_infection_ids = np.array(susc_infection_ids, dtype=np.int64)
             susc_susceptibilities = np.array(susc_susceptibilities, dtype=np.float64)
-        g.create_dataset(
-            "susc_infection_ids",
-            data=susc_infection_ids,
-        )
-        g.create_dataset(
-            "susc_susceptibilities",
-            data=susc_susceptibilities,
-        )
+        g.create_dataset("susc_infection_ids", data=susc_infection_ids)
+        g.create_dataset("susc_susceptibilities", data=susc_susceptibilities)
 
 
 def load_immunities_from_hdf5(hdf5_file_path: str, chunk_size=50000):

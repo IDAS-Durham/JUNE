@@ -1,6 +1,3 @@
-from collections import defaultdict
-
-
 class Immunity:
     """
     This class stores the "medical record" of the person,
@@ -9,7 +6,9 @@ class Immunity:
 
     __slots__ = "susceptibility_dict", "effective_multiplier_dict"
 
-    def __init__(self, susceptibility_dict: dict = None, effective_multiplier_dict: dict=None):
+    def __init__(
+        self, susceptibility_dict: dict = None, effective_multiplier_dict: dict = None
+    ):
         if susceptibility_dict:
             self.susceptibility_dict = susceptibility_dict
         else:
@@ -33,8 +32,9 @@ class Immunity:
         return self.effective_multiplier_dict.get(infection_id, 1.0)
 
     def serialize(self):
-        return list(self.susceptibility_dict.keys()), list(
-            self.susceptibility_dict.values()
+        return (
+            list(self.susceptibility_dict.keys()),
+            list(self.susceptibility_dict.values()),
         )
 
     def is_immune(self, infection_id):

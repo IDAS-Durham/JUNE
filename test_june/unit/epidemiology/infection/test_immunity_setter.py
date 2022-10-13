@@ -1,14 +1,10 @@
 import pytest
 import numpy as np
 
-from june.utils import (
-    parse_age_probabilities,
-    parse_prevalence_comorbidities_in_reference_population,
-)
-
 from june.epidemiology.infection import Covid19, B117, ImmunitySetter
 from june.demography import Person, Population
-from june.geography import Area, SuperArea, Region
+from june.geography import Area, Areas, SuperArea, SuperAreas, Region, Regions
+from june.groups import Household, Households
 from june.records import Record, RecordReader
 from june import World
 
@@ -98,10 +94,7 @@ class TestSusceptibilitySetter:
 
 @pytest.fixture(name="multiplier_dict")
 def make_multiplier():
-    return {
-        Covid19.infection_id(): 1.0,
-        B117.infection_id(): 1.5,
-    }
+    return {Covid19.infection_id(): 1.0, B117.infection_id(): 1.5}
 
 
 class TestMultiplierSetter:
@@ -141,10 +134,7 @@ class TestMultiplierSetter:
             multiplier_by_comorbidity=comorbidity_multipliers,
             comorbidity_prevalence_reference_population=prevalence_reference_population,
         )
-        dummy = Person.from_attributes(
-            sex="f",
-            age=40,
-        )
+        dummy = Person.from_attributes(sex="f", age=40)
         mean_multiplier_uk = (
             prevalence_reference_population["feo"]["f"]["10-100"]
             * comorbidity_multipliers["feo"]
@@ -173,18 +163,9 @@ class TestMultiplierSetter:
             assert person.immunity.get_effective_multiplier(c19_id) == 1.0
             assert person.immunity.get_effective_multiplier(b117_id) == 1.0
         comorbidity_prevalence_reference_population = {
-            "guapo": {
-                "f": {"0-100": 0.0},
-                "m": {"0-100": 0.0},
-            },
-            "feo": {
-                "f": {"0-100": 0.0},
-                "m": {"0-100": 0.0},
-            },
-            "no_condition": {
-                "m": {"0-100": 1.0},
-                "f": {"0-100": 1.0},
-            },
+            "guapo": {"f": {"0-100": 0.0}, "m": {"0-100": 0.0}},
+            "feo": {"f": {"0-100": 0.0}, "m": {"0-100": 0.0}},
+            "no_condition": {"m": {"0-100": 1.0}, "f": {"0-100": 1.0}},
         }
 
         multiplier_setter = ImmunitySetter(
@@ -212,7 +193,7 @@ class TestVaccinationSetter:
                     Covid19.infection_id(): {
                         "sterilisation_efficacy": {"0-100": 0.5},
                         "symptomatic_efficacy": {"0-100": 0.5},
-                    },
+                    }
                 },
             },
             "sputnik": {
@@ -221,7 +202,7 @@ class TestVaccinationSetter:
                     B117.infection_id(): {
                         "sterilisation_efficacy": {"0-100": 0.8},
                         "symptomatic_efficacy": {"0-100": 0.8},
-                    },
+                    }
                 },
             },
         }
@@ -229,8 +210,6 @@ class TestVaccinationSetter:
     def test__vaccination_parser(self, vaccination_dict):
         susc_setter = ImmunitySetter(vaccination_dict=vaccination_dict)
         vp = susc_setter.vaccination_dict
-        c19_id = Covid19.infection_id()
-        b117_id = B117.infection_id()
         for age in range(0, 100):
             # pfizer
             if age < 50:
@@ -316,7 +295,6 @@ class TestVaccinationSetter:
                     assert person.immunity.get_effective_multiplier(c19id) == 0.5
 
         under30 = len([person for person in population if person.age < 30])
-        over30 = len([person for person in population if person.age >= 30])
         under50 = len([person for person in population if person.age < 50])
         over50 = len([person for person in population if person.age >= 50])
         assert np.isclose(under30_sputnik / under30, 0.3, rtol=1e-1)
@@ -334,7 +312,7 @@ class TestVaccinationSetter:
                     B117.infection_id(): {
                         "sterilisation_efficacy": {"0-100": 0.8},
                         "symptomatic_efficacy": {"0-100": 0.8},
-                    },
+                    }
                 },
             }
         }
@@ -360,12 +338,52 @@ class TestVaccinationSetter:
 
 
 class TestPreviousInfectionSetter:
-    @pytest.fixture(name="previous_infections_dict")
-    def make_prev_inf_dict(self):
+    @pytest.fixture(name="world")
+    def create_world(self):
+        households = []
+        london_area = Area()
+        ne_area = Area()
+        areas = Areas(areas=[london_area, ne_area], ball_tree=False)
+        london_super_area = SuperArea(areas=[london_area])
+        ne_super_area = SuperArea(areas=[ne_area])
+        london_area.super_area = london_super_area
+        ne_area.super_area = ne_super_area
+        super_areas = SuperAreas(
+            super_areas=[london_super_area, ne_super_area], ball_tree=False
+        )
+        london = Region(name="London", super_areas=[london_super_area])
+        ne = Region(name="North East", super_areas=[ne_super_area])
+        london_super_area.region = london
+        ne_super_area.region = ne
+        regions = Regions(regions=[london, ne])
+        # geography = Geography(areas=areas, super_areas=super_areas, regions=regions)
+        world = World()
+        world.areas = areas
+        world.super_areas = super_areas
+        world.regions = regions
+        people = [Person.from_attributes(age=i % 100) for i in range(4000)]
+        world.people = Population(people)
+        for i in range(1000):
+            if i % 2 == 0:
+                area = london_area
+            else:
+                area = ne_area
+            h = Household(area=area)
+            area.households.append(h)
+            for j in range(i * 4, 4 * (i + 1)):
+                h.add(people[j])
+                area.add(people[j])
+            households.append(h)
+        world.households = Households(households)
+        return world
+
+    @pytest.fixture(name="previous_infections_dict_uniform")
+    def make_prev_inf_dict_uniform(self):
         dd = {
+            "distribution_method": "uniform",
             "infections": {
                 Covid19.infection_id(): {
-                    "sterilisation_efficacy": 0.5,
+                    "sterilisation_efficacy": 0.7,
                     "symptomatic_efficacy": 0.6,
                 },
                 B117.infection_id(): {
@@ -374,56 +392,123 @@ class TestPreviousInfectionSetter:
                 },
             },
             "ratios": {
-                "London": {"0-50": 0.5, "50-100": 0.2},
-                "North East": {"0-70": 0.3, "70-100": 0.8},
+                "London": {"0-40": 0.5, "40-100": 0.2},
+                "North East": {"0-80": 0.3, "80-100": 0.8},
             },
         }
         return dd
 
-    def test__setting_prev_infections(self, previous_infections_dict):
-        ne = Region(name="North East")
-        ne_super_area = SuperArea(region=ne)
-        ne_area = Area(super_area=ne_super_area)
-
-        london = Region(name="London")
-        london_super_area = SuperArea(region=london)
-        london_area = Area(super_area=london_super_area)
-
-        population = Population([])
-        for area in [ne_area, london_area]:
-            for age in range(100):
-                for _ in range(100):
-                    p = Person.from_attributes(age=age)
-                    p.area = area
-                    population.add(p)
+    def test__setting_prev_infections_uniform(
+        self, world, previous_infections_dict_uniform
+    ):
+        previous_infections_dict = previous_infections_dict_uniform
         immunity = ImmunitySetter(previous_infections_dict=previous_infections_dict)
-        immunity.set_previous_infections(population)
-        vaccinated = {"London" : {1: 0, 2 : 0} , "North East" : {1: 0, 2: 0}}
-        vaccinated_london = 0
-        vaccinated_ne = 0
+        immunity.set_previous_infections_uniform(world.people)
+        vaccinated = {"London": {1: 0, 2: 0}, "North East": {1: 0, 2: 0}}
+        population = world.people
         for person in population:
             c19_susc = person.immunity.get_susceptibility(Covid19.infection_id())
             b117_susc = person.immunity.get_susceptibility(B117.infection_id())
             if c19_susc < 1.0:
-                assert c19_susc == 0.5
+                assert np.isclose(c19_susc, 0.3)
                 if person.region.name == "London":
-                    if person.age < 50:
+                    if person.age < 40:
                         vaccinated[person.region.name][1] += 1
                     else:
                         vaccinated[person.region.name][2] += 1
                 else:
-                    if person.age < 70:
+                    if person.age < 80:
                         vaccinated[person.region.name][1] += 1
                     else:
                         vaccinated[person.region.name][2] += 1
             if b117_susc < 1.0:
                 assert b117_susc == 0.8
 
-        people_london1 = len([person for person in population if person.region.name == "London" if person.age < 50])
-        people_london2 = len([person for person in population if person.region.name == "London" if person.age >= 50])
-        people_ne1 = len([person for person in population if person.region.name == "North East" if person.age < 70])
-        people_ne2 = len([person for person in population if person.region.name == "North East" if person.age >= 70])
+        people_london1 = len(
+            [
+                person
+                for person in population
+                if person.region.name == "London"
+                if person.age < 40
+            ]
+        )
+        people_london2 = len(
+            [
+                person
+                for person in population
+                if person.region.name == "London"
+                if person.age >= 40
+            ]
+        )
+        people_ne1 = len(
+            [
+                person
+                for person in population
+                if person.region.name == "North East"
+                if person.age < 80
+            ]
+        )
+        people_ne2 = len(
+            [
+                person
+                for person in population
+                if person.region.name == "North East"
+                if person.age >= 80
+            ]
+        )
         assert np.isclose(vaccinated["London"][1] / people_london1, 0.5, rtol=0.1)
         assert np.isclose(vaccinated["London"][2] / people_london2, 0.2, rtol=0.1)
         assert np.isclose(vaccinated["North East"][1] / people_ne1, 0.3, rtol=0.1)
         assert np.isclose(vaccinated["North East"][2] / people_ne2, 0.8, rtol=0.1)
+
+    @pytest.fixture(name="previous_infections_dict_clustered")
+    def make_prev_inf_dict_clustered(self):
+        dd = {
+            "distribution_method": "clustered",
+            "infections": {
+                Covid19.infection_id(): {
+                    "sterilisation_efficacy": 0.7,
+                    "symptomatic_efficacy": 0.6,
+                },
+                B117.infection_id(): {
+                    "sterilisation_efficacy": 0.2,
+                    "symptomatic_efficacy": 0.3,
+                },
+            },
+            "ratios": {
+                "London": {"0-40": 0.5, "40-100": 0.0},
+                "North East": {"0-80": 0.0, "80-100": 0.0},
+            },
+        }
+        return dd
+
+    def test__setting_prev_infections_clustered(
+        self, world, previous_infections_dict_clustered
+    ):
+        previous_infections_dict = previous_infections_dict_clustered
+        immunity = ImmunitySetter(previous_infections_dict=previous_infections_dict)
+        immunity.set_previous_infections_clustered(world)
+        # Test again for correct age.
+        vaxed_london = len(
+            [
+                p
+                for p in world.people
+                if p.region.name == "London"
+                and np.isclose(
+                    p.immunity.get_susceptibility(Covid19.infection_id()), 0.3
+                )
+            ]
+        )
+        total_london = len([p for p in world.people if p.region.name == "London"])
+        assert np.isclose(vaxed_london / total_london, 0.5 * 0.4)
+        n_prev_infected_per_household = []
+        for household in world.households:
+            n = 0
+            for person in household.residents:
+                if np.isclose(
+                    person.immunity.get_susceptibility(Covid19.infection_id()), 0.3
+                ):
+                    n += 1
+            if n > 0:
+                n_prev_infected_per_household.append(n)
+        assert np.isclose(np.mean(n_prev_infected_per_household), 4, rtol=0.1)

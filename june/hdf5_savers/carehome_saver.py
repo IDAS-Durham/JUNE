@@ -3,6 +3,7 @@ import numpy as np
 
 from june.groups import CareHome, CareHomes
 from june.world import World
+from june.groups.group.make_subgroups import SubgroupParams
 from .utils import read_dataset
 
 nan_integer = -999
@@ -18,7 +19,7 @@ def save_care_homes_to_hdf5(
 
     Parameters
     ----------
-    companies 
+    companies
         population object
     file_path
         path of the saved hdf5 file
@@ -28,7 +29,6 @@ def save_care_homes_to_hdf5(
     """
     n_care_homes = len(care_homes)
     n_chunks = int(np.ceil(n_care_homes / chunk_size))
-    vlen_type = h5py.vlen_dtype(np.dtype("float64"))
     with h5py.File(file_path, "a") as f:
         care_homes_dset = f.create_group("care_homes")
         for chunk in range(n_chunks):
@@ -39,9 +39,6 @@ def save_care_homes_to_hdf5(
             super_areas = []
             n_residents = []
             n_workers = []
-            contact_matrices_sizes = []
-            contact_matrices_contacts = []
-            contact_matrices_physical = []
             for carehome in care_homes[idx1:idx2]:
                 ids.append(carehome.id)
                 if carehome.area is None:
@@ -61,7 +58,9 @@ def save_care_homes_to_hdf5(
                 care_homes_dset.attrs["n_care_homes"] = n_care_homes
                 care_homes_dset.create_dataset("id", data=ids, maxshape=(None,))
                 care_homes_dset.create_dataset("area", data=areas, maxshape=(None,))
-                care_homes_dset.create_dataset("super_area", data=super_areas, maxshape=(None,))
+                care_homes_dset.create_dataset(
+                    "super_area", data=super_areas, maxshape=(None,)
+                )
                 care_homes_dset.create_dataset(
                     "n_residents", data=n_residents, maxshape=(None,)
                 )
@@ -82,13 +81,20 @@ def save_care_homes_to_hdf5(
                 care_homes_dset["n_workers"][idx1:idx2] = n_workers
 
 
-def load_care_homes_from_hdf5(file_path: str, chunk_size=50000, domain_super_areas=None):
+def load_care_homes_from_hdf5(
+    file_path: str, chunk_size=50000, domain_super_areas=None, config_filename=None
+):
     """
     Loads carehomes from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+    CareHome_Class = CareHome
+    CareHome_Class.subgroup_params = SubgroupParams.from_file(
+        config_filename=config_filename
+    )
+
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         care_homes = f["care_homes"]
         care_homes_list = []
@@ -97,7 +103,6 @@ def load_care_homes_from_hdf5(file_path: str, chunk_size=50000, domain_super_are
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_carehomes)
-            length = idx2 - idx1
             ids = read_dataset(care_homes["id"], idx1, idx2)
             n_residents = read_dataset(care_homes["n_residents"], idx1, idx2)
             n_workers = read_dataset(care_homes["n_workers"], idx1, idx2)
@@ -111,7 +116,7 @@ def load_care_homes_from_hdf5(file_path: str, chunk_size=50000, domain_super_are
                         )
                     if super_area not in domain_super_areas:
                         continue
-                care_home = CareHome(
+                care_home = CareHome_Class(
                     area=None, n_residents=n_residents[k], n_workers=n_workers[k]
                 )
                 care_home.id = ids[k]
@@ -120,7 +125,7 @@ def load_care_homes_from_hdf5(file_path: str, chunk_size=50000, domain_super_are
 
 
 def restore_care_homes_properties_from_hdf5(
-    world: World, file_path: str, chunk_size=50000, domain_super_areas = None 
+    world: World, file_path: str, chunk_size=50000, domain_super_areas=None
 ):
     """
     Loads carehomes from an hdf5 file located at ``file_path``.
@@ -130,7 +135,6 @@ def restore_care_homes_properties_from_hdf5(
     """
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         carehomes = f["care_homes"]
-        carehomes_list = []
         n_carehomes = carehomes.attrs["n_care_homes"]
         n_chunks = int(np.ceil(n_carehomes / chunk_size))
         for chunk in range(n_chunks):

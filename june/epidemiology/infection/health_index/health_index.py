@@ -1,11 +1,12 @@
 import numpy as np
 import pandas as pd
-import yaml
-from typing import Optional, List
 
-from june.epidemiology.infection.symptom_tag import SymptomTag
 from june import paths
-from . import Data2Rates
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from june.demography.person import Person
 
 _sex_short_to_long = {"m": "male", "f": "female"}
 index_to_maximum_symptoms_tag = {
@@ -35,6 +36,11 @@ class HealthIndexGenerator:
         rates_df: pd.DataFrame,
         care_home_min_age: int = 50,
         max_age=99,
+        m_exp_baseline=79.4,
+        f_exp_baseline=83.1,
+        m_exp=79.4,
+        f_exp=83.1,
+        cutoff_age=16,
     ):
         """
         A Generator to determine the final outcome of an infection.
@@ -56,18 +62,59 @@ class HealthIndexGenerator:
             value: key for key, value in index_to_maximum_symptoms_tag.items()
         }["severe"]
 
+        self.m_exp_baseline = m_exp_baseline
+        self.f_exp_baseline = f_exp_baseline
+        self.m_exp = m_exp
+        self.f_exp = f_exp
+        self.cutoff_age = cutoff_age
+        if self.m_exp_baseline == self.m_exp and self.f_exp_baseline == self.f_exp:
+            self.use_physiological_age = False
+        else:
+            self.use_physiological_age = True
+
     @classmethod
     def from_file(
         cls,
         rates_file: str = default_rates_file,
         care_home_min_age=50,
+        m_exp_baseline=79.4,
+        f_exp_baseline=83.1,
+        m_exp=79.4,
+        f_exp=83.1,
+        cutoff_age=16,
     ):
         ifrs = pd.read_csv(rates_file, index_col=0)
         ifrs = ifrs.rename(_parse_interval)
         return cls(
             rates_df=ifrs,
             care_home_min_age=care_home_min_age,
-                    )
+            m_exp_baseline=m_exp_baseline,
+            f_exp_baseline=f_exp_baseline,
+            m_exp=m_exp,
+            f_exp=f_exp,
+            cutoff_age=cutoff_age,
+        )
+
+    def physiological_age(self, person_age, sex):
+        if sex == "f":
+            exp_baseline_age = self.f_exp_baseline
+            exp_age = self.f_exp
+        elif sex == "m":
+            exp_baseline_age = self.m_exp_baseline
+            exp_age = self.m_exp
+
+        if person_age > self.cutoff_age:
+            if exp_age == self.cutoff_age:
+                return 99
+            m = (exp_baseline_age - self.cutoff_age) / (exp_age - self.cutoff_age)
+            c = self.cutoff_age * (1 - m)
+            scaled_age = person_age * m + c
+        else:
+            scaled_age = person_age
+
+        if scaled_age > 99.0:
+            scaled_age = 99.0
+        return int(round(scaled_age))
 
     def __call__(self, person: "Person", infection_id: int):
         """
@@ -85,11 +132,19 @@ class HealthIndexGenerator:
             population = "ch"
         else:
             population = "gp"
-        probabilities = self.probabilities[population][person.sex][person.age]
+        if self.use_physiological_age:
+            physiological_age = self.physiological_age(int(person.age), person.sex)
+        else:
+            physiological_age = int(person.age)
+        probabilities = self.probabilities[population][person.sex][physiological_age]
         if infection_id is not None:
-            effective_multiplier = person.immunity.get_effective_multiplier(infection_id)
-            if effective_multiplier != 1.:
-                probabilities = self.apply_effective_multiplier(probabilities, effective_multiplier)
+            effective_multiplier = person.immunity.get_effective_multiplier(
+                infection_id
+            )
+            if effective_multiplier != 1.0:
+                probabilities = self.apply_effective_multiplier(
+                    probabilities, effective_multiplier
+                )
         return np.cumsum(probabilities)
 
     def apply_effective_multiplier(self, probabilities, effective_multiplier):
@@ -99,16 +154,16 @@ class HealthIndexGenerator:
             1 - probabilities.sum()
         )
         modified_probability_severe = probability_severe * effective_multiplier
-        modified_probability_mild = 1. - modified_probability_severe 
+        modified_probability_mild = 1.0 - modified_probability_severe
         modified_probabilities[: self.max_mild_symptom_tag] = (
             probabilities[: self.max_mild_symptom_tag]
-            * modified_probability_mild 
-            / probability_mild 
+            * modified_probability_mild
+            / probability_mild
         )
         modified_probabilities[self.max_mild_symptom_tag :] = (
             probabilities[self.max_mild_symptom_tag :]
-            * modified_probability_severe 
-            / probability_severe 
+            * modified_probability_severe
+            / probability_severe
         )
         return modified_probabilities
 
@@ -126,8 +181,7 @@ class HealthIndexGenerator:
         ]
         icu_dead_rate = self.rates_df.loc[age_bin, f"{population}_icu_ifr_{_sex}"]
         severe_rate = max(
-            0,
-            1 - (hospital_rate + home_dead_rate + asymptomatic_rate + mild_rate),
+            0, 1 - (hospital_rate + home_dead_rate + asymptomatic_rate + mild_rate)
         )
         # fill each age in bin
         for age in range(age_bin.left, age_bin.right + 1):
@@ -146,7 +200,6 @@ class HealthIndexGenerator:
             )  # dies in the ward
             p[population][sex][age][7] = icu_dead_rate
             # renormalise all but death rates (since those are the most certain ones)
-            total = p[population][sex][age].sum()
             to_keep_sum = p[population][sex][age][5:].sum()
             to_adjust_sum = p[population][sex][age][:5].sum()
             target_adjust_sum = max(1 - to_keep_sum, 0)
@@ -169,12 +222,6 @@ class HealthIndexGenerator:
                 # values are constant at each bin
                 for age_bin in self.age_bins:
                     self._set_probability_per_age_bin(
-                        p=probabilities,
-                        age_bin=age_bin,
-                        sex=sex,
-                        population=population,
+                        p=probabilities, age_bin=age_bin, sex=sex, population=population
                     )
         return probabilities
-
-
-

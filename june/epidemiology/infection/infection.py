@@ -1,16 +1,11 @@
-from enum import IntEnum
-
-import numpy as np
-import yaml
 from zlib import adler32
 
-from june import paths
-from .health_index.health_index import HealthIndexGenerator
 from .symptoms import Symptoms, SymptomTag
-from .trajectory_maker import TrajectoryMakers
-from .transmission import TransmissionConstant, TransmissionGamma
-from .transmission_xnexp import TransmissionXNExp
-from .trajectory_maker import CompletionTime
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from june.epidemiology.infection.transmission import Transmission
 
 
 class Infection:
@@ -21,12 +16,7 @@ class Infection:
     time step, according to an infectivity profile.
     """
 
-    __slots__ = (
-        "start_time",
-        "transmission",
-        "symptoms",
-        "time_of_testing",
-    )
+    __slots__ = ("start_time", "transmission", "symptoms", "time_of_testing")
     _infection_id = None
 
     def __init__(
@@ -148,7 +138,35 @@ class B117(Infection):
     def immunity_ids(cls):
         return (cls.infection_id(), Covid19.infection_id())
 
+
 class B16172(Infection):
     @classmethod
     def immunity_ids(cls):
-        return (cls.infection_id(), Covid19.infection_id(), B117.infection_id())
+        return (
+            cls.infection_id(),
+            Covid19.infection_id(),
+            B117.infection_id(),
+            Omicron.infection_id(),
+        )
+
+
+class Delta(Infection):
+    @classmethod
+    def immunity_ids(cls):
+        return (
+            cls.infection_id(),
+            Covid19.infection_id(),
+            B117.infection_id(),
+            Omicron.infection_id(),
+        )
+
+
+class Omicron(Infection):
+    @classmethod
+    def immunity_ids(cls):
+        return (
+            cls.infection_id(),
+            Covid19.infection_id(),
+            B117.infection_id(),
+            Delta.infection_id(),
+        )

@@ -1,0 +1,73 @@
+Pfizer:
+  days_administered_to_effective: [5,7,5]
+  days_effective_to_waning: [1,1,1]
+  days_waning: [1,1,1]
+  waning_factor: 1.
+  sterilisation_efficacies:
+    - Covid19:
+        0-100: 0.52
+    - Covid19:
+        0-100: 0.95
+    - Covid19:
+        0-100: 0.98
+  symptomatic_efficacies:
+    - Covid19:
+        0-100: 0.52
+    - Covid19:
+        0-100: 0.95
+    - Covid19:
+        0-100: 0.98
+
+AstraZeneca:
+  days_administered_to_effective: [5,7,5]
+  days_effective_to_waning: [1,1,1]
+  days_waning: [1,1,1]
+  waning_factor: 1.
+  sterilisation_efficacies:
+    - Covid19:
+        0-100: 0.32
+    - Covid19:
+        0-100: 0.75
+    - Covid19:
+        0-100: 0.88
+  symptomatic_efficacies:
+    - Covid19:
+        0-100: 0.32
+    - Covid19:
+        0-100: 0.75
+    - Covid19:
+        0-100: 0.88
+
+
+Test:
+  days_administered_to_effective: [1,2,10]
+  days_effective_to_waning: [1,1,1]
+  days_waning: [1,1,1]
+  waning_factor: 1.
+  sterilisation_efficacies:
+      - Delta:
+          0-100: 0.3
+        Omicron:
+          0-100: 0.2
+      - Delta:
+          0-100: 0.7
+        Omicron:
+          0-100: 0.2
+      - Delta:
+          0-100: 0.9
+        Omicron:
+          0-100: 0.8
+
+  symptomatic_efficacies: 
+      - Delta:
+          0-100: 0.3
+        Omicron:
+          0-100: 0.5
+      - Delta:
+          0-100: 0.7
+        Omicron:
+          0-100: 0.2
+      - Delta:
+          0-100: 0.7
+        Omicron:
+          0-100: 0.1

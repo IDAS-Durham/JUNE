@@ -14,13 +14,14 @@ from june.geography import (
     ExternalCity,
 )
 from .utils import read_dataset
-from june.groups import ExternalGroup, ExternalSubgroup
+from june.groups import ExternalGroup
 from june.groups.travel import (
     CityTransport,
     CityTransports,
     InterCityTransport,
     InterCityTransports,
 )
+from june.groups.group.make_subgroups import SubgroupParams
 
 nan_integer = -999
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
@@ -44,9 +45,6 @@ def save_cities_to_hdf5(cities: Cities, file_path: str):
         inter_city_stations_id_list = []
         inter_city_station_ids_lengths = []
         coordinates = []
-        super_area_city = []
-        super_area_closest_commuting_city = []
-        super_area_closest_commuting_city_super_area = []
         for city in cities:
             ids.append(city.id)
             names.append(city.name.encode("ascii", "ignore"))
@@ -134,7 +132,6 @@ def load_cities_from_hdf5(
     """
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         cities = f["cities"]
-        cities_list = []
         n_cities = cities.attrs["n_cities"]
         ids = read_dataset(cities["id"])
         names = read_dataset(cities["name"])
@@ -143,7 +140,6 @@ def load_cities_from_hdf5(
         city_super_areas = read_dataset(cities["city_super_area"])
         cities = []
         for k in range(n_cities):
-            name = names[k].decode()
             super_areas = [super_area.decode() for super_area in super_areas_list[k]]
             city_super_area = city_super_areas[k]
             if domain_super_areas is None or city_super_area in domain_super_areas:
@@ -228,6 +224,7 @@ def load_stations_from_hdf5(
     file_path: str,
     domain_super_areas: List[int] = None,
     super_areas_to_domain_dict: dict = None,
+    config_filename=None,
 ):
     """
     Loads cities from an hdf5 file located at ``file_path``.
@@ -235,6 +232,17 @@ def load_stations_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+
+    InterCityTransport_Class = InterCityTransport
+    InterCityTransport_Class.subgroup_params = SubgroupParams.from_file(
+        config_filename=config_filename
+    )
+
+    CityTransport_Class = CityTransport
+    CityTransport_Class.subgroup_params = SubgroupParams.from_file(
+        config_filename=config_filename
+    )
+
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         stations = f["stations"]
         n_stations = stations.attrs["n_stations"]
@@ -262,9 +270,9 @@ def load_stations_from_hdf5(
                 station.id = ids[k]
                 for transport_id in transport_ids[k]:
                     if station_type == "inter":
-                        transport = InterCityTransport(station=station)
+                        transport = InterCityTransport_Class(station=station)
                     else:
-                        transport = CityTransport(station=station)
+                        transport = CityTransport_Class(station=station)
                     transport.id = transport_id
                     transports_station.append(transport)
             else:
@@ -272,13 +280,13 @@ def load_stations_from_hdf5(
                     station = ExternalInterCityStation(
                         id=ids[k],
                         domain_id=super_areas_to_domain_dict[super_area],
-                        city=city
+                        city=city,
                     )
                 else:
                     station = ExternalCityStation(
                         id=ids[k],
                         domain_id=super_areas_to_domain_dict[super_area],
-                        city=city
+                        city=city,
                     )
                 for transport_id in transport_ids[k]:
                     if station_type == "inter":

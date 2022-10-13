@@ -8,19 +8,13 @@ from june.epidemiology.infection_seed import CasesDistributor
 class TestCasesDistributor:
     @fixture(name="super_area_region")
     def make_super_area_region(self):
-        data = [
-            ["a1", "East of England"],
-            ["a2", "East of England"],
-        ]
+        data = [["a1", "East of England"], ["a2", "East of England"]]
         ret = pd.DataFrame(data=data, columns=["super_area", "region"])
         return ret
 
     @fixture(name="residents_by_super_area")
     def make_area_super_area_region(self):
-        data = [
-            ["a1", 100],
-            ["a2", 200],
-        ]
+        data = [["a1", 100], ["a2", 200]]
         ret = pd.DataFrame(data=data, columns=["super_area", "n_residents"])
         return ret
 
@@ -57,8 +51,7 @@ class TestCasesDistributor:
     ):
         index = ["2020-03-01", "2020-03-02"]
         cases_per_day = pd.DataFrame(index=index)
-        cases_per_day['N_cases'] = [600, 1200]
-
+        cases_per_day["N_cases"] = [600, 1200]
 
         cd = CasesDistributor.from_national_cases(
             cases_per_day=cases_per_day,

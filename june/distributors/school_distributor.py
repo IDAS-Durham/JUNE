@@ -16,16 +16,12 @@ logger = logging.getLogger("school_distributor")
 
 EARTH_RADIUS = 6371  # km
 
-default_decoder = {
-    2314: "secondary",
-    2315: "primary",
-    2316: "special_needs",
-}
+default_decoder = {2314: "secondary", 2315: "primary", 2316: "special_needs"}
 
 
 class SchoolDistributor:
     """
-    Distributes students in an area to different schools 
+    Distributes students in an area to different schools
     """
 
     def __init__(
@@ -46,7 +42,7 @@ class SchoolDistributor:
 
         Parameters
         ----------
-        schools: 
+        schools:
             instance of Schools, with information on all schools in world.
         area:
             instance of Area.
@@ -71,11 +67,11 @@ class SchoolDistributor:
         # mandatory_age_range: Tuple[int, int] = (5, 18),#part of config ?
     ) -> "SchoolDistributor":
         """
-        Initialize SchoolDistributor from path to its config file 
+        Initialize SchoolDistributor from path to its config file
 
         Parameters
         ----------
-        schools: 
+        schools:
             instance of Schools, with information on all schools in world.
         area:
             instance of Area.
@@ -116,9 +112,9 @@ class SchoolDistributor:
 
     def distribute_kids_to_school(self, areas: List[Area]):
         """
-        Function to distribute kids to schools according to distance 
+        Function to distribute kids to schools according to distance
         """
-        logger.info(f"Distributing kids to schools")
+        logger.info("Distributing kids to schools")
         for i, area in enumerate(areas):
             if i % 4000 == 0:
                 logger.info(f"Distributed kids in {i} of {len(areas)} areas.")
@@ -127,7 +123,7 @@ class SchoolDistributor:
             for agegroup in self.schools.school_trees:
                 closest_schools = []
                 closest_schools_idx = self.schools.get_closest_schools(
-                    agegroup, area.coordinates, self.neighbour_schools,
+                    agegroup, area.coordinates, self.neighbour_schools
                 )
                 for idx in closest_schools_idx:
                     real_idx = self.schools.school_agegroup_to_global_indices[agegroup][
@@ -142,7 +138,7 @@ class SchoolDistributor:
             self.distribute_non_mandatory_kids_to_school(
                 area, is_school_full, closest_schools_by_age
             )
-        logger.info(f"Kids distributed to schools")
+        logger.info("Kids distributed to schools")
 
     def distribute_mandatory_kids_to_school(
         self, area: Area, is_school_full: dict, closest_schools_by_age: dict
@@ -193,7 +189,7 @@ class SchoolDistributor:
                 # remove from working population
                 if person.work_super_area is not None:
                     person.work_super_area.remove_worker(person)
-                school.add(person, school.SubgroupType.students)
+                school.add(person)
 
     def distribute_non_mandatory_kids_to_school(
         self, area: Area, is_school_full: dict, closest_schools_by_age: dict
@@ -233,7 +229,7 @@ class SchoolDistributor:
                     if find_school:
                         if person.work_super_area is not None:
                             person.work_super_area.remove_worker(person)
-                        school.add(person, school.SubgroupType.students)
+                        school.add(person)
 
     def distribute_teachers_to_schools_in_super_areas(
         self, super_areas: List[SuperArea]
@@ -333,7 +329,7 @@ class SchoolDistributor:
                     if not primary_teachers:
                         all_filled = True
                         break
-                    primary_school.add(teacher, school.SubgroupType.teachers)
+                    primary_school.add(teacher)
                     teacher.lockdown_status = "key_worker"
             if all_filled:
                 break
@@ -349,7 +345,7 @@ class SchoolDistributor:
                     if not secondary_teachers:
                         all_filled = True
                         break
-                    secondary_school.add(teacher, school.SubgroupType.teachers)
+                    secondary_school.add(teacher)
                     teacher.lockdown_status = "key_worker"
             if all_filled:
                 break
@@ -364,7 +360,7 @@ class SchoolDistributor:
             if not remaining_teachers:
                 break
             teacher = remaining_teachers.pop()
-            school.add(teacher, school.SubgroupType.teachers)
+            school.add(teacher)
             teacher.lockdown_status = "key_worker"
 
         while remaining_teachers:
@@ -378,12 +374,14 @@ class SchoolDistributor:
                     if not remaining_teachers:
                         all_filled = True
                         break
-                    school.add(teacher, school.SubgroupType.teachers)
+                    school.add(teacher)
                     teacher.lockdown_status = "key_worker"
             if all_filled:
                 break
 
-    def limit_classroom_sizes(self,):
+    def limit_classroom_sizes(
+        self,
+    ):
         """
         Limit subgroup sizes that represent class rooms to a maximum number of students.
         If maximum number is exceeded create new subgroups to distribute students homogeneously

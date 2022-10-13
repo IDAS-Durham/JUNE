@@ -1,13 +1,11 @@
 import numpy as np
-from random import choice, random, sample, randint
-from numba import jit, typed
+from random import random, sample, randint
+from numba import jit
 from typing import Dict
-from itertools import chain
 import yaml
 import re
 
-from june.groups.leisure import SocialVenues, SocialVenue, SocialVenueError
-from june.groups import Household, ExternalSubgroup
+from june.groups.leisure import SocialVenues
 from june.utils.parse_probabilities import parse_age_probabilities
 from june.geography import Area
 
@@ -20,6 +18,12 @@ def random_choice_numba(arr, prob):
     return arr[np.searchsorted(np.cumsum(prob), random(), side="right")]
 
 
+default_daytypes = {
+    "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "weekend": ["Saturday", "Sunday"],
+}
+
+
 class SocialVenueDistributor:
     """
     Tool to associate social venues to people.
@@ -29,11 +33,14 @@ class SocialVenueDistributor:
         self,
         social_venues: SocialVenues,
         times_per_week: Dict[Dict, float],
+        daytypes: Dict[str, str] = default_daytypes,
         hours_per_day: Dict[Dict, float] = None,
         drags_household_probability=0.0,
         neighbours_to_consider=5,
         maximum_distance=5,
         leisure_subgroup_type=0,
+        nearest_venues_to_visit=0,
+        open={"weekday": "0-24", "weekend": "0-24"},
     ):
         """
         A sex/age profile for the social venue attendees can be specified as
@@ -65,7 +72,12 @@ class SocialVenueDistributor:
         leisure_subgroup_type
             Subgroup of the venue that the person will be appended to
             (for instance, the visitors subgroup of the care home)
+        nearest_venues_to_visit:
+            restrict people only travelling to nearest venue(s). 0 means no restriction.
+            if >0, "neighbours_to_consider" will be ignored.
         """
+        self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
+        self.spec = "_".join(self.spec).lower()
         if hours_per_day is None:
             hours_per_day = {
                 "weekday": {
@@ -75,6 +87,9 @@ class SocialVenueDistributor:
                 "weekend": {"male": {"0-100": 12}, "female": {"0-100": 12}},
             }
         self.social_venues = social_venues
+        self.open = open
+        self.daytypes = daytypes
+
         self.poisson_parameters = self._parse_poisson_parameters(
             times_per_week=times_per_week, hours_per_day=hours_per_day
         )
@@ -84,29 +99,44 @@ class SocialVenueDistributor:
         self.leisure_subgroup_type = leisure_subgroup_type
         self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
         self.spec = "_".join(self.spec).lower()
+        self.nearest_venues_to_visit = nearest_venues_to_visit
 
     @classmethod
-    def from_config(cls, social_venues: SocialVenues, config_filename: str = None):
+    def from_config(
+        cls,
+        social_venues: SocialVenues,
+        daytypes: dict = default_daytypes,
+        config_filename: str = None,
+        config_override: Dict[str, int] = None,
+    ):
+        """
+        Parameters
+        ----------
+        config_override
+            a dict of parameters overrides their values in "config_filename"
+        """
         if config_filename is None:
             config_filename = cls.default_config_filename
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(social_venues, **config)
+        if config_override is not None:
+            for key, value in config_override.items():
+                if value is not None:
+                    config[key] = value
+        return cls(social_venues, daytypes=daytypes, **config)
 
     def _compute_poisson_parameter_from_times_per_week(
         self, times_per_week, hours_per_day, day_type
     ):
         if times_per_week == 0:
             return 0
-        if day_type == "weekend":
-            days = 2
-        else:
-            days = 5
-        return times_per_week / days * 24 / hours_per_day
+        ndays = len(self.daytypes[day_type])
+        return (times_per_week / ndays) * (24 / hours_per_day)
 
     def _parse_poisson_parameters(self, times_per_week, hours_per_day):
         ret = {}
         _sex_t = {"male": "m", "female": "f"}
+
         for day_type in ["weekday", "weekend"]:
             ret[day_type] = {}
             for sex in ["male", "female"]:
@@ -116,6 +146,7 @@ class SocialVenueDistributor:
                 parsed_hours_per_day = parse_age_probabilities(
                     hours_per_day[day_type][sex]
                 )
+
                 ret[day_type][_sex_t[sex]] = [
                     self._compute_poisson_parameter_from_times_per_week(
                         times_per_week=parsed_times_per_week[i],
@@ -127,13 +158,7 @@ class SocialVenueDistributor:
         return ret
 
     def get_poisson_parameter(
-        self,
-        sex,
-        age,
-        day_type,
-        working_hours,
-        region=None,
-        policy_reduction=None,
+        self, sex, age, day_type, working_hours, region=None, policy_reduction=None
     ):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
@@ -155,6 +180,7 @@ class SocialVenueDistributor:
             if self.spec in region.closed_venues:
                 return 0
             regional_compliance = region.regional_compliance
+
         original_poisson_parameter = self.poisson_parameters[day_type][sex][age]
         if policy_reduction is None:
             return original_poisson_parameter
@@ -191,8 +217,8 @@ class SocialVenueDistributor:
         """
         Given an area, searches for the social venues inside
         ``self.maximum_distance``. It then returns ``self.neighbours_to_consider``
-        of them randomly. If there are no social venues inside the maximum distance,
-        it returns the closest one.
+        of them randomly, or ``nearest_venues_to_visit`` of them sorting by distance ascending.
+        If there are no social venues inside the maximum distance, it returns the closest one.
         """
         area_location = area.coordinates
         potential_venues = self.social_venues.get_venues_in_radius(
@@ -203,9 +229,13 @@ class SocialVenueDistributor:
             if closest_venue is None:
                 return
             return (closest_venue[0],)
-        indices_len = min(len(potential_venues), self.neighbours_to_consider)
-        random_idx_choice = sample(range(len(potential_venues)), indices_len)
-        return tuple([potential_venues[idx] for idx in random_idx_choice])
+        if self.nearest_venues_to_visit > 0:
+            indices_len = min(len(potential_venues), self.nearest_venues_to_visit)
+            return tuple([potential_venues[idx] for idx in range(indices_len)])
+        else:
+            indices_len = min(len(potential_venues), self.neighbours_to_consider)
+            random_idx_choice = sample(range(len(potential_venues)), indices_len)
+            return tuple([potential_venues[idx] for idx in random_idx_choice])
 
     def get_leisure_group(self, person):
         candidates = person.area.social_venues[self.spec]

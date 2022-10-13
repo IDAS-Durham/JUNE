@@ -1,5 +1,5 @@
 from typing import Dict, Union
-from random import random, shuffle, randint
+from random import random, shuffle
 import logging
 import datetime
 

@@ -1,16 +1,10 @@
 import numpy as np
 import yaml
-import numba as nb
-from numpy.random import choice
 from random import random
 from typing import List, Dict
-from itertools import chain
-from typing import TYPE_CHECKING
 
-from june.exc import InteractionError
-from june.utils import parse_age_probabilities
 from june.groups.group.interactive import InteractiveGroup
-from june.groups import InteractiveSchool, InteractiveCompany, InteractiveHousehold
+from june.groups import InteractiveSchool
 from june.records import Record
 from june import paths
 
@@ -37,10 +31,7 @@ class Interaction:
     """
 
     def __init__(
-        self,
-        alpha_physical: float,
-        betas: Dict[str, float],
-        contact_matrices: dict,
+        self, alpha_physical: float, betas: Dict[str, float], contact_matrices: dict
     ):
         self.alpha_physical = alpha_physical
         self.betas = betas or {}
@@ -53,10 +44,7 @@ class Interaction:
         self.beta_reductions = {}
 
     @classmethod
-    def from_file(
-        cls,
-        config_filename: str = default_config_filename,
-    ) -> "Interaction":
+    def from_file(cls, config_filename: str = default_config_filename) -> "Interaction":
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         contact_matrices = config["contact_matrices"]
@@ -146,7 +134,7 @@ class Interaction:
 
     def time_step_for_group(
         self,
-        group: "Group",
+        group: InteractiveGroup,
         delta_time: float,
         people_from_abroad: dict = None,
         record: Record = None,
@@ -220,10 +208,7 @@ class Interaction:
         return infected_ids, infection_ids, interactive_group.size
 
     def _time_step_for_subgroup(
-        self,
-        infector_tensor,
-        susceptible_subgroup_id,
-        subgroup_susceptibles,
+        self, infector_tensor, susceptible_subgroup_id, subgroup_susceptibles
     ):
         """
         Time step for one susceptible subgroup. We first compute the combined
@@ -296,7 +281,7 @@ class Interaction:
         infected_ids: list,
         infection_ids: list,
         to_blame_ids: list,
-        group: "Group",
+        group: InteractiveGroup,
         record: Record,
     ):
         """

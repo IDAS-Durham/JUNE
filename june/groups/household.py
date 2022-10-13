@@ -2,15 +2,11 @@ from enum import IntEnum
 from collections import defaultdict
 import numpy as np
 from random import random
-import h5py
 
-from june.groups import Group, Supergroup, ExternalSubgroup, ExternalGroup
+from june.groups import Group, Supergroup
 from june.groups.group.interactive import InteractiveGroup
 
-from enum import IntEnum
 from typing import List
-from recordclass import dataobject
-
 
 
 class Household(Group):
@@ -27,22 +23,23 @@ class Household(Group):
     __slots__ = (
         "area",
         "type",
+        "composition_type",
         "max_size",
         "residents",
         "quarantine_starting_date",
         "residences_to_visit",
         "being_visited",
         "household_to_care",
-        "receiving_care"
+        "receiving_care",
     )
 
-    class SubgroupType(IntEnum):
-        kids = 0
-        young_adults = 1
-        adults = 2
-        old_adults = 3
+    # class SubgroupType(IntEnum):
+    #     kids = 0
+    #     young_adults = 1
+    #     adults = 2
+    #     old_adults = 3
 
-    def __init__(self, type=None, area=None, max_size=np.inf):
+    def __init__(self, type=None, area=None, max_size=np.inf, composition_type=None):
         """
         Type should be on of ["family", "student", "young_adults", "old", "other", "nokids", "ya_parents", "communal"].
         Relatives is a list of people that are related to the family living in the household
@@ -57,11 +54,12 @@ class Household(Group):
         self.household_to_care = None
         self.being_visited = False  # this is True when people from other households have been added to the group
         self.receiving_care = False
+        self.composition_type = composition_type
 
     def _get_leisure_subgroup_for_person(self, person):
         if person.age < 18:
             subgroup = self.SubgroupType.kids
-        elif person.age <= 35:
+        elif person.age <= 25:
             subgroup = self.SubgroupType.young_adults
         elif person.age < 65:
             subgroup = self.SubgroupType.adults
@@ -69,7 +67,10 @@ class Household(Group):
             subgroup = self.SubgroupType.old_adults
         return subgroup
 
-    def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
+    def add(self, person, subgroup_type=None, activity="residence"):
+        if subgroup_type is None:
+            subgroup_type = self.get_leisure_subgroup_type(person)
+
         if activity == "leisure":
             subgroup_type = self.get_leisure_subgroup_type(person)
             person.subgroups.leisure = self[subgroup_type]
@@ -82,7 +83,6 @@ class Household(Group):
         else:
             raise NotImplementedError(f"Activity {activity} not supported in household")
 
-    @classmethod
     def get_leisure_subgroup_type(cls, person):
         """
         A person wants to come and visit this household. We need to assign the person
@@ -91,7 +91,7 @@ class Household(Group):
         """
         if person.age < 18:
             return cls.SubgroupType.kids
-        elif person.age <= 35:
+        elif person.age <= 25:
             return cls.SubgroupType.young_adults
         elif person.age < 65:
             return cls.SubgroupType.adults
@@ -125,21 +125,21 @@ class Household(Group):
                     mate.residence  # person will be added later in the simulator.
                 )
 
-    @property
-    def kids(self):
-        return self.subgroups[self.SubgroupType.kids]
+    # @property
+    # def kids(self):
+    #     return self.subgroups[self.SubgroupType.kids]
 
-    @property
-    def young_adults(self):
-        return self.subgroups[self.SubgroupType.young_adults]
+    # @property
+    # def young_adults(self):
+    #     return self.subgroups[self.SubgroupType.young_adults]
 
-    @property
-    def adults(self):
-        return self.subgroups[self.SubgroupType.adults]
+    # @property
+    # def adults(self):
+    #     return self.subgroups[self.SubgroupType.adults]
 
-    @property
-    def old_adults(self):
-        return self.subgroups[self.SubgroupType.old_adults]
+    # @property
+    # def old_adults(self):
+    #     return self.subgroups[self.SubgroupType.old_adults]
 
     @property
     def coordinates(self):
@@ -187,7 +187,9 @@ class Households(Supergroup):
     Contains all households for the given area, and information about them.
     """
 
-    def __init__(self, households: List[Household]):
+    venue_class = Household
+
+    def __init__(self, households: List[venue_class]):
         super().__init__(members=households)
 
 
@@ -195,7 +197,7 @@ class InteractiveHousehold(InteractiveGroup):
     def get_processed_beta(self, betas, beta_reductions):
         """
         In the case of households, we need to apply the beta reduction of household visits
-        if the household has a visit, otherwise we apply the beta reduction for a normal 
+        if the household has a visit, otherwise we apply the beta reduction for a normal
         household.
         """
         if self.group.receiving_care:
@@ -210,4 +212,3 @@ class InteractiveHousehold(InteractiveGroup):
             beta_reduction = beta_reductions.get(self.spec, 1.0)
         regional_compliance = self.super_area.region.regional_compliance
         return beta * (1 + regional_compliance * (beta_reduction - 1))
-

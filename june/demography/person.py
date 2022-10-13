@@ -1,11 +1,16 @@
 from itertools import count
 from random import choice
 from recordclass import dataobject
-import numpy as np
-from datetime import datetime
-from typing import Optional
 
 from june.epidemiology.infection import Infection, Immunity
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from june.geography.geography import Area
+    from june.geography.geography import SuperArea
+    from june.groups.travel.mode_of_transport import ModeOfTransport
+    from june.policy.vaccine_policy import VaccineTrajectory
 
 
 class Activities(dataobject):
@@ -18,6 +23,7 @@ class Activities(dataobject):
 
     def iter(self):
         return [getattr(self, activity) for activity in self.__fields__]
+
 
 person_ids = count()
 
@@ -35,17 +41,18 @@ class Person(dataobject):
     sub_sector: str = None
     lockdown_status: str = None
     # vaccine
-    vaccine_plan: "VaccinePlan" = None
-    vaccinated: bool = False
+    vaccine_trajectory: "VaccineTrajectory" = None
+    vaccinated: int = None
+    vaccine_type: str = None
     # comorbidity
     comorbidity: str = None
     # commute
     mode_of_transport: "ModeOfTransport" = None
     # activities
     busy: bool = False
-    subgroups: Activities = Activities(None, None, None, None, None, None)
+    subgroups: Activities = None
     infection: Infection = None
-    immunity: Immunity()
+    immunity: Immunity = None
     # infection
     dead: bool = False
 
@@ -68,7 +75,7 @@ class Person(dataobject):
             ethnicity=ethnicity,
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
-            immunity = Immunity(susceptibility_dict=susceptibility_dict),
+            immunity=Immunity(susceptibility_dict=susceptibility_dict),
             comorbidity=comorbidity,
             subgroups=Activities(None, None, None, None, None, None),
         )
@@ -156,14 +163,14 @@ class Person(dataobject):
     def super_area(self):
         try:
             return self.area.super_area
-        except:
+        except Exception:
             return None
 
     @property
     def region(self):
         try:
             return self.super_area.region
-        except:
+        except Exception:
             return None
 
     @property
@@ -177,12 +184,6 @@ class Person(dataobject):
         return self.work_super_area.city
 
     @property
-    def should_be_vaccinated(self):
-        if self.vaccine_plan is None and not self.vaccinated:
-            return True
-        return False
-
-    @property
     def available(self):
         if (not self.dead) and (self.medical_facility is None) and (not self.busy):
             return True
@@ -192,5 +193,5 @@ class Person(dataobject):
     def socioeconomic_index(self):
         try:
             return self.area.socioeconomic_index
-        except:
-            return 
+        except Exception:
+            return

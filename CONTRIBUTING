@@ -1,0 +1,10 @@
+ - We use [black](https://github.com/psf/black) for coding style.
+ - We use flake8 to detect errors on Git push, we recommend you do this on your code before creating a pull request.
+ - License is available in LICENSE, by submitting code you are agreeing to publish your code with that license.
+ - Please make a pull request for any changes which you wish to add
+ - For imports which are just for type checks, to avoid cyclic dependencies, please surround the imports with:
+
+
+    from typing import TYPE_CHECKING
+    if TYPE_CHECKING:
+        import ...

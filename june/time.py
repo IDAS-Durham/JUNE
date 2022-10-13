@@ -1,5 +1,6 @@
 import calendar
 import datetime
+from turtle import home
 import yaml
 from typing import List
 
@@ -9,7 +10,7 @@ SECONDS_PER_DAY = 24 * 60 * 60
 class Timer:
     def __init__(
         self,
-        initial_day: str = "2020-03-01",
+        initial_day: str = "2020-03-01 9:00",
         total_days: int = 10,
         weekday_step_duration: List[int] = (12, 12),
         weekend_step_duration: List[int] = (24,),
@@ -18,11 +19,25 @@ class Timer:
             ("residence",),
         ),
         weekend_activities: List[List[str]] = (("residence",),),
+        day_types=None,
     ):
 
-        self.initial_date = datetime.datetime(
-            *[int(value) for value in initial_day.split("-")]
+        day_i = datetime.datetime(
+            *[int(value) for value in initial_day.split(" ")[0].split("-")]
         )
+        hour_i = 0
+        if len(initial_day.split(" ")) > 1:
+            hour_i = int(initial_day.split(" ")[1].split(":")[0])
+        self.initial_date = day_i + datetime.timedelta(hours=hour_i)
+
+        if day_types is None:
+            self.day_types = {
+                "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "weekend": ["Saturday", "Sunday"],
+            }
+        else:
+            self.day_types = day_types
+
         self.total_days = total_days
         self.weekday_step_duration = weekday_step_duration
         self.weekend_step_duration = weekend_step_duration
@@ -30,8 +45,12 @@ class Timer:
         self.weekend_activities = weekend_activities
 
         self.previous_date = self.initial_date
-        self.final_date = self.initial_date + datetime.timedelta(days=total_days)
-        self.date = datetime.datetime(*[int(value) for value in initial_day.split("-")])
+        self.final_date = (
+            self.initial_date
+            + datetime.timedelta(days=total_days)
+            # + datetime.timedelta(hours=24 - hour_i)
+        )
+        self.date = self.initial_date
         self.shift = 0
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
 
@@ -40,6 +59,11 @@ class Timer:
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         time_config = config["time"]
+        if "weekday" in config.keys() and "weekend" in config.keys():
+            day_types = {"weekday": config["weekday"], "weekend": config["weekend"]}
+        else:
+            day_types = None
+
         return cls(
             initial_day=time_config["initial_day"],
             total_days=time_config["total_days"],
@@ -47,22 +71,22 @@ class Timer:
             weekend_step_duration=time_config["step_duration"]["weekend"],
             weekday_activities=time_config["step_activities"]["weekday"],
             weekend_activities=time_config["step_activities"]["weekend"],
+            day_types=day_types,
         )
 
     @property
     def is_weekend(self):
-        week_number = self.date.weekday()
-        if week_number < 5:
+        if self.day_of_week in self.day_types["weekend"]:
+            return True
+        else:
             return False
-        return True
-    
+
     @property
     def day_type(self):
-        week_number = self.date.weekday()
-        if week_number < 5:
-            return "weekday"
-        else:
+        if self.day_of_week in self.day_types["weekend"]:
             return "weekend"
+        else:
+            return "weekday"
 
     @property
     def now(self):

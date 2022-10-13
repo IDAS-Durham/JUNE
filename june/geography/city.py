@@ -3,14 +3,13 @@ from typing import List
 import numpy as np
 from random import randint
 from sklearn.neighbors import BallTree
-from itertools import chain, count
-from collections import defaultdict
+from itertools import count
 import logging
 
 from june.paths import data_path
 from june.geography import SuperArea, Geography
 from june.groups.group import Supergroup
-from june.groups.group.external import ExternalSubgroup, ExternalGroup
+from june.groups.group.external import ExternalGroup
 
 default_cities_filename = data_path / "input/geography/cities_per_super_area_ew.csv"
 
@@ -96,9 +95,9 @@ class City:
             ]
             return internal_station.get_commute_subgroup()
         else:
-            closest_inter_city_station = person.super_area.closest_inter_city_station_for_city[
-                self.name
-            ]
+            closest_inter_city_station = (
+                person.super_area.closest_inter_city_station_for_city[self.name]
+            )
             if person.id in closest_inter_city_station.commuter_ids:
                 return closest_inter_city_station.get_commute_subgroup()
 
@@ -249,8 +248,8 @@ class ExternalCity(ExternalGroup):
             ]
             return internal_station.get_commute_subgroup()
         else:
-            closest_inter_city_station = person.super_area.closest_inter_city_station_for_city[
-                self.name
-            ]
+            closest_inter_city_station = (
+                person.super_area.closest_inter_city_station_for_city[self.name]
+            )
             if person.id in closest_inter_city_station.commuter_ids:
                 return closest_inter_city_station.get_commute_subgroup()

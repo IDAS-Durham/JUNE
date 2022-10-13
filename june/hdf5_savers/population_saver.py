@@ -1,6 +1,5 @@
 import h5py
 import numpy as np
-from collections import OrderedDict
 import logging
 
 
@@ -139,8 +138,10 @@ def save_population_to_hdf5(
                 group_specs.append(np.array(specs, dtype="S20"))
                 group_ids.append(np.array(gids, dtype=np.int64))
                 subgroup_types.append(np.array(stypes, dtype=np.int64))
-                group_super_areas.append(np.array(group_super_areas_temp, dtype=np.int64))
-                if person.mode_of_transport == None:
+                group_super_areas.append(
+                    np.array(group_super_areas_temp, dtype=np.int64)
+                )
+                if person.mode_of_transport is None:
                     mode_of_transport_description.append(" ".encode("ascii", "ignore"))
                     mode_of_transport_is_public.append(False)
                 else:
@@ -185,7 +186,7 @@ def save_population_to_hdf5(
                 )
                 people_dset.create_dataset("ethnicity", data=ethns, maxshape=(None,))
                 people_dset.create_dataset(
-                    "group_ids", data=group_ids, maxshape=(None, group_ids.shape[1]),
+                    "group_ids", data=group_ids, maxshape=(None, group_ids.shape[1])
                 )
                 people_dset.create_dataset(
                     "group_specs",
@@ -299,7 +300,6 @@ def load_population_from_hdf5(
             logger.info(f"Loaded chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_people)
-            length = idx2 - idx1
             ids = read_dataset(population["id"], idx1, idx2)
             ages = read_dataset(population["age"], idx1, idx2)
             sexes = read_dataset(population["sex"], idx1, idx2)
@@ -328,10 +328,7 @@ def load_population_from_hdf5(
                 else:
                     ethn = ethns[k].decode()
                 person = Person.from_attributes(
-                    id=ids[k],
-                    age=ages[k],
-                    sex=sexes[k].decode(),
-                    ethnicity=ethn,
+                    id=ids[k], age=ages[k], sex=sexes[k].decode(), ethnicity=ethn
                 )
                 people.append(person)
                 mode_of_transport_description = mode_of_transport_description_list[k]
@@ -389,7 +386,9 @@ def restore_population_properties_from_hdf5(
             areas = read_dataset(population["area"], idx1, idx2)
             super_areas = read_dataset(population["super_area"], idx1, idx2)
             work_super_areas = read_dataset(population["work_super_area"], idx1, idx2)
-            work_super_areas_coords = read_dataset(population["work_super_area_coords"], idx1, idx2)
+            work_super_areas_coords = read_dataset(
+                population["work_super_area_coords"], idx1, idx2
+            )
             work_super_areas_cities = read_dataset(
                 population["work_super_area_city"], idx1, idx2
             )
@@ -436,9 +435,7 @@ def restore_population_properties_from_hdf5(
                                 work_super_areas_cities[k]
                             )
                 # restore groups and subgroups
-                subgroups_instances = Activities(
-                    None, None, None, None, None, None
-                )
+                subgroups_instances = Activities(None, None, None, None, None, None)
                 for (
                     i,
                     (group_id, subgroup_type, group_spec, group_super_area),
@@ -471,7 +468,7 @@ def restore_population_properties_from_hdf5(
                             domain_id=domain_of_subgroup, id=group_id, spec=group_spec
                         )
                         subgroup_external = ExternalSubgroup(
-                            group=group, subgroup_type=subgroup_type,
+                            group=group, subgroup_type=subgroup_type
                         )
                         setattr(
                             subgroups_instances, activities_fields[i], subgroup_external

@@ -4,9 +4,6 @@ from june.distributors import HospitalDistributor
 from june.geography import Geography
 from june.groups import Hospital, Hospitals
 from june.demography.person import Person
-from june.world import World, generate_world_from_geography
-
-from june.paths import data_path
 
 
 @pytest.fixture(name="young_medic")

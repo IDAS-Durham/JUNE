@@ -1,20 +1,17 @@
 from typing import List
 from collections import defaultdict
 import logging
-from random import shuffle
 import numpy as np
 
 from june.groups import University
-from june.geography import Area, Areas
+from june.geography import Areas
 from june.demography import Population
 
 logger = logging.getLogger("university_distributor")
 
 
 class UniversityDistributor:
-    def __init__(
-        self, universities: List[University],
-    ):
+    def __init__(self, universities: List[University]):
         """
         For each university it searches in the nearby areas for students living
         in student households. Once it has enough to fill the university, it stops
@@ -38,10 +35,11 @@ class UniversityDistributor:
             for household in area.households:
                 if household.type == "student":
                     for student in household.residents:
-                        if student.primary_activity is None:
-                            students_dict[university.ukprn]["student"].append(
-                                student.id
-                            )
+                        if self.min_student_age <= student.age <= self.max_student_age:
+                            if student.primary_activity is None:
+                                students_dict[university.ukprn]["student"].append(
+                                    student.id
+                                )
                 elif household.type == "communal":
                     for person in household.residents:
                         if self.min_student_age <= person.age <= self.max_student_age:
@@ -62,7 +60,7 @@ class UniversityDistributor:
         For each university, search for students in nearby areas and allocate them to
         the university.
         """
-        logger.info(f"Distributing students to universities")
+        logger.info("Distributing students to universities")
         need_more_students = True
         distance_increment = 10
         distance = 5
@@ -86,11 +84,13 @@ class UniversityDistributor:
         # get students in areas
         for university in self.universities:
             close_areas, distances = areas.get_closest_areas(
-                coordinates=university.coordinates, k=min(len(areas), 1000), return_distance=True,
+                coordinates=university.coordinates,
+                k=min(len(areas), 1000),
+                return_distance=True,
             )
             close_areas = np.array(close_areas)[distances < distance]
             self.find_students_in_areas(
-                students_dict=students_dict, areas=close_areas, university=university,
+                students_dict=students_dict, areas=close_areas, university=university
             )
         return students_dict
 

@@ -1,4 +1,4 @@
-[![Python package](https://github.com/IDAS-Durham/JUNE/actions/workflows/python-publish.yml/badge.svg)](https://github.com/IDAS-Durham/JUNE/actions/workflows/python-publish.yml)
+[![Python package](https://github.com/IDAS-Durham/JUNE/actions/workflows/check.yml/badge.svg)](https://github.com/IDAS-Durham/JUNE/actions/workflows/check.yml)
 [![codecov](https://codecov.io/gh/IDAS-Durham/JUNE/branch/master/graph/badge.svg?token=6TKUHtWxJZ)](https://codecov.io/gh/IDAS-Durham/JUNE)
 
 # JUNE: open-source individual-based epidemiology simulation
@@ -33,18 +33,18 @@ The easiest way to get JUNE up and running is to install the latest stable versi
 pip install june
 ```
 
-and download the data by running the command
+and download the data by running the script:
 
 ```
 get_june_data.sh
 ```
 
-if the above command fails, then manually clone the repo and use the script ```scripts/get_june_data.sh```.
+If the above fails, then manually clone the repo and run the script ```scripts/get_june_data.sh```.
 
 
-Disclaimer: All the data is constructed by mixing different datasets from the Office for National Statistics (ONS), thus it may contain modifications. Please refere to the original source (cited in the [release paper](https://www.medrxiv.org/content/10.1101/2020.12.15.20248246v1)) for the raw dataset.
+Disclaimer: All the data is constructed by mixing different datasets from the Office for National Statistics (ONS), thus it may contain modifications. Please refer to the original source (cited in the [release paper](https://www.medrxiv.org/content/10.1101/2020.12.15.20248246v1)) for the raw dataset.
 
-This will require a working installation of Openmpi or Intelmpi to compile ``mpi4py``. 
+This will require a working installation of Open MPI or Intel MPI to compile ``mpi4py``. 
 
 If you want to get the most up-to-date version of the code, then you can clone this repository, and install it using
 
@@ -54,9 +54,89 @@ pip install -e .
 
 This should automatically install any requirements as well. You can then get the data using the same command as the pip version.
 
+## Conda installation (generally optional but required for M1 chip Macs)
+
+As an alternative to the above, you can use conda:
+
+
+    conda create -n june_env python=3.8 -y # need 3.8 for some deps
+    conda activate june_env
+
+    python --version
+
+    conda install -y numba
+    conda install -y -c anaconda hdf5
+
+    python3 -m pip install -r JUNE-private/requirements.txt
+    python3 -m pip install -r june_runs/requirements.txt
+
+    pushd JUNE-private
+    python3 -m pip install -e .
+    popd
+
+    pushd june_runs
+    python3 -m pip install -e .
+    popd
+
+
+    # Change to fit your environment
+    export INSTALL_DIR=$HOME
+    # For Hartree
+    #export INSTALL_DIR=$HCBASE/miniconda_base
+
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    chmod +x Miniconda3-latest-Linux-x86_64.sh
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p $INSTALL_DIR/miniconda
+    source $INSTALL_DIR/miniconda/bin/activate
+
+### Notes for using Hartree and Cosma clusters
+
+To download and setup conda:
+
+    # Change to fit your environment
+    export INSTALL_DIR=$HOME
+    # For Hartree
+    #export INSTALL_DIR=$HCBASE/miniconda_base
+
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    chmod +x Miniconda3-latest-Linux-x86_64.sh
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p $INSTALL_DIR/miniconda
+    source $INSTALL_DIR/miniconda/bin/activate
+
+
+Then you will need to load OpenMPI, e.g -
+
+
+    # Hartree: module load openmpi-gcc/2.1.1
+    # Cosma: module load openmpi/3.0.1 gnu_comp/7.3.0
+
+After this follow the instructions above for conda installation.
+
+To activate it, use:
+
+    . $HOME/miniconda/bin/activate
+    # For Hartree
+    #. $HCBASE/miniconda_base/miniconda/bin/activate
+    
+    conda activate june_env
+
+
+## Installation FAQs
+
+**Q:** I get errors with using mpi4y on a Mac<br/>
+**A:** Try using homebrew to install the software by running: ``brew install mpi4py``. If working in a conda environment, 
+use `pip install mpi4py` instead of `conda install`, as the latter will also install additional MPI-related packages that could prevent
+your MPI paths from being correctly found.
+
+**Q:** I get building errors for h5py, mpi4py and tables when trying to ``pip install -e .``<br/>
+**A:** Try installing these packages (e.g., with ``conda install`` if working in a conda environment, but see above caveat for mpi4py) 
+*before* attempting the full pip install, while enforcing the versions listed in the ``requirements.txt``. 
+This may help to avoid incompatibilities with the hdf5 on your system (if any).
+  
+
 # How to use the code
 
-Have a look at ``Notebooks/quickstart.ipynb`` for a gentle introduction to how JUNE works. You can also checkout some scripts in ``example_scripts``.
+Have a look at ``Notebooks/quickstart.ipynb`` for a gentle introduction to how JUNE works. You can also check out some scripts in ``example_scripts``.
 
 The ``docs`` directory contains the source files and HTML outputs to
 display all information auto-generated from the `june` codebase docstrings,
@@ -64,9 +144,15 @@ including auto-generated class and module diagrams.
 
 # Tests
 
-Run the tests with
+Run the tests with:
 
 ```
 cd test_june
 pytest
 ```
+
+# Contributing
+See our contributors guide [here](CONTRIBUTING).
+
+# Docs
+We have further documentation [here](docs/index.md).
