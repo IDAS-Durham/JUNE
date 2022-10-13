@@ -21,7 +21,7 @@ from june.groups.travel import (
     InterCityTransport,
     InterCityTransports,
 )
-from june.groups.group.make_subgroups import Subgroup_Params
+from june.groups.group.make_subgroups import SubgroupParams
 
 nan_integer = -999
 int_vlen_type = h5py.vlen_dtype(np.dtype("int64"))
@@ -234,12 +234,12 @@ def load_stations_from_hdf5(
     """
 
     InterCityTransport_Class = InterCityTransport
-    InterCityTransport_Class.subgroup_params = Subgroup_Params.from_file(
+    InterCityTransport_Class.subgroup_params = SubgroupParams.from_file(
         config_filename=config_filename
     )
 
     CityTransport_Class = CityTransport
-    CityTransport_Class.subgroup_params = Subgroup_Params.from_file(
+    CityTransport_Class.subgroup_params = SubgroupParams.from_file(
         config_filename=config_filename
     )
 

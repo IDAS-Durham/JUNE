@@ -11,7 +11,7 @@ from .interactive import InteractiveGroup
 from . import AbstractGroup
 from . import Subgroup
 
-from june.groups.group.make_subgroups import Subgroup_Params
+from june.groups.group.make_subgroups import SubgroupParams
 
 from typing import TYPE_CHECKING
 
@@ -44,7 +44,7 @@ class Group(AbstractGroup):
     """
 
     external = False
-    subgroup_params = Subgroup_Params.from_file()
+    subgroup_params = SubgroupParams.from_file()
 
     # @property
     # def SubgroupType(self):

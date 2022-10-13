@@ -1,7 +1,7 @@
 import h5py
 import numpy as np
 from typing import List
-from june.groups.group.make_subgroups import Subgroup_Params
+from june.groups.group.make_subgroups import SubgroupParams
 
 from .utils import read_dataset
 from june.groups.leisure import (
@@ -51,22 +51,22 @@ def load_social_venues_from_hdf5(
     social_venues_dict = {}
 
     Pub_Class = Pub
-    Pub_Class.subgroup_params = Subgroup_Params.from_file(
+    Pub_Class.subgroup_params = SubgroupParams.from_file(
         config_filename=config_filename
     )
 
     Cinema_Class = Cinema
-    Cinema_Class.subgroup_params = Subgroup_Params.from_file(
+    Cinema_Class.subgroup_params = SubgroupParams.from_file(
         config_filename=config_filename
     )
 
     Grocery_Class = Grocery
-    Grocery_Class.subgroup_params = Subgroup_Params.from_file(
+    Grocery_Class.subgroup_params = SubgroupParams.from_file(
         config_filename=config_filename
     )
 
     Gym_Class = Gym
-    Gym_Class.subgroup_params = Subgroup_Params.from_file(
+    Gym_Class.subgroup_params = SubgroupParams.from_file(
         config_filename=config_filename
     )
 

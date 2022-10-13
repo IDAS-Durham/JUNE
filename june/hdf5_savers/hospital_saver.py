@@ -3,7 +3,7 @@ import numpy as np
 
 from june.world import World
 from june.groups import Hospital, Hospitals, ExternalHospital
-from june.groups.group.make_subgroups import Subgroup_Params
+from june.groups.group.make_subgroups import SubgroupParams
 from .utils import read_dataset
 
 nan_integer = -999
@@ -121,7 +121,7 @@ def load_hospitals_from_hdf5(
     This function should be rarely be called oustide world.py
     """
     Hospital_Class = Hospital
-    Hospital_Class.subgroup_params = Subgroup_Params.from_file(
+    Hospital_Class.subgroup_params = SubgroupParams.from_file(
         config_filename=config_filename
     )
     ExternalHospital_Class = ExternalHospital

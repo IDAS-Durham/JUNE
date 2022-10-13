@@ -56,5 +56,5 @@ def test__make_subgroups(super_group):
 
 def test_excel_cols():
     assert list(
-        itertools.islice(make_subgroups.Subgroup_Params().excel_cols(), 10)
+        itertools.islice(make_subgroups.SubgroupParams().excel_cols(), 10)
     ) == ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]

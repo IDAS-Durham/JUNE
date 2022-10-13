@@ -9,7 +9,7 @@ from sklearn.neighbors import BallTree
 
 from june.groups import Group, Supergroup, ExternalGroup, ExternalSubgroup
 from june.exc import HospitalError
-from june.groups.group.make_subgroups import Subgroup_Params
+from june.groups.group.make_subgroups import SubgroupParams
 
 logger = logging.getLogger("hospitals")
 

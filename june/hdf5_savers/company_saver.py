@@ -4,7 +4,7 @@ import logging
 
 from june.groups import Company, Companies
 from june.world import World
-from june.groups.group.make_subgroups import Subgroup_Params
+from june.groups.group.make_subgroups import SubgroupParams
 from june.mpi_setup import mpi_rank
 from .utils import read_dataset
 
@@ -96,7 +96,7 @@ def load_companies_from_hdf5(
     """
 
     Company_Class = Company
-    Company_Class.subgroup_params = Subgroup_Params.from_file(
+    Company_Class.subgroup_params = SubgroupParams.from_file(
         config_filename=config_filename
     )
 

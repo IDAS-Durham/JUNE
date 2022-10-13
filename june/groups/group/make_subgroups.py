@@ -60,7 +60,7 @@ def get_defaults(spec):
         return ["defualt"], "Discrete"
 
 
-class Subgroup_Params:
+class SubgroupParams:
     """
     Class to read and collect Interaction matrix information. Allows for reading of subgroups from generic bins
 
@@ -73,7 +73,7 @@ class Subgroup_Params:
 
     Returns
     -------
-        Subgroup_Params class
+        SubgroupParams class
     """
 
     AgeYoungAdult = 18
@@ -202,9 +202,9 @@ class Subgroup_Params:
             n += 1
 
     @classmethod
-    def from_file(cls, config_filename=default_config_filename) -> "Subgroup_Params":
+    def from_file(cls, config_filename=default_config_filename) -> "SubgroupParams":
         """
-        Read from interaction yaml and extract information on bins and bin types. Returning instance of Subgroup_Params
+        Read from interaction yaml and extract information on bins and bin types. Returning instance of SubgroupParams
 
         Parameters
         ----------
@@ -213,10 +213,10 @@ class Subgroup_Params:
 
         Returns
         -------
-            Subgroup_Params class instance
+            SubgroupParams class instance
         """
         if config_filename is None:
             config_filename = default_config_filename
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return Subgroup_Params(params=config["contact_matrices"])
+        return SubgroupParams(params=config["contact_matrices"])

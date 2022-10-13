@@ -5,7 +5,7 @@ from itertools import chain
 
 from june.world import World
 from june.groups import Household, Households, ExternalGroup
-from june.groups.group.make_subgroups import Subgroup_Params
+from june.groups.group.make_subgroups import SubgroupParams
 from june.mpi_setup import mpi_rank
 from .utils import read_dataset
 
@@ -170,7 +170,7 @@ def load_households_from_hdf5(
     """
 
     Household_Class = Household
-    Household_Class.subgroup_params = Subgroup_Params.from_file(
+    Household_Class.subgroup_params = SubgroupParams.from_file(
         config_filename=config_filename
     )
 

@@ -97,4 +97,4 @@ class Supergroup:
 
     @classmethod
     def get_interaction(self, config_filename=None):
-        self.venue_class.subgroup_params = Subgroup_Params.from_file(config_filename)
+        self.venue_class.subgroup_params = SubgroupParams.from_file(config_filename)

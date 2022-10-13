@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 
 from june.groups import University, Universities
-from june.groups.group.make_subgroups import Subgroup_Params
+from june.groups.group.make_subgroups import SubgroupParams
 from .utils import read_dataset
 
 nan_integer = -999
@@ -70,7 +70,7 @@ def load_universities_from_hdf5(
     """
 
     University_Class = University
-    University_Class.subgroup_params = Subgroup_Params.from_file(
+    University_Class.subgroup_params = SubgroupParams.from_file(
         config_filename=config_filename
     )
 

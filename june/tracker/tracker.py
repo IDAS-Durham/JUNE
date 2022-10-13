@@ -16,7 +16,7 @@ from june.groups.group import make_subgroups
 
 warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
-AgeAdult = make_subgroups.Subgroup_Params.AgeYoungAdult
+AgeAdult = make_subgroups.SubgroupParams.AgeYoungAdult
 ACArray = np.array([0, AgeAdult, 100])
 DaysOfWeek_Names = [
     "Sunday",

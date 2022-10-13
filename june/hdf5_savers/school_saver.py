@@ -3,7 +3,7 @@ import numpy as np
 
 from june.groups import Schools, School
 from june.world import World
-from june.groups.group.make_subgroups import Subgroup_Params
+from june.groups.group.make_subgroups import SubgroupParams
 from .utils import read_dataset
 
 nan_integer = -999
@@ -136,7 +136,7 @@ def load_schools_from_hdf5(
     """
 
     School_Class = School
-    School_Class.subgroup_params = Subgroup_Params.from_file(
+    School_Class.subgroup_params = SubgroupParams.from_file(
         config_filename=config_filename
     )
 

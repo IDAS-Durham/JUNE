@@ -3,7 +3,7 @@ import numpy as np
 
 from june.groups import CareHome, CareHomes
 from june.world import World
-from june.groups.group.make_subgroups import Subgroup_Params
+from june.groups.group.make_subgroups import SubgroupParams
 from .utils import read_dataset
 
 nan_integer = -999
@@ -91,7 +91,7 @@ def load_care_homes_from_hdf5(
     This function should be rarely be called oustide world.py
     """
     CareHome_Class = CareHome
-    CareHome_Class.subgroup_params = Subgroup_Params.from_file(
+    CareHome_Class.subgroup_params = SubgroupParams.from_file(
         config_filename=config_filename
     )
 
