@@ -124,7 +124,8 @@ class TestCommute:
             == n_city_transports
         )
         n_inter_city_transports = sum(
-            len(station.inter_city_transports) for station in newcastle.inter_city_stations
+            len(station.inter_city_transports)
+            for station in newcastle.inter_city_stations
         )
         assert n_inter_city_transports > 0
         n_inter_city_commuters = sum(

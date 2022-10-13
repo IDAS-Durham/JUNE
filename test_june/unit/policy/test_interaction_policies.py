@@ -1,48 +1,13 @@
-import copy
 from datetime import datetime
-from pathlib import Path
 
-import numpy as np
 import pytest
 
 from june import paths
-from june.demography import Person, Population
-from june.geography import Geography, Cities
-from june.groups import Hospital, School, Company, Household, University
-from june.groups import (
-    Hospitals,
-    Schools,
-    Companies,
-    Households,
-    Universities,
-    Cemeteries,
-    Cinemas,
-    Pubs,
-    Cinema,
-    Pub,
-    InteractiveSchool,
-    InteractiveCompany,
-    InteractiveHousehold,
-)
-from june.groups.leisure import (
-    Leisure,
-    generate_leisure_for_config,
-    generate_leisure_for_world,
-)
-from june.groups.group.interactive import InteractiveGroup
-from june.epidemiology.infection import SymptomTag
-from june.epidemiology.infection.infection_selector import InfectionSelector
-from june.interaction import Interaction
-from june.policy import (
-    Policy,
-    Policies,
-    SocialDistancing,
-    Hospitalisation,
-    InteractionPolicies,
-    MaskWearing,
-)
-from june.simulator import Simulator
-from june.world import World
+from june.geography import Cities
+from june.groups import Cemeteries
+from june.groups.leisure import generate_leisure_for_config
+from june.policy import Policies, SocialDistancing, MaskWearing
+
 
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
@@ -177,7 +142,9 @@ class TestSocialDistancing:
                             beta_reductions=sim.interaction.beta_reductions,
                         )
                         if group.spec == "cinema":
-                            assert beta == sim.interaction.betas["cinema"] * (1 + 0.5 * (4-1))
+                            assert beta == sim.interaction.betas["cinema"] * (
+                                1 + 0.5 * (4 - 1)
+                            )
                         else:
                             assert beta == sim.interaction.betas[group.spec]
                 next(sim.timer)
@@ -238,7 +205,8 @@ class TestMaskWearing:
                             beta_reductions=sim.interaction.beta_reductions,
                         )
                         beta_with_mask = sim.interaction.betas[group.spec] * (
-                            1 - (0.5 * 1.0 * (1 - 0.5))                        )
+                            1 - (0.5 * 1.0 * (1 - 0.5))
+                        )
                         if group.spec == "household":
                             assert beta == sim.interaction.betas["household"]
                         else:

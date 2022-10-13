@@ -1,13 +1,17 @@
 import yaml
 from random import shuffle, randint
 import numpy as np
-from numpy.random import choice
 
 from june.groups.leisure import SocialVenueDistributor
 from june.paths import configs_path
 from june.utils import random_choice_numba
 
 default_config_filename = configs_path / "defaults/groups/leisure/visits.yaml"
+
+default_daytypes = {
+    "weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "weekend": ["Saturday", "Sunday"],
+}
 
 
 class ResidenceVisitsDistributor(SocialVenueDistributor):
@@ -23,6 +27,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         residence_type_probabilities,
         times_per_week,
         hours_per_day,
+        daytypes=default_daytypes,
         drags_household_probability=0,
     ):
         # it is necessary to make them arrays for performance
@@ -31,6 +36,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         super().__init__(
             social_venues=None,
             times_per_week=times_per_week,
+            daytypes=daytypes,
             hours_per_day=hours_per_day,
             drags_household_probability=drags_household_probability,
             neighbours_to_consider=None,
@@ -39,10 +45,10 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         )
 
     @classmethod
-    def from_config(cls, config_filename: str = default_config_filename):
+    def from_config(cls, daytypes, config_filename: str = default_config_filename):
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls(**config)
+        return cls(daytypes=daytypes, **config)
 
     def link_households_to_households(self, super_areas):
         """
@@ -143,13 +149,7 @@ class ResidenceVisitsDistributor(SocialVenueDistributor):
         return group
 
     def get_poisson_parameter(
-        self,
-        sex,
-        age,
-        day_type,
-        working_hours,
-        region=None,
-        policy_reduction=None,
+        self, sex, age, day_type, working_hours, region=None, policy_reduction=None
     ):
         """
         This differs from the super() implementation in that we do not allow

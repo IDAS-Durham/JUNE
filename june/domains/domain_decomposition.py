@@ -2,7 +2,6 @@ import logging
 import json
 import pandas as pd
 import numpy as np
-from typing import List
 from score_clustering import Point, ScoreClustering
 
 from june import paths

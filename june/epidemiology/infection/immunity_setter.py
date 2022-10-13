@@ -1,7 +1,9 @@
 from typing import Optional
+from collections import Counter
 import numpy as np
 import yaml
 from random import random
+
 from june.utils import (
     parse_age_probabilities,
     parse_prevalence_comorbidities_in_reference_population,
@@ -10,6 +12,12 @@ from june.utils import (
 )
 
 from . import Covid19, B117, B16172
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from june.records.records_writer import Record
+
 
 default_susceptibility_dict = {
     Covid19.infection_id(): {"0-13": 0.5, "13-100": 1.0},
@@ -33,6 +41,7 @@ class ImmunitySetter:
         multiplier_by_comorbidity: Optional[dict] = None,
         comorbidity_prevalence_reference_population: Optional[dict] = None,
         susceptibility_mode="average",
+        previous_infections_distribution="uniform",
         record: "Record" = None,
     ):
         """
@@ -110,6 +119,7 @@ class ImmunitySetter:
         else:
             self.comorbidity_prevalence_reference_population = None
         self.susceptibility_mode = susceptibility_mode
+        self.previous_infections_distribution = previous_infections_distribution
         self.record = record
 
     @classmethod
@@ -123,7 +133,7 @@ class ImmunitySetter:
         male_comorbidity_reference_prevalence_path: Optional[str] = None,
         female_comorbidity_reference_prevalence_path: Optional[str] = None,
         susceptibility_mode="average",
-        record:"Record"=None,
+        record: "Record" = None,
     ) -> "ImmunitySetter":
         if comorbidity_multipliers_path is not None:
             with open(comorbidity_multipliers_path) as f:
@@ -153,15 +163,15 @@ class ImmunitySetter:
             record=record,
         )
 
-    def set_immunity(self, population):
+    def set_immunity(self, world):
         if self.multiplier_dict:
-            self.set_multipliers(population)
+            self.set_multipliers(world.people)
         if self.susceptibility_dict:
-            self.set_susceptibilities(population)
+            self.set_susceptibilities(world.people)
         if self.previous_infections_dict:
-            self.set_previous_infections(population)
+            self.set_previous_infections(world)
         if self.vaccination_dict:
-            self.set_vaccinations(population)
+            self.set_vaccinations(world.people)
 
     def get_multiplier_from_reference_prevalence(self, age, sex):
         """
@@ -332,11 +342,20 @@ class ImmunitySetter:
                 "susccesfully_vaccinated"
             ] = susccesfully_vaccinated
 
-    def set_previous_infections(self, population):
+    def set_previous_infections(self, world):
+        if self.previous_infections_distribution == "uniform":
+            self.set_previous_infections_uniform(world.people)
+        elif self.previous_infections_distribution == "clustered":
+            self.set_previous_infections_clustered(world)
+        else:
+            raise ValueError(
+                f"Previous infection distr. {self.previous_infections_distribution} not recognized"
+            )
+
+    def set_previous_infections_uniform(self, population):
         """
-        Sets previous infections on the starting population.
+        Sets previous infections on the starting population in a uniform way.
         """
-        previously_infected = np.zeros(len(population), dtype=int)
         for i, person in enumerate(population):
             if person.region.name not in self.previous_infections_dict["ratios"]:
                 continue
@@ -353,7 +372,68 @@ class ImmunitySetter:
                     person.immunity.susceptibility_dict[inf_id] = (
                         1.0 - inf_data["sterilisation_efficacy"]
                     )
-        if self.record is not None:
-            self.record.statics["people"].extra_int_data[
-                "previously_infected"
-            ] = previously_infected
+
+    def _get_people_to_infect_by_age(self, people, seroprev_by_age):
+        """
+        Returns total people to infect according to the serorev age profile
+        """
+        people_by_age = Counter([person.age for person in people])
+        people_to_infect = {
+            age: people_by_age[age] * seroprev_by_age[age] for age in people_by_age
+        }
+        return people_to_infect
+
+    def _get_household_score(self, household, age_distribution):
+        if len(household.residents) == 0:
+            return 0
+        ret = 0
+        for resident in household.residents:
+            ret += age_distribution[resident.age]
+        return ret / np.sqrt(len(household.residents))
+
+    def set_previous_infections_clustered(self, world):
+        """
+        Sets previous infections on the starting population by clustering households.
+        """
+        infection_ids = list(self.previous_infections_dict["infections"].keys())
+        infection_data = list(self.previous_infections_dict["infections"].values())
+        for region in world.regions:
+            seroprev_by_age = self.previous_infections_dict["ratios"][region.name]
+            people = region.people
+            to_infect_by_age = self._get_people_to_infect_by_age(
+                people=people, seroprev_by_age=seroprev_by_age
+            )
+            total_to_infect = sum(to_infect_by_age.values())
+            age_distribution = {
+                age: to_infect_by_age[age] / total_to_infect for age in to_infect_by_age
+            }
+            households = np.array(region.households)
+            scores = [
+                self._get_household_score(h, age_distribution) for h in households
+            ]
+            cum_scores = np.cumsum(scores)
+            prev_inf_households = set()
+            while total_to_infect > 0:
+                num = random() * cum_scores[-1]
+                idx = np.searchsorted(cum_scores, num)
+                household = households[idx]
+                if household.id in prev_inf_households:
+                    continue
+                for person in household.residents:
+                    for inf_id, inf_data in zip(infection_ids, infection_data):
+                        target_symptom_mult = 1.0 - inf_data["symptomatic_efficacy"]
+                        target_susceptibility = 1.0 - inf_data["sterilisation_efficacy"]
+                        current_multiplier = person.immunity.get_effective_multiplier(
+                            inf_id
+                        )
+                        current_susc = person.immunity.get_susceptibility(inf_id)
+                        person.immunity.effective_multiplier_dict[inf_id] = min(
+                            current_multiplier, target_symptom_mult
+                        )
+                        person.immunity.susceptibility_dict[inf_id] = min(
+                            current_susc, target_susceptibility
+                        )
+                    total_to_infect -= 1
+                    if total_to_infect < 1:
+                        return
+                    prev_inf_households.add(household.id)

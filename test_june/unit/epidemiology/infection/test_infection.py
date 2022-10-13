@@ -6,8 +6,6 @@ from pathlib import Path
 from june import paths
 import june.epidemiology.infection.symptoms
 from june.demography import Person
-from june.epidemiology.infection import symptoms_trajectory as symtraj
-from june.epidemiology.infection import transmission_xnexp as transxnexp
 from june.epidemiology.infection.infection_selector import (
     default_transmission_config_path,
 )
@@ -83,13 +81,9 @@ class TestInfection:
 
         assert victim.infection.start_time == 0.2
         assert isinstance(
-            victim.infection.symptoms,
-            june.epidemiology.infection.symptoms.Symptoms,
+            victim.infection.symptoms, june.epidemiology.infection.symptoms.Symptoms
         )
-        assert isinstance(
-            victim.infection.transmission,
-            transmission.TransmissionGamma,
-        )
+        assert isinstance(victim.infection.transmission, transmission.TransmissionGamma)
 
     def test__update_to_time__calls_transmission_symptoms_methods(
         self, transmission, symptoms
@@ -110,7 +104,7 @@ class TestInfectionSelector:
     def test__constant_filename(self):
         selector = InfectionSelector(
             transmission_config_path=paths.configs_path
-            / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml",
+            / "defaults/epidemiology/infection/transmission/TransmissionConstant.yaml"
         )
         assert selector.transmission_type == "constant"
 
@@ -179,16 +173,8 @@ class TestInfectionSelector:
             )
             maxprobs.append(infection.transmission.probability)
 
-        np.testing.assert_allclose(
-            statistics.mean(norms),
-            1.13,
-            rtol=0.05,
-        )
-        np.testing.assert_allclose(
-            statistics.median(norms),
-            1.00,
-            rtol=0.05,
-        )
+        np.testing.assert_allclose(statistics.mean(norms), 1.13, rtol=0.05)
+        np.testing.assert_allclose(statistics.median(norms), 1.00, rtol=0.05)
         np.testing.assert_allclose(
             statistics.median(maxprobs) / true_avg_peak_infectivity, 1.0, rtol=0.1
         )
@@ -211,11 +197,7 @@ class TestInfectionSelector:
         max_t = infection.transmission.time_at_maximum_infectivity
         infection.update_symptoms_and_transmission(max_t)
         max_prob = infection.transmission.probability
-        np.testing.assert_allclose(
-            max_prob / true_avg_peak_infectivity,
-            0.3,
-            atol=0.1,
-        )
+        np.testing.assert_allclose(max_prob / true_avg_peak_infectivity, 0.3, atol=0.1)
 
     def test__infectivity_for_mild_carriers(self):
         avg_gamma = transmission.TransmissionGamma.from_file(
@@ -234,11 +216,7 @@ class TestInfectionSelector:
         max_t = infection.transmission.time_at_maximum_infectivity
         infection.update_symptoms_and_transmission(max_t)
         max_prob = infection.transmission.probability
-        np.testing.assert_allclose(
-            max_prob / true_avg_peak_infectivity,
-            0.48,
-            atol=0.1,
-        )
+        np.testing.assert_allclose(max_prob / true_avg_peak_infectivity, 0.48, atol=0.1)
 
 
 class TestMultipleVirus:

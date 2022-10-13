@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 from typing import List
+from june.groups.group.make_subgroups import Subgroup_Params
 
 from .utils import read_dataset
 from june.groups.leisure import (
@@ -12,14 +13,11 @@ from june.groups.leisure import (
     Cinemas,
     Gym,
     Gyms,
-    SocialVenue,
     SocialVenues,
 )
 from june.world import World
 
 nan_integer = -999
-spec_to_group_dict = {"pubs": Pub, "cinemas": Cinema, "groceries": Grocery, "gyms" : Gym}
-spec_to_supergroup_dict = {"pubs": Pubs, "cinemas": Cinemas, "groceries": Groceries, "gyms" : Gyms}
 
 
 def save_social_venues_to_hdf5(social_venues_list: List[SocialVenues], file_path: str):
@@ -47,8 +45,44 @@ def save_social_venues_to_hdf5(social_venues_list: List[SocialVenues], file_path
             social_venues_dset.create_dataset("area", data=areas)
 
 
-def load_social_venues_from_hdf5(file_path: str, domain_areas=None):
+def load_social_venues_from_hdf5(
+    file_path: str, domain_areas=None, config_filename=None
+):
     social_venues_dict = {}
+
+    Pub_Class = Pub
+    Pub_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
+
+    Cinema_Class = Cinema
+    Cinema_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
+
+    Grocery_Class = Grocery
+    Grocery_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
+
+    Gym_Class = Gym
+    Gym_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
+
+    spec_to_group_dict = {
+        "pubs": Pub_Class,
+        "cinemas": Cinema_Class,
+        "groceries": Grocery_Class,
+        "gyms": Gym_Class,
+    }
+    spec_to_supergroup_dict = {
+        "pubs": Pubs,
+        "cinemas": Cinemas,
+        "groceries": Groceries,
+        "gyms": Gyms,
+    }
+
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         for spec in f["social_venues"]:
             data = f["social_venues"][spec]
@@ -105,4 +139,3 @@ def restore_social_venues_properties_from_hdf5(
                 else:
                     area = world.areas.get_from_id(area)
                 social_venue.area = area
-

@@ -1,3 +1,7 @@
+from typing import List, Tuple
+from june.demography.person import Person
+
+
 class ExternalGroup:
     external = True
     __slots__ = "spec", "id", "domain_id"
@@ -35,7 +39,7 @@ class ExternalSubgroup:
 
     def clear(self):
         pass
-    
+
     @property
     def spec(self):
         return self.group.spec

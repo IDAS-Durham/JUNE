@@ -2,7 +2,6 @@ from june.groups import Supergroup
 from june.groups import Group
 from june.demography import Person
 from enum import IntEnum
-import numpy as np
 import pytest
 
 
@@ -13,15 +12,11 @@ class MockSupergroup(Supergroup):
 
 class MockGroup(Group):
     class SubgroupType(IntEnum):
-        type1 = 0
-        type2 = 0
+        A = 0
+        B = 1
 
     def __init__(self):
         super().__init__()
-        person = Person()
-        self.add(Person(), "primary_activity", self.SubgroupType.type1)
-        person = Person()
-        self.add(person, "primary_activity", self.SubgroupType.type2)
 
 
 @pytest.fixture(name="super_group", scope="module")

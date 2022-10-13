@@ -1,4 +1,4 @@
-from .social_venue import SocialVenue, SocialVenues, SocialVenueError
+from .social_venue import SocialVenue, SocialVenues
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
 
@@ -13,7 +13,7 @@ class Cinema(SocialVenue):
 
 
 class Cinemas(SocialVenues):
-    social_venue_class = Cinema
+    venue_class = Cinema
     default_coordinates_filename = default_cinemas_coordinates_filename
 
 

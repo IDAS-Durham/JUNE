@@ -2,8 +2,6 @@ from typing import List, Dict, Optional
 
 import numpy as np
 import pandas as pd
-import h5py
-import yaml
 
 from june import paths
 from june.demography import Person
@@ -224,6 +222,7 @@ class Population:
     def vaccinated(self):
         return [person for person in self.people if person.vaccinated]
 
+
 class Demography:
     def __init__(
         self,
@@ -244,9 +243,7 @@ class Demography:
         self.age_sex_generators = age_sex_generators
         self.comorbidity_data = comorbidity_data
 
-    def populate(
-        self, area_name: str, ethnicity=True, comorbidity=True,
-    ) -> Population:
+    def populate(self, area_name: str, ethnicity=True, comorbidity=True) -> Population:
         """
         Generate a population for a given area. Age, sex and number of residents
         are all based on census data for that area.
@@ -310,8 +307,8 @@ class Demography:
         """
         Initializes a geography for a specific list of zones. The zones are
         specified by the filter_dict dictionary where the key denotes the
-        kind of zone, and the value is a list with the different zone names. 
-        
+        kind of zone, and the value is a list with the different zone names.
+
         Example
         -------
             filter_key = {"region" : "North East"}
@@ -401,16 +398,12 @@ def _load_age_and_sex_generators(
     )  # pd MultiIndex!!!
     ethnicity_structure_df = ethnicity_structure_df.loc[pd.IndexSlice[area_names]]
     ethnicity_structure_df.sort_index(level=0, inplace=True)
-    ## "sort" is required as .loc slicing a multi_index df doesn't work as expected --
-    ## it preserves original order, and ignoring "repeat slices".
+    # "sort" is required as .loc slicing a multi_index df doesn't work as expected --
+    # it preserves original order, and ignoring "repeat slices".
     # TODO fix this to use proper complete indexing.
 
     ret = {}
-    for (
-        (_, age_structure),
-        (index, female_ratios),
-        (_, ethnicity_df),
-    ) in zip(
+    for ((_, age_structure), (index, female_ratios), (_, ethnicity_df)) in zip(
         age_structure_df.iterrows(),
         female_ratios_df.iterrows(),
         ethnicity_structure_df.groupby(level=0),
@@ -530,8 +523,7 @@ def generate_comorbidity(person, comorbidity_data):
 def load_age_and_sex_generators_for_bins(
     age_sex_bins_filename: str, by="super_area"
 ) -> Dict[str, AgeSexGenerator]:
-    """
-    """
+    """ """
     data = pd.read_csv(age_sex_bins_filename, index_col=0)
     area_names = data[by].values
     men = data.loc[:, data.columns.str.contains("M")].copy()

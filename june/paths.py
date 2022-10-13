@@ -84,7 +84,7 @@ except FileNotFoundError:
     )
     if answer == "y":
         script_path = Path(__file__).parent.parent / "scripts" / "get_june_data.sh"
-        with open(script_path, 'rb') as file:
+        with open(script_path, "rb") as file:
             script = file.read()
         rc = subprocess.call(script, shell=True)
     data_path = path_for_name("data", look_in_package=True)

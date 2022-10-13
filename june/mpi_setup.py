@@ -1,13 +1,11 @@
-from collections import defaultdict
 from mpi4py import MPI
 import numpy as np
 
-from june.groups import ExternalSubgroup
-from june.exc import SimulatorError
 
 mpi_comm = MPI.COMM_WORLD
 mpi_rank = mpi_comm.Get_rank()
 mpi_size = mpi_comm.Get_size()
+
 
 class MovablePeople:
     """
@@ -23,7 +21,7 @@ class MovablePeople:
         self.index = {}
 
     def add_person(self, person, external_subgroup):
-        """ Add or update a person to the outward facing group """
+        """Add or update a person to the outward facing group"""
         domain_id = external_subgroup.domain_id
         group_spec = external_subgroup.spec
         group_id = external_subgroup.group_id
@@ -85,7 +83,7 @@ class MovablePeople:
             return 1
 
     def serialise(self, rank):
-        """ Hopefully more efficient than standard pickle"""
+        """Hopefully more efficient than standard pickle"""
         keys, data = [], []
         if rank not in self.skinny_out:
             return None, None, 0
@@ -147,7 +145,7 @@ class MovablePeople:
                         for k, i, t, s, iids, iis, d, a in data
                     }
                 )
-            except:
+            except Exception:
                 print("failing", rank, "f-done")
                 raise
 

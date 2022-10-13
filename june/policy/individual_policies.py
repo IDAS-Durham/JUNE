@@ -2,12 +2,11 @@ import numpy as np
 from typing import List, Optional, Union
 import datetime
 from random import random
-import june.policy
 
 from june.epidemiology.infection import SymptomTag
 from june.demography.person import Person
 from june.policy import Policy, PolicyCollection
-from june.mpi_setup import mpi_rank, mpi_size
+from june.mpi_setup import mpi_size
 from june.utils.distances import haversine_distance
 
 
@@ -78,7 +77,7 @@ class IndividualPolicies(PolicyCollection):
                 if policy.check_skips_activity(person):
                     activities = policy.apply(activities=activities)
             else:
-                raise ValueError(f"policy type not expected")
+                raise ValueError("policy type not expected")
         return activities
 
 
@@ -132,7 +131,7 @@ class Quarantine(StayHome):
         n_days_household: int = 14,
         compliance: float = 1.0,
         household_compliance: float = 1.0,
-        vaccinated_household_compliance: float = 1.0
+        vaccinated_household_compliance: float = 1.0,
     ):
         """
         This policy forces people to stay at home for ```n_days``` days after they show symtpoms, and for ```n_days_household``` if someone else in their household shows symptoms
@@ -165,9 +164,8 @@ class Quarantine(StayHome):
     def check_stay_home_condition(self, person: Person, days_from_start):
         try:
             regional_compliance = person.region.regional_compliance
-        except:
+        except Exception:
             regional_compliance = 1
-        self_quarantine = False
         if person.infected:
             time_of_symptoms_onset = person.infection.time_of_symptoms_onset
             if time_of_symptoms_onset is not None:
@@ -179,11 +177,13 @@ class Quarantine(StayHome):
                         if random() < self.compliance * regional_compliance:
                             return True
 
-        if (person.vaccinated and person.vaccine_plan is None) or person.age < 18:
+        if (person.vaccinated and person.vaccine_trajectory is None) or person.age < 18:
             housemates_quarantine = person.residence.group.quarantine(
                 time=days_from_start,
                 quarantine_days=self.n_days_household,
-                household_compliance=self.vaccinated_household_compliance * self.household_compliance * regional_compliance,
+                household_compliance=self.vaccinated_household_compliance
+                * self.household_compliance
+                * regional_compliance,
             )
 
         else:
@@ -192,7 +192,7 @@ class Quarantine(StayHome):
                 quarantine_days=self.n_days_household,
                 household_compliance=self.household_compliance * regional_compliance,
             )
-            
+
         return housemates_quarantine
 
 
@@ -203,7 +203,7 @@ class SchoolQuarantine(StayHome):
         end_time: Union[str, datetime.datetime] = "2100-01-01",
         compliance: float = 1.0,
         n_days: int = 7,
-        isolate_on: str = "symptoms"
+        isolate_on: str = "symptoms",
     ):
         """
         This policy forces kids to stay at home if there is a symptomatic case of covid in their classroom.
@@ -236,11 +236,11 @@ class SchoolQuarantine(StayHome):
                 or person.primary_activity.group.external
             ):
                 return False
-        except:
+        except Exception:
             return False
         try:
             regional_compliance = person.region.regional_compliance
-        except:
+        except Exception:
             regional_compliance = 1
         compliance = self.compliance * regional_compliance
         if person.infected:
@@ -251,16 +251,28 @@ class SchoolQuarantine(StayHome):
                 time_start_quarantine = person.infection.start_time
             else:
                 if person.infection.time_of_symptoms_onset:
-                    time_start_quarantine = person.infection.start_time + person.infection.time_of_symptoms_onset
+                    time_start_quarantine = (
+                        person.infection.start_time
+                        + person.infection.time_of_symptoms_onset
+                    )
                 else:
                     time_start_quarantine = None
             if time_start_quarantine is not None:
-                if time_start_quarantine < person.primary_activity.quarantine_starting_date:
+                if (
+                    time_start_quarantine
+                    < person.primary_activity.quarantine_starting_date
+                ):
                     # If the agent will show symptoms earlier than the quarantine time, update it.
-                    person.primary_activity.quarantine_starting_date = time_start_quarantine
-                if (days_from_start - person.primary_activity.quarantine_starting_date) > self.n_days:
+                    person.primary_activity.quarantine_starting_date = (
+                        time_start_quarantine
+                    )
+                if (
+                    days_from_start - person.primary_activity.quarantine_starting_date
+                ) > self.n_days:
                     # If it's been more than n_days since last quarantine
-                    person.primary_activity.quarantine_starting_date = time_start_quarantine
+                    person.primary_activity.quarantine_starting_date = (
+                        time_start_quarantine
+                    )
         if (
             0
             < (days_from_start - person.primary_activity.quarantine_starting_date)
@@ -285,7 +297,7 @@ class Shielding(StayHome):
     def check_stay_home_condition(self, person: Person, days_from_start: float):
         try:
             regional_compliance = person.region.regional_compliance
-        except:
+        except Exception:
             regional_compliance = 1
         if person.age >= self.min_age:
             if (
@@ -388,11 +400,7 @@ class CloseSchools(SkipActivity):
 
 
 class CloseUniversities(SkipActivity):
-    def __init__(
-        self,
-        start_time: str,
-        end_time: str,
-    ):
+    def __init__(self, start_time: str, end_time: str):
         super().__init__(
             start_time, end_time, activities_to_remove=("primary_activity")
         )
@@ -406,6 +414,59 @@ class CloseUniversities(SkipActivity):
             and person.primary_activity.group.spec == "university"
         ):
             return True
+        return False
+
+
+class CloseCompaniesLockdownTiers(SkipActivity):
+    TIERS = set([3, 4])
+
+    def __init__(self, start_time: str, end_time: str):
+        super().__init__(start_time, end_time, ("primary_activity", "commute"))
+
+    def check_skips_activity(self, person: "Person") -> bool:
+        """
+        Returns True if the activity is to be skipped, otherwise False
+        """
+        if (
+            person.primary_activity is not None
+            and person.primary_activity.group.spec == "company"
+        ):
+            # import pdb; pdb.set_trace()
+            if person.lockdown_status == "random":
+                # stop people going to work in Tier 3 or 4 regions
+                # if they don't work in the same region
+                # and if their region is not in Tier 3 or 4
+                # subject to regional compliance
+                try:
+                    if (
+                        person.work_super_area != person.area.super_area
+                        and person.work_super_area.region.policy["lockdown_tier"]
+                        in CloseCompaniesLockdownTiers.TIERS
+                        and person.region.policy["lockdown_tier"]
+                        not in CloseCompaniesLockdownTiers.TIERS
+                    ):
+                        try:
+                            return random() < person.region.regional_compliance
+                        except Exception:
+                            return True
+                except AttributeError:
+                    pass
+
+                # stop people going to work who are living in a Tier 3 or 4 region unless they work
+                # in that same region
+                # subject to regional compliance
+                try:
+                    if (
+                        person.work_super_area != person.area.super_area
+                        and person.region.policy["lockdown_tier"]
+                        in CloseCompaniesLockdownTiers.TIERS
+                    ):
+                        try:
+                            return random() < person.region.regional_compliance
+                        except Exception:
+                            return True
+                except AttributeError:
+                    pass
         return False
 
 
@@ -434,7 +495,7 @@ class CloseCompanies(SkipActivity):
         self.key_probability = key_probability
 
     @classmethod
-    def set_ratios(cls, world):
+    def initialize(cls, world, date, record):
         furlough_ratio = 0
         key_ratio = 0
         random_ratio = 0
@@ -461,80 +522,10 @@ class CloseCompanies(SkipActivity):
         """
         Returns True if the activity is to be skipped, otherwise False
         """
-
-        # stop people going to work in Tier 3 or 4 regions 
-        # if they don't work in the same region
-        # and if their region is not in Tier 3 or 4
-        # subject to regional compliance
-        if person.lockdown_status == "random":
-            try:
-                if (
-                    person.work_super_area.region != person.region
-                    and person.work_super_area.region.policy["lockdown_tier"] == 3
-                    and person.super_area.region.policy["lockdown_tier"] != 3
-                ):
-                    try:
-                        regional_compliance = person.region.regional_compliance
-                    except:
-                        regional_compliance = 1
-                        if random() < regional_compliance:
-                            return True
-
-            except AttributeError:
-                pass
-
-            try:
-                if (
-                    person.work_super_area.region != person.region
-                    and person.work_super_area.region.policy["lockdown_tier"] == 4
-                    and person.super_area.region.policy["lockdown_tier"] != 4
-                ):
-                    try:
-                        regional_compliance = person.region.regional_compliance
-                    except:
-                        regional_compliance = 1
-                        if random() < regional_compliance:
-                            return True
-
-            except AttributeError:
-                pass
-
-            # stop people going to work who are living in a Tier 3 or 4 region unless they work
-            # in that same region
-            # subject to regional compliance
-            try:
-                if (
-                    person.work_super_area.region != person.super_area
-                    and person.super_area.region.policy["lockdown_tier"] == 3
-                ):
-                    try:
-                        regional_compliance = person.region.regional_compliance
-                    except:
-                        regional_compliance = 1
-                        if random() < regional_compliance:
-                            return True
-            except AttributeError:
-                pass
-
-            try:
-                if (
-                    person.work_super_area.region != person.super_area
-                    and person.super_area.region.policy["lockdown_tier"] == 4
-                ):
-                    try:
-                        regional_compliance = person.region.regional_compliance
-                    except:
-                        regional_compliance = 1
-                        if random() < regional_compliance:
-                            return True
-            except AttributeError:
-                pass
-
         if (
             person.primary_activity is not None
             and person.primary_activity.group.spec == "company"
         ):
-
             # if companies closed skip
             if self.full_closure:
                 return True
@@ -671,6 +662,9 @@ class LimitLongCommute(SkipActivity):
         self.going_to_work_probability = going_to_work_probability
         self.__class__.apply_from_distance = apply_from_distance
         self.__class__.long_distance_commuter_ids = set()
+
+    def initialize(self, world, date, record):
+        return self.get_long_commuters(world.people)
 
     @classmethod
     def get_long_commuters(cls, people):

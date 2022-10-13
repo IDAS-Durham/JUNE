@@ -3,6 +3,7 @@ import numpy as np
 
 from june.groups import Schools, School
 from june.world import World
+from june.groups.group.make_subgroups import Subgroup_Params
 from .utils import read_dataset
 
 nan_integer = -999
@@ -18,7 +19,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
 
     Parameters
     ----------
-    schools 
+    schools
         population object
     file_path
         path of the saved hdf5 file
@@ -71,7 +72,10 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             super_areas = np.array(super_areas, dtype=np.int64)
             coordinates = np.array(coordinates, dtype=np.float64)
             n_classrooms = np.array(n_classrooms, dtype=np.int64)
-            years = np.array(years, dtype=int_vlen_type)
+            if len(years) < 2:
+                years = np.array(years, dtype=np.int64)
+            else:
+                years = np.array(years, dtype=int_vlen_type)
             if chunk == 0:
                 schools_dset.attrs["n_schools"] = n_schools
                 schools_dset.create_dataset("id", data=ids, maxshape=(None,))
@@ -119,7 +123,10 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
 
 
 def load_schools_from_hdf5(
-    file_path: str, chunk_size: int = 50000, domain_super_areas=None
+    file_path: str,
+    chunk_size: int = 50000,
+    domain_super_areas=None,
+    config_filename=None,
 ):
     """
     Loads schools from an hdf5 file located at ``file_path``.
@@ -127,6 +134,12 @@ def load_schools_from_hdf5(
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+
+    School_Class = School
+    School_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
+
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         schools = f["schools"]
         schools_list = []
@@ -135,7 +148,6 @@ def load_schools_from_hdf5(
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_schools)
-            length = idx2 - idx1
             ids = read_dataset(schools["id"], idx1, idx2)
             n_pupils_max = read_dataset(schools["n_pupils_max"], idx1, idx2)
             age_min = read_dataset(schools["age_min"], idx1, idx2)
@@ -159,7 +171,7 @@ def load_schools_from_hdf5(
                     sector = None
                 else:
                     sector = sector.decode()
-                school = School(
+                school = School_Class(
                     coordinates=coordinates[k],
                     n_pupils_max=n_pupils_max[k],
                     age_min=age_min[k],
@@ -178,7 +190,6 @@ def restore_school_properties_from_hdf5(
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         schools = f["schools"]
-        schools_list = []
         n_schools = schools.attrs["n_schools"]
         n_chunks = int(np.ceil(n_schools / chunk_size))
         for chunk in range(n_chunks):

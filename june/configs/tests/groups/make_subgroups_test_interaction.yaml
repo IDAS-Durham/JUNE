@@ -1,0 +1,19 @@
+alpha_physical: 2.
+
+betas:
+ mock_group: 0.42941 
+
+
+contact_matrices:
+  mock_group:
+    contacts: [[1., 2., 3.], [4., 5., 4.], [3., 2., 1.]]
+    proportion_physical: [[5, 4., 2.], [2, 1., 2.], [3., 4., 5.]]
+    characteristic_time: 8 # in hours
+    type: "Age"
+    bins: [0,18,60,100]
+  test_group:
+    contacts: [[1., 2., 3.], [4., 5., 4.], [3., 2., 1.]]
+    proportion_physical: [[5, 4., 2.], [2, 1., 2.], [3., 4., 5.]]
+    characteristic_time: 8 # in hours
+    type: "Age"
+    bins: [0,18,60,100]

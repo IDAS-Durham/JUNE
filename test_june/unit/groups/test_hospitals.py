@@ -1,16 +1,12 @@
-import os
 from pathlib import Path
 import pytest
-import numpy as np
 import pandas as pd
 from june.geography import Geography
 
-from june.groups import Hospital, Hospitals
-from june.demography import Person
-from june.epidemiology.infection import SymptomTag, InfectionSelector, Infection
+from june.groups import Hospitals
+from june.epidemiology.infection import InfectionSelector
 from june.paths import data_path
 
-from pathlib import Path
 
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent

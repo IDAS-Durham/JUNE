@@ -5,10 +5,10 @@ from typing import List
 import logging
 
 from june.groups import Group, Subgroup, Supergroup
-from june.geography import SuperAreas, Areas, Geography
+from june.geography import Areas, Geography
 from june.paths import data_path
 
-age_to_years = {19: 1, 20: 2, 21: 3, 22: 4, 23: 5}
+age_to_years = {19: 0, 20: 1, 21: 2, 22: 3, 23: 4}
 
 default_universities_filename = data_path / "input/universities/uk_universities.csv"
 
@@ -17,7 +17,7 @@ logger = logging.getLogger("universities")
 
 class University(Group):
     def __init__(
-        self, n_students_max=None, n_years=5, ukprn=None, area=None, coordinates = None
+        self, n_students_max=None, n_years=5, ukprn=None, area=None, coordinates=None
     ):
         self.n_students_max = n_students_max
         self.n_years = n_years
@@ -25,19 +25,15 @@ class University(Group):
         self.area = area
         self.coordinates = coordinates
         super().__init__()
-        self.subgroups = [Subgroup(self, i) for i in range(self.n_years + 1)]
+        self.subgroups = [Subgroup(self, i) for i in range(self.n_years)]
 
     @property
     def students(self):
-        return [person for subgroup in self.subgroups for person in subgroup]
+        return [person for subgroup in self.subgroups[:] for person in subgroup]
 
     @property
     def n_students(self):
-        return sum([subgroup.size for subgroup in self.subgroups])
-
-    @property
-    def professors(self):
-        return self.subgroups[0].people
+        return sum([self.subgroups[i].size for i in range(1, len(self.subgroups))])
 
     @property
     def super_area(self):
@@ -52,8 +48,9 @@ class University(Group):
             self.subgroups[year].append(person)
             person.subgroups.primary_activity = self.subgroups[year]
             if person.work_super_area is not None:
-                    person.work_super_area.remove_worker(person)
+                person.work_super_area.remove_worker(person)
         elif subgroup == "professors":
+            # No professors in the modeling of the code!
             self.subgroups[0].append(person)
             person.subgroups.primary_activity = self.subgroups[0]
 
@@ -63,7 +60,9 @@ class University(Group):
 
 
 class Universities(Supergroup):
-    def __init__(self, universities: List[University]):
+    venue_class = University
+
+    def __init__(self, universities: List[venue_class]):
         super().__init__(members=universities)
 
     @classmethod
@@ -100,7 +99,7 @@ class Universities(Supergroup):
             closest_area = closest_area[0]
             if distance > max_distance_to_area:
                 continue
-            university = University(
+            university = cls.venue_class(
                 area=closest_area, n_students_max=n_stud, ukprn=ukprn, coordinates=coord
             )
             universities.append(university)
@@ -119,3 +118,11 @@ class Universities(Supergroup):
             universities_filename=universities_filename,
             max_distance_to_area=max_distance_to_area,
         )
+
+    # @property
+    # def n_professors(self):
+    #     return sum([uni.n_professors for uni in self.members])
+
+    @property
+    def n_students(self):
+        return sum([uni.n_students for uni in self.members])

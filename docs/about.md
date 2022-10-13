@@ -1,0 +1,1 @@
+This is the offical repository of JUNE, named after [June Almeida](https://en.wikipedia.org/wiki/June_Almeida), who was the female Scottish virologist that first identified the coronavirus group of viruses. Check out the [release paper](https://www.medrxiv.org/content/10.1101/2020.12.15.20248246v1) for a physical description of the model.

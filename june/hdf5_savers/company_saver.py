@@ -4,6 +4,7 @@ import logging
 
 from june.groups import Company, Companies
 from june.world import World
+from june.groups.group.make_subgroups import Subgroup_Params
 from june.mpi_setup import mpi_rank
 from .utils import read_dataset
 
@@ -13,17 +14,18 @@ logger = logging.getLogger("company_saver")
 if mpi_rank > 0:
     logger.propagate = False
 
+
 def save_companies_to_hdf5(
     companies: Companies, file_path: str, chunk_size: int = 500000
 ):
     """
     Saves the Population object to hdf5 format file ``file_path``. Currently for each person,
     the following values are stored:
-    - id, super_area, sector, n_workers_max, 
+    - id, super_area, sector, n_workers_max,
 
     Parameters
     ----------
-    companies 
+    companies
         population object
     file_path
         path of the saved hdf5 file
@@ -33,7 +35,6 @@ def save_companies_to_hdf5(
     """
     n_companies = len(companies)
     n_chunks = int(np.ceil(n_companies / chunk_size))
-    vlen_type = h5py.vlen_dtype(np.dtype("float64"))
     with h5py.File(file_path, "a") as f:
         companies_dset = f.create_group("companies")
         first_company_idx = companies[0].id
@@ -84,13 +85,21 @@ def save_companies_to_hdf5(
                 companies_dset["n_workers_max"][idx1:idx2] = n_workers_max
 
 
-def load_companies_from_hdf5(file_path: str, chunk_size=50000, domain_super_areas=None):
+def load_companies_from_hdf5(
+    file_path: str, chunk_size=50000, domain_super_areas=None, config_filename=None
+):
     """
     Loads companies from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
     object instances of other classes need to be restored first.
     This function should be rarely be called oustide world.py
     """
+
+    Company_Class = Company
+    Company_Class.subgroup_params = Subgroup_Params.from_file(
+        config_filename=config_filename
+    )
+
     logger.info("loading companies...")
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         companies = f["companies"]
@@ -130,7 +139,6 @@ def restore_companies_properties_from_hdf5(
 ):
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         companies = f["companies"]
-        companies_list = []
         n_companies = companies.attrs["n_companies"]
         n_chunks = int(np.ceil(n_companies / chunk_size))
         for chunk in range(n_chunks):

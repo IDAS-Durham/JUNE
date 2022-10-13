@@ -6,7 +6,9 @@ import yaml
 import numpy as np
 import numba as nb
 
-default_config_path = paths.configs_path / "defaults/epidemiology/infection/transmission/XNExp.yaml"
+default_config_path = (
+    paths.configs_path / "defaults/epidemiology/infection/transmission/XNExp.yaml"
+)
 
 
 @nb.jit(nopython=True)
@@ -27,7 +29,7 @@ def xnexp(x: float, n: float, alpha: float) -> float:
     -------
         evaluation fo xnexp function
     """
-    return x ** n * np.exp(-x / alpha)
+    return x**n * np.exp(-x / alpha)
 
 
 @nb.jit(nopython=True)
@@ -47,19 +49,19 @@ def update_probability(
     time_from_infection:
         time from infection
     time_first_infectious:
-        time from infection at which the person becomes infectious 
+        time from infection at which the person becomes infectious
     norm:
         multiplier to the infectiousness profile
     norm_time:
         controls the definition of tau
-    alpha: 
+    alpha:
         demominator in exponential for xnexp function
     n:
         exponent of x in xnexp
 
     Returns
     -------
-        Value of infectiousness at time 
+        Value of infectiousness at time
     """
 
     if time_from_infection > time_first_infectious:
@@ -257,10 +259,7 @@ class TransmissionXNExp(Transmission):
         )
 
     def _modify_infectiousness_for_symptoms(
-        self,
-        max_symptoms: str,
-        asymptomatic_infectious_factor,
-        mild_infectious_factor,
+        self, max_symptoms: str, asymptomatic_infectious_factor, mild_infectious_factor
     ):
         """
         Lowers the infectiousness of asymptomatic and mild cases, by modifying

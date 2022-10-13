@@ -26,7 +26,7 @@ class TestCity:
             [
                 SuperArea(name="c1", coordinates=[1, 2]),
                 SuperArea(name="c2", coordinates=[3, 4]),
-            ],
+            ]
         )
         cities = Cities.for_super_areas(
             super_areas, city_super_areas_filename=city_test_file

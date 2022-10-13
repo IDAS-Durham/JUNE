@@ -1,23 +1,18 @@
-from june.interaction import Interaction, interaction
-from june.epidemiology.infection.infection_selector import InfectionSelector
-from june.epidemiology.infection import Immunity
+from june.interaction import Interaction
 from june.groups import School
 from june.demography import Person
 from june import paths
 from june.geography import Geography
-from june.groups.group.interactive import InteractiveGroup
 from june.world import generate_world_from_geography
-from june.groups import Hospital, Hospitals
 from june.epidemiology.infection_seed import InfectionSeed
 from june.policy import Policies
 from june.simulator import Simulator
 
 import pytest
 import numpy as np
-import os
 import pandas as pd
 import pathlib
-from itertools import chain
+
 
 test_config = paths.configs_path / "tests/interaction.yaml"
 default_sector_beta_filename = (
@@ -156,7 +151,7 @@ def create_school(n_students, n_teachers):
         people.append(person)
     for _ in range(n_teachers):
         person = Person.from_attributes(sex="m", age=40)
-        school.add(person, subgroup_type=school.SubgroupType.teachers)
+        school.add(person)
         people.append(person)
     assert len(people) == n_students + n_teachers
     assert len(school.people) == n_students + n_teachers
@@ -166,35 +161,19 @@ def create_school(n_students, n_teachers):
 
 
 @pytest.mark.parametrize(
-    "n_teachers,mode",
-    [
-        [2, "average"],
-        [4, "average"],
-        [6, "average"],
-    ],
+    "n_teachers,mode", [[2, "average"], [4, "average"], [6, "average"]]
 )
 def test__average_time_to_infect(n_teachers, mode, selector):
-    selector_config = (
-        paths.configs_path / "defaults/transmission/TransmissionConstant.yaml"
-    )
     transmission_probability = 0.1
     n_students = 1
     contact_matrices = {
         "contacts": [[n_teachers - 1, 1], [1, 0]],
-        "proportion_physical": [
-            [
-                0,
-                0,
-            ],
-            [0, 0],
-        ],
+        "proportion_physical": [[0, 0], [0, 0]],
         "xi": 1.0,
         "characteristic_time": 24,
     }
     interaction = Interaction(
-        betas={
-            "school": 1,
-        },
+        betas={"school": 1},
         alpha_physical=1,
         contact_matrices={"school": contact_matrices},
     )
@@ -213,9 +192,7 @@ def test__average_time_to_infect(n_teachers, mode, selector):
     teacher_teacher = transmission_probability * (n_teachers - 1)
     student_teacher = transmission_probability / n_students
     np.testing.assert_allclose(
-        np.mean(n_days),
-        1.0 / (teacher_teacher + student_teacher),
-        rtol=0.1,
+        np.mean(n_days), 1.0 / (teacher_teacher + student_teacher), rtol=0.1
     )
 
 
@@ -223,8 +200,14 @@ def test__infection_is_isolated(epidemiology, selectors):
     geography = Geography.from_file({"area": ["E00002559"]})
     world = generate_world_from_geography(geography, include_households=True)
     interaction = Interaction.from_file(config_filename=test_config)
-    infection_seed = InfectionSeed.from_uniform_cases(world, selectors[0], cases_per_capita=5/len(world.people), date="2020-03-01")
-    infection_seed.unleash_virus_per_day(date = pd.to_datetime("2020-03-01"), time=0)
+    infection_seed = InfectionSeed.from_uniform_cases(
+        world,
+        selectors[0],
+        cases_per_capita=5 / len(world.people),
+        date="2020-03-01",
+        seed_past_infections=False,
+    )
+    infection_seed.unleash_virus_per_day(date=pd.to_datetime("2020-03-01"), time=0)
     policies = Policies([])
     n_infected = len([person for person in world.people if person.infected])
     simulator = Simulator.from_file(
@@ -302,8 +285,4 @@ def test__super_spreaders(selector):
     culpable_ids, culpable_counts = np.unique(to_blame_ids, return_counts=True)
     for culpable_id, culpable_count in zip(culpable_ids, culpable_counts):
         expected = (id_to_trans[culpable_id] / total * n_infections,)
-        assert np.isclose(
-            culpable_count,
-            expected,
-            rtol=0.25,
-        )
+        assert np.isclose(culpable_count, expected, rtol=0.25)
