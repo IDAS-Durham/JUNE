@@ -1,7 +1,7 @@
 import re
 from collections import OrderedDict
 
-from june.groups.group.make_subgroups import Subgroup_Params
+from june.groups.group.make_subgroups import SubgroupParams
 import numpy as np
 
 

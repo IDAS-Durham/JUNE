@@ -129,7 +129,7 @@ class SubgroupParams:
                 print(f"{spec} not defined in interaction yaml or defualt options")
                 return list(["default"])
             else:
-                Bins, Type = Get_Defaults(spec)
+                Bins, Type = get_defaults(spec)
                 logger.info(
                     f"{spec} interaction bins not specified. Using default values {Bins}"
                 )
@@ -139,7 +139,7 @@ class SubgroupParams:
             "bins" not in self.params[spec].keys()
             or "type" not in self.params[spec].keys()
         ):
-            Bins, Type = Get_Defaults(spec)
+            Bins, Type = get_defaults(spec)
             logger.info(
                 f"{spec} interaction bins not specified. Using default values {Bins}"
             )
@@ -155,7 +155,7 @@ class SubgroupParams:
             "household",
             "company",
         ]:
-            Bins, Type = Get_Defaults(spec)
+            Bins, Type = get_defaults(spec)
             if self.params[spec]["bins"] != Bins:
                 logger.info(f"{spec} interaction bins need default values for methods.")
                 self.params[spec]["bins"] = Bins
