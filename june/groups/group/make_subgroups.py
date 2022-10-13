@@ -10,7 +10,7 @@ default_config_filename = paths.configs_path / "defaults/interaction/interaction
 logger = logging.getLogger("subgroup maker")
 
 
-def Get_Defaults(spec):
+def get_defaults(spec):
     if spec in [
         "pub",
         "grocery",

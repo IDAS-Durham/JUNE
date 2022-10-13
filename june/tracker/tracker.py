@@ -993,10 +993,10 @@ class Tracker:
 
         for loc in self.IM.keys():
             if "type" not in self.IM[loc].keys():
-                Bins, Type = make_subgroups.Get_Defaults(loc)
+                Bins, Type = make_subgroups.get_defaults(loc)
                 self.IM[loc]["type"] = Type
             if "bins" not in self.IM[loc].keys():
-                Bins, Type = make_subgroups.Get_Defaults(loc)
+                Bins, Type = make_subgroups.get_defaults(loc)
                 self.IM[loc]["bins"] = Bins
         return 1
 
