@@ -429,8 +429,8 @@ class PlotClass:
     def IMPlots_GetIM(self, contact_type):
         return Tracker.IMPlots_GetIM(self, contact_type)
 
-    def Get_characteristic_time(self, location):
-        return Tracker.Get_characteristic_time(self, location)
+    def get_characteristic_time(self, location):
+        return Tracker.get_characteristic_time(self, location)
 
     #####################################################
     # General Plotting ##################################
@@ -983,7 +983,7 @@ class PlotClass:
 
             # Put into same contact units
 
-            CT = self.Get_characteristic_time(contact_type)[0]
+            CT = self.get_characteristic_time(contact_type)[0]
             cm /= CT
 
             cm_Max = max(bbc_Max, cm_Max)

@@ -141,8 +141,8 @@ class MergerClass:
     def CM_Norm(self, cm, cm_err, pop_tots, contact_type="global", Which="UNCM"):
         return Tracker.CM_Norm(self, cm, cm_err, pop_tots, contact_type, Which)
 
-    def Get_characteristic_time(self, location):
-        return Tracker.Get_characteristic_time(self, location)
+    def get_characteristic_time(self, location):
+        return Tracker.get_characteristic_time(self, location)
 
     def PolicyText(
         self, Type, contacts, contacts_err, proportional_physical, characteristic_time

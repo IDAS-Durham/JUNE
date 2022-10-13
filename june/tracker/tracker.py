@@ -658,7 +658,7 @@ class Tracker:
         self.hash_ages()
         return 1
 
-    def Get_characteristic_time(self, location):
+    def get_characteristic_time(self, location):
         """
         Get the characteristic time and proportion_physical time for location. (In hours)
 
@@ -1419,7 +1419,7 @@ class Tracker:
 
         # Normalization over characteristic time and population
         factor = (
-            self.Get_characteristic_time(location=contact_type)[0] * np.sum(pop_tots)
+            self.get_characteristic_time(location=contact_type)[0] * np.sum(pop_tots)
         ) / self.location_cum_time[contact_type]
         if np.isnan(factor):
             factor = 0
@@ -1775,7 +1775,7 @@ class Tracker:
                 subgroup_type = 1
 
         delta_t = self.timer.delta_time.seconds / (3600 * 24)  # In Days
-        characteristic_time = self.Get_characteristic_time(location=spec)[0]  # In Days
+        characteristic_time = self.get_characteristic_time(location=spec)[0]  # In Days
 
         factor = delta_t / characteristic_time
         contacts_per_subgroup = [
@@ -3046,7 +3046,7 @@ class Tracker:
                     (
                         characteristic_time,
                         proportion_physical,
-                    ) = self.Get_characteristic_time(local)
+                    ) = self.get_characteristic_time(local)
                     proportional_physical = np.array(proportion_physical)
                     characteristic_time = characteristic_time * 24
                 else:
