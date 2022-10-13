@@ -28,14 +28,14 @@ class TestTracker:
         geography = Geography.from_file({"super_area": ["E02005103"]})
         world = generate_world_from_geography(geography, include_households=True)
 
-        Pubs.Get_Interaction(interaction_config)
+        Pubs.get_interaction(interaction_config)
         world.pubs = Pubs.for_geography(geography)
 
         return world
 
     @pytest.fixture(name="tracker", autouse=True, scope="class")
     def setup_tracker(self, world):
-        Pubs.Get_Interaction(interaction_config)
+        Pubs.get_interaction(interaction_config)
         world.pubs = Pubs.from_coordinates(
             np.array([pub.coordinates for pub in world.pubs]), world.super_areas
         )

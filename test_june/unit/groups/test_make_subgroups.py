@@ -28,7 +28,7 @@ class MockSupergroup(Supergroup):
 
 @pytest.fixture(name="super_group_default", scope="module")
 def make_supergroup_default():
-    MockSupergroup.Get_Interaction(interaction_config)
+    MockSupergroup.get_interaction(interaction_config)
     groups_list = [MockSupergroup.venue_class() for _ in range(10)]
     super_group_default = MockSupergroup(groups_list)
     return super_group_default
@@ -36,7 +36,7 @@ def make_supergroup_default():
 
 @pytest.fixture(name="super_group", scope="module")
 def make_supergroup():
-    MockSupergroup.Get_Interaction(interaction_config)
+    MockSupergroup.get_interaction(interaction_config)
     groups_list = [MockSupergroup.venue_class() for _ in range(10)]
     super_group = MockSupergroup(groups_list)
     return super_group
