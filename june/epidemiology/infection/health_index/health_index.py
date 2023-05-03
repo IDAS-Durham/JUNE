@@ -188,8 +188,8 @@ class HealthIndexGenerator:
             p[population][sex][age][0] = asymptomatic_rate  # recovers as asymptomatic
             p[population][sex][age][1] = mild_rate  # recovers as mild
             p[population][sex][age][2] = severe_rate  # recovers as severe
-            p[population][sex][age][3] = (
-                hospital_rate - hospital_dead_rate
+            p[population][sex][age][3] = max(
+                hospital_rate - hospital_dead_rate, 0
             )  # recovers in the ward
             p[population][sex][age][4] = max(
                 icu_rate - icu_dead_rate, 0
