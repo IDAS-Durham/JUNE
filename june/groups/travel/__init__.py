@@ -8,3 +8,5 @@ from .transport import (
     InterCityTransport,
     InterCityTransports,
 )
+from .aircraft import Aircraft, Aircrafts
+from .travel import Travel, InternationalTravel

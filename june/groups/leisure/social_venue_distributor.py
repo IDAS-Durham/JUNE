@@ -1,13 +1,17 @@
+import random as rnd
 import numpy as np
-from random import random, sample, randint
+from random import sample, randint 
 from numba import jit
 from typing import Dict
 import yaml
 import re
 
+from june.demography.person import Person
 from june.groups.leisure import SocialVenues
+from june.groups.leisure.social_network import SocialNetwork
 from june.utils.parse_probabilities import parse_age_probabilities
 from june.geography import Area
+from june.mpi_wrapper import MPI, mpi_comm, mpi_rank, mpi_size, mpi_available
 
 
 @jit(nopython=True)
@@ -15,7 +19,7 @@ def random_choice_numba(arr, prob):
     """
     Fast implementation of np.random.choice
     """
-    return arr[np.searchsorted(np.cumsum(prob), random(), side="right")]
+    return arr[np.searchsorted(np.cumsum(prob), rnd(), side="right")]
 
 
 default_daytypes = {
@@ -36,6 +40,7 @@ class SocialVenueDistributor:
         daytypes: Dict[str, str] = default_daytypes,
         hours_per_day: Dict[Dict, float] = None,
         drags_household_probability=0.0,
+        invites_friends_probability=0.0,
         neighbours_to_consider=5,
         maximum_distance=5,
         leisure_subgroup_type=0,
@@ -96,10 +101,12 @@ class SocialVenueDistributor:
         self.neighbours_to_consider = neighbours_to_consider
         self.maximum_distance = maximum_distance
         self.drags_household_probability = drags_household_probability
+        self.invites_friends_probability = invites_friends_probability
         self.leisure_subgroup_type = leisure_subgroup_type
         self.spec = re.findall("[A-Z][^A-Z]*", self.__class__.__name__)[:-1]
         self.spec = "_".join(self.spec).lower()
         self.nearest_venues_to_visit = nearest_venues_to_visit
+        self.social_network = SocialNetwork()
 
     @classmethod
     def from_config(
@@ -110,20 +117,28 @@ class SocialVenueDistributor:
         config_override: Dict[str, int] = None,
     ):
         """
+        Load social venue settings from configuration and apply overrides.
+        
         Parameters
         ----------
         config_override
             a dict of parameters overrides their values in "config_filename"
         """
+        # Load config
         if config_filename is None:
             config_filename = cls.default_config_filename
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
+        
+        # Apply overrides if present
         if config_override is not None:
             for key, value in config_override.items():
                 if value is not None:
                     config[key] = value
-        return cls(social_venues, daytypes=daytypes, **config)
+
+        social_venues_instance = cls(social_venues, daytypes=daytypes, **config)
+
+        return social_venues_instance
 
     def _compute_poisson_parameter_from_times_per_week(
         self, times_per_week, hours_per_day, day_type
@@ -212,6 +227,7 @@ class SocialVenueDistributor:
             working_hours=working_hours,
         )
         return 1 - np.exp(-poisson_parameter * delta_time)
+    
 
     def get_possible_venues_for_area(self, area: Area):
         """
@@ -236,6 +252,7 @@ class SocialVenueDistributor:
             indices_len = min(len(potential_venues), self.neighbours_to_consider)
             random_idx_choice = sample(range(len(potential_venues)), indices_len)
             return tuple([potential_venues[idx] for idx in random_idx_choice])
+
 
     def get_leisure_group(self, person):
         candidates = person.area.social_venues[self.spec]
@@ -264,41 +281,10 @@ class SocialVenueDistributor:
         """
         Check whether person drags household or not.
         """
-        return random() < self.drags_household_probability
-
-    def send_household_with_person_if_necessary(self, person, to_send_abroad=None):
+        return rnd.random() < self.drags_household_probability
+    
+    def person_invites_friends(self):
         """
-        When we know that the person does an activity in the social venue X,
-        then we ask X whether the person needs to drag the household with
-        him or her.
+        Check whether person invites friends or not.
         """
-        if (
-            person.residence.group.spec == "care_home"
-            or person.residence.group.type in ["communal", "other", "student"]
-        ):
-            return
-        subgroup = person.leisure
-        if self.person_drags_household():
-            for mate in person.residence.group.residents:
-                if mate != person:
-                    if mate.busy:
-                        if (
-                            mate.leisure is not None
-                        ):  # this perosn has already been assigned somewhere
-                            if not mate.leisure.external:
-                                if mate not in mate.leisure.people:
-                                    # person active somewhere else, let's not disturb them
-                                    continue
-                                mate.leisure.remove(mate)
-                            else:
-                                ret = to_send_abroad.delete_person(mate, mate.leisure)
-                                if ret:
-                                    # person active somewhere else, let's not disturb them
-                                    continue
-                            if not subgroup.external:
-                                subgroup.append(mate)
-                            else:
-                                to_send_abroad.add_person(mate, subgroup)
-                    mate.subgroups.leisure = (
-                        subgroup  # person will be added later in the simulator.
-                    )
+        return rnd.random() < self.invites_friends_probability

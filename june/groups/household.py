@@ -3,6 +3,7 @@ from collections import defaultdict
 import numpy as np
 from random import random
 
+from june.epidemiology.infection.disease_config import DiseaseConfig
 from june.groups import Group, Supergroup
 from june.groups.group.interactive import InteractiveGroup
 
@@ -30,7 +31,7 @@ class Household(Group):
         "residences_to_visit",
         "being_visited",
         "household_to_care",
-        "receiving_care",
+        "receiving_care"
     )
 
     # class SubgroupType(IntEnum):
@@ -39,12 +40,14 @@ class Household(Group):
     #     adults = 2
     #     old_adults = 3
 
-    def __init__(self, type=None, area=None, max_size=np.inf, composition_type=None):
+    def __init__(self, type=None, area=None, max_size=np.inf, composition_type=None, registered_members_ids=None
+    ):
         """
         Type should be on of ["family", "student", "young_adults", "old", "other", "nokids", "ya_parents", "communal"].
         Relatives is a list of people that are related to the family living in the household
         """
-        super().__init__()
+
+        super().__init__()        
         self.area = area
         self.type = type
         self.quarantine_starting_date = -99
@@ -55,6 +58,7 @@ class Household(Group):
         self.being_visited = False  # this is True when people from other households have been added to the group
         self.receiving_care = False
         self.composition_type = composition_type
+        self.registered_members_ids = registered_members_ids if registered_members_ids is not None else {}
 
     def _get_leisure_subgroup_for_person(self, person):
         if person.age < 18:
@@ -66,6 +70,25 @@ class Household(Group):
         else:
             subgroup = self.SubgroupType.old_adults
         return subgroup
+    
+    def add_to_registered_members(self, person_id, subgroup_type=0):
+        """
+        Add a person to the registered members list for a specific subgroup.
+        
+        Parameters
+        ----------
+        person_id : int
+            The ID of the person to add
+        subgroup_type : int, optional
+            The subgroup to add the person to (default: 0)
+        """
+        # Create the subgroup if it doesn't exist
+        if subgroup_type not in self.registered_members_ids:
+            self.registered_members_ids[subgroup_type] = []
+            
+        # Add the person if not already in the list
+        if person_id not in self.registered_members_ids[subgroup_type]:
+            self.registered_members_ids[subgroup_type].append(person_id)
 
     def add(self, person, subgroup_type=None, activity="residence"):
         if subgroup_type is None:
@@ -180,6 +203,13 @@ class Household(Group):
         self.being_visited = True
         self.make_household_residents_stay_home(to_send_abroad=to_send_abroad)
         return self[self._get_leisure_subgroup_for_person(person=person)]
+    
+    def get_all_registered_members_ids(self):
+    
+        all_member_ids = [member_id for subgroup_members in self.registered_members_ids.values() 
+                    for member_id in subgroup_members]
+        
+        return all_member_ids
 
 
 class Households(Supergroup):
@@ -194,21 +224,86 @@ class Households(Supergroup):
 
 
 class InteractiveHousehold(InteractiveGroup):
-    def get_processed_beta(self, betas, beta_reductions):
+    def has_isolating_residents(self, current_time):
         """
+        Check if any household residents are currently in self-isolation.
+        
+        Parameters
+        ----------
+        current_time : float
+            Current simulation time in days from start
+            
+        Returns
+        -------
+        bool
+            True if any resident is currently in isolation, False otherwise
+        """
+        if current_time is None:
+            return False
+            
+        for person in self.group.residents:
+            if (hasattr(person, 'test_and_trace') and 
+                person.test_and_trace is not None and
+                person.test_and_trace.isolation_start_time is not None and
+                person.test_and_trace.isolation_end_time is not None):
+                
+                # Check if we're currently within the isolation period
+                if (person.test_and_trace.isolation_start_time <= current_time <= 
+                    person.test_and_trace.isolation_end_time):
+                    return True
+        return False
+    
+    def get_processed_beta(self, betas, beta_reductions, current_time=None):
+        """
+        Enhanced version that applies isolation precautions if residents are isolating.
+        
         In the case of households, we need to apply the beta reduction of household visits
         if the household has a visit, otherwise we apply the beta reduction for a normal
-        household.
+        household. Additionally, if any residents are in isolation, we apply extra
+        precautionary reductions to model social distancing within the household.
+        
+        Parameters
+        ----------
+        betas : dict
+            Base transmission intensities for different venue types
+        beta_reductions : dict
+            Policy-based beta reductions
+        current_time : float, optional
+            Current simulation time in days from start
+            
+        Returns
+        -------
+        float
+            Final processed beta value for this household
         """
+        # Determine base beta and spec based on household state
         if self.group.receiving_care:
             # important than this goes first than being visited
             beta = betas["care_visits"]
-            beta_reduction = beta_reductions.get("care_visits", 1.0)
+            spec = "care_visits"
         elif self.group.being_visited:
             beta = betas["household_visits"]
-            beta_reduction = beta_reductions.get("household_visits", 1.0)
+            spec = "household_visits"
         else:
             beta = betas["household"]
-            beta_reduction = beta_reductions.get(self.spec, 1.0)
+            spec = "household"
+        
+        # Get standard policy reduction
+        beta_reduction = beta_reductions.get(spec, 1.0)
+        
+        # Apply isolation precautions if anyone is isolating
+        if current_time is not None and self.has_isolating_residents(current_time):
+            # Additional reductions for isolation precautions
+            isolation_precautions = {
+                "household": 0.7,        # 30% reduction in household transmission
+                "household_visits": 0.1, # 90% reduction in visits (discouraged)
+                "care_visits": 0.6       # 40% reduction in care visits (extra PPE/precautions)
+            }
+            isolation_reduction = isolation_precautions.get(spec, 1.0)
+            beta_reduction *= isolation_reduction
+                    
+        # Apply regional compliance and return final beta
         regional_compliance = self.super_area.region.regional_compliance
-        return beta * (1 + regional_compliance * (beta_reduction - 1))
+        final_beta = beta * (1 + regional_compliance * (beta_reduction - 1))
+        
+        return final_beta

@@ -1,127 +1,139 @@
 import yaml
-
 from june import paths
 from .health_index.health_index import HealthIndexGenerator
-from . import Infection, Covid19
+from .infection import Infection
+from .infection import Covid19  
+from .infection import Measles
+from .infection import EVD68V
 from .symptoms import Symptoms
 from .trajectory_maker import TrajectoryMakers
 from .transmission import TransmissionConstant, TransmissionGamma
 from .transmission_xnexp import TransmissionXNExp
 from .trajectory_maker import CompletionTime
-
-from typing import TYPE_CHECKING
+from .disease_config import DiseaseConfig
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from june.demography import Person
     from .transmission import Transmission
     from june.epidemiology.infection.symptom_tag import SymptomTag
 
-default_transmission_config_path = (
-    paths.configs_path / "defaults/epidemiology/infection/transmission/covid19.yaml"
-)
-default_trajectories_config_path = (
-    paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
-)
-default_rates_file = paths.data_path / "input/health_index/infection_outcome_rates.csv"
+# Map disease names to infection classes
+disease_to_infection_class = {
+    "measles": Measles,
+    "covid19": Covid19,
+    "ev-d68-v": EVD68V
+    # Add other diseases here as needed
+}
 
 
 class InfectionSelector:
     def __init__(
         self,
-        transmission_config_path: str = default_transmission_config_path,
-        infection_class: Infection = Covid19,
-        trajectory_maker=TrajectoryMakers.from_file(default_trajectories_config_path),
-        health_index_generator: HealthIndexGenerator = None,
+        disease_config: DiseaseConfig,
+        infection_class: Optional[Infection] = None,
+        trajectory_maker: Optional[TrajectoryMakers] = None,
+        health_index_generator: Optional[HealthIndexGenerator] = None,
     ):
         """
-        Selects the type of infection a person is given
+        Selects the type of infection a person is given.
 
         Parameters
         ----------
-        transmission_config_path:
-            path to transmission config file
+        disease_config : DiseaseConfig
+            Configuration object for the disease.
+        infection_class : Infection, optional
+            Infection class for the disease (e.g., Measles, Covid19).
+        trajectory_maker : TrajectoryMakers, optional
+            Object to manage symptom trajectories.
+        health_index_generator : HealthIndexGenerator, optional
+            Generator for health index based on infection outcomes.
         """
-        self.infection_class = infection_class
-        self.transmission_config_path = transmission_config_path
-        self.trajectory_maker = trajectory_maker
-        self.health_index_generator = health_index_generator
+        self.disease_config = disease_config
+        self.disease_name = disease_config.disease_name
+        self.infection_class = infection_class or self._resolve_infection_class(self.disease_name)
+        self.trajectory_maker = trajectory_maker or TrajectoryMakers.from_disease_config(self.disease_config)
+        
+        # Retrieve the rates file from DiseaseConfig
+        self.health_index_generator = health_index_generator or HealthIndexGenerator.from_disease_config(
+            disease_config=disease_config
+        )
+        
+        self.transmission_type = None  # Will be initialized in `_load_transmission`
         self._load_transmission()
 
+
     @classmethod
-    def from_file(
-        cls,
-        infection_class: Infection = Covid19,
-        transmission_config_path: str = default_transmission_config_path,
-        trajectories_config_path: str = default_trajectories_config_path,
-        rates_file: str = default_rates_file,
-    ) -> "InfectionSelector":
+    def from_disease_config(cls, disease_config: DiseaseConfig) -> "InfectionSelector":
         """
-        Generate infection selector from default config file
+        Generate infection selector from default config file.
 
         Parameters
         ----------
-        transmission_config_path:
-            path to transmission config file
-        trajectories_config_path:
-            path to trajectories config file
-        health_index_generator:
-            health index generator
+        disease_name : str
+            Name of the disease.
+
+        Returns
+        -------
+        InfectionSelector
+            An instance of the infection selector.
         """
-        health_index_generator = HealthIndexGenerator.from_file(rates_file=rates_file)
-        trajectory_maker = TrajectoryMakers.from_file(trajectories_config_path)
-        return InfectionSelector(
+        # Dynamically select the infection class based on the disease name
+        infection_class = disease_to_infection_class.get(disease_config.disease_name.lower())
+
+        # Initialize the InfectionSelector with all required components
+        return cls(
+            disease_config=disease_config,
             infection_class=infection_class,
-            transmission_config_path=transmission_config_path,
-            trajectory_maker=trajectory_maker,
-            health_index_generator=health_index_generator,
+            trajectory_maker=TrajectoryMakers.from_disease_config(disease_config),
+            health_index_generator=HealthIndexGenerator.from_disease_config(
+                disease_config=disease_config
+            )
         )
 
-    @property
-    def infection_id(self):
-        return self.infection_class.infection_id()
-
-    def infect_person_at_time(self, person: "Person", time: float):
+    @staticmethod
+    def _get_rates_file_path(disease_name: str) -> str:
         """
-        Infects a person at a given time.
+        Construct the rates file path for the given disease.
 
         Parameters
         ----------
-        person:
-            person that will be infected
-        time:
-            time at which infection happens
-        """
-        person.infection = self._make_infection(person, time)
-        person.immunity.add_immunity(person.infection.immunity_ids())
+        disease_name : str
+            Name of the disease.
 
-    def _make_infection(self, person: "Person", time: float):
+        Returns
+        -------
+        str
+            Path to the rates file.
         """
-        Generates the symptoms and infectiousness of the person being infected
+        return paths.data_path / f"input/health_index/infection_outcome_rates_{disease_name.lower()}.csv"
+
+    def _resolve_infection_class(self, disease_name: str) -> Infection:
+        """
+        Resolves the infection class based on the disease name.
 
         Parameters
         ----------
-        person:
-            person that will be infected
-        time:
-            time at which infection happens
+        disease_name : str
+            Name of the disease.
+
+        Returns
+        -------
+        Infection
+            Infection class for the disease.
         """
-        symptoms = self._select_symptoms(person)
-        time_to_symptoms_onset = symptoms.time_exposed
-        transmission = self._select_transmission(
-            time_to_symptoms_onset=time_to_symptoms_onset,
-            max_symptoms_tag=symptoms.max_tag.name,
-        )
-        return self.infection_class(
-            transmission=transmission, symptoms=symptoms, start_time=time
-        )
+        infection_class = disease_to_infection_class.get(disease_name.lower())
+        if not infection_class:
+            raise ValueError(f"No infection class defined for disease '{disease_name}'.")
+        return infection_class
 
     def _load_transmission(self):
         """
-        Load transmission config file, and store objects that will generate random realisations
+        Load transmission config from the disease configuration.
         """
-        with open(self.transmission_config_path) as f:
-            transmission_config = yaml.safe_load(f)
-        self.transmission_type = transmission_config["type"]
+        transmission_config = self.disease_config.disease_yaml.get("disease", {}).get("transmission", {})
+        self.transmission_type = transmission_config.get("type")
+
         if self.transmission_type == "xnexp":
             self._load_transmission_xnexp(transmission_config)
         elif self.transmission_type == "gamma":
@@ -129,17 +141,87 @@ class InfectionSelector:
         elif self.transmission_type == "constant":
             self._load_transmission_constant(transmission_config)
         else:
-            raise NotImplementedError("This transmission type has not been implemented")
-
-    def _load_transmission_xnexp(self, transmission_config: dict):
+            raise NotImplementedError(f"Transmission type '{self.transmission_type}' is not implemented.")
+        
+    def infect_person_at_time(self, person: "Person", time: float):
         """
-        Given transmission config dictionary, load parameter generators from which
-        transmission xnexp parameters will be sampled
+        Infects a person at a given time.
 
         Parameters
         ----------
-        transmission_config:
-            dictionary of transmission config parameters
+        person : Person
+            The person to be infected.
+        time : float
+            The time at which the infection occurs.
+        """
+        # Create and assign infection
+        person.infection = self._make_infection(person, time)
+
+        # Update immunity
+        immunity_ids = person.infection.immunity_ids()
+        person.immunity.add_immunity(immunity_ids)
+
+    def _make_infection(self, person: "Person", time: float):
+        """
+        Generate symptoms and infectiousness of the infected person.
+
+        Parameters
+        ----------
+        person : Person
+            The person to be infected.
+        time : float
+            Time at which infection happens.
+
+        Returns
+        -------
+        Infection
+        """
+        symptoms = self._select_symptoms(person)
+        time_to_symptoms_onset = symptoms.time_exposed
+        transmission = self._select_transmission(
+            time_to_symptoms_onset=time_to_symptoms_onset,
+            max_symptoms_tag=symptoms.max_tag,
+        )
+        return self.infection_class(
+            transmission=transmission, symptoms=symptoms, start_time=time
+        )
+
+    def _select_symptoms(self, person: "Person") -> "Symptoms":
+        """
+        Select symptoms and their evolution for an infected person.
+
+        Parameters
+        ----------
+        person : Person
+            The person to be infected.
+
+        Returns
+        -------
+        Symptoms
+        """
+        health_index = self.health_index_generator(person, infection_id=self.infection_id)
+        symptoms = Symptoms(disease_config=self.disease_config, health_index=health_index)
+        return symptoms
+    
+    @property
+    def infection_id(self):
+        """
+        Retrieve the infection ID from the infection class.
+
+        Returns
+        -------
+        str
+        """
+        return self.infection_class.infection_id()
+    
+    def _load_transmission_xnexp(self, transmission_config: dict):
+        """
+        Load parameters for transmission of type `xnexp`.
+
+        Parameters
+        ----------
+        transmission_config : dict
+            Dictionary containing configuration for the `xnexp` transmission type.
         """
         self.smearing_time_first_infectious = CompletionTime.from_dict(
             transmission_config["smearing_time_first_infectious"]
@@ -159,15 +241,15 @@ class InfectionSelector:
             transmission_config["mild_infectious_factor"]
         )
 
+
     def _load_transmission_gamma(self, transmission_config: dict):
         """
-        Given transmission config dictionary, load parameter generators from which
-        transmission gamma parameters will be sampled
+        Load parameters for transmission of type `gamma`.
 
         Parameters
         ----------
-        transmission_config:
-            dictionary of transmission config parameters
+        transmission_config : dict
+            Dictionary containing configuration for the `gamma` transmission type.
         """
         self.max_infectiousness = CompletionTime.from_dict(
             transmission_config["max_infectiousness"]
@@ -182,32 +264,38 @@ class InfectionSelector:
             transmission_config["mild_infectious_factor"]
         )
 
+
     def _load_transmission_constant(self, transmission_config: dict):
         """
-        Given transmission config dictionary, load parameter generators from which
-        transmission constant parameters will be sampled
+        Load parameters for transmission of type `constant`.
 
         Parameters
         ----------
-        transmission_config:
-            dictionary of transmission config parameters
+        transmission_config : dict
+            Dictionary containing configuration for the `constant` transmission type.
         """
         self.probability = CompletionTime.from_dict(transmission_config["probability"])
+
 
     def _select_transmission(
         self, time_to_symptoms_onset: float, max_symptoms_tag: "SymptomTag"
     ) -> "Transmission":
         """
-        Selects the transmission type specified by the user in the init,
+        Selects the transmission type specified by the user in the configuration,
         and links its parameters to the symptom onset for the person (incubation
-        period)
+        period).
 
         Parameters
         ----------
-        person:
-            person that will be infected
-        time_to_symptoms_onset:
-            time of symptoms onset for person
+        time_to_symptoms_onset : float
+            Time from infection to symptom onset for the person.
+        max_symptoms_tag : SymptomTag
+            The maximum severity of symptoms for the person.
+
+        Returns
+        -------
+        Transmission
+            A transmission object configured for the specified disease and parameters.
         """
         if self.transmission_type == "xnexp":
             time_first_infectious = (
@@ -241,24 +329,7 @@ class InfectionSelector:
         elif self.transmission_type == "constant":
             return TransmissionConstant(probability=self.probability())
         else:
-            raise NotImplementedError("This transmission type has not been implemented")
-
-    def _select_symptoms(self, person: "Person") -> "Symptoms":
-        """
-        Select the symptoms that a given person has, and how they will evolve
-        in the future
-
-        Parameters
-        ----------
-        person:
-            person that will be infected
-        infection_id:
-            infection id
-        """
-        health_index = self.health_index_generator(
-            person, infection_id=self.infection_id
-        )
-        return Symptoms(health_index=health_index)
+            raise NotImplementedError(f"Transmission type {self.transmission_type} is not implemented.")
 
 
 class InfectionSelectors:
@@ -274,7 +345,7 @@ class InfectionSelectors:
                             the class that creates infections)
         """
         if not self._infection_selectors:
-            return {Covid19.infection_id(): InfectionSelector.from_file()}
+            return {Covid19.infection_id(): InfectionSelector.from_disease_config()}
         ret = {}
         for i, selector in enumerate(self._infection_selectors):
             ret[selector.infection_class.infection_id()] = selector

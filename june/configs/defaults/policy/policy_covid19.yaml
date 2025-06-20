@@ -1,0 +1,940 @@
+hospitalisation:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+
+testing:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  test_accuracy: 0.99  # 99% accuracy for tests
+  results_delay: 1  # Test results take 1 day
+
+tracing:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  contact_retention_days: 10
+  compliance: 0.8  # Percentage of contacts who comply with testing/quarantine (NOT IMPLEMENTED YET)
+
+quarantine4results:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  n_days: 1
+
+self_isolation:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  n_days: 10
+  beta_factors:
+    household: 0.1
+
+severe_symptoms_stay_home:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+
+regional_compliance:
+  1:
+    start_time: 1000-07-04
+    end_time: 9999-12-01
+    compliances_per_region:
+      London: 1.15
+      South East: 0.99
+      South West: 0.99
+      West Midlands: 1.
+      East Midlands: 1.
+      East of England: 1.
+      North West: 0.95
+      North East: 0.95
+      Yorkshire and The Humber: 0.95
+
+tiered_lockdown:
+  1:
+    start_time: 3020-10-14
+    end_time: 3020-10-17
+    tiers_per_region:
+      London: 1.
+      South East: 1.
+      South West: 1.
+      West Midlands: 2. # becuase of Birmingham
+      East Midlands: 1.
+      East of England: 1.
+      North West: 2. # dicounting anomaly of Liverpool for now 
+      North East: 2.
+      Yorkshire and The Humber: 2. # because of Sheffield and Leeds etc.
+  2:
+    start_time: 3020-10-17
+    end_time: 3020-11-05 # breaking for the national lockdown
+    tiers_per_region:
+      London: 2.
+      South East: 1.
+      South West: 1.
+      West Midlands: 2. # becuase of Birmingham
+      East Midlands: 1.
+      East of England: 1.
+      North West: 2. # dicounting anomaly of Liverpool for now 
+      North East: 2.
+      Yorkshire and The Humber: 2. # because of Sheffield and Leeds etc.
+  3:
+    start_time: 3020-12-03
+    end_time: 3020-12-19
+    tiers_per_region:
+      London: 2.
+      South East: 2.
+      South West: 2.
+      West Midlands: 3. # becuase of Birmingham
+      East Midlands: 3.
+      East of England: 2.
+      North West: 3. # becuase of Manchester
+      North East: 3.
+      Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
+  4:
+    start_time: 3020-12-19
+    end_time: 3020-12-26
+    tiers_per_region:
+      London: 3.
+      South East: 3.
+      South West: 2.
+      West Midlands: 3. # becuase of Birmingham
+      East Midlands: 3.
+      East of England: 2.
+      North West: 3. # becuase of Manchester
+      North East: 3.
+      Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
+  5:
+    start_time: 3020-12-26
+    end_time: 3020-12-31
+    tiers_per_region:
+      London: 4.
+      South East: 4.
+      South West: 3.
+      West Midlands: 3. # becuase of Birmingham
+      East Midlands: 3.
+      East of England: 4.
+      North West: 3. 
+      North East: 3.
+      Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
+  6:
+    start_time: 3020-12-31
+    end_time: 3021-01-05 # after which the country went into a national lockdown
+    tiers_per_region:
+      London: 4.
+      South East: 4.
+      South West: 3.
+      West Midlands: 4. # becuase of Birmingham
+      East Midlands: 4.
+      East of England: 4.
+      North West: 4. 
+      North East: 4.
+      Yorkshire and The Humber: 3. # because of Sheffield and Leeds etc.
+
+
+limit_long_commute:
+  # prevents people that have their workplace
+  # far away from their homes of commuting daily.
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  apply_from_distance: 100
+  going_to_work_probability: 0.2 # once a week
+
+
+
+quarantine:
+    1:
+        n_days: 7 # for the symptomatic person
+        n_days_household: 14 # for the housemates
+        compliance: 0.5 
+        household_compliance: 0.2
+        start_time: 3020-03-16 
+        end_time: 3020-03-24 
+    2:
+        n_days: 7 # for the symptomatic person
+        n_days_household: 14 # for the housemates
+        compliance: 0.95 # for the symptomatic individual - needs to be checked
+        household_compliance: 0.9
+        start_time: 3020-03-24
+        end_time: 9999-07-04
+
+shielding:
+    1:
+        min_age: 70
+        compliance: 0.2
+        start_time: 3020-03-16 
+        end_time: 3020-03-24
+    2:
+        min_age: 70
+        compliance: 0.7
+        start_time: 3020-03-24
+        end_time: 3020-08-01
+    3:
+        min_age: 70
+        compliance: 0.7
+        start_time: 3020-11-05
+        end_time: 3020-12-03
+    4:
+        min_age: 70
+        compliance: 0.7
+        start_time: 3021-01-05
+        end_time: 3021-03-31
+
+
+close_companies:
+    1:
+        start_time: 3020-03-16
+        end_time: 3020-03-20
+        full_closure: False 
+        avoid_work_probability: 0.20 # prob of avoiding workplace if still working (YouGov)
+        furlough_probability: 0.04 # prob of being furloughed (Statista)
+        key_probability: 0.22 # prob of being a key worker (ONS)
+    2:
+        start_time: 3020-03-20
+        end_time: 3020-03-27
+        full_closure: False 
+        avoid_work_probability: 0.29
+        furlough_probability: 0.04
+        key_probability: 0.19
+    3:
+        start_time: 3020-03-27
+        end_time: 3020-04-17
+        full_closure: False 
+        avoid_work_probability: 0.38
+        furlough_probability: 0.04
+        key_probability: 0.19
+    4:
+        start_time: 3020-04-17
+        end_time: 3020-05-01
+        full_closure: False 
+        avoid_work_probability: 0.36
+        furlough_probability: 0.1
+        key_probability: 0.19
+    5:
+        start_time: 3020-05-01
+        end_time: 3020-05-15
+        full_closure: False 
+        avoid_work_probability: 0.35
+        furlough_probability: 0.25
+        key_probability: 0.19
+    6:
+        start_time: 3020-05-15
+        end_time: 3020-06-16
+        full_closure: False 
+        avoid_work_probability: 0.31
+        furlough_probability: 0.30
+        key_probability: 0.19
+    7:
+        start_time: 3020-06-16
+        end_time: 3020-07-12
+        full_closure: False 
+        avoid_work_probability: 0.25
+        furlough_probability: 0.33
+        key_probability: 0.19
+    8:
+        start_time: 3020-07-12
+        end_time: 3020-07-26
+        full_closure: False 
+        avoid_work_probability: 0.21
+        furlough_probability: 0.34
+        key_probability: 0.19
+    9:
+        start_time: 3020-07-26
+        end_time: 3020-08-07
+        full_closure: False 
+        avoid_work_probability: 0.20
+        furlough_probability: 0.34
+        key_probability: 0.19
+    10:
+        start_time: 3020-08-07
+        end_time: 3020-08-12
+        full_closure: False 
+        avoid_work_probability: 0.20
+        furlough_probability: 0.34
+        key_probability: 0.19
+    11:
+        start_time: 3020-08-12
+        end_time: 3020-08-25
+        full_closure: False 
+        avoid_work_probability: 0.18
+        furlough_probability: 0.34
+        key_probability: 0.19
+    12:
+        start_time: 3020-08-25
+        end_time: 3020-09-09
+        full_closure: False 
+        avoid_work_probability: 0.15
+        furlough_probability: 0.34
+        key_probability: 0.19
+    13:
+        start_time: 3020-09-09
+        end_time: 3020-11-05
+        full_closure: False 
+        avoid_work_probability: 0.135
+        furlough_probability: 0.34
+        key_probability: 0.19
+    14:
+        start_time: 3020-11-05
+        end_time: 3020-12-03
+        full_closure: False 
+        avoid_work_probability: 0.38
+        furlough_probability: 0.34
+        key_probability: 0.19
+    15:
+        start_time: 3020-12-03
+        end_time: 3021-01-05
+        full_closure: False 
+        avoid_work_probability: 0.135
+        furlough_probability: 0.34
+        key_probability: 0.19
+    16:
+        start_time: 3021-01-05
+        end_time: 3021-03-31
+        full_closure: False 
+        avoid_work_probability: 0.38
+        furlough_probability: 0.34
+        key_probability: 0.19
+    17:
+        start_time: 3021-03-31
+        end_time: 9999-12-01
+        full_closure: False 
+        avoid_work_probability: 0.135
+        furlough_probability: 0.34
+        key_probability: 0.19
+
+social_distancing:
+    1: 
+        start_time: 3020-03-16
+        end_time: 3020-03-24 
+        beta_factors:
+            pub: 0.875
+            grocery: 0.875
+            cinema: 0.875
+            city_transport: 0.875
+            inter_city_transport: 0.875
+            hospital: 0.875
+            care_home: 0.875
+            company: 0.875
+            school: 0.875
+            household: 1.0
+            university: 0.875
+            gym: 0.875
+            household_visits: 0.875
+
+    2:
+        start_time: 3020-03-24
+        end_time: 3020-05-11 
+        beta_factors:
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            city_transport: 0.75
+            inter_city_transport: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
+            gym: 0.75
+            household_visits: 0.75
+    3:
+        start_time: 3020-05-11
+        end_time: 3020-07-04
+        beta_factors:
+            pub: 0.786
+            grocery: 0.786
+            cinema: 0.786
+            city_transport: 0.786
+            inter_city_transport: 0.786
+            hospital: 0.786
+            care_home: 0.786
+            company: 0.786
+            school: 0.786
+            household: 1.0
+            university: 0.786
+            gym: 0.786
+            household_visits: 0.5
+    4:
+        start_time: 3020-07-04 
+        end_time: 3020-09-01
+        beta_factors:
+            pub: 0.875
+            grocery: 0.875
+            cinema: 0.875
+            city_transport: 0.875
+            inter_city_transport: 0.875
+            hospital: 0.875
+            care_home: 0.875
+            company: 0.875
+            school: 0.875
+            household: 1.0
+            university: 0.875
+            gym: 0.875
+            household_visits: 0.5
+            care_visits: 0.5
+    5:
+        start_time: 3020-09-01
+        end_time: 3020-11-05
+        beta_factors:
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            city_transport: 0.75
+            inter_city_transport: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
+            household_visits: 0.5
+            care_visits: 0.5
+    6:
+        start_time: 3020-11-05
+        end_time: 3020-12-03
+        beta_factors:
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            city_transport: 0.75
+            inter_city_transport: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
+            household_visits: 0.5
+            care_visits: 0.5
+    7:
+        start_time: 3020-12-03
+        end_time: 3021-01-05
+        beta_factors:
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            city_transport: 0.75
+            inter_city_transport: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
+            household_visits: 0.5
+            care_visits: 0.5
+    8:
+        start_time: 3021-01-05
+        end_time: 3021-03-31
+        beta_factors:
+            pub: 0.75
+            grocery: 0.75
+            cinema: 0.75
+            city_transport: 0.75
+            inter_city_transport: 0.75
+            hospital: 0.75
+            care_home: 0.75
+            company: 0.75
+            school: 0.75
+            household: 1.0
+            university: 0.75
+            household_visits: 0.5
+            care_visits: 0.5
+
+
+mask_wearing:
+    1: 
+        start_time: 3020-03-27
+        end_time: 3020-04-24
+        compliance: 0.09 # overall mask wearing compliance (YouGov)
+        beta_factor: 0.5 # overall beta reducion if mask wearing
+        mask_probabilities: # given a mask is work, probability of where it is worn
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    2: 
+        start_time: 3020-04-24
+        end_time: 3020-05-21
+        compliance: 0.17
+        beta_factor: 0.5
+        mask_probabilities:
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    3: 
+        start_time: 3020-05-21
+        end_time: 3020-06-16
+        compliance: 0.23
+        beta_factor: 0.5
+        mask_probabilities: 
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    4: 
+        start_time: 3020-06-16
+        end_time: 3020-06-25
+        compliance: 0.29
+        beta_factor: 0.5
+        mask_probabilities: 
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    5: 
+        start_time: 3020-06-25
+        end_time: 3020-07-12
+        compliance: 0.35
+        beta_factor: 0.5
+        mask_probabilities: 
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    6: 
+        start_time: 3020-07-12
+        end_time: 3020-07-24
+        compliance: 0.48
+        beta_factor: 0.5
+        mask_probabilities: 
+            pub: 0.
+            grocery: 0.5
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    7: 
+        start_time: 3020-07-24
+        end_time: 3020-07-26
+        compliance: 0.48
+        beta_factor: 0.5
+        mask_probabilities: 
+            pub: 0.
+            grocery: 1.
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    8: 
+        start_time: 3020-07-26
+        end_time: 3020-07-31
+        compliance: 0.63
+        beta_factor: 0.5
+        mask_probabilities: 
+            pub: 0.
+            grocery: 1.
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    9: 
+        start_time: 3020-07-31
+        end_time: 3020-08-07
+        compliance: 0.67
+        beta_factor: 0.5
+        mask_probabilities: 
+            pub: 0.
+            grocery: 1.
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    10: 
+        start_time: 3020-08-07
+        end_time: 3020-08-12
+        compliance: 0.70
+        beta_factor: 0.5
+        mask_probabilities: 
+            pub: 0.
+            grocery: 1.
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    11: 
+        start_time: 3020-08-12
+        end_time: 3020-08-25
+        compliance: 0.745
+        beta_factor: 0.5
+        mask_probabilities: 
+            pub: 0.
+            grocery: 1.
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    12: 
+        start_time: 3020-08-25
+        end_time: 3020-09-08
+        compliance: 0.725
+        beta_factor: 0.5
+        mask_probabilities: 
+            pub: 0.
+            grocery: 1.
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+    13: 
+        start_time: 3020-09-08
+        #end_time: 3020-09-16
+        end_time: 3021-12-01
+        compliance: 0.735
+        beta_factor: 0.5
+        mask_probabilities: 
+            pub: 0.
+            grocery: 1.
+            cinema: 0.
+            inter_city_transport: 1.
+            city_transport: 1.
+            hospital: 0.
+            care_home: 0.5
+            company: 0.5
+            school: 0.
+            household: 0.
+            university: 0.5
+
+
+close_leisure_venue:
+    1:
+        start_time: 3020-03-21
+        end_time: 3020-07-04 
+        venues_to_close: ['pub', 'cinema', 'gym']
+    2:
+        start_time: 3020-11-05
+        end_time: 3020-12-03 
+        venues_to_close: ['pub', 'cinema', 'gym'] 
+    3: 
+      start_time: 3021-01-05
+      end_time: 3021-03-31
+      venues_to_close: ['pub', 'cinema', 'gym']
+
+change_leisure_probability:
+    1:
+        start_time: 3020-03-24
+        end_time: 3020-05-21
+        activity_reductions:
+          residence_visits:
+            both_sexes:
+              0-100: 0.05
+    2:
+        start_time: 3020-05-21
+        end_time: 3020-05-31
+        activity_reductions:
+          residence_visits:
+            both_sexes:
+              0-100: 0.125
+    3:
+        start_time: 3020-05-31
+        end_time: 3020-06-04
+        activity_reductions:
+            residence_visits:
+              both_sexes:
+                0-100: 0.25
+    4:
+        start_time: 3020-06-04
+        end_time: 3020-06-14
+        activity_reductions:
+            residence_visits:
+              both_sexes: 
+                0-100: 0.35
+    5:
+        start_time: 3020-06-14
+        end_time: 3020-07-04
+        activity_reductions:
+          residence_visits:
+            both_sexes: 
+              0-100: 0.625
+
+    6:
+        start_time: 3020-07-04
+        end_time: 3020-07-11
+        activity_reductions:
+          residence_visits:
+            both_sexes:
+              0-100: 0.7
+          pubs:
+            both_sexes:
+              0-100: 0.3
+
+    7:
+        start_time: 3020-07-11
+        end_time: 3020-07-18
+        activity_reductions:
+            pubs:
+              weekday:
+                both_sexes:
+                  0-100: 0.4
+              weekend:
+                both_sexes:
+                  0-100: 0.6
+            residence_visits:
+              both_sexes:
+                0-100: 0.7
+
+    8:
+        start_time: 3020-07-18
+        end_time: 3020-07-25
+        activity_reductions:
+            pubs:
+              weekday:
+                both_sexes:
+                  0-100: 0.55
+              weekend:
+                both_sexes:
+                  0-100: 0.7
+            residence_visits:
+              both_sexes:
+                0-100: 0.7
+
+    9:
+        start_time: 3020-07-25
+        end_time: 3020-08-01
+        activity_reductions:
+            pubs:
+              weekday:
+                both_sexes:
+                  0-100: 0.6
+              weekend:
+                both_sexes:
+                  0-100: 0.75
+            residence_visits:
+              both_sexes:
+                0-100: 0.7
+
+    10:
+        start_time: 3020-08-01
+        end_time: 3020-08-08
+        activity_reductions:
+            pubs:
+              weekday:
+                both_sexes:
+                  0-100: 1.1
+              weekend:
+                both_sexes:
+                  0-100: 0.9
+            residence_visits:
+              both_sexes:
+                0-100: 0.7
+
+    11:
+        start_time: 3020-08-08
+        end_time: 3020-08-15
+        activity_reductions:
+            pubs:
+              weekday:
+                both_sexes:
+                  0-100: 1.4
+              weekend:
+                both_sexes:
+                  0-100: 0.85
+
+    12:
+        start_time: 3020-08-15
+        end_time: 3020-08-22
+        activity_reductions:
+            pubs:
+              weekday:
+                both_sexes:
+                  0-100: 1.6
+              weekend:
+                both_sexes:
+                  0-100: 0.9
+
+    13:
+        start_time: 3020-08-22
+        end_time: 3020-08-29
+        activity_reductions:
+            pubs:
+              weekday:
+                both_sexes:
+                  0-100: 2
+              weekend:
+                both_sexes:
+                  0-100: 1.05
+
+    14:
+        start_time: 3020-08-29
+        end_time: 3020-08-31
+        activity_reductions:
+            pubs:
+              weekday:
+                both_sexes:
+                  0-100: 2
+              weekend:
+                both_sexes:
+                  0-100: 1.2
+    15:
+        start_time: 3020-11-05
+        end_time: 3020-12-03
+        activity_reductions:
+            residence_visits:
+              both_sexes:
+                0-100: 0.05
+    16:
+        start_time: 3021-01-05
+        end_time: 3021-03-31
+        activity_reductions:
+            residence_visits:
+              both_sexes:
+                0-100: 0.05
+
+change_visits_probability:
+  1:
+    start_time: 3020-03-24
+    end_time: 3020-07-01
+    new_residence_type_probabilities:
+      household: 0.97
+      care_home : 0.03
+  2:
+    start_time: 3020-07-01
+    end_time: 3020-11-05
+    new_residence_type_probabilities:
+      household: 0.9
+      care_home : 0.1
+  3:
+    start_time: 3020-11-05
+    end_time: 3020-12-03
+    new_residence_type_probabilities:
+      household: 0.97
+      care_home : 0.03
+  4:
+    start_time: 3020-12-03
+    end_time: 3021-01-05
+    new_residence_type_probabilities:
+      household: 0.9
+      care_home : 0.1
+  5:
+    start_time: 3020-01-05
+    end_time: 3021-01-03
+    new_residence_type_probabilities:
+      household: 0.97
+      care_home : 0.03
+
+close_schools:
+    1:
+        start_time: 3020-03-20
+        end_time: 3020-06-01
+        years_to_close: all
+        full_closure: False
+    2:
+        start_time: 3020-06-01
+        end_time: 3020-06-11
+        years_to_close: [0,1,2,7,8,9,12,13,14,15,16,17,18,19]
+        attending_compliance: 0.125
+        full_closure: False
+    3:
+        start_time: 3020-06-11
+        end_time: 3020-06-18
+        years_to_close: [0,1,2,7,8,9,12,13,14,15,16,17,18,19]
+        attending_compliance: 0.195
+        full_closure: False
+    4:
+        start_time: 3020-06-18
+        end_time: 3020-06-25
+        years_to_close: [0,1,2,7,8,9,12,13,14,15,16,17,18,19]
+        attending_compliance: 0.253
+        full_closure: False
+    5:
+        start_time: 3020-06-25
+        end_time: 3020-07-02
+        years_to_close: [0,1,2,7,8,9,12,13,14,15,16,17,18,19]
+        attending_compliance: 0.312
+        full_closure: False
+    6:
+        start_time: 3020-07-02
+        end_time: 3020-07-16
+        years_to_close: [0,1,2,7,8,9,12,13,14,15,16,17,18,19]
+        attending_compliance: 0.37 
+        full_closure: False
+    7:
+        start_time: 3020-07-16
+        end_time: 3020-09-01
+        years_to_close: all
+        full_closure: False
+    8:
+        start_time: 3020-10-26
+        end_time: 3020-10-31
+        years_to_close: all
+        full_closure: False
+    9:
+        start_time: 3020-12-19
+        end_time: 3021-01-03
+        years_to_close: all
+        full_closure: True
+    10:
+        start_time: 3021-01-05
+        end_time: 3021-03-31
+        years_to_close: all
+        full_closure: False
+
+close_universities:
+    start_time: 3020-03-20
+    end_time: 3021-09-28

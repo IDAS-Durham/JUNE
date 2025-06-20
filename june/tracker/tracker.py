@@ -1,5 +1,5 @@
 import numpy as np
-from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+from june.mpi_wrapper import mpi_comm, mpi_size, mpi_rank
 import logging
 
 import yaml
@@ -57,7 +57,7 @@ class Tracker:
         path for interactions yaml directory
     Tracker_Contact_Type:
         NONE, Not used
-    MaxVenueTrackingSize:
+    MaxVenueTrackingsize:
         int, Maximum number for venue type to track. Default is all venues in world.VENUE are tracked
 
     Returns
@@ -75,7 +75,7 @@ class Tracker:
         record_path=Path(""),
         load_interactions_path=default_interaction_path,
         Tracker_Contact_Type=None,
-        MaxVenueTrackingSize=np.inf,
+        MaxVenueTrackingsize=np.inf,
     ):
 
         if Tracker_Contact_Type is None:
@@ -90,7 +90,7 @@ class Tracker:
         self.record_path = record_path
         self.load_interactions_path = load_interactions_path
 
-        self.MaxVenueTrackingSize = MaxVenueTrackingSize
+        self.MaxVenueTrackingsize = MaxVenueTrackingsize
 
         # If we want to track total persons at each location
         self.initialise_group_names()
@@ -105,10 +105,10 @@ class Tracker:
 
         self.venues_which = {}
         for spec in locations:
-            if len(getattr(self.world, spec).members) > MaxVenueTrackingSize:
+            if len(getattr(self.world, spec).members) > MaxVenueTrackingsize:
                 self.venues_which[spec] = np.random.choice(
                     np.arange(0, len(getattr(self.world, spec).members), 1),
-                    size=self.MaxVenueTrackingSize,
+                    size=self.MaxVenueTrackingsize,
                     replace=False,
                 )
             else:
@@ -136,6 +136,91 @@ class Tracker:
     #####################################################
     # Useful functions ##################################
     #####################################################
+
+    def print_tracker_initialization(self):
+        """
+        Print a detailed summary of the Tracker object when initialized.
+        """
+        print("=== Tracker Initialization ===")
+        print(f"World Object: {self.world}")
+        print(f"Age Bins: {self.age_bins}")
+        print(f"Contact Sexes: {self.contact_sexes}")
+        print(f"Group Types: {self.group_types}")
+        print(f"Record Path: {self.record_path}")
+        print(f"Load Interactions Path: {self.load_interactions_path}")
+        print(f"Max Venue Tracking size: {self.MaxVenueTrackingsize}")
+        
+        # Age Bin Structure
+        print("\n=== Age Bin Structure ===")
+        for bin_type, bins in self.age_bins.items():
+            print(f"Bin Type: {bin_type}")
+            print(f"Bins: {bins}")
+        
+        # Group Types
+        print("\n=== Group Types ===")
+        if self.group_types:
+            for group in self.group_types:
+                print(f"Group Spec: {group.spec}, Number: {len(group.members)}")
+        else:
+            print("No group types initialized.")
+        
+        # Location Counters
+        print("\n=== Location Counters ===")
+        if hasattr(self, "location_counters") and "loc" in self.location_counters:
+            for loc, data in self.location_counters["loc"].items():
+                print(f"Location Type: {loc}, Tracked Locations: {len(data)}")
+        else:
+            print("Location counters not initialized.")
+        
+        # Venues Being Tracked
+        print("\n=== Venues Being Tracked ===")
+        if hasattr(self, "venues_which"):
+            for loc, venues in self.venues_which.items():
+                print(f"Location: {loc}, Number of Venues Tracked: {len(venues)}")
+        else:
+            print("Venues tracking not initialized.")
+        
+        # Contact Matrices
+        print("\n=== Contact Matrix Initialization ===")
+        if hasattr(self, "CM"):
+            print("1D Contact Matrices:")
+            for bin_type, locations in self.CM.items():
+                print(f"\nBin Type: {bin_type}")
+                for loc, sexes in locations.items():
+                    print(f"  Location: {loc}")
+                    # Check if sexes is a dictionary
+                    if isinstance(sexes, dict):
+                        for sex, matrix in sexes.items():
+                            print(f"    Sex: {sex}, Matrix Shape: {matrix.shape}")
+                    elif isinstance(sexes, np.ndarray):
+                        print(f"    Matrix Shape: {sexes.shape}")
+                    else:
+                        print(f"    Unexpected Data Type: {type(sexes)}")
+        else:
+            print("No contact matrices initialized.")
+        
+        # Timer
+        if hasattr(self, "timer"):
+            print("\n=== Timer ===")
+            print(f"Timer: {self.timer}")
+        else:
+            print("Timer not initialized.")
+        
+        # Cumulative Population Data
+        print("\n=== Location Cumulative Population ===")
+        if hasattr(self, "location_cum_pop"):
+            for bin_type, data in self.location_cum_pop.items():
+                print(f"Bin Type: {bin_type}")
+                for loc, sexes in data.items():
+                    print(f"  Location: {loc}")
+                    if isinstance(sexes, dict):
+                        print(f"    Sexes: {list(sexes.keys())}")
+                    elif isinstance(sexes, np.ndarray):
+                        print(f"    Matrix Shape: {sexes.shape}")
+                    else:
+                        print(f"    Unexpected Data Type: {type(sexes)}")
+        else:
+            print("Cumulative population data not initialized.")
 
     @staticmethod
     def _random_round(x):
@@ -845,7 +930,7 @@ class Tracker:
                     for N in range(
                         min(
                             len(getattr(self.world, spec).members),
-                            self.MaxVenueTrackingSize,
+                            self.MaxVenueTrackingsize,
                         )
                     )
                 }
@@ -861,7 +946,7 @@ class Tracker:
                     for N in range(
                         min(
                             len(getattr(self.world, spec).members),
-                            self.MaxVenueTrackingSize,
+                            self.MaxVenueTrackingsize,
                         )
                     )
                 }
@@ -876,7 +961,7 @@ class Tracker:
                     for N in range(
                         min(
                             len(getattr(self.world, spec).members),
-                            self.MaxVenueTrackingSize,
+                            self.MaxVenueTrackingsize,
                         )
                     )
                 }

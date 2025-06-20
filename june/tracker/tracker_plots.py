@@ -19,7 +19,7 @@ import logging
 
 from june.tracker.tracker import Tracker
 
-from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+from june.mpi_wrapper import mpi_comm, mpi_size, mpi_rank
 from june.paths import data_path, configs_path
 
 fig_initialize(setsize=True)

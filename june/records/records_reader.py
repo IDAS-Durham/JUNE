@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd
 import tables
@@ -47,6 +47,7 @@ class RecordReader:
             .groupby("time_stamp")
             .agg(self.aggregator)
         )
+    
 
     def table_to_df(
         self, table_name: str, index: str = "id", fields: Optional[Tuple] = None

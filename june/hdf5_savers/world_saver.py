@@ -1,6 +1,7 @@
 import h5py
 import logging
 
+from june.epidemiology.infection.disease_config import DiseaseConfig
 from june.geography import Geography
 from june.world import World
 from june.groups import Cemeteries
@@ -38,8 +39,14 @@ from . import (
     restore_social_venues_properties_from_hdf5,
     restore_universities_properties_from_hdf5,
     restore_hospital_properties_from_hdf5,
+    save_airports_to_hdf5,
+    load_airports_from_hdf5,
+    save_aircrafts_to_hdf5,
+    load_aircrafts_from_hdf5,
+    restore_airport_properties_from_hdf5,
+    restore_aircraft_properties_from_hdf5,
 )
-from june.mpi_setup import mpi_rank
+from june.mpi_wrapper import mpi_rank
 
 from typing import TYPE_CHECKING
 
@@ -112,6 +119,15 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
     if social_venues_list:
         logger.info("saving social venues...")
         save_social_venues_to_hdf5(social_venues_list, file_path)
+    
+    """ if needs_to_be_saved(world.airports):
+        logger.info("saving airports...")
+        save_airports_to_hdf5(world.airports, file_path, chunk_size)
+    
+    if needs_to_be_saved(world.aircrafts):
+        logger.info("saving aircrafts...")
+        save_aircrafts_to_hdf5(world.aircrafts, file_path, chunk_size) """
+
     logger.info("Saving domain decomposition data...")
     save_data_for_domain_decomposition(world, file_path)
 
@@ -195,6 +211,21 @@ def generate_world_from_hdf5(
         )
         for social_venues_spec, social_venues in social_venues_dict.items():
             setattr(world, social_venues_spec, social_venues)
+    if "airports" in f_keys:
+        logger.info("loading airports...")
+        world.airports = load_airports_from_hdf5(
+            file_path=file_path,
+            chunk_size=chunk_size,
+            config_filename=interaction_config,
+        )
+    
+    if "aircrafts" in f_keys:
+        logger.info("loading aircrafts...")
+        world.aircrafts = load_aircrafts_from_hdf5(
+            file_path=file_path,
+            chunk_size=chunk_size,
+            config_filename=interaction_config,
+        )
 
     # restore world
     logger.info("restoring world...")
@@ -241,6 +272,18 @@ def generate_world_from_hdf5(
     if "social_venues" in f_keys:
         logger.info("restoring social venues...")
         restore_social_venues_properties_from_hdf5(world=world, file_path=file_path)
+
+    """ if "airports" in f_keys:
+        logger.info("restoring airports...")
+        restore_airport_properties_from_hdf5(
+            world=world, file_path=file_path, chunk_size=chunk_size
+        )
+    
+    if "aircrafts" in f_keys:
+        logger.info("restoring aircrafts...")
+        restore_aircraft_properties_from_hdf5(
+            world=world, file_path=file_path, chunk_size=chunk_size
+        ) """
     world.cemeteries = Cemeteries()
     return world
 
@@ -250,7 +293,7 @@ def generate_domain_from_hdf5(
     super_areas_to_domain_dict: dict,
     file_path: str,
     chunk_size=500000,
-    interaction_config=None,
+    interaction_config=None
 ) -> "Domain":
     """
     Loads the world from an hdf5 file. All id references are substituted
@@ -286,13 +329,13 @@ def generate_domain_from_hdf5(
 
     # load world data
     if "hospitals" in f_keys:
-        logger.info("loading hospitals...")
+        logger.info("Loading hospitals...")
         domain.hospitals = load_hospitals_from_hdf5(
             file_path=file_path,
             chunk_size=chunk_size,
             domain_super_areas=super_area_ids,
             super_areas_to_domain_dict=super_areas_to_domain_dict,
-            config_filename=interaction_config,
+            config_filename=interaction_config
         )
     if "schools" in f_keys:
         logger.info("loading schools...")
@@ -362,6 +405,24 @@ def generate_domain_from_hdf5(
         )
         for social_venues_spec, social_venues in social_venues_dict.items():
             setattr(domain, social_venues_spec, social_venues)
+    
+    """ if "airports" in f_keys:
+        logger.info("Loading airports...")
+        domain.airports = load_airports_from_hdf5(
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+            super_areas_to_domain_dict=super_areas_to_domain_dict,
+            config_filename=interaction_config
+        )
+    
+    if "aircrafts" in f_keys:
+        logger.info("Loading aircrafts...")
+        domain.aircrafts = load_aircrafts_from_hdf5(
+            file_path=file_path,
+            chunk_size=chunk_size,
+            config_filename=interaction_config
+        ) """
 
     # restore world
     logger.info("restoring world...")
@@ -443,5 +504,24 @@ def generate_domain_from_hdf5(
         restore_social_venues_properties_from_hdf5(
             world=domain, file_path=file_path, domain_areas=area_ids
         )
+
+    """ if "airports" in f_keys:
+        logger.info("restoring airports...")
+        restore_airport_properties_from_hdf5(
+            world=domain,
+            file_path=file_path,
+            chunk_size=chunk_size,
+            domain_super_areas=super_area_ids,
+            domain_areas=area_ids,
+            super_areas_to_domain_dict=super_areas_to_domain_dict,
+        )
+    
+    if "aircrafts" in f_keys:
+        logger.info("restoring aircrafts...")
+        restore_aircraft_properties_from_hdf5(
+            world=domain,
+            file_path=file_path,
+            chunk_size=chunk_size,
+        ) """
     domain.cemeteries = Cemeteries()
     return domain

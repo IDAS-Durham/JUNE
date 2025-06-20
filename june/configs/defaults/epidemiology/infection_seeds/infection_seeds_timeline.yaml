@@ -1,0 +1,17 @@
+# Simple Default Infection Seeding Configuration
+# Basic example for testing and getting started
+
+global_parameters:
+  default_seed_past_infections: true
+  default_seed_strength: 1.0
+  base_cases_per_capita: 0.01
+
+infection_seeds:
+  # Single uniform seeding event
+  - name: "basic_seeding"
+    type: "uniform"
+    date: "2025-08-28 08:00"
+    description: "Basic uniform seeding across entire simulation area"
+    parameters:
+      cases_per_capita_multiplier: 1.0
+      seed_past_infections: true

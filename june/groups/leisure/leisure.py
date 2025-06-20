@@ -1,8 +1,9 @@
 import numpy as np
 import yaml
 import logging
+import pandas as pd
 from random import random
-from typing import Dict
+from typing import Dict, List
 from june.demography import Person
 from june.geography import SuperAreas, Areas, Regions, Region
 from june.groups.leisure import (
@@ -13,24 +14,31 @@ from june.groups.leisure import (
     ResidenceVisitsDistributor,
     GymDistributor,
 )
+from june.groups.leisure.friend_invitations import FriendInvitationManager
 from june.utils import random_choice_numba
 from june import paths
 from june.utils.parse_probabilities import parse_opens
+from june.mpi_wrapper import mpi_comm, mpi_rank, mpi_size, MPI, mpi_available
+
+# Rank prefix for all prints
+RANK_PREFIX = f"[RANK {mpi_rank}]" if mpi_available else "[RANK 0]"
 
 
-default_config_filename = paths.configs_path / "config_example.yaml"
+default_config_filename = paths.configs_path / "config_simulation.yaml"
 
 logger = logging.getLogger("leisure")
 
 
-def generate_leisure_for_world(list_of_leisure_groups, world, daytypes):
+def generate_leisure_for_world(list_of_leisure_groups, world, daytypes, contact_manager=None):
     """
     Generates an instance of the leisure class for the specified geography and leisure groups.
 
     Parameters
     ----------
     list_of_leisure_groups
-        list of names of the lesire groups desired. Ex: ["pubs", "cinemas"]
+        list of names of the leisure groups desired. Ex: ["pubs", "cinemas"]
+    contact_manager
+        ContactManager instance for recording temporary contacts
     """
     leisure_distributors = {}
     if "pubs" in list_of_leisure_groups:
@@ -80,17 +88,19 @@ def generate_leisure_for_world(list_of_leisure_groups, world, daytypes):
         leisure_distributors[
             "residence_visits"
         ] = ResidenceVisitsDistributor.from_config(daytypes=daytypes)
-    leisure = Leisure(leisure_distributors=leisure_distributors, regions=world.regions)
+    leisure = Leisure(leisure_distributors=leisure_distributors, regions=world.regions, contact_manager=contact_manager)
     return leisure
 
 
-def generate_leisure_for_config(world, config_filename=default_config_filename):
+def generate_leisure_for_config(world, config_filename=default_config_filename, contact_manager=None):
     """
     Generates an instance of the leisure class for the specified geography and leisure groups.
     Parameters
     ----------
     list_of_leisure_groups
         list of names of the lesire groups desired. Ex: ["pubs", "cinemas"]
+    contact_manager
+        ContactManager instance for recording temporary contacts
     """
     with open(config_filename) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
@@ -107,7 +117,7 @@ def generate_leisure_for_config(world, config_filename=default_config_filename):
             "weekend": ["Saturday", "Sunday"],
         }
     leisure_instance = generate_leisure_for_world(
-        list_of_leisure_groups, world, daytypes
+        list_of_leisure_groups, world, daytypes, contact_manager=contact_manager
     )
     return leisure_instance
 
@@ -121,18 +131,33 @@ class Leisure:
         self,
         leisure_distributors: Dict[str, SocialVenueDistributor],
         regions: Regions = None,
-    ):
+        contact_manager=None
+        ):
         """
         Parameters
         ----------
         leisure_distributors
             List of social venue distributors.
+        contact_manager
+            ContactManager instance for recording temporary contacts
         """
         self.probabilities_by_region_sex_age = None
         self.leisure_distributors = leisure_distributors
         self.n_activities = len(self.leisure_distributors)
         self.policy_reductions = {}
         self.regions = regions  # needed for regional compliances
+        self.friend_invitation_manager = FriendInvitationManager(contact_manager=contact_manager)
+    
+    def set_contact_manager(self, contact_manager):
+        """
+        Set or update the contact manager for recording temporary contacts.
+        
+        Parameters
+        ----------
+        contact_manager
+            ContactManager instance for recording temporary contacts
+        """
+        self.friend_invitation_manager.contact_manager = contact_manager
 
     def distribute_social_venues_to_areas(self, areas: Areas, super_areas: SuperAreas):
         logger.info("Linking households and care homes for visits")
@@ -145,31 +170,53 @@ class Leisure:
             )
         logger.info("Done")
         logger.info("Distributing social venues to areas")
+        # Collect data for visualization
+        distributed_venues_data = []
+        
         for i, area in enumerate(areas):
             if i % 2000 == 0:
                 logger.info(f"Distributed in {i} of {len(areas)} areas.")
+            
             for activity, distributor in self.leisure_distributors.items():
                 if "visits" in activity:
                     continue
+                
                 social_venues = distributor.get_possible_venues_for_area(area)
                 if social_venues is not None:
                     area.social_venues[activity] = social_venues
+                    
+                    # Collect data for each assigned venue in this area
+                    for venue in social_venues:
+                        distributed_venues_data.append({
+                            "Area name": area.name,
+                            "Activity Type": activity,
+                            "Assigned Venue ID": venue.id,
+                            "Assigned Venue Coordinates": venue.coordinates,
+                            "Area of Assigned Venue": venue.area.name if venue.area else "None"
+                        })
+        
         logger.info(f"Distributed in {len(areas)} of {len(areas)} areas.")
+        
+        # Convert collected data to DataFrame for visualization
+        df_distributed_venues = pd.DataFrame(distributed_venues_data)
+        print("\n===== Sample of Distributed Social Venues to Areas =====")
+        print(df_distributed_venues)  # Show a random sample of 10 assigned venues
 
     def generate_leisure_probabilities_for_timestep(
         self, delta_time: float, working_hours: bool, date: str
     ):
+        
         self.probabilities_by_region_sex_age = {}
+
         if self.regions:
             for region in self.regions:
-                self.probabilities_by_region_sex_age[
-                    region.name
-                ] = self._generate_leisure_probabilities_for_age_and_sex(
+                probabilities = self._generate_leisure_probabilities_for_age_and_sex(
                     delta_time=delta_time,
                     working_hours=working_hours,
                     date=date,
                     region=region,
                 )
+                self.probabilities_by_region_sex_age[region.name] = probabilities
         else:
             self.probabilities_by_region_sex_age = (
                 self._generate_leisure_probabilities_for_age_and_sex(
@@ -185,55 +232,49 @@ class Leisure:
     ):
         """
         Main function of the Leisure class. For every possible activity a person can do,
-        we chech the Poisson parameter lambda = probability / day * deltat of that activty
+        we check the Poisson parameter lambda = probability / day * deltat of that activity
         taking place. We then sum up the Poisson parameters to decide whether a person
         does any activity at all. The relative weight of the Poisson parameters gives then
         the specific activity a person does.
-        If a person ends up going to a social venue, we do a second check to see if his/her
-        entire household accompanies him/her.
-        The social venue subgroups are attached to the involved people, but they are not
-        added to the subgroups, since it is possible they change their plans if a policy is in
-        place or they have other responsibilities.
-        The function returns None if no activity takes place.
-
-        Parameters
-        ----------
-        person
-            an instance of person
         """
 
-        ###########################################
         age_before = person.age
         age = person.age
-        # AorC_value = self.AorC(person.age)
-        # if age < 18 and AorC_value == "Adult":
-        #     age = 18
-
-        # Does this change actual persons name above?
         person.age = age
 
         if person.residence.group.spec == "care_home":
             person.age = age_before
-            return
+            return None
+
+        # Calculate probabilities for activities
         prob_age_sex = self._get_activity_probabilities_for_person(person=person)
+
+        # Check if the person does any activity
         if random() < prob_age_sex["does_activity"]:
+            # Select activity based on probabilities
             activity_idx = random_choice_numba(
                 arr=np.arange(0, len(prob_age_sex["activities"])),
                 prob=np.array(list(prob_age_sex["activities"].values())),
             )
             activity = list(prob_age_sex["activities"].keys())[activity_idx]
+
+            # Get the subgroup for the chosen activity
             activity_distributor = self.leisure_distributors[activity]
             subgroup = activity_distributor.get_leisure_subgroup(
                 person, to_send_abroad=to_send_abroad
             )
+            
+            
+            # Assign the subgroup to the person
             person.subgroups.leisure = subgroup
-            activity_distributor.send_household_with_person_if_necessary(
-                person=person, to_send_abroad=to_send_abroad
-            )
+
             person.age = age_before
             return subgroup
-        person.age = age_before
 
+        person.age = age_before
+        return None
+    
+    
     def _generate_leisure_probabilities_for_age_and_sex(
         self, delta_time: float, working_hours: bool, date: str, region: Region
     ):
@@ -251,7 +292,6 @@ class Leisure:
                 for age in range(0, 100)
             ]
             ret[sex] = probs
-
         return ret
 
     def _get_leisure_probability_for_age_and_sex(
@@ -280,10 +320,14 @@ class Leisure:
         """
         poisson_parameters = []
         drags_household_probabilities = []
+        invites_friends_probabilities = []
         activities = []
         for activity, distributor in self.leisure_distributors.items():
             drags_household_probabilities.append(
                 distributor.drags_household_probability
+            )
+            invites_friends_probabilities.append(
+                distributor.invites_friends_probability
             )
 
             activity_poisson_parameter = self._get_activity_poisson_parameter(
@@ -297,10 +341,13 @@ class Leisure:
             )
             poisson_parameters.append(activity_poisson_parameter)
             activities.append(activity)
+        
+
         total_poisson_parameter = sum(poisson_parameters)
         does_activity_probability = 1.0 - np.exp(-delta_time * total_poisson_parameter)
         activities_probabilities = {}
         drags_household_probabilities_dict = {}
+        invites_friends_probabilities_dict = {}
         for i in range(len(activities)):
             if poisson_parameters[i] == 0:
                 activities_probabilities[activities[i]] = 0
@@ -311,9 +358,15 @@ class Leisure:
             drags_household_probabilities_dict[
                 activities[i]
             ] = drags_household_probabilities[i]
+            invites_friends_probabilities_dict[
+                activities[i]
+            ]  = invites_friends_probabilities[i]
+
+
         return {
             "does_activity": does_activity_probability,
             "drags_household": drags_household_probabilities_dict,
+            "invites_friends": invites_friends_probabilities_dict,
             "activities": activities_probabilities,
         }
 
@@ -368,28 +421,6 @@ class Leisure:
         )
         return activity_poisson_parameter * open
 
-    def _drags_household_to_activity(self, person, activity):
-        """
-        Checks whether the person drags the household to the activity.
-        """
-        try:
-            prob = self.probabilities_by_region_sex_age[person.region.name][person.sex][
-                person.age
-            ]["drags_household"][activity]
-        except KeyError:
-            prob = self.probabilities_by_region_sex_age[person.sex][person.age][
-                "drags_household"
-            ][activity]
-        except AttributeError:
-            if person.sex in self.probabilities_by_region_sex_age:
-                prob = self.probabilities_by_region_sex_age[person.sex][person.age][
-                    "drags_household"
-                ][activity]
-            else:
-                prob = self.probabilities_by_region_sex_age[
-                    list(self.probabilities_by_region_sex_age.keys())[0]
-                ][person.sex][person.age]["drags_household"][activity]
-        return random() < prob
 
     # TESTING TODO
     ######################################################################
@@ -433,3 +464,145 @@ class Leisure:
                 return self.probabilities_by_region_sex_age[
                     list(self.probabilities_by_region_sex_age.keys())[0]
                 ][person.sex][person.age]
+    
+    def process_friend_invitations(self, potential_inviters: List[Person], world) -> None:
+        """
+        Process friend invitations for leisure activities.
+        
+        This method handles the complete friend invitation process:
+        1. Generate invitations from people who won the invite lottery
+        2. Exchange invitations via MPI
+        3. Process received invitations and generate responses
+        4. Exchange responses via MPI
+        5. Apply friend assignments
+        
+        Parameters
+        ----------
+        potential_inviters : List[Person]
+            People who are doing leisure activities and might invite friends
+        world : World
+            The simulation world containing all people
+        """
+
+        # Clear previous round's data
+        self.friend_invitation_manager.clear()
+        
+        # Step 1: Generate invitations (including delegations for external inviters)
+        # We need to pass the activity distributors to the invitation manager
+        self._enhance_potential_inviters(potential_inviters)
+
+        self.friend_invitation_manager.generate_invitations(potential_inviters)
+        
+        # Step 1.5: Exchange delegations for external inviters
+        self.friend_invitation_manager.exchange_delegations()
+        
+        # Step 1.6: Process delegations at venue ranks
+        self.friend_invitation_manager.process_delegations()
+        
+        # Step 2: Exchange invitations via MPI
+        self.friend_invitation_manager.exchange_invitations()
+        
+        # Step 3: Process received invitations
+        self.friend_invitation_manager.process_invitations(potential_inviters)
+        
+        # Step 4: Exchange responses via MPI
+        self.friend_invitation_manager.exchange_responses()
+        
+        # Step 5: Apply friend assignments
+        self.friend_invitation_manager.apply_friend_assignments(world)
+        
+        # Step 6: Cleanup
+        self.friend_invitation_manager.cleanup_temporary_attributes(world)
+            
+    def _enhance_potential_inviters(self, potential_inviters: List[Person]) -> None:
+        """
+        Add activity distributor references to people's leisure subgroups.
+        Now also detects and classifies external inviters for future delegation.
+        
+        This allows the friend invitation manager to access the invites_friends_probability.
+        
+        Parameters
+        ----------
+        potential_inviters : List[Person]
+            People who are doing leisure activities
+        """        
+        # Create activity type aliases to handle mismatches
+        activity_aliases = {
+            'household': 'residence_visits',  # household visits -> residence_visits distributor
+            'care_home': 'residence_visits',  # care home visits -> residence_visits distributor
+            'gyms': 'gym',  # plural -> singular
+            'pubs': 'pub',  # plural -> singular
+            'cinemas': 'cinema',  # plural -> singular
+            'groceries': 'grocery',  # plural -> singular
+        }
+        
+        enhanced_count = 0
+        external_inviter_count = 0
+        activity_type_counts = {}
+        external_activity_counts = {}
+        external_inviter_ids = set()  # Track external inviters by ID instead of marking Person objects
+        
+        for i, person in enumerate(potential_inviters):
+            if person.subgroups.leisure is not None:
+                # Classify external vs local inviters
+                if hasattr(person.subgroups.leisure, 'external') and person.subgroups.leisure.external:
+                    # Handle external inviters differently
+                    external_inviter_count += 1
+                    activity_type = person.subgroups.leisure.spec
+                    external_activity_counts[activity_type] = external_activity_counts.get(activity_type, 0) + 1
+                    
+                    # Track external inviter ID instead of marking the Person object
+                    external_inviter_ids.add(person.id)
+                    continue
+                else:
+                    # Existing local inviter logic
+                    activity_type = person.subgroups.leisure.spec
+                    
+                    # Count activity types for debugging
+                    activity_type_counts[activity_type] = activity_type_counts.get(activity_type, 0) + 1
+                    
+                    # Try direct match first, then aliases
+                    distributor_key = activity_type
+                    if distributor_key not in self.leisure_distributors and activity_type in activity_aliases:
+                        distributor_key = activity_aliases[activity_type]
+                    
+                    if distributor_key in self.leisure_distributors:
+                        # Add reference to activity distributor
+                        person.subgroups.leisure._activity_distributor = self.leisure_distributors[distributor_key]
+                        enhanced_count += 1
+
+        # Store external inviter IDs in the friend invitation manager
+        self.friend_invitation_manager.external_inviter_ids = external_inviter_ids
+        
+        
+    def _prepare_external_invitation_delegation(self, person: Person) -> dict:
+        """
+        Prepare delegation data for external inviters.
+        
+        Parameters
+        ----------
+        person : Person
+            Person with external leisure subgroup
+            
+        Returns
+        -------
+        dict or None
+            Delegation info or None if person shouldn't invite friends.
+        """
+        if not (hasattr(person.subgroups.leisure, 'external') and person.subgroups.leisure.external):
+            return None
+            
+        # Extract venue information from external subgroup
+        external_group = person.subgroups.leisure.group
+        venue_rank = external_group.domain_id
+        venue_id = external_group.id
+        activity_type = external_group.spec
+        
+        return {
+            'inviter_id': person.id,
+            'inviter_home_rank': person._home_rank,
+            'venue_rank': venue_rank,
+            'venue_id': venue_id,
+            'activity_type': activity_type,
+            'subgroup_type': person.subgroups.leisure.subgroup_type
+        }

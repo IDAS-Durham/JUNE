@@ -1,6 +1,7 @@
 import logging
-
+import pandas as pd
 import numpy as np
+import random
 from random import shuffle
 import yaml
 from typing import List, Optional
@@ -107,6 +108,34 @@ class HospitalDistributor:
         logger.info("Distributing medics to hospitals")
         for super_area in super_areas:
             self.distribute_medics_to_hospitals(super_area)
+
+       # Collect all hospitals after distribution for sampling
+        all_hospitals = [
+            hospital
+            for super_area in super_areas
+            for hospital in self.get_hospitals_in_super_area(super_area)
+        ]
+        
+        # Take a random sample from all hospitals
+        sample_size = 5  # Define sample size
+        sampled_hospitals = random.sample(all_hospitals, min(sample_size, len(all_hospitals)))
+
+        # Prepare data for visualization
+        hospital_data = [
+            {
+                "Hospital ID": hospital.id,
+                "Super Area": hospital.super_area.name,
+                "Hospital Area": hospital.area.name,
+                "N_Medics": len(hospital.subgroups[hospital.SubgroupType.workers].people),
+                "Medic IDs": [medic.id for medic in hospital.subgroups[hospital.SubgroupType.workers].people]  # Get IDs of assigned medics
+            }
+            for hospital in sampled_hospitals
+        ]
+
+        # Display in DataFrame format
+        df_sampled_hospitals = pd.DataFrame(hospital_data)
+        print("\n===== Random Sample of Hospitals After Medic Distribution =====")
+        print(df_sampled_hospitals)
         logger.info("Medics distributed to hospitals")
 
     def get_hospitals_in_super_area(self, super_area: SuperArea) -> List["Hospital"]:
@@ -123,6 +152,7 @@ class HospitalDistributor:
             for hospital in self.hospitals.members
             if hospital.super_area.name == super_area.name
         ]
+
         return hospitals_in_super_area
 
     def distribute_medics_to_hospitals(self, super_area: SuperArea):
@@ -170,3 +200,22 @@ class HospitalDistributor:
             super_area.closest_hospitals = self.hospitals.get_closest_hospitals(
                 super_area.coordinates, self.hospitals.neighbour_hospitals
             )
+
+        # Prepare data for visualization of a random sample of super areas
+        sample_size = 5  # Adjust as needed
+        sampled_super_areas = random.sample(list(super_areas), min(sample_size, len(super_areas)))        
+        # Gather visualization data
+        closest_hospitals_data = [
+            {
+                "Super Area": super_area.name,
+                "Super Area Coordinates": super_area.coordinates,
+                "Closest Hospital IDs": [hospital.id for hospital in super_area.closest_hospitals],
+                "Closest Hospital Coordinates": [hospital.coordinates for hospital in super_area.closest_hospitals]
+            }
+            for super_area in sampled_super_areas
+        ]
+        
+        # Display data as a DataFrame
+        df_closest_hospitals = pd.DataFrame(closest_hospitals_data)
+        print("\n===== Sample of Closest Hospitals Assigned to Super Areas =====")
+        print(df_closest_hospitals)

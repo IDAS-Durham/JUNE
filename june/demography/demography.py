@@ -1,10 +1,12 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Set
 
 import numpy as np
 import pandas as pd
+import random
 
 from june import paths
 from june.demography import Person
+from june.demography.hobbies import HobbyGenerator
 from june.geography import Geography
 from june.utils import random_choice_numba
 
@@ -162,13 +164,16 @@ class Population:
             A list of people generated to match census data for that area
         """
         if people is None:
-            self.people_dict = {}
-            self.people_ids = set()
-            self.people = []
+            self.people_dict: Dict[int, Person] = {}
+            self.people_ids: Set[int] = set()
+            self.people: List[Person] = []
+            self.index_map: Dict[int, int] = {}  # New: track indices
         else:
+            self.people = people
             self.people_dict = {person.id: person for person in people}
             self.people_ids = set(self.people_dict.keys())
-            self.people = people
+            # New: initialize index map
+            self.index_map = {person.id: idx for idx, person in enumerate(people)}
 
     def __len__(self):
         return len(self.people)
@@ -181,19 +186,42 @@ class Population:
 
     def __add__(self, population: "Population"):
         self.people.extend(population.people)
-        self.people_dict = {**self.people_dict, **population.people_dict}
+        self.people_dict.update(population.people_dict)
         self.people_ids = set(self.people_dict.keys())
+        # Update index map for new additions
+        self.index_map.update({
+            person.id: idx + len(self.people) 
+            for idx, person in enumerate(population.people)
+        })
         return self
 
     def add(self, person):
         self.people_dict[person.id] = person
         self.people.append(person)
         self.people_ids.add(person.id)
+        self.index_map[person.id] = len(self.people) - 1  # Track index
 
     def remove(self, person):
+        """
+        Remove a person in O(1) time using index tracking.
+        """
+        # Remove from dictionary and ids set
         del self.people_dict[person.id]
-        self.people.remove(person)
         self.people_ids.remove(person.id)
+        
+        # Get index and remove from people list in O(1)
+        idx = self.index_map[person.id]
+        last_idx = len(self.people) - 1
+        
+        if idx != last_idx:
+            # If not removing last element, swap with last
+            last_person = self.people[last_idx]
+            self.people[idx] = last_person
+            self.index_map[last_person.id] = idx
+            
+        # Remove the last element and update index map
+        self.people.pop()
+        del self.index_map[person.id]
 
     def extend(self, people):
         for person in people:
@@ -229,6 +257,7 @@ class Demography:
         area_names,
         age_sex_generators: Dict[str, AgeSexGenerator],
         comorbidity_data=None,
+        hobby_generator=None
     ):
         """
         Tool to generate population for a certain geographical regin.
@@ -242,6 +271,7 @@ class Demography:
         self.area_names = area_names
         self.age_sex_generators = age_sex_generators
         self.comorbidity_data = comorbidity_data
+        self.hobby_generator = HobbyGenerator()
 
     def populate(self, area_name: str, ethnicity=True, comorbidity=True) -> Population:
         """
@@ -261,6 +291,8 @@ class Demography:
         age_and_sex_generator = self.age_sex_generators[area_name]
         if comorbidity:
             comorbidity_generator = ComorbidityGenerator(self.comorbidity_data)
+
+
         for _ in range(age_and_sex_generator.n_residents):
             if ethnicity:
                 ethnicity_value = age_and_sex_generator.ethnicity()
@@ -273,8 +305,17 @@ class Demography:
             )
             if comorbidity:
                 person.comorbidity = comorbidity_generator.get_comorbidity(person)
+            
+            # Assign hobbies to the person
+            person.hobbies = self.hobby_generator.assign_hobbies(
+                sex=person.sex,
+                age=person.age
+            )
             people.append(person)  # add person to population
-        return Population(people=people)
+
+        population = Population(people=people)
+
+        return population
 
     @classmethod
     def for_geography(
@@ -294,7 +335,10 @@ class Demography:
         if not geography.areas:
             raise DemographyError("Empty geography!")
         area_names = [area.name for area in geography.areas]
-        return cls.for_areas(area_names, data_path, config)
+        demography= cls.for_areas(area_names, data_path, config)
+
+        
+        return demography
 
     @classmethod
     def for_zone(
@@ -362,11 +406,17 @@ class Demography:
             area_names,
         )
         comorbidity_data = load_comorbidity_data(m_comorbidity_path, f_comorbidity_path)
-        return Demography(
+
+
+
+        # Initialize Demography instance
+        demography_instance = Demography(
             age_sex_generators=age_sex_generators,
             area_names=area_names,
             comorbidity_data=comorbidity_data,
         )
+
+        return demography_instance
 
 
 def _load_age_and_sex_generators(
@@ -403,6 +453,7 @@ def _load_age_and_sex_generators(
     # TODO fix this to use proper complete indexing.
 
     ret = {}
+
     for ((_, age_structure), (index, female_ratios), (_, ethnicity_df)) in zip(
         age_structure_df.iterrows(),
         female_ratios_df.iterrows(),
@@ -439,11 +490,11 @@ def load_comorbidity_data(m_comorbidity_path=None, f_comorbidity_path=None):
             f_norm_2 = np.sum(female_co[column]) - f_nc
 
             for idx in list(male_co.index)[:-1]:
-                male_co[column].loc[idx] = (
-                    male_co[column].loc[idx] / m_norm_2 * m_norm_1
+                male_co.loc[idx, column] = (
+                    male_co.loc[idx, column] / m_norm_2 * m_norm_1
                 )
-                female_co[column].loc[idx] = (
-                    female_co[column].loc[idx] / f_norm_2 * f_norm_1
+                female_co.loc[idx, column] = (
+                    female_co.loc[idx, column] / f_norm_2 * f_norm_1
                 )
 
         return [male_co, female_co]

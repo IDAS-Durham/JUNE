@@ -3,10 +3,11 @@ import numpy as np
 import logging
 from itertools import chain
 
+from june.global_context import GlobalContext
 from june.world import World
 from june.groups import Household, Households, ExternalGroup
 from june.groups.group.make_subgroups import SubgroupParams
-from june.mpi_setup import mpi_rank
+from june.mpi_wrapper import mpi_rank
 from .utils import read_dataset
 
 nan_integer = -999
@@ -49,6 +50,7 @@ def save_households_to_hdf5(
             types = []
             composition_types = []
             max_sizes = []
+            registered_members_ids = []  # Add for storing registered_members_ids
             for household in households[idx1:idx2]:
                 ids.append(household.id)
                 if household.area is None:
@@ -68,6 +70,13 @@ def save_households_to_hdf5(
                         household.composition_type.encode("ascii", "ignore")
                     )
                 max_sizes.append(household.max_size)
+                
+                # Process registered_members_ids
+                household_registered_members = {}
+                if hasattr(household, 'registered_members_ids') and household.registered_members_ids is not None:
+                    for subgroup_id, members in household.registered_members_ids.items():
+                        household_registered_members[subgroup_id] = np.array(members, dtype=np.int64)
+                registered_members_ids.append(household_registered_members)
 
             ids = np.array(ids, dtype=np.int64)
             areas = np.array(areas, dtype=np.int64)
@@ -75,6 +84,30 @@ def save_households_to_hdf5(
             types = np.array(types, dtype="S20")
             composition_types = np.array(composition_types, dtype="S20")
             max_sizes = np.array(max_sizes, dtype=np.float64)
+            
+            # Create datasets to store registered_members_ids
+            # First, determine what subgroups exist across all households
+            all_subgroups = set()
+            for household_subgroups in registered_members_ids:
+                all_subgroups.update(household_subgroups.keys())
+            all_subgroups = sorted(list(all_subgroups))  # Ensure consistent ordering
+            
+            # Store subgroup IDs as integers
+            subgroup_ids = np.array(all_subgroups, dtype=np.int64) if all_subgroups else np.array([], dtype=np.int64)
+            
+            # Create counts and flattened arrays for each subgroup
+            subgroup_counts = {}
+            flattened_subgroup_members = {}
+            
+            for subgroup_id in all_subgroups:
+                # Count of members in this subgroup for each household
+                counts = np.array([len(household_dict.get(subgroup_id, [])) for household_dict in registered_members_ids], dtype=np.int64)
+                subgroup_counts[subgroup_id] = counts
+                
+                # Flatten all member IDs for this subgroup
+                member_arrays = [household_dict.get(subgroup_id, np.array([], dtype=np.int64)) for household_dict in registered_members_ids]
+                flattened = np.concatenate(member_arrays) if any(len(arr) > 0 for arr in member_arrays) else np.array([], dtype=np.int64)
+                flattened_subgroup_members[subgroup_id] = flattened
             if chunk == 0:
                 households_dset.attrs["n_households"] = n_households
                 households_dset.create_dataset("id", data=ids, maxshape=(None,))
@@ -89,6 +122,27 @@ def save_households_to_hdf5(
                 households_dset.create_dataset(
                     "max_size", data=max_sizes, maxshape=(None,)
                 )
+                
+                # Store registered_members_ids subgroups information
+                if all_subgroups:  # Only create these datasets if we have subgroups
+                    households_dset.create_dataset("registered_members_subgroups", data=subgroup_ids, maxshape=(None,))
+                    
+                    # Create datasets for each subgroup
+                    for subgroup_id in all_subgroups:
+                        # Store counts for this subgroup
+                        households_dset.create_dataset(
+                            f"registered_members_count_sg{subgroup_id}", 
+                            data=subgroup_counts[subgroup_id], 
+                            maxshape=(None,)
+                        )
+                        
+                        # Store flattened members for this subgroup
+                        flattened_members = flattened_subgroup_members[subgroup_id]
+                        households_dset.create_dataset(
+                            f"registered_members_ids_sg{subgroup_id}", 
+                            data=flattened_members, 
+                            maxshape=(None,)
+                        )
 
             else:
                 newshape = (households_dset["id"].shape[0] + ids.shape[0],)
@@ -104,6 +158,24 @@ def save_households_to_hdf5(
                 households_dset["composition_type"][idx1:idx2] = composition_types
                 households_dset["max_size"].resize(newshape)
                 households_dset["max_size"][idx1:idx2] = max_sizes
+                
+                # Update registered members for subgroups
+                if all_subgroups:  # Only update these datasets if we have subgroups
+                    for subgroup_id in all_subgroups:
+                        # Update counts for this subgroup
+                        count_dataset = households_dset[f"registered_members_count_sg{subgroup_id}"]
+                        count_dataset.resize(newshape)
+                        count_dataset[idx1:idx2] = subgroup_counts[subgroup_id]
+                        
+                        # Update flattened IDs for this subgroup (variable length)
+                        ids_dataset = households_dset[f"registered_members_ids_sg{subgroup_id}"]
+                        flattened_members = flattened_subgroup_members[subgroup_id]
+                        
+                        if flattened_members.shape[0] > 0:
+                            current_length = ids_dataset.shape[0]
+                            new_length = current_length + flattened_members.shape[0]
+                            ids_dataset.resize((new_length,))
+                            ids_dataset[current_length:new_length] = flattened_members
 
         residences_to_visit_specs = []
         residences_to_visit_ids = []
@@ -170,9 +242,8 @@ def load_households_from_hdf5(
     """
 
     Household_Class = Household
-    Household_Class.subgroup_params = SubgroupParams.from_file(
-        config_filename=config_filename
-    )
+    disease_config = GlobalContext.get_disease_config()
+    Household_Class.subgroup_params = SubgroupParams.from_disease_config(disease_config)
 
     logger.info("loading households...")
     households_list = []
@@ -180,6 +251,37 @@ def load_households_from_hdf5(
         households = f["households"]
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
+        
+        # Check if registered members data exists
+        has_subgroup_data = "registered_members_subgroups" in households
+        subgroup_counts = {}
+        subgroup_members = {}
+        subgroup_cumulative_counts = {}
+        
+        if has_subgroup_data:
+            # Get all subgroups
+            subgroups = read_dataset(households["registered_members_subgroups"], 0, households["registered_members_subgroups"].shape[0])
+            
+            # For each subgroup, prepare the count and flattened arrays
+            for subgroup_id in subgroups:
+                sg_key = f"registered_members_count_sg{subgroup_id}"
+                ids_key = f"registered_members_ids_sg{subgroup_id}"
+                
+                if sg_key in households and ids_key in households:
+                    # Read counts for this subgroup
+                    counts = read_dataset(households[sg_key], 0, n_households)
+                    subgroup_counts[subgroup_id] = counts
+                    
+                    # Calculate cumulative counts for this subgroup
+                    cumulative = np.concatenate(([0], np.cumsum(counts)))
+                    subgroup_cumulative_counts[subgroup_id] = cumulative
+                    
+                    # Read flattened member IDs for this subgroup
+                    if households[ids_key].shape[0] > 0:
+                        member_ids = read_dataset(households[ids_key], 0, households[ids_key].shape[0])
+                        subgroup_members[subgroup_id] = member_ids
+                    else:
+                        subgroup_members[subgroup_id] = np.array([])
         for chunk in range(n_chunks):
             logger.info(f"Loaded chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
@@ -199,11 +301,31 @@ def load_households_from_hdf5(
                         )
                     if super_area not in domain_super_areas:
                         continue
+                        
+                # Get registered_members_ids for this household if available
+                registered_members_dict = {}
+                
+                if has_subgroup_data and subgroups.size > 0:
+                    household_index = idx1 + k
+                    
+                    # Get members for each subgroup
+                    for subgroup_id in subgroups:
+                        if subgroup_id in subgroup_counts and subgroup_id in subgroup_members:
+                            n_members = subgroup_counts[subgroup_id][household_index]
+                            
+                            if n_members > 0 and len(subgroup_members[subgroup_id]) > 0:
+                                start_idx = subgroup_cumulative_counts[subgroup_id][household_index]
+                                end_idx = subgroup_cumulative_counts[subgroup_id][household_index + 1]
+                                
+                                if start_idx < len(subgroup_members[subgroup_id]):
+                                    registered_members_dict[int(subgroup_id)] = subgroup_members[subgroup_id][start_idx:end_idx].tolist()
+                
                 household = Household_Class(
                     area=None,
                     type=types[k].decode(),
                     max_size=max_sizes[k],
                     composition_type=composition_types[k].decode(),
+                    registered_members_ids=registered_members_dict,
                 )
                 households_list.append(household)
                 household.id = ids[k]
@@ -228,6 +350,37 @@ def restore_households_properties_from_hdf5(
         households = f["households"]
         n_households = households.attrs["n_households"]
         n_chunks = int(np.ceil(n_households / chunk_size))
+        
+        # Check if registered members data exists
+        has_subgroup_data = "registered_members_subgroups" in households
+        subgroup_counts = {}
+        subgroup_members = {}
+        subgroup_cumulative_counts = {}
+        
+        if has_subgroup_data:
+            # Get all subgroups
+            subgroups = read_dataset(households["registered_members_subgroups"], 0, households["registered_members_subgroups"].shape[0])
+            
+            # For each subgroup, prepare the count and flattened arrays
+            for subgroup_id in subgroups:
+                sg_key = f"registered_members_count_sg{subgroup_id}"
+                ids_key = f"registered_members_ids_sg{subgroup_id}"
+                
+                if sg_key in households and ids_key in households:
+                    # Read counts for this subgroup
+                    counts = read_dataset(households[sg_key], 0, n_households)
+                    subgroup_counts[subgroup_id] = counts
+                    
+                    # Calculate cumulative counts for this subgroup
+                    cumulative = np.concatenate(([0], np.cumsum(counts)))
+                    subgroup_cumulative_counts[subgroup_id] = cumulative
+                    
+                    # Read flattened member IDs for this subgroup
+                    if households[ids_key].shape[0] > 0:
+                        member_ids = read_dataset(households[ids_key], 0, households[ids_key].shape[0])
+                        subgroup_members[subgroup_id] = member_ids
+                    else:
+                        subgroup_members[subgroup_id] = np.array([])
         for chunk in range(n_chunks):
             logger.info(f"Restored chunk {chunk} of {n_chunks}")
             idx1 = chunk * chunk_size
@@ -262,6 +415,26 @@ def restore_households_properties_from_hdf5(
                 household.area = area
                 area.households.append(household)
                 household.residents = tuple(household.people)
+                
+                # Restore registered_members_ids if available
+                if has_subgroup_data and subgroups.size > 0:
+                    household_index = idx1 + k
+                    registered_members_dict = {}
+                    
+                    # Process each subgroup
+                    for subgroup_id in subgroups:
+                        if subgroup_id in subgroup_counts and subgroup_id in subgroup_members:
+                            n_members = subgroup_counts[subgroup_id][household_index]
+                            
+                            if n_members > 0 and len(subgroup_members[subgroup_id]) > 0:
+                                start_idx = subgroup_cumulative_counts[subgroup_id][household_index]
+                                end_idx = subgroup_cumulative_counts[subgroup_id][household_index + 1]
+                                
+                                if start_idx < len(subgroup_members[subgroup_id]):
+                                    registered_members_dict[int(subgroup_id)] = subgroup_members[subgroup_id][start_idx:end_idx].tolist()
+                    
+                    # Always use dictionary format
+                    household.registered_members_ids = registered_members_dict
                 # visits
                 visit_ids = residences_to_visit_ids[k]
                 if visit_ids[0] == nan_integer:

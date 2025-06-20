@@ -11,7 +11,7 @@ from june.utils import (
     convert_comorbidities_prevalence_to_dict,
 )
 
-from . import Covid19, B117, B16172
+from . import Covid19, B117, B16172, Measles, EVD68V
 
 from typing import TYPE_CHECKING
 
@@ -23,11 +23,15 @@ default_susceptibility_dict = {
     Covid19.infection_id(): {"0-13": 0.5, "13-100": 1.0},
     B117.infection_id(): {"0-13": 0.5, "13-100": 1.0},
     B16172.infection_id(): {"0-13": 0.5, "13-100": 1.0},
+    Measles.infection_id(): {"0-13": 0.9, "13-100": 0.3},  # Added measles
+    EVD68V.infection_id(): {"0-13": 1.0, "13-100": 1.0}
 }
 default_multiplier_dict = {
     Covid19.infection_id(): 1.0,
     B117.infection_id(): 1.5,
     B16172.infection_id(): 1.5,
+    Measles.infection_id(): 6.0,  # Added measles
+    EVD68V.infection_id(): 1.0
 }
 
 
@@ -340,7 +344,7 @@ class ImmunitySetter:
             self.record.statics["people"].extra_str_data["vaccine_type"] = vaccine_type
             self.record.statics["people"].extra_int_data[
                 "susccesfully_vaccinated"
-            ] = susccesfully_vaccinated
+            ] = susccesfully_vaccinated 
 
     def set_previous_infections(self, world):
         if self.previous_infections_distribution == "uniform":

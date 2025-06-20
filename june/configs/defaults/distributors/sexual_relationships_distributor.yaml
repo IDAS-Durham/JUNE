@@ -1,0 +1,126 @@
+# Sexual relationship distributor configuration
+
+# Sexual orientation probabilities by gender
+sexual_orientation_config:
+  m:
+    heterosexual: 0.95
+    homosexual: 0.03
+    bisexual: 0.02
+  f:
+    heterosexual: 0.93
+    homosexual: 0.02
+    bisexual: 0.05
+
+# Relationship configuration with probabilities
+relationship_config:
+  relationship_probability:
+    no_partner: 0.30
+    exclusive: 0.60
+    non_exclusive: 0.10
+  cheating_probability: 0.30  # Base probability of a person in exclusive relationship cheating
+  age_difference:
+    18-25: [0, 3]    # Age range: [min_diff, max_diff]
+    26-35: [0, 5]
+    36-50: [0, 10]
+    51-64: [0, 15]
+    65+: [0, 15]
+  location_bonus: 2.0  # Multiplier for relationship probability if same super area
+  friends_bonus: 1.5   # Multiplier for relationship probability if common friends
+  activity_bonus: 3.0  # Multiplier for non-exclusive relationship if same primary activity
+
+# Maximum number of partners based on age, gender, and relationship type
+partner_limit_config:
+  # Default limits for non-exclusive relationships by age group and gender
+  non_exclusive:
+    18-25:
+      m: 3
+      f: 3
+    26-35:
+      m: 3
+      f: 2
+    36-50:
+      m: 2
+      f: 2
+    51-64:
+      m: 1
+      f: 1
+    65+:
+      m: 1
+      f: 1
+  # Cheating (non-consensual) limits are lower than non-exclusive
+  non_consensual:
+    default: 1  # Default for all age groups and genders
+    # Exceptions to the default
+    18-25:
+      m: 2
+      f: 2
+    26-35:
+      m: 1
+      f: 1
+  # Exclusive relationships always have exactly 1 partner
+  exclusive:
+    default: 1
+
+# Age bins configuration
+age_bins: [18, 26, 36, 51, 65, 100]
+
+# Risk profile configuration
+risk_profile_config:
+  # Age-based risk adjustments
+  age_risk_factors:
+    '<25':
+      demographic_risk: 20
+      behaviour_risk: 15
+      testing_frequency: 1
+      testing_consistency: -2
+    '25-35':
+      demographic_risk: 10
+      behaviour_risk: 5
+      testing_frequency: 1
+    '36-50':
+      demographic_risk: 0
+      behaviour_risk: 0
+      testing_frequency: 0
+    '51-65':
+      demographic_risk: -10
+      behaviour_risk: -5
+      testing_frequency: -1
+    '>65':
+      demographic_risk: -20
+      behaviour_risk: -15
+      testing_frequency: -2
+      
+  # Relationship status risk adjustments
+  relationship_risk_factors:
+    exclusive_consensual:
+      behaviour_risk: -25
+      relationship_risk: -30
+      testing_frequency: -2
+      testing_consistency: 1
+    exclusive_non_consensual:
+      behaviour_risk: 35
+      relationship_risk: 40
+      testing_frequency: 1
+      testing_consistency: -3
+    non_exclusive:
+      behaviour_risk: 20
+      relationship_risk: 15
+      testing_frequency: 2
+      
+  # Gender-based risk adjustments
+  gender_risk_factors:
+    m:
+      demographic_risk: 5
+      testing_frequency: -1
+    f:
+      demographic_risk: 0
+      testing_frequency: 0
+      
+  # Sexual orientation risk adjustments
+  orientation_risk_factors:
+    m_homosexual:
+      demographic_risk: 15
+      testing_frequency: 2
+    bisexual:
+      demographic_risk: 10
+      testing_frequency: 1

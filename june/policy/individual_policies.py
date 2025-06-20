@@ -5,8 +5,11 @@ from random import random
 
 from june.epidemiology.infection import SymptomTag
 from june.demography.person import Person
+from june.epidemiology.infection.disease_config import DiseaseConfig
+from june.global_context import GlobalContext
 from june.policy import Policy, PolicyCollection
-from june.mpi_setup import mpi_size
+from june.mpi_wrapper import mpi_size, mpi_rank
+from june.records.event_recording import emit_isolation_event, emit_quarantine_event
 from june.utils.distances import haversine_distance
 
 
@@ -83,7 +86,7 @@ class IndividualPolicies(PolicyCollection):
 
 class StayHome(IndividualPolicy):
     """
-    Template for policies that will force someone to stay at home
+    Template for policies that will force someone to stay at home.
     """
 
     def __init__(self, start_time="1900-01-01", end_time="2100-01-01"):
@@ -110,15 +113,39 @@ class StayHome(IndividualPolicy):
         days_from_start:
             time past from beginning of simulation, in units of days
         """
+        
         raise NotImplementedError(
             f"Need to implement check_stay_home_condition for policy {self.__class__.__name__}"
         )
 
-
 class SevereSymptomsStayHome(StayHome):
+
+    def __init__(self, start_time=None, end_time=None):
+        super().__init__(start_time, end_time)
+
     def check_stay_home_condition(self, person: Person, days_from_start: float) -> bool:
+        """
+        Check if the person should stay home based on severe symptoms.
+
+        Parameters
+        ----------
+        person : Person
+            The person to evaluate.
+        days_from_start : float
+            Days elapsed since the simulation started.
+
+        Returns
+        -------
+        bool
+            True if the person should stay home, False otherwise.
+        """
+        severe_symptom_tags = GlobalContext.get_disease_config().symptom_manager.severe_symptom
+
+
+        # Check if the person's infection tag matches any of the severe symptom tags
         return (
-            person.infection is not None and person.infection.tag is SymptomTag.severe
+            person.infection is not None
+            and person.infection.tag in severe_symptom_tags
         )
 
 
@@ -160,40 +187,144 @@ class Quarantine(StayHome):
         self.compliance = compliance
         self.household_compliance = household_compliance
         self.vaccinated_household_compliance = vaccinated_household_compliance
+        
+        # Cache for disease config data
+        self._stay_at_home_tags = None
 
-    def check_stay_home_condition(self, person: Person, days_from_start):
+    def _get_stay_at_home_tags(self):
+        """Lazily initialize and cache the stay-at-home tags"""
+        if self._stay_at_home_tags is None:
+            disease_config = GlobalContext.get_disease_config()
+            self._stay_at_home_tags = set(disease_config.symptom_manager.stay_at_home)
+        return self._stay_at_home_tags
+        
+    def check_stay_home_condition(self, person: Person, days_from_start: float) -> bool:
+        # Get cached stay-at-home tags
+        stay_at_home_tags = self._get_stay_at_home_tags()
+        
+        # Get regional compliance with fast path for missing attribute
         try:
             regional_compliance = person.region.regional_compliance
-        except Exception:
-            regional_compliance = 1
+        except AttributeError:
+            regional_compliance = 1.0
+
         if person.infected:
-            time_of_symptoms_onset = person.infection.time_of_symptoms_onset
+            infection = person.infection
+            time_of_symptoms_onset = infection.time_of_symptoms_onset if infection else None
+
             if time_of_symptoms_onset is not None:
-                # record to the household that this person is infected:
                 person.residence.group.quarantine_starting_date = time_of_symptoms_onset
-                if person.symptoms.tag in (SymptomTag.mild, SymptomTag.severe):
+
+                if infection.tag in stay_at_home_tags:
                     release_day = time_of_symptoms_onset + self.n_days
                     if 0 < release_day - days_from_start < self.n_days:
                         if random() < self.compliance * regional_compliance:
                             return True
 
-        if (person.vaccinated and person.vaccine_trajectory is None) or person.age < 18:
-            housemates_quarantine = person.residence.group.quarantine(
-                time=days_from_start,
-                quarantine_days=self.n_days_household,
-                household_compliance=self.vaccinated_household_compliance
-                * self.household_compliance
-                * regional_compliance,
-            )
-
+        # Calculate household compliance factor once
+        if person.vaccinated and not person.vaccine_trajectory or person.age < 18:
+            household_compliance_factor = self.vaccinated_household_compliance * self.household_compliance * regional_compliance
         else:
-            housemates_quarantine = person.residence.group.quarantine(
-                time=days_from_start,
-                quarantine_days=self.n_days_household,
-                household_compliance=self.household_compliance * regional_compliance,
-            )
+            household_compliance_factor = self.household_compliance * regional_compliance
 
+        housemates_quarantine = person.residence.group.quarantine(
+            time=days_from_start,
+            quarantine_days=self.n_days_household,
+            household_compliance=household_compliance_factor,
+        )
+
+        
         return housemates_quarantine
+    
+class Quarantine4results(StayHome):
+    def __init__(
+        self,
+        start_time: Union[str, datetime.datetime] = "1900-01-01",
+        end_time: Union[str, datetime.datetime] = "2100-01-01",
+        n_days: int = 1,
+        compliance: float = 1.0
+    ):
+        super().__init__(start_time, end_time)
+        self.n_days = n_days
+        self.compliance = compliance
+        
+        # Debug flag - set to False by default
+        self.debug = False
+
+    def check_stay_home_condition(self, person, days_from_start):
+        if hasattr(person,'test_and_trace') and person.test_and_trace is not None:
+            if not person.hospitalised:
+                if person.test_and_trace.time_of_testing is not None:
+                    if days_from_start > person.test_and_trace.time_of_result and person.test_and_trace.test_result is not None: 
+                        #Only people that tested positive will enter here but not really, because this happens before we apply the test result... 
+                        if person.test_and_trace.emited_quarantine_end_event is None:
+                            emit_quarantine_event(person, days_from_start, is_start=False)
+                            person.test_and_trace.emited_quarantine_end_event = True
+
+                            if self.debug:
+                                print(f"[Rank {mpi_rank}] Person {person.id} is done Quarantining before Results (time of results: {person.test_and_trace.time_of_result}. result: {person.test_and_trace.test_result}). They now need to Self Isolate! (current time: {days_from_start})")
+                            
+                        return False
+                    else:
+                        #People waiting for results enter here
+                        if person.test_and_trace.emited_quarantine_start_event is None:
+                            emit_quarantine_event(person, days_from_start, is_start=True)
+                            person.test_and_trace.emited_quarantine_start_event = True
+                        if self.debug:
+                            print(f"[Rank {mpi_rank}] Person {person.id} is Quarantining before Results! (time of results: {person.test_and_trace.time_of_result}. result: {person.test_and_trace.test_result}) current time {days_from_start}")
+                        return True
+            return False
+            
+class SelfIsolation(StayHome):
+    def __init__(
+            self,
+            start_time: Union[str, datetime.datetime] = "1900-01-01",
+            end_time: Union[str, datetime.datetime] = "2100-01-01",
+            n_days: int = 10,
+            compliance: float = 1.0
+    ):
+        super().__init__(start_time, end_time)
+        self.n_days = n_days
+        self.compliance = compliance
+        
+        # Debug flag - set to False by default
+        self.debug = False
+
+    def check_stay_home_condition(self, person, days_from_start):
+
+        if hasattr(person, 'test_and_trace') and person.test_and_trace is not None:
+            if not person.hospitalised:
+                if person.test_and_trace.isolation_start_time is None: #First time comers, let's assign what they need
+                    if person.test_and_trace.test_result == "Positive": #If they are positive
+                        #We assign their isolation start and end times
+                        person.test_and_trace.isolation_start_time = days_from_start
+                        person.test_and_trace.isolation_end_time = days_from_start + self.n_days
+                        emit_isolation_event(person, days_from_start, is_start=True)
+                        
+                        if self.debug:
+                            print(f"[Rank {mpi_rank}] Person {person.id} is isolating. Isolation end time: {person.test_and_trace.isolation_end_time}. Person infected? {person.infected}. Current time: {days_from_start}")
+
+                        return True
+                    else: #If they are negative or have no results
+                        return False
+                else: #Coming again, we need to see if they need to stay in isolation
+                    if days_from_start >= person.test_and_trace.isolation_end_time: #They finished their time. 
+                        if not person.infected: #They are actually healthy
+                            
+                            emit_isolation_event(person, days_from_start, is_start=False)
+
+                            if self.debug:
+                                print(f"[Rank {mpi_rank}] Person {person.id} has finished their self-isolation and is healthy. Released!")
+                            return False
+                        if person.infected: #They are still infected
+                            if self.debug:
+                                print(f"[Rank {mpi_rank}] Person {person.id} has finished their self-isolation period but still have symptoms. NOT released!")
+                            return True
+                    if self.debug:
+                        print(f"[Rank {mpi_rank}] Person {person.id} has not finished their self-isolation period yet.")
+                    return True
+        else:
+            return False
 
 
 class SchoolQuarantine(StayHome):

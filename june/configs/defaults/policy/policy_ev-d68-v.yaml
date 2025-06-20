@@ -1,0 +1,91 @@
+hospitalisation:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+
+testing:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  test_accuracy: 0.99  # 99% accuracy for tests
+  results_delay: 1  # Test results take 1 day
+
+tracing:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  contact_retention_days: 10
+  compliance: 0.8  # Percentage of contacts who comply with testing/quarantine (NOT IMPLEMENTED YET)
+
+quarantine4results:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  n_days: 1
+
+self_isolation:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  n_days: 10
+  beta_factors:
+    household: 0.1
+
+severe_symptoms_stay_home:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+
+regional_compliance:
+  1:
+    start_time: 1000-07-04
+    end_time: 9999-12-01
+    compliances_per_region:
+      London: 1.15
+      South East: 0.99
+      South West: 0.99
+      West Midlands: 1.
+      East Midlands: 1.
+      East of England: 1.
+      North West: 0.95
+      North East: 0.95
+      Yorkshire and The Humber: 0.95
+
+tiered_lockdown:
+  
+
+limit_long_commute:
+  # prevents people that have their workplace
+  # far away from their homes of commuting daily.
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  apply_from_distance: 100
+  going_to_work_probability: 0.2 # once a week
+
+
+quarantine:
+    
+
+shielding:
+    
+
+
+close_companies:
+   
+
+social_distancing:
+   
+
+
+mask_wearing:
+    
+
+
+close_leisure_venue:
+    
+
+change_leisure_probability:
+    
+
+change_visits_probability:
+  
+
+close_schools:
+    
+
+close_universities:
+   

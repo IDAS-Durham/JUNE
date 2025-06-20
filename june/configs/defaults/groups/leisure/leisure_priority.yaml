@@ -1,0 +1,197 @@
+preferences:
+  activity:
+    cinema:
+      male:
+        0-9:
+          household: 1
+          friends: 0
+        10-19:
+          household: 0.5
+          friends: 0.5
+        20-29:
+          household: 0.3
+          friends: 0.7
+        30-49:
+          household: 0.5
+          friends: 0.5
+        50-69:
+          household: 0.6
+          friends: 0.4
+        70-100:
+          household: 0.8
+          friends: 0.2
+      female:
+        0-9:
+          household: 1
+          friends: 0
+        10-19:
+          household: 0.5
+          friends: 0.5
+        20-29:
+          household: 0.4
+          friends: 0.6
+        30-49:
+          household: 0.55
+          friends: 0.45
+        50-69:
+          household: 0.65
+          friends: 0.35
+        70-100:
+          household: 0.85
+          friends: 0.15
+    grocery:
+      male:
+        0-9:
+          household: 1
+          friends: 0
+        10-19:
+          household: 0.95
+          friends: 0.05
+        20-29:
+          household: 0.95
+          friends: 0.05
+        30-49:
+          household: 0.95
+          friends: 0.05
+        50-69:
+          household: 0.95
+          friends: 0.05
+        70-100:
+          household: 0.95
+          friends: 0.05
+      female:
+        0-9:
+          household: 1
+          friends: 0
+        10-19:
+          household: 0.95
+          friends: 0.05
+        20-29:
+          household: 0.95
+          friends: 0.05
+        30-49:
+          household: 0.95
+          friends: 0.05
+        50-69:
+          household: 0.95
+          friends: 0.05
+        70-100:
+          household: 0.95
+          friends: 0.05
+    gym:
+      male:
+        0-9:
+          household: 1
+          friends: 0
+        10-19:
+          household: 0.1
+          friends: 0.9
+        20-29:
+          household: 0.5
+          friends: 0.5
+        30-49:
+          household: 0.5
+          friends: 0.5
+        50-69:
+          household: 0.9
+          friends: 0.1
+        70-100:
+          household: 0.9
+          friends: 0.1
+      female:
+        0-9:
+          household: 1
+          friends: 0
+        10-19:
+          household: 0.1
+          friends: 0.9
+        20-29:
+          household: 0.5
+          friends: 0.5
+        30-49:
+          household: 0.5
+          friends: 0.5
+        50-69:
+          household: 0.9
+          friends: 0.1
+        70-100:
+          household: 0.9
+          friends: 0.1
+    pub:
+      male:
+        0-9:
+          household: 1
+          friends: 0
+        10-19:
+          household: 0.5
+          friends: 0.5
+        20-29:
+          household: 0.3
+          friends: 0.7
+        30-49:
+          household: 0.5
+          friends: 0.5
+        50-69:
+          household: 0.6
+          friends: 0.4
+        70-100:
+          household: 0.8
+          friends: 0.2
+      female:
+        0-9:
+          household: 1
+          friends: 0
+        10-19:
+          household: 0.5
+          friends: 0.5
+        20-29:
+          household: 0.4
+          friends: 0.6
+        30-49:
+          household: 0.55
+          friends: 0.45
+        50-69:
+          household: 0.65
+          friends: 0.35
+        70-100:
+          household: 0.85
+          friends: 0.15
+    residence_visits:
+      male:
+        0-9:
+          household: 1
+          friends: 0
+        10-19:
+          household: 0.6
+          friends: 0.4
+        20-29:
+          household: 0.5
+          friends: 0.5
+        30-49:
+          household: 0.7
+          friends: 0.3
+        50-69:
+          household: 0.8
+          friends: 0.2
+        70-100:
+          household: 0.9
+          friends: 0.1
+      female:
+        0-9:
+          household: 1
+          friends: 0
+        10-19:
+          household: 0.65
+          friends: 0.35
+        20-29:
+          household: 0.6
+          friends: 0.4
+        30-49:
+          household: 0.75
+          friends: 0.25
+        50-69:
+          household: 0.85
+          friends: 0.15
+        70-100:
+          household: 0.9
+          friends: 0.1

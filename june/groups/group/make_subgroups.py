@@ -5,7 +5,9 @@ from june import paths
 import numpy as np
 import logging
 
-default_config_filename = paths.configs_path / "defaults/interaction/interaction.yaml"
+from june.epidemiology.infection.disease_config import DiseaseConfig
+
+#default_config_filename = paths.configs_path / "defaults/interaction/interaction.yaml"
 
 logger = logging.getLogger("subgroup maker")
 
@@ -57,7 +59,7 @@ def get_defaults(spec):
         return [0, 100], "Age"
 
     else:
-        return ["defualt"], "Discrete"
+        return ["default"], "Discrete"
 
 
 class SubgroupParams:
@@ -202,21 +204,23 @@ class SubgroupParams:
             n += 1
 
     @classmethod
-    def from_file(cls, config_filename=default_config_filename) -> "SubgroupParams":
+    def from_disease_config(cls, disease_config: DiseaseConfig) -> "SubgroupParams":
         """
-        Read from interaction yaml and extract information on bins and bin types. Returning instance of SubgroupParams
+        Initialize SubgroupParams using data from an existing DiseaseConfig object.
 
         Parameters
         ----------
-            config_filename:
-                yaml location
+        disease_config : DiseaseConfig
+            The disease-specific configuration object, which already contains the interaction data.
 
         Returns
         -------
-            SubgroupParams class instance
+        SubgroupParams
+            SubgroupParams class instance.
         """
-        if config_filename is None:
-            config_filename = default_config_filename
-        with open(config_filename) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
-        return SubgroupParams(params=config["contact_matrices"])
+
+        # Extract the contact matrices from DiseaseConfig
+        contact_matrices = disease_config.interaction_manager.contact_matrices
+
+        # Create and return SubgroupParams
+        return cls(params=contact_matrices)

@@ -1,0 +1,21 @@
+# Capacity parameters
+capacity_scaling:
+  max_concurrent_occupancy: 0.1  # % of daily capacity
+
+# Single area weight for infection risk
+area_weights:
+  airport: 1.5    # Higher transmission risk due to indoor crowded environment
+
+# Contact parameters between subgroups
+contact_matrices:
+  travelers:
+    travelers: 15  # High contact between travelers in airport environment
+
+# Physical contact ratios
+physical_contact_ratio: 0.3  # Proportion of contacts that are physical
+
+# Processing times by travel class (in hours)
+processing_times:
+  economy: 3.0    # Longer processing time, standard security
+  business: 2.0   # Fast track security, lounge access
+  first: 1.5      # Premium fast track, dedicated lounges

@@ -108,6 +108,8 @@ class WorkerDistributor:
             )
         )
         logger.info("Distributing workers to super areas...")
+        distributed_workers_data = []  # Collect data for visualization
+
         for i, area in enumerate(iter(self.areas)):
             wf_area_df = self.workflow_df.loc[(area.super_area.name,)]
             self._work_place_lottery(area.name, wf_area_df, len(area.people))
@@ -122,9 +124,25 @@ class WorkerDistributor:
                         lockdown_tags_idx,
                         person,
                     )
+                    # Collect data for sample visualization
+                    distributed_workers_data.append({
+                        "| Person ID": person.id,
+                        "| Home Area": area.name,
+                        "| Person Age": person.age,
+                        #"Work Location": person.work_super_area.name,
+                        "| Assigned Work Super Area": person.work_super_area.name if person.work_super_area else "No Assignment",
+                        "| Assigned Work Sector": getattr(person, 'sector', None),
+                        "| Lockdown Status": getattr(person, 'lockdown_status', None),
+                    })
+
             if i % 5000 == 0 and i != 0:
                 logger.info(f"Distributed workers in {i} areas of {len(self.areas)}")
-        logger.info("Workers distributed.")
+
+        # Convert collected sample data to a DataFrame
+        df_distributed_workers = pd.DataFrame(distributed_workers_data).sample(n=10)  # Show a random sample of 10
+        print("\n===== Sample of Distributed Workers to Super Areas and Work Sector (No company yet)=====")
+        print(df_distributed_workers)
+        logger.info(f"{len(distributed_workers_data)} Workers distributed.")
 
     def _work_place_lottery(
         self, area_name: str, wf_area_df: pd.DataFrame, n_workers: int
@@ -408,8 +426,7 @@ def load_workflow_df(
 ) -> pd.DataFrame:
     wf_df = pd.read_csv(
         workflow_file,
-        delimiter=",",
-        delim_whitespace=False,
+        sep=",",
         skiprows=1,
         usecols=[0, 1, 3, 4],
         names=["super_area", "work_super_area", "n_man", "n_woman"],
@@ -462,11 +479,17 @@ def load_sex_per_sector(
         ):
             logger.info("There exists no Education sector in this geography.")
 
-    # convert counts to ratios
-    sector_by_sex_df.loc[:, m_columns] = sector_by_sex_df.loc[:, m_columns].div(
-        sector_by_sex_df[m_columns].sum(axis=1), axis=0
-    )
-    sector_by_sex_df.loc[:, f_columns] = sector_by_sex_df.loc[:, f_columns].div(
-        sector_by_sex_df[f_columns].sum(axis=1), axis=0
-    )
+    # Ensure the entire dataframe is float first
+    sector_by_sex_df = sector_by_sex_df.astype(float)
+
+    # Prevent division by zero issues
+    m_sums = sector_by_sex_df[m_columns].sum(axis=1).replace(0, np.nan)  # Avoid division by zero
+    f_sums = sector_by_sex_df[f_columns].sum(axis=1).replace(0, np.nan)
+
+    # Perform division while keeping dtype consistency
+    sector_by_sex_df.loc[:, m_columns] = sector_by_sex_df.loc[:, m_columns].div(m_sums, axis=0)
+    sector_by_sex_df.loc[:, f_columns] = sector_by_sex_df.loc[:, f_columns].div(f_sums, axis=0)
+
+    # If needed, fill NaNs back with 0 after division
+    sector_by_sex_df.fillna(0, inplace=True)
     return sector_by_sex_df

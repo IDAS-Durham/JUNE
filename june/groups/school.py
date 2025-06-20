@@ -1,6 +1,7 @@
 import logging
 import numba as nb
 import math
+import random
 from enum import IntEnum
 from copy import deepcopy
 from june import paths
@@ -10,6 +11,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
+from june.epidemiology.infection.disease_config import DiseaseConfig
 from june.geography import Geography, Areas, Area
 from june.groups import Group, Subgroup, Supergroup
 from june.groups.group.interactive import InteractiveGroup
@@ -33,7 +35,6 @@ class SchoolClass(Subgroup):
 
 
 class School(Group):
-
     __slots__ = (
         "id",
         "coordinates",
@@ -44,11 +45,9 @@ class School(Group):
         "age_structure",
         "sector",
         "years",
+        "disease_config",
+        "registered_members_ids",
     )
-
-    # class SubgroupType(IntEnum):
-    #     teachers = 0
-    #     students = 1
 
     def __init__(
         self,
@@ -60,41 +59,22 @@ class School(Group):
         area: Area = None,
         n_classrooms: Optional[int] = None,
         years: Optional[int] = None,
+        registered_members_ids: dict = None
     ):
         """
         Create a School given its description.
 
         Parameters
         ----------
-        coordinates:
-            latitude and longitude
-        n_pupils_max:
-            maximum number of pupils that can attend the school
-        age_min:
-            minimum age of the pupils
-        age_max:
-            maximum age of the pupils
-        sector:
-            whether it is a "primary", "secondary" or both "primary_secondary"
-        area:
-            area the school belongs to
-        n_classrooms:
-            number of classrooms in the school
-        years:
-            age group year per classroom
-
-        number of SubGroups N = age_max-age_min year +1 (student years) + 1 (teachers):
-        0 - teachers
-        1 - year of lowest age (age_min)
         ...
-        n - year of highest age (age_max)
+        disease_config:
+            Configuration object for the disease.
         """
+
         super().__init__()
         self.subgroups = []
-        # for i, _ in enumerate(range(age_min, age_max + 2)):
         if n_classrooms is None:
             n_classrooms = age_max - age_min
-
         self.subgroups = [SchoolClass(self, i) for i in range(n_classrooms + 2)]
 
         self.n_classrooms = n_classrooms
@@ -105,10 +85,8 @@ class School(Group):
         self.age_min = age_min
         self.age_max = age_max
         self.sector = sector
-        if years is None:
-            self.years = tuple(range(age_min, age_max + 1))
-        else:
-            self.years = tuple(years)
+        self.years = tuple(range(age_min, age_max + 1)) if years is None else tuple(years)
+        self.registered_members_ids = registered_members_ids if registered_members_ids is not None else {}
 
     def get_interactive_group(self, people_from_abroad=None):
         return InteractiveSchool(self, people_from_abroad=people_from_abroad)
@@ -122,6 +100,25 @@ class School(Group):
             subgroup = self.subgroups[0]
             subgroup.append(person)
             person.subgroups.primary_activity = subgroup
+            
+    def add_to_registered_members(self, person_id, subgroup_type=0):
+        """
+        Add a person to the registered members list for a specific subgroup.
+        
+        Parameters
+        ----------
+        person_id : int
+            The ID of the person to add
+        subgroup_type : int, optional
+            The subgroup to add the person to (default: 0)
+        """
+        # Create the subgroup if it doesn't exist
+        if subgroup_type not in self.registered_members_ids:
+            self.registered_members_ids[subgroup_type] = []
+            
+        # Add the person if not already in the list
+        if person_id not in self.registered_members_ids[subgroup_type]:
+            self.registered_members_ids[subgroup_type].append(person_id)
 
     def limit_classroom_sizes(self, max_classroom_size: int):
         """
@@ -224,12 +221,39 @@ class Schools(Supergroup):
         config_file: str = default_config_filename,
     ) -> "Schools":
         """
-        Parameters
-        ----------
-        geography
-            an instance of the geography class
+        Creates Schools for the given geography with a disease configuration.
         """
-        return cls.for_areas(geography.areas, data_file, config_file)
+        schools = cls.for_areas(
+            geography.areas,
+            data_file,
+            config_file
+        )
+
+        # Sample 5 schools from each area for visualization
+        sampled_schools = []
+        for area in geography.areas:
+            if hasattr(area, 'schools') and area.schools:
+                # Sample 5 schools or fewer if there are less than 5
+                sample_schools = random.sample(area.schools, min(5, len(area.schools)))
+                for school in sample_schools:
+                    sampled_schools.append({
+                        "| School ID": school.id,
+                        "| Area": area.name,
+                        "| School Sector": school.sector,
+                        "| Number of Pupils": school.n_pupils,
+                        "| Coordinates": school.coordinates,
+                        "| Max Pupils": school.n_pupils_max,
+                        "| Min Age": school.age_min,
+                        "| Max Age": school.age_max
+                    })
+
+        # Convert the sample data to a DataFrame
+        df_schools = pd.DataFrame(sampled_schools)
+        print("\n===== Sample of Created Schools =====")
+        print(df_schools)
+        
+        logger.info(f"Created {len(schools)} schools in this geography.")
+        return schools
 
     @classmethod
     def for_areas(
@@ -239,45 +263,27 @@ class Schools(Supergroup):
         config_file: str = default_config_filename,
     ) -> "Schools":
         """
-        Parameters
-        ----------
-        area_names
-            list of areas for which to create populations
-        data_path
-            The path to the data directory
-        config
+        Creates Schools for specified areas using a disease configuration.
         """
-        return cls.from_file(areas, data_file, config_file)
+        return cls.from_file(areas, data_file, )
 
     @classmethod
     def from_file(
         cls,
         areas: Areas,
         data_file: str = default_data_filename,
-        config_file: str = default_config_filename,
     ) -> "Schools":
         """
-        Initialize Schools from path to data frame, and path to config file
-
-        Parameters
-        ----------
-        filename:
-            path to school dataframe
-        config_filename:
-            path to school config dictionary
-
-        Returns
-        -------
-        Schools instance
+        Initialize Schools from a data frame and a disease configuration.
         """
+
         school_df = pd.read_csv(data_file, index_col=0)
         area_names = [area.name for area in areas]
         if area_names is not None:
-            # filter out schools that are in the area of interest
             school_df = school_df[school_df["oa"].isin(area_names)]
         school_df.reset_index(drop=True, inplace=True)
         logger.info(f"There are {len(school_df)} schools in this geography.")
-        return cls.build_schools_for_areas(areas, school_df)  # , **config,)
+        return cls.build_schools_for_areas(areas, school_df)
 
     @classmethod
     def build_schools_for_areas(
@@ -288,24 +294,15 @@ class Schools(Supergroup):
         employee_per_clients: Dict[str, int] = None,
     ) -> "Schools":
         """
-        Parameters
-        ----------
-        area
-        Returns
-        -------
-            An infrastructure of schools
+        Build schools for specified areas with disease configuration.
         """
+
         employee_per_clients = employee_per_clients or {"primary": 30, "secondary": 30}
-        # build schools
         schools = []
         for school_name, row in school_df.iterrows():
             n_pupils_max = row["NOR"]
-            school_type = row["sector"]
-            if school_type is np.nan:
-                school_type = list(employee_per_clients.keys())[0]
-            coordinates = np.array(
-                row[["latitude", "longitude"]].values, dtype=np.float64
-            )
+            school_type = row["sector"] if row["sector"] is not np.nan else list(employee_per_clients.keys())[0]
+            coordinates = np.array(row[["latitude", "longitude"]].values, dtype=np.float64)
             area = areas.get_closest_area(coordinates)
             school = cls.venue_class(
                 coordinates=coordinates,
@@ -313,15 +310,12 @@ class Schools(Supergroup):
                 age_min=int(row["age_min"]),
                 age_max=int(row["age_max"]),
                 sector=school_type,
-                area=area,
+                area=area
             )
             schools.append(school)
             area.schools.append(school)
 
-        # link schools
-        school_trees, agegroup_to_global_indices = Schools.init_trees(
-            school_df, age_range
-        )
+        school_trees, agegroup_to_global_indices = Schools.init_trees(school_df, age_range)
         return Schools(
             schools,
             school_trees=school_trees,

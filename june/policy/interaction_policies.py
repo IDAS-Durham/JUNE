@@ -13,13 +13,26 @@ class InteractionPolicies(PolicyCollection):
     policy_type = "interaction"
 
     def apply(self, date: datetime, interaction: Interaction):
+        print(f"\n=== Applying Interaction Policies on {date} ===")
+        
+        # Get active policies
         active_policies = self.get_active(date)
+        print(f"Active Policies: {active_policies}")
+
+        # Initialize beta reductions
         beta_reductions = defaultdict(lambda: 1.0)
+
+        # Apply active policies and update beta reductions
         for policy in active_policies:
             beta_reductions_dict = policy.apply()
+            print(f"Policy {policy} produced beta reductions: {beta_reductions_dict}")
+
             for group in beta_reductions_dict:
                 beta_reductions[group] *= beta_reductions_dict[group]
+
+        # Assign final reductions to the interaction
         interaction.beta_reductions = beta_reductions
+        print(f"Final beta reductions assigned to interaction: {dict(interaction.beta_reductions)}")
 
 
 class SocialDistancing(InteractionPolicy):
@@ -29,7 +42,7 @@ class SocialDistancing(InteractionPolicy):
         super().__init__(start_time, end_time)
         self.beta_factors = beta_factors
 
-    def apply(self):
+    def apply(self):        
         """
         Implement social distancing policy
 

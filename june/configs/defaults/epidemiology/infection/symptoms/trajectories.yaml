@@ -243,7 +243,7 @@ trajectories:
       - symptom_tag: mild
         completion_time:
           type: lognormal
-          s: 0.55
+          s: 0.55 
           loc: 0.0
           scale: 5.
 

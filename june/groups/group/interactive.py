@@ -36,8 +36,10 @@ class InteractiveGroup:
 
     def __init__(self, group: "Group", people_from_abroad=None):
         """
-        This function is very long to avoid function calls for performance reasons.
-        InteractiveGroups are created millions of times. Given a group, we need to extract:
+        Optimised version of InteractiveGroup.__init__ with vectorised person status checks.
+        This function is performance-critical as InteractiveGroups are created millions of times.
+        
+        Given a group, we need to extract:
         - ids of the people that can infect (infector).
         - ids of the people that can be infected (susceptible).
         - probabilities of transmission of the infectors.
@@ -59,60 +61,81 @@ class InteractiveGroup:
         self.subgroup_sizes = {}
         group_size = 0
 
+        # OPTIMISATION: Process subgroups more efficiently
         for subgroup_index, subgroup in enumerate(group.subgroups):
-            subgroup_size = len(subgroup.people)
+            # OPTIMISATION: Cache subgroup size calculation
+            subgroup_people = subgroup.people
+            subgroup_size = len(subgroup_people)
+            
+            # Handle people from abroad
+            people_abroad_data = None
+            people_abroad_ids = []
             if subgroup.subgroup_type in people_from_abroad:
                 people_abroad_data = people_from_abroad[subgroup.subgroup_type]
-                people_abroad_ids = people_abroad_data.keys()
+                people_abroad_ids = list(people_abroad_data.keys())  # Convert to list once
                 subgroup_size += len(people_abroad_ids)
-            else:
-                people_abroad_data = None
-                people_abroad_ids = []
+            
             if subgroup_size == 0:
                 continue
+                
             self.subgroup_sizes[subgroup_index] = subgroup_size
             group_size += subgroup_size
 
-            # Get susceptible people
-            # local
-            for person in subgroup:
-                if not person.infected:
-                    self.susceptibles_per_subgroup[subgroup_index][
-                        person.id
-                    ] = person.immunity.susceptibility_dict
-            # from abroad
-            for id in people_abroad_ids:
-                if people_abroad_data[id]["susc"]:
-                    dd = {
+            # OPTIMISATION: Batch process local people with fewer attribute accesses
+            if subgroup_people:
+                # Pre-extract frequently accessed attributes to reduce repeated lookups
+                infected_people = []
+                susceptible_people = []
+                
+                # Single pass through people - batch status check
+                for person in subgroup_people:
+                    if person.infected:
+                        # Cache infection attributes to avoid repeated access
+                        infection = person.infection
+                        if infection is not None:
+                            infected_people.append((person.id, infection.infection_id(), infection.transmission.probability))
+                    else:
+                        # Cache immunity attributes to avoid repeated access
+                        susceptible_people.append((person.id, person.immunity.susceptibility_dict))
+                
+                # OPTIMISATION: Process infected people in batch
+                for person_id, infection_id, trans_prob in infected_people:
+                    infector_dict = self.infectors_per_infection_per_subgroup[infection_id][subgroup_index]
+                    infector_dict["ids"].append(person_id)
+                    infector_dict["trans_probs"].append(trans_prob)
+                
+                # OPTIMISATION: Process susceptible people in batch
+                if susceptible_people:
+                    subgroup_susceptibles = self.susceptibles_per_subgroup[subgroup_index]
+                    for person_id, susceptibility_dict in susceptible_people:
+                        subgroup_susceptibles[person_id] = susceptibility_dict
+            
+            # Handle people from abroad (keep original logic for now)
+            for person_id in people_abroad_ids:
+                person_data = people_abroad_data[person_id]
+                
+                # Handle susceptible people from abroad
+                if person_data["susc"]:
+                    susceptibility_dict = {
                         key: value
                         for key, value in zip(
-                            people_abroad_data[id]["immunity_inf_ids"],
-                            people_abroad_data[id]["immunity_suscs"],
+                            person_data["immunity_inf_ids"],
+                            person_data["immunity_suscs"],
                         )
                     }
-                    self.susceptibles_per_subgroup[subgroup_index][id] = dd
-
-            # Get infectors
-            for person in subgroup:
-                if person.infection is not None:
-                    infection_id = person.infection.infection_id()
-                    self.infectors_per_infection_per_subgroup[infection_id][
-                        subgroup_index
-                    ]["ids"].append(person.id)
-                    self.infectors_per_infection_per_subgroup[infection_id][
-                        subgroup_index
-                    ]["trans_probs"].append(person.infection.transmission.probability)
-            for id in people_abroad_ids:
-                if people_abroad_data[id]["inf_id"] != 0:
-                    infection_id = people_abroad_data[id]["inf_id"]
-                    self.infectors_per_infection_per_subgroup[infection_id][
-                        subgroup_index
-                    ]["ids"].append(id)
-                    self.infectors_per_infection_per_subgroup[infection_id][
-                        subgroup_index
-                    ]["trans_probs"].append(people_abroad_data[id]["inf_prob"])
-        self.must_timestep = self.has_susceptible and self.has_infectors
+                    self.susceptibles_per_subgroup[subgroup_index][person_id] = susceptibility_dict
+                
+                # Handle infected people from abroad
+                if person_data["inf_id"] != 0:
+                    infection_id = person_data["inf_id"]
+                    infector_dict = self.infectors_per_infection_per_subgroup[infection_id][subgroup_index]
+                    infector_dict["ids"].append(person_id)
+                    infector_dict["trans_probs"].append(person_data["inf_prob"])
+        
+        # OPTIMISATION: Cache final properties to avoid repeated computation
+        self.must_timestep = bool(self.susceptibles_per_subgroup) and bool(self.infectors_per_infection_per_subgroup)
         self.size = group_size
+        
 
     @classmethod
     def get_raw_contact_matrix(
@@ -170,8 +193,10 @@ class InteractiveGroup:
 
     @property
     def has_susceptible(self):
-        return bool(self.susceptibles_per_subgroup)
+        """Optimised version - avoid bool() call on already-computed result"""
+        return len(self.susceptibles_per_subgroup) > 0
 
     @property
     def has_infectors(self):
-        return bool(self.infectors_per_infection_per_subgroup)
+        """Optimised version - avoid bool() call on already-computed result"""
+        return len(self.infectors_per_infection_per_subgroup) > 0

@@ -5,10 +5,11 @@ import yaml
 from scipy.stats import beta, lognorm, norm, expon, exponweib
 
 from june import paths
+from june.epidemiology.infection.disease_config import DiseaseConfig
 from .symptom_tag import SymptomTag
 
 default_config_path = (
-    paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories.yaml"
+    paths.configs_path / "defaults/epidemiology/infection/symptoms/trajectories_measles.yaml"
 )
 
 
@@ -153,10 +154,37 @@ class Stage:
         self.completion_time = completion_time
 
     @classmethod
-    def from_dict(cls, stage_dict):
+    def from_dict(cls, stage_dict, dynamic_tags=None):
+        """
+        Create a Stage instance from a dictionary.
+
+        Parameters
+        ----------
+        stage_dict : dict
+            Dictionary containing stage information.
+        dynamic_tags : dict, optional
+            Mapping of symptom tag names to their integer values.
+
+        Returns
+        -------
+        Stage
+        """
         completion_time = CompletionTime.from_dict(stage_dict["completion_time"])
-        symptom_tag = SymptomTag.from_string(stage_dict["symptom_tag"])
-        return Stage(symptoms_tag=symptom_tag, completion_time=completion_time)
+        symptom_tag_name = stage_dict["symptom_tag"]
+
+        if isinstance(symptom_tag_name, str):
+            # Map using dynamic_tags
+            symptom_tag = SymptomTag.from_string(symptom_tag_name, dynamic_tags)
+        elif isinstance(symptom_tag_name, int):
+            # Ensure the integer is valid
+            if symptom_tag_name in dynamic_tags.values():
+                symptom_tag = symptom_tag_name
+            else:
+                raise ValueError(f"{symptom_tag_name} is not a valid SymptomTag")
+        else:
+            raise ValueError(f"Invalid type for symptom_tag: {type(symptom_tag_name)}")
+
+        return cls(symptoms_tag=symptom_tag, completion_time=completion_time)
 
 
 class TrajectoryMaker:
@@ -199,8 +227,26 @@ class TrajectoryMaker:
         return trajectory
 
     @classmethod
-    def from_dict(cls, trajectory_dict):
-        return TrajectoryMaker(*map(Stage.from_dict, trajectory_dict["stages"]))
+    def from_dict(cls, trajectory_dict, dynamic_tags=None):
+        """
+        Create a TrajectoryMaker instance from a dictionary.
+
+        Parameters
+        ----------
+        trajectory_dict : dict
+            Dictionary containing trajectory information, including `stages`.
+        dynamic_tags : dict, optional
+            Mapping of symptom tag names to their integer values.
+
+        Returns
+        -------
+        TrajectoryMaker
+        """
+        stages = [
+            Stage.from_dict(stage, dynamic_tags=dynamic_tags)
+            for stage in trajectory_dict["stages"]
+        ]
+        return cls(*stages)
 
 
 class TrajectoryMakers:
@@ -226,23 +272,61 @@ class TrajectoryMakers:
         self.trajectories = {
             trajectory.most_severe_symptoms: trajectory for trajectory in trajectories
         }
+    
+    @classmethod
+    def from_disease_config(cls, disease_config: DiseaseConfig) -> "TrajectoryMakers":
+        """
+        Load trajectories using a DiseaseConfig instance.
+
+        Parameters
+        ----------
+        disease_config : DiseaseConfig
+            The configuration object for the disease.
+
+        Returns
+        -------
+        TrajectoryMakers
+        """
+        if cls.__instance is None or cls.__disease_name != disease_config.disease_name:
+            trajectories_config = disease_config.disease_yaml.get("disease", {}).get("trajectories", [])
+            dynamic_tags = disease_config.symptom_manager.symptom_tags
+
+            # Generate instance with parsed trajectories
+            cls.__instance = TrajectoryMakers.from_list(trajectories_config, dynamic_tags=dynamic_tags)
+            cls.__disease_name = disease_config.disease_name
+
+        return cls.__instance
 
     @classmethod
-    def from_file(cls, config_path: str = default_config_path) -> "TrajectoryMakers":
+    def from_file(cls, disease_name) -> "TrajectoryMakers":
         """
-        Currently this doesn't do what it says it does.
+        Load trajectories from a YAML file.
 
-        By setting an instance on the class we can make the trajectory maker
-        something like a singleton. However, if it were being loaded from
-        configurations we'd need to be careful as this could give unexpected
-        effects.
+        Parameters
+        ----------
+        disease_name : str
+            Name of the disease to load configurations for.
+
+        Returns
+        -------
+        TrajectoryMakers
         """
+        config_path = paths.configs_path / f"defaults/epidemiology/infection/disease/{disease_name.lower()}.yaml"
+
         if cls.__instance is None or cls.__path != config_path:
             with open(config_path) as f:
-                cls.__instance = TrajectoryMakers.from_list(
-                    yaml.safe_load(f)["trajectories"]
-                )
-                cls.__path = config_path
+                full_config = yaml.safe_load(f)
+
+            # Extract symptom tags
+            dynamic_tags = SymptomTag.load_from_yaml(config_path)
+
+            # Extract trajectories
+            trajectories = full_config.get("disease", {}).get("trajectories", [])
+
+            # Pass dynamic_tags to from_list
+            cls.__instance = TrajectoryMakers.from_list(trajectories, dynamic_tags=dynamic_tags)
+            cls.__path = config_path
+
         return cls.__instance
 
     def __getitem__(self, tag: SymptomTag) -> List[Tuple[float, SymptomTag]]:
@@ -267,10 +351,27 @@ class TrajectoryMakers:
         A list describing the symptoms experienced by the patient
         at given times.
         """
-        return self.trajectories[tag].generate_trajectory()
+        return self.trajectories[tag].ory()
 
     @classmethod
-    def from_list(cls, trajectory_dicts):
-        return TrajectoryMakers(
-            trajectories=list(map(TrajectoryMaker.from_dict, trajectory_dicts))
+    def from_list(cls, trajectory_dicts, dynamic_tags=None):
+        """
+        Create a TrajectoryMakers instance from a list of trajectory dictionaries.
+
+        Parameters
+        ----------
+        trajectory_dicts : list of dict
+            List of dictionaries containing trajectory information.
+        dynamic_tags : dict, optional
+            Mapping of symptom tag names to their integer values.
+
+        Returns
+        -------
+        TrajectoryMakers
+        """
+        return cls(
+            trajectories=[
+                TrajectoryMaker.from_dict(trajectory, dynamic_tags=dynamic_tags)
+                for trajectory in trajectory_dicts
+            ]
         )

@@ -83,25 +83,51 @@ class DomesticCare(Event):
         All linking is restricted to the super area level.
         """
         total_need_care = 0
+        unlinked_needers = []
+        unlinked_providers = []
+
+        print("\n\n=== Care Aid Linking Summary ===")
         for super_area in world.super_areas:
-            # get households that need care
             need_care = []
             can_provide_care = []
+            linked_pairs = []
+
+            # Collect households needing and providing care
             for area in super_area.areas:
                 for household in area.households:
-                    if self._check_household_needs_care(household):
+                    if self._check_household_needs_care(household):  # Assuming this method exists
                         need_care.append(household)
-                    if self._check_household_can_provide_care(household):
+                    if self._check_household_can_provide_care(household):  # Assuming this method exists
                         can_provide_care.append(household)
+
+            # Shuffle the lists and create pairs
             shuffle(need_care)
             shuffle(can_provide_care)
-            if len(need_care) > len(can_provide_care):
-                logger.warning(
-                    f"super area {super_area.id} does not" f"have enough carers"
-                )
+
             for needer, provider in zip(need_care, can_provide_care):
                 total_need_care += 1
-                provider.household_to_care = needer
+                linked_pairs.append((provider, needer))
+                provider.household_to_care = needer  # Link provider to needer
+
+            # Track unlinked households
+            unlinked_needers.extend(need_care[len(linked_pairs):])
+            unlinked_providers.extend(can_provide_care[len(linked_pairs):])
+
+            # Print details for the current super area
+            print(f"\nSuper Area: {super_area.id}")
+            print(f"  Total Needing Care: {len(need_care)}")
+            print(f"  Total Providing Care: {len(can_provide_care)}")
+            print(f"  Successfully Linked Pairs: {len(linked_pairs)}")
+            print(f"  Unlinked Needing Care: {len(need_care[len(linked_pairs):])}")
+            print(f"  Unlinked Providing Care: {len(can_provide_care[len(linked_pairs):])}")
+
+        # Print overall summary
+        print("\n=== Overall Summary ===")
+        print(f"Total Households Needing Care: {total_need_care}")
+        print(f"Total Unlinked Needing Care: {len(unlinked_needers)}")
+        print(f"Total Unlinked Providing Care: {len(unlinked_providers)}")
+    
+    
 
     def _check_household_needs_care(self, household):
         """

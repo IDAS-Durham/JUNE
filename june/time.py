@@ -1,6 +1,6 @@
 import calendar
 import datetime
-from turtle import home
+#ßfrom turtle import home
 import yaml
 from typing import List
 
@@ -37,7 +37,7 @@ class Timer:
             }
         else:
             self.day_types = day_types
-
+        
         self.total_days = total_days
         self.weekday_step_duration = weekday_step_duration
         self.weekend_step_duration = weekend_step_duration
@@ -64,7 +64,8 @@ class Timer:
         else:
             day_types = None
 
-        return cls(
+
+        timer = cls(
             initial_day=time_config["initial_day"],
             total_days=time_config["total_days"],
             weekday_step_duration=time_config["step_duration"]["weekday"],
@@ -73,6 +74,24 @@ class Timer:
             weekend_activities=time_config["step_activities"]["weekend"],
             day_types=day_types,
         )
+
+        print("\n\n=== Timer Object Inspection ===")
+        print(f"Initial Date: {timer.initial_date}")
+        print(f"Final Date: {timer.final_date}")
+        print(f"Total Days: {timer.total_days}")
+        print(f"Weekday Step Duration: {timer.weekday_step_duration}")
+        print(f"Weekend Step Duration: {timer.weekend_step_duration}")
+        print(f"Weekday Activities: {timer.weekday_activities}")
+        print(f"Weekend Activities: {timer.weekend_activities}")
+        print(f"Current Date: {timer.date}")
+        print(f"Current Shift: {timer.shift}")
+        print(f"Current Delta Time: {timer.delta_time}")
+        print(f"Is Weekend: {timer.is_weekend}")
+        print(f"Day Type: {timer.day_type}")
+        print(f"Day of the Week: {timer.day_of_week}")
+        print(f"Activities for Current Shift: {timer.activities}")
+
+        return timer
 
     @property
     def is_weekend(self):
@@ -114,6 +133,7 @@ class Timer:
         type_day = "weekend" if self.is_weekend else "weekday"
         return getattr(self, type_day + "_activities")[self.shift]
 
+
     @property
     def shift_duration(self):
         type_day = "weekend" if self.is_weekend else "weekday"
@@ -138,4 +158,4 @@ class Timer:
         if self.previous_date.day != self.date.day:
             self.shift = 0
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
-        return self.date
+        return self.date 

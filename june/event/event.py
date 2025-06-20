@@ -2,11 +2,12 @@ from abc import ABC
 import yaml
 import datetime
 import logging
+import pandas as pd
 from typing import Union, List
 
 from june.utils import read_date, str_to_class
 from june.paths import configs_path
-from june.mpi_setup import mpi_rank
+from june.mpi_wrapper import mpi_rank
 
 default_config_filename = configs_path / "defaults/event/events.yaml"
 logger = logging.getLogger("events")
@@ -65,7 +66,23 @@ class Events:
                 events.append(
                     str_to_class(camel_case_key, base_event_modules)(**event_data)
                 )
-        return cls(events)
+
+        eventsobj = cls(events)
+
+        data = []
+        for event in eventsobj.events:
+            data.append({
+                "event_name": event.__class__.__name__,
+                "start_time": event.start_time,
+                "end_time": event.end_time,
+            })
+
+        events_df = pd.DataFrame(data)
+        print("=== Events ===")
+        print("Source: " + str(config_file))
+        print(events_df)
+
+        return eventsobj
 
     def init_events(self, world):
         logger.info("Initialising events...")
@@ -74,11 +91,19 @@ class Events:
             logger.info(f"Event {event.__class__.__name__} initialised")
 
     def apply(self, date, world, simulator, activities: List[str], day_type: bool):
+        print(f"\n=== Applying Events on {date} ===")
+        
         for event in self.events:
             if event.is_active(date=date):
+                print(f"Event {event} is active.")
+                print(f"Applying to:")
+                print(f"  World: {world}")
+                print(f"  Activities: {activities}")                
                 event.apply(
                     world=world,
                     simulator=simulator,
                     activities=activities,
                     day_type=day_type,
                 )
+        
+        print(f"=== Finished Applying Events on {date} ===")

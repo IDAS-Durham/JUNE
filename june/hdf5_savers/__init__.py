@@ -57,6 +57,15 @@ from .domain_data_saver import (
 
 from .infection_savers import *  # noqa
 
+from .travel_saver import (
+    save_aircrafts_to_hdf5,
+    save_airports_to_hdf5, 
+    load_aircrafts_from_hdf5,
+    load_airports_from_hdf5,
+    restore_aircraft_properties_from_hdf5,
+    restore_airport_properties_from_hdf5
+)
+
 # important this needs to be last:
 from .world_saver import (
     generate_world_from_hdf5,

@@ -7,7 +7,7 @@ import glob
 from june.tracker.tracker import Tracker
 from june.tracker.tracker_plots import PlotClass
 
-from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+from june.mpi_wrapper import mpi_comm, mpi_size, mpi_rank
 import logging
 
 logger = logging.getLogger("tracker merger")

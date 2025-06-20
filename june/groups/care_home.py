@@ -1,5 +1,6 @@
 import logging
 import yaml
+import random
 from enum import IntEnum
 from typing import List
 import numpy as np
@@ -7,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from june import paths
+from june.epidemiology.infection.disease_config import DiseaseConfig
 from june.geography import Geography, Area
 from june.groups import Group, Supergroup
 
@@ -22,29 +24,35 @@ class CareHomeError(BaseException):
 
 class CareHome(Group):
     """
-    The Carehome class represents a carehome and contains information about
-    its residents, workers and visitors.
-    We assume three subgroups:
-    0 - workers
-    1 - residents
-    2 - visitors
+    Represents a care home with its residents, workers, and visitors.
+
+    Parameters
+    ----------
+    area : Area
+        The area the care home belongs to.
+    n_residents : int
+        The number of residents in the care home.
+    n_workers : int
+        The number of workers in the care home.
+    disease_config : DiseaseConfig
+        The disease configuration object.
     """
 
-    __slots__ = ("n_residents", "area", "n_workers", "quarantine_starting_date")
-
-    # class SubgroupType(IntEnum):
-    #     workers = 0
-    #     residents = 1
-    #     visitors = 2
+    __slots__ = ("n_residents", "area", "n_workers", "quarantine_starting_date", "registered_members_ids")
 
     def __init__(
-        self, area: Area = None, n_residents: int = None, n_workers: int = None
+        self,
+        area: Area = None,
+        n_residents: int = None,
+        n_workers: int = None,
+        registered_members_ids: dict = None,
     ):
         super().__init__()
         self.n_residents = n_residents
         self.n_workers = n_workers
         self.area = area
         self.quarantine_starting_date = None
+        self.registered_members_ids = registered_members_ids if registered_members_ids is not None else {}
 
     def add(self, person, subgroup_type, activity: str = "residence"):
         if activity == "leisure":
@@ -53,6 +61,25 @@ class CareHome(Group):
             )
         else:
             super().add(person, subgroup_type=subgroup_type, activity=activity)
+            
+    def add_to_registered_members(self, person_id, subgroup_type=0):
+        """
+        Add a person to the registered members list for a specific subgroup.
+        
+        Parameters
+        ----------
+        person_id : int
+            The ID of the person to add
+        subgroup_type : int, optional
+            The subgroup to add the person to (default: 0)
+        """
+        # Create the subgroup if it doesn't exist
+        if subgroup_type not in self.registered_members_ids:
+            self.registered_members_ids[subgroup_type] = []
+            
+        # Add the person if not already in the list
+        if person_id not in self.registered_members_ids[subgroup_type]:
+            self.registered_members_ids[subgroup_type].append(person_id)
 
     @property
     def workers(self):
@@ -107,16 +134,29 @@ class CareHomes(Supergroup):
         cls,
         geography: Geography,
         data_file: str = default_data_filename,
-        config_file: str = default_config_filename,
     ) -> "CareHomes":
         """
-        Initializes care homes from geography.
+        Initializes care homes from geography using a disease configuration.
+
+        Parameters
+        ----------
+        geography : Geography
+            The geography object with areas for initializing care homes.
+        disease_config : DiseaseConfig
+            The disease configuration object containing relevant settings.
+        data_file : str
+            Path to the care home data file.
+
+        Returns
+        -------
+        CareHomes
+            An instance containing all created care homes.
         """
         areas = geography.areas
         if not areas:
             raise CareHomeError("Empty geography!")
-        return cls.for_areas(areas, data_file, config_file)
-
+        return cls.for_areas(areas, data_file)
+    
     @classmethod
     def for_areas(
         cls,
@@ -152,4 +192,20 @@ class CareHomes(Supergroup):
             if n_residents != 0:
                 area.care_home = cls.venue_class(area, n_residents, n_worker)
                 care_homes.append(area.care_home)
+
+        # Visualization - Sample 5 care homes for inspection
+        sample_care_homes = [
+            {
+                "| Care Home ID": care_home.id,
+                "| Area": care_home.area.name if care_home.area else "Unknown",
+                "| Residents Needed": care_home.n_residents,
+                "| Workers Needed": care_home.n_workers,  # Use the corrected attribute name
+                "| Coordinates": care_home.coordinates if care_home.area else "Unknown",
+            }
+            for care_home in random.sample(care_homes, min(5, len(care_homes)))
+        ]
+
+        df_care_homes = pd.DataFrame(sample_care_homes)
+        print("\n===== Sample of Created Care Homes =====")
+        print(df_care_homes)
         return cls(care_homes)

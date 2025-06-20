@@ -5,4 +5,6 @@ from .cinema import Cinema, Cinemas, CinemaDistributor
 from .grocery import Groceries, Grocery, GroceryDistributor
 from .gym import Gym, Gyms, GymDistributor
 from .residence_visits import ResidenceVisitsDistributor
-from .leisure import Leisure, generate_leisure_for_world, generate_leisure_for_config
+from .leisure import generate_leisure_for_world, generate_leisure_for_config, Leisure
+
+

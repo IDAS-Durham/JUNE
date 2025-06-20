@@ -1,9 +1,12 @@
 import numpy as np
 import pandas as pd
+import random
 from random import randint
-from typing import List
+from typing import List, Tuple
 import logging
 
+from june.epidemiology.infection.disease_config import DiseaseConfig
+from june.geography.geography import Area
 from june.groups import Group, Subgroup, Supergroup
 from june.geography import Areas, Geography
 from june.paths import data_path
@@ -17,15 +20,40 @@ logger = logging.getLogger("universities")
 
 class University(Group):
     def __init__(
-        self, n_students_max=None, n_years=5, ukprn=None, area=None, coordinates=None
+        self,
+        n_students_max: int = None,
+        n_years: int = 5,
+        ukprn: str = None,
+        area: Area = None,
+        coordinates: Tuple[float, float] = None,
+        registered_members_ids: dict = None
     ):
+        """
+        Create a University given its description.
+
+        Parameters
+        ----------
+        n_students_max : int
+            Maximum number of students that can attend the university.
+        n_years : int
+            Number of academic years in the university.
+        ukprn : str
+            Unique identifier for the university.
+        area : Area
+            The area the university belongs to.
+        coordinates : Tuple[float, float]
+            Latitude and longitude of the university.
+        registered_members_ids : dict, optional
+            A dict mapping subgroup IDs to lists of member IDs.
+        """
+        super().__init__()
         self.n_students_max = n_students_max
         self.n_years = n_years
         self.ukprn = ukprn
         self.area = area
         self.coordinates = coordinates
-        super().__init__()
         self.subgroups = [Subgroup(self, i) for i in range(self.n_years)]
+        self.registered_members_ids = registered_members_ids if registered_members_ids is not None else {}
 
     @property
     def students(self):
@@ -53,6 +81,25 @@ class University(Group):
             # No professors in the modeling of the code!
             self.subgroups[0].append(person)
             person.subgroups.primary_activity = self.subgroups[0]
+            
+    def add_to_registered_members(self, person_id, subgroup_type=0):
+        """
+        Add a person to the registered members list for a specific subgroup.
+        
+        Parameters
+        ----------
+        person_id : int
+            The ID of the person to add
+        subgroup_type : int, optional
+            The subgroup to add the person to (default: 0)
+        """
+        # Create the subgroup if it doesn't exist
+        if subgroup_type not in self.registered_members_ids:
+            self.registered_members_ids[subgroup_type] = []
+            
+        # Add the person if not already in the list
+        if person_id not in self.registered_members_ids[subgroup_type]:
+            self.registered_members_ids[subgroup_type].append(person_id)
 
     @property
     def is_full(self):
@@ -69,20 +116,27 @@ class Universities(Supergroup):
     def for_areas(
         cls,
         areas: Areas,
-        universities_filename: str = default_universities_filename,
-        max_distance_to_area=5,
-    ):
+        universities_filename: str,
+        max_distance_to_area: float,
+    ) -> "Universities":
         """
-        Initializes universities from super areas. By looking at the coordinates
-        of each university in the filename, we initialize those universities who
-        are close to any of the super areas.
+        Initializes universities based on proximity to areas.
 
         Parameters
         ----------
-        areas:
-            an instance of Areas
-        universities_filename:
-            path to the university data
+        areas : Areas
+            Areas where universities will be created.
+        universities_filename : str
+            Path to the university data file.
+        max_distance_to_area : float
+            Maximum allowable distance to assign a university to an area.
+        disease_config : DiseaseConfig
+            The disease configuration object containing relevant settings.
+
+        Returns
+        -------
+        Universities
+            An instance containing all created universities.
         """
         universities_df = pd.read_csv(universities_filename)
         longitudes = universities_df["longitude"].values
@@ -90,6 +144,7 @@ class Universities(Supergroup):
         coordinates = np.array(list(zip(latitudes, longitudes)))
         n_students = universities_df["n_students"].values
         ukprn_values = universities_df["UKPRN"].values
+
         universities = []
         for coord, n_stud, ukprn in zip(coordinates, n_students, ukprn_values):
             closest_area, distance = areas.get_closest_areas(
@@ -100,10 +155,31 @@ class Universities(Supergroup):
             if distance > max_distance_to_area:
                 continue
             university = cls.venue_class(
-                area=closest_area, n_students_max=n_stud, ukprn=ukprn, coordinates=coord
+                area=closest_area,
+                n_students_max=n_stud,
+                ukprn=ukprn,
+                coordinates=coord,
             )
             universities.append(university)
+
         logger.info(f"There are {len(universities)} universities in this world.")
+
+        # Visualization - Sample 5 universities for inspection
+        sample_universities = [
+            {
+                "| Uni ID": uni.id,
+                "| Area": uni.area.name if uni.area else "Unknown",
+                "| UKPRN": uni.ukprn,
+                "| Max Students": uni.n_students_max,
+                "| Coordinates": uni.coordinates,
+            }
+            for uni in random.sample(universities, min(5, len(universities)))
+        ]
+
+        df_universities = pd.DataFrame(sample_universities)
+        print("\n===== Sample of Created Universities =====")
+        print(df_universities)
+
         return cls(universities)
 
     @classmethod
@@ -112,7 +188,24 @@ class Universities(Supergroup):
         geography: Geography,
         universities_filename: str = default_universities_filename,
         max_distance_to_area: float = 20,
-    ):
+    ) -> "Universities":
+        """
+        Create universities for a given geography.
+
+        Parameters
+        ----------
+        geography : Geography
+            The geography object with areas to initialize universities.
+        disease_config : DiseaseConfig
+            The disease configuration object containing relevant settings.
+        max_distance_to_area : float
+            Maximum distance from an area to consider a university.
+
+        Returns
+        -------
+        Universities
+            An instance containing all created universities.
+        """
         return cls.for_areas(
             geography.areas,
             universities_filename=universities_filename,

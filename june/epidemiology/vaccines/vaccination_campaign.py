@@ -8,6 +8,8 @@ import logging
 from pathlib import Path
 
 from june import paths
+from june.epidemiology.infection.disease_config import DiseaseConfig
+from june.global_context import GlobalContext
 from june.utils import read_date
 from .vaccines import Vaccine, Vaccines
 
@@ -231,13 +233,15 @@ class VaccinationCampaign:
         record : Optional["Record"]
             record
         """
+        
         vaccine_trajectory = self.vaccine.generate_trajectory(
             person=person,
             dose_numbers=self.dose_numbers,
             days_to_next_dose=self.days_to_next_dose,
             date=date,
         )
-        vaccine_trajectory.update_dosage(person=person, record=record)
+        #print("\nDOSAGE about to be updated via VACCINATE:")
+        vaccine_trajectory.update_dosage(person=person, record=record, entered_via=0)
         person.vaccine_trajectory = vaccine_trajectory
         self.vaccinated_ids.add(person.id)
 
@@ -273,10 +277,8 @@ class VaccinationCampaigns:
         self.vaccination_campaigns = vaccination_campaigns
 
     @classmethod
-    def from_config(
-        cls,
-        config_file: Path = default_config_filename,
-        vaccines_config_file: Path = default_vaccines_config_filename,
+    def from_disease_config(
+        cls, disease_config: DiseaseConfig
     ):
         """from_config.
 
@@ -287,17 +289,31 @@ class VaccinationCampaigns:
         vaccines_config_file : Path
             vaccines_config_file
         """
-        vaccines = Vaccines.from_config(vaccines_config_file)
-        with open(config_file) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
+        print(f"\n=== Loading Vaccines Configuration from File ===")
+        vaccines = Vaccines.from_config(disease_config=disease_config)
+
+        print(f"Vaccines loaded successfully: {[vaccine.name for vaccine in vaccines.vaccines]}")
+
+        print(f"\n=== Loading Vaccination Campaign Configuration from File ===")
+
+        config = disease_config.vaccination_manager.get_vaccination_campaigns()
         vaccination_campaigns = []
         for key, params_dict in config.items():
-            params_dict["vaccine"] = vaccines.get_by_name(params_dict["vaccine_type"])
-            vaccination_campaigns.append(
-                VaccinationCampaign(
-                    **{k: v for k, v in params_dict.items() if k != "vaccine_type"}
-                )
+            print(f"\nProcessing Vaccination Campaign: {key}")
+            vaccine_type = params_dict["vaccine_type"]
+            print(f"  Vaccine Type: {vaccine_type}")
+
+            params_dict["vaccine"] = vaccines.get_by_name(vaccine_type)
+            print(f"  Associated Vaccine: {params_dict['vaccine'].name}")
+
+            campaign = VaccinationCampaign(
+                **{k: v for k, v in params_dict.items() if k != "vaccine_type"}
             )
+            vaccination_campaigns.append(campaign)
+            print(f"  Vaccination Campaign {key} created successfully.")
+
+        print("\n=== All Vaccination Campaigns Created Successfully ===")
+        
         return cls(vaccination_campaigns=vaccination_campaigns)
 
     def __iter__(
@@ -335,24 +351,38 @@ class VaccinationCampaigns:
         record :
             record
         """
+        # Step 1: Get active vaccination campaigns
         active_campaigns = self.get_active(date=date)
+
+        # Step 2: Check eligibility and calculate probabilities
         daily_probability, campaigns_to_chose_from = [], []
+        counter = 0
         for vc in active_campaigns:
+            counter += 1
             if vc.should_be_vaccinated(person=person):
                 days_passed = (date - vc.start_time).days
-                daily_probability.append(
-                    vc.daily_vaccination_probability(days_passed=days_passed)
-                )
+                prob = vc.daily_vaccination_probability(days_passed=days_passed)
+                daily_probability.append(prob)
                 campaigns_to_chose_from.append(vc)
-        daily_probability = np.array(daily_probability)
-        norm = daily_probability.sum()
-        if norm > 0.0:
+
+        # Proceed only if the person is eligible
+        if daily_probability:
+
+            daily_probability = np.array(daily_probability)
+            norm = daily_probability.sum()
+            
+            # Step 3: Normalize probabilities and decide vaccination
             if random() < norm:
                 daily_probability /= norm
-                campaign = np.random.choice(
-                    campaigns_to_chose_from, p=daily_probability
-                )
+                campaign = np.random.choice(campaigns_to_chose_from, p=daily_probability)
+                #print(f"Person ID {person.id} is eligible for vaccination on {date}.")
+                #print(f"Total Daily Vaccination Probability (Norm): {norm:.2f}")
+                #print(
+                #    f"Person ID {person.id} is vaccinated in Campaign '{counter}' on {date}."
+                #)
                 campaign.vaccinate(person=person, date=date, record=record)
+            #else:
+                #print(f"Person ID {person.id} did not get vaccinated (random chance).")
 
     def collect_all_dates_in_past(
         self, current_date: datetime.datetime
@@ -376,13 +406,22 @@ class VaccinationCampaigns:
         self, people, date: datetime.datetime, record: Optional["Record"] = None
     ):
         dates_to_vaccinate = self.collect_all_dates_in_past(current_date=date)
+        logger.info(f"Applying past vaccination campaigns...")
+
+        total_people_updated = 0  # Counter to track people with updated vaccine trajectories
+        tpv = 0
         for date_to_vax in dates_to_vaccinate:
             logger.info(f"Vaccinating at date {date_to_vax.date()}")
             for person in people:
                 self.apply(person=person, date=date_to_vax, record=record)
+                tpv +=1
                 if person.vaccine_trajectory is not None:
                     person.vaccine_trajectory.update_vaccine_effect(
                         person=person, date=date_to_vax, record=record
                     )
+                    total_people_updated += 1  # Increment the counter when updated
+
             if record is not None:
                 record.time_step(timestamp=date_to_vax)
+        logger.info(f"Total people updated with vaccine effects: {total_people_updated} out of {tpv}")
+        logger.info(f"Finished applying past vaccinations campaigns.")

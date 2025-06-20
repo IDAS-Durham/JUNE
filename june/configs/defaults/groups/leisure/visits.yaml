@@ -50,7 +50,8 @@ hours_per_day:
       0-100: 12
     female:
       0-100: 12
-drags_household_probability: 0
+drags_household_probability: 0.6
+invites_friends_probability: 0
 residence_type_probabilities:
   # if a person can visit both,
   # with what probability will

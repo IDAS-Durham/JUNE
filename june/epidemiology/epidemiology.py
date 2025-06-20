@@ -1,17 +1,23 @@
+from datetime import datetime
 import numpy as np
 from time import perf_counter
 from time import time as wall_clock
 import logging
 
+from june.global_context import GlobalContext
+
 from .infection import InfectionSelectors, ImmunitySetter
+from .test_and_trace import TestAndTrace
 from june.demography import Activities
 from june.policy import MedicalCarePolicies
 from june.epidemiology.vaccines import VaccinationCampaigns
-from june.mpi_setup import mpi_comm, mpi_size, mpi_rank, move_info
+from june.mpi_wrapper import MPI, mpi_comm, mpi_size, mpi_rank, move_info
 from june.groups import MedicalFacilities
 from june.records import Record
 from june.world import World
 from june.time import Timer
+from june.zoonosis.zoonotic_transmission import ZoonoticTransmission
+
 
 from typing import TYPE_CHECKING, Optional
 
@@ -32,10 +38,18 @@ def _get_medical_facilities(world, activity_manager):
         if "visits" in group_name:
             continue
 
-        grouptype = getattr(world, group_name)
-        if grouptype is not None:
-            if isinstance(grouptype, MedicalFacilities):
-                medical_facilities.append(grouptype)
+        try:
+            grouptype = getattr(world, group_name, None)
+            if grouptype is not None:
+                if isinstance(grouptype, MedicalFacilities):
+                    medical_facilities.append(grouptype)
+        except AttributeError:
+            logger.warning(f"Could not find group {group_name} in world")
+            continue
+    
+    if not medical_facilities:
+        logger.warning("No medical facilities found in world. Continuing without hospitals.")
+    
     return medical_facilities
 
 
@@ -53,7 +67,7 @@ class Epidemiology:
         immunity_setter: Optional[ImmunitySetter] = None,
         medical_care_policies: Optional[MedicalCarePolicies] = None,
         medical_facilities: Optional[MedicalFacilities] = None,
-        vaccination_campaigns: Optional[VaccinationCampaigns] = None,
+        vaccination_campaigns: Optional[VaccinationCampaigns] = None
     ):
         self.infection_selectors = infection_selectors
         self.infection_seeds = infection_seeds
@@ -78,34 +92,50 @@ class Epidemiology:
             self.effective_multiplier_setter.set_multipliers(population)
 
     def set_medical_care(self, world, activity_manager):
-        self.medical_facilities = _get_medical_facilities(
-            world=world, activity_manager=activity_manager
-        )
-        if activity_manager.policies:
-            self.medical_care_policies = activity_manager.policies.medical_care_policies
+        try:
+            self.medical_facilities = _get_medical_facilities(
+                world=world, activity_manager=activity_manager
+            )
+            if activity_manager.policies:
+                self.medical_care_policies = activity_manager.policies.medical_care_policies
+        except Exception as e:
+            logger.warning(f"Error setting up medical care: {e}. Continuing without medical facilities.")
+            self.medical_facilities = []
 
     def infection_seeds_timestep(self, timer, record: Record = None):
         if self.infection_seeds:
+            
             self.infection_seeds.unleash_virus_per_day(
                 date=timer.date, record=record, time=timer.now
             )
 
+            
     def do_timestep(
         self,
+        simulator,
         world: World,
         timer: Timer,
         record: Record = None,
         infected_ids: list = None,
         infection_ids: list = None,
-        people_from_abroad_dict: dict = None,
+        people_from_abroad_dict: dict = None
     ):
+        print(f"\n=== Starting Do_Timestep EPIDEMIOLOGY===")
+        print(f"Current Simulation Date: {timer.date}")
+        print(f"Previous Recorded Date: {self.current_date}")
+
+        # Check and set vaccination campaign status
         if self.vaccination_campaigns is not None and (
             self.current_date is None or timer.date.date() != self.current_date.date()
         ):
             self.current_date = timer.date
             vaccinate = True
+            print(f"Vaccination campaign triggered for date: {self.current_date.date()}")
         else:
             vaccinate = False
+            print(f"No vaccination campaign triggered for date: {timer.date.date()}")
+
+        print(f"Vaccinate Flag: {vaccinate}")
 
         # infect the people that got exposed
         if self.infection_selectors:
@@ -128,7 +158,9 @@ class Epidemiology:
             duration=timer.duration,
             record=record,
             vaccinate=vaccinate,
+            simulator=simulator
         )
+        
         if record:
             record.summarise_time_step(timestamp=timer.date, world=world)
             record.time_step(timestamp=timer.date)
@@ -138,13 +170,8 @@ class Epidemiology:
         """
         When someone dies, send them to cemetery.
         ZOMBIE ALERT!!
-
-        Parameters
-        ----------
-        time
-        person:
-            person to send to cemetery
         """
+        # Original code
         if record is not None:
             if person.medical_facility is not None:
                 death_location = person.medical_facility.group
@@ -166,7 +193,7 @@ class Epidemiology:
                 mate for mate in household.residents if mate != person
             )
         person.subgroups = Activities(None, None, None, None, None, None)
-
+        
     @staticmethod
     def recover(person: "Person", record: Record = None):
         """
@@ -184,7 +211,7 @@ class Epidemiology:
                 table_name="recoveries",
                 recovered_person_id=person.id,
                 infection_id=person.infection.infection_id(),
-            )
+            ) 
         person.infection = None
 
     def update_health_status(
@@ -192,9 +219,10 @@ class Epidemiology:
         world: World,
         time: float,
         duration: float,
-        date=None,
+        date = datetime(2020, 2, 2),
         record: Record = None,
         vaccinate: bool = False,
+        simulator=None,
     ):
         """
         Update symptoms and health status of infected people.
@@ -208,32 +236,63 @@ class Epidemiology:
         duration:
             duration of time step
         """
+
         for person in world.people:
+
             if person.infected:
+                # Log person's previous infection state
                 previous_tag = person.infection.tag
+
+                # Update health status
                 new_status = person.infection.update_health_status(time, duration)
+
+                if new_status == "recovered":
+                    if hasattr(person, "test_and_trace") and person.test_and_trace is not None:
+                        if (person.test_and_trace.isolation_end_time is not None
+                             and time >= person.test_and_trace.isolation_end_time):
+                            person.test_and_trace = None
+                            #print(f"Person {person.id} is recovered and not in isolation!, Deleting TaT.")
+
                 if record is not None:
-                    if previous_tag != person.infection.tag:
+                    # Get the current tag value from the person's infection
+                    current_tag_value = person.infection.tag
+
+                    if previous_tag != current_tag_value:
                         record.accumulate(
                             table_name="symptoms",
                             infected_id=person.id,
-                            symptoms=person.infection.tag.value,
+                            symptoms=current_tag_value,  # Use the resolved tag name
                             infection_id=person.infection.infection_id(),
                         )
-                # Take actions on new symptoms
-                if self.medical_care_policies:
+
+            # Take actions based on new symptoms
+            if person.test_and_trace is not None or person.infected:
+                
+                if self.medical_care_policies and self.medical_facilities:
+                    disease_config = GlobalContext.get_disease_config()
+
+                    active_medical_care_policies = self.medical_care_policies.get_active(date=date)
                     self.medical_care_policies.apply(
                         person=person,
+                        disease_config=disease_config,
                         medical_facilities=self.medical_facilities,
                         days_from_start=time,
                         record=record,
+                        simulator=simulator,
+                        active_medical_care_policies=active_medical_care_policies
                     )
+                
+            if person.infected:
                 if new_status == "recovered":
                     self.recover(person, record=record)
                 elif new_status == "dead":
                     self.bury_the_dead(world, person, record=record)
+
+            # Skip dead persons
             if person.dead:
                 continue
+            
+            # Vaccination Campaign
             if vaccinate:
                 self.vaccination_campaigns.apply(
                     person=person, date=date, record=record
@@ -242,6 +301,8 @@ class Epidemiology:
                     person.vaccine_trajectory.update_vaccine_effect(
                         person=person, date=date, record=record
                     )
+
+            
 
     def infect_people(
         self, world, time, infected_ids, infection_ids, people_from_abroad_dict
@@ -294,6 +355,7 @@ class Epidemiology:
                     infection_counter += 1
         return infect_in_domains
 
+    
     def tell_domains_to_infect(self, world, timer, infect_in_domains):
         """
         Sends information about the people who got infected in this domain to the other domains.

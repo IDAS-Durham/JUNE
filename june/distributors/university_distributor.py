@@ -2,8 +2,10 @@ from typing import List
 from collections import defaultdict
 import logging
 import numpy as np
+import pandas as pd
+from random import randint
 
-from june.groups import University
+from june.groups.university import University, age_to_years
 from june.geography import Areas
 from june.demography import Population
 
@@ -73,11 +75,43 @@ class UniversityDistributor:
                 if university.n_students < university.n_students_max:
                     need_more_students = True
                     break
-        uni_info_dict = {
-            university.ukprn: university.n_students for university in self.universities
-        }
-        for key, value in uni_info_dict.items():
-            logger.info(f"University {key} has {value} students.")
+
+        # Gather university data for visualization
+        university_data = []
+        for university in self.universities:
+            # Get information about registered members
+            total_registered = sum(len(members) for members in university.registered_members_ids.values())
+            all_subgroups = list(university.registered_members_ids.keys())
+            
+            # Sample some IDs to display
+            sampled_ids = []
+            for subgroup, members in university.registered_members_ids.items():
+                if members:
+                    # Take up to 2 from each subgroup
+                    for member_id in members[:2]:
+                        sampled_ids.append(f"year{subgroup}:{member_id}")
+            
+            sampled_ids = sampled_ids[:5]  # Limit to 5 total
+            
+            university_data.append({
+                "| University ID": university.id,
+                "| Total Students": university.n_students,
+                "| Total Registered Members": total_registered,
+                "| Years": all_subgroups,
+                "| Sample Registered Member IDs": sampled_ids,
+                "| Max Capacity": university.n_students_max
+            })
+
+        # Convert the university data to a DataFrame for a structured view
+        df_universities = pd.DataFrame(university_data)
+        print("\n===== University Registered Members Summary =====")
+        print(df_universities.head(10))  # Display a sample of 10 universities for brevity
+
+        # Calculate the total number of students
+        total_students = sum(university.n_students for university in self.universities)
+        logger.info(f"Total number of students distributed across all universities: {total_students}")
+        #for key, value in uni_info_dict.items():
+        #    logger.info(f"University {key} has {value} students.")
 
     def _build_student_dict(self, areas, distance):
         students_dict = defaultdict(lambda: defaultdict(list))
@@ -95,15 +129,35 @@ class UniversityDistributor:
         return students_dict
 
     def _assign_students_to_unis(self, students_dict, people):
+        # Track already assigned students across all universities
+        assigned_students = set()
+        
         for key in ["student", "communal", "other"]:
             keep_key = True
             while keep_key:
                 keep_key = False
                 for university in self.universities:
-                    student_candidates = students_dict[university.ukprn][key]
+                    # Filter out already assigned students from candidate list
+                    student_candidates = [
+                        student_id for student_id in students_dict[university.ukprn][key]
+                        if student_id not in assigned_students
+                    ]
+                    
+                    # Update the list in the dictionary
+                    students_dict[university.ukprn][key] = student_candidates
+                    
                     if student_candidates and not university.is_full:
                         student_id = student_candidates.pop()
-                        university.add(
-                            people.get_from_id(student_id), subgroup="student"
-                        )
+                        # Mark this student as assigned
+                        assigned_students.add(student_id)
+                        
+                        student = people.get_from_id(student_id)
+                        university.add(student, subgroup="student")
+                        
+                        # Add to registered members
+                        if student.age not in age_to_years:
+                            year = randint(0, university.n_years - 1)
+                        else:
+                            year = age_to_years[student.age]
+                        university.add_to_registered_members(student_id, subgroup_type=year)
                         keep_key = True

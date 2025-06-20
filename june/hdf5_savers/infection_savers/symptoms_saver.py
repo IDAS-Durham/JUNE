@@ -2,6 +2,7 @@ import numpy as np
 import h5py
 from typing import List
 
+from june.global_context import GlobalContext
 from june.hdf5_savers.utils import read_dataset, write_dataset
 from june.epidemiology.infection import Symptoms, SymptomTag
 
@@ -45,8 +46,8 @@ def save_symptoms_to_hdf5(
             time_of_symptoms_onset_list = []
             for index in range(idx1, idx2):
                 symptoms = symptoms_list[index]
-                max_tag_list.append(symptoms.max_tag.value)
-                tag_list.append(symptoms.tag.value)
+                max_tag_list.append(symptoms.max_tag)
+                tag_list.append(symptoms.tag)
                 max_severity_list.append(symptoms.max_severity)
                 stage_list.append(symptoms.stage)
                 time_of_symptoms_onset_list.append(symptoms.time_of_symptoms_onset)
@@ -75,7 +76,7 @@ def save_symptoms_to_hdf5(
             symps = []
             for time, symp in symptoms.trajectory:
                 times.append(time)
-                symps.append(symp.value)
+                symps.append(symp)
             trajectory_times_list.append(np.array(times, dtype=np.float64))
             trajectory_symptom_list.append(np.array(symps, dtype=np.int64))
             trajectory_lengths.append(len(times))

@@ -29,7 +29,15 @@ class Immunity:
         return self.susceptibility_dict.get(infection_id, 1.0)
 
     def get_effective_multiplier(self, infection_id):
-        return self.effective_multiplier_dict.get(infection_id, 1.0)
+        multiplier = self.effective_multiplier_dict.get(infection_id, 1.0)
+        # Print statement for visualization
+        '''print(
+            f"Input: infection_id={infection_id} | "
+            f"Multiplier Found: {'Yes' if infection_id in self.effective_multiplier_dict else 'No'} | "
+            f"Effective Multiplier: {multiplier}"
+        )'''
+        return multiplier
+    
 
     def serialize(self):
         return (

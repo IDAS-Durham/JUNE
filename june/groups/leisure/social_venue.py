@@ -1,18 +1,21 @@
 import numpy as np
 import pandas as pd
 import logging
+import random
 from typing import List, Optional
 from enum import IntEnum
 from sklearn.neighbors import BallTree
 
+from june.epidemiology.infection.disease_config import DiseaseConfig
 from june.groups import Supergroup, Group
 from june.geography import Area, Areas, SuperArea, SuperAreas, Geography
-from june.mpi_setup import mpi_rank
+from june.mpi_wrapper import mpi_rank, mpi_available
 
 earth_radius = 6371  # km
 
 logger = logging.getLogger("social_venue")
-if mpi_rank > 0:
+# Only disable propagation in MPI mode with rank > 0
+if mpi_available and mpi_rank > 0:
     logger.propagate = False
 
 
@@ -23,12 +26,12 @@ class SocialVenueError(BaseException):
 class SocialVenue(Group):
     max_size = np.inf
 
-    # class SubgroupType(IntEnum):
-    #     leisure = 0
-
     def __init__(self, area=None):
-        super().__init__()
+        super().__init__()  # Pass disease_config to the parent class
         self.area = area
+        # Use 0 as domain_id in non-MPI mode
+        self.domain_id = 0 if not mpi_available else mpi_rank
+        
 
     def add(self, person, activity="leisure"):
         self.subgroups[0].append(person)
@@ -54,7 +57,9 @@ class SocialVenues(Supergroup):
 
     def __init__(self, social_venues: List[venue_class], make_tree=True):
         super().__init__(members=social_venues)
-        logger.info(f"Domain {mpi_rank} has {len(self)} {self.spec}(s)")
+        # Use a safer logging approach that works in both MPI and non-MPI modes
+        current_rank = 0 if not mpi_available else mpi_rank
+        logger.info(f"Domain {current_rank} has {len(self)} {self.spec}(s)")
         self.ball_tree = None
         if make_tree:
             if not social_venues:
@@ -82,7 +87,7 @@ class SocialVenues(Supergroup):
         social_venues = []
 
         for i, coord in enumerate(coordinates):
-            sv = cls.venue_class()
+            sv = cls.venue_class()  # Pass disease_config here
             if super_areas:
                 super_area = super_areas[i]
             else:
@@ -98,6 +103,7 @@ class SocialVenues(Supergroup):
 
                 sv.area = area
             social_venues.append(sv)
+
         return cls(social_venues, **kwargs)
 
     @classmethod
@@ -107,7 +113,31 @@ class SocialVenues(Supergroup):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
         sv_coordinates = pd.read_csv(coordinates_filename, index_col=0).values
-        return cls.from_coordinates(sv_coordinates, super_areas=super_areas)
+
+        # Generate social venues using the coordinates
+        social_venues_instance = cls.from_coordinates(
+            sv_coordinates, super_areas=super_areas
+        )
+
+        # Prepare sample data for visualization
+        venue_data = [
+            {
+                "Venue ID": venue.id,
+                "Super Area": venue.area.super_area.name if venue.area and venue.area.super_area else "Unknown",
+                "Coordinates": venue.coordinates,
+                "Assigned Area": venue.area.name if venue.area else "None",
+            }
+            for venue in social_venues_instance.members
+        ]
+
+        # Convert sample data to DataFrame for better readability
+        df_venues = pd.DataFrame(venue_data)
+        print("\n===== Gaps in ID represent the venues that were created that did not fulfill the criteria required =====")
+        print("\n===== Sample of Social Venues Created from Coordinates =====")
+        print(df_venues)
+
+        return social_venues_instance
+
 
     @classmethod
     def for_areas(cls, areas: Areas, coordinates_filename: str = None):
@@ -120,6 +150,7 @@ class SocialVenues(Supergroup):
     def for_geography(cls, geography: Geography, coordinates_filename: str = None):
         if coordinates_filename is None:
             coordinates_filename = cls.default_coordinates_filename
+        
         return cls.for_super_areas(geography.super_areas, coordinates_filename)
 
     @classmethod

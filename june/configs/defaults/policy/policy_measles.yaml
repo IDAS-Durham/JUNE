@@ -1,0 +1,73 @@
+hospitalisation:
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+
+severe_symptoms_stay_home:
+  start_time: 3000-01-01
+  end_time: 9999-01-01
+
+regional_compliance:
+  1:
+    start_time: 1000-07-04
+    end_time: 9999-12-01
+    compliances_per_region:
+      London: 1.15
+      South East: 0.99
+      South West: 0.99
+      West Midlands: 1.
+      East Midlands: 1.
+      East of England: 1.
+      North West: 0.95
+      North East: 0.95
+      Yorkshire and The Humber: 0.95
+
+tiered_lockdown:
+  
+
+limit_long_commute:
+  # prevents people that have their workplace
+  # far away from their homes of commuting daily.
+  start_time: 1000-01-01
+  end_time: 9999-01-01
+  apply_from_distance: 100
+  going_to_work_probability: 0.2 # once a week
+
+
+quarantine:
+    
+
+isolation:
+  enabled: true
+  household_contact_reduction: 0.2  # 80% reduction in contact frequency
+  household_physical_reduction: 0.1  # 90% reduction in physical contact
+  default_duration_days: 14  # Default isolation period
+
+shielding:
+    
+
+
+close_companies:
+   
+
+social_distancing:
+   
+
+
+mask_wearing:
+    
+
+
+close_leisure_venue:
+    
+
+change_leisure_probability:
+    
+
+change_visits_probability:
+  
+
+close_schools:
+    
+
+close_universities:
+   

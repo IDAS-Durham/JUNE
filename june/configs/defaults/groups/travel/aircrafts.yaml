@@ -1,0 +1,6 @@
+# Aircraft-specific parameters
+max_distance: 3  # Maximum rows to consider for transmission
+distance_decay: 0.7  # Exponential decay factor for distance
+area_weight: 1.5  # Base weight for aircraft environment
+num_seats_per_row: 6  # Number of seats per row in aircraft
+num_rows: 30  # Number of rows in aircraft

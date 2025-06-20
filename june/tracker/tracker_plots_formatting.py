@@ -4,7 +4,7 @@ import matplotlib as mpl
 import matplotlib.font_manager
 import matplotlib.pyplot as plt
 
-from june.mpi_setup import mpi_comm, mpi_size, mpi_rank
+from june.mpi_wrapper import mpi_comm, mpi_size, mpi_rank
 
 try:
     plt.style.use(["science", "no-latex", "bright"])

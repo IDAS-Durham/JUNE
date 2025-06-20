@@ -1,3 +1,4 @@
+# june/domains/domain_decomposition.py
 import logging
 import json
 import pandas as pd
@@ -6,6 +7,7 @@ from score_clustering import Point, ScoreClustering
 
 from june import paths
 from june.hdf5_savers import load_data_for_domain_decomposition
+from june.mpi_wrapper import mpi_available, mpi_size
 
 default_super_area_adjaceny_graph_path = (
     paths.data_path / "input/geography/super_area_adjacency_graph.json"
@@ -24,6 +26,8 @@ class DomainSplitter:
     """
     Class used to split the world into ``n`` domains containing an equal number
     of super areas continuous to each other.
+    
+    In non-MPI mode or with a single MPI process, all super areas are assigned to domain 0.
     """
 
     def __init__(
@@ -44,6 +48,14 @@ class DomainSplitter:
             per super area
         """
         self.number_of_domains = number_of_domains
+        
+        # In non-MPI mode or single process, create a simple split
+        if not mpi_available or number_of_domains <= 1:
+            self.simple_split = True
+            self.super_area_data = super_area_data
+            return
+            
+        self.simple_split = False
         with open(super_area_adjacency_graph_path, "r") as f:
             self.adjacency_graph = json.load(f)
         self.super_area_data = super_area_data
@@ -65,6 +77,24 @@ class DomainSplitter:
         maxiter=100,
     ):
         super_area_data = load_data_for_domain_decomposition(world_path)
+        
+        # If not using MPI or only one domain is needed, create a simple split
+        if not mpi_available or number_of_domains <= 1:
+            # Assign all super areas to domain 0
+            super_areas_per_domain = {0: list(super_area_data.keys())}
+            
+            # Calculate total score for domain 0
+            total_score = sum(
+                weights["population"] * data["n_people"]
+                + weights["workers"] * (data["n_workers"] + data["n_pupils"])
+                + weights["commuters"] * data["n_commuters"]
+                for data in super_area_data.values()
+            )
+            score_per_domain = {0: total_score}
+            
+            return super_areas_per_domain, score_per_domain
+        
+        # Otherwise, use the normal clustering approach
         ds = cls(
             number_of_domains=number_of_domains,
             super_area_data=super_area_data,
@@ -83,6 +113,22 @@ class DomainSplitter:
         )
 
     def generate_domain_split(self, maxiter=100):
+        # For single-domain case
+        if self.simple_split:
+            super_areas_per_domain = {0: list(self.super_area_data.keys())}
+            
+            # Calculate total score for domain 0
+            total_score = sum(
+                default_weights["population"] * data["n_people"]
+                + default_weights["workers"] * (data["n_workers"] + data["n_pupils"])
+                + default_weights["commuters"] * data["n_commuters"]
+                for data in self.super_area_data.values()
+            )
+            score_per_domain = {0: total_score}
+            
+            return super_areas_per_domain, score_per_domain
+        
+        # For multi-domain case
         points = list(
             self.super_area_df.apply(
                 lambda row: Point(row["X"], row["Y"], row["score"], row.name), axis=1

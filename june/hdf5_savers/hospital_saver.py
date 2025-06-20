@@ -1,6 +1,8 @@
 import h5py
 import numpy as np
 
+from june.epidemiology.infection.disease_config import DiseaseConfig
+from june.global_context import GlobalContext
 from june.world import World
 from june.groups import Hospital, Hospitals, ExternalHospital
 from june.groups.group.make_subgroups import SubgroupParams
@@ -115,23 +117,22 @@ def load_hospitals_from_hdf5(
     config_filename=None,
 ):
     """
-    Loads companies from an hdf5 file located at ``file_path``.
+    Loads hospitals from an hdf5 file located at ``file_path``.
     Note that this object will not be ready to use, as the links to
     object instances of other classes need to be restored first.
-    This function should be rarely be called oustide world.py
+    This function should rarely be called outside world.py.
     """
     Hospital_Class = Hospital
-    Hospital_Class.subgroup_params = SubgroupParams.from_file(
-        config_filename=config_filename
-    )
+    disease_config = GlobalContext.get_disease_config()
+    Hospital_Class.subgroup_params = SubgroupParams.from_disease_config(disease_config)
     ExternalHospital_Class = ExternalHospital
 
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         hospitals = f["hospitals"]
         hospitals_list = []
-        chunk_size = 50000
         n_hospitals = hospitals.attrs["n_hospitals"]
         n_chunks = int(np.ceil(n_hospitals / chunk_size))
+
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_hospitals)
@@ -142,17 +143,16 @@ def load_hospitals_from_hdf5(
             coordinates = read_dataset(hospitals["coordinates"], idx1, idx2)
             super_areas = read_dataset(hospitals["super_area"], idx1, idx2)
             region_name = read_dataset(hospitals["region_name"], idx1, idx2)
+
             for k in range(idx2 - idx1):
                 super_area = super_areas[k]
                 if super_area == nan_integer:
                     raise ValueError(
-                        "if ``domain_super_areas`` is True, I expect not Nones super areas."
+                        "If ``domain_super_areas`` is True, I expect non-None super areas."
                     )
+
                 trust_code = trust_codes[k]
-                if trust_code.decode() == " ":
-                    trust_code = None
-                else:
-                    trust_code = trust_code.decode()
+                trust_code = trust_code.decode() if trust_code.decode() != " " else None
 
                 if (
                     domain_super_areas is not None
@@ -169,10 +169,11 @@ def load_hospitals_from_hdf5(
                         n_beds=n_beds_list[k],
                         n_icu_beds=n_icu_beds_list[k],
                         coordinates=coordinates[k],
-                        trust_code=trust_code,
+                        trust_code=trust_code
                     )
                     hospital.id = ids[k]
                 hospitals_list.append(hospital)
+
     return Hospitals(hospitals_list, ball_tree=False)
 
 

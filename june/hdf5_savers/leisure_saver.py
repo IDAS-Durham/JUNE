@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 from typing import List
+from june.global_context import GlobalContext
 from june.groups.group.make_subgroups import SubgroupParams
 
 from .utils import read_dataset
@@ -50,25 +51,19 @@ def load_social_venues_from_hdf5(
 ):
     social_venues_dict = {}
 
+    disease_config = GlobalContext.get_disease_config()
+
     Pub_Class = Pub
-    Pub_Class.subgroup_params = SubgroupParams.from_file(
-        config_filename=config_filename
-    )
+    Pub_Class.subgroup_params = SubgroupParams.from_disease_config(disease_config)
 
     Cinema_Class = Cinema
-    Cinema_Class.subgroup_params = SubgroupParams.from_file(
-        config_filename=config_filename
-    )
+    Cinema_Class.subgroup_params = SubgroupParams.from_disease_config(disease_config)
 
     Grocery_Class = Grocery
-    Grocery_Class.subgroup_params = SubgroupParams.from_file(
-        config_filename=config_filename
-    )
+    Grocery_Class.subgroup_params = SubgroupParams.from_disease_config(disease_config)
 
     Gym_Class = Gym
-    Gym_Class.subgroup_params = SubgroupParams.from_file(
-        config_filename=config_filename
-    )
+    Gym_Class.subgroup_params = SubgroupParams.from_disease_config(disease_config)
 
     spec_to_group_dict = {
         "pubs": Pub_Class,

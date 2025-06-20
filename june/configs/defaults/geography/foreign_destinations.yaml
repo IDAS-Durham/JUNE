@@ -1,0 +1,35 @@
+# Risk multiplier baseline values
+risk_multipliers:
+  LOW: 1.0
+  MEDIUM: 2.0 
+  HIGH: 4.0
+
+# Activity intensity by travel purpose
+activity_intensities:
+  BUSINESS: 0.7  # Business travelers - controlled environments, fewer contacts
+  LEISURE: 1.3   # Leisure travelers - varied environments, more contacts
+
+# Base parameters
+base_parameters:
+  contact_rate: 10.0  # Base daily contacts
+  duration_scaling: 100.0  # Days for risk accumulation (characteristic time)
+
+# Country destinations with risk levels
+destinations:
+  france:
+    risk_level: MEDIUM
+    risk_multiplier: 2.0
+    region: europe
+  spain: 
+    risk_level: MEDIUM
+    risk_multiplier: 2.0
+    region: europe
+  italy:
+    risk_level: HIGH 
+    risk_multiplier: 4.0
+    region: europe
+  germany:
+    risk_level: LOW
+    risk_multiplier: 1.0
+    region: europe
+  # Add more destinations as needed

@@ -6,3 +6,7 @@ from .exact_num_infection_seed import (
     ExactNumInfectionSeed,
     ExactNumClusteredInfectionSeed,
 )
+from .infection_seeds_config_loader import (
+    SeedingConfigLoader,
+    DEFAULT_SEEDING_CONFIG_PATH
+)

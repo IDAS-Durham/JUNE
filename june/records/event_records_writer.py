@@ -64,7 +64,7 @@ class InfectionRecord(EventRecord):
             table_name="infections",
             int_names=["location_ids", "infector_ids", "infected_ids", "infection_ids"],
             float_names=[],
-            str_names=["location_specs", "region_names"],
+            str_names=["location_specs", "region_names"]
         )
 
     def accumulate(

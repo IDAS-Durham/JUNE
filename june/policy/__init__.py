@@ -22,6 +22,8 @@ from .individual_policies import (
     StayHome,
     SevereSymptomsStayHome,
     Quarantine,
+    Quarantine4results,
+    SelfIsolation,
     SchoolQuarantine,
     Shielding,
     CloseCompanies,
@@ -34,6 +36,8 @@ from .medical_care_policies import (
     MedicalCarePolicy,
     MedicalCarePolicies,
     Hospitalisation,
+    Testing,
+    Tracing,
 )
 
 from .regional_compliance import (

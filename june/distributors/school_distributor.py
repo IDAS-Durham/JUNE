@@ -1,6 +1,7 @@
 import logging
 from typing import List, Tuple
-
+import pandas as pd
+import random
 import numpy as np
 import yaml
 
@@ -140,6 +141,36 @@ class SchoolDistributor:
             )
         logger.info("Kids distributed to schools")
 
+        # Visualize the final distribution of kids to schools with a sample of Student IDs
+        sample_data = []
+        for school in random.sample(self.schools.members, min(10, len(self.schools.members))):
+            # Get information about registered members
+            total_registered = sum(len(members) for members in school.registered_members_ids.values())
+            all_subgroups = list(school.registered_members_ids.keys())
+            
+            # Sample some IDs to display
+            sampled_ids = []
+            for subgroup, members in school.registered_members_ids.items():
+                if members:
+                    # Take up to 2 from each subgroup
+                    for member_id in members[:2]:
+                        sampled_ids.append(f"sg{subgroup}:{member_id}")
+            
+            sampled_ids = sampled_ids[:5]  # Limit to 5 total
+            
+            sample_data.append({
+                "| School ID": school.id,
+                "| Area": school.area.name if school.area else "Unknown Area",
+                "| Total Students": len(school.students),
+                "| Total Registered Members": total_registered,
+                "| Subgroups": all_subgroups,
+                "| Sample Registered Member IDs": sampled_ids
+            })
+        
+        df_schools = pd.DataFrame(sample_data)
+        print("\n===== Sample of Registered Members in Schools =====")
+        print(df_schools)
+
     def distribute_mandatory_kids_to_school(
         self, area: Area, is_school_full: dict, closest_schools_by_age: dict
     ):
@@ -190,6 +221,9 @@ class SchoolDistributor:
                 if person.work_super_area is not None:
                     person.work_super_area.remove_worker(person)
                 school.add(person)
+                # Add to registered members
+                subgroup = 0 if person.age > school.age_max else person.age - school.age_min + 1
+                school.add_to_registered_members(person.id, subgroup_type=subgroup)
 
     def distribute_non_mandatory_kids_to_school(
         self, area: Area, is_school_full: dict, closest_schools_by_age: dict
@@ -230,12 +264,35 @@ class SchoolDistributor:
                         if person.work_super_area is not None:
                             person.work_super_area.remove_worker(person)
                         school.add(person)
+                        # Add to registered members
+                        subgroup = 0 if person.age > school.age_max else person.age - school.age_min + 1
+                        school.add_to_registered_members(person.id, subgroup_type=subgroup)
 
     def distribute_teachers_to_schools_in_super_areas(
         self, super_areas: List[SuperArea]
     ):
         for super_area in super_areas:
             self.distribute_teachers_to_school(super_area)
+
+        classroom_distribution_data = []
+        for super_area in super_areas:
+            for area in super_area.areas:
+                for school in area.schools:
+                    # Gather data for each classroom (starting from index 1)
+                    for classroom_id, classroom in enumerate(school.subgroups[1:], start=1):
+                        if not classroom.people:
+                            continue  # Skip empty classrooms
+                        
+                        classroom_distribution_data.append({
+                            "| School ID": school.id if hasattr(school, 'id') else "Unknown",
+                            "| Classroom ID": classroom_id,
+                            "| Total Students in Classroom": len(classroom.people)
+                        })
+
+        # Convert data to a DataFrame for easy viewing
+        df_classrooms = pd.DataFrame(classroom_distribution_data)
+        print("\n===== Teacher Assignment to Schools =====")
+        print(df_classrooms)
 
     def distribute_teachers_to_school(self, super_area: SuperArea):
         """
@@ -330,6 +387,7 @@ class SchoolDistributor:
                         all_filled = True
                         break
                     primary_school.add(teacher)
+                    primary_school.add_to_registered_members(teacher.id, subgroup_type=0)  # Teachers are in subgroup 0
                     teacher.lockdown_status = "key_worker"
             if all_filled:
                 break
@@ -346,6 +404,7 @@ class SchoolDistributor:
                         all_filled = True
                         break
                     secondary_school.add(teacher)
+                    secondary_school.add_to_registered_members(teacher.id, subgroup_type=0)  # Teachers are in subgroup 0
                     teacher.lockdown_status = "key_worker"
             if all_filled:
                 break
@@ -361,6 +420,7 @@ class SchoolDistributor:
                 break
             teacher = remaining_teachers.pop()
             school.add(teacher)
+            school.add_to_registered_members(teacher.id, subgroup_type=0)  # Teachers are in subgroup 0
             teacher.lockdown_status = "key_worker"
 
         while remaining_teachers:
@@ -375,6 +435,7 @@ class SchoolDistributor:
                         all_filled = True
                         break
                     school.add(teacher)
+                    school.add_to_registered_members(teacher.id, subgroup_type=0)  # Teachers are in subgroup 0
                     teacher.lockdown_status = "key_worker"
             if all_filled:
                 break
@@ -388,3 +449,24 @@ class SchoolDistributor:
         """
         for school in self.schools:
             school.limit_classroom_sizes(self.max_classroom_size)
+        # Collect classroom data from all schools
+        all_classroom_data = []
+        for school in self.schools:
+            for i, classroom in enumerate(school.subgroups[1:], start=1):  # Skip index 0 for teachers
+                student_ids = [student.id for student in classroom.people]
+                
+                # Sample up to 5 student IDs for visualization
+                sampled_student_ids = random.sample(student_ids, min(5, len(student_ids)))
+                
+                all_classroom_data.append({
+                    "| School ID": school.id,
+                    "| Classroom": f"{i}",
+                    "| Total Students": len(classroom.people),
+                    "| Sample of IDs of Persons (Students)": ", ".join(map(str, sampled_student_ids))
+                })
+
+        # Convert the data to a DataFrame for better visualization
+        df_classrooms = pd.DataFrame(all_classroom_data)
+        
+        print("\n===== Classroom Distribution =====")
+        print(df_classrooms)

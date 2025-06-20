@@ -1,0 +1,305 @@
+disease:
+  name: covid19
+  settings:
+    default_lowest_stage: exposed  # Default lowest stage of symptoms
+    max_mild_symptom_tag: severe
+    severe_symptoms_stay_at_home_stage:
+      - name: severe
+    stay_at_home_stage:
+      - name: mild
+      - name: severe
+    fatality_stage: 
+      - name: dead_home
+      - name: dead_hospital
+      - name: dead_icu
+    recovered_stage:
+      - name: recovered
+    hospitalised_stage:
+      - name: hospitalised
+      - name: intensive_care
+    intensive_care_stage:
+      - name: intensive_care
+  symptom_tags:
+    - name: recovered
+      value: -2
+    - name: healthy
+      value: -1
+    - name: exposed
+      value: 0
+    - name: asymptomatic
+      value: 1
+    - name: mild
+      value: 2
+    - name: severe
+      value: 3
+    - name: hospitalised
+      value: 4
+    - name: intensive_care
+      value: 5
+    - name: dead_home
+      value: 6
+    - name: dead_hospital
+      value: 7
+    - name: dead_icu
+      value: 8
+  infection_outcome_rates:
+    - parameter: asymptomatic
+    - parameter: mild
+    - parameter: hospital
+    - parameter: icu
+    - parameter: home_ifr
+    - parameter: hospital_ifr
+    - parameter: icu_ifr
+  rate_to_tag_mapping:
+    asymptomatic: asymptomatic
+    mild: mild
+    hospital: hospitalised
+    icu: intensive_care
+    home_ifr: dead_home
+    hospital_ifr: dead_hospital
+    icu_ifr: dead_icu
+  unrated_tags:
+    - name: severe
+      rate_calc_dependency: 
+        - asymptomatic
+        - mild
+        - hospitalised
+        - dead_home
+  trajectories:
+    - description: "exposed => asymptomatic => recovered | asymptomatic infection"
+      stages:
+        - symptom_tag: exposed
+          completion_time:
+            type: beta
+            a: 2.29
+            b: 19.05
+            loc: 0.39
+            scale: 39.8 
+        - symptom_tag: asymptomatic
+          completion_time:
+            type: constant
+            value: 14
+        - symptom_tag: recovered
+          completion_time:
+            type: constant
+            value: 0.0
+    - description: "exposed => mild => recovered | recovered from mild at home"
+      stages:
+        - symptom_tag: exposed
+          completion_time:
+            type: beta
+            a: 2.29
+            b: 19.05
+            loc: 0.39
+            scale: 39.8
+        - symptom_tag: mild
+          completion_time:
+            type: constant
+            value: 20.
+        - symptom_tag: recovered
+          completion_time:
+            type: constant
+            value: 0.0
+    - description: "exposed => mild => severe => recovered  | recovered from severe at home"
+      stages:
+        - symptom_tag: exposed
+          completion_time:
+            type: beta
+            a: 2.29
+            b: 19.05
+            loc: 0.39
+            scale: 39.8
+        - symptom_tag: mild
+          completion_time:
+            type: lognormal
+            s: 0.8325
+            loc: 0.0
+            scale: 5.727
+        - symptom_tag: severe
+          completion_time:
+            type: constant
+            value: 20.
+        - symptom_tag: recovered
+          completion_time:
+            type: constant
+            value: 0.0
+    - description: "exposed => mild => hospitalised => recovered | recovered after hospitalisation"
+      stages:
+        - symptom_tag: exposed
+          completion_time:
+            type: beta
+            a: 2.29
+            b: 19.05
+            loc: 0.39
+            scale: 39.8
+        - symptom_tag: mild
+          completion_time:
+            type: lognormal
+            s: 0.55
+            loc: 0.0
+            scale: 5.
+        - symptom_tag: hospitalised
+          completion_time:
+            type: beta
+            a: 1.35
+            b: 3.68
+            loc: 0.05
+            scale: 27.1
+        - symptom_tag: mild
+          completion_time:
+            type: constant 
+            value: 8 
+        - symptom_tag: recovered
+          completion_time:
+            type: constant
+            value: 0.0
+    - description: "exposed => mild => intensive_care => recovered  | recovered after icu"
+      stages:
+        - symptom_tag: exposed
+          completion_time:
+            type: beta
+            a: 2.29
+            b: 19.05
+            loc: 0.39
+            scale: 39.8
+        - symptom_tag: mild
+          completion_time:
+            type: lognormal
+            s: 0.55
+            loc: 0.0
+            scale: 5.
+        - symptom_tag: hospitalised
+          completion_time:
+            type: exponweib 
+            a: 0.085 
+            c: 4.14
+            loc: 0.0
+            scale: 6.8
+        - symptom_tag: intensive_care
+          completion_time:
+            type: exponweib
+            a: 1.06 
+            c: 0.89
+            loc: 0.0
+            scale: 12 
+        - symptom_tag: hospitalised
+          completion_time:
+            type: exponweib 
+            a: 15.95
+            c: 0.4
+            loc: 0.0
+            scale: 0.41
+        - symptom_tag: mild
+          completion_time:
+            type: constant 
+            value: 3 
+        - symptom_tag: recovered
+          completion_time:
+            type: constant
+            value: 0.0
+    - description: "exposed => mild => severe => dead  | died at home"
+      stages:
+        - symptom_tag: exposed
+          completion_time:
+            type: beta
+            a: 2.29
+            b: 19.05
+            loc: 0.39
+            scale: 39.8
+        - symptom_tag: mild
+          completion_time:
+            type: lognormal
+            s: 0.8325
+            loc: 0.0
+            scale: 5.727
+        - symptom_tag: severe
+          completion_time:
+            type: constant
+            value: 3.0
+        - symptom_tag: dead_home
+          completion_time:
+            type: constant
+            value: 0.0
+    - description: "exposed => mild => hospitalised => dead | died at hospital"
+      stages:
+        - symptom_tag: exposed
+          completion_time:
+            type: beta
+            a: 2.29
+            b: 19.05
+            loc: 0.39
+            scale: 39.8
+        - symptom_tag: mild
+          completion_time:
+            type: lognormal
+            s: 0.55
+            loc: 0.0
+            scale: 5.
+        - symptom_tag: hospitalised
+          completion_time:
+            type: beta
+            a: 1.21
+            b: 1.97
+            loc: 0.08
+            scale: 12.9      
+        - symptom_tag: dead_hospital
+          completion_time:
+            type: constant
+            value: 0.
+    - description: "exposed => mild => hospitalised => intensive_care => dead | died at icu"
+      stages:
+        - symptom_tag: exposed
+          completion_time:
+            type: beta
+            a: 2.29
+            b: 19.05
+            loc: 0.39
+            scale: 39.8
+        - symptom_tag: mild
+          completion_time:
+            type: lognormal
+            s: 0.55 
+            loc: 0.0
+            scale: 5.
+        - symptom_tag: hospitalised
+          completion_time:
+            type: lognormal
+            s: 1.412
+            loc: 0.0
+            scale: 0.907
+        - symptom_tag: intensive_care
+          completion_time:
+            type: exponweib
+            a: 1.23 
+            c: 1.10
+            loc: 0.0
+            scale: 9.69
+        - symptom_tag: dead_icu
+          completion_time:
+            type: constant
+            value: 0.
+  transmission:
+    type: gamma  # Gamma distribution for transmission dynamics
+    max_infectiousness:
+      type: lognormal
+      s: 0.5  
+      loc: 0.0
+      scale: 1
+    shape:
+      type: normal
+      loc: 1.56
+      scale: 0.08
+    rate:
+      type: normal
+      loc: 0.53
+      scale: 0.03
+    shift:
+      type: normal
+      loc: -2.12
+      scale: 0.1
+    asymptomatic_infectious_factor:
+      type: constant
+      value: 0.5
+    mild_infectious_factor:
+      type: constant
+      value: 1.0 

@@ -1,5 +1,6 @@
 import yaml
 import logging
+import random
 from enum import IntEnum
 from june import paths
 from typing import List, Tuple, Optional
@@ -7,9 +8,9 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
+from june.global_context import GlobalContext
 from june.groups import Group, Supergroup, ExternalGroup, ExternalSubgroup
 from june.exc import HospitalError
-from june.groups.group.make_subgroups import SubgroupParams
 
 logger = logging.getLogger("hospitals")
 
@@ -31,8 +32,16 @@ class AbstractHospital:
     """
 
     def __init__(self):
-        self.ward_ids = set()
-        self.icu_ids = set()
+        """
+        Initialize the hospital with a disease configuration.
+
+        Parameters
+        ----------
+        disease_config : DiseaseConfig
+            Configuration object for the disease.
+        """
+        self.ward_ids = set()  # IDs of patients in the ward
+        self.icu_ids = set()   # IDs of patients in the ICU
 
     def add_to_ward(self, person):
         self.ward_ids.add(person.id)
@@ -53,38 +62,47 @@ class AbstractHospital:
     def allocate_patient(self, person):
         """
         Allocate a patient inside the hospital, in the ward, in the ICU, or transfer.
-        To correctly log if the person has been just admitted, transfered, or released,
+
+        To correctly log if the person has been just admitted, transferred, or released,
         we return a few flags:
-        - "ward_admitted" : this person has been admitted to the ward.
-        - "icu_admitted" : this person has been directly admitted to icu.
-        - "ward_transferred" : this person has been transferred  to ward (from icu)
-        - "icu_transferred" : this person has been transferred to icu (from ward)
-        - "no_change" : no change respect to last time step.
+        - "ward_admitted": This person has been admitted to the ward.
+        - "icu_admitted": This person has been directly admitted to ICU.
+        - "ward_transferred": This person has been transferred to ward (from ICU).
+        - "icu_transferred": This person has been transferred to ICU (from ward).
+        - "no_change": No change respect to last time step.
         """
+        disease_config = GlobalContext.get_disease_config()
+        # Get the person's current symptom tag
+        person_tag = person.infection.tag
+
+        # Ensure person_tag is resolved to a value (integer) if it's an object
+        person_tag_value = person_tag.value if hasattr(person_tag, "value") else person_tag
+
+        # Check if the person is entering a hospital
         if (
             person.medical_facility is None
             or person.medical_facility.spec != "hospital"
         ):
-            if person.infection.tag.name == "hospitalised":
+            if person_tag_value == disease_config.symptom_manager.get_tag_value("hospitalised"):
                 self.add_to_ward(person)
                 return "ward_admitted"
-            elif person.infection.tag.name == "intensive_care":
+            elif person_tag_value == disease_config.symptom_manager.get_tag_value("intensive_care"):
                 self.add_to_icu(person)
                 return "icu_admitted"
             else:
                 raise HospitalError(
-                    f"Person with symptoms {person.infection.tag} trying to enter hospital."
+                    f"Person with symptoms {person_tag} (value: {person_tag_value}) "
                 )
         else:
-            # this person has already been allocated in a hospital (this one)
-            if person.infection.tag.name == "hospitalised":
+            # The person is already in a hospital
+            if person_tag_value == disease_config.symptom_manager.get_tag_value("hospitalised"):
                 if person.id in self.ward_ids:
                     return "no_change"
                 else:
                     self.remove_from_icu(person)
                     self.add_to_ward(person)
                     return "ward_transferred"
-            elif person.infection.tag.name == "intensive_care":
+            elif person_tag_value == disease_config.symptom_manager.get_tag_value("intensive_care"):
                 if person.id in self.icu_ids:
                     return "no_change"
                 else:
@@ -115,11 +133,6 @@ class Hospital(Group, AbstractHospital, MedicalFacility):
     2 - ICU patients
     """
 
-    # class SubgroupType(IntEnum):
-    #     workers = 0
-    #     patients = 1
-    #     icu_patients = 2
-
     __slots__ = "id", "n_beds", "n_icu_beds", "coordinates", "area", "trust_code"
 
     def __init__(
@@ -135,17 +148,26 @@ class Hospital(Group, AbstractHospital, MedicalFacility):
 
         Parameters
         ----------
-        n_beds:
-            total number of regular beds in the hospital
-        n_icu_beds:
-            total number of ICU beds in the hospital
-        area:
-            name of the super area the hospital belongs to
-        coordinates:
-            latitude and longitude
+        n_beds: int
+            Total number of regular beds in the hospital.
+        n_icu_beds: int
+            Total number of ICU beds in the hospital.
+        disease_config: DiseaseConfig
+            Configuration object for the disease.
+        area: str, optional
+            Name of the super area the hospital belongs to.
+        coordinates: tuple of float, optional
+            Latitude and longitude.
+        trust_code: str, optional
+            Trust code associated with the hospital.
         """
+        # Initialize the base Group class with disease_config
         Group.__init__(self)
+
+        # Initialize AbstractHospital with disease_config
         AbstractHospital.__init__(self)
+
+        # Assign attributes specific to Hospital
         self.area = area
         self.coordinates = coordinates
         self.n_beds = n_beds
@@ -264,6 +286,25 @@ class Hospitals(Supergroup, MedicalFacilities):
         filename: str = default_data_filename,
         config_filename: str = default_config_filename,
     ):
+        """
+        Create hospitals for the given geography based on input files and disease configuration.
+
+        Parameters
+        ----------
+        geography : Geography
+            The geography object containing areas.
+        filename : str
+            Path to the file containing hospital data.
+        config_filename : str
+            Path to the configuration file.
+        disease_config : DiseaseConfig, optional
+            The disease configuration object to use for initializing hospitals.
+
+        Returns
+        -------
+        cls
+            An instance of the Hospitals class.
+        """
         with open(config_filename) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         neighbour_hospitals = config["neighbour_hospitals"]
@@ -273,34 +314,73 @@ class Hospitals(Supergroup, MedicalFacilities):
         logger.info(f"There are {len(hospital_df)} hospitals in this geography.")
         total_hospitals = len(hospital_df)
         hospitals = []
+
         for area in geography.areas:
             if area.name in hospital_df.index:
                 hospitals_in_area = hospital_df.loc[area.name]
                 if isinstance(hospitals_in_area, pd.Series):
-                    hospital = cls.create_hospital_from_df_row(area, hospitals_in_area)
+                    hospital = cls.create_hospital_from_df_row(
+                        area, hospitals_in_area
+                    )
                     hospitals.append(hospital)
                 else:
                     for _, row in hospitals_in_area.iterrows():
-                        hospital = cls.create_hospital_from_df_row(area, row)
+                        hospital = cls.create_hospital_from_df_row(
+                            area, row
+                        )
                         hospitals.append(hospital)
                 if len(hospitals) == total_hospitals:
                     break
+
+        # Debugging: View hospital data as a DataFrame
+        hospitals_data = [{
+            "| Hospital ID": hospital.id,
+            "| Area": hospital.area.name,
+            "| Coordinates": hospital.coordinates,
+            "| Total Beds": hospital.n_beds,
+            "| ICU Beds": hospital.n_icu_beds,
+            "| Trust Code": hospital.trust_code
+        } for hospital in hospitals]
+
+        hospitals_df = pd.DataFrame(hospitals_data)
+        print("\n===== Sample of Created Hospitals =====")
+        print(hospitals_df.head())
+
         return cls(
             hospitals=hospitals, neighbour_hospitals=neighbour_hospitals, ball_tree=True
         )
 
     @classmethod
     def create_hospital_from_df_row(cls, area, row):
+        """
+        Create a hospital from a row in the hospital dataframe.
+
+        Parameters
+        ----------
+        area : Area
+            The area object associated with the hospital.
+        row : pd.Series
+            The row from the hospital dataframe.
+        disease_config : DiseaseConfig
+            The disease configuration object.
+
+        Returns
+        -------
+        Hospital
+            A newly created Hospital instance.
+        """
         coordinates = row[["latitude", "longitude"]].values.astype(np.float64)
         n_beds = row["beds"]
         n_icu_beds = row["icu_beds"]
         trust_code = row["code"]
+
+        # Pass DiseaseConfig to the hospital initialization
         hospital = cls.venue_class(
             area=area,
             coordinates=coordinates,
             n_beds=n_beds,
             n_icu_beds=n_icu_beds,
-            trust_code=trust_code,
+            trust_code=trust_code
         )
         return hospital
 

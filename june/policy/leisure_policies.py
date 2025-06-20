@@ -17,7 +17,6 @@ class LeisurePolicy(Policy):
         super().__init__(start_time, end_time)
         self.policy_type = "leisure"
 
-
 class LeisurePolicies(PolicyCollection):
     policy_type = "leisure"
 
@@ -30,13 +29,28 @@ class LeisurePolicies(PolicyCollection):
 
         This is very similar to how we deal with social distancing / mask wearing policies.
         """
+        print(f"\n=== Applying Leisure Policies on {date} ===")
+        
+        # Initialize regions
         for region in leisure.regions:
             region.policy["global_closed_venues"] = set()
+        print(f"Initialized global_closed_venues for {len(leisure.regions)} regions.")
+
+        # Initialize policy reductions
         leisure.policy_reductions = {}
+        print(f"Initialized leisure.policy_reductions.")
+
+        # Initialize residence visits if applicable
         if "residence_visits" in leisure.leisure_distributors:
             leisure.leisure_distributors["residence_visits"].policy_reductions = {}
+            print("Initialized residence_visits policy reductions.")
+
         change_leisure_probability_policies_counter = 0
+
+        # Apply active policies
         for policy in self.get_active(date):
+            print(f"Applying policy: {policy.policy_subtype}")
+            
             if policy.policy_subtype == "change_leisure_probability":
                 change_leisure_probability_policies_counter += 1
                 if change_leisure_probability_policies_counter > 1:
@@ -44,12 +58,17 @@ class LeisurePolicies(PolicyCollection):
                         "Having more than one change leisure probability policy"
                         "active is not supported."
                     )
+                # Apply the policy and update leisure policy reductions
                 leisure.policy_reductions = policy.apply(leisure=leisure)
+                print(f"Updated and Applied leisure.policy_reductions for type: {policy.policy_subtype}")
             else:
                 policy.apply(leisure=leisure)
+                print(f"Applied policy of subtype: {policy.policy_subtype}")
 
+        print("=== Finished Applying Leisure Policies and Leisure Object Has Been Updated===\n")
 
 class CloseLeisureVenue(LeisurePolicy):
+    
     policy_subtype = "close_venues"
 
     def __init__(

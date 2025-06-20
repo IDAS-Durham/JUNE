@@ -17,3 +17,5 @@ from .station import (
     ExternalCityStation,
     ExternalInterCityStation,
 )
+from .airport import Airport, Airports
+

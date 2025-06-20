@@ -51,5 +51,6 @@ hours_per_day:
     female:
       0-100: 12
 drags_household_probability: 0
+invites_friends_probability: 0.05
 neighbours_to_consider: 7
 maximum_distance: 10

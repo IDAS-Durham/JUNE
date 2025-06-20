@@ -1,5 +1,7 @@
 from zlib import adler32
 
+from june.global_context import GlobalContext
+
 from .symptoms import Symptoms, SymptomTag
 
 from typing import TYPE_CHECKING
@@ -16,7 +18,7 @@ class Infection:
     time step, according to an infectivity profile.
     """
 
-    __slots__ = ("start_time", "transmission", "symptoms", "time_of_testing")
+    __slots__ = ("start_time", "transmission", "symptoms", "time_of_testing", "test_result")
     _infection_id = None
 
     def __init__(
@@ -35,7 +37,7 @@ class Infection:
         self.start_time = start_time
         self.transmission = transmission
         self.symptoms = symptoms
-        self.time_of_testing = None
+
 
     @classmethod  # this could be a property but it is complicated (needs meta classes)
     def infection_id(cls):
@@ -108,7 +110,13 @@ class Infection:
 
     @property
     def should_be_in_hospital(self) -> bool:
-        return self.tag in (SymptomTag.hospitalised, SymptomTag.intensive_care)
+
+        # Fetch the disease config from the global context
+        disease_config = GlobalContext.get_disease_config()
+
+        # Get the tags for hospitalisation dynamically
+        hospitalisation_tags = disease_config.symptom_manager._resolve_tags("hospitalised_stage")
+        return self.tag in hospitalisation_tags
 
     @property
     def infected_at_home(self) -> bool:
@@ -125,8 +133,19 @@ class Infection:
     @property
     def infection_probability(self):
         return self.transmission.probability
+    
+class EVD68V(Infection):
+    @classmethod
+    def immunity_ids(cls):
+        #  only provides immunity to itself, no cross-immunity with other diseases
+        return (cls.infection_id(),)
 
-
+class Measles(Infection):
+    @classmethod
+    def immunity_ids(cls):
+        # Measles only provides immunity to itself, no cross-immunity with other diseases
+        return (cls.infection_id(),)
+    
 class Covid19(Infection):
     @classmethod
     def immunity_ids(cls):

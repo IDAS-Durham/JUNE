@@ -2,6 +2,7 @@ import h5py
 import numpy as np
 from typing import List
 
+from june.global_context import GlobalContext
 from june.world import World
 from june.geography import (
     City,
@@ -234,14 +235,11 @@ def load_stations_from_hdf5(
     """
 
     InterCityTransport_Class = InterCityTransport
-    InterCityTransport_Class.subgroup_params = SubgroupParams.from_file(
-        config_filename=config_filename
-    )
+    disease_config = GlobalContext.get_disease_config()
+    InterCityTransport_Class.subgroup_params = SubgroupParams.from_disease_config(disease_config)
 
     CityTransport_Class = CityTransport
-    CityTransport_Class.subgroup_params = SubgroupParams.from_file(
-        config_filename=config_filename
-    )
+    CityTransport_Class.subgroup_params = SubgroupParams.from_disease_config(disease_config)
 
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         stations = f["stations"]

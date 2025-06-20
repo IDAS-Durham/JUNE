@@ -1,5 +1,5 @@
 import cProfile
-from june.mpi_setup import mpi_rank, mpi_comm
+from june.mpi_wrapper import mpi_rank, mpi_comm
 
 
 # a decorator for profiling

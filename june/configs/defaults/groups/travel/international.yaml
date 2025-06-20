@@ -1,0 +1,96 @@
+# Duration distributions for different trip types (in days)
+duration_distributions:
+  short_trip:
+    type: uniform  # or normal, lognormal etc
+    min: 1
+    max: 7
+  medium_trip:
+    type: uniform
+    min: 8 
+    max: 14
+  long_trip:
+    type: uniform
+    min: 15
+    max: 21
+
+# Probability of each trip type by demographic
+trip_type_probabilities:
+  male:
+    18-30: 
+      short_trip: 0.6
+      medium_trip: 0.3
+      long_trip: 0.1
+    31-50:
+      short_trip: 0.4
+      medium_trip: 0.4
+      long_trip: 0.2
+  female:  
+    18-30: 
+      short_trip: 0.6
+      medium_trip: 0.3
+      long_trip: 0.1
+    31-50:
+      short_trip: 0.4
+      medium_trip: 0.4
+      long_trip: 0.2
+
+# Travel companion type probabilities by trip purpose/duration
+travel_companion_types:
+  short_trip:  # 1-7 days, typically business
+    solo: 0.7    # Most short trips are business/solo
+    family: 0.2  # Some short family trips
+    friends: 0.1 # Few friend groups
+
+  medium_trip:  # 8-14 days, mixed purposes  
+    solo: 0.3    # Fewer solo travelers
+    family: 0.5  # More family vacations
+    friends: 0.2 # Some friend groups
+    
+  long_trip:   # 15+ days, mostly leisure
+    solo: 0.2    # Few solo travelers
+    family: 0.5  # Mostly families
+    friends: 0.3 # More friend groups
+
+# Maximum group sizes
+max_group_size:
+  family: 6  # Maximum family members traveling together
+  friends: 4 # Maximum friends traveling together
+
+# Probability that entire household travels together
+household_travel_probability: 0.8  # 80% chance all household members go together
+
+# Correlation factors for infection spread within travel groups
+infection_correlation:
+  family: 2.0  # Double infection risk for family members
+  friends: 1.5 # 50% higher risk for friend groups
+
+# Travel selection parameters
+selection:
+  # Base probability of initiating travel on any given day
+  base_daily_probability: 0.001  # 0.1% chance per day
+
+  # Age-based probability multipliers
+  age_multipliers:
+    "0-17": 0.0   # Children don't initiate travel
+    "18-30": 1.2  # Young adults travel more
+    "31-50": 1.5  # Peak travel age
+    "51-70": 1.0  # Base level
+    "71-100": 0.5 # Reduced travel for elderly
+
+  # Weekend multiplier
+  weekend_multiplier: 1.5  # 50% more likely to start travel on weekends
+
+  # Monthly multipliers to capture seasonality
+  monthly_multipliers:
+    "1": 0.7  # January
+    "2": 0.7  # February
+    "3": 0.8  # March
+    "4": 1.0  # April
+    "5": 1.2  # May
+    "6": 1.5  # June
+    "7": 2.0  # July (peak summer travel)
+    "8": 2.0  # August (peak summer travel)
+    "9": 1.2  # September
+    "10": 1.0 # October
+    "11": 0.8 # November
+    "12": 1.3 # December (holiday travel)

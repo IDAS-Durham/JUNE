@@ -113,6 +113,8 @@ class CareHomeDistributor:
         """
         logger.info("Populating care homes")
         total_care_home_residents = 0
+        care_home_data = []  # Collect data for visualization
+
         for super_area in super_areas:
             men_communal_residents = self.communal_men_by_super_area[super_area.name]
             women_communal_residents = self.communal_women_by_super_area[
@@ -153,6 +155,7 @@ class CareHomeDistributor:
                                 if person is None:
                                     continue
                                 care_home.add(person, care_home.SubgroupType.residents)
+                                care_home.add_to_registered_members(person.id, care_home.SubgroupType.residents)
                                 communal_women_sorted[age_range] -= 1
                                 total_care_home_residents += 1
                                 found_person = True
@@ -173,15 +176,36 @@ class CareHomeDistributor:
                                 found_person = True
                                 break
                             care_home.add(person, care_home.SubgroupType.residents)
+                            care_home.add_to_registered_members(person.id, care_home.SubgroupType.residents)
                             communal_men_sorted[age_range] -= 1
                             total_care_home_residents += 1
                             found_person = True
                             break
+            # Collect care home data for each super area
+            for area in areas_with_care_homes:
+                care_home = area.care_home
+                resident_ids_sample = [resident.id for resident in care_home.residents]
+                resident_ids_sample = resident_ids_sample[:10] if len(resident_ids_sample) > 5 else resident_ids_sample  # Sample up to 10 resident IDs
+
+                care_home_data.append({
+                    "Care Home ID": care_home.id,
+                    "Super Area": super_area.name,
+                    "Care Home Area": area.name,
+                    "Total Residents": len(care_home.residents),
+                    "Max Capacity": care_home.n_residents,
+                    "Resident IDs Sample": resident_ids_sample
+                })
+            
+        # Convert data to a DataFrame for visualization
+        df_care_homes = pd.DataFrame(care_home_data)
+        print("\n===== Care Homes Sample Population Distribution =====")
+        print(df_care_homes.head(10))        
         logger.info(
             f"This world has {total_care_home_residents} people living in care homes."
         )
 
     def distribute_workers_to_care_homes(self, super_areas: SuperAreas):
+        care_home_data = []  # Collect data for visualization
         for super_area in super_areas:
             care_homes = [
                 area.care_home
@@ -201,6 +225,7 @@ class CareHomeDistributor:
             ]
             shuffle(carers)
             for care_home in care_homes:
+                worker_ids = []  # Collect worker IDs for each care home
                 while len(care_home.workers) < care_home.n_workers:
                     try:
                         carer = carers.pop()
@@ -214,4 +239,41 @@ class CareHomeDistributor:
                         subgroup_type=care_home.SubgroupType.workers,
                         activity="primary_activity",
                     )
+                    care_home.add_to_registered_members(carer.id, care_home.SubgroupType.workers)
                     carer.lockdown_status = "key_worker"
+                    worker_ids.append(carer.id)
+                # Append care home information for visualization
+                # Get information about registered members
+                total_registered = sum(len(members) for members in care_home.registered_members_ids.values())
+                all_subgroups = list(care_home.registered_members_ids.keys())
+                
+                # Sample some IDs to display
+                sampled_ids = []
+                for subgroup, members in care_home.registered_members_ids.items():
+                    if members:
+                        # Take up to 2 from each subgroup
+                        for member_id in members[:2]:
+                            if subgroup == care_home.SubgroupType.workers:
+                                sampled_ids.append(f"worker:{member_id}")
+                            elif subgroup == care_home.SubgroupType.residents:
+                                sampled_ids.append(f"resident:{member_id}")
+                            elif subgroup == care_home.SubgroupType.visitors:
+                                sampled_ids.append(f"visitor:{member_id}")
+                            else:
+                                sampled_ids.append(f"sg{subgroup}:{member_id}")
+                
+                sampled_ids = sampled_ids[:5]  # Limit to 5 total
+                
+                care_home_data.append({
+                    "| Care Home ID": care_home.id,
+                    "| Area": care_home.area.name,
+                    "| Total Registered": total_registered,
+                    "| Subgroups": all_subgroups,
+                    "| Sample Registered Member IDs": sampled_ids,
+                })
+        # Convert care home data to a DataFrame for easy visualization
+        df_care_homes = pd.DataFrame(care_home_data)
+        print("\n===== Care Home Registered Members Summary =====")
+        print(df_care_homes.head(10))  # Display a sample of 10 care homes for brevity
+
+

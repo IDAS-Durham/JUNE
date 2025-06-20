@@ -1,0 +1,86 @@
+trajectories:
+
+# exposed => asymptomatic => rash => recovered
+  - stages:
+      - symptom_tag: exposed
+        completion_time:
+          type: normal
+          loc: 10  # Mean incubation period (𝑇𝑖𝑛𝑐)
+          scale: 2  # Variability in incubation period (7–14 days)
+
+      - symptom_tag: asymptomatic
+        completion_time:
+          type: constant
+          value: 4  # Duration of prodromal phase
+
+      - symptom_tag: rash
+        completion_time:
+          type: constant
+          value: 5  # Rash duration (𝑇𝑟)
+
+      - symptom_tag: recovered
+        completion_time:
+          type: constant
+          value: 0.0
+
+
+# exposed => asymptomatic => rash => hospitalised => recovered
+  - stages:
+      - symptom_tag: exposed
+        completion_time:
+          type: normal
+          loc: 10
+          scale: 2
+
+      - symptom_tag: asymptomatic
+        completion_time:
+          type: constant
+          value: 4
+
+      - symptom_tag: rash
+        completion_time:
+          type: constant
+          value: 5
+
+      - symptom_tag: hospitalised  # Renamed from severe
+        completion_time:
+          type: lognormal
+          s: 0.5
+          loc: 0.0
+          scale: 7  # Hospitalisation duration reflects complications
+
+      - symptom_tag: recovered
+        completion_time:
+          type: constant
+          value: 0.0
+
+
+# exposed => asymptomatic => rash => hospitalised => dead
+  - stages:
+      - symptom_tag: exposed
+        completion_time:
+          type: normal
+          loc: 10
+          scale: 2
+
+      - symptom_tag: asymptomatic
+        completion_time:
+          type: constant
+          value: 4
+
+      - symptom_tag: rash
+        completion_time:
+          type: constant
+          value: 5
+
+      - symptom_tag: hospitalised  # Renamed from severe
+        completion_time:
+          type: lognormal
+          s: 0.5
+          loc: 0.0
+          scale: 7
+
+      - symptom_tag: dead_hospital
+        completion_time:
+          type: constant
+          value: 0.0

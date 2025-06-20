@@ -26,6 +26,8 @@ def read_date(date: Union[str, datetime.datetime]) -> datetime.datetime:
 
 
 def str_to_class(classname, base_policy_modules=("june.policy",)):
+    print(base_policy_modules)
+
     for module_name in base_policy_modules:
         try:
             module = importlib.import_module(module_name)

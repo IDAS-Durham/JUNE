@@ -1,4 +1,5 @@
 import datetime
+from inspect import signature
 import re
 from abc import ABC
 from typing import List, Union
@@ -6,6 +7,7 @@ from typing import List, Union
 import yaml
 
 from june import paths
+from june.epidemiology.infection.disease_config import DiseaseConfig
 from june.utils import read_date, str_to_class
 
 default_config_filename = paths.configs_path / "defaults/policy/policy.yaml"
@@ -46,6 +48,7 @@ class Policy(ABC):
         date:
             date to check
         """
+
         return self.start_time <= date < self.end_time
 
     def initialize(self, world, date, record=None):
@@ -54,9 +57,31 @@ class Policy(ABC):
 
 class Policies:
     def __init__(self, policies=None):
-        self.policies = policies
-        # Note (Arnau): This import here is ugly, but I couldn't
-        # find a way to get around a redundant import loop.
+        """
+        Initialize Policies and its categorized policy types.
+
+        Parameters
+        ----------
+        policies : list, optional
+            A list of initialized policy objects.
+        """
+        self.policies = policies or []
+
+        # Initialize policy-specific categories
+        self.individual_policies = None
+        self.interaction_policies = None
+        self.medical_care_policies = None
+        self.leisure_policies = None
+        self.regional_compliance = None
+        self.tiered_lockdown = None
+
+        # Initialize policy categories lazily
+        self._initialize_policy_categories()
+
+    def _initialize_policy_categories(self):
+        """
+        Initialize specific policy categories using the from_policies method.
+        """
         from june.policy import (
             IndividualPolicies,
             InteractionPolicies,
@@ -75,35 +100,150 @@ class Policies:
 
     @classmethod
     def from_file(
-        cls, config_file=default_config_filename, base_policy_modules=("june.policy",)
+        cls, disease_config: DiseaseConfig, base_policy_modules=("june.policy",)
     ):
-        with open(config_file) as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
+        """
+        Load policies from the configuration file.
+
+        Parameters
+        ----------
+        disease_config : DiseaseConfig
+            The disease configuration object.
+        base_policy_modules : tuple
+            The base modules to search for policy classes.
+
+        Returns
+        -------
+        Policies
+            The loaded Policies object.
+        """
+        # Access the policy data via PolicyManager
+        policy_manager = disease_config.policy_manager
+        policy_data = policy_manager.get_all_policies()
         policies = []
-        for policy, policy_data in config.items():
-            camel_case_key = "".join(x.capitalize() or "_" for x in policy.split("_"))
-            if "start_time" not in policy_data:
-                for policy_i, policy_data_i in policy_data.items():
-                    if (
-                        "start_time" not in policy_data_i.keys()
-                        or "end_time" not in policy_data_i.keys()
-                    ):
-                        raise ValueError("policy config file not valid.")
-                    policies.append(
-                        str_to_class(camel_case_key, base_policy_modules)(
-                            **policy_data_i
-                        )
-                    )
+
+        try:
+            for policy_name, config in policy_data.items():
+                cls._process_policy(policies, policy_name, config, base_policy_modules, disease_config)
+            
+        except Exception as e:
+            import traceback
+            print(f"Error loading policies: {e}")
+            print(traceback.format_exc())
+
+        # Return the Policies object with the loaded policies
+        return cls(policies=policies)
+
+    @staticmethod
+    def _process_policy(policies, policy_name, config, base_policy_modules, disease_config):
+        """
+        Process a single policy or policy group.
+
+        Parameters
+        ----------
+        policies : list
+            List to append policies to.
+        policy_name : str
+            Name of the policy.
+        config : dict
+            Configuration for the policy.
+        base_policy_modules : tuple
+            Modules to search for policy classes.
+        disease_config : DiseaseConfig
+            The disease configuration object.
+        """
+        # Skip empty configurations
+        if not config:
+            print(f"Skipping empty policy section: {policy_name}")
+            return
+
+        # Dynamically resolve the class
+        camel_case_key = "".join(x.capitalize() for x in policy_name.split("_"))
+        try:
+            # Try to find policy class in any of the modules
+            policy_class = None
+            for module_name in base_policy_modules:
+                try:
+                    # Try to import the module
+                    module = __import__(module_name, fromlist=[camel_case_key])
+                    # Try to get the class
+                    if hasattr(module, camel_case_key):
+                        policy_class = getattr(module, camel_case_key)
+                        break
+                except ImportError:
+                    print(f"  Module {module_name} not found, skipping...")
+                    continue
+            
+            # If no class was found, raise error
+            if policy_class is None:
+                raise ValueError(f"Could not find class {camel_case_key} in any of the modules {base_policy_modules}")
+            
+            
+            # Prepare to inspect the constructor
+            init_signature = signature(policy_class.__init__)
+            init_params = init_signature.parameters
+
+            # Handle grouped policies
+            if isinstance(config, dict) and "start_time" not in config:
+                for sub_name, sub_config in config.items():
+                    if isinstance(sub_config, dict):
+                        filtered_data = Policies._filter_params(sub_config, init_params, disease_config)                    
+                        policies.append(policy_class(**filtered_data))
             else:
-                policies.append(
-                    str_to_class(camel_case_key, base_policy_modules)(**policy_data)
-                )
+                # Handle single policies
+                filtered_data = Policies._filter_params(config, init_params, disease_config)
+                policies.append(policy_class(**filtered_data))
+        except Exception as e:
+            print(f"Error processing policy {policy_name}: {e}")
 
-        return Policies(policies=policies)
+    @staticmethod
+    def _filter_params(config, init_params, disease_config):
+        """
+        Filter configuration parameters based on the policy class constructor.
 
-    def get_policies_for_type(self, policy_type):
-        return [policy for policy in self if policy.policy_type == policy_type]
+        Parameters
+        ----------
+        config : dict
+            Raw configuration.
+        init_params : inspect.Parameters
+            Constructor parameters of the policy class.
+        disease_config : DiseaseConfig
+            Disease configuration object for contextual arguments.
 
+        Returns
+        -------
+        dict
+            Filtered configuration suitable for the constructor.
+        """
+        # Check for parameters in config that aren't in init_params
+        extra_params = [key for key in config.keys() if key not in init_params]
+        if extra_params:
+            print(f"WARNING: These parameters in YAML are not in constructor: {extra_params}")
+
+        filtered_data = {key: value for key, value in config.items() if key in init_params}
+
+        # Inject disease_config if required
+        if "disease_config" in init_params:
+            filtered_data["disease_config"] = disease_config
+
+        return filtered_data
+    
+    def get_policies_for_type(self, policy_type: str):
+        """
+        Retrieve all policies of a specific type.
+
+        Parameters
+        ----------
+        policy_type : str
+            The type of policy to retrieve.
+
+        Returns
+        -------
+        list
+            A list of policies matching the specified type.
+        """
+        return [policy for policy in self.policies if getattr(policy, "policy_type", None) == policy_type]
+    
     def __iter__(self):
         if self.policies is None:
             return iter([])

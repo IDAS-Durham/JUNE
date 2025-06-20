@@ -1,0 +1,25 @@
+type:
+        'gamma'  # Gamma distribution for transmission dynamics
+max_infectiousness:
+        type: lognormal
+        s: 0.4  # Slightly tighter spread of infectiousness
+        loc: 0.0
+        scale: 5  
+shape:
+        type: normal
+        loc: 2.0  # Gamma shape parameter, reflecting sharper peak
+        scale: 0.1
+rate:
+        type: normal
+        loc: 0.6  # Gamma rate parameter, inversely related to infectious period
+        scale: 0.02
+shift:
+        type: normal
+        loc: -1.5  # Time shift (days before symptoms peak infectiousness)
+        scale: 0.1
+asymptomatic_infectious_factor:
+        type: constant
+        value: 1  # Measles is rarely asymptomatic; very low factor
+mild_infectious_factor:
+        type: constant
+        value: 1.0  # Mild cases transmit as effectively as symptomatic cases

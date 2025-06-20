@@ -1,0 +1,132 @@
+disease:
+  name: measles
+  settings:
+    default_lowest_stage: rash  # Default lowest stage of symptoms
+    max_mild_symptom_tag: rash
+    severe_symptoms_stay_at_home_stage:
+    stay_at_home_stage:
+    fatality_stage: 
+      - name: dead_hospital  # Final stage for fatal cases
+    recovered_stage:
+      - name: recovered
+    hospitalised_stage:
+      - name: hospitalised
+    intensive_care_stage:
+      - name: intensive_care
+  symptom_tags:
+    - name: recovered
+      value: -2
+    - name: healthy
+      value: -1
+    - name: exposed
+      value: 0
+    - name: asymptomatic
+      value: 1
+    - name: rash
+      value: 2
+    - name: hospitalised
+      value: 3
+    - name: dead_hospital
+      value: 4
+  infection_outcome_rates:
+    - parameter: hospital
+    - parameter: ifr
+  rate_to_tag_mapping:
+    hospital: hospitalised
+    ifr: dead_hospital
+  unrated_tags:
+  trajectories:
+    - description: "Typical recovery after rash"
+      stages:
+        - symptom_tag: exposed
+          completion_time:
+            type: normal
+            loc: 10  # Mean incubation period (𝑇𝑖𝑛𝑐)
+            scale: 2  # Variability in incubation period (7–14 days)
+        - symptom_tag: asymptomatic
+          completion_time:
+            type: constant
+            value: 4  # Duration of prodromal phase
+        - symptom_tag: rash
+          completion_time:
+            type: constant
+            value: 5
+        - symptom_tag: recovered
+          completion_time:
+            type: constant
+            value: 0
+    - description: "Recovery after hospitalisation"
+      stages:
+        - symptom_tag: exposed
+          completion_time:
+            type: normal
+            loc: 10  # Mean incubation period (𝑇𝑖𝑛𝑐)
+            scale: 2  # Variability in incubation period (7–14 days)
+        - symptom_tag: asymptomatic
+          completion_time:
+            type: constant
+            value: 4
+        - symptom_tag: rash
+          completion_time:
+            type: constant
+            value: 5
+        - symptom_tag: hospitalised
+          completion_time: 
+            type: lognormal
+            s: 0.5
+            loc: 0.0
+            scale: 7  # Hospitalisation duration reflects complications
+        - symptom_tag: recovered
+          completion_time:
+            type: constant
+            value: 0
+    - description: "Fatal outcome after hospitalisation"
+      stages:
+        - symptom_tag: exposed
+          completion_time:
+            type: normal
+            loc: 10
+            scale: 2
+        - symptom_tag: asymptomatic
+          completion_time:
+            type: constant
+            value: 4
+        - symptom_tag: rash
+          completion_time:
+            type: constant
+            value: 5
+        - symptom_tag: hospitalised
+          completion_time:
+            type: lognormal
+            s: 0.5
+            loc: 0.0
+            scale: 7  # Hospitalisation duration reflects complications
+        - symptom_tag: dead_hospital
+          completion_time:
+            type: constant
+            value: 0
+  transmission:
+    type: gamma  # Gamma distribution for transmission dynamics
+    max_infectiousness:
+      type: lognormal
+      s: 0.4  # Slightly tighter spread of infectiousness
+      loc: 0.0
+      scale: 5
+    shape:
+      type: normal
+      loc: 2.0  # Gamma shape parameter, reflecting sharper peak
+      scale: 0.1
+    rate:
+      type: normal
+      loc: 0.6  # Gamma rate parameter, inversely related to infectious period
+      scale: 0.02
+    shift:
+      type: normal
+      loc: -1.5  # Time shift (days before symptoms peak infectiousness)
+      scale: 0.1
+    asymptomatic_infectious_factor:
+      type: constant
+      value: 1  # Measles is rarely asymptomatic; very low factor
+    mild_infectious_factor:
+      type: constant
+      value: 1.0  # Mild cases transmit as effectively as symptomatic cases

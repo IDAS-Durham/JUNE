@@ -4,8 +4,9 @@ import numpy as np
 from collections import defaultdict
 from enum import IntEnum
 from itertools import count
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
+from june.global_context import GlobalContext
 from june.demography.person import Person
 from .interactive import InteractiveGroup
 from . import AbstractGroup
@@ -23,71 +24,43 @@ logger = logging.getLogger(__name__)
 
 class Group(AbstractGroup):
     """
-    A group of people enjoying social interactions.  It contains three lists,
-    all people in the group, the healthy ones and the infected ones (we may
-    have to add the immune ones as well).
-
-    This is very basic and we will have to specify derived classes with
-    additional information - like household, work, commute - where some,
-    like household groups are stable and others, like commute groups, are
-    randomly assorted on a step-by-step base.
-
-    The logic is that the group will enjoy one Interaction per time step,
-    where the infection spreads, with a probablity driven by transmission
-    probabilities and inteaction intensity, plus, possilby, individual
-    susceptibility to become infected.
-
-    TODO: we will have to decide in how far specific groups define behavioral
-    patterns, which may be time-dependent.  So, far I have made a first pass at
-    a list of group specifiers - we could promote it to a dicitonary with
-    default intensities (maybe mean+width with a pre-described range?).
+    A group of people enjoying social interactions. It contains three lists:
+    all people in the group, the healthy ones, and the infected ones.
     """
 
     external = False
-    subgroup_params = SubgroupParams.from_file()
 
-    # @property
-    # def SubgroupType(self):
-    #     if self.get_spec() in self.subgroup_params.specs:
-    #         return IntEnum("SubgroupType", self.subgroup_labels, start=0)
-    #     else:
-    #         self.subgroup_params.params = {
-    #             self.get_spec(): {
-    #                 'contacts': [[0]],
-    #                 'proportion_physical': [[0]],
-    #                 'characteristic_time': 0,
-    #                 'type': 'Age',
-    #                 'bins': [0,100]
-    #             }
-    #         }
-    #         self.subgroup_params.specs = self.subgroup_params.params.keys()
-    #         return IntEnum("SubgroupType", ["default"], start=0)
-
-    __slots__ = ("id", "subgroups", "spec")
+    __slots__ = ("id", "subgroups", "spec", "subgroup_params")
 
     __id_generators = defaultdict(count)
 
     @classmethod
     def _next_id(cls) -> int:
         """
-        Iterate an id for this class. Each group class has its own id iterator
-        starting at 0
+        Iterate an ID for this class. Each group class has its own ID iterator
+        starting at 0.
         """
         return next(cls.__id_generators[cls])
 
     def __init__(self):
         """
         A group of people such as in a hospital or a school.
-
-        If a spec attribute is not defined in the child class then it is generated
-        by converting the class name into snakecase.
         """
+        # Fetch disease_config from GlobalContext
+        disease_config = GlobalContext.get_disease_config()
+
         self.id = self._next_id()
         self.spec = self.get_spec()
+
+        # Initialize subgroup_params using DiseaseConfig
+        self.subgroup_params = SubgroupParams.from_disease_config(disease_config)
+
+        # Define SubgroupType using subgroup_params
         self.SubgroupType = IntEnum(
             "SubgroupType", self.subgroup_params.subgroup_labels(self.spec), start=0
         )
-        # noinspection PyTypeChecker
+
+        # Initialize subgroups
         self.subgroups = [Subgroup(self, i) for i in range(len(self.SubgroupType))]
 
     @property
@@ -238,7 +211,9 @@ class Group(AbstractGroup):
         return InteractiveGroup(self, people_from_abroad=people_from_abroad)
 
     def get_leisure_subgroup(self, person, subgroup_type=None, to_send_abroad=None):
+        
         if self.subgroup_type == "Age":
+            
             min_age = self.subgroup_bins[0]
             max_age = self.subgroup_bins[-1] - 1
 
@@ -336,3 +311,5 @@ class Group(AbstractGroup):
             return cls.SubgroupType.adults
         else:
             return cls.SubgroupType.old_adults
+        
+

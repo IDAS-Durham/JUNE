@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 
+from june.global_context import GlobalContext
 from june.groups import Schools, School
 from june.world import World
 from june.groups.group.make_subgroups import SubgroupParams
@@ -44,6 +45,7 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
             years = []
             areas = []
             super_areas = []
+            registered_members_ids = []  # Add for storing registered_members_ids
             for school in schools[idx1:idx2]:
                 ids.append(school.id)
                 n_pupils_max.append(school.n_pupils_max)
@@ -62,6 +64,13 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 coordinates.append(np.array(school.coordinates))
                 n_classrooms.append(school.n_classrooms)
                 years.append(np.array(school.years))
+                
+                # Process registered_members_ids
+                school_registered_members = {}
+                if hasattr(school, 'registered_members_ids') and school.registered_members_ids is not None:
+                    for subgroup_id, members in school.registered_members_ids.items():
+                        school_registered_members[subgroup_id] = np.array(members, dtype=np.int64)
+                registered_members_ids.append(school_registered_members)
 
             ids = np.array(ids, dtype=np.int64)
             n_pupils_max = np.array(n_pupils_max, dtype=np.int64)
@@ -76,6 +85,30 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 years = np.array(years, dtype=np.int64)
             else:
                 years = np.array(years, dtype=int_vlen_type)
+                
+            # Create datasets to store registered_members_ids
+            # First, determine what subgroups exist across all schools
+            all_subgroups = set()
+            for school_subgroups in registered_members_ids:
+                all_subgroups.update(school_subgroups.keys())
+            all_subgroups = sorted(list(all_subgroups))  # Ensure consistent ordering
+            
+            # Store subgroup IDs as integers
+            subgroup_ids = np.array(all_subgroups, dtype=np.int64)
+            
+            # Create counts and flattened arrays for each subgroup
+            subgroup_counts = {}
+            flattened_subgroup_members = {}
+            
+            for subgroup_id in all_subgroups:
+                # Count of members in this subgroup for each school
+                counts = np.array([len(school_dict.get(subgroup_id, [])) for school_dict in registered_members_ids], dtype=np.int64)
+                subgroup_counts[subgroup_id] = counts
+                
+                # Flatten all member IDs for this subgroup
+                member_arrays = [school_dict.get(subgroup_id, np.array([], dtype=np.int64)) for school_dict in registered_members_ids]
+                flattened = np.concatenate(member_arrays) if any(len(arr) > 0 for arr in member_arrays) else np.array([], dtype=np.int64)
+                flattened_subgroup_members[subgroup_id] = flattened
             if chunk == 0:
                 schools_dset.attrs["n_schools"] = n_schools
                 schools_dset.create_dataset("id", data=ids, maxshape=(None,))
@@ -98,6 +131,27 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                     "n_classrooms", data=n_classrooms, maxshape=(None,)
                 )
                 schools_dset.create_dataset("years", data=years)
+                
+                # Store registered_members_ids subgroups information
+                if all_subgroups:  # Only create these datasets if we have subgroups
+                    schools_dset.create_dataset("registered_members_subgroups", data=subgroup_ids, maxshape=(None,))
+                    
+                    # Create datasets for each subgroup
+                    for subgroup_id in all_subgroups:
+                        # Store counts for this subgroup
+                        schools_dset.create_dataset(
+                            f"registered_members_count_sg{subgroup_id}", 
+                            data=subgroup_counts[subgroup_id], 
+                            maxshape=(None,)
+                        )
+                        
+                        # Store flattened members for this subgroup
+                        flattened_members = flattened_subgroup_members[subgroup_id]
+                        schools_dset.create_dataset(
+                            f"registered_members_ids_sg{subgroup_id}", 
+                            data=flattened_members, 
+                            maxshape=(None,)
+                        )
             else:
                 newshape = (schools_dset["id"].shape[0] + ids.shape[0],)
                 schools_dset["id"].resize(newshape)
@@ -120,6 +174,24 @@ def save_schools_to_hdf5(schools: Schools, file_path: str, chunk_size: int = 500
                 schools_dset["n_classrooms"][idx1:idx2] = n_classrooms
                 schools_dset["years"].resize(newshape[0], axis=0)
                 schools_dset["years"][idx1:idx2] = years
+                
+                # Update registered members for subgroups
+                if all_subgroups:  # Only update these datasets if we have subgroups
+                    for subgroup_id in all_subgroups:
+                        # Update counts for this subgroup
+                        count_dataset = schools_dset[f"registered_members_count_sg{subgroup_id}"]
+                        count_dataset.resize(newshape)
+                        count_dataset[idx1:idx2] = subgroup_counts[subgroup_id]
+                        
+                        # Update flattened IDs for this subgroup (variable length)
+                        ids_dataset = schools_dset[f"registered_members_ids_sg{subgroup_id}"]
+                        flattened_members = flattened_subgroup_members[subgroup_id]
+                        
+                        if flattened_members.shape[0] > 0:
+                            current_length = ids_dataset.shape[0]
+                            new_length = current_length + flattened_members.shape[0]
+                            ids_dataset.resize((new_length,))
+                            ids_dataset[current_length:new_length] = flattened_members
 
 
 def load_schools_from_hdf5(
@@ -136,15 +208,45 @@ def load_schools_from_hdf5(
     """
 
     School_Class = School
-    School_Class.subgroup_params = SubgroupParams.from_file(
-        config_filename=config_filename
-    )
+    disease_config = GlobalContext.get_disease_config()
+    School_Class.subgroup_params = SubgroupParams.from_disease_config(disease_config)
 
     with h5py.File(file_path, "r", libver="latest", swmr=True) as f:
         schools = f["schools"]
         schools_list = []
         n_schools = schools.attrs["n_schools"]
         n_chunks = int(np.ceil(n_schools / chunk_size))
+        
+        # Check if registered members data exists
+        has_subgroup_data = "registered_members_subgroups" in schools
+        subgroup_counts = {}
+        subgroup_members = {}
+        subgroup_cumulative_counts = {}
+        
+        if has_subgroup_data:
+            # Get all subgroups
+            subgroups = read_dataset(schools["registered_members_subgroups"], 0, schools["registered_members_subgroups"].shape[0])
+            
+            # For each subgroup, prepare the count and flattened arrays
+            for subgroup_id in subgroups:
+                sg_key = f"registered_members_count_sg{subgroup_id}"
+                ids_key = f"registered_members_ids_sg{subgroup_id}"
+                
+                if sg_key in schools and ids_key in schools:
+                    # Read counts for this subgroup
+                    counts = read_dataset(schools[sg_key], 0, n_schools)
+                    subgroup_counts[subgroup_id] = counts
+                    
+                    # Calculate cumulative counts for this subgroup
+                    cumulative = np.concatenate(([0], np.cumsum(counts)))
+                    subgroup_cumulative_counts[subgroup_id] = cumulative
+                    
+                    # Read flattened member IDs for this subgroup
+                    if schools[ids_key].shape[0] > 0:
+                        member_ids = read_dataset(schools[ids_key], 0, schools[ids_key].shape[0])
+                        subgroup_members[subgroup_id] = member_ids
+                    else:
+                        subgroup_members[subgroup_id] = np.array([])
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_schools)
@@ -171,6 +273,24 @@ def load_schools_from_hdf5(
                     sector = None
                 else:
                     sector = sector.decode()
+                # Get registered_members_ids for this school if available
+                registered_members_dict = {}
+                
+                if has_subgroup_data and subgroups.size > 0:
+                    school_index = idx1 + k
+                    
+                    # Get members for each subgroup
+                    for subgroup_id in subgroups:
+                        if subgroup_id in subgroup_counts and subgroup_id in subgroup_members:
+                            n_members = subgroup_counts[subgroup_id][school_index]
+                            
+                            if n_members > 0 and len(subgroup_members[subgroup_id]) > 0:
+                                start_idx = subgroup_cumulative_counts[subgroup_id][school_index]
+                                end_idx = subgroup_cumulative_counts[subgroup_id][school_index + 1]
+                                
+                                if start_idx < len(subgroup_members[subgroup_id]):
+                                    registered_members_dict[int(subgroup_id)] = subgroup_members[subgroup_id][start_idx:end_idx].tolist()
+                
                 school = School_Class(
                     coordinates=coordinates[k],
                     n_pupils_max=n_pupils_max[k],
@@ -179,6 +299,7 @@ def load_schools_from_hdf5(
                     sector=sector,
                     n_classrooms=n_classrooms[k],
                     years=years[k],
+                    registered_members_ids=registered_members_dict,
                 )
                 school.id = ids[k]
                 schools_list.append(school)
@@ -192,6 +313,38 @@ def restore_school_properties_from_hdf5(
         schools = f["schools"]
         n_schools = schools.attrs["n_schools"]
         n_chunks = int(np.ceil(n_schools / chunk_size))
+        
+        # Check if registered members data exists
+        has_subgroup_data = "registered_members_subgroups" in schools
+        subgroup_counts = {}
+        subgroup_members = {}
+        subgroup_cumulative_counts = {}
+        
+        if has_subgroup_data:
+            # Get all subgroups
+            subgroups = read_dataset(schools["registered_members_subgroups"], 0, schools["registered_members_subgroups"].shape[0])
+            
+            # For each subgroup, prepare the count and flattened arrays
+            for subgroup_id in subgroups:
+                sg_key = f"registered_members_count_sg{subgroup_id}"
+                ids_key = f"registered_members_ids_sg{subgroup_id}"
+                
+                if sg_key in schools and ids_key in schools:
+                    # Read counts for this subgroup
+                    counts = read_dataset(schools[sg_key], 0, n_schools)
+                    subgroup_counts[subgroup_id] = counts
+                    
+                    # Calculate cumulative counts for this subgroup
+                    cumulative = np.concatenate(([0], np.cumsum(counts)))
+                    subgroup_cumulative_counts[subgroup_id] = cumulative
+                    
+                    # Read flattened member IDs for this subgroup
+                    if schools[ids_key].shape[0] > 0:
+                        member_ids = read_dataset(schools[ids_key], 0, schools[ids_key].shape[0])
+                        subgroup_members[subgroup_id] = member_ids
+                    else:
+                        subgroup_members[subgroup_id] = np.array([])
+        
         for chunk in range(n_chunks):
             idx1 = chunk * chunk_size
             idx2 = min((chunk + 1) * chunk_size, n_schools)
@@ -208,9 +361,31 @@ def restore_school_properties_from_hdf5(
                         )
                     if super_area not in domain_super_areas:
                         continue
+                        
                 school = world.schools.get_from_id(ids[k])
+                
                 area = areas[k]
                 if area == nan_integer:
                     school.area = None
                 else:
                     school.area = world.areas.get_from_id(area)
+                    
+                # Restore registered_members_ids if available
+                if has_subgroup_data and subgroups.size > 0:
+                    school_index = idx1 + k
+                    registered_members_dict = {}
+                    
+                    # Process each subgroup
+                    for subgroup_id in subgroups:
+                        if subgroup_id in subgroup_counts and subgroup_id in subgroup_members:
+                            n_members = subgroup_counts[subgroup_id][school_index]
+                            
+                            if n_members > 0 and len(subgroup_members[subgroup_id]) > 0:
+                                start_idx = subgroup_cumulative_counts[subgroup_id][school_index]
+                                end_idx = subgroup_cumulative_counts[subgroup_id][school_index + 1]
+                                
+                                if start_idx < len(subgroup_members[subgroup_id]):
+                                    registered_members_dict[int(subgroup_id)] = subgroup_members[subgroup_id][start_idx:end_idx].tolist()
+                    
+                    # Always use dictionary format
+                    school.registered_members_ids = registered_members_dict

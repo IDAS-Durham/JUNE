@@ -1,6 +1,6 @@
 # Groups 1-4 Pfizer/BioNTech
 1:
-    start_time: 2020-12-01 
+    start_time: 2020-12-01
     end_time: 2020-12-20 
     days_to_next_dose: [0,14]
     group_by: 'residence'
@@ -9,7 +9,7 @@
     vaccine_type: 'Pfizer'
     dose_numbers: [0,1]
 2:
-    start_time: 2020-12-01 
+    start_time: 2020-12-01
     end_time: 2020-12-20 
     days_to_next_dose: [0,14]
     group_by: 'residence'

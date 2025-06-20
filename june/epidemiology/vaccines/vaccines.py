@@ -8,11 +8,9 @@ import numpy as np
 
 from june import paths
 from june.epidemiology.infection import infection as infection_module
+from june.epidemiology.infection.disease_config import DiseaseConfig
 from june.utils.parse_probabilities import parse_age_probabilities
 
-default_config_filename = (
-    paths.configs_path / "defaults/epidemiology/vaccines/vaccines.yaml"
-)
 
 # TODO: apply doses from file
 # Start with (date, pseudo_id, region, age, dose, vaccine_type)
@@ -297,7 +295,7 @@ class VaccineTrajectory:
             return True
         return False
 
-    def update_dosage(self, person, record=None):
+    def update_dosage(self, person, entered_via, record=None):
         """update_dosage.
 
         Parameters
@@ -307,11 +305,16 @@ class VaccineTrajectory:
         record :
             record
         """
+
         dose_number = self.current_dose
         person.vaccinated = dose_number
         person.vaccine_type = self.name
         if record is not None:
             record.events["vaccines"].accumulate(person.id, self.name, dose_number)
+        if entered_via == 1:
+            import sys
+            #sys.exit()
+        #print(f"DOSAGE UPDATED for {person.id}!")
 
     def update_vaccine_effect(
         self, person: "Person", date: datetime.datetime, record=None
@@ -328,28 +331,50 @@ class VaccineTrajectory:
             record
         """
         if self.is_finished(date=date):
+            #print(f"Person {person.id} has finished their vaccine trajectory.")
             person.vaccine_trajectory = None
             return
         immunity = person.immunity
         dose_number = self.current_dose
         # update person.vaccinated here and use record
         self.update_trajectory_stage(date=date)
+        #print(f"Person ID: {person.id}")
         for infection_id in self.infection_ids:
+            # Compute updated susceptibility and effective multiplier
             updated_susceptibility = self.susceptibility(
                 date=date, infection_id=infection_id
             )
             updated_effective_multiplier = self.effective_multiplier(
                 date=date, infection_id=infection_id
             )
+
+            # Debugging print statements for intermediate values
+            #print(f"Infection ID: {infection_id}")
+            #print(f"  Updated Susceptibility: {updated_susceptibility}")
+            #print(f"  Updated Effective Multiplier: {updated_effective_multiplier}")
+
+            # Compute new values for susceptibility_dict and effective_multiplier_dict
+            prior_susceptibility = self.prior_susceptibility.get(infection_id, 1.0)
+            prior_effective_multiplier = self.prior_effective_multiplier.get(infection_id, 1.0)
+
             immunity.susceptibility_dict[infection_id] = min(
-                self.prior_susceptibility.get(infection_id, 1.0), updated_susceptibility
+                prior_susceptibility, updated_susceptibility
             )
             immunity.effective_multiplier_dict[infection_id] = min(
-                self.prior_effective_multiplier.get(infection_id, 1.0),
-                updated_effective_multiplier,
+                prior_effective_multiplier, updated_effective_multiplier,
             )
+
+            # Debugging print statements for final values
+            #print(f"  Prior Susceptibility: {prior_susceptibility}")
+            #print(f"  Final Susceptibility: {immunity.susceptibility_dict[infection_id]}")
+            #print(f"  Prior Effective Multiplier: {prior_effective_multiplier}")
+            #print(
+            #    f"  Final Effective Multiplier: {immunity.effective_multiplier_dict[infection_id]}"
+            #)
         if self.current_dose != dose_number:
-            self.update_dosage(person=person, record=record)
+            #print(f"\nDOSAGE about to be updated via UPDATE_VACCINE_EFFECT for {person.id}:")
+            self.update_dosage(person=person, record=record, entered_via=1)
+        
 
 
 class Vaccine:
@@ -389,6 +414,33 @@ class Vaccine:
         self.infection_ids = self._read_infection_ids(self.sterilisation_efficacies)
         self.waning_factor = waning_factor
 
+
+    @classmethod
+    def from_dict(cls, name, data):
+        """
+        Create a Vaccine instance from a dictionary.
+
+        Parameters
+        ----------
+        name : str
+            The name of the vaccine.
+        data : dict
+            Dictionary containing vaccine attributes.
+
+        Returns
+        -------
+        Vaccine
+            The initialized Vaccine object.
+        """
+        return cls(
+            name=name,
+            days_administered_to_effective=data.get("days_administered_to_effective", []),
+            days_effective_to_waning=data.get("days_effective_to_waning", []),
+            days_waning=data.get("days_waning", []),
+            waning_factor=data.get("waning_factor", 1.0),
+            sterilisation_efficacies=data.get("sterilisation_efficacies", []),
+            symptomatic_efficacies=data.get("symptomatic_efficacies", []),
+        )
     @classmethod
     def from_config_dict(cls, name: str, config: Dict):
         """from_config_dict.
@@ -410,6 +462,7 @@ class Vaccine:
             waning_factor=config["waning_factor"],
         )
 
+    '''    
     @classmethod
     def from_config(
         cls, vaccine_type: str, config_file: Path = default_config_filename
@@ -426,7 +479,7 @@ class Vaccine:
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         config = config[vaccine_type]
-        return cls.from_config_dict(name=vaccine_type, config=config)
+        return cls.from_config_dict(name=vaccine_type, config=config) '''
 
     def _read_infection_ids(self, sterilisation_efficacies):
         """_read_infection_ids.
@@ -505,10 +558,16 @@ class Vaccine:
         VaccineTrajectory
 
         """
+        #print(f"\n=== Generating Vaccine Trajectory for Person ID: {person.id} ===")
         prior_efficacy = self.collect_prior_efficacy(person=person)
+        #print(f"Initial Prior Efficacy: {prior_efficacy}")
+
         doses = []
         for i, dose in enumerate(dose_numbers):
             date += datetime.timedelta(days=days_to_next_dose[i])
+            #print(f"\nDose {dose}:")
+            #print(f"  Date Administered: {date.strftime('%Y-%m-%d')}")
+
             efficacy = Efficacy(
                 infection={
                     inf_id: self.sterilisation_efficacies[dose][inf_id][person.age]
@@ -520,6 +579,10 @@ class Vaccine:
                 },
                 waning_factor=self.waning_factor,
             )
+            #print(f"  Efficacy (Infection): {efficacy.infection}")
+            #print(f"  Efficacy (Symptoms): {efficacy.symptoms}")
+            #print(f"  Waning Factor: {efficacy.waning_factor}")
+
             doses.append(
                 Dose(
                     number=dose,
@@ -534,9 +597,23 @@ class Vaccine:
                 )
             )
             prior_efficacy = efficacy * efficacy.waning_factor
-        return VaccineTrajectory(
+            #print(f"  Updated Prior Efficacy: {prior_efficacy}")
+
+        vaccine_trajectory = VaccineTrajectory(
             doses=doses, name=self.name, infection_ids=self.infection_ids
         )
+        #print("\n=== Final Vaccine Trajectory ===\n")
+        '''print("\n=== SUMMARY OF DOSES ===")
+
+        for dose in vaccine_trajectory.doses:
+            print(f"  Dose {dose.number}:")
+            print(f"    Date Administered: {dose.date_administered.strftime('%Y-%m-%d')}")
+            print(f"    Days to Effective: {dose.days_administered_to_effective}")
+            print(f"    Days Effective to Waning: {dose.days_effective_to_waning}")
+            print(f"    Days Waning: {dose.days_waning}")
+            print(f"    Prior Efficacy: {dose.prior_efficacy}")
+            print(f"    Efficacy: {dose.efficacy}")'''
+        return vaccine_trajectory
 
 
 class Vaccines:
@@ -566,21 +643,37 @@ class Vaccines:
         return self.vaccines_dict[vaccine_name]
 
     @classmethod
-    def from_config_dict(cls, config: Dict):
-        """from_config_dict.
+    def from_config_dict(cls, config: dict):
+        """
+        Create Vaccines from a configuration dictionary.
 
         Parameters
         ----------
-        config : Dict
-            config
+        config : dict
+            Dictionary containing vaccine configurations.
+
+        Returns
+        -------
+        Vaccines
+            An instance of Vaccines.
+
+        Notes
+        -----
+        Returns an empty Vaccines instance if the config is None or empty.
         """
+        if not config:  # Handle None or empty dictionary
+            print("No vaccine configurations found. Returning an empty Vaccines instance.")
+            return cls([])  # Assuming cls([]) creates an empty Vaccines instance
+
+        # Proceed with normal initialization
         vaccines = []
-        for key, values in config.items():
-            vaccines.append(Vaccine(name=key, **values))
+        for vaccine_name, vaccine_data in config.items():
+            if vaccine_data:  # Skip empty configurations
+                vaccines.append(Vaccine.from_dict(name=vaccine_name, data=vaccine_data))
         return cls(vaccines=vaccines)
 
     @classmethod
-    def from_config(cls, config_file: Path = default_config_filename):
+    def from_config(cls, disease_config: DiseaseConfig ):
         """from_config.
 
         Parameters
@@ -588,9 +681,14 @@ class Vaccines:
         config_file : Path
             config_file
         """
+        return cls.from_config_dict(config = disease_config.vaccination_manager.get_vaccines())
+        """
+        print(f"\n=== Loading Vaccine Configuration from File: {config_file} ===")
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls.from_config_dict(config=config)
+        print("Configuration loaded successfully:")
+        print(config)
+        return cls.from_config_dict(config=config)"""
 
     def __iter__(
         self,
