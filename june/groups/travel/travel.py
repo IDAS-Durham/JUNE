@@ -147,8 +147,7 @@ class Travel:
             internal = value["internal"]
             external = value["external"]
             if len(internal) + len(external) > 0:
-                logger.info(
-                    f"City {key} has {
+                logger.info(f"City {key} has {
                         len(internal)} internal and {
                         len(external)} external commuters.")
         return ret
@@ -252,8 +251,7 @@ class Travel:
                         )
                     )
                 )
-                logger.info(
-                    f"City {
+                logger.info(f"City {
                         city.name} has {number_city_transports} city train carriages.")
                 n_city_stations = len(city.city_stations)
                 transports_per_station = int(
@@ -291,5 +289,6 @@ class Travel:
                         world.inter_city_transports.add(inter_city_transport)
                 logger.info(
                     f"City {
-                        city.name} has {number_inter_city_transports_total} inter-city train carriages.")
+                        city.name} has {number_inter_city_transports_total} inter-city train carriages."
+                )
         logger.info("Cities' transport initialised")

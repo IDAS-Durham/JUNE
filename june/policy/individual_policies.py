@@ -112,7 +112,8 @@ class StayHome(IndividualPolicy):
         """
         raise NotImplementedError(
             f"Need to implement check_stay_home_condition for policy {
-                self.__class__.__name__}")
+                self.__class__.__name__}"
+        )
 
 
 class SevereSymptomsStayHome(StayHome):

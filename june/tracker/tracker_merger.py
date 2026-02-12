@@ -132,7 +132,8 @@ class MergerClass:
 
         logger.info(
             f"Rank {mpi_rank} -- Initial params loaded -- have following group types {
-                self.group_type_names['all']}")
+                self.group_type_names['all']}"
+        )
 
     ##########################################################################
     # Import the useful functions from other Tracker modules #################

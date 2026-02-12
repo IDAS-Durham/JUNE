@@ -204,8 +204,7 @@ class CareHomeDistributor:
                     try:
                         carer = carers.pop()
                     except Exception:
-                        logger.info(
-                            f"Care home in area {
+                        logger.info(f"Care home in area {
                                 care_home.area.name} has not enough workers!")
                         break
                     care_home.add(

@@ -36,7 +36,7 @@ def create_world():
             h.add(people[j])
             people[j].area = area_1
         households.append(h)
-    area_2.people = people[int(len(people) / 2):]
+    area_2.people = people[int(len(people) / 2) :]
     for i in range(1000, 2000):
         h = Household(area=area_2)
         area_2.households.append(h)
@@ -93,7 +93,9 @@ class TestExactNumInfectSeed:
         cis.infect_super_areas(
             time=time,
             date=date,
-            cases_per_capita_per_age_per_region=cis.daily_cases_per_capita_per_age_per_region.loc[date],
+            cases_per_capita_per_age_per_region=cis.daily_cases_per_capita_per_age_per_region.loc[
+                date
+            ],
         )
         infected_50 = len(
             [person for person in world.people if person.age < 50 and person.infected]

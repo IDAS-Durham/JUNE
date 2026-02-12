@@ -150,7 +150,7 @@ class HealthIndexGenerator:
     def apply_effective_multiplier(self, probabilities, effective_multiplier):
         modified_probabilities = np.zeros_like(probabilities)
         probability_mild = probabilities[: self.max_mild_symptom_tag].sum()
-        probability_severe = probabilities[self.max_mild_symptom_tag:].sum() + (
+        probability_severe = probabilities[self.max_mild_symptom_tag :].sum() + (
             1 - probabilities.sum()
         )
         modified_probability_severe = probability_severe * effective_multiplier
@@ -160,8 +160,8 @@ class HealthIndexGenerator:
             * modified_probability_mild
             / probability_mild
         )
-        modified_probabilities[self.max_mild_symptom_tag:] = (
-            probabilities[self.max_mild_symptom_tag:]
+        modified_probabilities[self.max_mild_symptom_tag :] = (
+            probabilities[self.max_mild_symptom_tag :]
             * modified_probability_severe
             / probability_severe
         )

@@ -26,8 +26,7 @@ class CompanyDistributor:
         logger.info("Distributing workers to companies")
         for i, super_area in enumerate(super_areas):
             if i % 100 == 0:
-                logger.info(
-                    f"Distributed workers to companies in {i} of {
+                logger.info(f"Distributed workers to companies in {i} of {
                         len(super_areas)} super areas.")
             self.distribute_adults_to_companies_in_super_area(super_area)
         logger.info("Workers distributed to companies")

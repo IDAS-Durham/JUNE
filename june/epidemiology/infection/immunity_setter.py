@@ -348,8 +348,7 @@ class ImmunitySetter:
         elif self.previous_infections_distribution == "clustered":
             self.set_previous_infections_clustered(world)
         else:
-            raise ValueError(
-                f"Previous infection distr. {
+            raise ValueError(f"Previous infection distr. {
                     self.previous_infections_distribution} not recognized")
 
     def set_previous_infections_uniform(self, population):

@@ -322,8 +322,7 @@ class HouseholdDistributor:
             counter += 1
             if counter % 5000 == 0:
                 logger.info(f"filled {counter} areas of {len(area_names)}")
-        logger.info(
-            f"People assigned to households. There are {
+        logger.info(f"People assigned to households. There are {
                 len(households_total)} households in this world.")
         return Households(households_total)
 

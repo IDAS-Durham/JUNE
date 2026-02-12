@@ -76,6 +76,7 @@ def save_world_to_hdf5(world: World, file_path: str, chunk_size=100000):
 
     def needs_to_be_saved(x):
         return (x is not None) and (len(x) > 0)
+
     save_population_to_hdf5(world.people, file_path, chunk_size)
     if needs_to_be_saved(world.hospitals):
         logger.info("saving hospitals...")

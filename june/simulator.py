@@ -375,8 +375,7 @@ class Simulator:
         """
         Run simulation with n_seed initial infections
         """
-        output_logger.info(
-            f"Starting simulation for {
+        output_logger.info(f"Starting simulation for {
                 self.timer.total_days} days at day {
                 self.timer.date}," f"to run for {
                 self.timer.total_days} days")

@@ -181,7 +181,7 @@ def test__average_time_to_infect(n_teachers, mode, selector):
         people, school = create_school(n_students, n_teachers)
         for student in people[:n_students]:
             selector.infect_person_at_time(student, time=0)
-        for teacher in people[n_students: n_students + n_teachers - 1]:
+        for teacher in people[n_students : n_students + n_teachers - 1]:
             selector.infect_person_at_time(teacher, time=0)
         school.clear()
         teacher = people[-1]

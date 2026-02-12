@@ -20,7 +20,8 @@ class MSOASearch:
         Parse input arguments
         """
         parser = argparse.ArgumentParser(
-            description="Run the Google Maps API by region at the MSOA level for a given type")
+            description="Run the Google Maps API by region at the MSOA level for a given type"
+        )
         parser.add_argument(
             "--apikey_file",
             dest="apikey_file",

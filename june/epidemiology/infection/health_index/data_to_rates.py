@@ -334,8 +334,10 @@ class Data2Rates:
              if not provided uses population weight.
         """
         if weight_mapper is None:
+
             def weight_mapper(age, sex):
                 return 1
+
         age_bin = df.loc[age].name
         data_bin = df.loc[age, sex]
         bin_weight = sum(
@@ -604,7 +606,7 @@ class Data2Rates:
 
     def get_mild_rate(self, age: Union[int, pd.Interval], sex: str, is_care_home):
         if isinstance(age, pd.Interval):
-            return self.mild_rates_by_age_sex_df.loc[age.left: age.right, sex].mean()
+            return self.mild_rates_by_age_sex_df.loc[age.left : age.right, sex].mean()
         else:
             return self.mild_rates_by_age_sex_df.loc[age, sex]
 
@@ -613,7 +615,7 @@ class Data2Rates:
     ):
         if isinstance(age, pd.Interval):
             return self.asymptomatic_rates_by_age_sex_df.loc[
-                age.left: age.right, sex
+                age.left : age.right, sex
             ].mean()
         else:
             return self.mild_rates_by_age_sex_df.loc[age, sex]

@@ -72,8 +72,7 @@ class AbstractHospital:
                 self.add_to_icu(person)
                 return "icu_admitted"
             else:
-                raise HospitalError(
-                    f"Person with symptoms {
+                raise HospitalError(f"Person with symptoms {
                         person.infection.tag} trying to enter hospital.")
         else:
             # this person has already been allocated in a hospital (this one)

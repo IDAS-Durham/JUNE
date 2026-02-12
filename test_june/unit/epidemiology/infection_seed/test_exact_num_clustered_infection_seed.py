@@ -36,7 +36,7 @@ def create_world():
             h.add(people[j])
             people[j].area = area_1
         households.append(h)
-    area_2.people = people[int(len(people) / 2):]
+    area_2.people = people[int(len(people) / 2) :]
     for i in range(1000, 2000):
         h = Household(area=area_2)
         area_2.households.append(h)
