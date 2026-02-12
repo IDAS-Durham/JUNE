@@ -35,7 +35,7 @@ jobs:
     - name: Install JUNE
       run: |
         python -m pip install --upgrade pip
-        python setup.py install
+        pip install .
 
     - name: Lint with black and flake8
       run: |
