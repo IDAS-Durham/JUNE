@@ -54,6 +54,7 @@ jobs:
 
     - name: Test with pytest
       run: |
+        pip install pytest-cov
         pytest test_june --cov=june --cov-report xml
 
     - name: Upload coverage to Codecov
