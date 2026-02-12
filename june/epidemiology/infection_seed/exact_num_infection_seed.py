@@ -80,7 +80,7 @@ class ExactNumInfectionSeed(InfectionSeed):
                 if (
                     person.age >= age_ranges[j][0]
                     and person.age < age_ranges[j][1]
-                    and N_seeded[j] < cases_per_capita_per_age[j]
+                    and N_seeded[j] < cases_per_capita_per_age.iloc[j]
                 ):
                     in_seed_age_range = True
                     break
@@ -96,7 +96,7 @@ class ExactNumInfectionSeed(InfectionSeed):
                     )
 
                 N_seeded[j] += 1
-                if np.all(N_seeded == np.array(cases_per_capita_per_age)):
+                if np.all(N_seeded == cases_per_capita_per_age.values):
                     break
 
     def infect_super_areas(
@@ -193,7 +193,7 @@ class ExactNumClusteredInfectionSeed(ExactNumInfectionSeed):
         for resident in household.residents:
             for ii, age_bin in enumerate(age_ranges):
                 if resident.age >= age_bin[0] and resident.age < age_bin[1]:
-                    ret += age_distribution[ii]
+                    ret += age_distribution.iloc[ii]
                     break
         return ret / np.sqrt(len(household.residents))
 

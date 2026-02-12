@@ -406,18 +406,21 @@ class Observed2Cases:
                 cummulative_infections_hundred_thousand[region].values,
                 self.regional_infections_per_hundred_thousand,
             )
-            regional_cases_to_seed = n_cases_per_region_df[region].iloc[
-                : regional_index + 1
-            ]
-            target_cases = (
-                self.regional_infections_per_hundred_thousand
-                * people_per_region.loc[region]
-                / 100_000
-            )
-            remaining_cases = np.round(
-                max(0, target_cases - regional_cases_to_seed.iloc[:-1].sum())
-            )
-            regional_cases_to_seed.iloc[-1] = remaining_cases
+            if regional_index < len(n_cases_per_region_df[region]):
+                regional_cases_to_seed = n_cases_per_region_df[region].iloc[
+                    : regional_index + 1
+                ]
+                target_cases = (
+                    self.regional_infections_per_hundred_thousand
+                    * people_per_region.loc[region]
+                    / 100_000
+                )
+                remaining_cases = np.round(
+                    max(0, target_cases - regional_cases_to_seed.iloc[:-1].sum())
+                )
+                regional_cases_to_seed.iloc[-1] = remaining_cases
+            else:
+                regional_cases_to_seed = n_cases_per_region_df[region]
             regional_series.append(regional_cases_to_seed)
         return pd.concat(regional_series, axis=1).fillna(0.0)
 
@@ -460,7 +463,7 @@ class Observed2Cases:
                     p=super_area_weights_for_region["weights"],
                 )
                 n_cases_super_area = Counter(chosen_super_areas)
-                n_cases_per_super_area_df.loc[date, list(n_cases_super_area.keys())] = (
+                n_cases_per_super_area_df.loc[date, list(n_cases_super_area.keys())] = list(
                     n_cases_super_area.values()
                 )
         return n_cases_per_super_area_df
