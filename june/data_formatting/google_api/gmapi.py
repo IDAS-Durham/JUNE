@@ -67,8 +67,7 @@ class APICall:
         lat = str(lat)
         lon = str(lon)
         url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={},{}&radius={}&type={}&&key={}".format(
-            lat, lon, radius, location_type, self.key
-        )
+            lat, lon, radius, location_type, self.key)
 
         response = self.get_request(url)
         # convert to json
@@ -92,8 +91,7 @@ class APICall:
         """
 
         url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={}&key={}".format(
-            next_page_token, self.key
-        )
+            next_page_token, self.key)
 
         response = self.get_request(url)
 

@@ -131,12 +131,12 @@ class MergerClass:
             )
 
         logger.info(
-            f"Rank {mpi_rank} -- Initial params loaded -- have following group types { self.group_type_names['all'] }"
-        )
+            f"Rank {mpi_rank} -- Initial params loaded -- have following group types {
+                self.group_type_names['all']}")
 
-    ###########################################################################################
-    # Import the useful functions from other Tracker modules ##################################
-    ###########################################################################################
+    ##########################################################################
+    # Import the useful functions from other Tracker modules #################
+    ##########################################################################
 
     def CM_Norm(self, cm, cm_err, pop_tots, contact_type="global", Which="UNCM"):
         return Tracker.CM_Norm(self, cm, cm_err, pop_tots, contact_type, Which)
@@ -926,7 +926,7 @@ class MergerClass:
     #################################################
 
     def Merge(self):
-        logger.info(f"Rank {mpi_rank} -- Begin Merging from {self.NRanks+1} ranks")
+        logger.info(f"Rank {mpi_rank} -- Begin Merging from {self.NRanks + 1} ranks")
         if self.MPI:
             self.Travel_Distance()
             logger.info(f"Rank {mpi_rank} -- Distance sheet done")

@@ -131,8 +131,7 @@ class SubgroupParams:
             else:
                 Bins, Type = get_defaults(spec)
                 logger.info(
-                    f"{spec} interaction bins not specified. Using default values {Bins}"
-                )
+                    f"{spec} interaction bins not specified. Using default values {Bins}")
                 self.params[spec] = {"bins": Bins, "type": Type}
 
         if (

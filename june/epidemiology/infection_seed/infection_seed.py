@@ -287,8 +287,9 @@ class InfectionSeed:
         )
         if is_seeding_date and not_yet_seeded_date:
             seed_logger.info(
-                f"Seeding {self.infection_selector.infection_class.__name__} infections at date {date.date()}"
-            )
+                f"Seeding {
+                    self.infection_selector.infection_class.__name__} infections at date {
+                    date.date()}")
             cases_per_capita_per_age_per_region = (
                 self.daily_cases_per_capita_per_age_per_region.loc[date]
             )

@@ -32,7 +32,7 @@ def create_world():
     area_1 = Area(name="area_1", super_area=None, coordinates=None)
     area_1.people = people[: int(len(people) / 2)]
     area_2 = Area(name="area_2", super_area=None, coordinates=None)
-    area_2.people = people[int(len(people) / 2) :]
+    area_2.people = people[int(len(people) / 2):]
     super_area_1 = SuperArea("super_1", areas=[area_1], coordinates=(1.0, 1.0))
     super_area_2 = SuperArea("super_2", areas=[area_2], coordinates=(1.0, 2.0))
     region1 = Region(name="London", super_areas=[super_area_1])

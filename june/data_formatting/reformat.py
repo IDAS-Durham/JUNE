@@ -193,7 +193,8 @@ def read_household_composition_people(OUTPUT_AREA_DIR, ages_df):
         + comp_people_df["Couple_Family_adult_children"]
     )
 
-    # Since other contains some old, give it some probability when there are old people in the area
+    # Since other contains some old, give it some probability when there are
+    # old people in the area
     areas_with_old = ages_df[ages_df.columns[OLD_THRESHOLD:]].sum(axis=1) > 0
     areas_no_house_old = (
         comp_people_df["Person_old"]
@@ -266,7 +267,8 @@ def people_compositions2households(comp_people_df):
     households_df["2 0 2 0"] = (
         comp_people_df["Family_2k"] // 4 - comp_people_df["Family_2k"] % 4
     ).apply(lambda x: max(x, 0))
-    # ii) Assumption: the maximum number of children is 3, it could be a young adult or a kid
+    # ii) Assumption: the maximum number of children is 3, it could be a young
+    # adult or a kid
     households_df["3 0 2 0"] = 0.5 * (comp_people_df["Family_2k"] % 4)
     households_df["2 1 2 0"] = 0.5 * (comp_people_df["Family_2k"] % 4)
 
@@ -288,7 +290,8 @@ def people_compositions2households(comp_people_df):
     households_df["2 0 1 0"] = (
         comp_people_df["Lone_2k"] // 3 - comp_people_df["Lone_2k"] % 3
     ).apply(lambda x: max(x, 0))
-    # ii) Assumption: the maximum number of children is 3, it could be a young adult or a kid
+    # ii) Assumption: the maximum number of children is 3, it could be a young
+    # adult or a kid
     households_df["3 0 1 0"] = 0.5 * (comp_people_df["Lone_2k"] % 3)
     households_df["2 1 1 0"] = 0.5 * (comp_people_df["Lone_2k"] % 3)
 
@@ -329,7 +332,6 @@ def read_school_census(DATA_DIR):
 
 def downsample_social_matrix(matrix):
     # low_res_matrix = pd.DataFrame()
-
     """
     print(matrix)
 

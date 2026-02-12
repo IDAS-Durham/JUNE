@@ -256,7 +256,7 @@ class SchoolDistributor:
                 if school.n_pupils == 0:
                     continue
                 # note one school can be primary and secondary.
-                if type(school.sector) != str:
+                if not isinstance(school.sector, str):
                     idx = np.random.randint(0, 2)
                     if idx == 0:
                         primary_schools.append(school)

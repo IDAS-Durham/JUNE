@@ -23,7 +23,8 @@ default_vaccines_config_filename = (
 
 
 # TODO:
-# iii) Vaccinate individually given age, region, n doses, and vaccine type (could be made of combinations)
+# iii) Vaccinate individually given age, region, n doses, and vaccine type
+# (could be made of combinations)
 
 
 if TYPE_CHECKING:

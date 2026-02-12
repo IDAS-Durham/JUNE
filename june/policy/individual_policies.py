@@ -111,8 +111,8 @@ class StayHome(IndividualPolicy):
             time past from beginning of simulation, in units of days
         """
         raise NotImplementedError(
-            f"Need to implement check_stay_home_condition for policy {self.__class__.__name__}"
-        )
+            f"Need to implement check_stay_home_condition for policy {
+                self.__class__.__name__}")
 
 
 class SevereSymptomsStayHome(StayHome):
@@ -262,7 +262,8 @@ class SchoolQuarantine(StayHome):
                     time_start_quarantine
                     < person.primary_activity.quarantine_starting_date
                 ):
-                    # If the agent will show symptoms earlier than the quarantine time, update it.
+                    # If the agent will show symptoms earlier than the quarantine time,
+                    # update it.
                     person.primary_activity.quarantine_starting_date = (
                         time_start_quarantine
                     )
@@ -538,7 +539,8 @@ class CloseCompanies(SkipActivity):
                     # if there are too few furloughed people then always furlough all
                     if self.furlough_ratio < self.furlough_probability:
                         return True
-                    # if there are too many or correct number of furloughed people then furlough with a probability
+                    # if there are too many or correct number of furloughed people then
+                    # furlough with a probability
                     elif self.furlough_ratio >= self.furlough_probability:
                         if random() < self.furlough_probability / self.furlough_ratio:
                             return True
@@ -554,7 +556,8 @@ class CloseCompanies(SkipActivity):
                 and self.key_ratio is not None
                 and self.key_probability is not None
             ):
-                # if there are too many key workers, scale them down - otherwise send all to work
+                # if there are too many key workers, scale them down - otherwise send
+                # all to work
                 if self.key_ratio > self.key_probability:
                     if random() > self.key_probability / self.key_ratio:
                         return True
@@ -582,7 +585,8 @@ class CloseCompanies(SkipActivity):
                             / self.random_ratio
                         ):
                             return True
-                        # correct for some random workers now being treated as furloughed
+                        # correct for some random workers now being treated as
+                        # furloughed
                         elif random() < (self.key_probability - self.key_ratio) / (
                             self.random_ratio
                             - (self.furlough_probability - self.furlough_ratio)
@@ -610,7 +614,8 @@ class CloseCompanies(SkipActivity):
                     and self.furlough_probability is not None
                     and self.random_ratio is not None
                 ):
-                    # if there are too few furloughed people then randomly stop extra people from going to work
+                    # if there are too few furloughed people then randomly stop extra
+                    # people from going to work
                     if self.furlough_ratio < self.furlough_probability:
                         if (
                             random()
@@ -624,7 +629,8 @@ class CloseCompanies(SkipActivity):
                     and self.key_probability is not None
                     and self.random_ratio is not None
                 ):
-                    # if there are too few key workers then randomly boost more people going to work and do not subject them to the random choice
+                    # if there are too few key workers then randomly boost more people
+                    # going to work and do not subject them to the random choice
                     if self.key_ratio < self.key_probability:
                         if (
                             random()

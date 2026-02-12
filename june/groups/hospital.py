@@ -73,8 +73,8 @@ class AbstractHospital:
                 return "icu_admitted"
             else:
                 raise HospitalError(
-                    f"Person with symptoms {person.infection.tag} trying to enter hospital."
-                )
+                    f"Person with symptoms {
+                        person.infection.tag} trying to enter hospital.")
         else:
             # this person has already been allocated in a hospital (this one)
             if person.infection.tag.name == "hospitalised":

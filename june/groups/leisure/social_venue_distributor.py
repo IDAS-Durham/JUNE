@@ -287,13 +287,15 @@ class SocialVenueDistributor:
                         ):  # this perosn has already been assigned somewhere
                             if not mate.leisure.external:
                                 if mate not in mate.leisure.people:
-                                    # person active somewhere else, let's not disturb them
+                                    # person active somewhere else, let's not disturb
+                                    # them
                                     continue
                                 mate.leisure.remove(mate)
                             else:
                                 ret = to_send_abroad.delete_person(mate, mate.leisure)
                                 if ret:
-                                    # person active somewhere else, let's not disturb them
+                                    # person active somewhere else, let's not disturb
+                                    # them
                                     continue
                             if not subgroup.external:
                                 subgroup.append(mate)

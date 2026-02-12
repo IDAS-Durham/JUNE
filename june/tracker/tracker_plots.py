@@ -117,7 +117,8 @@ class PlotClass:
 
         self.record_path = record_path
 
-        # Only plot fully merged data (Only applies to MPI runs, auto saved to merge if single core)
+        # Only plot fully merged data (Only applies to MPI runs, auto saved to
+        # merge if single core)
         folder_name = "merged_data_output"
 
         logger.info(f"Rank {mpi_rank} -- Begin loading")
@@ -729,7 +730,7 @@ class PlotClass:
                 list of strings for bin labels or none type
         """
         if len(bins) < 25:
-            return [f"{low}-{high-1}" for low, high in zip(bins[:-1], bins[1:])]
+            return [f"{low}-{high - 1}" for low, high in zip(bins[:-1], bins[1:])]
         else:
             return None
 
@@ -811,7 +812,7 @@ class PlotClass:
 
         if len(bins) < 25 and bintype == "Age":
             labels = [
-                f"{int(low)}-{int(high-1)}" for low, high in zip(bins[:-1], bins[1:])
+                f"{int(low)}-{int(high - 1)}" for low, high in zip(bins[:-1], bins[1:])
             ]
         elif len(bins) < 25 and bintype == "Discrete":
             labels = bins

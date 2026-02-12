@@ -560,7 +560,8 @@ class Geography:
         Create geo-graph of the used geographical units.
 
         """
-        # this method ensure that super geo.super_areas, geo.areas, and so are ordered by identifier.
+        # this method ensure that super geo.super_areas, geo.areas, and so are
+        # ordered by identifier.
         region_hierarchy = hierarchy.reset_index().set_index("region")["super_area"]
         region_hierarchy = region_hierarchy.drop_duplicates()
         region_list = []

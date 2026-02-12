@@ -58,7 +58,7 @@ def read_comorbidity_csv(filename: str):
     column_names = [f"0-{comorbidity_df.columns[0]}"]
     for i in range(len(comorbidity_df.columns) - 1):
         column_names.append(
-            f"{comorbidity_df.columns[i]}-{comorbidity_df.columns[i+1]}"
+            f"{comorbidity_df.columns[i]}-{comorbidity_df.columns[i + 1]}"
         )
     comorbidity_df.columns = column_names
     for column in comorbidity_df.columns:

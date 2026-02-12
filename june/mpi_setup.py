@@ -126,7 +126,7 @@ class MovablePeople:
                 self.skinny_in[group_spec][group_id] = {}
             if subgroup_type not in self.skinny_in[group_spec][group_id]:
                 self.skinny_in[group_spec][group_id][subgroup_type] = {}
-            data = rank_data[index : index + n_data]
+            data = rank_data[index: index + n_data]
             index += n_data
 
             try:

@@ -125,7 +125,8 @@ class ActivityManager:
                 "Daily activity durations in config do not add to 24 hours."
             )
 
-        # Check that all groups given in time_config file are in the valid group hierarchy
+        # Check that all groups given in time_config file are in the valid group
+        # hierarchy
         all_super_groups = activity_hierarchy
         try:
             for step, activities in time_config["step_activities"]["weekday"].items():
@@ -207,13 +208,13 @@ class ActivityManager:
         )
         tock_interaction_timestep = perf_counter()
         rank_logger.info(
-            f"Rank {mpi_rank} -- move_people -- {tock_interaction_timestep-tick_interaction_timestep}"
+            f"Rank {mpi_rank} -- move_people -- {tock_interaction_timestep - tick_interaction_timestep}"
         )
         tick_waiting = perf_counter()
         mpi_comm.Barrier()
         tock_waiting = perf_counter()
         rank_logger.info(
-            f"Rank {mpi_rank} -- move_people_waiting -- {tock_waiting-tick_waiting}"
+            f"Rank {mpi_rank} -- move_people_waiting -- {tock_waiting - tick_waiting}"
         )
         (
             people_from_abroad,
@@ -265,7 +266,7 @@ class ActivityManager:
                 to_send_abroad.add_person(person, external_subgroup)
 
         tock = perf_counter()
-        mpi_logger.info(f"{self.timer.date},{mpi_rank},activity,{tock-tick}")
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},activity,{tock - tick}")
         return to_send_abroad
 
     def move_to_active_subgroup(
@@ -348,5 +349,5 @@ class ActivityManager:
         logger.info(
             f"CMS: People COMS for rank {mpi_rank}/{mpi_size} - {tock - tick},{tockw - tickw} - {self.timer.date}"
         )
-        mpi_logger.info(f"{self.timer.date},{mpi_rank},people_comms,{tock-tick}")
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},people_comms,{tock - tick}")
         return movable_people.skinny_in, n_people_from_abroad, n_people_going_abroad

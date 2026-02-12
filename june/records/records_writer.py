@@ -420,8 +420,7 @@ def prepend_checkpoint_hdf5(
                 else:
                     if checkpoint_date != checkpoint_date:
                         print(
-                            f"provided date {checkpoint_date} does not match min date {min_date}"
-                        )
+                            f"provided date {checkpoint_date} does not match min date {min_date}")
 
                 for dataset in post_record.root._f_list_nodes():
                     description = getattr(post_record.root, dataset.name).description
@@ -481,8 +480,7 @@ def prepend_checkpoint_summary(
     else:
         if min_date != checkpoint_date:
             print(
-                f"Provided date {checkpoint_date} does not match the earliest date in the summary!"
-            )
+                f"Provided date {checkpoint_date} does not match the earliest date in the summary!")
     pre_summary = pre_summary[pre_summary["time_stamp"] < min_date]
     merged_summary = pd.concat([pre_summary, post_summary], ignore_index=True)
     merged_summary.set_index(["region", "time_stamp"])

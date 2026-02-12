@@ -51,12 +51,12 @@ def _read_checkpoint_dates_from_file(config_filename):
 def _read_checkpoint_dates(checkpoint_dates):
     if isinstance(checkpoint_dates, datetime.date):
         return (checkpoint_dates,)
-    elif type(checkpoint_dates) == str:
+    elif isinstance(checkpoint_dates, str):
         return (datetime.datetime.strptime(checkpoint_dates, "%Y-%m-%d"),)
     elif type(checkpoint_dates) in [list, tuple]:
         ret = []
         for date in checkpoint_dates:
-            if type(date) == str:
+            if isinstance(date, str):
                 dd = datetime.datetime.strptime(date, "%Y-%m-%d").date()
             else:
                 dd = date
@@ -262,7 +262,8 @@ class Simulator:
             people_from_abroad_dict,
             n_people_from_abroad,
             n_people_going_abroad,
-            to_send_abroad,  # useful for knowing who's MPI-ing, so can send extra info as needed.
+            to_send_abroad,
+            # useful for knowing who's MPI-ing, so can send extra info as needed.
         ) = self.activity_manager.do_timestep(record=self.record)
         tick_interaction = perf_counter()
 
@@ -318,7 +319,7 @@ class Simulator:
 
         tock_interaction = perf_counter()
         rank_logger.info(
-            f"Rank {mpi_rank} -- interaction -- {tock_interaction-tick_interaction}"
+            f"Rank {mpi_rank} -- interaction -- {tock_interaction - tick_interaction}"
         )
 
         tick_tracker = perf_counter()
@@ -330,7 +331,7 @@ class Simulator:
                 self.activity_manager.all_super_groups, self.timer
             )
         tock_tracker = perf_counter()
-        rank_logger.info(f"Rank {mpi_rank} -- tracker -- {tock_tracker-tick_tracker}")
+        rank_logger.info(f"Rank {mpi_rank} -- tracker -- {tock_tracker - tick_tracker}")
 
         self.epidemiology.do_timestep(
             world=self.world,
@@ -344,7 +345,7 @@ class Simulator:
         tick, tickw = perf_counter(), wall_clock()
         mpi_comm.Barrier()
         tock, tockw = perf_counter(), wall_clock()
-        rank_logger.info(f"Rank {mpi_rank} -- interaction_waiting -- {tock-tick}")
+        rank_logger.info(f"Rank {mpi_rank} -- interaction_waiting -- {tock - tick}")
 
         # recount people active to check people conservation
         people_active = (
@@ -366,18 +367,19 @@ class Simulator:
         tock, tockw = perf_counter(), wall_clock()
         output_logger.info(
             f"CMS: Timestep for rank {mpi_rank}/{mpi_size} - {tock - tick_s},"
-            f"{tockw-tickw_s} - {self.timer.date}\n"
+            f"{tockw - tickw_s} - {self.timer.date}\n"
         )
-        mpi_logger.info(f"{self.timer.date},{mpi_rank},timestep,{tock-tick_s}")
+        mpi_logger.info(f"{self.timer.date},{mpi_rank},timestep,{tock - tick_s}")
 
     def run(self):
         """
         Run simulation with n_seed initial infections
         """
         output_logger.info(
-            f"Starting simulation for {self.timer.total_days} days at day {self.timer.date},"
-            f"to run for {self.timer.total_days} days"
-        )
+            f"Starting simulation for {
+                self.timer.total_days} days at day {
+                self.timer.date}," f"to run for {
+                self.timer.total_days} days")
         self.clear_world()
         if self.record is not None:
             self.record.parameters(

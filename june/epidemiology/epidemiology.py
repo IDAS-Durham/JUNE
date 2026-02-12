@@ -322,10 +322,10 @@ class Epidemiology:
 
         tock, tockw = perf_counter(), wall_clock()
         logger.info(
-            f"CMS: Infection COMS-v2 for rank {mpi_rank}/{mpi_size}({n_sending+n_receiving})"
-            f"{tock-tick},{tockw-tickw} - {timer.date}"
+            f"CMS: Infection COMS-v2 for rank {mpi_rank}/{mpi_size}({n_sending + n_receiving})"
+            f"{tock - tick},{tockw - tickw} - {timer.date}"
         )
-        mpi_logger.info(f"{timer.date},{mpi_rank},infection,{tock-tick}")
+        mpi_logger.info(f"{timer.date},{mpi_rank},infection,{tock - tick}")
 
         for person_id, infection_id in zip(people_to_infect, infection_to_infect):
             try:

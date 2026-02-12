@@ -142,7 +142,7 @@ class CareHomes(Supergroup):
             care_home_df = care_home_df.loc[area_names]
         care_homes = []
         logger.info(
-            f"There are {len(care_home_df.loc[care_home_df.values!=0])} care_homes in this geography."
+            f"There are {len(care_home_df.loc[care_home_df.values != 0])} care_homes in this geography."
         )
         for area in areas:
             n_residents = care_home_df.loc[area.name].values[0]

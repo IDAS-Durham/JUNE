@@ -595,7 +595,7 @@ class Tracker:
                 Win_Yi = (bins[bin_yi], bins[bin_yi + 1])
 
                 cm[bin_xi, bin_yi] = method(
-                    CM[Win_Xi[0] : Win_Xi[1], Win_Yi[0] : Win_Yi[1]]
+                    CM[Win_Xi[0]: Win_Xi[1], Win_Yi[0]: Win_Yi[1]]
                 )
         return cm
 
@@ -1108,7 +1108,7 @@ class Tracker:
                     for bin_x in range(len(bins_idx) - 1):
                         Win = [bins_idx[bin_x], bins_idx[bin_x + 1]]
                         APPEND[spec][sex][bin_x] = np.sum(
-                            self.location_cum_pop["syoa"][spec][sex][Win[0] : Win[1]]
+                            self.location_cum_pop["syoa"][spec][sex][Win[0]: Win[1]]
                         )
             return APPEND
 
@@ -1234,7 +1234,8 @@ class Tracker:
                             self.UNCM_R["Interaction"][contact_type] = UNCM_R
                             self.UNCM_R_err["Interaction"][contact_type] = UNCM_R_err
 
-                            # Basically just counts of interactions so assume a poisson error
+                            # Basically just counts of interactions so assume a poisson
+                            # error
                             self.CM["Interaction"][contact_type] = (
                                 cm / self.timer.total_days
                             )
@@ -1250,7 +1251,8 @@ class Tracker:
                         self.UNCM_R[bin_type][contact_type][sex] = UNCM_R
                         self.UNCM_R_err[bin_type][contact_type][sex] = UNCM_R_err
 
-                        # Basically just counts of interactions so assume a poisson error
+                        # Basically just counts of interactions so assume a poisson
+                        # error
                         self.CM[bin_type][contact_type][sex] = (
                             cm / self.timer.total_days
                         )
@@ -1318,7 +1320,8 @@ class Tracker:
                             self.UNCM_V["Interaction"][contact_type] = UNCMV
                             self.UNCM_V_err["Interaction"][contact_type] = UNCMV_err
 
-                            # Basically just counts of interactions so assume a poisson error
+                            # Basically just counts of interactions so assume a poisson
+                            # error
                             self.CMV["Interaction"][contact_type] = (
                                 cm / self.timer.total_days
                             )
@@ -1332,7 +1335,8 @@ class Tracker:
                         self.UNCM_V[bin_type][contact_type][sex] = UNCMV
                         self.UNCM_V_err[bin_type][contact_type][sex] = UNCMV_err
 
-                        # Basically just counts of interactions so assume a poisson error
+                        # Basically just counts of interactions so assume a poisson
+                        # error
                         self.CMV[bin_type][contact_type][sex] = (
                             cm / self.timer.total_days
                         )
@@ -1849,7 +1853,8 @@ class Tracker:
             for subgroup_contacts, subgroup_contacts_error, contact_subgroup_idx in zip(
                 contacts_per_subgroup, contacts_per_subgroup_error, contact_subgroups
             ):
-                # potential contacts is one less if you're in that subgroup - can't contact yourself!
+                # potential contacts is one less if you're in that subgroup - can't
+                # contact yourself!
                 subgroup_people = groups_inter[contact_subgroup_idx]
                 subgroup_people_without = subgroup_people.copy()
 
@@ -2374,8 +2379,12 @@ class Tracker:
                     if group.spec in self.group_type_names:
                         if counter == 0:
                             logger.info(
-                                f"Rank {mpi_rank} -- tracking contacts -- {len(self.venues_which[super_group_name])} of {len(grouptype.members)} of type {group.spec}"
-                            )
+                                f"Rank {mpi_rank} -- tracking contacts -- {
+                                    len(
+                                        self.venues_which[super_group_name])} of {
+                                    len(
+                                        grouptype.members)} of type {
+                                    group.spec}")
                         if group.external:
                             Skipped_E += 1
                             counter += 1
@@ -2574,9 +2583,8 @@ class Tracker:
                             f"{low}" for low, high in zip(bins[:-1], bins[1:])
                         ]
                     else:
-                        df["Ages"] = [
-                            f"{low}-{high-1}" for low, high in zip(bins[:-1], bins[1:])
-                        ]
+                        df["Ages"] = [f"{low}-{high - 1}" for low,
+                                      high in zip(bins[:-1], bins[1:])]
                     df = df.set_index("Ages")
                     df.loc["Total"] = df.sum()
                     df.to_excel(writer, sheet_name=f"{local}")
@@ -2865,7 +2873,7 @@ class Tracker:
                     for bin_yi in range(len(bins_I) - 1):
                         Win_Xi = (bins_I[bin_xi], bins_I[bin_xi + 1])
                         Win_Yi = (bins_I[bin_yi], bins_I[bin_yi + 1])
-                        Pmatrix[Win_Xi[0] : Win_Xi[1], Win_Yi[0] : Win_Yi[1]] = PM[
+                        Pmatrix[Win_Xi[0]: Win_Xi[1], Win_Yi[0]: Win_Yi[1]] = PM[
                             bin_xi, bin_yi
                         ]
                 Pmatrix = self.contract_matrix(Pmatrix, bins_target, method=np.mean)

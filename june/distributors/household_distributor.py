@@ -323,8 +323,8 @@ class HouseholdDistributor:
             if counter % 5000 == 0:
                 logger.info(f"filled {counter} areas of {len(area_names)}")
         logger.info(
-            f"People assigned to households. There are {len(households_total)} households in this world."
-        )
+            f"People assigned to households. There are {
+                len(households_total)} households in this world.")
         return Households(households_total)
 
     def distribute_people_to_households(
@@ -1108,7 +1108,8 @@ class HouseholdDistributor:
                 max_age=self.old_max_age,
             )
             if person is None:
-                # no old people left, leave the house and the rest empty and adults can come here later.
+                # no old people left, leave the house and the rest empty and adults can
+                # come here later.
                 for array in extra_people_lists:
                     array.append(household)
                 for _ in range(i + 1, n_households):
@@ -1316,7 +1317,8 @@ class HouseholdDistributor:
             )
             households.append(household)
             if self._check_if_oldpeople_left(men_by_age, women_by_age):
-                # if there are old people left, then put them here together with another adult.
+                # if there are old people left, then put them here together with another
+                # adult.
                 first_adult = self._get_random_person_in_age_bracket(
                     men_by_age,
                     women_by_age,

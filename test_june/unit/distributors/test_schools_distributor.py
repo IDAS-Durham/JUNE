@@ -111,7 +111,7 @@ def test__non_mandatory_dont_go_if_school_full(school_world):
                     person.age
                     for person in list(
                         sorted(school.students, key=lambda person: person.age)
-                    )[int(school.n_pupils_max) :]
+                    )[int(school.n_pupils_max):]
                 ]
             )
             older_kids_when_full = np.sum(ages > mandatory_age_range[1])

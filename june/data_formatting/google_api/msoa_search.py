@@ -20,8 +20,7 @@ class MSOASearch:
         Parse input arguments
         """
         parser = argparse.ArgumentParser(
-            description="Run the Google Maps API by region at the MSOA level for a given type"
-        )
+            description="Run the Google Maps API by region at the MSOA level for a given type")
         parser.add_argument(
             "--apikey_file",
             dest="apikey_file",
@@ -80,9 +79,8 @@ if __name__ == "__main__":
         api = f.read()
     apikey = api.split("\n")[0]
 
-    regions = [
-        "East"
-    ]  # , 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'Yorkshire','London', 'Wales', 'EastMidlands', 'WestMidlands']
+    # , 'SouthEast', 'SouthWest', 'NorthEast', 'NorthWest', 'Yorkshire','London', 'Wales', 'EastMidlands', 'WestMidlands']
+    regions = ["East"]
 
     for region in regions:
         print("Working on region: {}".format(region))

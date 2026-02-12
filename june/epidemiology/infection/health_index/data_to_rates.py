@@ -89,7 +89,7 @@ def read_comorbidity_csv(filename: str):
     column_names = [f"0-{comorbidity_df.columns[0]}"]
     for i in range(len(comorbidity_df.columns) - 1):
         column_names.append(
-            f"{comorbidity_df.columns[i]}-{comorbidity_df.columns[i+1]}"
+            f"{comorbidity_df.columns[i]}-{comorbidity_df.columns[i + 1]}"
         )
     comorbidity_df.columns = column_names
     for column in comorbidity_df.columns:
@@ -334,7 +334,8 @@ class Data2Rates:
              if not provided uses population weight.
         """
         if weight_mapper is None:
-            weight_mapper = lambda age, sex: 1
+            def weight_mapper(age, sex):
+                return 1
         age_bin = df.loc[age].name
         data_bin = df.loc[age, sex]
         bin_weight = sum(
@@ -603,7 +604,7 @@ class Data2Rates:
 
     def get_mild_rate(self, age: Union[int, pd.Interval], sex: str, is_care_home):
         if isinstance(age, pd.Interval):
-            return self.mild_rates_by_age_sex_df.loc[age.left : age.right, sex].mean()
+            return self.mild_rates_by_age_sex_df.loc[age.left: age.right, sex].mean()
         else:
             return self.mild_rates_by_age_sex_df.loc[age, sex]
 
@@ -612,7 +613,7 @@ class Data2Rates:
     ):
         if isinstance(age, pd.Interval):
             return self.asymptomatic_rates_by_age_sex_df.loc[
-                age.left : age.right, sex
+                age.left: age.right, sex
             ].mean()
         else:
             return self.mild_rates_by_age_sex_df.loc[age, sex]

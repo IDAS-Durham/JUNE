@@ -448,7 +448,8 @@ class TestClosure:
 
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is False
 
-        # Live in a tier 3 or 4 AND work in same region: Do not skip as allowed to go to work
+        # Live in a tier 3 or 4 AND work in same region: Do not skip as allowed to
+        # go to work
         live_tiers = [3, 4, 3, 4]
         work_tiers = [3, 4, 4, 4]
         live_super_area.add_worker(worker)
