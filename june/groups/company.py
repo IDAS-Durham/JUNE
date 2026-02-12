@@ -170,7 +170,9 @@ class Companies(Supergroup):
         if len(company_sectors_per_super_area) == 1:
             super_area = super_areas[0]
             companies = cls.create_companies_in_super_area(
-                super_area, company_sizes_per_super_area, company_sectors_per_super_area
+                super_area,
+                company_sizes_per_super_area.squeeze(),
+                company_sectors_per_super_area.squeeze(),
             )
             super_area.companies = companies
         else:

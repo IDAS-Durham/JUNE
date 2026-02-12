@@ -452,7 +452,7 @@ class Observed2Cases:
             super_area_weights_for_region = super_area_weights[
                 super_area_weights["region"] == region
             ]
-            for date, n_cases in n_cases_per_region_df[region].iteritems():
+            for date, n_cases in n_cases_per_region_df[region].items():
                 chosen_super_areas = np.random.choice(
                     list(super_area_weights_for_region.index),
                     replace=True,

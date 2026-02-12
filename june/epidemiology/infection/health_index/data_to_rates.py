@@ -92,11 +92,11 @@ def read_comorbidity_csv(filename: str):
             f"{comorbidity_df.columns[i]}-{comorbidity_df.columns[i + 1]}"
         )
     comorbidity_df.columns = column_names
-    for column in comorbidity_df.columns:
+    for col_idx, column in enumerate(comorbidity_df.columns):
         no_comorbidity = comorbidity_df[column].loc["no_condition"]
         should_have_comorbidity = 1 - no_comorbidity
         has_comorbidity = np.sum(comorbidity_df[column]) - no_comorbidity
-        comorbidity_df[column].iloc[:-1] *= should_have_comorbidity / has_comorbidity
+        comorbidity_df.iloc[:-1, col_idx] *= should_have_comorbidity / has_comorbidity
 
     return comorbidity_df.T
 

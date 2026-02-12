@@ -35,19 +35,23 @@ class ClusteredInfectionSeed(InfectionSeed):
         people_by_age = defaultdict(int)
         for person in people:
             people_by_age[person.age] += 1
+        if isinstance(cases_per_capita_per_age, pd.DataFrame):
+            cases_per_capita_per_age = cases_per_capita_per_age.squeeze()
         total = sum(
             [
                 people_by_age[age] * cases_per_capita_per_age.loc[age]
                 for age in people_by_age
             ]
         )
-        ret = int(total)
+        ret = int(float(total))
         ret += int(random() < (total - ret))
         return ret
 
     def get_household_score(self, household, age_distribution):
         if len(household.residents) == 0:
             return 0
+        if isinstance(age_distribution, pd.DataFrame):
+            age_distribution = age_distribution.squeeze()
         ret = 0
         for resident in household.residents:
             ret += age_distribution.loc[resident.age]

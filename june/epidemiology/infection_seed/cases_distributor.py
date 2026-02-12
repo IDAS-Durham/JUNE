@@ -96,7 +96,7 @@ class CasesDistributor:
                 super_area_to_region.region == region, "super_area"
             ]
             ret.loc[:, region_super_areas] = 0
-            for date, n_cases in region_cases.iteritems():
+            for date, n_cases in region_cases.items():
                 weights = weights_per_super_area.loc[
                     region_super_areas
                 ].values.flatten()
