@@ -465,7 +465,7 @@ def load_sex_per_sector(
     # Convert columns to float to avoid dtype incompatibility warnings
     sector_by_sex_df[m_columns] = sector_by_sex_df[m_columns].astype(float)
     sector_by_sex_df[f_columns] = sector_by_sex_df[f_columns].astype(float)
-    
+
     sector_by_sex_df.loc[:, m_columns] = sector_by_sex_df.loc[:, m_columns].div(
         sector_by_sex_df[m_columns].sum(axis=1), axis=0
     )

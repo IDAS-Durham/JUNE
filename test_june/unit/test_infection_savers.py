@@ -80,7 +80,7 @@ def setup_symptoms():
 @pytest.fixture(name="infections", scope="module")
 def setup_infections(xnexp_transmissions, symptoms_list):
     infections = []
-    for (i, (symptoms, trans)) in enumerate(zip(symptoms_list, xnexp_transmissions)):
+    for i, (symptoms, trans) in enumerate(zip(symptoms_list, xnexp_transmissions)):
         if i % 2:
             infection = Covid19(transmission=trans, symptoms=symptoms, start_time=2)
         else:

@@ -98,7 +98,7 @@ class DomainSplitter:
         clusters = sc.fit(points, maxiter=maxiter)
         super_areas_per_domain = {}
         score_per_domain = {}
-        for (i, cluster) in enumerate(clusters):
+        for i, cluster in enumerate(clusters):
             super_areas_per_domain[i] = [point.name for point in cluster.points]
             score_per_domain[i] = cluster.score
         print(f"Score is {sc.calculate_score_unbalance(clusters)}")

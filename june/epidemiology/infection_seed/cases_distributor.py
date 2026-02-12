@@ -28,10 +28,10 @@ def get_super_area_population_weights_by_region(
     people_per_region = people_per_super_area_and_region.groupby("region").sum()[
         "n_residents"
     ]
-    people_per_super_area_and_region[
-        "weights"
-    ] = people_per_super_area_and_region.apply(
-        lambda x: x.n_residents / people_per_region.loc[x.region], axis=1
+    people_per_super_area_and_region["weights"] = (
+        people_per_super_area_and_region.apply(
+            lambda x: x.n_residents / people_per_region.loc[x.region], axis=1
+        )
     )
     ret = people_per_super_area_and_region.loc[:, ["super_area", "weights"]]
     ret = ret.set_index("super_area")

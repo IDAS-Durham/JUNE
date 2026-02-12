@@ -8,7 +8,6 @@ from june.interaction import Interaction
 from june.epidemiology.infection.infection_selector import InfectionSelector
 from june.policy import Policy
 
-
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 constant_config = (

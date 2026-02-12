@@ -9,7 +9,6 @@ from june.geography import Geography
 from june.demography import Person
 from june.groups.company import Company, Companies
 
-
 default_data_path = (
     Path(os.path.abspath(__file__)).parent.parent.parent.parent
     / "data/processed/census_data/company_data/"

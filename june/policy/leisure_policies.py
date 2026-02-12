@@ -181,6 +181,6 @@ class ChangeVisitsProbability(LeisurePolicy):
         self.policy_reductions = new_residence_type_probabilities
 
     def apply(self, leisure: Leisure):
-        leisure.leisure_distributors[
-            "residence_visits"
-        ].policy_reductions = self.policy_reductions
+        leisure.leisure_distributors["residence_visits"].policy_reductions = (
+            self.policy_reductions
+        )

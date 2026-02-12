@@ -8,7 +8,6 @@ from june.world import World
 from .mode_of_transport import ModeOfTransport, ModeOfTransportGenerator
 from .transport import CityTransports, InterCityTransports
 
-
 logger = logging.getLogger("travel")
 default_cities_filename = data_path / "input/geography/cities_per_super_area_ew.csv"
 
@@ -206,9 +205,9 @@ class Travel:
         for super_area in world.super_areas:
             for city in world.cities:
                 if city.has_stations:
-                    super_area.closest_inter_city_station_for_city[
-                        city.name
-                    ] = city.get_closest_inter_city_station(super_area.coordinates)
+                    super_area.closest_inter_city_station_for_city[city.name] = (
+                        city.get_closest_inter_city_station(super_area.coordinates)
+                    )
 
     def _distribute_commuters_to_stations(self, world: World, commuters_dict: dict):
         for city, commuters in commuters_dict.items():

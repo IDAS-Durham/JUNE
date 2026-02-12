@@ -5,7 +5,6 @@ from june.demography import Person
 from june.groups.care_home import CareHome
 from june.geography import Area, SuperArea, Areas, SuperAreas
 
-
 default_config_file = paths.configs_path / "defaults/groups/carehome.yaml"
 
 

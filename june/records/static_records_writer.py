@@ -136,7 +136,7 @@ class LocationRecord(StaticRecord):
         )
 
     def get_data(self, world):
-        (ids, latitude, longitude, group_spec, group_id, area_id) = (
+        ids, latitude, longitude, group_spec, group_id, area_id = (
             [],
             [],
             [],

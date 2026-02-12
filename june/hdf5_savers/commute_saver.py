@@ -408,6 +408,6 @@ def restore_cities_and_stations_properties_from_hdf5(
                     super_area_closest_stations_cities[k],
                     super_area_closest_stations_stations[k],
                 ):
-                    super_area.closest_inter_city_station_for_city[
-                        city.decode()
-                    ] = world.stations.get_from_id(station)
+                    super_area.closest_inter_city_station_for_city[city.decode()] = (
+                        world.stations.get_from_id(station)
+                    )

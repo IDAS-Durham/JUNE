@@ -403,7 +403,7 @@ def _load_age_and_sex_generators(
     # TODO fix this to use proper complete indexing.
 
     ret = {}
-    for ((_, age_structure), (index, female_ratios), (_, ethnicity_df)) in zip(
+    for (_, age_structure), (index, female_ratios), (_, ethnicity_df) in zip(
         age_structure_df.iterrows(),
         female_ratios_df.iterrows(),
         ethnicity_structure_df.groupby(level=0),

@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 import pathlib
 
-
 test_config = paths.configs_path / "tests/interaction.yaml"
 default_sector_beta_filename = (
     paths.configs_path / "defaults/interaction/sector_beta.yaml"

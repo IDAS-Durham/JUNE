@@ -385,10 +385,10 @@ class Observed2Cases:
         people_per_region = people_per_super_aera_and_region.groupby("region").sum()[
             "n_people"
         ]
-        people_per_super_aera_and_region[
-            "weights"
-        ] = people_per_super_aera_and_region.apply(
-            lambda x: x.n_people / people_per_region.loc[x.region], axis=1
+        people_per_super_aera_and_region["weights"] = (
+            people_per_super_aera_and_region.apply(
+                lambda x: x.n_people / people_per_region.loc[x.region], axis=1
+            )
         )
         return people_per_super_aera_and_region[["weights", "region"]]
 
@@ -460,9 +460,9 @@ class Observed2Cases:
                     p=super_area_weights_for_region["weights"],
                 )
                 n_cases_super_area = Counter(chosen_super_areas)
-                n_cases_per_super_area_df.loc[
-                    date, list(n_cases_super_area.keys())
-                ] = n_cases_super_area.values()
+                n_cases_per_super_area_df.loc[date, list(n_cases_super_area.keys())] = (
+                    n_cases_super_area.values()
+                )
         return n_cases_per_super_area_df
 
     def _smooth_time_series(self, time_series_df: pd.DataFrame) -> pd.DataFrame:

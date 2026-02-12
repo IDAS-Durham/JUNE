@@ -5,7 +5,6 @@ from typing import List, Union, Optional
 from june import paths
 import yaml
 
-
 # ch = care home, gp = general population (so everyone not in a care home)
 
 hi_data = paths.data_path / "input/health_index"

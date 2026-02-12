@@ -3,7 +3,6 @@ import logging
 import numpy as np
 from random import randint
 
-
 logger = logging.getLogger("company_distributor")
 
 """

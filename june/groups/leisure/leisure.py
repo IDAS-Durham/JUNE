@@ -17,7 +17,6 @@ from june.utils import random_choice_numba
 from june import paths
 from june.utils.parse_probabilities import parse_opens
 
-
 default_config_filename = paths.configs_path / "config_example.yaml"
 
 logger = logging.getLogger("leisure")
@@ -77,9 +76,9 @@ def generate_leisure_for_world(list_of_leisure_groups, world, daytypes):
             raise ValueError(
                 "Your world does not have care homes or households for visits."
             )
-        leisure_distributors[
-            "residence_visits"
-        ] = ResidenceVisitsDistributor.from_config(daytypes=daytypes)
+        leisure_distributors["residence_visits"] = (
+            ResidenceVisitsDistributor.from_config(daytypes=daytypes)
+        )
     leisure = Leisure(leisure_distributors=leisure_distributors, regions=world.regions)
     return leisure
 
@@ -162,13 +161,13 @@ class Leisure:
         self.probabilities_by_region_sex_age = {}
         if self.regions:
             for region in self.regions:
-                self.probabilities_by_region_sex_age[
-                    region.name
-                ] = self._generate_leisure_probabilities_for_age_and_sex(
-                    delta_time=delta_time,
-                    working_hours=working_hours,
-                    date=date,
-                    region=region,
+                self.probabilities_by_region_sex_age[region.name] = (
+                    self._generate_leisure_probabilities_for_age_and_sex(
+                        delta_time=delta_time,
+                        working_hours=working_hours,
+                        date=date,
+                        region=region,
+                    )
                 )
         else:
             self.probabilities_by_region_sex_age = (
@@ -308,9 +307,9 @@ class Leisure:
                 activities_probabilities[activities[i]] = (
                     poisson_parameters[i] / total_poisson_parameter
                 )
-            drags_household_probabilities_dict[
-                activities[i]
-            ] = drags_household_probabilities[i]
+            drags_household_probabilities_dict[activities[i]] = (
+                drags_household_probabilities[i]
+            )
         return {
             "does_activity": does_activity_probability,
             "drags_household": drags_household_probabilities_dict,

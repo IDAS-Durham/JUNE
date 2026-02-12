@@ -45,7 +45,6 @@ class CityTransport(Transport):
 
 
 class CityTransports(Transports):
-
     """
     Inner city transports
     """

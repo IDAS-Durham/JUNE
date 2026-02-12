@@ -15,7 +15,6 @@ from june.policy import (
     ChangeVisitsProbability,
 )
 
-
 test_config = paths.configs_path / "tests/test_simulator_simple.yaml"
 
 

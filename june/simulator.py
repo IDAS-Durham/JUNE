@@ -133,7 +133,6 @@ class Simulator:
         checkpoint_save_path: str = None,
         record: Optional[Record] = None,
     ) -> "Simulator":
-
         """
         Load config for simulator from world.yaml
 

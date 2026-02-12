@@ -37,7 +37,7 @@ class Boundary(Group):
             # TODO companies shouldn always be completely full
             n_residents = company.n_employees_max - company.n_employees
 
-            (sex_rnd_arr, nomis_bin_rnd_arr, age_rnd_arr) = self.init_random_variables(
+            sex_rnd_arr, nomis_bin_rnd_arr, age_rnd_arr = self.init_random_variables(
                 n_residents, company.industry
             )
 

@@ -221,9 +221,9 @@ class ImmunitySetter:
             set_comorbidity_multipliers = False
         for person in population:
             for inf_id in self.multiplier_dict:
-                person.immunity.effective_multiplier_dict[
-                    inf_id
-                ] = self.multiplier_dict[inf_id]
+                person.immunity.effective_multiplier_dict[inf_id] = (
+                    self.multiplier_dict[inf_id]
+                )
                 if set_comorbidity_multipliers:
                     multiplier = self.multiplier_by_comorbidity.get(
                         person.comorbidity, 1.0

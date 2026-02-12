@@ -408,15 +408,15 @@ class TestClosure:
         for live_tier, work_tier in zip(live_tiers, work_tiers):
             worker.work_super_area.region.policy["lockdown_tier"] = work_tier
             worker.region.policy["lockdown_tier"] = live_tier
-            worker.region.policy[
-                "regional_compliance"
-            ] = 1  # Want them to comply this time
+            worker.region.policy["regional_compliance"] = (
+                1  # Want them to comply this time
+            )
 
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is True
 
-            worker.region.policy[
-                "regional_compliance"
-            ] = 0  # Want them to not comply this time
+            worker.region.policy["regional_compliance"] = (
+                0  # Want them to not comply this time
+            )
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is False
 
         # Live in a tier 3 or 4 and work in another region: skip activity
@@ -425,15 +425,15 @@ class TestClosure:
         for live_tier, work_tier in zip(live_tiers, work_tiers):
             worker.work_super_area.region.policy["lockdown_tier"] = work_tier
             worker.region.policy["lockdown_tier"] = live_tier
-            worker.region.policy[
-                "regional_compliance"
-            ] = 1  # Want them to comply this time
+            worker.region.policy["regional_compliance"] = (
+                1  # Want them to comply this time
+            )
 
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is True
 
-            worker.region.policy[
-                "regional_compliance"
-            ] = 0  # Want them to not comply this time
+            worker.region.policy["regional_compliance"] = (
+                0  # Want them to not comply this time
+            )
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is False
 
         # Live and work in a tier 1 or 2: Never skip
@@ -442,9 +442,9 @@ class TestClosure:
         for live_tier, work_tier in zip(live_tiers, work_tiers):
             worker.work_super_area.region.policy["lockdown_tier"] = work_tier
             worker.region.policy["lockdown_tier"] = live_tier
-            worker.region.policy[
-                "regional_compliance"
-            ] = 1  # Want them to comply this time
+            worker.region.policy["regional_compliance"] = (
+                1  # Want them to comply this time
+            )
 
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is False
 
@@ -455,9 +455,9 @@ class TestClosure:
         for live_tier, work_tier in zip(live_tiers, work_tiers):
             worker.work_super_area.region.policy["lockdown_tier"] = work_tier
             worker.region.policy["lockdown_tier"] = live_tier
-            worker.region.policy[
-                "regional_compliance"
-            ] = 1  # Want them to comply this time
+            worker.region.policy["regional_compliance"] = (
+                1  # Want them to comply this time
+            )
 
             assert company_closure_lockdown_tiers.check_skips_activity(worker) is False
 

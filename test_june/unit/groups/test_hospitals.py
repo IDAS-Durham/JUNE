@@ -7,7 +7,6 @@ from june.groups import Hospitals
 from june.epidemiology.infection import InfectionSelector
 from june.paths import data_path
 
-
 path_pwd = Path(__file__)
 dir_pwd = path_pwd.parent
 

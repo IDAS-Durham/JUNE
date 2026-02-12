@@ -9,7 +9,6 @@ from june.records import Record
 from june.groups.leisure import generate_leisure_for_config
 from june import paths
 
-
 selector_config = paths.configs_path / "defaults/infection/InfectionConstant.yaml"
 test_config = paths.configs_path / "tests/test_simulator.yaml"
 interaction_config = paths.configs_path / "tests/interaction.yaml"

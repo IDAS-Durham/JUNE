@@ -1,6 +1,7 @@
 """
 A few numbaised useful functions for random sampling.
 """
+
 from numba import jit
 from random import random
 import numpy as np
