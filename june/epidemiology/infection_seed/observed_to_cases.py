@@ -463,8 +463,8 @@ class Observed2Cases:
                     p=super_area_weights_for_region["weights"],
                 )
                 n_cases_super_area = Counter(chosen_super_areas)
-                n_cases_per_super_area_df.loc[date, list(n_cases_super_area.keys())] = list(
-                    n_cases_super_area.values()
+                n_cases_per_super_area_df.loc[date, list(n_cases_super_area.keys())] = (
+                    list(n_cases_super_area.values())
                 )
         return n_cases_per_super_area_df
 
