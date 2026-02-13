@@ -2392,14 +2392,12 @@ class Tracker:
                 for group in groups_which:  # Loop over all locations.
                     if group.spec in self.group_type_names:
                         if counter == 0:
-                            logger.info(
-                                f"Rank {mpi_rank} -- tracking contacts -- {
+                            logger.info(f"Rank {mpi_rank} -- tracking contacts -- {
                                     len(
                                         self.venues_which[super_group_name])} of {
                                     len(
                                         grouptype.members)} of type {
-                                    group.spec}"
-                            )
+                                    group.spec}")
                         if group.external:
                             Skipped_E += 1
                             counter += 1
