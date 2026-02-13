@@ -335,7 +335,7 @@ def combine_summaries(record_path, remove_left_overs=False, save_dir=None):
         if remove_left_overs:
             summary_file.unlink()
     summary = pd.concat(dfs)
-    summary = summary.groupby(["region", "time_stamp"]).sum()
+    summary = summary.groupby(["region", "time_stamp"]).sum(numeric_only=True)
     if save_dir is None:
         save_path = record_path
     else:

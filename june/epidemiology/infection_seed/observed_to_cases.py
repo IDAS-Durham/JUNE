@@ -372,7 +372,7 @@ class Observed2Cases:
                 left_index=True,
                 right_index=True,
             )
-            .groupby("super_area")
+            .groupby("super_area")["n_people"]
             .sum()
         )
         people_per_super_aera_and_region = pd.merge(
@@ -382,9 +382,9 @@ class Observed2Cases:
             right_index=True,
             how="left",
         )
-        people_per_region = people_per_super_aera_and_region.groupby("region").sum()[
+        people_per_region = people_per_super_aera_and_region.groupby("region")[
             "n_people"
-        ]
+        ].sum()
         people_per_super_aera_and_region["weights"] = (
             people_per_super_aera_and_region.apply(
                 lambda x: x.n_people / people_per_region.loc[x.region], axis=1

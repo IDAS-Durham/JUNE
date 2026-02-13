@@ -25,9 +25,9 @@ def get_super_area_population_weights_by_region(
     people_per_super_area_and_region = pd.merge(
         residents_per_super_area, super_area_to_region, on="super_area"
     )
-    people_per_region = people_per_super_area_and_region.groupby("region").sum()[
+    people_per_region = people_per_super_area_and_region.groupby("region")[
         "n_residents"
-    ]
+    ].sum()
     people_per_super_area_and_region["weights"] = (
         people_per_super_area_and_region.apply(
             lambda x: x.n_residents / people_per_region.loc[x.region], axis=1

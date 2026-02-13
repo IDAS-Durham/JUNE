@@ -1148,7 +1148,7 @@ class Tracker:
             ExpN = len(self.age_bins[bin_type])
             AgesCount = self.contacts_df.groupby(
                 self.contacts_df[bins_idx], dropna=False
-            ).mean()[colsWhich]
+            )[colsWhich].mean()
             AgesCount = AgesCount.reindex(range(ExpN - 1), fill_value=0)
 
             self.average_contacts[bin_type] = AgesCount
