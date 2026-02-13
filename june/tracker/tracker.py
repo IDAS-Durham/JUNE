@@ -390,7 +390,9 @@ class Tracker:
             Norm = 1
 
         denominator = abs(x) + abs(y)
-        DM = np.divide(abs(x - y), denominator, out=np.zeros_like(x), where=denominator != 0)
+        DM = np.divide(
+            abs(x - y), denominator, out=np.zeros_like(x), where=denominator != 0
+        )
         return np.nansum(DM) / Norm, DM
 
     def Calc_QIndex(self, cm):
@@ -1376,7 +1378,12 @@ class Tracker:
         else:
             return 1
         return np.array(
-            np.divide(local_pop, global_pop, out=np.zeros_like(local_pop), where=global_pop != 0)
+            np.divide(
+                local_pop,
+                global_pop,
+                out=np.zeros_like(local_pop),
+                where=global_pop != 0,
+            )
         )
 
     def UNtoPNConversion(self, cm, ratio):
@@ -1442,7 +1449,7 @@ class Tracker:
             for j in range(cm.shape[1]):
                 # Population rescaling
                 if pop_tots[i] < 1:
-                     continue
+                    continue
                 w = pop_tots[j] / pop_tots[i]
                 if pop_tots[j] < 1:
                     continue
@@ -2385,12 +2392,14 @@ class Tracker:
                 for group in groups_which:  # Loop over all locations.
                     if group.spec in self.group_type_names:
                         if counter == 0:
-                            logger.info(f"Rank {mpi_rank} -- tracking contacts -- {
+                            logger.info(
+                                f"Rank {mpi_rank} -- tracking contacts -- {
                                     len(
                                         self.venues_which[super_group_name])} of {
                                     len(
                                         grouptype.members)} of type {
-                                    group.spec}")
+                                    group.spec}"
+                            )
                         if group.external:
                             Skipped_E += 1
                             counter += 1
@@ -3079,7 +3088,9 @@ class Tracker:
                 print("")
                 im, im_err = self.IMPlots_GetIM(local)
                 im_arr = np.array(im)
-                ratio_arr = np.divide(contact, im_arr, out=np.zeros_like(contact), where=im_arr != 0)
+                ratio_arr = np.divide(
+                    contact, im_arr, out=np.zeros_like(contact), where=im_arr != 0
+                )
                 print(
                     "    Ratio of contacts and feed in values: %s"
                     % self.MatrixString(ratio_arr)
