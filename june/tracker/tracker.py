@@ -389,7 +389,8 @@ class Tracker:
         if Norm == 0:
             Norm = 1
 
-        DM = abs(x - y) / (abs(x) + abs(y))
+        denominator = abs(x) + abs(y)
+        DM = np.divide(abs(x - y), denominator, out=np.zeros_like(x), where=denominator != 0)
         return np.nansum(DM) / Norm, DM
 
     def Calc_QIndex(self, cm):
@@ -405,8 +406,10 @@ class Tracker:
             Q:
                 float, Q index of assortativeness
         """
-        P = np.zeros_like(cm, dtype=float)
-        P = np.nan_to_num(cm / np.nansum(cm, axis=1), nan=0.0)
+        sums = np.nansum(cm, axis=1)
+        P = np.nan_to_num(
+            np.divide(cm.T, sums, out=np.zeros_like(cm.T), where=sums != 0).T, nan=0.0
+        )
         return (np.trace(P) - 1) / (P.shape[0] - 1)
 
     def Calc_NPCDM(self, cm, pop_by_bin, pop_width):
@@ -1372,7 +1375,9 @@ class Tracker:
             local_pop = self.location_cum_pop[bin_type][contact_type][sex]
         else:
             return 1
-        return np.array(local_pop / global_pop)
+        return np.array(
+            np.divide(local_pop, global_pop, out=np.zeros_like(local_pop), where=global_pop != 0)
+        )
 
     def UNtoPNConversion(self, cm, ratio):
         """
@@ -1436,8 +1441,10 @@ class Tracker:
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
                 # Population rescaling
+                if pop_tots[i] < 1:
+                     continue
                 w = pop_tots[j] / pop_tots[i]
-                if pop_tots[i] < 1 or pop_tots[j] < 1:
+                if pop_tots[j] < 1:
                     continue
 
                 if Which in ["UNCM", "UNCM_V"]:  # Only count contacts i to j
@@ -3071,9 +3078,11 @@ class Tracker:
                 )
                 print("")
                 im, im_err = self.IMPlots_GetIM(local)
+                im_arr = np.array(im)
+                ratio_arr = np.divide(contact, im_arr, out=np.zeros_like(contact), where=im_arr != 0)
                 print(
                     "    Ratio of contacts and feed in values: %s"
-                    % self.MatrixString(contact / np.array(im))
+                    % self.MatrixString(ratio_arr)
                 )
                 print("")
 

@@ -407,18 +407,20 @@ class Observed2Cases:
                 self.regional_infections_per_hundred_thousand,
             )
             if regional_index < len(n_cases_per_region_df[region]):
-                regional_cases_to_seed = n_cases_per_region_df[region].iloc[
-                    : regional_index + 1
-                ]
+                regional_cases_to_seed = (
+                    n_cases_per_region_df[region].iloc[: regional_index + 1].copy()
+                )
                 target_cases = (
                     self.regional_infections_per_hundred_thousand
                     * people_per_region.loc[region]
                     / 100_000
                 )
-                remaining_cases = np.round(
-                    max(0, target_cases - regional_cases_to_seed.iloc[:-1].sum())
+                total_previous = regional_cases_to_seed.iloc[:-1].sum()
+                remaining_cases_count = max(0, target_cases - total_previous)
+                # Ensure we don't increase the original number of cases at this step
+                regional_cases_to_seed.iloc[-1] = min(
+                    regional_cases_to_seed.iloc[-1], remaining_cases_count
                 )
-                regional_cases_to_seed.iloc[-1] = remaining_cases
             else:
                 regional_cases_to_seed = n_cases_per_region_df[region]
             regional_series.append(regional_cases_to_seed)
