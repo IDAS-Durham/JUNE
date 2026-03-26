@@ -10,7 +10,7 @@ pytest==9.0.2
 pytest-cov==7.0.0
 PyYAML==6.0.3
 recordclass==0.24
-requests==2.32.5
+requests==2.33.0
 scikit-learn==1.8.0
 score-clustering==0.1.4
 scipy==1.17.0
