@@ -6,7 +6,7 @@ mpi4py==4.1.1
 numba==0.63.1
 numpy==2.3.5
 pandas==3.0.0
-pytest==9.0.2
+pytest==9.0.3
 pytest-cov==7.0.0
 PyYAML==6.0.3
 recordclass==0.24
